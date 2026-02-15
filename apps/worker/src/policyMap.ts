@@ -3,12 +3,48 @@
  * Loads from PolicyMap.json at repo root.
  * Article 25 = admin only; Article 26 = out of scope (no findings).
  */
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const POLICY_MAP_PATH = join(__dirname, "..", "..", "..", "PolicyMap.json");
+
+/**
+ * Resolve PolicyMap.json path with fallback logic.
+ * 1. Try POLICY_MAP_PATH env var
+ * 2. Try common locations (repo root, cwd, /app)
+ * 3. Throw clear error if not found
+ */
+function resolvePolicyMapPath(): string {
+  // 1. Env var override
+  if (process.env.POLICY_MAP_PATH) {
+    const envPath = process.env.POLICY_MAP_PATH;
+    if (existsSync(envPath)) return envPath;
+    throw new Error(`POLICY_MAP_PATH set to "${envPath}" but file does not exist`);
+  }
+
+  // 2. Try common locations
+  const candidates = [
+    join(__dirname, "..", "..", "..", "PolicyMap.json"), // Repo root (dev monorepo)
+    join(process.cwd(), "PolicyMap.json"),               // Current working directory
+    "/app/PolicyMap.json",                                // Docker container standard path
+  ];
+
+  for (const path of candidates) {
+    if (existsSync(path)) {
+      console.log(`[policyMap] Loaded from: ${path}`);
+      return path;
+    }
+  }
+
+  // 3. Not found - provide helpful error
+  throw new Error(
+    `PolicyMap.json not found. Tried:\n${candidates.map(c => `  - ${c}`).join('\n')}\n` +
+    `To fix: Set POLICY_MAP_PATH environment variable or ensure PolicyMap.json is copied to container.`
+  );
+}
+
+const POLICY_MAP_PATH = resolvePolicyMapPath();
 
 export type PolicyAtom = { atomId: string; title_ar: string };
 export type PolicyArticle = {
