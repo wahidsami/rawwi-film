@@ -12,4 +12,4 @@ if (isProd) {
 }
 
 export const API_BASE_URL =
-  envUrl ?? "http://localhost:54321/functions/v1";
+  envUrl || (import.meta.env.DEV ? "http://localhost:54321/functions/v1" : "");
