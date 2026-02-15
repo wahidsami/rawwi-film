@@ -123,7 +123,14 @@ Deno.serve(async (req: Request) => {
 
   const { error: updateAuthErr } = await supabase.auth.admin.updateUserById(authUserId, { password });
   if (updateAuthErr) {
-    console.error("[invites-consume] updateUserById:", updateAuthErr.message);
+    console.error("[invites-consume] STEP:update_auth_password FAILED");
+    console.error("[invites-consume] Error details:", JSON.stringify({
+      message: updateAuthErr.message,
+      // @ts-ignore
+      code: updateAuthErr.code,
+      // @ts-ignore
+      status: updateAuthErr.status,
+    }, null, 2));
     return json({ error: updateAuthErr.message }, 500);
   }
 
@@ -133,7 +140,13 @@ Deno.serve(async (req: Request) => {
     .eq("id", row.id);
 
   if (markUsedErr) {
-    console.error("[invites-consume] mark used:", markUsedErr.message);
+    console.error("[invites-consume] STEP:mark_invite_used FAILED");
+    console.error("[invites-consume] Error details:", JSON.stringify({
+      message: markUsedErr.message,
+      code: markUsedErr.code,
+      details: markUsedErr.details,
+      hint: markUsedErr.hint,
+    }, null, 2));
     return json({ error: "Failed to mark invite as used" }, 500);
   }
 
@@ -151,8 +164,14 @@ Deno.serve(async (req: Request) => {
     );
 
   if (profileErr) {
-    console.error("[invites-consume] profiles upsert:", profileErr.message);
-    return json({ error: "Failed to create profile" }, 500);
+    console.error("[invites-consume] STEP:upsert_profile FAILED");
+    console.error("[invites-consume] Error details:", JSON.stringify({
+      message: profileErr.message,
+      code: profileErr.code,
+      details: profileErr.details,
+      hint: profileErr.hint,
+    }, null, 2));
+    return json({ error: "Failed to create/update profile" }, 500);
   }
 
   const { error: roleErr } = await supabase
@@ -163,7 +182,13 @@ Deno.serve(async (req: Request) => {
     );
 
   if (roleErr) {
-    console.error("[invites-consume] user_roles upsert:", roleErr.message);
+    console.error("[invites-consume] STEP:upsert_user_role FAILED");
+    console.error("[invites-consume] Error details:", JSON.stringify({
+      message: roleErr.message,
+      code: roleErr.code,
+      details: roleErr.details,
+      hint: roleErr.hint,
+    }, null, 2));
     return json({ error: "Failed to assign role" }, 500);
   }
 
