@@ -1,9 +1,10 @@
 /**
  * Edge Function: invites
- * POST /invites → create invite (token + hash), create/find auth user, insert user_invites, send email via Resend.
+ * POST /invites → create invite (token + hash), create auth user, upsert user_roles, insert user_invites, send email via Resend.
  * Requires manage_users. Single-use invite links; token stored as hash only.
+ * Profile is created by DB trigger handle_new_user on auth.users INSERT — this function does not insert into public.profiles.
  *
- * Env: RESEND_API_KEY, APP_PUBLIC_URL (e.g. http://localhost:5173 or https://raawifilm.unifinitylab.com)
+ * Env: SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, APP_PUBLIC_URL (e.g. http://localhost:5173 or https://raawifilm.unifinitylab.com)
  */
 import { optionsResponse, jsonResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
@@ -84,6 +85,15 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Invalid JSON body" }, 400);
   }
 
+  // Service role key required for auth.admin.createUser (and createSupabaseAdmin already uses it)
+  if (!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+    console.error("[invites] SUPABASE_SERVICE_ROLE_KEY is not set");
+    return json(
+      { error: "Server configuration error: SUPABASE_SERVICE_ROLE_KEY is required for invites. Set it in Edge Function secrets." },
+      500
+    );
+  }
+
   const email = (body.email ?? "").trim().toLowerCase();
   if (!email) return json({ error: "email is required" }, 400);
 
@@ -106,14 +116,16 @@ Deno.serve(async (req: Request) => {
 
   let authUserId: string;
 
-  // Step 0: Pre-check for existing user
+  // Step 0: Pre-check for existing user by email (avoid duplicate auth.users → trigger would duplicate profile)
   console.log(`[invites] STEP:pre_check - Checking for ${email}`);
   const { data: getUserData, error: getUserErr } = await supabase.auth.admin.listUsers({
-    perPage: 10, // Just a small page for searching if possible, but listUsers filter is limited
+    perPage: 1000,
   });
-
-  // Since listUsers filter isn't great in all versions, we check first page or use a simple search
-  // Prefer checking if they exist in auth OR profiles
+  if (getUserErr) {
+    console.error("[invites] STEP:pre_check FAILED");
+    console.error("[invites] Error details:", JSON.stringify({ step: "pre_check", message: getUserErr.message, raw: getUserErr }, null, 2));
+    return json({ error: "pre_check_failed", message: getUserErr.message }, 500);
+  }
   const existingInAuth = (getUserData?.users ?? []).find(u => u.email?.toLowerCase() === email);
 
   if (existingInAuth) {
@@ -167,41 +179,9 @@ Deno.serve(async (req: Request) => {
   authUserId = user.id;
   console.log(`[invites] STEP:auth_create_user SUCCESS - user_id=${authUserId}`);
 
-  // Step 2: Create profile
-  const profileName = (body.name ?? "").trim() || email.split("@")[0];
-  console.log(`[invites] STEP:insert_profile - Creating profile for ${authUserId}`);
-  const { error: profileErr } = await supabase.from("profiles").insert({
-    user_id: authUserId,
-    name: profileName,
-    email: email,
-  });
+  // Profile is created by DB trigger handle_new_user on auth.users INSERT — do not insert into profiles.
 
-  if (profileErr) {
-    console.error("[invites] STEP:insert_profile FAILED");
-    console.error("[invites] Profile error details:", JSON.stringify({
-      step: "insert_profile",
-      message: profileErr.message,
-      code: profileErr.code,
-      details: profileErr.details,
-      hint: profileErr.hint,
-    }, null, 2));
-
-    // Best-effort cleanup of Auth user
-    console.log(`[invites] STEP:cleanup_auth_user - Deleting auth user ${authUserId} due to profile failure`);
-    await supabase.auth.admin.deleteUser(authUserId).catch(e =>
-      console.error("[invites] Cleanup failed:", e.message)
-    );
-
-    return json({
-      error: "auth_create_user_failed",
-      step: "insert_profile",
-      code: profileErr.code,
-      message: profileErr.message
-    }, 500);
-  }
-  console.log(`[invites] STEP:insert_profile SUCCESS`);
-
-  // Step 3: Assign role (optional/immediate)
+  // Step 2: Assign role (user_roles; does not depend on profiles)
   console.log(`[invites] STEP:upsert_user_role - Assigning role ${roleId} to ${authUserId}`);
   const { error: upsertRoleErr } = await supabase.from("user_roles").upsert(
     { user_id: authUserId, role_id: roleId },
@@ -216,11 +196,8 @@ Deno.serve(async (req: Request) => {
       code: upsertRoleErr.code,
       details: upsertRoleErr.details,
       hint: upsertRoleErr.hint,
+      raw: upsertRoleErr,
     }, null, 2));
-
-    // We already have auth and profile, we could delete both, but role failure is rarer.
-    // Following "Only proceed to insert ... after auth_create_user succeeds"
-    // I will return 500 but keep auth/profile for now as they are basic state.
     return json({
       error: "auth_create_user_failed",
       step: "upsert_user_role",
@@ -230,7 +207,8 @@ Deno.serve(async (req: Request) => {
   }
   console.log(`[invites] STEP:upsert_user_role SUCCESS`);
 
-
+  // Step 3: Record invite
+  console.log(`[invites] STEP:insert_user_invite - Recording invite for ${email}`);
   const { data: insertedRow, error: insertErr } = await supabase.from("user_invites").insert({
     email,
     role_id: roleId,
@@ -242,10 +220,12 @@ Deno.serve(async (req: Request) => {
   }).select("id").single();
 
   if (insertErr) {
-    console.error("[invites] user_invites insert:", insertErr.message);
-    return json({ error: insertErr.message }, 500);
+    console.error("[invites] STEP:insert_user_invite FAILED");
+    console.error("[invites] Error details:", JSON.stringify({ step: "insert_user_invite", message: insertErr.message, code: insertErr.code, details: insertErr.details, hint: insertErr.hint, raw: insertErr }, null, 2));
+    return json({ error: "invite_record_failed", step: "insert_user_invite", message: insertErr.message }, 500);
   }
   const inviteId = insertedRow?.id;
+  console.log(`[invites] STEP:insert_user_invite SUCCESS - invite_id=${inviteId}`);
 
   const appPublicUrlRaw = Deno.env.get("APP_PUBLIC_URL");
   const isCloud = !!Deno.env.get("DENO_REGION");
