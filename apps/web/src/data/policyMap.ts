@@ -2,7 +2,7 @@
  * Policy map: single source of truth for articles and atoms (Raawi report taxonomy).
  * Loaded from PolicyMap.json at repo root. Article 25 = admin only; 26 = out of scope.
  */
-import policyMapJson from "PolicyMap";
+import policyMapJson from "./PolicyMap.json";
 
 export type PolicyAtom = { atomId: string; title_ar: string };
 export type PolicyArticle = {
