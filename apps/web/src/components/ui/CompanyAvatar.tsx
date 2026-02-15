@@ -42,12 +42,18 @@ export function CompanyAvatar({ name, logoUrl, size = 48, className }: CompanyAv
   const initials = useMemo(() => getCompanyInitials(name), [name]);
   const bg = useMemo(() => getAvatarBg(name), [name]);
 
-  const resolvedLogoUrl = useMemo(() => (logoUrl ? toPublicStorageUrl(logoUrl) : ''), [logoUrl]);
-  const hasValidLogo = resolvedLogoUrl && (resolvedLogoUrl.startsWith('http') || resolvedLogoUrl.startsWith('blob:')) && !useFallback;
+  const resolvedLogoUrl = useMemo(() => (logoUrl ? resolveStorageUrl(logoUrl) : ''), [logoUrl]);
+  const hasValidLogo =
+    resolvedLogoUrl &&
+    (resolvedLogoUrl.startsWith('http') || resolvedLogoUrl.startsWith('blob:')) &&
+    !useFallback;
 
   return (
     <div
-      className={cn('flex items-center justify-center rounded-[var(--radius)] overflow-hidden flex-shrink-0 bg-background border border-border', className)}
+      className={cn(
+        'flex items-center justify-center rounded-[var(--radius)] overflow-hidden flex-shrink-0 bg-background border border-border',
+        className
+      )}
       style={{ width: size, height: size }}
     >
       {hasValidLogo ? (
