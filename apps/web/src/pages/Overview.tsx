@@ -66,7 +66,7 @@ export function Overview() {
     setExportingReport(true);
     try {
       // 1. Fetch Template
-      const response = await fetch('/src/templates/dashboard-report-template.html');
+      const response = await fetch('/templates/dashboard-report-template.html');
       const template = await response.text();
 
       const isAr = lang === 'ar';

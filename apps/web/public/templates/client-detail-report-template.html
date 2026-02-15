@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="{{lang}}" dir="{{dir}}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Report - {{clientName}}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --secondary: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --dark: #111827;
+            --gray: #6B7280;
+            --light: #F3F4F6;
+            --white: #FFFFFF;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
+            color: var(--dark);
+            margin: 0;
+            background: #fff;
+        }
+
+        /* Utils */
+        .font-bold {
+            font-weight: 700;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            height: 250mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            page-break-after: always;
+        }
+
+        .cover-logo {
+            width: 140px;
+            margin-bottom: 2rem;
+            object-fit: contain;
+        }
+
+        .client-logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 1rem;
+            border: 1px solid #E5E7EB;
+        }
+
+        .cover-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .cover-subtitle {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .cover-meta {
+            font-size: 1.1rem;
+            color: var(--gray);
+        }
+
+        .cover-footer img {
+            width: 120px;
+            opacity: 0.8;
+        }
+
+        /* Header */
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #E5E7EB;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header-logo {
+            height: 30px;
+        }
+
+        .header-meta {
+            font-size: 10px;
+            color: var(--gray);
+        }
+
+        /* Client Info Card */
+        .client-card {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .client-card img {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            border: 1px solid #E5E7EB;
+            object-fit: cover;
+        }
+
+        .client-details {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .detail-item {
+            font-size: 10px;
+        }
+
+        .detail-label {
+            color: var(--gray);
+            font-size: 9px;
+            text-transform: uppercase;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 5px;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            background: #FFF;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        /* Scripts Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-bottom: 2rem;
+        }
+
+        th {
+            background-color: #F9FAFB;
+            color: var(--gray);
+            font-weight: 600;
+            text-align: inherit;
+            padding: 8px;
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #E5E7EB;
+            vertical-align: middle;
+        }
+
+        tr:nth-child(even) {
+            background-color: #FAFAFA;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+
+        .badge-outline {
+            border-color: #E5E7EB;
+            color: var(--gray);
+        }
+
+        .badge-success {
+            background: #ECFDF5;
+            color: #065F46;
+            border-color: #A7F3D0;
+        }
+
+        .badge-warning {
+            background: #FFF7ED;
+            color: #9A3412;
+            border-color: #FED7AA;
+        }
+
+        .badge-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-color: #FECACA;
+        }
+
+        /* Footer */
+        .page-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 9px;
+            color: #9CA3AF;
+            padding: 0 15mm;
+            background: #FFF;
+        }
+    </style>
+</head>
+
+<body class="dir-{{dir}}">
+
+    <!-- COVER PAGE -->
+    <div class="cover-page">
+        <div style="margin-top: 6rem;">
+            <img src="{{loginLogoBase64}}" class="cover-logo" alt="Rawwi Logo">
+        </div>
+
+        <div>
+            {{#if clientLogoVisible}}
+            <img src="{{clientLogoBase64}}" class="client-logo" alt="Client Logo">
+            {{/if}}
+            <div class="cover-title">{{clientName}}</div>
+            <div class="cover-subtitle">{{labels.reportTitle}}</div>
+            <div class="cover-meta">
+                <div class="mb-2">{{labels.totalScripts}}: {{stats.totalScripts}}</div>
+                <div>{{labels.generatedOn}}: {{formattedDate}}</div>
+            </div>
+        </div>
+
+        <div class="cover-footer">
+            <div style="font-size: 0.75rem; color: #9CA3AF; margin-bottom: 0.5rem;">Powered by</div>
+            <img src="{{footerImageBase64}}" alt="Raawi">
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="report-header">
+        <img src="{{dashboardLogoBase64}}" class="header-logo" alt="Logo">
+        <div class="header-meta">{{clientName}} | {{formattedDate}}</div>
+    </div>
+
+    <!-- Client Profile -->
+    <div class="section-title">{{labels.clientProfile}}</div>
+    <div class="client-card">
+        {{#if clientLogoVisible}}
+        <img src="{{clientLogoBase64}}" alt="Logo">
+        {{/if}}
+        <div class="client-details">
+            <div>
+                <div class="detail-label">{{labels.clientName}}</div>
+                <div class="detail-value">{{clientName}}</div>
+            </div>
+            <div>
+                <div class="detail-label">{{labels.representative}}</div>
+                <div class="detail-value">{{client.representative}}</div>
+            </div>
+            <div>
+                <div class="detail-label">{{labels.email}}</div>
+                <div class="detail-value">{{client.email}}</div>
+            </div>
+            <div>
+                <div class="detail-label">{{labels.phone}}</div>
+                <div class="detail-value">{{client.phone}}</div>
+            </div>
+            <div>
+                <div class="detail-label">{{labels.registrationDate}}</div>
+                <div class="detail-value">{{client.registrationDate}}</div>
+            </div>
+            <div>
+                <div class="detail-label">{{labels.status}}</div>
+                <div class="detail-value">{{client.status}}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="section-title">{{labels.scriptsOverview}}</div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{stats.totalScripts}}</div>
+            <div class="stat-label">{{labels.totalScripts}}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color: var(--success);">{{stats.approvedScripts}}</div>
+            <div class="stat-label">{{labels.approved}}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color: var(--warning);">{{stats.inReviewScripts}}</div>
+            <div class="stat-label">{{labels.inReview}}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color: var(--gray);">{{stats.draftScripts}}</div>
+            <div class="stat-label">{{labels.draft}}</div>
+        </div>
+    </div>
+
+    <!-- Scripts Table -->
+    <div class="section-title">{{labels.scriptsList}}</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th width="30%">{{labels.scriptTitle}}</th>
+                <th width="15%">{{labels.type}}</th>
+                <th width="15%">{{labels.date}}</th>
+                <th width="15%">{{labels.assignee}}</th>
+                <th width="10%">{{labels.reports}}</th>
+                <th width="15%">{{labels.status}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each scripts}}
+            <tr>
+                <td>
+                    <div class="font-bold">{{this.title}}</div>
+                </td>
+                <td>{{this.type}}</td>
+                <td>{{this.date}}</td>
+                <td>
+                    <div style="font-size: 10px;">{{this.assignee}}</div>
+                </td>
+                <td style="text-align: center;">
+                    <span style="font-weight: 600;">{{this.reportsCount}}</span>
+                </td>
+                <td>
+                    <span class="badge {{this.statusClass}}">
+                        {{this.status}}
+                    </span>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <!-- PAGE FOOTER -->
+    <div class="page-footer">
+        <span>{{clientName}} - {{labels.reportTitle}}</span>
+        <span>Generated: {{generationTimestamp}}</span>
+    </div>
+
+</body>
+
+</html>

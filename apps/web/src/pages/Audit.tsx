@@ -90,7 +90,7 @@ export function Audit() {
     setExporting(true);
     try {
       // 1. Fetch Template
-      const response = await fetch('/src/templates/audit-report-template.html');
+      const response = await fetch('/templates/audit-report-template.html');
       const template = await response.text();
 
       const isAr = lang === 'ar';

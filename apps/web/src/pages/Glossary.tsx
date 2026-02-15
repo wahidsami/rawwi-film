@@ -64,7 +64,7 @@ export function Glossary() {
     setExportingPdf(true);
     try {
       // 1. Fetch Template
-      const response = await fetch('/src/templates/glossary-report-template.html');
+      const response = await fetch('/templates/glossary-report-template.html');
       const template = await response.text();
 
       const isAr = lang === 'ar';

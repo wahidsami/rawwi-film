@@ -225,22 +225,28 @@ export function Results() {
   const generateHtmlPrint = async () => {
     try {
       // 1. Fetch template
+      const templateUrl = '/templates/report-template.html';
       const maxRetries = 3;
       let template = '';
       for (let i = 0; i < maxRetries; i++) {
         try {
-          const res = await fetch('/src/templates/report-template.html');
+          const res = await fetch(templateUrl);
           if (res.ok) {
             template = await res.text();
+            console.log('[print] Template URL:', templateUrl, 'fetch: ok');
             break;
           }
+          console.warn('[print] Template fetch attempt', i + 1, 'status:', res.status, templateUrl);
         } catch (e) {
           console.error('Failed to load template attempt', i, e);
         }
         await new Promise(r => setTimeout(r, 500));
       }
 
-      if (!template) throw new Error('Could not load report template');
+      if (!template) {
+        console.error('[print] Template fetch failed after retries:', templateUrl);
+        throw new Error('Could not load report template');
+      }
 
       // 2. Prepare Data
       const isAr = lang === 'ar';

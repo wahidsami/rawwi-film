@@ -65,7 +65,7 @@ export function Clients() {
     setExportingPdf(true);
     try {
       // 1. Fetch Template
-      const response = await fetch('/src/templates/clients-overview-report-template.html');
+      const response = await fetch('/templates/clients-overview-report-template.html');
       const template = await response.text();
 
       const isAr = lang === 'ar';
