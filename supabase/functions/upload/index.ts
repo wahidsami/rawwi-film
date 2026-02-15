@@ -66,7 +66,15 @@ Deno.serve(async (req: Request) => {
     return json({ error: "No signed URL in response" }, 500);
   }
   // Rewrite origin so browser can resolve (Supabase returns kong:8000 internally)
-  const publicOrigin = (Deno.env.get("PUBLIC_SUPABASE_URL") || "http://localhost:54321").replace(/\/$/, "");
+  const envUrl = Deno.env.get("PUBLIC_SUPABASE_URL");
+  // DENO_REGION is present in Supabase Edge Functions (hosted)
+  const isCloud = !!Deno.env.get("DENO_REGION");
+
+  if (isCloud && !envUrl) {
+    throw new Error("PUBLIC_SUPABASE_URL is required in production");
+  }
+
+  const publicOrigin = (envUrl || "http://localhost:54321").replace(/\/$/, "");
   try {
     const u = new URL(url);
     url = publicOrigin + u.pathname + u.search;

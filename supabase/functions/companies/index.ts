@@ -51,7 +51,6 @@ function toFrontend(row: ClientRow, scriptsCount = 0): FrontendClient {
     representativeTitle: row.representative_title ?? null,
     mobile: row.mobile ?? null,
     email: row.email ?? null,
-    email: row.email ?? null,
     createdAt: row.created_at,
     created_by: row.created_by ?? null, // NEW
     logoUrl: row.logo_url ?? null,
@@ -205,7 +204,14 @@ Deno.serve(async (req: Request) => {
       let logoUrl = (publicUrlData as { publicUrl?: string } | null)?.publicUrl ?? null;
       if (!logoUrl) return jsonResponse({ error: "Failed to get logo URL" }, 500);
       // Rewrite origin so browser can resolve (Supabase returns kong:8000 internally in Docker)
-      const publicOrigin = (Deno.env.get("PUBLIC_SUPABASE_URL") || "http://localhost:54321").replace(/\/$/, "");
+      const envUrl = Deno.env.get("PUBLIC_SUPABASE_URL");
+      const isCloud = !!Deno.env.get("DENO_REGION"); // DENO_REGION is present in Supabase Edge Functions
+
+      if (isCloud && !envUrl) {
+        throw new Error("PUBLIC_SUPABASE_URL is required in production");
+      }
+
+      const publicOrigin = (envUrl || "http://localhost:54321").replace(/\/$/, "");
       try {
         const u = new URL(logoUrl);
         logoUrl = publicOrigin + u.pathname + (u.search || "");
