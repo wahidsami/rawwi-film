@@ -67,7 +67,6 @@ Deno.serve(async (req: Request) => {
   }
   // Rewrite origin so browser can resolve (Supabase returns kong:8000 internally)
   const envUrl = Deno.env.get("PUBLIC_SUPABASE_URL");
-  // DENO_REGION is present in Supabase Edge Functions (hosted)
   const isCloud = !!Deno.env.get("DENO_REGION");
 
   if (isCloud && !envUrl) {

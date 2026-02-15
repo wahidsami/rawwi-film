@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.env.local
+.git
+.vscode
+*.log
+
+# CRITICAL: Do NOT ignore PolicyMap.json as it is required at runtime
+!PolicyMap.json

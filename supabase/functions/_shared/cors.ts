@@ -12,8 +12,10 @@ const ALLOWED_ORIGINS = [
 ];
 
 function getAllowedOrigins(): string[] {
+  const isCloud = !!Deno.env.get("DENO_REGION");
+  const list = isCloud ? [] : [...ALLOWED_ORIGINS];
+
   const appUrl = Deno.env.get("APP_PUBLIC_URL");
-  const list = [...ALLOWED_ORIGINS];
   if (appUrl) {
     const trimmed = appUrl.replace(/\/$/, "");
     if (trimmed && !list.includes(trimmed)) list.push(trimmed);

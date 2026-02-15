@@ -15,6 +15,7 @@ import { ClientModal } from '@/components/ClientModal';
 import { FileUpload } from '@/components/ui/FileUpload';
 import { scriptsApi, reportsApi } from '@/api';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '@/lib/env';
 import { ArrowLeft, Trash2, FileText, Edit, Upload, User } from 'lucide-react';
 
 import { usersApi } from '@/api';
@@ -144,7 +145,7 @@ export function ClientDetails() {
       formData.append('scriptId', scriptId);
       formData.append('companyId', company.companyId);
 
-      const response = await fetch(`${(import.meta as any).env.VITE_SUPABASE_URL}/functions/v1/raawi-script-upload`, {
+      const response = await fetch(`${API_BASE_URL}/raawi-script-upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

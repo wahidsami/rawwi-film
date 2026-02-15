@@ -4,9 +4,11 @@
  */
 const isProd = import.meta.env.PROD;
 const envUrl = import.meta.env.VITE_API_BASE_URL;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
-if (isProd && !envUrl) {
-  throw new Error("VITE_API_BASE_URL is required in production");
+if (isProd) {
+  if (!envUrl) throw new Error("VITE_API_BASE_URL is required in production");
+  if (!supabaseUrl) throw new Error("VITE_SUPABASE_URL is required in production");
 }
 
 export const API_BASE_URL =
