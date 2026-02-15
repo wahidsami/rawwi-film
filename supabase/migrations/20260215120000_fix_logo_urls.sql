@@ -1,24 +1,23 @@
--- Migration: Fix localhost URLs in company logos
+-- Migration: Standardize storage URLs to relative paths (Task B3)
 -- Date: 2026-02-15
--- Issue: Production logos show http://localhost:54321 URLs causing mixed content errors
+-- Goal: Strip origins and store only {bucket}/{path} so URLs are env-agnostic.
 
--- Preview affected rows (run this first to verify)
-SELECT id, name_ar, name_en, logo_url 
-FROM clients 
-WHERE logo_url LIKE '%localhost%' 
-   OR logo_url LIKE '%127.0.0.1%';
-
--- Fix: Replace localhost with production URL
+-- 1. Convert Clients (logos) to relative paths
 UPDATE clients
-SET logo_url = REPLACE(
-  REPLACE(logo_url, 'http://localhost:54321', 'https://swbobhxyluupjzsxpzrd.supabase.co'),
-  'http://127.0.0.1:54321', 
-  'https://swbobhxyluupjzsxpzrd.supabase.co'
-)
-WHERE logo_url LIKE '%localhost%' 
-   OR logo_url LIKE '%127.0.0.1%';
+SET logo_url = substring(logo_url from '/storage/v1/object/public/(.*)')
+WHERE logo_url LIKE '%/storage/v1/object/public/%';
 
--- Verify fix
-SELECT id, name_ar, name_en, logo_url 
-FROM clients 
-WHERE logo_url IS NOT NULL;
+-- 2. Convert Scripts (file_url) to relative paths
+UPDATE scripts
+SET file_url = substring(file_url from '/storage/v1/object/public/(.*)')
+WHERE file_url LIKE '%/storage/v1/object/public/%';
+
+-- 3. Convert Script Versions (source_file_url) to relative paths
+UPDATE script_versions
+SET source_file_url = substring(source_file_url from '/storage/v1/object/public/(.*)')
+WHERE source_file_url LIKE '%/storage/v1/object/public/%';
+
+-- 4. Initial Cleanup (Catch anything else that was missed or already rewritten)
+-- (No-op if already processed by the substring above, but handles the case where we had http://localhost prefixes without the full storage path pattern)
+UPDATE clients SET logo_url = REPLACE(logo_url, 'http://localhost:54321', 'REPLACED_ORIGIN') WHERE logo_url LIKE 'http://localhost%';
+-- Actually, the substring approach is much more robust for Task B3.

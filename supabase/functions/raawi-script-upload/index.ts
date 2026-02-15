@@ -77,14 +77,10 @@ Deno.serve(async (req: Request) => {
         return json({ error: uploadError.message || "Failed to upload file" }, 500);
     }
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
-        .from(BUCKET)
-        .getPublicUrl(storagePath);
+    // Use relative path for database storage (bucket/path)
+    const fileUrl = `${BUCKET}/${storagePath}`;
 
-    const fileUrl = urlData.publicUrl;
-
-    // Update script record with file URL
+    // Update script record with relative file path
     const { error: updateError } = await supabase
         .from("scripts")
         .update({ file_url: fileUrl })

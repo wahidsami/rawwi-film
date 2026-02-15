@@ -200,24 +200,7 @@ Deno.serve(async (req: Request) => {
         return jsonResponse({ error: uploadErr.message }, 500);
       }
 
-      const { data: publicUrlData } = supabase.storage.from(LOGO_BUCKET).getPublicUrl(objectName);
-      let logoUrl = (publicUrlData as { publicUrl?: string } | null)?.publicUrl ?? null;
-      if (!logoUrl) return jsonResponse({ error: "Failed to get logo URL" }, 500);
-      // Rewrite origin so browser can resolve (Supabase returns kong:8000 internally in Docker)
-      const envUrl = Deno.env.get("PUBLIC_SUPABASE_URL");
-      const isCloud = !!Deno.env.get("DENO_REGION"); // DENO_REGION is present in Supabase Edge Functions
-
-      if (isCloud && !envUrl) {
-        throw new Error("PUBLIC_SUPABASE_URL is required in production");
-      }
-
-      const publicOrigin = (envUrl || "http://localhost:54321").replace(/\/$/, "");
-      try {
-        const u = new URL(logoUrl);
-        logoUrl = publicOrigin + u.pathname + (u.search || "");
-      } catch {
-        /* leave logoUrl as-is if parse fails */
-      }
+      const logoUrl = `${LOGO_BUCKET}/${objectName}`;
 
       const oldLogoUrl = (clientRow as { logo_url?: string | null }).logo_url;
       if (oldLogoUrl && oldLogoUrl.includes(LOGO_BUCKET)) {

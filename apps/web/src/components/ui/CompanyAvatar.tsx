@@ -1,18 +1,6 @@
 import { useState, useMemo } from 'react';
 import { cn } from '@/utils/cn';
-
-/** Rewrite storage URL to use public Supabase origin (fixes kong:8000 / internal host in Docker). */
-function toPublicStorageUrl(url: string): string {
-  try {
-    const u = new URL(url);
-    const publicOrigin = (import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/$/, '');
-    if (!publicOrigin) return url;
-    if (u.hostname === 'kong' || u.port === '8000') return publicOrigin + u.pathname + (u.search || '');
-    return url;
-  } catch {
-    return url;
-  }
-}
+import { resolveStorageUrl } from '@/utils/storage';
 
 /**
  * Derive 1–2 letter initials from company name.
