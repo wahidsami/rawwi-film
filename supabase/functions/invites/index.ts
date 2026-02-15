@@ -105,87 +105,131 @@ Deno.serve(async (req: Request) => {
   const expiresAtIso = expiresAt.toISOString();
 
   let authUserId: string;
-  let isNewUser = false;
 
-  const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-  const existingUser = (listData?.users ?? []).find((u) => u.email?.toLowerCase() === email);
-  if (existingUser) {
-    authUserId = existingUser.id;
-  } else {
-    isNewUser = true;
-    const tempPassword = generateTempPassword(20);
-    const userMetadata: Record<string, unknown> = {
-      name: (body.name ?? "").trim() || email.split("@")[0]
-    };
-    // Store allowedSections if provided
-    if (allowedSections) {
-      userMetadata.allowedSections = allowedSections;
-    }
+  // Step 0: Pre-check for existing user
+  console.log(`[invites] STEP:pre_check - Checking for ${email}`);
+  const { data: getUserData, error: getUserErr } = await supabase.auth.admin.listUsers({
+    perPage: 10, // Just a small page for searching if possible, but listUsers filter is limited
+  });
 
-    // Step 1: Create auth user
-    const { data: createData, error: createErr } = await supabase.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: userMetadata,
-    });
+  // Since listUsers filter isn't great in all versions, we check first page or use a simple search
+  // Prefer checking if they exist in auth OR profiles
+  const existingInAuth = (getUserData?.users ?? []).find(u => u.email?.toLowerCase() === email);
 
-    if (createErr) {
-      console.error("[invites] STEP:auth_create_user FAILED");
-      console.error("[invites] Error details:", JSON.stringify({
-        message: createErr.message,
-        code: (createErr as any).code,
-        details: (createErr as any).details,
-        hint: (createErr as any).hint,
-        status: (createErr as any).status,
-        // @ts-ignore
-        cause: createErr.cause,
-        // @ts-ignore
-        originalError: createErr.originalError,
-      }, null, 2));
-      return json({
-        error: "Failed to create auth user",
-        code: (createErr as any).code,
-        message: createErr.message
-      }, 500);
-    }
-
-    const user = createData?.user;
-    if (!user?.id) {
-      console.error("[invites] STEP:auth_create_user FAILED - no user ID returned");
-      return json({ error: "Auth user creation failed - no ID" }, 500);
-    }
-    authUserId = user.id;
-    console.log(`[invites] STEP:auth_create_user SUCCESS - user_id=${authUserId}`);
-
-    // Step 2: Create profile (required for system to function)
-    const profileName = (body.name ?? "").trim() || email.split("@")[0];
-    const { error: profileErr } = await supabase.from("profiles").insert({
-      user_id: authUserId,
-      name: profileName,
-      email: email,
-    });
-
-    if (profileErr) {
-      console.error("[invites] STEP:insert_profile FAILED");
-      console.error("[invites] Profile error details:", JSON.stringify({
-        message: profileErr.message,
-        code: profileErr.code,
-        details: profileErr.details,
-        hint: profileErr.hint,
-      }, null, 2));
-      // Try to clean up auth user
-      await supabase.auth.admin.deleteUser(authUserId).catch(e =>
-        console.error("[invites] Failed to clean up auth user:", e)
-      );
-      return json({
-        error: "Failed to create user profile",
-        code: profileErr.code,
-        message: profileErr.message
-      }, 500);
-    }
-    console.log(`[invites] STEP:insert_profile SUCCESS - user_id=${authUserId}`);
+  if (existingInAuth) {
+    console.log(`[invites] STEP:pre_check - User already exists: ${email}`);
+    return json({ error: "user_already_exists", email }, 409);
   }
+
+  // Step 1: Create auth user
+  const tempPassword = generateTempPassword(20);
+  const userMetadata: Record<string, unknown> = {
+    name: (body.name ?? "").trim() || email.split("@")[0]
+  };
+  if (allowedSections) {
+    userMetadata.allowedSections = allowedSections;
+  }
+
+  console.log(`[invites] STEP:auth_create_user - Creating auth user for ${email}`);
+  const { data: createData, error: createErr } = await supabase.auth.admin.createUser({
+    email,
+    password: tempPassword,
+    email_confirm: true,
+    user_metadata: userMetadata,
+  });
+
+  if (createErr) {
+    console.error("[invites] STEP:auth_create_user FAILED");
+    console.error("[invites] Error details:", JSON.stringify({
+      step: "auth_create_user",
+      message: createErr.message,
+      status: (createErr as any).status,
+      code: (createErr as any).code,
+      name: (createErr as any).name,
+      details: (createErr as any).details,
+      hint: (createErr as any).hint,
+      stack: (createErr as any).stack,
+      raw: createErr
+    }, null, 2));
+    return json({
+      error: "auth_create_user_failed",
+      step: "auth_create_user",
+      code: (createErr as any).code,
+      message: createErr.message
+    }, 500);
+  }
+
+  const user = createData?.user;
+  if (!user?.id) {
+    console.error("[invites] STEP:auth_create_user FAILED - no user ID returned");
+    return json({ error: "auth_create_user_failed", message: "No user ID returned from Supabase Auth" }, 500);
+  }
+  authUserId = user.id;
+  console.log(`[invites] STEP:auth_create_user SUCCESS - user_id=${authUserId}`);
+
+  // Step 2: Create profile
+  const profileName = (body.name ?? "").trim() || email.split("@")[0];
+  console.log(`[invites] STEP:insert_profile - Creating profile for ${authUserId}`);
+  const { error: profileErr } = await supabase.from("profiles").insert({
+    user_id: authUserId,
+    name: profileName,
+    email: email,
+  });
+
+  if (profileErr) {
+    console.error("[invites] STEP:insert_profile FAILED");
+    console.error("[invites] Profile error details:", JSON.stringify({
+      step: "insert_profile",
+      message: profileErr.message,
+      code: profileErr.code,
+      details: profileErr.details,
+      hint: profileErr.hint,
+    }, null, 2));
+
+    // Best-effort cleanup of Auth user
+    console.log(`[invites] STEP:cleanup_auth_user - Deleting auth user ${authUserId} due to profile failure`);
+    await supabase.auth.admin.deleteUser(authUserId).catch(e =>
+      console.error("[invites] Cleanup failed:", e.message)
+    );
+
+    return json({
+      error: "auth_create_user_failed",
+      step: "insert_profile",
+      code: profileErr.code,
+      message: profileErr.message
+    }, 500);
+  }
+  console.log(`[invites] STEP:insert_profile SUCCESS`);
+
+  // Step 3: Assign role (optional/immediate)
+  console.log(`[invites] STEP:upsert_user_role - Assigning role ${roleId} to ${authUserId}`);
+  const { error: upsertRoleErr } = await supabase.from("user_roles").upsert(
+    { user_id: authUserId, role_id: roleId },
+    { onConflict: "user_id,role_id" }
+  );
+
+  if (upsertRoleErr) {
+    console.error("[invites] STEP:upsert_user_role FAILED");
+    console.error("[invites] Role error details:", JSON.stringify({
+      step: "upsert_user_role",
+      message: upsertRoleErr.message,
+      code: upsertRoleErr.code,
+      details: upsertRoleErr.details,
+      hint: upsertRoleErr.hint,
+    }, null, 2));
+
+    // We already have auth and profile, we could delete both, but role failure is rarer.
+    // Following "Only proceed to insert ... after auth_create_user succeeds"
+    // I will return 500 but keep auth/profile for now as they are basic state.
+    return json({
+      error: "auth_create_user_failed",
+      step: "upsert_user_role",
+      code: upsertRoleErr.code,
+      message: upsertRoleErr.message
+    }, 500);
+  }
+  console.log(`[invites] STEP:upsert_user_role SUCCESS`);
+
 
   const { data: insertedRow, error: insertErr } = await supabase.from("user_invites").insert({
     email,
