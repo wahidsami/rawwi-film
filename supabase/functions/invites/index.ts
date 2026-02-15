@@ -105,12 +105,14 @@ Deno.serve(async (req: Request) => {
   const expiresAtIso = expiresAt.toISOString();
 
   let authUserId: string;
+  let isNewUser = false;
 
   const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
   const existingUser = (listData?.users ?? []).find((u) => u.email?.toLowerCase() === email);
   if (existingUser) {
     authUserId = existingUser.id;
   } else {
+    isNewUser = true;
     const tempPassword = generateTempPassword(20);
     const userMetadata: Record<string, unknown> = {
       name: (body.name ?? "").trim() || email.split("@")[0]
@@ -119,19 +121,70 @@ Deno.serve(async (req: Request) => {
     if (allowedSections) {
       userMetadata.allowedSections = allowedSections;
     }
+
+    // Step 1: Create auth user
     const { data: createData, error: createErr } = await supabase.auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
       user_metadata: userMetadata,
     });
+
     if (createErr) {
-      console.error("[invites] createUser:", createErr.message);
-      return json({ error: createErr.message }, 500);
+      console.error("[invites] STEP:auth_create_user FAILED");
+      console.error("[invites] Error details:", JSON.stringify({
+        message: createErr.message,
+        code: (createErr as any).code,
+        details: (createErr as any).details,
+        hint: (createErr as any).hint,
+        status: (createErr as any).status,
+        // @ts-ignore
+        cause: createErr.cause,
+        // @ts-ignore
+        originalError: createErr.originalError,
+      }, null, 2));
+      return json({
+        error: "Failed to create auth user",
+        code: (createErr as any).code,
+        message: createErr.message
+      }, 500);
     }
+
     const user = createData?.user;
-    if (!user?.id) return json({ error: "Auth user creation failed" }, 500);
+    if (!user?.id) {
+      console.error("[invites] STEP:auth_create_user FAILED - no user ID returned");
+      return json({ error: "Auth user creation failed - no ID" }, 500);
+    }
     authUserId = user.id;
+    console.log(`[invites] STEP:auth_create_user SUCCESS - user_id=${authUserId}`);
+
+    // Step 2: Create profile (required for system to function)
+    const profileName = (body.name ?? "").trim() || email.split("@")[0];
+    const { error: profileErr } = await supabase.from("profiles").insert({
+      user_id: authUserId,
+      name: profileName,
+      email: email,
+    });
+
+    if (profileErr) {
+      console.error("[invites] STEP:insert_profile FAILED");
+      console.error("[invites] Profile error details:", JSON.stringify({
+        message: profileErr.message,
+        code: profileErr.code,
+        details: profileErr.details,
+        hint: profileErr.hint,
+      }, null, 2));
+      // Try to clean up auth user
+      await supabase.auth.admin.deleteUser(authUserId).catch(e =>
+        console.error("[invites] Failed to clean up auth user:", e)
+      );
+      return json({
+        error: "Failed to create user profile",
+        code: profileErr.code,
+        message: profileErr.message
+      }, 500);
+    }
+    console.log(`[invites] STEP:insert_profile SUCCESS - user_id=${authUserId}`);
   }
 
   const { data: insertedRow, error: insertErr } = await supabase.from("user_invites").insert({
@@ -150,7 +203,14 @@ Deno.serve(async (req: Request) => {
   }
   const inviteId = insertedRow?.id;
 
-  const appPublicUrl = (Deno.env.get("APP_PUBLIC_URL") ?? "http://localhost:5173").replace(/\/$/, "");
+  const appPublicUrlRaw = Deno.env.get("APP_PUBLIC_URL");
+  const isCloud = !!Deno.env.get("DENO_REGION");
+
+  if (isCloud && !appPublicUrlRaw) {
+    throw new Error("APP_PUBLIC_URL is required in production");
+  }
+
+  const appPublicUrl = (appPublicUrlRaw ?? "http://localhost:5173").replace(/\/$/, "");
   const setPasswordLink = `${appPublicUrl}/set-password?token=${encodeURIComponent(token)}`;
 
   const resendKey = Deno.env.get("RESEND_API_KEY");
