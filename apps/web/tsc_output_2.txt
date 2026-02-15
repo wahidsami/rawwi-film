@@ -1,0 +1,122 @@
+src/api/httpClient.ts(6,41): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/httpClient.ts(106,13): error TS6133: 'email' is declared but its value is never read.
+src/api/httpClient.ts(261,30): error TS2345: Argument of type '{ id: string; jobId: any; scriptId: any; versionId: any; source: string; articleId: any; atomId: any; severity: any; confidence: number; titleAr: string; descriptionAr: any; evidenceSnippet: any; startOffsetGlobal: any; ... 11 more ...; manualComment: any; }' is not assignable to parameter of type 'Finding'.
+  Type '{ id: string; jobId: any; scriptId: any; versionId: any; source: string; articleId: any; atomId: any; severity: any; confidence: number; titleAr: string; descriptionAr: any; evidenceSnippet: any; startOffsetGlobal: any; ... 11 more ...; manualComment: any; }' is missing the following properties from type 'Finding': excerpt, status, comments
+src/components/ui/CompanyAvatar.tsx(8,39): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/env.ts(6,15): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/supabaseClient.ts(3,33): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/supabaseClient.ts(4,37): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/pages/Reports.tsx(40,40): error TS2554: Expected 1 arguments, but got 0.
+src/pages/Reports.tsx(45,39): error TS2339: Property 'reviewer_user' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(59,27): error TS2339: Property 'script_title' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(60,27): error TS2339: Property 'company_name_ar' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(61,27): error TS2339: Property 'company_name_en' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(62,51): error TS2339: Property 'company_id' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(63,51): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(122,38): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(133,38): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(204,35): error TS2339: Property 'report_id' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(205,89): error TS2339: Property 'report_id' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(209,94): error TS2339: Property 'company_name_ar' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(209,119): error TS2339: Property 'company_name_en' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(214,80): error TS2339: Property 'script_title' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(215,75): error TS2339: Property 'script_type' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(218,80): error TS2551: Property 'created_at' does not exist on type 'ReportListItem'. Did you mean 'createdAt'?
+src/pages/Reports.tsx(222,33): error TS2339: Property 'reviewer_user' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(226,61): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(227,48): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(227,82): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(232,84): error TS2339: Property 'findings_count_total' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(232,116): error TS2339: Property 'findings_count_total' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(234,43): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(234,175): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(234,212): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(235,43): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(235,166): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(235,199): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(236,43): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(236,176): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(236,211): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(237,43): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(237,167): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(237,199): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Results.tsx(413,9): error TS6133: 'pdfFindings' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(1,52): error TS6133: 'useMemo' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(4,24): error TS6133: 'Finding' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(15,7): error TS6133: 'ARTICLES' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(53,1): error TS6133: 'sanitizeFormattedHtml' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(55,3): error TS6133: 'buildDomTextIndex' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(61,1): error TS6133: 'canonicalMatchesDomNormalized' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(64,28): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/pages/ScriptWorkspace.tsx(72,30): error TS6133: 'addFinding' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(86,10): error TS6133: 'analysisReportId' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(169,10): error TS6133: 'selectedJobCanonicalHash' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(332,9): error TS6133: 'lastContentHtmlForIndexRef' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(335,9): error TS6133: 'lastHighlightAppliedLogFindingsRef' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(336,24): error TS6133: 'setDomTextIndex' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(372,40): error TS6133: 'startOffset' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(666,13): error TS6133: 'jobId' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(676,40): error TS2345: Argument of type '{ id: string; jobId: string; scriptId: string; versionId: string; findingsCount: number; severityCounts: { low: number; medium: number; high: number; critical: number; }; approvedCount: number; createdAt: string; ... 5 more ...; lastReviewedRole: null; }' is not assignable to parameter of type 'SetStateAction<ReportListItem | null>'.
+  Property 'createdBy' is missing in type '{ id: string; jobId: string; scriptId: string; versionId: string; findingsCount: number; severityCounts: { low: number; medium: number; high: number; critical: number; }; approvedCount: number; createdAt: string; ... 5 more ...; lastReviewedRole: null; }' but required in type 'ReportListItem'.
+src/pages/ScriptWorkspace.tsx(716,3): error TS1232: An import declaration can only be used at the top level of a namespace or module.
+src/pages/ScriptWorkspace.tsx(716,69): error TS2307: Cannot find module '@/utils/textMatching' or its corresponding type declarations.
+src/pages/ScriptWorkspace.tsx(722,9): error TS6133: 'norm' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(762,9): error TS6133: 'buildFindingSegments' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(762,92): error TS2304: Cannot find name 'Segment'.
+src/pages/ScriptWorkspace.tsx(805,21): error TS2304: Cannot find name 'Segment'.
+src/pages/ScriptWorkspace.tsx(823,9): error TS6133: 'getHighlightedText' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(830,50): error TS2345: Argument of type 'Finding' is not assignable to parameter of type 'AnalysisFinding'.
+  Type 'Finding' is missing the following properties from type 'AnalysisFinding': jobId, versionId, atomId, startLineChunk, and 7 more.
+src/pages/ScriptWorkspace.tsx(833,25): error TS2677: A type predicate's type must be assignable to its parameter's type.
+  Type 'AnalysisFinding' is missing the following properties from type '{ startOffsetGlobal: number; endOffsetGlobal: number; id: string; scriptId: string; source: "manual" | "ai" | "lexicon_mandatory"; excerpt: string; evidenceSnippet?: string | undefined; ... 13 more ...; comments: { ...; }[]; }': excerpt, status, comments
+src/pages/ScriptWorkspace.tsx(834,24): error TS18047: 'b' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(834,53): error TS18047: 'a' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(844,27): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(844,48): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(845,76): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(845,99): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(845,120): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(846,50): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(846,180): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(846,211): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(846,233): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(848,32): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(848,85): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(858,10): error TS2304: Cannot find name 'container'.
+src/pages/ScriptWorkspace.tsx(868,25): error TS2677: A type predicate's type must be assignable to its parameter's type.
+  Type 'AnalysisFinding' is not assignable to type '{ startOffsetGlobal: number; endOffsetGlobal: number; id: string; jobId: string; scriptId: string; versionId: string; source: string; articleId: number; atomId: string | null; severity: string; ... 14 more ...; manualComment?: string | null; }'.
+    Types of property 'startOffsetGlobal' are incompatible.
+      Type 'number | null' is not assignable to type 'number'.
+        Type 'null' is not assignable to type 'number'.
+src/pages/ScriptWorkspace.tsx(870,24): error TS2304: Cannot find name 'container'.
+src/pages/ScriptWorkspace.tsx(873,18): error TS18047: 'a' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(874,18): error TS18047: 'b' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(876,15): error TS18047: 'b' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(876,42): error TS18047: 'a' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(882,21): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(883,19): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(891,42): error TS18047: 'f' is possibly 'null'.
+src/pages/ScriptWorkspace.tsx(906,68): error TS2304: Cannot find name 'canonicalHashMismatch'.
+src/pages/ScriptWorkspace.tsx(1019,57): error TS2304: Cannot find name 'hasEditorContent'.
+src/pages/ScriptWorkspace.tsx(1044,33): error TS2304: Cannot find name 'hasEditorContent'.
+src/pages/ScriptWorkspace.tsx(1063,30): error TS2304: Cannot find name 'hasEditorContent'.
+src/pages/ScriptWorkspace.tsx(1068,14): error TS2304: Cannot find name 'hasEditorContent'.
+src/pages/ScriptWorkspace.tsx(1070,18): error TS2304: Cannot find name 'canonicalHashMismatch'.
+src/pages/ScriptWorkspace.tsx(1130,22): error TS2552: Cannot find name 'findingSegments'. Did you mean 'buildFindingSegments'?
+src/pages/ScriptWorkspace.tsx(1131,23): error TS2304: Cannot find name 'findingSegments'.
+src/pages/ScriptWorkspace.tsx(1131,44): error TS7006: Parameter 'seg' implicitly has an 'any' type.
+src/pages/ScriptWorkspace.tsx(1169,64): error TS2304: Cannot find name 'viewerHtml'.
+src/pages/ScriptWorkspace.tsx(1189,49): error TS2304: Cannot find name 'hasEditorContent'.
+src/pages/ScriptWorkspace.tsx(1393,25): error TS2322: Type '"default" | "ghost"' is not assignable to type '"primary" | "secondary" | "outline" | "ghost" | "danger" | undefined'.
+  Type '"default"' is not assignable to type '"primary" | "secondary" | "outline" | "ghost" | "danger" | undefined'.
+src/pages/Tasks.tsx(4,1): error TS6133: 'useAuthStore' is declared but its value is never read.
+src/services/auditService.ts(67,33): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/store/dataStore.ts(123,11): error TS2345: Argument of type '(state: DataState) => { tasks: (Task | AnalysisJob)[]; }' is not assignable to parameter of type 'DataState | Partial<DataState> | ((state: DataState) => DataState | Partial<DataState>)'.
+  Type '(state: DataState) => { tasks: (Task | AnalysisJob)[]; }' is not assignable to type '(state: DataState) => DataState | Partial<DataState>'.
+    Type '{ tasks: (Task | AnalysisJob)[]; }' is not assignable to type 'DataState | Partial<DataState>'.
+      Type '{ tasks: (Task | AnalysisJob)[]; }' is not assignable to type 'Partial<DataState>'.
+        Types of property 'tasks' are incompatible.
+          Type '(Task | AnalysisJob)[]' is not assignable to type 'AnalysisJob[]'.
+            Type 'Task | AnalysisJob' is not assignable to type 'AnalysisJob'.
+              Type 'Task' is missing the following properties from type 'AnalysisJob': versionId, progressTotal, progressDone, progressPercent, and 4 more.
+src/utils/documentExtract.ts(18,24): error TS2307: Cannot find module 'pdfjs-dist/build/pdf.worker.mjs?url' or its corresponding type declarations.

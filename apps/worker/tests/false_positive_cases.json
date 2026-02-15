@@ -1,0 +1,123 @@
+[
+    {
+        "id": "fp-001",
+        "text_ar": "المستهدفة: حوالي 20 دقيقة",
+        "expected_findings": 0,
+        "category": "metadata",
+        "notes": "Neutral metadata - target duration"
+    },
+    {
+        "id": "fp-002",
+        "text_ar": "ستارة موجودة",
+        "expected_findings": 0,
+        "category": "stage_direction",
+        "notes": "Stage direction - curtain present"
+    },
+    {
+        "id": "fp-003",
+        "text_ar": "عناوين: مشهد الافتتاح",
+        "expected_findings": 0,
+        "category": "heading",
+        "notes": "Scene heading"
+    },
+    {
+        "id": "fp-004",
+        "text_ar": "مؤثرات صوتية: رعد في الخلفية",
+        "expected_findings": 0,
+        "category": "stage_direction",
+        "notes": "Sound effects notation"
+    },
+    {
+        "id": "fp-005",
+        "text_ar": "جودة الصورة: 4K، التحرير: نهائي",
+        "expected_findings": 0,
+        "category": "metadata",
+        "notes": "Technical metadata"
+    },
+    {
+        "id": "fp-006",
+        "text_ar": "وصف الشخصية: رجل في الأربعينات، يرتدي بدلة رمادية",
+        "expected_findings": 0,
+        "category": "description",
+        "notes": "Neutral character description"
+    },
+    {
+        "id": "fp-007",
+        "text_ar": "المكان: غرفة معيشة، إضاءة خافتة",
+        "expected_findings": 0,
+        "category": "description",
+        "notes": "Neutral location description"
+    },
+    {
+        "id": "fn-001",
+        "text_ar": "يحظر: عنف شديد، لغة بذيئة",
+        "expected_findings": 0,
+        "category": "policy_reference",
+        "notes": "False negative if context ignored - this is quoting policy rules, not violating"
+    },
+    {
+        "id": "tp-001",
+        "text_ar": "لعنة عليك يا حقير!",
+        "expected_findings": 1,
+        "expected_articles": [
+            4
+        ],
+        "category": "profanity",
+        "notes": "True positive - explicit insult"
+    },
+    {
+        "id": "tp-002",
+        "text_ar": "أنتِ امرأة غبية لا تفهمين شيئاً",
+        "expected_findings": 1,
+        "expected_articles": [
+            5,
+            7
+        ],
+        "category": "gender_based_insult",
+        "notes": "True positive - gender-based insult"
+    },
+    {
+        "id": "tp-003",
+        "text_ar": "سأقتلك إن لم تصمت",
+        "expected_findings": 1,
+        "expected_articles": [
+            7,
+            17
+        ],
+        "category": "threat",
+        "notes": "True positive - explicit threat of violence"
+    },
+    {
+        "id": "tp-004",
+        "text_ar": "يشرب الخمر بشكل مستمر رغم معرفته بالحظر",
+        "expected_findings": 1,
+        "expected_articles": [
+            18
+        ],
+        "category": "alcohol",
+        "notes": "True positive - explicit alcohol consumption depicted positively"
+    },
+    {
+        "id": "edge-001",
+        "text_ar": "مشهد 5: عنف - الشخصية تدافع عن نفسها",
+        "expected_findings": 0,
+        "category": "edge_case",
+        "notes": "Edge case - contains word 'violence' but in metadata context describing justified self-defense"
+    },
+    {
+        "id": "edge-002",
+        "text_ar": "الحوار يتضمن: 'أنت جميلة' - رومانسي محترم",
+        "expected_findings": 0,
+        "category": "edge_case",
+        "notes": "Edge case - romantic compliment in metadata, should not be flagged"
+    },
+    {
+        "id": "soft-001",
+        "text_ar": "نظرات ذات مغزى بين الشخصيتين",
+        "expected_findings": 0,
+        "expected_is_interpretive": true,
+        "max_confidence": 0.6,
+        "category": "soft_signal",
+        "notes": "Soft signal candidate - ambiguous romantic/sexual implication, should be is_interpretive if flagged"
+    }
+]

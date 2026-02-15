@@ -1,0 +1,13 @@
+{
+  "name": "rawwi-film",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=web",
+    "worker:dev": "npm run worker:dev --workspace=worker",
+    "worker:once": "npm run worker:once --workspace=worker"
+  }
+}

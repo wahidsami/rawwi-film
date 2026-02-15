@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="{{lang}}" dir="{{dir}}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Report - {{scriptTitle}}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --secondary: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --dark: #111827;
+            --gray: #6B7280;
+            --light: #F3F4F6;
+            --white: #FFFFFF;
+
+            /* Severity Colors */
+            --sev-critical-bg: #FEF2F2;
+            --sev-critical-text: #991B1B;
+            --sev-critical-border: #FECACA;
+            --sev-high-bg: #FFF7ED;
+            --sev-high-text: #9A3412;
+            --sev-high-border: #FED7AA;
+            --sev-medium-bg: #FEFCE8;
+            --sev-medium-text: #854D0E;
+            --sev-medium-border: #FEF08A;
+            --sev-low-bg: #EFF6FF;
+            --sev-low-text: #1E40AF;
+            --sev-low-border: #BFDBFE;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            /* ~9pt print */
+            line-height: 1.5;
+            color: var(--dark);
+            margin: 0;
+            background: #fff;
+        }
+
+        /* Utils */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-end {
+            text-align: end;
+        }
+
+        .font-bold {
+            font-weight: 700;
+        }
+
+        .uppercase {
+            text-transform: uppercase;
+        }
+
+        .mb-1 {
+            margin-bottom: 0.25rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .mb-6 {
+            margin-bottom: 1.5rem;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            height: 270mm;
+            /* Full A4 height minus margins */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            page-break-after: always;
+        }
+
+        .cover-logo {
+            width: 180px;
+            margin-bottom: 2rem;
+        }
+
+        .cover-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+
+        .cover-script {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .cover-meta {
+            font-size: 1.1rem;
+            color: var(--gray);
+        }
+
+        .cover-footer img {
+            width: 120px;
+            opacity: 0.8;
+        }
+
+        /* Report Content */
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #E5E7EB;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header-logo {
+            height: 30px;
+        }
+
+        .header-meta {
+            font-size: 10px;
+            color: var(--gray);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 5px;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            break-after: avoid;
+        }
+
+        /* Summary Stats */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            background: var(--light);
+        }
+
+        /* Dynamic Stat Colors */
+        .stat-critical {
+            background: var(--sev-critical-bg);
+            border-color: var(--sev-critical-border);
+            color: var(--sev-critical-text);
+        }
+
+        .stat-high {
+            background: var(--sev-high-bg);
+            border-color: var(--sev-high-border);
+            color: var(--sev-high-text);
+        }
+
+        .stat-medium {
+            background: var(--sev-medium-bg);
+            border-color: var(--sev-medium-border);
+            color: var(--sev-medium-text);
+        }
+
+        .stat-low {
+            background: var(--sev-low-bg);
+            border-color: var(--sev-low-border);
+            color: var(--sev-low-text);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* Finding Group */
+        .article-group {
+            margin-bottom: 2rem;
+            break-inside: avoid;
+            /* Keep header with at least first card if possible */
+        }
+
+        .article-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            background: #F9FAFB;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #E5E7EB;
+        }
+
+        .article-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Findings Card */
+        .finding-card {
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #FFF;
+            break-inside: avoid;
+            /* CRITICAL: Prevent card splitting */
+            page-break-inside: avoid;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            min-height: 24px;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .sev-critical {
+            background: var(--sev-critical-bg);
+            color: var(--sev-critical-text);
+            border: 1px solid var(--sev-critical-border);
+        }
+
+        .sev-high {
+            background: var(--sev-high-bg);
+            color: var(--sev-high-text);
+            border: 1px solid var(--sev-high-border);
+        }
+
+        .sev-medium {
+            background: var(--sev-medium-bg);
+            color: var(--sev-medium-text);
+            border: 1px solid var(--sev-medium-border);
+        }
+
+        .sev-low {
+            background: var(--sev-low-bg);
+            color: var(--sev-low-text);
+            border: 1px solid var(--sev-low-border);
+        }
+
+        .finding-title {
+            font-weight: 700;
+            font-size: 1rem;
+            flex: 1;
+            padding: 0 0.75rem;
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+
+        .meta-chip {
+            background: #F3F4F6;
+            color: var(--gray);
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #E5E7EB;
+        }
+
+        .evidence-box {
+            background: #F9FAFB;
+            border-left: 3px solid #D1D5DB;
+            /* LTR default */
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-style: italic;
+            color: #374151;
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            /* Wrap Defense */
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        [dir="rtl"] .evidence-box {
+            border-left: none;
+            border-right: 3px solid #D1D5DB;
+            text-align: right;
+        }
+
+        .review-status {
+            font-size: 0.8rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #F3F4F6;
+            color: var(--gray);
+        }
+
+        .status-safe {
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        .status-violation {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* Print Footer */
+        .page-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 9px;
+            color: #9CA3AF;
+            padding: 0 15mm;
+            background: #FFF;
+        }
+    </style>
+</head>
+
+<body class="dir-{{dir}}">
+
+    <!-- COVER PAGE -->
+    <div class="cover-page">
+        <div style="margin-top: 6rem;">
+            <img src="{{loginLogoBase64}}" class="cover-logo" alt="Logo">
+        </div>
+
+        <div>
+            <div class="cover-title">{{labels.reportTitle}}</div>
+            <div class="cover-script">{{scriptTitle}}</div>
+            <div class="cover-meta">
+                <div class="mb-2">{{labels.client}}: {{clientName}}</div>
+                <div>{{labels.date}}: {{formattedDate}}</div>
+            </div>
+        </div>
+
+        <div class="cover-footer">
+            <div style="font-size: 0.75rem; color: #9CA3AF; margin-bottom: 0.5rem;">Powered by</div>
+            <img src="{{footerImageBase64}}" alt="Raawi">
+        </div>
+    </div>
+
+    <!-- CONTENT START -->
+    <div class="report-header">
+        <img src="{{dashboardLogoBase64}}" class="header-logo" alt="Logo">
+        <div class="header-meta">{{scriptTitle}} | {{clientName}}</div>
+    </div>
+
+    <!-- EXECUTIVE SUMMARY -->
+    <div class="section-title">{{labels.executiveSummary}}</div>
+
+    <div class="summary-grid">
+        <div class="stat-card stat-critical">
+            <div class="stat-value">{{stats.critical}}</div>
+            <div class="stat-label">{{labels.critical}}</div>
+        </div>
+        <div class="stat-card stat-high">
+            <div class="stat-value">{{stats.high}}</div>
+            <div class="stat-label">{{labels.high}}</div>
+        </div>
+        <div class="stat-card stat-medium">
+            <div class="stat-value">{{stats.medium}}</div>
+            <div class="stat-label">{{labels.medium}}</div>
+        </div>
+        <div class="stat-card stat-low">
+            <div class="stat-value">{{stats.low}}</div>
+            <div class="stat-label">{{labels.low}}</div>
+        </div>
+    </div>
+
+    <!-- FINDINGS SECTION -->
+    <div class="section-title">{{labels.findingsDetails}}</div>
+
+    {{#each groupedFindings}}
+    <div class="article-group">
+        <div class="article-header">
+            <span class="article-title">{{this.articleTitle}}</span>
+            <span class="meta-chip">{{this.count}} {{../labels.issues}}</span>
+        </div>
+
+        {{#each this.findings}}
+        <div class="finding-card">
+            <div class="card-header">
+                <span class="severity-badge sev-{{this.severity}}">{{this.severityLabel}}</span>
+                <span class="finding-title">{{this.title}}</span>
+            </div>
+
+            <div class="card-meta">
+                <span class="meta-chip">{{../labels.confidence}}: {{this.confidence}}%</span>
+                <span class="meta-chip">{{../labels.source}}: {{this.source}}</span>
+                {{#if this.lines}}
+                <span class="meta-chip">{{../labels.lines}}: {{this.lines}}</span>
+                {{/if}}
+            </div>
+
+            <div class="evidence-box">"{{this.evidence}}"</div>
+
+            {{#if this.reviewStatus}}
+            <div class="review-status">
+                {{../labels.status}}:
+                <span class="{{#if this.isSafe}}status-safe{{else}}status-violation{{/if}}">
+                    {{this.reviewStatusLabel}}
+                </span>
+                {{#if this.reviewedAt}}
+                <span style="margin-inline-start: 10px;">({{this.reviewedAt}})</span>
+                {{/if}}
+            </div>
+            {{/if}}
+        </div>
+        {{/each}}
+    </div>
+    {{/each}}
+
+    <!-- FOOTER (Repeats on every page via fixed pos) -->
+    <div class="page-footer">
+        <span>{{scriptTitle}}</span>
+        <span>Generated: {{generationTimestamp}}</span>
+    </div>
+
+</body>
+
+</html>

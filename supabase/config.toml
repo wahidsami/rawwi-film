@@ -1,0 +1,48 @@
+# Minimal config for local dev. Disable JWT verification so browser preflight (OPTIONS)
+# reaches our functions and CORS headers are returned; auth is enforced inside each function.
+# See: https://supabase.com/docs/guides/functions/function-configuration
+
+[functions.activity]
+verify_jwt = false
+
+[functions.audit]
+verify_jwt = false
+
+[functions.companies]
+verify_jwt = false
+
+[functions.dashboard]
+verify_jwt = false
+
+[functions.extract]
+verify_jwt = false
+
+[functions.findings]
+verify_jwt = false
+
+[functions.invites]
+verify_jwt = false
+
+[functions.invites-consume]
+verify_jwt = false
+
+[functions.lexicon]
+verify_jwt = false
+
+[functions.me]
+verify_jwt = false
+
+[functions.reports]
+verify_jwt = false
+
+[functions.scripts]
+verify_jwt = false
+
+[functions.tasks]
+verify_jwt = false
+
+[functions.upload]
+verify_jwt = false
+
+[functions.users]
+verify_jwt = false

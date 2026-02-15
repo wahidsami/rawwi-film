@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+  
+  --font-arabic: 'Cairo', sans-serif;
+  --font-english: 'Poppins', sans-serif;
+
+  --radius-default: var(--radius);
+}
+
+@layer base {
+  :root {
+    /* 🎨 Master Identity File */
+    
+    /* Primary Colors */
+    --primary: #21945F;
+    --primary-hover: #0F4731;
+    --secondary: #F4BE19;
+    
+    /* Neutrals */
+    --background: #f8fafc;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    
+    /* Semantic Colors */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --info: #3b82f6;
+  
+    /* Layout Tokens */
+    --radius: 0.5rem;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--text-main);
+    font-family: var(--font-english);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Font switching based on HTML dir attribute */
+  html[dir="rtl"] body {
+    font-family: var(--font-arabic);
+  }
+
+  @media print {
+    @page {
+      margin: 20mm 15mm;
+      size: A4;
+    }
+
+    body {
+      background-color: white !important;
+      color: black !important;
+      font-size: 11pt;
+    }
+
+    html[dir="rtl"] body {
+      font-family: 'Cairo', sans-serif !important;
+    }
+
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+
+    .print\:hidden {
+      display: none !important;
+    }
+
+    .print\:break-inside-avoid {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+
+    .print\:break-before {
+      break-before: page !important;
+      page-break-before: always !important;
+    }
+
+    /* Simplify borders and shadows for print */
+    .print\:border-none {
+      border: none !important;
+    }
+
+    .print\:bg-transparent {
+      background: transparent !important;
+    }
+
+    .print\:text-black {
+      color: black !important;
+    }
+  }
+
+  /* Highlight wrapper for finding ranges (visible in all themes; unmistakable for lexicon/AI findings) */
+  .ap-highlight {
+    background: rgba(255, 0, 0, 0.25) !important;
+    outline: 2px solid rgba(255, 0, 0, 0.7) !important;
+    border-radius: 4px !important;
+    padding: 1px 3px !important;
+  }
+}

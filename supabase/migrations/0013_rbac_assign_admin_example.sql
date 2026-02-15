@@ -1,0 +1,21 @@
+-- ---------------------------------------------------------------------------
+-- RBAC: Assign admin role to a user (MANUAL STEP — run snippet below with your user id).
+-- This migration file is a no-op; use the snippet in the comment to grant admin.
+--
+-- 1) Find your user id (Supabase Dashboard → Authentication → Users, or run locally):
+--      SELECT id, email FROM auth.users;
+--
+-- 2) Assign admin role (replace <<USER_UUID>> with the id from step 1):
+--
+--    INSERT INTO roles (key, name) VALUES ('admin', 'Admin')
+--    ON CONFLICT (key) DO NOTHING;
+--
+--    INSERT INTO user_roles (user_id, role_id)
+--    SELECT '<<USER_UUID>>'::uuid, r.id
+--    FROM roles r
+--    WHERE r.key = 'admin'
+--    ON CONFLICT (user_id, role_id) DO NOTHING;
+--
+-- After that, the user can access /access-control (manage_users) and other admin permissions.
+-- ---------------------------------------------------------------------------
+SELECT 1;

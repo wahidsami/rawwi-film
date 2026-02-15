@@ -1,0 +1,70 @@
+src/api/httpClient.ts(6,41): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/httpClient.ts(106,13): error TS6133: 'email' is declared but its value is never read.
+src/api/httpClient.ts(261,30): error TS2345: Argument of type '{ id: string; jobId: any; scriptId: any; versionId: any; source: string; articleId: any; atomId: any; severity: any; confidence: number; titleAr: string; descriptionAr: any; evidenceSnippet: any; startOffsetGlobal: any; ... 11 more ...; manualComment: any; }' is not assignable to parameter of type 'Finding'.
+  Type '{ id: string; jobId: any; scriptId: any; versionId: any; source: string; articleId: any; atomId: any; severity: any; confidence: number; titleAr: string; descriptionAr: any; evidenceSnippet: any; startOffsetGlobal: any; ... 11 more ...; manualComment: any; }' is missing the following properties from type 'Finding': excerpt, status, comments
+src/components/ui/CompanyAvatar.tsx(8,39): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/env.ts(6,15): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/supabaseClient.ts(3,33): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/supabaseClient.ts(4,37): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/pages/Overview.tsx(38,10): error TS2451: Cannot redeclare block-scoped variable 'exportingReport'.
+src/pages/Overview.tsx(38,27): error TS2451: Cannot redeclare block-scoped variable 'setExportingReport'.
+src/pages/Overview.tsx(245,10): error TS2451: Cannot redeclare block-scoped variable 'exportingReport'.
+src/pages/Overview.tsx(245,27): error TS2451: Cannot redeclare block-scoped variable 'setExportingReport'.
+src/pages/Reports.tsx(40,40): error TS2554: Expected 1 arguments, but got 0.
+src/pages/Reports.tsx(45,39): error TS2339: Property 'reviewer_user' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(59,27): error TS2339: Property 'script_title' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(60,27): error TS2339: Property 'company_name_ar' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(61,27): error TS2339: Property 'company_name_en' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(62,51): error TS2339: Property 'company_id' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(63,51): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(122,38): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(133,38): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(204,35): error TS2339: Property 'report_id' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(205,89): error TS2339: Property 'report_id' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(209,94): error TS2339: Property 'company_name_ar' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(209,119): error TS2339: Property 'company_name_en' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(214,80): error TS2339: Property 'script_title' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(215,75): error TS2339: Property 'script_type' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(218,80): error TS2551: Property 'created_at' does not exist on type 'ReportListItem'. Did you mean 'createdAt'?
+src/pages/Reports.tsx(222,33): error TS2339: Property 'reviewer_user' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(226,61): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(227,48): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(227,82): error TS2339: Property 'decision_status' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(232,84): error TS2339: Property 'findings_count_total' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(232,116): error TS2339: Property 'findings_count_total' does not exist on type 'ReportListItem'.
+src/pages/Reports.tsx(234,43): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(234,175): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(234,212): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(235,43): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(235,166): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(235,199): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(236,43): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(236,176): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(236,211): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(237,43): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(237,167): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Reports.tsx(237,199): error TS2551: Property 'severity_counts' does not exist on type 'ReportListItem'. Did you mean 'severityCounts'?
+src/pages/Results.tsx(413,9): error TS6133: 'pdfFindings' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(4,24): error TS6133: 'Finding' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(15,7): error TS6133: 'ARTICLES' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(64,28): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/pages/ScriptWorkspace.tsx(72,30): error TS6133: 'addFinding' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(86,10): error TS6133: 'analysisReportId' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(372,40): error TS6133: 'startOffset' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(666,13): error TS6133: 'jobId' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(676,40): error TS2345: Argument of type '{ id: string; jobId: string; scriptId: string; versionId: string; findingsCount: number; severityCounts: { low: number; medium: number; high: number; critical: number; }; approvedCount: number; createdAt: string; ... 5 more ...; lastReviewedRole: null; }' is not assignable to parameter of type 'SetStateAction<ReportListItem | null>'.
+  Property 'createdBy' is missing in type '{ id: string; jobId: string; scriptId: string; versionId: string; findingsCount: number; severityCounts: { low: number; medium: number; high: number; critical: number; }; approvedCount: number; createdAt: string; ... 5 more ...; lastReviewedRole: null; }' but required in type 'ReportListItem'.
+src/pages/ScriptWorkspace.tsx(846,9): error TS6133: 'sectionStarts' is declared but its value is never read.
+src/pages/ScriptWorkspace.tsx(1556,25): error TS2322: Type '"default" | "ghost"' is not assignable to type '"primary" | "secondary" | "outline" | "ghost" | "danger" | undefined'.
+  Type '"default"' is not assignable to type '"primary" | "secondary" | "outline" | "ghost" | "danger" | undefined'.
+src/pages/Tasks.tsx(4,1): error TS6133: 'useAuthStore' is declared but its value is never read.
+src/services/auditService.ts(67,33): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/store/dataStore.ts(123,11): error TS2345: Argument of type '(state: DataState) => { tasks: (Task | AnalysisJob)[]; }' is not assignable to parameter of type 'DataState | Partial<DataState> | ((state: DataState) => DataState | Partial<DataState>)'.
+  Type '(state: DataState) => { tasks: (Task | AnalysisJob)[]; }' is not assignable to type '(state: DataState) => DataState | Partial<DataState>'.
+    Type '{ tasks: (Task | AnalysisJob)[]; }' is not assignable to type 'DataState | Partial<DataState>'.
+      Type '{ tasks: (Task | AnalysisJob)[]; }' is not assignable to type 'Partial<DataState>'.
+        Types of property 'tasks' are incompatible.
+          Type '(Task | AnalysisJob)[]' is not assignable to type 'AnalysisJob[]'.
+            Type 'Task | AnalysisJob' is not assignable to type 'AnalysisJob'.
+              Type 'Task' is missing the following properties from type 'AnalysisJob': versionId, progressTotal, progressDone, progressPercent, and 4 more.
+src/utils/documentExtract.ts(18,24): error TS2307: Cannot find module 'pdfjs-dist/build/pdf.worker.mjs?url' or its corresponding type declarations.
