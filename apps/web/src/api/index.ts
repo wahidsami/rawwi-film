@@ -54,6 +54,7 @@ export type UploadUrlResponse = { url: string; path?: string };
 
 export const scriptsApi = {
   getScripts: (): Promise<Script[]> => httpClient.get('/scripts'),
+  getScript: (id: string): Promise<Script> => httpClient.get(`/scripts/${encodeURIComponent(id)}`),
   addScript: (script: Script): Promise<Script> => httpClient.post('/scripts', script),
   updateScript: (id: string, updates: Partial<Script>): Promise<Script> => httpClient.patch(`/scripts/${encodeURIComponent(id)}`, updates), // NEW
   /** Check if current user can approve/reject this script (backend policy). Use to gate UI. */

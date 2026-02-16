@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
-import { useDataStore, Finding } from '@/store/dataStore';
+import { useDataStore, Finding, type Script } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -72,8 +72,31 @@ export function ScriptWorkspace() {
   const { scripts, findings, updateFindingStatus, updateScript, fetchInitialData, isLoading, error: dataError } = useDataStore();
   const { user, hasPermission } = useAuthStore();
 
-  const script = scripts.find(s => s.id === id);
+  const scriptFromList = scripts.find(s => s.id === id);
+  const [scriptFetched, setScriptFetched] = useState<Script | null>(null);
+  const script = scriptFromList ?? scriptFetched ?? undefined;
   const scriptFindings = findings.filter(f => f.scriptId === id);
+
+  useEffect(() => {
+    if (!id) {
+      setScriptFetched(null);
+      return;
+    }
+    if (scriptFromList) {
+      setScriptFetched(null);
+      return;
+    }
+    let cancelled = false;
+    scriptsApi
+      .getScript(id)
+      .then((s) => {
+        if (!cancelled) setScriptFetched(s);
+      })
+      .catch(() => {
+        if (!cancelled) setScriptFetched(null);
+      });
+    return () => { cancelled = true; };
+  }, [id, scriptFromList]);
 
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; text: string; startOffsetGlobal?: number; endOffsetGlobal?: number } | null>(null);
   const [floatingAction, setFloatingAction] = useState<{ x: number; y: number; text: string; startOffsetGlobal?: number; endOffsetGlobal?: number } | null>(null);
@@ -123,16 +146,22 @@ export function ScriptWorkspace() {
   useEffect(() => () => stopPolling(), [stopPolling]);
 
   // Fetch backend decision/can so UI matches backend policy (single source of truth)
+  const [decisionCanScriptId, setDecisionCanScriptId] = useState<string | null>(null);
   useEffect(() => {
     if (!script?.id || script.status === 'approved' || script.status === 'rejected') {
       setDecisionCan(null);
+      setDecisionCanScriptId(null);
       return;
     }
     let cancelled = false;
+    const sid = script.id;
     scriptsApi
       .getDecisionCan(script.id)
       .then((res) => {
-        if (!cancelled) setDecisionCan(res);
+        if (!cancelled) {
+          setDecisionCan(res);
+          setDecisionCanScriptId(sid);
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -141,10 +170,12 @@ export function ScriptWorkspace() {
             canReject: false,
             reason: err?.message ?? 'Could not load decision permissions.',
           });
+          setDecisionCanScriptId(sid);
         }
       });
     return () => { cancelled = true; };
   }, [script?.id, script?.status]);
+  const showDecisionBar = decisionCan !== null && decisionCanScriptId === script?.id && script?.status !== 'approved' && script?.status !== 'rejected';
 
   // On mount: fetch latest analysis job for this script so "View Report" has a jobId
   useEffect(() => {
@@ -535,7 +566,7 @@ export function ScriptWorkspace() {
   const canImport = user?.role === 'Super Admin' || user?.role === 'Admin' || user?.role === 'Regulator' || script?.assigneeId === user?.id;
   const hasVersionForAnalysis = Boolean(script?.currentVersionId);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !script) return;
 
@@ -558,7 +589,7 @@ export function ScriptWorkspace() {
         source_file_path: storagePath,
         source_file_url: storagePath,
       });
-
+      
       setUploadStatus('extracting');
       let textToShow = '';
       if (ext === 'txt') {
@@ -716,9 +747,9 @@ export function ScriptWorkspace() {
       if (floatingPayload) {
         setFloatingAction(floatingPayload);
       } else {
-        setFloatingAction(null);
-        setContextMenu(null);
-      }
+       setFloatingAction(null);
+       setContextMenu(null);
+    }
     }, 0);
   };
 
@@ -766,13 +797,13 @@ export function ScriptWorkspace() {
     try {
       const created = await findingsApi.createManual({
         reportId: formData.reportId,
-        scriptId: script.id,
+      scriptId: script.id,
         versionId: script.currentVersionId,
         startOffsetGlobal: manualOffsets.startOffsetGlobal,
         endOffsetGlobal: manualOffsets.endOffsetGlobal,
         articleId: parseInt(formData.articleId, 10) || 1,
         atomId: formData.atomId?.trim() ? formData.atomId.trim() : null,
-        severity: formData.severity,
+      severity: formData.severity,
         manualComment: formData.comment?.trim() || undefined,
       });
       toast.success(lang === 'ar' ? 'تمت إضافة الملاحظة اليدوية' : 'Manual finding added');
@@ -807,7 +838,7 @@ export function ScriptWorkspace() {
       }
       setSelectedFindingId(created.id);
       setSidebarTab('findings');
-      setIsViolationModalOpen(false);
+    setIsViolationModalOpen(false);
     } catch (err: any) {
       toast.error(err?.message ?? (lang === 'ar' ? 'فشل الحفظ' : 'Save failed'));
     } finally {
@@ -1224,16 +1255,16 @@ export function ScriptWorkspace() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept=".pdf,.docx,.txt"
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept=".pdf,.docx,.txt" 
             onChange={handleFileUpload}
           />
-          <Button
-            variant="outline"
-            size="sm"
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={() => fileInputRef.current?.click()}
             disabled={!canImport || isUploading}
             title={!canImport ? (lang === 'ar' ? 'ليس لديك صلاحية' : 'You do not have permission') : ''}
@@ -1264,13 +1295,13 @@ export function ScriptWorkspace() {
             >
               {isAnalysisRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
               {isAnalyzing ? (lang === 'ar' ? 'جاري الطابور…' : 'Queuing…') : isAnalysisRunning ? `${analysisJob?.progressPercent ?? 0}%` : (lang === 'ar' ? 'تحليل ذكي' : 'Start Smart Analysis')}
-            </Button>
+          </Button>
             {isAnalysisRunning && (
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-warning rounded-full animate-pulse border-2 border-surface" />
             )}
           </div>
-          <Button
-            size="sm"
+          <Button 
+            size="sm" 
             className="flex gap-2"
             onClick={() => navigate(analysisJobId ? `/report/${analysisJobId}?by=job` : `/report/${script.id}?by=script`)}
           >
@@ -1309,13 +1340,13 @@ export function ScriptWorkspace() {
                 {editorData?.contentHtml ? (
                   <div
                     key="editor-with-html"
-                    ref={editorRef}
+              ref={editorRef}
                     className="bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main break-words text-right select-text [&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm"
                     dir="rtl"
                     onMouseDown={handleMouseDown}
-                    onContextMenu={handleContextMenu}
-                    onMouseUp={handleMouseUp}
-                    onTouchEnd={() => handleMouseUp()}
+              onContextMenu={handleContextMenu}
+              onMouseUp={handleMouseUp}
+              onTouchEnd={() => handleMouseUp()}
                     onMouseMove={(e) => {
                       if (isSelectingRef.current) return;
                       const mark = (e.target as HTMLElement).closest?.('[data-finding-id]');
@@ -1341,8 +1372,8 @@ export function ScriptWorkspace() {
                         }
                       }
                     }}
-                    tabIndex={0}
-                    role="region"
+              tabIndex={0}
+              role="region"
                     aria-label={lang === 'ar' ? 'محتوى النص' : 'Script content'}
                   />
                 ) : (
@@ -1429,7 +1460,7 @@ export function ScriptWorkspace() {
         {/* Right: Sidebar Panel */}
         <div className="w-80 flex-shrink-0 bg-surface border-s border-border flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
 
-          {/* Decision Bar - gated by GET /scripts/:id/decision/can (backend policy); fallback to client capabilities if fetch failed */}
+          {/* Decision Bar - only show when permission state is loaded for this script (avoids flicker) */}
           {script && (
             <div className="border-b border-border">
               <DecisionBar
@@ -1438,10 +1469,14 @@ export function ScriptWorkspace() {
                 currentStatus={script.status || 'draft'}
                 relatedReportId={selectedReportForHighlights?.id}
                 compact
-                capabilities={decisionCan != null
+                capabilities={showDecisionBar && decisionCan != null
                   ? { canApprove: decisionCan.canApprove, canReject: decisionCan.canReject, reasonIfDisabled: decisionCan.reason ?? null }
                   : (user ? getScriptDecisionCapabilities(script, user, hasPermission) : null)}
-                onDecisionMade={() => {}}
+                onDecisionMade={(newStatus) => {
+                  updateScript(script.id, { status: newStatus });
+                  if (scriptFetched && scriptFetched.id === script.id) setScriptFetched((s) => s ? { ...s, status: newStatus } : null);
+                  fetchInitialData();
+                }}
               />
             </div>
           )}
@@ -1470,10 +1505,10 @@ export function ScriptWorkspace() {
               {reportHistory.length > 0 && <Badge variant="outline" className="text-[10px] px-1.5">{reportHistory.length}</Badge>}
             </button>
           </div>
-
+          
           {/* ── Findings tab ── */}
           {sidebarTab === 'findings' && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/30">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/30">
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/50">
                 <span className="text-xs font-medium text-text-muted">
                   {selectedReportForHighlights
@@ -1571,61 +1606,61 @@ export function ScriptWorkspace() {
                   {lang === 'ar' ? 'ملاحظات يدوية' : 'Manual findings'}
                 </h3>
               )}
-              {scriptFindings.map(f => (
-                <div
-                  key={f.id}
-                  className={cn(
-                    "bg-surface border rounded-xl p-4 shadow-sm transition-all cursor-pointer group hover:border-primary/50",
+            {scriptFindings.map(f => (
+              <div 
+                key={f.id} 
+                className={cn(
+                  "bg-surface border rounded-xl p-4 shadow-sm transition-all cursor-pointer group hover:border-primary/50",
                     (f.source === 'ai' || f.source === 'lexicon_mandatory') ? 'border-warning/30' : 'border-error/30'
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-2">
+                )}
+              >
+                <div className="flex items-center justify-between mb-2">
                     <Badge variant={(f.source === 'ai' || f.source === 'lexicon_mandatory') ? 'warning' : 'error'} className="text-[10px]">
                       {f.source === 'manual' ? (lang === 'ar' ? 'يدوي' : 'Manual') : f.source === 'lexicon_mandatory' ? (lang === 'ar' ? 'قاموس' : 'Lexicon') : 'AI Agent'}
-                    </Badge>
-                    <span className={cn(
-                      "text-xs font-semibold px-2 py-0.5 rounded-md",
-                      f.severity === 'Critical' ? 'bg-error/10 text-error' :
-                        f.severity === 'High' ? 'bg-warning/20 text-warning-700' : 'bg-background text-text-muted'
-                    )}>
-                      {f.severity}
-                    </span>
-                  </div>
-                  <p className="text-sm font-medium text-text-main leading-snug mb-2 line-clamp-3 bg-background/50 p-2 rounded-md border border-border/50" dir="rtl">
-                    "{f.excerpt}"
-                  </p>
-                  <div className="flex items-center justify-between mt-3 text-xs text-text-muted">
-                    <span className="font-medium">{f.articleId}</span>
+                  </Badge>
+                  <span className={cn(
+                    "text-xs font-semibold px-2 py-0.5 rounded-md",
+                    f.severity === 'Critical' ? 'bg-error/10 text-error' : 
+                    f.severity === 'High' ? 'bg-warning/20 text-warning-700' : 'bg-background text-text-muted'
+                  )}>
+                    {f.severity}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-text-main leading-snug mb-2 line-clamp-3 bg-background/50 p-2 rounded-md border border-border/50" dir="rtl">
+                  "{f.excerpt}"
+                </p>
+                <div className="flex items-center justify-between mt-3 text-xs text-text-muted">
+                  <span className="font-medium">{f.articleId}</span>
                     {f.status === 'open' && (f.source === 'ai' || f.source === 'lexicon_mandatory') && (
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); updateFindingStatus(f.id, 'accepted', 'Override AI finding', user?.name); }}
-                          className="p-1.5 bg-success/10 text-success rounded hover:bg-success/20 transition-colors" title="Accept/Override"
-                        >
-                          <Check className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); updateFindingStatus(f.id, 'confirmed', 'Confirm Violation', user?.name); }}
-                          className="p-1.5 bg-error/10 text-error rounded hover:bg-error/20 transition-colors" title="Confirm Violation"
-                        >
-                          <ShieldAlert className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
-                    {f.status !== 'open' && (
-                      <Badge variant={f.status === 'accepted' ? 'success' : 'error'} className="text-[10px]">
-                        {f.status}
-                      </Badge>
-                    )}
-                  </div>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); updateFindingStatus(f.id, 'accepted', 'Override AI finding', user?.name); }}
+                        className="p-1.5 bg-success/10 text-success rounded hover:bg-success/20 transition-colors" title="Accept/Override"
+                      >
+                        <Check className="w-3 h-3" />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); updateFindingStatus(f.id, 'confirmed', 'Confirm Violation', user?.name); }}
+                        className="p-1.5 bg-error/10 text-error rounded hover:bg-error/20 transition-colors" title="Confirm Violation"
+                      >
+                        <ShieldAlert className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                  {f.status !== 'open' && (
+                    <Badge variant={f.status === 'accepted' ? 'success' : 'error'} className="text-[10px]">
+                      {f.status}
+                    </Badge>
+                  )}
                 </div>
-              ))}
+              </div>
+            ))}
               {scriptFindings.length === 0 && reportFindings.length === 0 && (
-                <div className="text-center p-8 text-text-muted text-sm border-2 border-dashed border-border rounded-xl">
+              <div className="text-center p-8 text-text-muted text-sm border-2 border-dashed border-border rounded-xl">
                   {lang === 'ar' ? 'لا توجد ملاحظات. اختر تقريراً لعرض التمييز، أو حدد نصاً وانقر بزر الماوس الأيمن لإضافة ملاحظة.' : 'No findings. Select a report to show highlights, or select text and right-click to add a manual finding.'}
-                </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
           )}
 
           {/* ── Reports tab ── */}
@@ -1753,11 +1788,11 @@ export function ScriptWorkspace() {
       )}
 
       {contextMenu && (
-        <div
+        <div 
           className="fixed z-50 bg-surface border border-border shadow-xl rounded-lg py-1 w-48 animate-in fade-in zoom-in-95 duration-100"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
-          <button
+          <button 
             className="w-full text-start px-4 py-2 text-sm text-text-main hover:bg-background hover:text-primary flex items-center gap-2 transition-colors"
             onClick={(e) => { e.stopPropagation(); handleMarkViolation(); }}
           >
@@ -1793,8 +1828,8 @@ export function ScriptWorkspace() {
           {reportHistory.length === 0 && (
             <p className="text-xs text-text-muted">{lang === 'ar' ? 'قم بتشغيل التحليل أولاً لإنشاء تقرير.' : 'Run analysis first to create a report.'}</p>
           )}
-
-          <Select
+          
+          <Select 
             label={lang === 'ar' ? 'المادة (البند)' : 'Article'}
             value={formData.articleId}
             onChange={(e) => setFormData({ ...formData, articleId: e.target.value, atomId: '' })}
@@ -1807,8 +1842,8 @@ export function ScriptWorkspace() {
             onChange={(e) => setFormData({ ...formData, atomId: e.target.value })}
             options={ARTICLE_ATOMS[formData.articleId] ?? ARTICLE_ATOMS['1']}
           />
-
-          <Select
+          
+          <Select 
             label={lang === 'ar' ? 'درجة الخطورة' : 'Severity'}
             value={formData.severity}
             onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
@@ -1819,8 +1854,8 @@ export function ScriptWorkspace() {
               { label: 'Critical', value: 'critical' },
             ]}
           />
-
-          <Textarea
+          
+          <Textarea 
             label={lang === 'ar' ? 'التعليق' : 'Comment'}
             value={formData.comment}
             onChange={(e) => setFormData({ ...formData, comment: e.target.value })}

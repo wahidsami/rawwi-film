@@ -8,7 +8,7 @@ import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { getCorrelationId } from "../_shared/utils.ts";
-import { canOverrideOwnScriptDecision, isRegulatorOnly } from "../_shared/roleCheck.ts";
+import { canOverrideOwnScriptDecision, isRegulatorOnly, isUserAdmin } from "../_shared/roleCheck.ts";
 
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
@@ -168,18 +168,35 @@ Deno.serve(async (req: Request) => {
 
   // GET /scripts
   if (method === "GET" && rest === "") {
-    const { data: rows, error } = await supabase
+    let query = supabase
       .from("scripts")
       .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
-      .or(`created_by.eq.${uid},assignee_id.eq.${uid}`)
       .order("created_at", { ascending: false });
-
+    const isAdmin = await isUserAdmin(supabase, uid);
+    if (!isAdmin) query = query.or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
+    const { data: rows, error } = await query;
     if (error) {
       console.error(`[scripts] correlationId=${correlationId} list error=`, error.message);
       return json({ error: error.message }, 500);
     }
     const list = (rows ?? []).map((r) => toScriptFrontend(r as ScriptRow));
     return json(list);
+  }
+
+  // GET /scripts/:id — single script (for workspace when not in list)
+  if (method === "GET" && rest && !rest.includes("/")) {
+    const scriptId = rest.trim();
+    const { data: row, error } = await supabase
+      .from("scripts")
+      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
+      .eq("id", scriptId)
+      .maybeSingle();
+    if (error) return json({ error: error.message }, 500);
+    if (!row) return json({ error: "Script not found" }, 404);
+    const s = row as ScriptRow;
+    const isAdmin = await isUserAdmin(supabase, uid);
+    if (!isAdmin && s.created_by !== uid && s.assignee_id !== uid) return json({ error: "Forbidden" }, 403);
+    return json(toScriptFrontend(s));
   }
 
   // POST /scripts
