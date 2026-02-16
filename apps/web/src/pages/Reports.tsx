@@ -88,10 +88,9 @@ function Reports() {
   };
 
   const decisionConfig: Record<string, { label: string; color: string }> = {
-    PASS: { label: t('approved' as any) || 'Approved', color: 'success' },
-    REJECT: { label: t('rejected' as any) || 'Rejected', color: 'error' },
-    REVIEW_REQUIRED: { label: t('reviewRequired' as any) || 'Review', color: 'warning' },
-    DRAFT: { label: 'Draft', color: 'default' }
+    approved: { label: t('approved' as any) || 'Approved', color: 'success' },
+    rejected: { label: t('rejected' as any) || 'Rejected', color: 'error' },
+    under_review: { label: t('reviewRequired' as any) || 'Review', color: 'warning' }
   };
 
   return (
@@ -135,7 +134,7 @@ function Reports() {
               <CheckCircle className="h-4 w-4 text-success" />
             </div>
             <div className="text-2xl font-bold text-success">
-              {reports.filter(r => r.decision_status === 'PASS').length}
+              {reports.filter(r => r.reviewStatus === 'approved').length}
             </div>
           </CardContent>
         </Card>
@@ -146,7 +145,7 @@ function Reports() {
               <XCircle className="h-4 w-4 text-error" />
             </div>
             <div className="text-2xl font-bold text-error">
-              {reports.filter(r => r.decision_status === 'REJECT').length}
+              {reports.filter(r => r.reviewStatus === 'rejected').length}
             </div>
           </CardContent>
         </Card>
@@ -176,9 +175,9 @@ function Reports() {
             onChange={(e) => setDecision(e.target.value)}
             options={[
               { label: lang === 'ar' ? 'جميع الحالات' : 'All Decisions', value: 'all' },
-              { label: t('approved' as any) || 'Approved', value: 'PASS' },
-              { label: t('rejected' as any) || 'Rejected', value: 'REJECT' },
-              { label: t('reviewRequired' as any) || 'Review', value: 'REVIEW_REQUIRED' }
+              { label: t('approved' as any) || 'Approved', value: 'approved' },
+              { label: t('rejected' as any) || 'Rejected', value: 'rejected' },
+              { label: t('reviewRequired' as any) || 'Under Review', value: 'under_review' }
             ]}
           />
           {/* Admin-only: Filter by user */}
@@ -228,41 +227,34 @@ function Reports() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredReports.map(report => (
-                  <tr key={report.report_id} className="bg-surface hover:bg-background/50 transition-colors cursor-pointer" onClick={() => handleOpen(report)}>
-                    <td className="px-6 py-4 font-mono text-xs text-text-muted">{report.report_id}</td>
+                  <tr key={report.id} className="bg-surface hover:bg-background/50 transition-colors cursor-pointer" onClick={() => handleOpen(report)}>
+                    <td className="px-6 py-4 font-mono text-xs text-text-muted">{report.id?.substring(0, 8)}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-text-muted" />
-                        <span className="font-medium text-text-main">{lang === 'ar' ? report.company_name_ar : report.company_name_en}</span>
+                        <span className="font-medium text-text-main">{lang === 'ar' ? report.companyNameAr : report.companyNameEn}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="font-semibold text-text-main">{report.script_title}</span>
-                        <span className="text-xs text-text-muted">{report.script_type}</span>
+                        <span className="font-semibold text-text-main">{report.scriptTitle}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-text-muted">{new Date(report.created_at).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</td>
+                    <td className="px-6 py-4 text-text-muted">{new Date(report.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-xs">
                         <User className="w-4 h-4 text-text-muted" />
-                        {report.reviewer_user.name}
+                        {report.reportCreatorName ?? 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant={decisionConfig[report.decision_status]?.color as any}>
-                        {decisionConfig[report.decision_status]?.label || report.decision_status}
+                      <Badge variant={decisionConfig[report.reviewStatus]?.color as any}>
+                        {decisionConfig[report.reviewStatus]?.label || report.reviewStatus}
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold">{Number.isFinite(Number(report.findings_count_total)) ? report.findings_count_total : 0}</span>
-                        <div className="flex gap-1 text-[10px] font-bold">
-                          {(Number(report.severity_counts?.critical) || 0) > 0 && <span className="bg-error-100 text-error-700 px-1 rounded">C:{Number.isFinite(Number(report.severity_counts?.critical)) ? report.severity_counts.critical : 0}</span>}
-                          {(Number(report.severity_counts?.high) || 0) > 0 && <span className="bg-error-50 text-error px-1 rounded">H:{Number.isFinite(Number(report.severity_counts?.high)) ? report.severity_counts.high : 0}</span>}
-                          {(Number(report.severity_counts?.medium) || 0) > 0 && <span className="bg-warning-50 text-warning-700 px-1 rounded">M:{Number.isFinite(Number(report.severity_counts?.medium)) ? report.severity_counts.medium : 0}</span>}
-                          {(Number(report.severity_counts?.low) || 0) > 0 && <span className="bg-info-50 text-info-700 px-1 rounded">L:{Number.isFinite(Number(report.severity_counts?.low)) ? report.severity_counts.low : 0}</span>}
-                        </div>
+                        <span className="font-bold">{report.findingsCount ?? 0}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
