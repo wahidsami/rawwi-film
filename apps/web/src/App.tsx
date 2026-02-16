@@ -3,6 +3,7 @@ import { AppLayout } from '@/layout/AppLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Login } from '@/pages/Login';
 import { ForgotPassword } from '@/pages/ForgotPassword';
+import { ResetPassword } from '@/pages/ResetPassword';
 import { SetPassword } from '@/pages/SetPassword';
 import { AccessControl } from '@/pages/AccessControl';
 import { Overview } from '@/pages/Overview';
@@ -23,6 +24,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/set-password" element={<SetPassword />} />
 
         {/* Protected Application Layout */}
