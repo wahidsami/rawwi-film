@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, Fragment } from 'react';
 import toast from 'react-hot-toast';
 import { useLangStore } from '@/store/langStore';
 import { auditService, AuditEventRow, AuditListParams } from '@/services/auditService';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -27,11 +28,13 @@ export function Audit() {
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [users, setUsers] = useState<Array<{ id: string; email: string; role: string }>>([]);
 
   const [filters, setFilters] = useState<AuditListParams>({
     pageSize: PAGE_SIZE,
     dateFrom: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19),
     dateTo: '',
+    userId: '',
     eventType: '',
     targetType: '',
     resultStatus: '',
@@ -60,12 +63,50 @@ export function Audit() {
     load();
   }, [load]);
 
+  // Fetch users list for filter dropdown
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        // Fetch all users from user_roles with their roles
+        const { data: userRolesData } = await supabase
+          .from('user_roles')
+          .select('user_id, role:roles(name)');
+
+        if (!userRolesData) return;
+
+        // Get unique user IDs
+        const userIds = [...new Set(userRolesData.map((ur: any) => ur.user_id))];
+
+        // Fetch user emails from auth
+        const userList: Array<{ id: string; email: string; role: string }> = [];
+        for (const userId of userIds) {
+          const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+          if (user?.email) {
+            const userRole = userRolesData.find((ur: any) => ur.user_id === userId);
+            userList.push({
+              id: userId,
+              email: user.email,
+              role: (userRole as any)?.role?.name ?? 'No Role'
+            });
+          }
+        }
+
+        setUsers(userList.sort((a, b) => a.email.localeCompare(b.email)));
+      } catch (err) {
+        console.error('Failed to fetch users:', err);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
   const handleExportCsv = async () => {
     setExporting(true);
     try {
       const blob = await auditService.exportCsv({
         dateFrom: filters.dateFrom,
         dateTo: filters.dateTo || undefined,
+        userId: filters.userId || undefined,
         eventType: filters.eventType || undefined,
         targetType: filters.targetType || undefined,
         resultStatus: filters.resultStatus || undefined,

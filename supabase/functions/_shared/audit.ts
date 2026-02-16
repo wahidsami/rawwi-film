@@ -4,6 +4,7 @@
  * Canonical schema (TODO #3): event_type, actor_*, occurred_at, target_*, result_*, metadata.
  */
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getUserInfo } from "./userInfo.ts";
 
 export type AuditPayload = {
   actor_user_id: string | null;
@@ -67,11 +68,22 @@ export async function logAuditCanonical(
 ): Promise<{ id?: string; error?: Error }> {
   const occurred = payload.occurred_at ?? new Date().toISOString();
   const uuidMatch = typeof payload.target_id === "string" && /^[0-9a-f-]{36}$/i.test(payload.target_id) ? payload.target_id : null;
+
+  // Auto-fetch user info if not provided
+  let actorName = payload.actor_name;
+  let actorRole = payload.actor_role;
+
+  if ((!actorName || !actorRole) && payload.actor_user_id) {
+    const userInfo = await getUserInfo(supabase, payload.actor_user_id);
+    actorName = actorName ?? userInfo.name;
+    actorRole = actorRole ?? userInfo.role;
+  }
+
   const row = {
     event_type: payload.event_type,
     actor_user_id: payload.actor_user_id ?? null,
-    actor_name: payload.actor_name ?? null,
-    actor_role: payload.actor_role ?? null,
+    actor_name: actorName ?? null,
+    actor_role: actorRole ?? null,
     occurred_at: occurred,
     target_type: payload.target_type,
     target_id: payload.target_id ?? null,
