@@ -89,14 +89,22 @@ export function AccessControl() {
     allowedSections: [] as string[] // NEW
   });
   const [editSaving, setEditSaving] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setUsersLoading(true);
+    setAccessDenied(false);
     try {
       const list = await usersApi.getUsers();
       setUsers(list);
     } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to load users list (CORS/backend). Check console.');
+      const msg = err?.message ?? '';
+      if (msg.includes('Forbidden') || msg.includes('403') || msg.includes('manage_users')) {
+        setUsers([]);
+        setAccessDenied(true);
+        return;
+      }
+      toast.error(msg || 'Failed to load users list. Check console.');
       setUsers([]);
     } finally {
       setUsersLoading(false);
@@ -218,6 +226,15 @@ export function AccessControl() {
           {t('addUser')}
         </Button>
       </div>
+
+      {accessDenied && (
+        <Card className="border-error/20 bg-error/5">
+          <CardContent className="py-8 text-center">
+            <p className="text-text-main font-medium">{t('accessDenied')}</p>
+            <p className="text-text-muted text-sm mt-1">{lang === 'ar' ? 'ليس لديك صلاحية لعرض هذه الصفحة.' : 'You do not have access to view this section.'}</p>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-background/50 rounded-t-[var(--radius)]">
