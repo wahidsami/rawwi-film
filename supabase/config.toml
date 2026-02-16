@@ -44,5 +44,8 @@ verify_jwt = false
 [functions.upload]
 verify_jwt = false
 
+[functions.raawi-script-upload]
+verify_jwt = false
+
 [functions.users]
 verify_jwt = false
