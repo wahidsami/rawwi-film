@@ -227,7 +227,7 @@ Deno.serve(async (req: Request) => {
 
         const { data: reports, error } = await supabase
           .from("analysis_reports")
-          .select("id, job_id, script_id, created_at, review_status, reviewed_by, reviewed_at, review_notes, approved_count, rejected_count, total_findings")
+          .select("id, job_id, script_id, created_at, review_status, reviewed_by, reviewed_at, review_notes, approved_count, findings_count")
           .order("created_at", { ascending: false });
 
         if (error) {
@@ -280,8 +280,7 @@ Deno.serve(async (req: Request) => {
             reviewedAt: r.reviewed_at,
             reviewNotes: r.review_notes,
             approvedCount: r.approved_count ?? 0,
-            rejectedCount: r.rejected_count ?? 0,
-            totalFindings: r.total_findings ?? 0,
+            findingsCount: r.findings_count ?? 0,
           };
         });
 
