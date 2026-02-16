@@ -166,6 +166,9 @@ Deno.serve(async (req: Request) => {
   const method = req.method;
   const uid = auth.userId;
 
+  console.log(`[scripts] Request: ${method} ${req.url}`);
+  console.log(`[scripts] Parsed rest path: '${rest}'`);
+
   // GET /scripts
   if (method === "GET" && rest === "") {
     let query = supabase
