@@ -1476,6 +1476,7 @@ export function ScriptWorkspace() {
                   updateScript(script.id, { status: newStatus });
                   if (scriptFetched && scriptFetched.id === script.id) setScriptFetched((s) => s ? { ...s, status: newStatus } : null);
                   fetchInitialData();
+                  window.dispatchEvent(new CustomEvent('dashboard-invalidate'));
                 }}
               />
             </div>

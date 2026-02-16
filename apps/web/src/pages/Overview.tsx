@@ -59,6 +59,9 @@ export function Overview() {
       }
     };
     fetchDashboard();
+    const onInvalidate = () => fetchDashboard();
+    window.addEventListener('dashboard-invalidate', onInvalidate);
+    return () => window.removeEventListener('dashboard-invalidate', onInvalidate);
   }, [fetchInitialData]);
 
   const handleExportReport = async () => {

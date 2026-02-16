@@ -1,6 +1,10 @@
 /**
  * Dashboard stats — real aggregate queries.
  * GET /dashboard/stats → DashboardStats
+ *
+ * Script status source of truth: scripts.status (DB CHECK in 0001_init)
+ * Canonical values: draft, in_review, analysis_running, review_required, approved, rejected
+ * (no "assigned" or "completed" in DB; "completed" in API = approved + rejected for charts)
  */
 import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
@@ -86,13 +90,14 @@ Deno.serve(async (req: Request) => {
     if (!isAdmin) pendingTasksQuery = pendingTasksQuery.eq("created_by", uid);
     const { count: pendingTasks } = await pendingTasksQuery.in("status", ["queued", "running"]);
 
-    // --- scriptsInReview: scripts not yet completed/rejected ---
+    // --- scriptsInReview: scripts not yet approved/rejected (same visibility as GET /scripts) ---
     const reviewStatuses = ["draft", "in_review", "analysis_running", "review_required"];
-    let scriptsQuery = supabase
+    let scriptsInReviewQuery = supabase
       .from("scripts")
-      .select("id", { count: "exact", head: true });
-    if (!isAdmin) scriptsQuery = scriptsQuery.eq("created_by", uid);
-    const { count: scriptsInReview } = await scriptsQuery.in("status", reviewStatuses);
+      .select("id", { count: "exact", head: true })
+      .in("status", reviewStatuses);
+    if (!isAdmin) scriptsInReviewQuery = scriptsInReviewQuery.or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
+    const { count: scriptsInReview } = await scriptsInReviewQuery;
 
     // --- reportsThisMonth: analysis_reports created this month (via job ownership) ---
     const now = new Date();
@@ -123,9 +128,9 @@ Deno.serve(async (req: Request) => {
       highCriticalFindings = count ?? 0;
     }
 
-    // --- scriptsByStatus ---
+    // --- scriptsByStatus: use scripts.status only; same RBAC as GET /scripts ---
     let statusQuery = supabase.from("scripts").select("status");
-    if (!isAdmin) statusQuery = statusQuery.eq("created_by", uid);
+    if (!isAdmin) statusQuery = statusQuery.or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
     const { data: scriptRows } = await statusQuery;
     const scriptsByStatus = {
       draft: 0,
@@ -138,7 +143,7 @@ Deno.serve(async (req: Request) => {
       completed: 0
     };
     for (const r of scriptRows ?? []) {
-      const s = (r as any).status as string;
+      const s = String((r as any).status ?? "").toLowerCase();
       if (s === "draft") scriptsByStatus.draft++;
       else if (s === "assigned") scriptsByStatus.assigned++;
       else if (s === "in_review") scriptsByStatus.in_review++;
@@ -147,6 +152,11 @@ Deno.serve(async (req: Request) => {
       else if (s === "approved") scriptsByStatus.approved++;
       else if (s === "rejected") scriptsByStatus.rejected++;
       else if (s === "completed") scriptsByStatus.completed++;
+    }
+    // "completed" not in DB; use approved+rejected for chart/UI
+    scriptsByStatus.completed = scriptsByStatus.approved + scriptsByStatus.rejected;
+    if (typeof Deno !== "undefined" && Deno.env.get("DEBUG_DASHBOARD") === "true") {
+      console.log("[dashboard] scriptsByStatus", { isAdmin, uid: uid.slice(0, 8) + "...", scriptsByStatus });
     }
 
     // --- findingsBySeverity ---
