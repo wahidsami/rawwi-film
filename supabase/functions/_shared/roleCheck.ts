@@ -39,3 +39,29 @@ export async function isUserAdmin(
         return false;
     }
 }
+
+/**
+ * Returns true if the user is Admin or Super Admin (not Regulator).
+ * Use for "override" rules where only Admin/Super Admin can bypass (e.g. decide on own script).
+ */
+export async function canOverrideOwnScriptDecision(
+    supabase: ReturnType<typeof createSupabaseAdmin>,
+    userId: string
+): Promise<boolean> {
+    try {
+        const { data: roleRows, error } = await supabase
+            .from("user_roles")
+            .select("role_id, roles(key)")
+            .eq("user_id", userId);
+
+        if (error || !roleRows || roleRows.length === 0) return false;
+
+        return roleRows.some((r: any) => {
+            const key = (r.roles?.key ?? "").toLowerCase();
+            return key === "admin" || key === "super_admin";
+        });
+    } catch (err) {
+        console.error("[roleCheck] canOverrideOwnScriptDecision:", err);
+        return false;
+    }
+}

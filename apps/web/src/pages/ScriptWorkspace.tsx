@@ -1403,21 +1403,26 @@ export function ScriptWorkspace() {
         {/* Right: Sidebar Panel */}
         <div className="w-80 flex-shrink-0 bg-surface border-s border-border flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
 
-          {/* Decision Bar - for regulators/admins */}
-          {script && (
-            <div className="border-b border-border">
-              <DecisionBar
-                scriptId={script.id}
-                scriptTitle={script.title}
-                currentStatus={script.status || 'draft'}
-                relatedReportId={selectedReportForHighlights?.id}
-                compact
-                onDecisionMade={(newStatus) => {
-                  /* Optional: local state update if needed, but page reload in DecisionBar handles it */
-                }}
-              />
-            </div>
-          )}
+          {/* Decision Bar - only when user can decide (not creator, or Admin/Super Admin override) */}
+          {script && (() => {
+            const isCreator = script.created_by != null && script.created_by === user?.id;
+            const canOverride = user?.role === 'Super Admin' || user?.role === 'Admin';
+            const canShowDecisionBar = !isCreator || canOverride;
+            return canShowDecisionBar ? (
+              <div className="border-b border-border">
+                <DecisionBar
+                  scriptId={script.id}
+                  scriptTitle={script.title}
+                  currentStatus={script.status || 'draft'}
+                  relatedReportId={selectedReportForHighlights?.id}
+                  compact
+                  onDecisionMade={(newStatus) => {
+                    /* Optional: local state update if needed, but page reload in DecisionBar handles it */
+                  }}
+                />
+              </div>
+            ) : null;
+          })()}
 
           {/* Sidebar tab bar */}
           <div className="flex border-b border-border bg-background/50">
