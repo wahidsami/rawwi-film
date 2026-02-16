@@ -74,6 +74,8 @@ export interface Script {
   status: ScriptStatus | string;
   createdAt: string;
   assigneeId?: string;
+  /** Assignee display name (from profiles), when available */
+  assigneeName?: string;
   created_by?: string;
   currentVersionId?: string;
 }

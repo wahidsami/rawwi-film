@@ -180,6 +180,14 @@ Deno.serve(async (req: Request) => {
       return json({ error: error.message }, 500);
     }
     const list = (rows ?? []).map((r) => toScriptFrontend(r as ScriptRow));
+    const assigneeIds = [...new Set((rows ?? []).map((r: { assignee_id: string | null }) => r.assignee_id).filter(Boolean))] as string[];
+    if (assigneeIds.length > 0) {
+      const { data: profileRows } = await supabase.from("profiles").select("user_id, name").in("user_id", assigneeIds);
+      const nameByUserId = new Map((profileRows ?? []).map((p: { user_id: string; name: string }) => [p.user_id, p.name]));
+      list.forEach((s: { assigneeId?: string; assigneeName?: string }) => {
+        if (s.assigneeId) s.assigneeName = nameByUserId.get(s.assigneeId) ?? undefined;
+      });
+    }
     return json(list);
   }
 
@@ -196,7 +204,12 @@ Deno.serve(async (req: Request) => {
     const s = row as ScriptRow;
     const isAdmin = await isUserAdmin(supabase, uid);
     if (!isAdmin && s.created_by !== uid && s.assignee_id !== uid) return json({ error: "Forbidden" }, 403);
-    return json(toScriptFrontend(s));
+    const out = toScriptFrontend(s);
+    if (s.assignee_id) {
+      const { data: profile } = await supabase.from("profiles").select("name").eq("user_id", s.assignee_id).maybeSingle();
+      if (profile) (out as { assigneeName?: string }).assigneeName = (profile as { name: string }).name;
+    }
+    return json(out);
   }
 
   // POST /scripts

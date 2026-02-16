@@ -241,7 +241,9 @@ export function Scripts() {
                                         {script.assigneeId && (
                                             <div className="flex items-center justify-between">
                                                 <span>{lang === 'ar' ? 'المعين' : 'Assigned'}</span>
-                                                <span>{lang === 'ar' ? 'تم التعيين' : 'Assigned'}</span>
+                                                <span className="truncate max-w-[60%]" title={script.assigneeName || undefined}>
+                                                    {script.assigneeName || (lang === 'ar' ? 'تم التعيين' : 'Assigned')}
+                                                </span>
                                             </div>
                                         )}
                                     </div>

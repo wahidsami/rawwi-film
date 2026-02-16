@@ -154,10 +154,14 @@ export function ClientDetails() {
       formData.append('scriptId', scriptId);
       formData.append('companyId', company.companyId);
 
+      const tokenPrefix = token.substring(0, 10) + '...';
+      console.log(`🔍 DEBUG: Starting upload. Token prefix: ${tokenPrefix}, Expires at: ${session?.expires_at}`);
+
       const response = await fetch(`${API_BASE_URL}/raawi-script-upload`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`,
+          'apikey': (import.meta as any).env.VITE_SUPABASE_ANON_KEY,
         },
         body: formData,
       });

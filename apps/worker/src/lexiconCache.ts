@@ -55,18 +55,31 @@ export class LexiconCache {
     try {
       const { data, error } = await this.supabase
         .from("slang_lexicon")
-        .select("id, term, term_type, severity_floor, enforcement_mode, gcam_article_id, gcam_atom_id, gcam_article_title_ar")
+        .select("id, term, term_type, severity_floor, enforcement_mode, gcam_article_id, gcam_atom_id, gcam_article_title_ar, updated_at")
         .eq("is_active", true)
         .order("term");
       if (error) {
-        logger.warn("Lexicon refresh failed", { error: error.message });
+        logger.warn("Lexicon refresh failed", { error: error.message, code: error.code, hint: error.hint });
         return;
       }
-      cache = (data ?? []) as LexiconTerm[];
-      logger.info("Lexicon cache refreshed", { count: cache.length });
+      const rows = (data ?? []) as (LexiconTerm & { updated_at?: string })[];
+      cache = rows.map(({ updated_at: _, ...r }) => r);
+      const maxUpdatedAt = rows.length
+        ? rows.reduce((max, r) => (r.updated_at && (!max || r.updated_at > max) ? r.updated_at : max), "")
+        : null;
+      const firstTerms = cache.slice(0, 3).map((t) => t.term);
+      logger.info("Lexicon cache refreshed", {
+        count: cache.length,
+        updated_at_max: maxUpdatedAt ?? undefined,
+        first_terms: firstTerms.length ? firstTerms : undefined,
+      });
     } finally {
       isRefreshing = false;
     }
+  }
+
+  getCount(): number {
+    return cache.length;
   }
 
   findMatches(text: string): LexiconMatch[] {

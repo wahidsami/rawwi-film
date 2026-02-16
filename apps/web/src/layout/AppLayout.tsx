@@ -57,6 +57,9 @@ export function AppLayout() {
     // Always visible
     { to: '/settings', icon: Settings, label: t('settings'), section: null as string | null, permission: null as string | null },
   ].filter(link => {
+    // Tasks section hidden for all users
+    if (link.to === '/tasks') return false;
+
     // If no section/permission required, always show
     if (!link.section && !link.permission) return true;
 

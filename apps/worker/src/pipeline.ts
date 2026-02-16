@@ -216,8 +216,11 @@ export async function processChunkJudge(
 
   // HEALTH CHECK: warn if lexicon cache appears empty
   const lexiconCache = getLexiconCache(supabase);
-  const cacheTerms = lexiconCache.findMatches(""); // Empty query returns 0 matches, but ensures cache is accessed
-  if (isDev) logger.info("Lexicon cache health check", { chunkId: chunk.id, cacheStatus: "checked" });
+  const lexiconCount = lexiconCache.getCount();
+  if (lexiconCount === 0) {
+    logger.warn("Lexicon cache empty for chunk", { jobId, chunkId: chunk.id, lexiconCount: 0 });
+  }
+  if (isDev) logger.info("Lexicon cache health check", { chunkId: chunk.id, lexiconCount, cacheStatus: "checked" });
 
   const { mandatoryFindings } = analyzeLexiconMatches(chunkText, supabase);
   for (const m of mandatoryFindings) {

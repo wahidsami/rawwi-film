@@ -45,7 +45,7 @@ export function Results() {
   const navigate = useNavigate();
   const { lang, t } = useLangStore();
   const { user } = useAuthStore();
-
+  
   const [report, setReport] = useState<AnalysisReport | null>(null);
   const [findings, setFindings] = useState<AnalysisFinding[]>([]);
   const [loading, setLoading] = useState(true);
@@ -535,11 +535,11 @@ export function Results() {
                     <div className="flex items-center gap-3">
                       <span className="font-bold text-text-main">{lang === 'ar' ? `مادة ${art.article_id}` : `Article ${art.article_id}`}</span>
                       <span className="text-text-muted text-sm truncate max-w-xs">{lang === 'ar' ? (artMeta?.titleAr ?? art.title_ar) : (artMeta?.titleEn ?? art.title_ar)}</span>
-                    </div>
+                </div>
                     <div className="flex items-center gap-3">
                       <Badge variant="outline">{art.top_findings.length}</Badge>
                       {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
-                    </div>
+                </div>
                   </button>
                   {isExpanded && (
                     <div className="p-4 space-y-3">
@@ -550,18 +550,18 @@ export function Results() {
                             <div className="flex items-center gap-2">
                               <Badge className={cn("text-[10px] border", sevColor(f.severity))}>{f.severity}</Badge>
                               <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round(f.confidence * 100)}%</span>
-                            </div>
-                          </div>
+              </div>
+            </div>
                           <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">"{f.evidence_snippet}"</div>
-                        </div>
+                </div>
                       ))}
-                    </div>
+                  </div>
                   )}
                 </div>
               );
             })}
-          </div>
-        </div>
+              </div>
+            </div>
       );
     });
   }
@@ -598,22 +598,22 @@ export function Results() {
                     <div className="flex items-center gap-3">
                       <span className="font-bold text-text-main">{lang === 'ar' ? `مادة ${articleId}` : `Article ${articleId}`}</span>
                       <span className="text-text-muted text-sm truncate max-w-xs">{lang === 'ar' ? artMeta?.titleAr : artMeta?.titleEn}</span>
-                    </div>
+              </div>
                     <div className="flex items-center gap-3">
                       <Badge variant="outline">{artFindings.length}</Badge>
                       {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
-                    </div>
+                  </div>
                   </button>
                   {isExpanded && (
                     <div className="p-4 space-y-3">
                       {artFindings.map(f => renderFindingCard(f))}
-                    </div>
+                  </div>
                   )}
                 </div>
               );
             })}
-          </div>
-        </div>
+                  </div>
+              </div>
       );
     });
   }
@@ -710,7 +710,7 @@ export function Results() {
             <div className="bg-surface/50 border border-border p-3 rounded-xl">
               <div className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'مخالفات' : 'Violations'}</div>
               <div className="font-bold text-lg">{displayTotal}</div>
-            </div>
+          </div>
             <div className="bg-error/5 border border-error/20 p-3 rounded-xl text-error">
               <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'حرجة' : 'Critical'}</div>
               <div className="font-bold text-lg">{displaySc.critical}</div>
@@ -779,8 +779,8 @@ export function Results() {
                         return (
                           <div key={article.id} className="flex justify-between items-center py-2 px-3 rounded-md hover:bg-surface text-sm">
                             <span className="text-text-main font-medium">
-                              {lang === 'ar' ? `مادة ${article.id}: ${article.titleAr}` : `Art ${article.id}: ${article.titleEn}`}
-                            </span>
+                                {lang === 'ar' ? `مادة ${article.id}: ${article.titleAr}` : `Art ${article.id}: ${article.titleEn}`}
+                              </span>
                             {cl?.status === 'not_scanned' ? (
                               <Badge variant="outline" className="text-[10px] text-text-muted bg-background min-w-[70px] justify-center">{lang === 'ar' ? 'غير مفحوصة' : 'Not Scanned'}</Badge>
                             ) : total > 0 ? (
@@ -831,7 +831,7 @@ export function Results() {
       </div>
 
       {/* Finding review modal */}
-      <Modal
+      <Modal 
         isOpen={!!reviewModal}
         onClose={() => { setReviewModal(null); setReviewReason(''); }}
         title={reviewModal?.toStatus === 'approved'
@@ -842,7 +842,7 @@ export function Results() {
           <div className="p-3 bg-background rounded-md border border-border text-sm text-text-main font-medium" dir="rtl">
             {reviewModal?.titleAr}
           </div>
-          <Textarea
+          <Textarea 
             label={lang === 'ar' ? 'السبب (مطلوب)' : 'Reason (required)'}
             value={reviewReason}
             onChange={e => setReviewReason(e.target.value)}

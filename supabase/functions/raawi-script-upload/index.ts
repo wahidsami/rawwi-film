@@ -5,8 +5,8 @@
  * Fields: file, scriptId, companyId
  */
 import { optionsResponse, jsonResponse } from "../_shared/cors.ts";
-import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const BUCKET = "scripts";
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -17,12 +17,42 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "OPTIONS") return optionsResponse(req);
 
-    const auth = await requireAuth(req);
-    if (auth instanceof Response) {
-        console.warn("[raawi-script-upload] auth failed, returning 401");
-        return auth;
+    // STEP:auth_parse - Check headers
+    const authHeader = req.headers.get("Authorization");
+    console.log(`[raawi-script-upload] STEP:auth_parse - Auth header exists: ${!!authHeader}`);
+
+    if (!authHeader) {
+        return json({ code: 401, message: "Missing Authorization header" }, 401);
     }
-    const { userId, supabase } = auth;
+
+    const token = authHeader.replace("Bearer ", "").trim();
+    console.log(`[raawi-script-upload] STEP:auth_parse - Token len: ${token.length}, Prefix: ${token.substring(0, 10)}...`);
+
+    if (!token) {
+        return json({ code: 401, message: "Invalid JWT (empty)" }, 401);
+    }
+
+    // STEP:auth_verify - Verify with Supabase Client (Standard Pattern)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Create client representing the user
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+        auth: { persistSession: false }
+    });
+
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
+
+    if (authError || !user) {
+        console.error("[raawi-script-upload] STEP:auth_verify FAILED:", authError);
+        return json({ code: 401, message: "Invalid JWT (expired or bad signature)" }, 401);
+    }
+
+    console.log(`[raawi-script-upload] STEP:auth_verify SUCCESS - User ID: ${user.id}`);
+
+    // Use Admin client for privileged storage operations
+    const supabase = createSupabaseAdmin();
 
     if (req.method !== "POST") {
         return json({ error: "Method not allowed" }, 405);
