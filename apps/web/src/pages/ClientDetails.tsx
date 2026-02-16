@@ -131,10 +131,10 @@ export function ClientDetails() {
 
   const uploadScriptDocument = async (scriptId: string, file: File) => {
     try {
-      // Get auth token properly
       const { supabase } = await import('@/lib/supabaseClient');
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
+      // Refresh session so we send a valid, non-expired JWT (avoids 401 Invalid JWT from Edge)
+      const { data: { session: refreshed } } = await supabase.auth.refreshSession();
+      const token = refreshed?.access_token ?? (await supabase.auth.getSession()).data.session?.access_token;
 
       if (!token) {
         throw new Error('No auth token available');
