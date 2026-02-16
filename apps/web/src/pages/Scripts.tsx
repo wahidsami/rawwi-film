@@ -53,7 +53,10 @@ export function Scripts() {
             filtered = filtered.filter(s => s.status === 'rejected');
         } else if (statusFilter === 'pending') {
             filtered = filtered.filter(s =>
-                s.status === 'review_required' || s.status === 'in_review'
+                s.status === 'draft' ||
+                s.status === 'pending' ||
+                s.status === 'review_required' ||
+                s.status === 'in_review'
             );
         }
 
@@ -90,7 +93,12 @@ export function Scripts() {
         all: scripts.length,
         approved: scripts.filter(s => s.status === 'approved').length,
         rejected: scripts.filter(s => s.status === 'rejected').length,
-        pending: scripts.filter(s => s.status === 'review_required' || s.status === 'in_review').length
+        pending: scripts.filter(s =>
+            s.status === 'draft' ||
+            s.status === 'pending' ||
+            s.status === 'review_required' ||
+            s.status === 'in_review'
+        ).length
     };
 
     const tabs: Array<{ key: StatusFilter; label: string; icon: any; color: string }> = [
