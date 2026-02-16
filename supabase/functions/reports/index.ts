@@ -220,6 +220,75 @@ Deno.serve(async (req: Request) => {
         }
       }
 
+      // ── GET /reports (no query params) → List ALL user reports ──
+      // RLS handles filtering: users see only their reports, admins see all
+      if (!jobId && !scriptId && !reportId) {
+        console.log(`[reports] Listing all reports for uid=${uid}, isAdmin=${isAdmin}`);
+
+        const { data: reports, error } = await supabase
+          .from("analysis_reports")
+          .select("id, job_id, script_id, created_at, review_status, reviewed_by, reviewed_at, review_notes, approved_count, rejected_count, total_findings")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error(`[reports] List all error:`, error.message);
+          return json({ error: error.message }, 500);
+        }
+
+        if (!reports || reports.length === 0) {
+          return json([]);
+        }
+
+        console.log(`[reports] Found ${reports.length} reports (post-RLS)`);
+
+        // Enrich with script, company, and job creator data
+        const scriptIds = [...new Set(reports.map((r: any) => r.script_id))];
+        const jobIds = [...new Set(reports.map((r: any) => r.job_id))];
+
+        const [scriptsResult, jobsResult] = await Promise.all([
+          supabase.from("scripts").select("id, title, company_id, created_by").in("id", scriptIds),
+          supabase.from("analysis_jobs").select("id, created_by").in("id", jobIds),
+        ]);
+
+        const scripts = scriptsResult.data ?? [];
+        const jobs = jobsResult.data ?? [];
+        const companyIds = [...new Set(scripts.map((s: any) => s.company_id).filter(Boolean))];
+        const { data: companies } = await supabase.from("clients").select("id, name_ar, name_en").in("id", companyIds);
+        const creatorIds = [...new Set(jobs.map((j: any) => j.created_by).filter(Boolean))];
+        const { data: creators } = await supabase.from("profiles").select("user_id, name").in("user_id", creatorIds);
+
+        const enriched = reports.map((r: any) => {
+          const script = scripts.find((s: any) => s.id === r.script_id);
+          const job = jobs.find((j: any) => j.id === r.job_id);
+          const company = companies?.find((c: any) => c.id === script?.company_id);
+          const creator = creators?.find((c: any) => c.user_id === job?.created_by);
+
+          return {
+            id: r.id,
+            jobId: r.job_id,
+            scriptId: r.script_id,
+            scriptTitle: script?.title ?? "Unknown Script",
+            companyId: script?.company_id,
+            companyNameAr: company?.name_ar ?? "",
+            companyNameEn: company?.name_en ?? "",
+            scriptOwnerId: script?.created_by,
+            reportCreatorId: job?.created_by,
+            reportCreatorName: creator?.name ?? "Unknown User",
+            createdAt: r.created_at,
+            reviewStatus: r.review_status,
+            reviewedBy: r.reviewed_by,
+            reviewedAt: r.reviewed_at,
+            reviewNotes: r.review_notes,
+            approvedCount: r.approved_count ?? 0,
+            rejectedCount: r.rejected_count ?? 0,
+            totalFindings: r.total_findings ?? 0,
+          };
+        });
+
+        console.log(`[reports] Returning ${enriched.length} enriched reports`);
+        return json(enriched);
+      }
+
       // ── Single report by report PK id ──
       if (reportId) {
         const { data: row, error } = await selectReport(supabase, { col: "id", val: reportId }, true);

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { 
+import {
   FileText, Search, FileDown, Printer, Eye, Calendar, Building2, User, RefreshCw, XCircle, CheckCircle, AlertTriangle
 } from 'lucide-react';
 
@@ -19,7 +19,7 @@ function Reports() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { companies, fetchInitialData } = useDataStore();
-  
+
   const [reports, setReports] = useState<ReportListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +28,7 @@ function Reports() {
   const [search, setSearch] = useState('');
   const [companyId, setCompanyId] = useState('all');
   const [decision, setDecision] = useState('all');
+  const [userFilter, setUserFilter] = useState('all'); // For admin filtering
 
   useEffect(() => {
     fetchInitialData();
@@ -37,13 +38,11 @@ function Reports() {
     setLoading(true);
     setError(null);
     try {
-      const data = await reportService.listReports();
-      // Permission logic: Super Admin, Admin, Regulator see all. Reviewer sees assigned.
-      if (user?.role === 'Regulator' || user?.role === 'Super Admin' || user?.role === 'Admin') {
-        setReports(data);
-      } else {
-        setReports(data.filter(r => r.reviewer_user.id === user?.id));
-      }
+      // NEW: Use listAllReports - RLS policies handle filtering automatically
+      // Regular users: see only their reports
+      // Admins: see all reports
+      const data = await reportService.listAllReports();
+      setReports(data);
     } catch (err: any) {
       setError(err.message || 'Failed to load reports');
     } finally {
@@ -55,17 +54,28 @@ function Reports() {
     loadReports();
   }, [user]);
 
+  const isAdmin = user?.role === 'Admin' || user?.role === 'Super Admin';
+
+  // Get unique users for admin filtering
+  const uniqueUsers = isAdmin
+    ? Array.from(new Set(reports.map(r => r.reportCreatorId).filter(Boolean))).map(id => {
+      const report = reports.find(r => r.reportCreatorId === id);
+      return { id, name: report?.reportCreatorName ?? 'Unknown' };
+    })
+    : [];
+
   const filteredReports = reports.filter(r => {
-    const matchSearch = r.script_title.toLowerCase().includes(search.toLowerCase()) || 
-                        r.company_name_ar.includes(search) || 
-                        r.company_name_en.toLowerCase().includes(search.toLowerCase());
-    const matchCompany = companyId === 'all' || r.company_id === companyId;
-    const matchDecision = decision === 'all' || r.decision_status === decision;
-    return matchSearch && matchCompany && matchDecision;
+    const matchSearch = (r.scriptTitle ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (r.companyNameAr ?? '').includes(search) ||
+      (r.companyNameEn ?? '').toLowerCase().includes(search.toLowerCase());
+    const matchCompany = companyId === 'all' || r.companyId === companyId;
+    const matchDecision = decision === 'all' || r.reviewStatus === decision;
+    const matchUser = userFilter === 'all' || r.reportCreatorId === userFilter;
+    return matchSearch && matchCompany && matchDecision && matchUser;
   });
 
   const handleOpen = (report: ReportListItem) => navigate(`/report/${(report as any).jobId ?? (report as any).id}?by=${(report as any).jobId ? 'job' : 'id'}`);
-  
+
   const handlePrint = (e: React.MouseEvent, report: ReportListItem) => {
     e.stopPropagation();
     handleOpen(report);
@@ -139,7 +149,7 @@ function Reports() {
       {/* Filters */}
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="w-full lg:w-1/3">
-          <Input 
+          <Input
             placeholder={t('search')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -147,7 +157,7 @@ function Reports() {
           />
         </div>
         <div className="w-full lg:w-2/3 flex flex-col sm:flex-row gap-4">
-          <Select 
+          <Select
             value={companyId}
             onChange={(e) => setCompanyId(e.target.value)}
             options={[
@@ -155,7 +165,7 @@ function Reports() {
               ...companies.map(c => ({ label: lang === 'ar' ? c.nameAr : c.nameEn, value: c.companyId }))
             ]}
           />
-          <Select 
+          <Select
             value={decision}
             onChange={(e) => setDecision(e.target.value)}
             options={[
@@ -165,7 +175,18 @@ function Reports() {
               { label: t('reviewRequired' as any) || 'Review', value: 'REVIEW_REQUIRED' }
             ]}
           />
-          <Button variant="ghost" onClick={() => { setSearch(''); setCompanyId('all'); setDecision('all'); }}>
+          {/* Admin-only: Filter by user */}
+          {isAdmin && uniqueUsers.length > 0 && (
+            <Select
+              value={userFilter}
+              onChange={(e) => setUserFilter(e.target.value)}
+              options={[
+                { label: lang === 'ar' ? 'جميع المستخدمين' : 'All Users', value: 'all' },
+                ...uniqueUsers.map(u => ({ label: u.name, value: u.id }))
+              ]}
+            />
+          )}
+          <Button variant="ghost" onClick={() => { setSearch(''); setCompanyId('all'); setDecision('all'); setUserFilter('all'); }}>
             <RefreshCw className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
             {lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
           </Button>

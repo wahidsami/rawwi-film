@@ -188,16 +188,25 @@ export interface ReportListItem {
   findingsCount: number;
   severityCounts: { low: number; medium: number; high: number; critical: number };
   approvedCount: number;
+  rejectedCount?: number;
+  totalFindings?: number;
   createdAt: string;
   createdBy: string | null;
   reviewStatus: ReviewStatus;
   reviewedBy: string | null;
   reviewedAt: string | null;
+  reviewNotes?: string | null;
   lastReviewedAt: string | null;
   lastReviewedBy: string | null;
   lastReviewedRole: string | null;
   scriptTitle?: string;
   clientName?: string;
+  companyId?: string;
+  companyNameAr?: string;
+  companyNameEn?: string;
+  scriptOwnerId?: string; //For approval permissions
+  reportCreatorId?: string; // For admin filtering
+  reportCreatorName?: string; // For admin filtering
 }
 
 /** Full report returned by GET /reports?jobId=... or GET /reports?id=... */

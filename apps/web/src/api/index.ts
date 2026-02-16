@@ -207,6 +207,8 @@ export const lexiconApi = {
 };
 
 export const reportsApi = {
+  /** List ALL reports visible to current user (RLS-filtered: users see own reports, admins see all). */
+  listAll: (): Promise<ReportListItem[]> => httpClient.get('/reports'),
   /** List reports for a script (newest first). */
   listByScript: (scriptId: string): Promise<ReportListItem[]> => httpClient.get(`/reports?scriptId=${encodeURIComponent(scriptId)}`),
   /** Get full report by report id. */

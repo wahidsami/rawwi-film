@@ -27,4 +27,9 @@ export const reportService = {
     }
     return reportsApi.listByScript(scriptId);
   },
+
+  /** List ALL reports visible to current user (RLS-filtered: users see only their reports, admins see all). */
+  async listAllReports(): Promise<ReportListItem[]> {
+    return reportsApi.listAll();
+  },
 };
