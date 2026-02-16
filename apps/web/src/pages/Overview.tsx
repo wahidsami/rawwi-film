@@ -526,9 +526,6 @@ export function Overview() {
                   <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/clients')}>
                     <UploadCloud className="h-4 w-4" /> {t('uploadScriptAction')}
                   </Button>
-                  <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/tasks')}>
-                    <UserPlus className="h-4 w-4" /> {t('assignTaskAction')}
-                  </Button>
                 </>
               )}
               <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/tasks')}>
