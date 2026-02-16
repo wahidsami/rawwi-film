@@ -154,6 +154,52 @@ Deno.serve(async (req: Request) => {
       created_by: userId,
     };
 
+    const { data: existing } = await supabase
+      .from("slang_lexicon")
+      .select("id, term, is_active")
+      .eq("normalized_term", normalized_term)
+      .maybeSingle();
+
+    if (existing) {
+      const ex = existing as { id: string; term: string; is_active: boolean };
+      if (ex.is_active) return json({ error: "Term already exists (duplicate normalized term)" }, 409);
+      const { data: updated, error: updateErr } = await supabase
+        .from("slang_lexicon")
+        .update({
+          term: row.term,
+          term_type: row.term_type,
+          category: row.category,
+          severity_floor: row.severity_floor,
+          enforcement_mode: row.enforcement_mode,
+          gcam_article_id: row.gcam_article_id,
+          gcam_atom_id: row.gcam_atom_id,
+          gcam_article_title_ar: row.gcam_article_title_ar,
+          description: row.description,
+          example_usage: row.example_usage,
+          is_active: true,
+          last_changed_by: userId,
+          last_change_reason: "Reactivated after previous deactivation",
+        })
+        .eq("id", ex.id)
+        .select("*")
+        .single();
+      if (updateErr) {
+        console.error("[lexicon] POST terms reactivate error:", updateErr.message);
+        return json({ error: updateErr.message }, 500);
+      }
+      const ins = updated as { id: string; term: string };
+      logAuditCanonical(supabase, {
+        event_type: "LEXICON_TERM_ADDED",
+        actor_user_id: userId,
+        target_type: "glossary",
+        target_id: ins.id,
+        target_label: ins.term,
+        result_status: "success",
+        meta: { reactivated: true },
+      }).catch((e) => console.warn("[lexicon] audit:", e));
+      return json(toCamel((updated as Record<string, unknown>) ?? {}));
+    }
+
     const { data: inserted, error } = await supabase
       .from("slang_lexicon")
       .insert(row)
