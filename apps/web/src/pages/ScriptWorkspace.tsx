@@ -12,6 +12,7 @@ import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCir
 import { cn } from '@/utils/cn';
 import { getPolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
+import { getScriptDecisionCapabilities } from '@/utils/scriptDecisionCapabilities';
 
 
 
@@ -69,7 +70,7 @@ export function ScriptWorkspace() {
   const location = useLocation();
   const { lang } = useLangStore();
   const { scripts, findings, updateFindingStatus, updateScript, fetchInitialData, isLoading, error: dataError } = useDataStore();
-  const { user } = useAuthStore();
+  const { user, hasPermission } = useAuthStore();
 
   const script = scripts.find(s => s.id === id);
   const scriptFindings = findings.filter(f => f.scriptId === id);
@@ -1403,26 +1404,20 @@ export function ScriptWorkspace() {
         {/* Right: Sidebar Panel */}
         <div className="w-80 flex-shrink-0 bg-surface border-s border-border flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
 
-          {/* Decision Bar - only when user can decide (not creator, or Admin/Super Admin override) */}
-          {script && (() => {
-            const isCreator = script.created_by != null && script.created_by === user?.id;
-            const canOverride = user?.role === 'Super Admin' || user?.role === 'Admin';
-            const canShowDecisionBar = !isCreator || canOverride;
-            return canShowDecisionBar ? (
-              <div className="border-b border-border">
-                <DecisionBar
-                  scriptId={script.id}
-                  scriptTitle={script.title}
-                  currentStatus={script.status || 'draft'}
-                  relatedReportId={selectedReportForHighlights?.id}
-                  compact
-                  onDecisionMade={(newStatus) => {
-                    /* Optional: local state update if needed, but page reload in DecisionBar handles it */
-                  }}
-                />
-              </div>
-            ) : null;
-          })()}
+          {/* Decision Bar - capabilities aligned with backend (Regulator=assignee only; creator blocked except Super Admin) */}
+          {script && (
+            <div className="border-b border-border">
+              <DecisionBar
+                scriptId={script.id}
+                scriptTitle={script.title}
+                currentStatus={script.status || 'draft'}
+                relatedReportId={selectedReportForHighlights?.id}
+                compact
+                capabilities={user ? getScriptDecisionCapabilities(script, user, hasPermission) : null}
+                onDecisionMade={() => {}}
+              />
+            </div>
+          )}
 
           {/* Sidebar tab bar */}
           <div className="flex border-b border-border bg-background/50">

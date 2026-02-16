@@ -8,7 +8,7 @@ import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { getCorrelationId } from "../_shared/utils.ts";
-import { canOverrideOwnScriptDecision } from "../_shared/roleCheck.ts";
+import { canOverrideOwnScriptDecision, isRegulatorOnly } from "../_shared/roleCheck.ts";
 
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
@@ -463,7 +463,23 @@ Deno.serve(async (req: Request) => {
       return json({ error: `Forbidden: You do not have permission to ${decision} scripts` }, 403);
     }
 
-    // Conflict of interest: creator cannot approve/reject their own script, unless they are Admin/Super Admin (override).
+    // Regulator: can approve/reject only scripts assigned to them.
+    const regulatorOnly = await isRegulatorOnly(supabase, uid);
+    if (regulatorOnly) {
+      const assigneeId = (script as any).assignee_id ?? null;
+      if (assigneeId !== uid) {
+        return json(
+          {
+            error:
+              "Only the assigned reviewer can approve or reject this script. This script is not assigned to you.",
+          },
+          403
+        );
+      }
+    }
+
+    // Conflict of interest: creator cannot approve/reject their own script, unless Super Admin (override).
+    // Admin and Regulator cannot decide on scripts they created.
     const isCreator = (script as any).created_by === uid;
     if (isCreator) {
       const canOverride = await canOverrideOwnScriptDecision(supabase, uid);
@@ -476,7 +492,7 @@ Deno.serve(async (req: Request) => {
           403
         );
       }
-      // Admin/Super Admin may override (decide on their own script).
+      // Super Admin may override (decide on their own script).
     }
 
     // Update script status

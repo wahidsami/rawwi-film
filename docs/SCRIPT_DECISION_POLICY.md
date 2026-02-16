@@ -84,8 +84,9 @@ So: **any** user who **created** the script is blocked from making the approve/r
 
 - **Creator (regular user):** Cannot approve/reject their own script (conflict of interest).
 - **Assignee (not creator):** Can decide if they have `approve_scripts` / `reject_scripts` (or `manage_script_status`).
-- **Admin / Super Admin:** Can **override** — they may approve/reject **any** script, including their own (e.g. when they created and self-assigned).
-- **Regulator:** Can decide on scripts they did **not** create; cannot decide on their own script (no override).
+- **Admin:** Can approve/reject any script **except** their own (no override).
+- **Super Admin:** Can approve/reject **any** script, including their own (override).
+- **Regulator:** Can approve/reject **only** scripts **assigned to them**; cannot decide on their own script (no override).
 
 This keeps conflict-of-interest for non-admins, allows assignee-based workflow, and unblocks the case “Admin created and self-assigned.”
 
@@ -97,30 +98,28 @@ This keeps conflict-of-interest for non-admins, allows assignee-based workflow, 
 **Concrete rule (implemented):**
 
 1. User must pass permission check (existing RPC).
-2. **Conflict of interest:** If `script.created_by === uid`, allow decision **only if** the user is Admin or Super Admin (override). Otherwise return 403 with an actionable message.
+2. **Regulator:** Can decide only if `script.assignee_id === uid`; else 403.
+3. **Conflict of interest:** If `script.created_by === uid`, allow decision **only if** the user is Super Admin (override). Admin and Regulator cannot decide on own script.
 
 ---
 
 ## TASK E — Implemented changes
 
-### 1. Edge Function: allow Admin/Super Admin override
+### 1. Edge Function: Regulator assignee + Super Admin–only override
 
 **File:** `supabase/functions/scripts/index.ts`
 
-- Import `canOverrideOwnScriptDecision` from `../_shared/roleCheck.ts`.
-- After the permission check and before updating status:
-  - If `(script as any).created_by === uid` (user is creator):
-    - Call `canOverrideOwnScriptDecision(supabase, uid)` — returns true only for Admin or Super Admin (not Regulator).
-    - If not canOverride → return 403 with message:  
-      `"Conflict of interest: You cannot approve/reject your own script. Ask an admin or the assigned reviewer to make the decision."`
-  - If user is Admin/Super Admin and creator → allow (override).
+- Import `canOverrideOwnScriptDecision`, `isRegulatorOnly` from `../_shared/roleCheck.ts`.
+- **Regulator:** If `isRegulatorOnly(supabase, uid)` then require `script.assignee_id === uid`; else 403: "Only the assigned reviewer can approve or reject this script. This script is not assigned to you."
+- **Conflict:** If `script.created_by === uid`, allow only if `canOverrideOwnScriptDecision(supabase, uid)` (Super Admin only). Else 403 with conflict message.
 
-### 2. Hide DecisionBar when creator and not Admin/Super Admin
+### 2. UI: capabilities object and DecisionBar
 
-**File:** `apps/web/src/pages/ScriptWorkspace.tsx`
+**Files:** `apps/web/src/utils/scriptDecisionCapabilities.ts`, `DecisionBar.tsx`, `ScriptWorkspace.tsx`
 
-- Only render `DecisionBar` when `!isCreator || canOverride` (not the creator, or role is Super Admin/Admin).  
-- This avoids showing Approve/Reject to a creator who would get 403 (better UX).
+- **scriptDecisionCapabilities.ts:** `getScriptDecisionCapabilities(script, user, hasPermission)` returns `{ canApprove, canReject, reasonIfDisabled }` aligned with backend (Regulator = assignee only; creator blocked except Super Admin).
+- **DecisionBar:** Accepts optional `capabilities`; when provided, uses it to show/hide Approve/Reject and to show `reasonIfDisabled` when both disabled.
+- **ScriptWorkspace:** Computes capabilities and passes to DecisionBar so UI only shows buttons when backend would allow.
 
 ### 3. Error message
 
@@ -131,9 +130,10 @@ This keeps conflict-of-interest for non-admins, allows assignee-based workflow, 
 
 ## Verification
 
-1. **Creator (non-admin), self-assigned:** Call `POST /scripts/:id/decision` as creator → 403 with the message above.
-2. **Creator who is Admin:** Same script, same user (Admin) → 200, status updated.
-3. **Assignee (not creator)** with permission → 200.
-4. **Regulator, not creator** → 200; Regulator, creator → 403 (no override).
+1. **Regulator, script assigned to them (not creator):** 200.
+2. **Regulator, script they created or not assigned to them:** 403; UI shows reason.
+3. **Admin, script they did not create:** 200.
+4. **Admin, script they created:** 403 (no override).
+5. **Super Admin, any script including own:** 200 (override).
 
-No SQL/RLS changes are required; the policy is enforced in the Edge Function.
+See **docs/SCRIPT_DECISION_VERIFICATION.md** for manual test steps and audit logging details. No SQL/RLS changes are required; the policy is enforced in the Edge Function.

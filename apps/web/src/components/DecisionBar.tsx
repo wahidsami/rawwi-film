@@ -5,6 +5,7 @@ import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useLangStore } from '../store/langStore';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
+import type { ScriptDecisionCapabilities } from '../utils/scriptDecisionCapabilities';
 
 interface DecisionBarProps {
     scriptId: string;
@@ -13,6 +14,8 @@ interface DecisionBarProps {
     relatedReportId?: string;
     onDecisionMade?: (newStatus: string) => void;
     compact?: boolean;
+    /** When provided, buttons are gated by backend-aligned capabilities (assignee/creator/role). */
+    capabilities?: ScriptDecisionCapabilities | null;
 }
 
 export function DecisionBar({
@@ -21,7 +24,8 @@ export function DecisionBar({
     currentStatus,
     relatedReportId,
     onDecisionMade,
-    compact = false
+    compact = false,
+    capabilities: capabilitiesProp = null,
 }: DecisionBarProps) {
     const { lang } = useLangStore();
     const { hasPermission } = useAuthStore();
@@ -32,12 +36,23 @@ export function DecisionBar({
 
     const isAr = lang === 'ar';
 
-    // Check permissions
-    const canApprove = hasPermission('approve_scripts') || hasPermission('manage_script_status');
-    const canReject = hasPermission('reject_scripts') || hasPermission('manage_script_status');
+    const canApprove = capabilitiesProp != null
+        ? capabilitiesProp.canApprove
+        : (hasPermission('approve_scripts') || hasPermission('manage_script_status'));
+    const canReject = capabilitiesProp != null
+        ? capabilitiesProp.canReject
+        : (hasPermission('reject_scripts') || hasPermission('manage_script_status'));
+    const reasonIfDisabled = capabilitiesProp?.reasonIfDisabled ?? null;
 
-    // Don't show if user has no permissions
     if (!canApprove && !canReject) {
+        if (reasonIfDisabled) {
+            return (
+                <div className="flex items-center gap-2 px-4 py-2 bg-surface-elevated rounded-lg border border-border text-sm text-text-muted">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{reasonIfDisabled}</span>
+                </div>
+            );
+        }
         return null;
     }
 
