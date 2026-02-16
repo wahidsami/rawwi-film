@@ -463,44 +463,33 @@ export function Overview() {
             </Card>
           </div>
 
-          {/* My Queue */}
+          {/* Recent Activity (moved from right column) */}
           <Card>
-            <CardHeader>
-              <CardTitle>{t('myQueue')}</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>{t('recentActivity')}</CardTitle>
+              {canViewAudit && (
+                <Button variant="ghost" size="sm" onClick={() => navigate('/audit')}>
+                  {t('showAll')}
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
-              {myTasks.length === 0 ? (
-                <div className="text-center py-8 text-text-muted bg-surface-hover rounded-lg border border-dashed border-border-main">
-                  {t('cleanLog')}
-                </div>
+              {activities.length === 0 ? (
+                <div className="text-center py-6 text-text-muted">{t('cleanLog')}</div>
               ) : (
-                <div className="space-y-4">
-                  {myTasks.map(task => (
-                    <div key={task.id} className="flex items-center justify-between p-4 bg-surface-hover rounded-lg border border-border-main">
-                      <div>
-                        <h4 className="font-semibold text-text-main">{task.scriptTitle || task.scriptId}</h4>
-                        <div className="text-xs text-text-muted mt-1 flex items-center gap-2">
-                          {'progressDone' in task ? (
-                            <>
-                              <span>{task.progressDone}/{task.progressTotal}</span>
-                              <span>•</span>
-                              <span>{task.progressPercent}%</span>
-                            </>
-                          ) : (
-                            <span className="italic">{lang === 'ar' ? 'بانتظار التحليل' : 'Pending Analysis'}</span>
-                          )}
+                <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border-main before:to-transparent">
+                  {activities.map((act) => (
+                    <div key={act.id} className="relative flex items-center justify-between group">
+                      <div className="flex items-start gap-4 w-full">
+                        <div className="relative z-10 w-4 h-4 mt-1 rounded-full bg-surface-main border-2 border-primary flex-shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-text-main leading-tight">{act.action}</p>
+                          <div className="flex items-center gap-2 mt-1.5 text-xs text-text-muted">
+                            <span className="font-semibold">{act.actor}</span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {act.time}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <Badge variant={
-                          task.status === 'Ready' ? 'success' :
-                            task.status === 'failed' ? 'error' :
-                              task.status === 'completed' ? 'default' :
-                                'warning'
-                        }>
-                          {t(task.status as any) || task.status}
-                        </Badge>
-                        <Button size="sm" onClick={() => navigate(`/workspace/${task.scriptId}`)}>{t('openScript')}</Button>
                       </div>
                     </div>
                   ))}
@@ -544,41 +533,6 @@ export function Overview() {
 
           {/* Recent Decisions */}
           <RecentDecisionsWidget />
-
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>{t('recentActivity')}</CardTitle>
-              {canViewAudit && (
-                <Button variant="ghost" size="sm" onClick={() => navigate('/audit')}>
-                  {t('showAll')}
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              {activities.length === 0 ? (
-                <div className="text-center py-6 text-text-muted">{t('cleanLog')}</div>
-              ) : (
-                <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border-main before:to-transparent">
-                  {activities.map((act) => (
-                    <div key={act.id} className="relative flex items-center justify-between group">
-                      <div className="flex items-start gap-4 w-full">
-                        <div className="relative z-10 w-4 h-4 mt-1 rounded-full bg-surface-main border-2 border-primary flex-shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-text-main leading-tight">{act.action}</p>
-                          <div className="flex items-center gap-2 mt-1.5 text-xs text-text-muted">
-                            <span className="font-semibold">{act.actor}</span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {act.time}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
