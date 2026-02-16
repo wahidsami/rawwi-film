@@ -18,7 +18,10 @@ Deno.serve(async (req: Request) => {
     if (req.method === "OPTIONS") return optionsResponse(req);
 
     const auth = await requireAuth(req);
-    if (auth instanceof Response) return auth;
+    if (auth instanceof Response) {
+        console.warn("[raawi-script-upload] auth failed, returning 401");
+        return auth;
+    }
     const { userId, supabase } = auth;
 
     if (req.method !== "POST") {

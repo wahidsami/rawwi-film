@@ -16,6 +16,7 @@ import { FileUpload } from '@/components/ui/FileUpload';
 import { scriptsApi, reportsApi } from '@/api';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '@/lib/env';
+import { supabase } from '@/lib/supabaseClient';
 import { ArrowLeft, Trash2, FileText, Edit, Upload, User } from 'lucide-react';
 
 import { usersApi } from '@/api';
@@ -131,11 +132,19 @@ export function ClientDetails() {
 
   const uploadScriptDocument = async (scriptId: string, file: File) => {
     try {
-      const { supabase } = await import('@/lib/supabaseClient');
-      // Refresh session so we send a valid, non-expired JWT (avoids 401 Invalid JWT from Edge)
-      const { data: { session: refreshed } } = await supabase.auth.refreshSession();
-      const token = refreshed?.access_token ?? (await supabase.auth.getSession()).data.session?.access_token;
-
+      // Use singleton supabase client (same auth state as app). Get access_token only (never refresh_token or anon key).
+      let { data: { session } } = await supabase.auth.getSession();
+      let token = session?.access_token ?? null;
+      if (!token) {
+        await supabase.auth.refreshSession();
+        ({ data: { session } } = await supabase.auth.getSession());
+        token = session?.access_token ?? null;
+      }
+      if (!token) {
+        await new Promise((r) => setTimeout(r, 200));
+        ({ data: { session } } = await supabase.auth.getSession());
+        token = session?.access_token ?? null;
+      }
       if (!token) {
         throw new Error('No auth token available');
       }
@@ -148,7 +157,7 @@ export function ClientDetails() {
       const response = await fetch(`${API_BASE_URL}/raawi-script-upload`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
