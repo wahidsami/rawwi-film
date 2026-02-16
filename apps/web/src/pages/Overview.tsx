@@ -6,7 +6,6 @@ import { useAuthStore } from '../store/authStore';
 import { useDataStore } from '../store/dataStore';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
 import { RecentDecisionsWidget } from '../components/RecentDecisionsWidget';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -16,7 +15,6 @@ import {
   AlertTriangle,
   Plus,
   UploadCloud,
-  UserPlus,
   PlayCircle,
   FileBarChart,
   BookOpen,
@@ -33,7 +31,7 @@ import toast from 'react-hot-toast';
 export function Overview() {
   const { t, lang } = useLangStore();
   const { user, hasPermission } = useAuthStore();
-  const { tasks, fetchInitialData } = useDataStore();
+  const { fetchInitialData } = useDataStore();
   const navigate = useNavigate();
 
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -200,8 +198,6 @@ export function Overview() {
 
   const canManage = user?.role === 'Super Admin' || user?.role === 'Admin' || user?.role === 'Regulator';
   const canViewAudit = hasPermission('view_audit');
-
-  const myTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'completed_with_errors');
 
   if (loading) {
     return (
