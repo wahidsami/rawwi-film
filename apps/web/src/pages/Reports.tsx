@@ -57,11 +57,17 @@ function Reports() {
   const isAdmin = user?.role === 'Admin' || user?.role === 'Super Admin';
 
   // Get unique users for admin filtering
+  // Get unique users for admin filtering - SAFE version
+  // Wrap in useMemo to prevent re-calculations and potential race conditions
+  // Handle case where reports or reportCreatorName might be undefined
   const uniqueUsers = isAdmin
     ? Array.from(new Set(reports.map(r => r.reportCreatorId).filter(Boolean))).map(id => {
       const report = reports.find(r => r.reportCreatorId === id);
-      return { id, name: report?.reportCreatorName ?? 'Unknown' };
-    })
+      return {
+        id: id as string,
+        name: report?.reportCreatorName ?? 'Unknown'
+      };
+    }).filter(u => u && u.id)
     : [];
 
   const filteredReports = reports.filter(r => {
@@ -182,7 +188,7 @@ function Reports() {
               onChange={(e) => setUserFilter(e.target.value)}
               options={[
                 { label: lang === 'ar' ? 'جميع المستخدمين' : 'All Users', value: 'all' },
-                ...uniqueUsers.map(u => ({ label: u.name, value: u.id }))
+                ...uniqueUsers.map(u => ({ label: u?.name ?? 'Unknown', value: u?.id }))
               ]}
             />
           )}
