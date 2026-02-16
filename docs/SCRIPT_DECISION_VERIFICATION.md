@@ -72,12 +72,26 @@ So: who, what, previous status, new status, and reason are all persisted.
 6. **Super Admin, own script**  
    - As Super Admin, open a script you created. Buttons visible; Approve/Reject → 200.
 
+## Single source of truth (GET decision/can + POST decision)
+
+- **Shared predicate:** `computeScriptDecisionCan(supabase, uid, script)` in `scripts/index.ts` — used by both GET and POST. Checks: (a) permissions (approve/reject or manage_script_status), (b) conflict-of-interest (creator blocked unless Super Admin), (c) Regulator must be assignee.
+- **GET /scripts/:id/decision/can** returns `{ canApprove, canReject, reason? }`. UI (ScriptWorkspace) calls this and hides buttons when false; shows `reason` as hint/tooltip.
+- **POST /scripts/:id/decision** uses the same predicate; returns 403 with `reason` when not allowed. Logs `{ scriptId, uid, isCreator, isAssignee, canApprove, canReject }` at info before applying change.
+- **Script decision UI exists only in ScriptWorkspace.** The Results page approve/reject is for report/finding review, not script status.
+
+## Smoke tests (minimum)
+
+- **Creator (Regulator) opens own script** → GET decision/can returns canApprove=false, canReject=false, reason set → no buttons.
+- **Regulator opens script assigned to them, not creator** → canApprove/canReject true → buttons visible → POST decision succeeds.
+- **Admin/Super Admin opens script they did NOT create** → buttons visible → POST succeeds.
+- **Admin opens script they created** → canApprove/canReject false (or canReject only if policy allows reject?) — backend blocks; UI must match (no buttons or reason).
+
 ## Files changed (summary)
 
-- **Backend:** `supabase/functions/scripts/index.ts` (Regulator assignee check; conflict + Super Admin override).  
-- **Backend:** `supabase/functions/_shared/roleCheck.ts` (`isRegulatorOnly`, `isSuperAdmin`, `canOverrideOwnScriptDecision` = Super Admin only).  
-- **Frontend:** `apps/web/src/utils/scriptDecisionCapabilities.ts` (new; `getScriptDecisionCapabilities`).  
-- **Frontend:** `apps/web/src/components/DecisionBar.tsx` (optional `capabilities` prop; show `reasonIfDisabled` when both buttons disabled).  
-- **Frontend:** `apps/web/src/pages/ScriptWorkspace.tsx` (compute capabilities, pass to DecisionBar).  
-- **Docs:** `docs/SCRIPT_DECISION_POLICY.md` (update override to Super Admin only; Regulator assignee rule).  
+- **Backend:** `supabase/functions/scripts/index.ts` — `computeScriptDecisionCan()` shared; GET `/scripts/:id/decision/can`; POST uses predicate; logging.  
+- **Backend:** `supabase/functions/_shared/roleCheck.ts` (`isRegulatorOnly`, `isSuperAdmin`, `canOverrideOwnScriptDecision`).  
+- **Frontend:** `apps/web/src/api/index.ts` — `getDecisionCan(id)`.  
+- **Frontend:** `apps/web/src/utils/scriptDecisionCapabilities.ts` (fallback when GET fails).  
+- **Frontend:** `apps/web/src/components/DecisionBar.tsx` (capabilities prop; tooltip for reasonIfDisabled).  
+- **Frontend:** `apps/web/src/pages/ScriptWorkspace.tsx` (fetch GET decision/can, pass to DecisionBar; fallback to client capabilities).  
 - **Docs:** `docs/SCRIPT_DECISION_VERIFICATION.md` (this file).

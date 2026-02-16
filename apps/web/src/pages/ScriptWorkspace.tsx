@@ -88,6 +88,7 @@ export function ScriptWorkspace() {
   const [debugOpen, setDebugOpen] = useState(false);
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [decisionCan, setDecisionCan] = useState<{ canApprove: boolean; canReject: boolean; reason?: string } | null>(null);
 
   // Polling for analysis job progress
   const stopPolling = useCallback(() => {
@@ -120,6 +121,30 @@ export function ScriptWorkspace() {
 
   // Cleanup polling on unmount
   useEffect(() => () => stopPolling(), [stopPolling]);
+
+  // Fetch backend decision/can so UI matches backend policy (single source of truth)
+  useEffect(() => {
+    if (!script?.id || script.status === 'approved' || script.status === 'rejected') {
+      setDecisionCan(null);
+      return;
+    }
+    let cancelled = false;
+    scriptsApi
+      .getDecisionCan(script.id)
+      .then((res) => {
+        if (!cancelled) setDecisionCan(res);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setDecisionCan({
+            canApprove: false,
+            canReject: false,
+            reason: err?.message ?? 'Could not load decision permissions.',
+          });
+        }
+      });
+    return () => { cancelled = true; };
+  }, [script?.id, script?.status]);
 
   // On mount: fetch latest analysis job for this script so "View Report" has a jobId
   useEffect(() => {
@@ -1404,7 +1429,7 @@ export function ScriptWorkspace() {
         {/* Right: Sidebar Panel */}
         <div className="w-80 flex-shrink-0 bg-surface border-s border-border flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
 
-          {/* Decision Bar - capabilities aligned with backend (Regulator=assignee only; creator blocked except Super Admin) */}
+          {/* Decision Bar - gated by GET /scripts/:id/decision/can (backend policy); fallback to client capabilities if fetch failed */}
           {script && (
             <div className="border-b border-border">
               <DecisionBar
@@ -1413,7 +1438,9 @@ export function ScriptWorkspace() {
                 currentStatus={script.status || 'draft'}
                 relatedReportId={selectedReportForHighlights?.id}
                 compact
-                capabilities={user ? getScriptDecisionCapabilities(script, user, hasPermission) : null}
+                capabilities={decisionCan != null
+                  ? { canApprove: decisionCan.canApprove, canReject: decisionCan.canReject, reasonIfDisabled: decisionCan.reason ?? null }
+                  : (user ? getScriptDecisionCapabilities(script, user, hasPermission) : null)}
                 onDecisionMade={() => {}}
               />
             </div>

@@ -56,6 +56,9 @@ export const scriptsApi = {
   getScripts: (): Promise<Script[]> => httpClient.get('/scripts'),
   addScript: (script: Script): Promise<Script> => httpClient.post('/scripts', script),
   updateScript: (id: string, updates: Partial<Script>): Promise<Script> => httpClient.patch(`/scripts/${encodeURIComponent(id)}`, updates), // NEW
+  /** Check if current user can approve/reject this script (backend policy). Use to gate UI. */
+  getDecisionCan: (id: string): Promise<{ canApprove: boolean; canReject: boolean; reason?: string }> =>
+    httpClient.get(`/scripts/${encodeURIComponent(id)}/decision/can`),
   /** Make approval/rejection decision on a script */
   makeDecision: (id: string, decision: 'approve' | 'reject', reason: string, relatedReportId?: string): Promise<{ success: boolean; script: Script; message: string }> =>
     httpClient.post(`/scripts/${encodeURIComponent(id)}/decision`, { decision, reason, relatedReportId }),

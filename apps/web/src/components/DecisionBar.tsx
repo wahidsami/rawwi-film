@@ -47,7 +47,10 @@ export function DecisionBar({
     if (!canApprove && !canReject) {
         if (reasonIfDisabled) {
             return (
-                <div className="flex items-center gap-2 px-4 py-2 bg-surface-elevated rounded-lg border border-border text-sm text-text-muted">
+                <div
+                    className="flex items-center gap-2 px-4 py-2 bg-surface-elevated rounded-lg border border-border text-sm text-text-muted"
+                    title={reasonIfDisabled}
+                >
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     <span>{reasonIfDisabled}</span>
                 </div>

@@ -89,6 +89,69 @@ function normalizeStatus(s: unknown): string {
   return allowed.includes(v) ? v : "draft";
 }
 
+/** Shared predicate for script decision: used by GET .../decision/can and POST .../decision. */
+async function computeScriptDecisionCan(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  uid: string,
+  script: { created_by?: string | null; assignee_id?: string | null }
+): Promise<{
+  canApprove: boolean;
+  canReject: boolean;
+  reasonIfDisabled?: string;
+  isCreator: boolean;
+  isAssignee: boolean;
+}> {
+  const createdBy = script.created_by ?? null;
+  const assigneeId = script.assignee_id ?? null;
+  const isCreator = createdBy === uid;
+  const isAssignee = assigneeId === uid;
+
+  const [approveRpc, rejectRpc] = await Promise.all([
+    supabase.rpc("user_can_approve_scripts", { p_user_id: uid }),
+    supabase.rpc("user_can_reject_scripts", { p_user_id: uid }),
+  ]);
+  const hasApprovePerm = approveRpc.data === true && !approveRpc.error;
+  const hasRejectPerm = rejectRpc.data === true && !rejectRpc.error;
+
+  if (!hasApprovePerm && !hasRejectPerm) {
+    return {
+      canApprove: false,
+      canReject: false,
+      reasonIfDisabled: "You do not have permission to approve or reject scripts.",
+      isCreator,
+      isAssignee,
+    };
+  }
+
+  const regulatorOnly = await isRegulatorOnly(supabase, uid);
+  if (regulatorOnly && !isAssignee) {
+    return {
+      canApprove: false,
+      canReject: false,
+      reasonIfDisabled:
+        "Only the assigned reviewer can approve or reject this script. This script is not assigned to you.",
+      isCreator,
+      isAssignee,
+    };
+  }
+
+  if (isCreator) {
+    const canOverride = await canOverrideOwnScriptDecision(supabase, uid);
+    if (!canOverride) {
+      return {
+        canApprove: false,
+        canReject: false,
+        reasonIfDisabled:
+          "Conflict of interest: You cannot approve/reject your own script. Ask an admin or the assigned reviewer to make the decision.",
+        isCreator,
+        isAssignee,
+      };
+    }
+  }
+
+  return { canApprove: hasApprovePerm, canReject: hasRejectPerm, isCreator, isAssignee };
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? undefined;
   const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
@@ -409,6 +472,34 @@ Deno.serve(async (req: Request) => {
     return json({ jobId });
   }
 
+  // ──────────────── GET /scripts/:id/decision/can (policy predicate for UI) ────────────────
+  const decisionCanMatch = rest.match(/^([^/]+)\/decision\/can$/);
+  if (method === "GET" && decisionCanMatch) {
+    const scriptId = decisionCanMatch[1].trim();
+    const { data: script, error: findErr } = await supabase
+      .from("scripts")
+      .select("id, created_by, assignee_id")
+      .eq("id", scriptId)
+      .maybeSingle();
+
+    if (findErr || !script) return json({ error: "Script not found" }, 404);
+
+    const can = await computeScriptDecisionCan(supabase, uid, script as { created_by?: string | null; assignee_id?: string | null });
+    console.info("[scripts] decision/can", {
+      scriptId,
+      uid,
+      isCreator: can.isCreator,
+      isAssignee: can.isAssignee,
+      canApprove: can.canApprove,
+      canReject: can.canReject,
+    });
+    return json({
+      canApprove: can.canApprove,
+      canReject: can.canReject,
+      reason: can.reasonIfDisabled ?? undefined,
+    });
+  }
+
   // ──────────────── POST /scripts/:id/decision (Approve/Reject) ────────────────
   const decisionMatch = rest.match(/^([^/]+)\/decision$/);
   if (method === "POST" && decisionMatch) {
@@ -447,52 +538,21 @@ Deno.serve(async (req: Request) => {
     const currentStatus = (script as any).status || 'draft';
     const newStatus = decision === 'approve' ? 'approved' : 'rejected';
 
-    // Check permissions: user must have approve_scripts or reject_scripts permission
-    const requiredPermission = decision === 'approve' ? 'approve_scripts' : 'reject_scripts';
-    const { data: hasPermission, error: permErr } = await supabase.rpc(
-      decision === 'approve' ? 'user_can_approve_scripts' : 'user_can_reject_scripts',
-      { p_user_id: uid }
-    );
+    const can = await computeScriptDecisionCan(supabase, uid, script as { created_by?: string | null; assignee_id?: string | null });
+    console.info("[scripts] decision POST", {
+      scriptId,
+      uid,
+      decision,
+      isCreator: can.isCreator,
+      isAssignee: can.isAssignee,
+      canApprove: can.canApprove,
+      canReject: can.canReject,
+    });
 
-    if (permErr) {
-      console.error(`[scripts] correlationId=${correlationId} permission check error=`, permErr.message);
-      return json({ error: "Failed to check permissions" }, 500);
-    }
-
-    if (!hasPermission) {
-      return json({ error: `Forbidden: You do not have permission to ${decision} scripts` }, 403);
-    }
-
-    // Regulator: can approve/reject only scripts assigned to them.
-    const regulatorOnly = await isRegulatorOnly(supabase, uid);
-    if (regulatorOnly) {
-      const assigneeId = (script as any).assignee_id ?? null;
-      if (assigneeId !== uid) {
-        return json(
-          {
-            error:
-              "Only the assigned reviewer can approve or reject this script. This script is not assigned to you.",
-          },
-          403
-        );
-      }
-    }
-
-    // Conflict of interest: creator cannot approve/reject their own script, unless Super Admin (override).
-    // Admin and Regulator cannot decide on scripts they created.
-    const isCreator = (script as any).created_by === uid;
-    if (isCreator) {
-      const canOverride = await canOverrideOwnScriptDecision(supabase, uid);
-      if (!canOverride) {
-        return json(
-          {
-            error:
-              "Conflict of interest: You cannot approve/reject your own script. Ask an admin or the assigned reviewer to make the decision.",
-          },
-          403
-        );
-      }
-      // Super Admin may override (decide on their own script).
+    const allowed = decision === 'approve' ? can.canApprove : can.canReject;
+    if (!allowed) {
+      const msg = can.reasonIfDisabled ?? `You do not have permission to ${decision} this script.`;
+      return json({ error: msg }, 403);
     }
 
     // Update script status
