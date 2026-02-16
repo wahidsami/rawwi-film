@@ -116,13 +116,10 @@ export function DecisionBar({
             setShowReasonInput(false);
             setPendingDecision(null);
 
-            // Notify parent
+            // Notify parent (can refetch scripts / update state)
             if (onDecisionMade) {
                 onDecisionMade(pendingDecision === 'approve' ? 'approved' : 'rejected');
             }
-
-            // Reload page to reflect changes
-            setTimeout(() => window.location.reload(), 1000);
         } catch (error: any) {
             console.error('Decision error:', error);
             toast.error(error.message || (isAr ? 'فشل في تنفيذ القرار' : 'Failed to execute decision'));
