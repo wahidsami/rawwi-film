@@ -135,8 +135,10 @@ Deno.serve(async (req: Request) => {
 
   // Step 1: Create auth user
   const tempPassword = generateTempPassword(20);
+  const roleDisplayName = roleKey === "super_admin" ? "Super Admin" : roleKey === "regulator" ? "Regulator" : "Admin";
   const userMetadata: Record<string, unknown> = {
-    name: (body.name ?? "").trim() || email.split("@")[0]
+    name: (body.name ?? "").trim() || email.split("@")[0],
+    role: roleDisplayName
   };
   if (allowedSections) {
     userMetadata.allowedSections = allowedSections;

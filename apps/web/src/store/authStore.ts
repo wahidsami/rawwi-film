@@ -116,16 +116,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user: mapSupabaseUserToAppUser(data.session.user), isAuthenticated: true });
       try {
         const res = await authApi.getMe();
-        if (res?.user) {
+            if (res?.user) {
+          const role = (res.user.role as Role) || 'Admin';
           set({
             user: {
               id: res.user.id,
               email: res.user.email,
               name: res.user.name,
-              role: (res.user.role as Role) || 'Admin',
+              role,
               permissions: res.user.permissions ?? [],
               allowedSections: (!res.user.allowedSections || res.user.allowedSections.length === 0)
-                ? getDefaultSectionsForRole((res.user.role as Role) || 'Admin')
+                ? getDefaultSectionsForRole(role)
                 : res.user.allowedSections,
             },
           });
@@ -201,14 +202,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       authApi.getMe()
         .then((res) => {
           if (res?.user) {
+            const role = (res.user.role as Role) || 'Admin';
             set({
               user: {
                 id: res.user.id,
                 email: res.user.email,
                 name: res.user.name,
-                role: (res.user.role as Role) || 'Admin',
+                role,
                 permissions: res.user.permissions ?? [],
-                allowedSections: res.user.allowedSections,
+                allowedSections: (!res.user.allowedSections || res.user.allowedSections.length === 0)
+                  ? getDefaultSectionsForRole(role)
+                  : (res.user.allowedSections ?? []),
               },
             });
           }

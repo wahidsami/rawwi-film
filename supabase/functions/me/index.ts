@@ -30,7 +30,16 @@ Deno.serve(async (req: Request) => {
     .eq("user_id", userId);
   const roleIds = (rolePermRows ?? []).map((r: { role_id: string }) => r.role_id);
   let permissionKeys: string[] = [];
+  let roleFromDb: string | null = null;
   if (roleIds.length > 0) {
+    const { data: roleRows } = await supabase
+      .from("roles")
+      .select("key, name")
+      .in("id", roleIds);
+    if (roleRows?.length) {
+      const r = roleRows[0] as { key: string; name: string };
+      roleFromDb = r.name;
+    }
     const { data: permRows } = await supabase
       .from("role_permissions")
       .select("permission_id")
@@ -47,19 +56,17 @@ Deno.serve(async (req: Request) => {
 
   const meta = sbUser.user_metadata ?? {};
   const name = (meta.name as string) || sbUser.email?.split("@")[0] || "User";
-  const roleKey = (meta.role as string) || (roleIds.length > 0 ? "admin" : "");
-  const role = roleKey === "Super Admin" || roleKey === "super_admin" ? "Super Admin"
-    : roleKey === "Regulator" || roleKey === "regulator" ? "Regulator"
-      : roleKey === "admin" || roleKey === "Admin" ? "Admin"
-        : "Admin";
+  const role = roleFromDb ?? (meta.role as string) || (roleIds.length ? "Admin" : "Admin");
+  const normalizedRole = role === "Super Admin" || role === "super_admin" ? "Super Admin"
+    : role === "Regulator" || role === "regulator" ? "Regulator"
+      : role === "admin" || role === "Admin" ? "Admin" : "Admin";
 
   return json({
     user: {
       id: sbUser.id,
       email: sbUser.email ?? "",
       name,
-      role,
-      role,
+      role: normalizedRole,
       permissions: permissionKeys,
       allowedSections: meta.allowedSections as string[] | undefined,
     },
