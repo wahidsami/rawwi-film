@@ -194,6 +194,142 @@ Deno.serve(async (req: Request) => {
     return json(list);
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // SPECIFIC STRING ROUTES (must come before wildcard :id routes)
+  // ═══════════════════════════════════════════════════════════════
+
+  // GET /scripts/editor?scriptId=...&versionId=...
+  if (method === "GET" && rest === "editor") {
+    const url = new URL(req.url);
+    const scriptId = url.searchParams.get("scriptId")?.trim();
+    const versionId = url.searchParams.get("versionId")?.trim();
+    if (!scriptId || !versionId) {
+      return json({ error: "scriptId and versionId query params are required" }, 400);
+    }
+    const { data: script, error: scriptErr } = await supabase
+      .from("scripts")
+      .select("id, created_by, assignee_id")
+      .eq("id", scriptId)
+      .maybeSingle();
+    if (scriptErr || !script) {
+      return json({ error: "Script not found" }, 404);
+    }
+    const s = script as { created_by: string | null; assignee_id: string | null };
+    if (s.created_by !== uid && s.assignee_id !== uid) {
+      return json({ error: "Forbidden" }, 403);
+    }
+    const { data: version, error: versionErr } = await supabase
+      .from("script_versions")
+      .select("id, script_id")
+      .eq("id", versionId)
+      .eq("script_id", scriptId)
+      .maybeSingle();
+    if (versionErr || !version) {
+      return json({ error: "Version not found or does not belong to script" }, 404);
+    }
+    const { data: textRow, error: textErr } = await supabase
+      .from("script_text")
+      .select("content, content_hash, content_html")
+      .eq("version_id", versionId)
+      .maybeSingle();
+    if (textErr) {
+      console.error(`[scripts] correlationId=${correlationId} script_text error=`, textErr.message);
+      return json({ error: textErr.message }, 500);
+    }
+    const { data: sectionRows, error: sectionErr } = await supabase
+      .from("script_sections")
+      .select("id, index, title, start_offset, end_offset, meta")
+      .eq("version_id", versionId)
+      .order("index", { ascending: true });
+    if (sectionErr) {
+      console.error(`[scripts] correlationId=${correlationId} script_sections error=`, sectionErr.message);
+      return json({ error: sectionErr.message }, 500);
+    }
+    const content = textRow != null ? (textRow as { content: string }).content : "";
+    const contentHash = textRow != null ? (textRow as { content_hash?: string | null }).content_hash ?? null : null;
+    const contentHtml = textRow != null ? (textRow as { content_html?: string | null }).content_html ?? null : null;
+    const sections = (sectionRows ?? []).map((r: Record<string, unknown>) => ({
+      id: r.id,
+      index: r.index,
+      title: r.title,
+      startOffset: r.start_offset,
+      endOffset: r.end_offset,
+      meta: r.meta ?? {},
+    }));
+    return json({ content, contentHash, contentHtml, sections });
+  }
+
+  // GET /scripts/highlight-preference?scriptId=xxx → { jobId: string | null }
+  if (method === "GET" && rest === "highlight-preference") {
+    const url = new URL(req.url);
+    const scriptId = url.searchParams.get("scriptId")?.trim();
+    if (!scriptId) return json({ error: "scriptId query param is required" }, 400);
+    const { data: script, error: scriptErr } = await supabase
+      .from("scripts")
+      .select("id, created_by, assignee_id")
+      .eq("id", scriptId)
+      .maybeSingle();
+    if (scriptErr || !script) return json({ error: "Script not found" }, 404);
+    const s = script as { created_by: string | null; assignee_id: string | null };
+    if (s.created_by !== uid && s.assignee_id !== uid) return json({ error: "Forbidden" }, 403);
+    const { data: row, error: rowErr } = await supabase
+      .from("user_script_highlight")
+      .select("job_id")
+      .eq("user_id", uid)
+      .eq("script_id", scriptId)
+      .maybeSingle();
+    if (rowErr) {
+      console.error(`[scripts] correlationId=${correlationId} highlight-preference get error=`, rowErr.message);
+      return json({ error: rowErr.message }, 500);
+    }
+    const jobId = (row as { job_id?: string } | null)?.job_id ?? null;
+    return json({ jobId });
+  }
+
+  // PUT /scripts/highlight-preference body: { scriptId: string, jobId: string }
+  if (method === "PUT" && rest === "highlight-preference") {
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+    const scriptId = typeof body.scriptId === "string" ? body.scriptId.trim() : null;
+    const jobId = typeof body.jobId === "string" ? body.jobId.trim() : null;
+    if (!scriptId || !jobId) return json({ error: "scriptId and jobId are required" }, 400);
+    const { data: script, error: scriptErr } = await supabase
+      .from("scripts")
+      .select("id, created_by, assignee_id")
+      .eq("id", scriptId)
+      .maybeSingle();
+    if (scriptErr || !script) return json({ error: "Script not found" }, 404);
+    const s = script as { created_by: string | null; assignee_id: string | null };
+    if (s.created_by !== uid && s.assignee_id !== uid) return json({ error: "Forbidden" }, 403);
+    const { data: job, error: jobErr } = await supabase
+      .from("analysis_jobs")
+      .select("id, script_id, created_by")
+      .eq("id", jobId)
+      .maybeSingle();
+    if (jobErr || !job) return json({ error: "Job not found" }, 404);
+    const j = job as { script_id: string; created_by: string };
+    if (j.script_id !== scriptId || j.created_by !== uid) return json({ error: "Forbidden" }, 403);
+    const { error: upsertErr } = await supabase
+      .from("user_script_highlight")
+      .upsert(
+        { user_id: uid, script_id: scriptId, job_id: jobId, updated_at: new Date().toISOString() },
+        { onConflict: "user_id,script_id" }
+      );
+    if (upsertErr) {
+      console.error(`[scripts] correlationId=${correlationId} highlight-preference put error=`, upsertErr.message);
+      return json({ error: upsertErr.message }, 500);
+    }
+    return json({ jobId });
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // WILDCARD ROUTES (come after specific string routes)
+  // ═══════════════════════════════════════════════════════════════
+
   // GET /scripts/:id — single script (for workspace when not in list)
   if (method === "GET" && rest && !rest.includes("/")) {
     const scriptId = rest.trim();
@@ -376,135 +512,6 @@ Deno.serve(async (req: Request) => {
     const list = (versions ?? []).map((v) => toVersionFrontend(v as ScriptVersionRow));
     return json(list);
   }
-
-  // GET /scripts/editor?scriptId=...&versionId=...
-  if (method === "GET" && rest === "editor") {
-    const url = new URL(req.url);
-    const scriptId = url.searchParams.get("scriptId")?.trim();
-    const versionId = url.searchParams.get("versionId")?.trim();
-    if (!scriptId || !versionId) {
-      return json({ error: "scriptId and versionId query params are required" }, 400);
-    }
-    const { data: script, error: scriptErr } = await supabase
-      .from("scripts")
-      .select("id, created_by, assignee_id")
-      .eq("id", scriptId)
-      .maybeSingle();
-    if (scriptErr || !script) {
-      return json({ error: "Script not found" }, 404);
-    }
-    const s = script as { created_by: string | null; assignee_id: string | null };
-    if (s.created_by !== uid && s.assignee_id !== uid) {
-      return json({ error: "Forbidden" }, 403);
-    }
-    const { data: version, error: versionErr } = await supabase
-      .from("script_versions")
-      .select("id, script_id")
-      .eq("id", versionId)
-      .eq("script_id", scriptId)
-      .maybeSingle();
-    if (versionErr || !version) {
-      return json({ error: "Version not found or does not belong to script" }, 404);
-    }
-    const { data: textRow, error: textErr } = await supabase
-      .from("script_text")
-      .select("content, content_hash, content_html")
-      .eq("version_id", versionId)
-      .maybeSingle();
-    if (textErr) {
-      console.error(`[scripts] correlationId=${correlationId} script_text error=`, textErr.message);
-      return json({ error: textErr.message }, 500);
-    }
-    const { data: sectionRows, error: sectionErr } = await supabase
-      .from("script_sections")
-      .select("id, index, title, start_offset, end_offset, meta")
-      .eq("version_id", versionId)
-      .order("index", { ascending: true });
-    if (sectionErr) {
-      console.error(`[scripts] correlationId=${correlationId} script_sections error=`, sectionErr.message);
-      return json({ error: sectionErr.message }, 500);
-    }
-    const content = textRow != null ? (textRow as { content: string }).content : "";
-    const contentHash = textRow != null ? (textRow as { content_hash?: string | null }).content_hash ?? null : null;
-    const contentHtml = textRow != null ? (textRow as { content_html?: string | null }).content_html ?? null : null;
-    const sections = (sectionRows ?? []).map((r: Record<string, unknown>) => ({
-      id: r.id,
-      index: r.index,
-      title: r.title,
-      startOffset: r.start_offset,
-      endOffset: r.end_offset,
-      meta: r.meta ?? {},
-    }));
-    return json({ content, contentHash, contentHtml, sections });
-  }
-
-  // GET /scripts/highlight-preference?scriptId=xxx → { jobId: string | null }
-  if (method === "GET" && rest === "highlight-preference") {
-    const url = new URL(req.url);
-    const scriptId = url.searchParams.get("scriptId")?.trim();
-    if (!scriptId) return json({ error: "scriptId query param is required" }, 400);
-    const { data: script, error: scriptErr } = await supabase
-      .from("scripts")
-      .select("id, created_by, assignee_id")
-      .eq("id", scriptId)
-      .maybeSingle();
-    if (scriptErr || !script) return json({ error: "Script not found" }, 404);
-    const s = script as { created_by: string | null; assignee_id: string | null };
-    if (s.created_by !== uid && s.assignee_id !== uid) return json({ error: "Forbidden" }, 403);
-    const { data: row, error: rowErr } = await supabase
-      .from("user_script_highlight")
-      .select("job_id")
-      .eq("user_id", uid)
-      .eq("script_id", scriptId)
-      .maybeSingle();
-    if (rowErr) {
-      console.error(`[scripts] correlationId=${correlationId} highlight-preference get error=`, rowErr.message);
-      return json({ error: rowErr.message }, 500);
-    }
-    const jobId = (row as { job_id?: string } | null)?.job_id ?? null;
-    return json({ jobId });
-  }
-
-  // PUT /scripts/highlight-preference body: { scriptId: string, jobId: string }
-  if (method === "PUT" && rest === "highlight-preference") {
-    let body: Record<string, unknown>;
-    try {
-      body = await req.json();
-    } catch {
-      return json({ error: "Invalid JSON body" }, 400);
-    }
-    const scriptId = typeof body.scriptId === "string" ? body.scriptId.trim() : null;
-    const jobId = typeof body.jobId === "string" ? body.jobId.trim() : null;
-    if (!scriptId || !jobId) return json({ error: "scriptId and jobId are required" }, 400);
-    const { data: script, error: scriptErr } = await supabase
-      .from("scripts")
-      .select("id, created_by, assignee_id")
-      .eq("id", scriptId)
-      .maybeSingle();
-    if (scriptErr || !script) return json({ error: "Script not found" }, 404);
-    const s = script as { created_by: string | null; assignee_id: string | null };
-    if (s.created_by !== uid && s.assignee_id !== uid) return json({ error: "Forbidden" }, 403);
-    const { data: job, error: jobErr } = await supabase
-      .from("analysis_jobs")
-      .select("id, script_id, created_by")
-      .eq("id", jobId)
-      .maybeSingle();
-    if (jobErr || !job) return json({ error: "Job not found" }, 404);
-    const j = job as { script_id: string; created_by: string };
-    if (j.script_id !== scriptId || j.created_by !== uid) return json({ error: "Forbidden" }, 403);
-    const { error: upsertErr } = await supabase
-      .from("user_script_highlight")
-      .upsert(
-        { user_id: uid, script_id: scriptId, job_id: jobId, updated_at: new Date().toISOString() },
-        { onConflict: "user_id,script_id" }
-      );
-    if (upsertErr) {
-      console.error(`[scripts] correlationId=${correlationId} highlight-preference put error=`, upsertErr.message);
-      return json({ error: upsertErr.message }, 500);
-    }
-    return json({ jobId });
-  }
-
   // ──────────────── GET /scripts/:id/decision/can (policy predicate for UI) ────────────────
   const decisionCanMatch = rest.match(/^([^/]+)\/decision\/can$/);
   if (method === "GET" && decisionCanMatch) {
