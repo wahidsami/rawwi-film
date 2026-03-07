@@ -202,6 +202,7 @@ export function Overview() {
 
   const canManage = user?.role === 'Super Admin' || user?.role === 'Admin' || user?.role === 'Regulator';
   const canViewAudit = hasSection('audit');
+  const isRegulator = user?.role === 'Regulator';
 
   if (loading) {
     return (
@@ -264,22 +265,24 @@ export function Overview() {
         </Button>
       </div>
 
-      {/* KPI Row */}
+      {/* KPI Row — hide Pending Tasks, Reports This Month, High/Critical Findings for Regulator */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-text-muted">{t('pendingTasks')}</CardTitle>
-            <ClipboardList className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-text-main">{stats?.pendingTasks || 0}</div>
-            {hasSection('tasks') && (
-              <button onClick={() => navigate('/tasks')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
-                {t('viewTasks')} <ArrowIcon className="h-3 w-3" />
-              </button>
-            )}
-          </CardContent>
-        </Card>
+        {!isRegulator && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-text-muted">{t('pendingTasks')}</CardTitle>
+              <ClipboardList className="h-4 w-4 text-warning" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-text-main">{stats?.pendingTasks || 0}</div>
+              {hasSection('tasks') && (
+                <button onClick={() => navigate('/tasks')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
+                  {t('viewTasks')} <ArrowIcon className="h-3 w-3" />
+                </button>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -296,35 +299,39 @@ export function Overview() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-text-muted">{t('reportsThisMonth')}</CardTitle>
-            <BarChart2 className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-text-main">{stats?.reportsThisMonth || 0}</div>
-            {hasSection('reports') && (
-              <button onClick={() => navigate('/reports')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
-                {t('goToReports')} <ArrowIcon className="h-3 w-3" />
-              </button>
-            )}
-          </CardContent>
-        </Card>
+        {!isRegulator && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-text-muted">{t('reportsThisMonth')}</CardTitle>
+              <BarChart2 className="h-4 w-4 text-success" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-text-main">{stats?.reportsThisMonth || 0}</div>
+              {hasSection('reports') && (
+                <button onClick={() => navigate('/reports')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
+                  {t('goToReports')} <ArrowIcon className="h-3 w-3" />
+                </button>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-text-muted">{t('highCriticalFindings')}</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-error" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-text-main">{stats?.highCriticalFindings || 0}</div>
-            {hasSection('reports') && (
-              <button onClick={() => navigate('/reports')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
-                {t('viewResults')} <ArrowIcon className="h-3 w-3" />
-              </button>
-            )}
-          </CardContent>
-        </Card>
+        {!isRegulator && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-text-muted">{t('highCriticalFindings')}</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-error" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-text-main">{stats?.highCriticalFindings || 0}</div>
+              {hasSection('reports') && (
+                <button onClick={() => navigate('/reports')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
+                  {t('viewResults')} <ArrowIcon className="h-3 w-3" />
+                </button>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Approval Metrics Row */}
@@ -450,31 +457,33 @@ export function Overview() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('findingsBySeverity')}</CardTitle>
-              </CardHeader>
-              <CardContent className="h-64 min-h-[200px]">
-                {stats && Object.values(stats.findingsBySeverity).some(v => v > 0) ? (
-                  <div className="w-full h-full min-h-[200px]" style={{ minHeight: 200 }}>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={getSeverityChartData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--color-text-muted)' }} />
-                        <YAxis tick={{ fontSize: 12, fill: 'var(--color-text-muted)' }} />
-                        <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border-main)' }} />
-                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                          {getSeverityChartData().map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-text-muted">{t('cleanLog')}</div>
-                )}
-              </CardContent>
-            </Card>
+            {!isRegulator && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('findingsBySeverity')}</CardTitle>
+                </CardHeader>
+                <CardContent className="h-64 min-h-[200px]">
+                  {stats && Object.values(stats.findingsBySeverity).some(v => v > 0) ? (
+                    <div className="w-full h-full min-h-[200px]" style={{ minHeight: 200 }}>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={getSeverityChartData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--color-text-muted)' }} />
+                          <YAxis tick={{ fontSize: 12, fill: 'var(--color-text-muted)' }} />
+                          <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border-main)' }} />
+                          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                            {getSeverityChartData().map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.fill} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-text-muted">{t('cleanLog')}</div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Recent Activity (moved from right column) */}
@@ -521,7 +530,7 @@ export function Overview() {
               <CardTitle className="text-primary-dark">{t('quickActions')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {hasSection('clients') && (
+              {!isRegulator && hasSection('clients') && (
                 <>
                   <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/clients')}>
                     <Plus className="h-4 w-4" /> {t('addClientAction')}
@@ -531,12 +540,17 @@ export function Overview() {
                   </Button>
                 </>
               )}
-              {hasSection('tasks') && (
+              {hasSection('clients') && (
+                <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/scripts')}>
+                  <FileText className="h-4 w-4" /> {lang === 'ar' ? 'فتح النصوص' : 'Open Scripts'}
+                </Button>
+              )}
+              {!isRegulator && hasSection('tasks') && (
                 <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/tasks')}>
                   <PlayCircle className="h-4 w-4" /> {t('startAnalysisAction')}
                 </Button>
               )}
-              {hasSection('reports') && (
+              {!isRegulator && hasSection('reports') && (
                 <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/reports')}>
                   <FileBarChart className="h-4 w-4" /> {t('generateReportAction')}
                 </Button>

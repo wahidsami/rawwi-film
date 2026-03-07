@@ -9,7 +9,7 @@
 import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
-import { isUserAdmin } from "../_shared/roleCheck.ts";
+import { isSuperAdminOrAdmin } from "../_shared/roleCheck.ts";
 
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
@@ -34,8 +34,8 @@ Deno.serve(async (req: Request) => {
 
     const supabase = createSupabaseAdmin();
 
-    // Admin bypass check (Robust DB check)
-    const isAdmin = await isUserAdmin(supabase, uid);
+    // Only Super Admin and Admin see all stats; regulators see assignee-only stats
+    const seeAll = await isSuperAdminOrAdmin(supabase, uid);
 
     // Handle /dashboard/recent-decisions endpoint
     if (rest === "recent-decisions") {
@@ -48,26 +48,28 @@ Deno.serve(async (req: Request) => {
           reason,
           changed_by,
           changed_at,
-          scripts!inner(title, client_id, clients(name_en))
+          scripts!inner(title, client_id, assignee_id, clients(name_en))
         `)
         .in("to_status", ["approved", "rejected"])
         .order("changed_at", { ascending: false })
-        .limit(10);
+        .limit(seeAll ? 10 : 50);
 
       if (error) {
         console.error("[dashboard] recent-decisions error:", error);
         return json({ error: error.message }, 500);
       }
 
-      // Get user names for changed_by
-      const userIds = [...new Set((decisions ?? []).map((d: any) => d.changed_by))].filter(Boolean);
+      let list = decisions ?? [];
+      if (!seeAll) list = list.filter((d: any) => d.scripts?.assignee_id === uid).slice(0, 10);
+      else list = list.slice(0, 10);
+      const userIds = [...new Set(list.map((d: any) => d.changed_by))].filter(Boolean);
       const { data: users } = await supabase.auth.admin.listUsers();
       const userMap = new Map();
       users?.users.forEach((u: any) => {
         userMap.set(u.id, u.email?.split('@')[0] || 'Unknown');
       });
 
-      const formatted = (decisions ?? []).map((d: any) => ({
+      const formatted = list.map((d: any) => ({
         id: d.id,
         scriptId: d.script_id,
         scriptTitle: d.scripts?.title || 'Untitled',
@@ -83,32 +85,42 @@ Deno.serve(async (req: Request) => {
 
     // Continue with /dashboard/stats endpoint
 
-    // --- pendingTasks: analysis_jobs in queued/running ---
-    let pendingTasksQuery = supabase
-      .from("analysis_jobs")
-      .select("id", { count: "exact", head: true });
-    if (!isAdmin) pendingTasksQuery = pendingTasksQuery.eq("created_by", uid);
-    const { count: pendingTasks } = await pendingTasksQuery.in("status", ["queued", "running"]);
+    // --- pendingTasks: regulators see 0 (they don't start analysis); others see own jobs ---
+    let pendingTasks = 0;
+    if (seeAll) {
+      const res = await supabase.from("analysis_jobs").select("id", { count: "exact", head: true }).in("status", ["queued", "running"]);
+      pendingTasks = res.count ?? 0;
+    } else {
+      const res = await supabase.from("analysis_jobs").select("id", { count: "exact", head: true }).eq("created_by", uid).in("status", ["queued", "running"]);
+      pendingTasks = res.count ?? 0;
+    }
 
-    // --- scriptsInReview: scripts not yet approved/rejected (same visibility as GET /scripts) ---
+    // --- scriptsInReview: assignee-only for regulator, else created_by or assignee ---
     const reviewStatuses = ["draft", "in_review", "analysis_running", "review_required"];
     let scriptsInReviewQuery = supabase
       .from("scripts")
       .select("id", { count: "exact", head: true })
       .in("status", reviewStatuses);
-    if (!isAdmin) scriptsInReviewQuery = scriptsInReviewQuery.or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
+    if (seeAll) { /* no filter */ } else scriptsInReviewQuery = scriptsInReviewQuery.eq("assignee_id", uid);
     const { count: scriptsInReview } = await scriptsInReviewQuery;
 
-    // --- reportsThisMonth: analysis_reports created this month (via job ownership) ---
+    // --- reportsThisMonth, highCriticalFindings, findingsBySeverity: seeAll = whole DB; else jobs on scripts assigned to uid ---
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    // Get user's job ids first, then count reports
-    let jobQuery = supabase.from("analysis_jobs").select("id");
-    if (!isAdmin) jobQuery = jobQuery.eq("created_by", uid);
-    const { data: userJobs } = await jobQuery;
-    const jobIds = (userJobs ?? []).map((j: any) => j.id);
+    let jobIds: string[] = [];
+    if (!seeAll) {
+      const { data: myScripts } = await supabase.from("scripts").select("id").eq("assignee_id", uid);
+      const scriptIds = (myScripts ?? []).map((s: any) => s.id);
+      if (scriptIds.length > 0) {
+        const { data: jobsOnMyScripts } = await supabase.from("analysis_jobs").select("id").in("script_id", scriptIds);
+        jobIds = (jobsOnMyScripts ?? []).map((j: any) => j.id);
+      }
+    }
     let reportsThisMonth = 0;
-    if (jobIds.length > 0) {
+    if (seeAll) {
+      const res = await supabase.from("analysis_reports").select("id", { count: "exact", head: true }).gte("created_at", monthStart);
+      reportsThisMonth = res.count ?? 0;
+    } else if (jobIds.length > 0) {
       const { count } = await supabase
         .from("analysis_reports")
         .select("id", { count: "exact", head: true })
@@ -117,9 +129,11 @@ Deno.serve(async (req: Request) => {
       reportsThisMonth = count ?? 0;
     }
 
-    // --- highCriticalFindings: analysis_findings with severity high/critical (via job ownership) ---
     let highCriticalFindings = 0;
-    if (jobIds.length > 0) {
+    if (seeAll) {
+      const res = await supabase.from("analysis_findings").select("id", { count: "exact", head: true }).in("severity", ["high", "critical"]);
+      highCriticalFindings = res.count ?? 0;
+    } else if (jobIds.length > 0) {
       const { count } = await supabase
         .from("analysis_findings")
         .select("id", { count: "exact", head: true })
@@ -128,9 +142,9 @@ Deno.serve(async (req: Request) => {
       highCriticalFindings = count ?? 0;
     }
 
-    // --- scriptsByStatus: use scripts.status only; same RBAC as GET /scripts ---
+    // --- scriptsByStatus: assignee-only for regulator, else created_by or assignee ---
     let statusQuery = supabase.from("scripts").select("status");
-    if (!isAdmin) statusQuery = statusQuery.or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
+    if (!seeAll) statusQuery = statusQuery.eq("assignee_id", uid);
     const { data: scriptRows } = await statusQuery;
     const scriptsByStatus = {
       draft: 0,
@@ -156,12 +170,21 @@ Deno.serve(async (req: Request) => {
     // "completed" not in DB; use approved+rejected for chart/UI
     scriptsByStatus.completed = scriptsByStatus.approved + scriptsByStatus.rejected;
     if (typeof Deno !== "undefined" && Deno.env.get("DEBUG_DASHBOARD") === "true") {
-      console.log("[dashboard] scriptsByStatus", { isAdmin, uid: uid.slice(0, 8) + "...", scriptsByStatus });
+      console.log("[dashboard] scriptsByStatus", { seeAll, uid: uid.slice(0, 8) + "...", scriptsByStatus });
     }
 
     // --- findingsBySeverity ---
     const findingsBySeverity = { critical: 0, high: 0, medium: 0, low: 0 };
-    if (jobIds.length > 0) {
+    if (seeAll) {
+      const { data: findingRows } = await supabase.from("analysis_findings").select("severity");
+      for (const r of findingRows ?? []) {
+        const sev = (r as any).severity as string;
+        if (sev === "critical") findingsBySeverity.critical++;
+        else if (sev === "high") findingsBySeverity.high++;
+        else if (sev === "medium") findingsBySeverity.medium++;
+        else if (sev === "low") findingsBySeverity.low++;
+      }
+    } else if (jobIds.length > 0) {
       const { data: findingRows } = await supabase
         .from("analysis_findings")
         .select("severity")

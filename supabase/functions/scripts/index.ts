@@ -89,6 +89,48 @@ function normalizeStatus(s: unknown): string {
   return allowed.includes(v) ? v : "draft";
 }
 
+const RESEND_API = "https://api.resend.com/emails";
+const NOTIFY_FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
+
+/** Notify assignee when a script is assigned (in-app + optional email). */
+async function notifyScriptAssigned(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  assigneeId: string,
+  scriptId: string,
+  scriptTitle: string,
+  assignedByName: string
+): Promise<void> {
+  const title = `Script assigned: ${scriptTitle}`;
+  const body = `You have been assigned to review the script "${scriptTitle}"${assignedByName ? ` by ${assignedByName}` : ""}.`;
+  const metadata = { script_id: scriptId, script_title: scriptTitle, assigned_by_name: assignedByName };
+  const { error: notifErr } = await supabase.from("notifications").insert({
+    user_id: assigneeId,
+    type: "script_assigned",
+    title,
+    body,
+    metadata,
+  });
+  if (notifErr) console.error("[scripts] notify insert:", notifErr.message);
+
+  const resendKey = Deno.env.get("RESEND_API_KEY");
+  if (!resendKey) return;
+  const { data: profile } = await supabase.from("profiles").select("email").eq("user_id", assigneeId).maybeSingle();
+  let assigneeEmail = (profile as { email?: string } | null)?.email;
+  if (!assigneeEmail) {
+    const { data: authUser } = await supabase.auth.admin.getUserById(assigneeId);
+    assigneeEmail = authUser?.user?.email ?? null;
+  }
+  if (!assigneeEmail) return;
+  const appUrl = Deno.env.get("APP_PUBLIC_URL") ?? "";
+  const html = `<p>${body}</p>${appUrl ? `<p><a href="${appUrl}/scripts">Open Scripts</a></p>` : ""}`;
+  const res = await fetch(RESEND_API, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${resendKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: NOTIFY_FROM_EMAIL, to: [assigneeEmail], subject: title, html }),
+  });
+  if (!res.ok) console.error("[scripts] Resend error:", res.status, await res.text());
+}
+
 /** Shared predicate for script decision: used by GET .../decision/can and POST .../decision. */
 async function computeScriptDecisionCan(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -406,7 +448,13 @@ Deno.serve(async (req: Request) => {
       if (error.code === "23503") return json({ error: "companyId (client) not found" }, 400);
       return json({ error: error.message }, 500);
     }
-    return json(toScriptFrontend(row as ScriptRow));
+    const created = row as ScriptRow;
+    if (created.assignee_id) {
+      const { data: assignerProfile } = await supabase.from("profiles").select("name").eq("user_id", uid).maybeSingle();
+      const assignerName = (assignerProfile as { name?: string } | null)?.name ?? undefined;
+      await notifyScriptAssigned(supabase, created.assignee_id, created.id, created.title, assignerName ?? "");
+    }
+    return json(toScriptFrontend(created));
   }
 
   // POST /scripts/versions
@@ -714,7 +762,13 @@ Deno.serve(async (req: Request) => {
       return json({ error: updateErr.message }, 500);
     }
 
-    return json(toScriptFrontend(updated as ScriptRow));
+    const updatedRow = updated as ScriptRow;
+    if (updates.assignee_id && updatedRow.assignee_id) {
+      const { data: assignerProfile } = await supabase.from("profiles").select("name").eq("user_id", uid).maybeSingle();
+      const assignerName = (assignerProfile as { name?: string } | null)?.name ?? undefined;
+      await notifyScriptAssigned(supabase, updatedRow.assignee_id, updatedRow.id, updatedRow.title, assignerName ?? "");
+    }
+    return json(toScriptFrontend(updatedRow));
   }
 
   // DELETE /scripts/:id

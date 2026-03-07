@@ -12,13 +12,15 @@ import {
   LogOut,
   Globe,
   History,
-  Award
+  Award,
+  Bell
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useDataStore } from '@/store/dataStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { notificationsApi, NotificationItem } from '@/api';
 
 export function AppLayout() {
   const { t, lang, toggleLang } = useLangStore();
@@ -88,6 +90,52 @@ export function AppLayout() {
     return link.permission ? hasPermission(link.permission) : false;
   });
 
+  const [notifUnreadCount, setNotifUnreadCount] = useState(0);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifList, setNotifList] = useState<NotificationItem[]>([]);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    notificationsApi.getUnreadCount().then(r => setNotifUnreadCount(r.unreadCount)).catch(() => {});
+  }, []);
+
+  const openNotifPanel = useCallback(() => {
+    if (!notifOpen) {
+      notificationsApi.getList().then(r => {
+        setNotifList(r.data);
+        setNotifUnreadCount(r.unreadCount);
+      }).catch(() => {});
+    }
+    setNotifOpen(prev => !prev);
+  }, [notifOpen]);
+
+  useEffect(() => {
+    const onOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+    };
+    if (notifOpen) document.addEventListener('click', onOutside);
+    return () => document.removeEventListener('click', onOutside);
+  }, [notifOpen]);
+
+  const handleNotifClick = useCallback((n: NotificationItem) => {
+    if (!n.readAt) {
+      notificationsApi.markRead(n.id).then(() => {
+        setNotifUnreadCount(c => Math.max(0, c - 1));
+        setNotifList(list => list.map(item => item.id === n.id ? { ...item, readAt: new Date().toISOString() } : item));
+      }).catch(() => {});
+    }
+    const scriptId = n.metadata?.script_id as string | undefined;
+    setNotifOpen(false);
+    if (scriptId) navigate(`/workspace/${scriptId}`);
+  }, [navigate]);
+
+  const handleMarkAllRead = useCallback(() => {
+    notificationsApi.markAllRead().then(() => {
+      setNotifUnreadCount(0);
+      setNotifList(list => list.map(item => ({ ...item, readAt: item.readAt ?? new Date().toISOString() })));
+    }).catch(() => {});
+  }, []);
+
   return (
     <div className="flex h-screen bg-background text-text-main overflow-hidden">
       {/* Sidebar */}
@@ -126,6 +174,55 @@ export function AppLayout() {
           <div></div>
 
           <div className="flex items-center gap-4">
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={openNotifPanel}
+                aria-label={lang === 'ar' ? 'الإشعارات' : 'Notifications'}
+                className="relative flex items-center justify-center w-9 h-9 rounded-md text-text-muted hover:text-text-main hover:bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <Bell className="w-5 h-5" />
+                {notifUnreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-semibold text-white bg-error rounded-full">
+                    {notifUnreadCount > 99 ? '99+' : notifUnreadCount}
+                  </span>
+                )}
+              </button>
+              {notifOpen && (
+                <div className="absolute top-full right-0 mt-2 w-80 max-h-[min(24rem,70vh)] overflow-hidden rounded-lg border border-border bg-surface shadow-lg z-50 flex flex-col">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                    <span className="text-sm font-semibold text-text-main">{lang === 'ar' ? 'الإشعارات' : 'Notifications'}</span>
+                    {notifUnreadCount > 0 && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {lang === 'ar' ? 'تعليم الكل كمقروء' : 'Mark all read'}
+                      </button>
+                    )}
+                  </div>
+                  <div className="overflow-y-auto flex-1">
+                    {notifList.length === 0 ? (
+                      <p className="px-4 py-6 text-sm text-text-muted text-center">{lang === 'ar' ? 'لا توجد إشعارات' : 'No notifications'}</p>
+                    ) : (
+                      notifList.map((n) => (
+                        <button
+                          key={n.id}
+                          onClick={() => handleNotifClick(n)}
+                          className={cn(
+                            'w-full text-left px-4 py-3 border-b border-border last:border-b-0 hover:bg-background transition-colors',
+                            !n.readAt && 'bg-primary/5'
+                          )}
+                        >
+                          <p className="text-sm font-medium text-text-main">{n.title}</p>
+                          {n.body && <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{n.body}</p>}
+                          <p className="text-xs text-text-muted mt-1">{new Date(n.createdAt).toLocaleString(lang === 'ar' ? 'ar' : 'en')}</p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <button
               onClick={toggleLang}
               aria-label="Toggle language"

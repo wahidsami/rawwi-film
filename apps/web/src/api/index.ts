@@ -20,6 +20,27 @@ export const authApi = {
   getMe: (): Promise<MeResponse> => httpClient.get('/me'),
 };
 
+export interface NotificationItem {
+  id: string;
+  type: string;
+  title: string;
+  body?: string;
+  metadata: Record<string, unknown>;
+  readAt?: string;
+  createdAt: string;
+}
+
+export const notificationsApi = {
+  getList: (): Promise<{ data: NotificationItem[]; unreadCount: number }> =>
+    httpClient.get('/notifications'),
+  getUnreadCount: (): Promise<{ unreadCount: number }> =>
+    httpClient.get('/notifications/count'),
+  markRead: (id: string): Promise<{ ok: boolean }> =>
+    httpClient.patch(`/notifications/${encodeURIComponent(id)}/read`, {}),
+  markAllRead: (): Promise<{ ok: boolean }> =>
+    httpClient.post('/notifications/read-all', {}),
+};
+
 export const companiesApi = {
   getCompanies: (): Promise<Company[]> => httpClient.get('/companies'),
   addCompany: (company: Company): Promise<Company> => httpClient.post('/companies', company),

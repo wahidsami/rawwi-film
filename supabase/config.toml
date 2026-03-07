@@ -32,6 +32,9 @@ verify_jwt = false
 [functions.me]
 verify_jwt = false
 
+[functions.notifications]
+verify_jwt = false
+
 [functions.reports]
 verify_jwt = false
 

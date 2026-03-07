@@ -296,6 +296,15 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
     }
   }
 
+  if (path.startsWith('/notifications')) {
+    if (method === 'GET' && (path === '/notifications/count' || path.includes('/count'))) {
+      return { unreadCount: 0 };
+    }
+    if (method === 'GET') return { data: [], unreadCount: 0 };
+    if (method === 'PATCH' && path.match(/\/notifications\/[^/]+\/read$/)) return { ok: true };
+    if (method === 'POST' && path === '/notifications/read-all') return { ok: true };
+  }
+
   if (path.startsWith('/reports')) {
     if (method === 'GET' && path.includes('scriptId=')) {
       const q = path.indexOf('?');
