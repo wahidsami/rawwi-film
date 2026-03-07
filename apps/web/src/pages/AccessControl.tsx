@@ -4,9 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { Switch } from '@/components/ui/Switch';
 import { Modal } from '@/components/ui/Modal';
-import { Search, Plus, UserCog, Shield, Eye, Pencil, UserX, UserCheck, Trash2, Users, FileText, BookOpen, History, ShieldCheck } from 'lucide-react';
+import { Search, Plus, UserCog, Shield, Eye, Pencil, UserX, UserCheck, Trash2 } from 'lucide-react';
 import { usersApi, invitesApi } from '@/api';
 import type { UserListItem } from '@/api';
 import toast from 'react-hot-toast';
@@ -16,54 +15,6 @@ const ROLE_OPTIONS = [
   { value: 'super_admin', labelKey: 'superAdmin' as const },
   { value: 'regulator', labelKey: 'regulator' as const },
 ];
-
-
-// NEW: Section-based permission definitions
-const AVAILABLE_SECTIONS = [
-  {
-    id: 'clients',
-    nameEn: 'Clients',
-    nameAr: 'العملاء',
-    icon: Users,
-    description: 'View and manage client companies, upload scripts'
-  },
-  {
-    id: 'tasks',
-    nameEn: 'Tasks',
-    nameAr: 'المهام',
-    icon: FileText,
-    description: 'Assign and track analysis tasks'
-  },
-  {
-    id: 'glossary',
-    nameEn: 'Glossary',
-    nameAr: 'المعجم',
-    icon: BookOpen,
-    description: 'Manage lexicon terms and policies'
-  },
-  {
-    id: 'reports',
-    nameEn: 'Reports',
-    nameAr: 'التقارير',
-    icon: FileText,
-    description: 'View and generate analysis reports'
-  },
-  {
-    id: 'access_control',
-    nameEn: 'Access Control',
-    nameAr: 'التحكم بالصلاحيات',
-    icon: ShieldCheck,
-    description: 'Manage users and permissions (Admin only)'
-  },
-  {
-    id: 'audit',
-    nameEn: 'Audit Log',
-    nameAr: 'سجل العمليات',
-    icon: History,
-    description: 'View system activity logs'
-  },
-];
-
 
 export function AccessControl() {
   const { t, lang } = useLangStore();
@@ -76,7 +27,6 @@ export function AccessControl() {
     name: '',
     email: '',
     roleKey: 'admin',
-    allowedSections: [] as string[], // NEW: Section-based permissions
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -86,7 +36,6 @@ export function AccessControl() {
     name: '',
     roleKey: 'admin',
     status: 'active' as 'active' | 'disabled',
-    allowedSections: [] as string[] // NEW
   });
   const [editSaving, setEditSaving] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
@@ -130,16 +79,14 @@ export function AccessControl() {
     }
     setSubmitting(true);
     try {
-      // NEW: Send allowedSections instead of permissions
       await invitesApi.sendInvite({
         email,
         name: name || undefined,
         role: form.roleKey,
-        allowedSections: form.allowedSections.length ? form.allowedSections : undefined,
       });
       toast.success(lang === 'ar' ? 'تم إرسال الدعوة إلى البريد الإلكتروني' : 'Invite sent to email');
       setIsModalOpen(false);
-      setForm({ name: '', email: '', roleKey: 'admin', allowedSections: [] }); // Reset form
+      setForm({ name: '', email: '', roleKey: 'admin' });
       await loadUsers();
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to send invite');
@@ -150,20 +97,10 @@ export function AccessControl() {
 
   const openEdit = (user: UserListItem) => {
     setEditUser(user);
-    // Note: UserListItem from API might not have allowedSections typed yet if not updated in frontend types.
-    // For now we assume if it's there we use it, else empty.
-    // The GET /users endpoint maps metadata, so we might need to check how it's returned.
-    // Looking at users/index.ts GET: it just returns id, email, name, roleKey, status.
-    // *** CRITICAL FIX ***: GET /users needs to return allowedSections for this to work!
-    // I will Assume for now the frontend UserListItem has it or we cast it. 
-    // Wait, the previous steps didn't update GET /users to return allowedSections.
-    // I need to update GET /users as well.
-    const sections = (user as any).allowedSections || [];
     setEditForm({
       name: user.name,
       roleKey: user.roleKey ?? 'admin',
       status: user.status,
-      allowedSections: sections
     });
   };
 
@@ -176,7 +113,6 @@ export function AccessControl() {
         name: editForm.name.trim() || undefined,
         roleKey: editForm.roleKey,
         status: editForm.status,
-        allowedSections: editForm.allowedSections, // NEW
       });
       toast.success(lang === 'ar' ? 'تم تحديث المستخدم' : 'User updated');
       setEditUser(null);
@@ -409,6 +345,9 @@ export function AccessControl() {
                   <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
                 ))}
               </select>
+              <p className="text-xs text-text-muted">
+                {lang === 'ar' ? 'يحدد صلاحيات المستخدم في النظام' : 'Defines backend permissions.'}
+              </p>
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-text-main">{t('status')}</label>
@@ -420,43 +359,6 @@ export function AccessControl() {
                 <option value="active">{t('active')}</option>
                 <option value="disabled">{t('disabled')}</option>
               </select>
-            </div>
-
-            {/* NEW: Section Permissions for Edit */}
-            <div className="space-y-3 pt-2 border-t border-border">
-              <label className="block text-sm font-medium text-text-main">
-                {lang === 'ar' ? 'الأقسام المسموحة' : 'Dashboard Sections'}
-              </label>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {AVAILABLE_SECTIONS.map((section) => (
-                  <div
-                    key={section.id}
-                    className="flex items-center justify-between p-2 border border-border rounded-lg bg-surface/50"
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <section.icon className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-text-main">
-                          {lang === 'ar' ? section.nameAr : section.nameEn}
-                        </p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={editForm.allowedSections.includes(section.id)}
-                      onCheckedChange={(checked) => {
-                        setEditForm((f) => ({
-                          ...f,
-                          allowedSections: checked
-                            ? [...f.allowedSections, section.id]
-                            : f.allowedSections.filter((x) => x !== section.id),
-                        }));
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-border">
@@ -502,46 +404,9 @@ export function AccessControl() {
                 </option>
               ))}
             </select>
-          </div>
-
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-text-main">
-              {lang === 'ar' ? 'الأقسام المسموحة' : 'Dashboard Sections'}
-            </label>
             <p className="text-xs text-text-muted">
-              {lang === 'ar' ? 'حدد الأقسام التي يمكن لهذا المستخدم الوصول إليها' : 'Select which sections this user can access'}
+              {lang === 'ar' ? 'يحدد صلاحيات المستخدم وما يظهر له في القائمة' : 'Defines what they can do and which dashboard sections they see.'}
             </p>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {AVAILABLE_SECTIONS.map((section) => (
-                <div
-                  key={section.id}
-                  className="flex items-center justify-between p-3 border border-border rounded-lg hover:border-primary/30 transition-colors bg-surface"
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <section.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-text-main">
-                        {lang === 'ar' ? section.nameAr : section.nameEn}
-                      </p>
-                      <p className="text-xs text-text-muted">{section.description}</p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={form.allowedSections.includes(section.id)}
-                    onCheckedChange={(checked) => {
-                      setForm((f) => ({
-                        ...f,
-                        allowedSections: checked
-                          ? [...f.allowedSections, section.id]
-                          : f.allowedSections.filter((x) => x !== section.id),
-                      }));
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border">
