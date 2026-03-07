@@ -265,8 +265,10 @@ export function Overview() {
         </Button>
       </div>
 
-      {/* KPI Row — hide Pending Tasks, Reports This Month, High/Critical Findings for Regulator */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Stats cards: single grid — 1 row for regulator (5 cards), 2 rows for admin (8 cards) */}
+      <div
+        className={`grid gap-4 sm:gap-5 ${isRegulator ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4'}`}
+      >
         {!isRegulator && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -332,10 +334,7 @@ export function Overview() {
             </CardContent>
           </Card>
         )}
-      </div>
 
-      {/* Approval Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-text-muted">
