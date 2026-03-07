@@ -9,7 +9,7 @@
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { corsHeaders, jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
-import { isRegulatorOnly } from "../_shared/roleCheck.ts";
+import { isRegulatorOnly, isSuperAdminOrAdmin } from "../_shared/roleCheck.ts";
 
 const LOGO_BUCKET = "company-logos";
 const LOGO_MAX_BYTES = 2 * 1024 * 1024; // 2MB
@@ -98,15 +98,15 @@ Deno.serve(async (req: Request) => {
 
   try {
     // GET /companies → list all clients with script counts
-    // Regulators see only companies that have at least one script assigned to them
+    // Only Super Admin and Admin see all companies. Everyone else (regulators, no-roles) sees only companies with scripts assigned to them.
     if (method === "GET" && !pathAfter) {
-      const regulatorOnly = await isRegulatorOnly(supabase, actorUserId);
+      const seeAll = await isSuperAdminOrAdmin(supabase, actorUserId);
 
       let rows: ClientRow[] | null = null;
       let scriptRows: { client_id?: string | null; company_id?: string | null; assignee_id?: string | null }[] = [];
 
-      if (regulatorOnly) {
-        // Regulator: get client ids from scripts assigned to this user
+      if (!seeAll) {
+        // Not super admin/admin: return only companies that have at least one script assigned to this user
         const { data: assignedScripts, error: scriptsErr } = await supabase
           .from("scripts")
           .select("client_id, company_id, assignee_id")
@@ -139,12 +139,12 @@ Deno.serve(async (req: Request) => {
         scriptRows = allScripts ?? [];
       }
 
-      // Count scripts per client (for regulator: only scripts assigned to them)
+      // Count scripts per client (for non-seeAll: only scripts assigned to this user)
       const countByClient: Record<string, number> = {};
       for (const s of scriptRows) {
         const id = (s.client_id ?? s.company_id ?? "").toString().trim();
         if (!id) continue;
-        if (regulatorOnly && s.assignee_id !== actorUserId) continue;
+        if (!seeAll && s.assignee_id !== actorUserId) continue;
         countByClient[id] = (countByClient[id] ?? 0) + 1;
       }
 

@@ -8,7 +8,7 @@ import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { getCorrelationId } from "../_shared/utils.ts";
-import { canOverrideOwnScriptDecision, isRegulatorOnly, isUserAdmin } from "../_shared/roleCheck.ts";
+import { canOverrideOwnScriptDecision, isRegulatorOnly, isSuperAdminOrAdmin, isUserAdmin } from "../_shared/roleCheck.ts";
 
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
@@ -169,18 +169,15 @@ Deno.serve(async (req: Request) => {
   console.log(`[scripts] Request: ${method} ${req.url}`);
   console.log(`[scripts] Parsed rest path: '${rest}'`);
 
-  // GET /scripts
+  // GET /scripts — Only Super Admin and Admin see all. Everyone else sees only scripts assigned to them.
   if (method === "GET" && rest === "") {
     let query = supabase
       .from("scripts")
       .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
       .order("created_at", { ascending: false });
-    const isAdmin = await isUserAdmin(supabase, uid);
-    const regulatorOnly = await isRegulatorOnly(supabase, uid);
-    if (regulatorOnly) {
+    const seeAll = await isSuperAdminOrAdmin(supabase, uid);
+    if (!seeAll) {
       query = query.eq("assignee_id", uid);
-    } else if (!isAdmin) {
-      query = query.or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
     }
     const { data: rows, error } = await query;
     if (error) {

@@ -56,7 +56,7 @@ Deno.serve(async (req: Request) => {
 
   const meta = sbUser.user_metadata ?? {};
   const name = (meta.name as string) || sbUser.email?.split("@")[0] || "User";
-  const role = roleFromDb ?? (meta.role as string) || (roleIds.length ? "Admin" : "Admin");
+  const role = roleFromDb ?? ((meta.role as string) || (roleIds.length ? "Admin" : "Admin"));
   const normalizedRole = role === "Super Admin" || role === "super_admin" ? "Super Admin"
     : role === "Regulator" || role === "regulator" ? "Regulator"
       : role === "admin" || role === "Admin" ? "Admin" : "Admin";

@@ -41,32 +41,6 @@ export async function isUserAdmin(
 }
 
 /**
- * Returns true if the user has only Regulator (no Admin/Super Admin).
- * Used to enforce "Regulator can decide only scripts assigned to them".
- */
-export async function isRegulatorOnly(
-    supabase: ReturnType<typeof createSupabaseAdmin>,
-    userId: string
-): Promise<boolean> {
-    try {
-        const { data: roleRows, error } = await supabase
-            .from("user_roles")
-            .select("role_id, roles(key)")
-            .eq("user_id", userId);
-
-        if (error || !roleRows || roleRows.length === 0) return false;
-
-        const keys = (roleRows as any[]).map((r) => (r.roles?.key ?? "").toLowerCase());
-        const hasRegulator = keys.some((k) => k === "regulator");
-        const hasAdminOrSuper = keys.some((k) => k === "admin" || k === "super_admin");
-        return hasRegulator && !hasAdminOrSuper;
-    } catch (err) {
-        console.error("[roleCheck] isRegulatorOnly:", err);
-        return false;
-    }
-}
-
-/**
  * Returns true if the user is Super Admin only (used for override: can decide on own script).
  */
 export async function isSuperAdmin(
@@ -97,4 +71,54 @@ export async function canOverrideOwnScriptDecision(
     userId: string
 ): Promise<boolean> {
     return isSuperAdmin(supabase, userId);
+}
+
+/**
+ * Returns true if the user has Super Admin or Admin role (and can see all companies/scripts).
+ * Regulators and users with no roles do NOT get this — they only see assigned items.
+ */
+export async function isSuperAdminOrAdmin(
+    supabase: ReturnType<typeof createSupabaseAdmin>,
+    userId: string
+): Promise<boolean> {
+    try {
+        const { data: roleRows, error } = await supabase
+            .from("user_roles")
+            .select("role_id, roles(key)")
+            .eq("user_id", userId);
+
+        if (error || !roleRows || roleRows.length === 0) return false;
+
+        const keys = (roleRows as any[]).map((r) => (r.roles?.key ?? "").toLowerCase());
+        return keys.some((k) => k === "super_admin" || k === "admin");
+    } catch (err) {
+        console.error("[roleCheck] isSuperAdminOrAdmin:", err);
+        return false;
+    }
+}
+
+/**
+ * Returns true if the user has only Regulator (no Admin/Super Admin).
+ * Used to enforce "Regulator can decide only scripts assigned to them".
+ */
+export async function isRegulatorOnly(
+    supabase: ReturnType<typeof createSupabaseAdmin>,
+    userId: string
+): Promise<boolean> {
+    try {
+        const { data: roleRows, error } = await supabase
+            .from("user_roles")
+            .select("role_id, roles(key)")
+            .eq("user_id", userId);
+
+        if (error || !roleRows || roleRows.length === 0) return false;
+
+        const keys = (roleRows as any[]).map((r) => (r.roles?.key ?? "").toLowerCase());
+        const hasRegulator = keys.some((k) => k === "regulator");
+        const hasAdminOrSuper = keys.some((k) => k === "admin" || k === "super_admin");
+        return hasRegulator && !hasAdminOrSuper;
+    } catch (err) {
+        console.error("[roleCheck] isRegulatorOnly:", err);
+        return false;
+    }
 }
