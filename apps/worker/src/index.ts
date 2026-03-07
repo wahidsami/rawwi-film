@@ -4,13 +4,20 @@ import { config } from "./config.js";
 import { supabase } from "./db.js";
 import { fetchNextJob, fetchNextPendingChunk, claimChunk } from "./jobs.js";
 import { setContext, logger } from "./logger.js";
-import { initializeLexiconCache } from "./lexiconCache.js";
+import { initializeLexiconCache, getLexiconCache } from "./lexiconCache.js";
 import { processChunkJudge } from "./pipeline.js";
 import { setChunkFailed } from "./jobs.js";
+
+let lastLexiconRefreshJobId: string | null = null;
 
 async function processOneJob(): Promise<boolean> {
   const job = await fetchNextJob();
   if (!job) return false;
+
+  if (job.id !== lastLexiconRefreshJobId) {
+    await getLexiconCache(supabase).refresh();
+    lastLexiconRefreshJobId = job.id;
+  }
 
   setContext({ jobId: job.id });
   const chunk = await fetchNextPendingChunk(job.id);
@@ -59,6 +66,7 @@ async function runOnce(jobId: string | undefined): Promise<void> {
       process.exit(1);
     }
     setContext({ jobId: job.id });
+    await getLexiconCache(supabase).refresh();
     let processed = 0;
     while (true) {
       const chunk = await fetchNextPendingChunk(jobId);

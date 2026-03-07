@@ -16,6 +16,8 @@ import { Plus, Search, FileDown, FileUp, FileText, Edit2, Trash2, AlertCircle } 
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate } from '@/utils/dateFormat';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
+import { lexiconApi } from '@/api';
+import type { LexiconHistoryEntry } from '@/api/models';
 
 export function Glossary() {
   const { t, lang } = useLangStore();
@@ -276,6 +278,8 @@ export function Glossary() {
               { label: t('sexual'), value: 'sexual' },
               { label: t('drugs'), value: 'drugs' },
               { label: t('violence'), value: 'violence' },
+              { label: t('discrimination'), value: 'discrimination' },
+              { label: t('other'), value: 'other' },
             ]}
           />
           <Select
@@ -345,7 +349,7 @@ export function Glossary() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-xs">
-                      <p className="font-semibold">المادة {term.gcam_article_id} {term.gcam_atom_id ? `(${term.gcam_atom_id})` : ''}</p>
+                      <p className="font-semibold">{t('article')} {term.gcam_article_id} {term.gcam_atom_id ? `(${term.gcam_atom_id})` : ''}</p>
                       {term.gcam_article_title_ar && <p className="text-text-muted mt-0.5">{term.gcam_article_title_ar}</p>}
                     </div>
                   </td>
@@ -401,20 +405,35 @@ export function Glossary() {
 }
 
 function HistoryModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () => void; termId: string | null }) {
-  const { lang } = useLangStore();
-  const { lexiconHistory } = useDataStore();
+  const { t, lang } = useLangStore();
+  const { settings } = useSettingsStore();
+  const [history, setHistory] = useState<LexiconHistoryEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && termId) {
+      setLoading(true);
+      lexiconApi
+        .getHistory(termId)
+        .then((entries) => setHistory(entries.sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())))
+        .catch(() => setHistory([]))
+        .finally(() => setLoading(false));
+    } else {
+      setHistory([]);
+    }
+  }, [isOpen, termId]);
 
   if (!termId) return null;
-
-  const history = lexiconHistory.filter(h => h.lexicon_id === termId).sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime());
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={lang === 'ar' ? 'سجل التعديلات' : 'Audit History'}>
       <div className="space-y-4">
-        {history.length === 0 ? (
+        {loading ? (
+          <p className="text-sm text-text-muted text-center py-4">{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+        ) : history.length === 0 ? (
           <p className="text-sm text-text-muted text-center py-4">{lang === 'ar' ? 'لا يوجد سجل' : 'No history found'}</p>
         ) : (
-          history.map(entry => (
+          history.map((entry) => (
             <div key={entry.id} className="border border-border bg-background rounded-lg p-3 text-sm">
               <div className="flex justify-between items-start mb-2 border-b border-border/50 pb-2">
                 <Badge variant={entry.operation === 'INSERT' ? 'success' : entry.operation === 'DELETE' ? 'error' : 'warning'} className="text-[10px]">
@@ -423,8 +442,8 @@ function HistoryModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: (
                 <span className="text-text-muted text-xs">{formatDate(new Date(entry.changed_at), { lang, format: settings?.platform?.dateFormat })}</span>
               </div>
               <div className="flex justify-between items-center text-xs text-text-main">
-                <span className="font-medium">بواسطة: {entry.changed_by}</span>
-                {entry.change_reason && <span className="text-text-muted italic">"{entry.change_reason}"</span>}
+                <span className="font-medium">{t('byUser')} {entry.changed_by}</span>
+                {entry.change_reason && <span className="text-text-muted italic">&quot;{entry.change_reason}&quot;</span>}
               </div>
             </div>
           ))
@@ -478,13 +497,13 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
 
     const normalized = formData.term.trim().toLowerCase();
 
-    // Check duplicates
-    if (!termId) {
-      const exists = lexiconTerms.some(t => t.is_active && t.normalized_term === normalized);
-      if (exists) {
-        setError(t('termExists'));
-        return;
-      }
+    // Check duplicates (when editing, exclude current term)
+    const exists = lexiconTerms.some(
+      t => t.id !== termId && t.is_active && t.normalized_term === normalized
+    );
+    if (exists) {
+      setError(t('termExists'));
+      return;
     }
 
     if (termId) {
