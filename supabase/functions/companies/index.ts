@@ -9,6 +9,7 @@
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { corsHeaders, jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
+import { isRegulatorOnly } from "../_shared/roleCheck.ts";
 
 const LOGO_BUCKET = "company-logos";
 const LOGO_MAX_BYTES = 2 * 1024 * 1024; // 2MB
@@ -97,25 +98,54 @@ Deno.serve(async (req: Request) => {
 
   try {
     // GET /companies → list all clients with script counts
+    // Regulators see only companies that have at least one script assigned to them
     if (method === "GET" && !pathAfter) {
-      const { data: rows, error } = await supabase
-        .from("clients")
-        .select("id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, created_by, logo_url, logo_updated_at")
-        .order("created_at", { ascending: false });
+      const regulatorOnly = await isRegulatorOnly(supabase, actorUserId);
 
-      if (error) {
-        return jsonResponse({ error: error.message }, 500);
+      let rows: ClientRow[] | null = null;
+      let scriptRows: { client_id?: string | null; company_id?: string | null; assignee_id?: string | null }[] = [];
+
+      if (regulatorOnly) {
+        // Regulator: get client ids from scripts assigned to this user
+        const { data: assignedScripts, error: scriptsErr } = await supabase
+          .from("scripts")
+          .select("client_id, company_id, assignee_id")
+          .eq("assignee_id", actorUserId);
+        if (scriptsErr) {
+          return jsonResponse({ error: scriptsErr.message }, 500);
+        }
+        scriptRows = assignedScripts ?? [];
+        const clientIds = [...new Set((scriptRows ?? []).map((s) => (s.client_id ?? s.company_id ?? "").toString().trim()).filter(Boolean))];
+        if (clientIds.length === 0) {
+          return jsonResponse([]);
+        }
+        const { data: clientRows, error } = await supabase
+          .from("clients")
+          .select("id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, created_by, logo_url, logo_updated_at")
+          .in("id", clientIds)
+          .order("created_at", { ascending: false });
+        if (error) return jsonResponse({ error: error.message }, 500);
+        rows = clientRows as ClientRow[];
+      } else {
+        const { data: clientRows, error } = await supabase
+          .from("clients")
+          .select("id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, created_by, logo_url, logo_updated_at")
+          .order("created_at", { ascending: false });
+        if (error) return jsonResponse({ error: error.message }, 500);
+        rows = clientRows as ClientRow[];
+        const { data: allScripts } = await supabase
+          .from("scripts")
+          .select("client_id, company_id");
+        scriptRows = allScripts ?? [];
       }
 
-      // Count scripts per client (client_id or company_id = client id)
-      const { data: scriptRows } = await supabase
-        .from("scripts")
-        .select("client_id, company_id");
+      // Count scripts per client (for regulator: only scripts assigned to them)
       const countByClient: Record<string, number> = {};
-      for (const s of scriptRows ?? []) {
-        const row = s as { client_id?: string | null; company_id?: string | null };
-        const id = (row.client_id ?? row.company_id ?? "").toString().trim();
-        if (id) countByClient[id] = (countByClient[id] ?? 0) + 1;
+      for (const s of scriptRows) {
+        const id = (s.client_id ?? s.company_id ?? "").toString().trim();
+        if (!id) continue;
+        if (regulatorOnly && s.assignee_id !== actorUserId) continue;
+        countByClient[id] = (countByClient[id] ?? 0) + 1;
       }
 
       const list = (rows ?? []).map((r) => {

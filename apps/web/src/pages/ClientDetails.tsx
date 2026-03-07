@@ -72,6 +72,7 @@ export function ClientDetails() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
+  const canAddScript = hasPermission('upload_scripts');
   const [formData, setFormData] = useState({
     title: '',
     type: 'Film' as 'Film' | 'Series',
@@ -526,10 +527,12 @@ export function ClientDetails() {
 
       <div className="flex justify-between items-center pt-4">
         <h2 className="text-lg font-bold text-text-main">{lang === 'ar' ? 'النصوص' : 'Company Scripts'}</h2>
-        <Button onClick={() => setIsUploadOpen(true)} className="flex items-center gap-2">
-          <Upload className="w-4 h-4" />
-          {lang === 'ar' ? 'رفع نص جديد' : 'Upload New Script'}
-        </Button>
+        {canAddScript && (
+          <Button onClick={() => setIsUploadOpen(true)} className="flex items-center gap-2">
+            <Upload className="w-4 h-4" />
+            {lang === 'ar' ? 'رفع نص جديد' : 'Upload New Script'}
+          </Button>
+        )}
       </div>
 
       {companyScripts.length === 0 ? (
@@ -544,9 +547,11 @@ export function ClientDetails() {
             <p className="text-text-muted max-w-sm mb-6">
               {lang === 'ar' ? 'قم برفع أول نص للبدء في عملية التحليل.' : 'Upload the first script to start the analysis process.'}
             </p>
-            <Button onClick={() => setIsUploadOpen(true)}>
-              {lang === 'ar' ? 'رفع أول نص' : 'Upload First Script'}
-            </Button>
+            {canAddScript && (
+              <Button onClick={() => setIsUploadOpen(true)}>
+                {lang === 'ar' ? 'رفع أول نص' : 'Upload First Script'}
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (

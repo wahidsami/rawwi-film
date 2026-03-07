@@ -176,7 +176,12 @@ Deno.serve(async (req: Request) => {
       .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
       .order("created_at", { ascending: false });
     const isAdmin = await isUserAdmin(supabase, uid);
-    if (!isAdmin) query = query.or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
+    const regulatorOnly = await isRegulatorOnly(supabase, uid);
+    if (regulatorOnly) {
+      query = query.eq("assignee_id", uid);
+    } else if (!isAdmin) {
+      query = query.or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
+    }
     const { data: rows, error } = await query;
     if (error) {
       console.error(`[scripts] correlationId=${correlationId} list error=`, error.message);
@@ -354,8 +359,12 @@ Deno.serve(async (req: Request) => {
     return json(out);
   }
 
-  // POST /scripts
+  // POST /scripts — Regulators cannot create scripts; only work on assigned ones
   if (method === "POST" && rest === "") {
+    const regulatorOnly = await isRegulatorOnly(supabase, uid);
+    if (regulatorOnly) {
+      return json({ error: "Regulators cannot add new scripts. Only scripts assigned to you can be worked on." }, 403);
+    }
     let body: Record<string, unknown>;
     try {
       body = await req.json();
@@ -379,8 +388,6 @@ Deno.serve(async (req: Request) => {
       return json({ error: "status is required" }, 400);
     }
     const clientId = companyId.trim();
-    console.log('🔍 DEBUG [scripts POST]: body.assigneeId =', body.assigneeId);
-    console.log('🔍 DEBUG [scripts POST]: body.assignee_id =', body.assignee_id);
     const insert = {
       client_id: clientId,
       company_id: clientId,
@@ -390,9 +397,8 @@ Deno.serve(async (req: Request) => {
       synopsis: typeof body.synopsis === "string" ? body.synopsis.trim() || null : null,
       file_url: typeof body.fileUrl === "string" ? body.fileUrl.trim() || null : null,
       created_by: uid,
-      assignee_id: typeof body.assigneeId === "string" && body.assigneeId.trim() ? body.assigneeId.trim() : (typeof body.assignee_id === "string" && body.assignee_id.trim() ? body.assignee_id.trim() : null), // NEW
+      assignee_id: typeof body.assigneeId === "string" && body.assigneeId.trim() ? body.assigneeId.trim() : (typeof body.assignee_id === "string" && body.assignee_id.trim() ? body.assignee_id.trim() : null),
     };
-    console.log('🔍 DEBUG [scripts POST]: insert.assignee_id =', insert.assignee_id);
     const { data: row, error } = await supabase
       .from("scripts")
       .insert(insert)
@@ -403,10 +409,7 @@ Deno.serve(async (req: Request) => {
       if (error.code === "23503") return json({ error: "companyId (client) not found" }, 400);
       return json({ error: error.message }, 500);
     }
-    console.log('🔍 DEBUG [scripts POST]: row from DB =', row);
-    const response = toScriptFrontend(row as ScriptRow);
-    console.log('🔍 DEBUG [scripts POST]: response =', response);
-    return json(response);
+    return json(toScriptFrontend(row as ScriptRow));
   }
 
   // POST /scripts/versions
@@ -465,8 +468,6 @@ Deno.serve(async (req: Request) => {
       console.error(`[scripts] correlationId=${correlationId} version insert error=`, versionErr?.message);
       return json({ error: versionErr?.message || "Failed to create version" }, 500);
     }
-    await supabase.from("scripts").update({ current_version_id: version.id }).eq("id", sid);
-    return json(toVersionFrontend(version as ScriptVersionRow));
     await supabase.from("scripts").update({ current_version_id: version.id }).eq("id", sid);
     return json(toVersionFrontend(version as ScriptVersionRow));
   }
