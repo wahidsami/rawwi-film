@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
 import { reportService } from '@/services/reportService';
 import { useDataStore } from '@/store/dataStore';
+import { usersApi } from '@/api';
 import { ReportListItem } from '@/api/models';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -23,18 +24,19 @@ function Reports() {
   const [reports, setReports] = useState<ReportListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usersList, setUsersList] = useState<{ id: string; name: string }[]>([]);
 
   // Filters
   const [search, setSearch] = useState('');
   const [companyId, setCompanyId] = useState('all');
   const [decision, setDecision] = useState('all');
-  const [userFilter, setUserFilter] = useState('all'); // For admin filtering
+  const [userFilter, setUserFilter] = useState('all');
 
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -48,27 +50,29 @@ function Reports() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadReports();
-  }, [user]);
+  }, [loadReports]);
 
   const isAdmin = user?.role === 'Admin' || user?.role === 'Super Admin';
 
-  // Get unique users for admin filtering
-  // Get unique users for admin filtering - SAFE version
-  // Wrap in useMemo to prevent re-calculations and potential race conditions
-  // Handle case where reports or reportCreatorName might be undefined
-  const uniqueUsers = isAdmin
-    ? Array.from(new Set(reports.map(r => r.reportCreatorId).filter(Boolean))).map(id => {
-      const report = reports.find(r => r.reportCreatorId === id);
-      return {
-        id: id as string,
-        name: report?.reportCreatorName ?? 'Unknown'
-      };
-    }).filter(u => u && u.id)
-    : [];
+  // Load full user list for admin filter dropdown (so all users appear, not only report creators)
+  useEffect(() => {
+    if (!isAdmin) return;
+    usersApi.getUsers().then((list) => {
+      const active = list.filter((u) => u.status === 'active');
+      setUsersList(active.map((u) => ({ id: u.id, name: u.name || u.email || 'Unknown' })).sort((a, b) => a.name.localeCompare(b.name)));
+    }).catch(() => setUsersList([]));
+  }, [isAdmin]);
+
+  const handleResetFilters = useCallback(() => {
+    setSearch('');
+    setCompanyId('all');
+    setDecision('all');
+    setUserFilter('all');
+  }, []);
 
   const filteredReports = reports.filter(r => {
     const matchSearch = (r.scriptTitle ?? '').toLowerCase().includes(search.toLowerCase()) ||
@@ -204,18 +208,18 @@ function Reports() {
               { label: t('reviewRequired' as any) || 'Under Review', value: 'under_review' }
             ]}
           />
-          {/* Admin-only: Filter by user */}
-          {isAdmin && uniqueUsers.length > 0 && (
+          {/* Admin-only: Filter by user (full user list so all users appear in dropdown) */}
+          {isAdmin && (
             <Select
               value={userFilter}
               onChange={(e) => setUserFilter(e.target.value)}
               options={[
                 { label: lang === 'ar' ? 'جميع المستخدمين' : 'All Users', value: 'all' },
-                ...uniqueUsers.map(u => ({ label: u?.name ?? 'Unknown', value: u?.id }))
+                ...usersList.map((u) => ({ label: u.name, value: u.id }))
               ]}
             />
           )}
-          <Button variant="ghost" onClick={() => { setSearch(''); setCompanyId('all'); setDecision('all'); setUserFilter('all'); }}>
+          <Button type="button" variant="ghost" onClick={handleResetFilters}>
             <RefreshCw className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
             {lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
           </Button>
