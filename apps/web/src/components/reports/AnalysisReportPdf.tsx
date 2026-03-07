@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View, Image, Page, Document } from "@react-pdf/renderer";
+import { formatDate, formatDateLong } from "@/utils/dateFormat";
 import { ReportLayout } from "./ReportLayout";
 import { styles, themeColors, extendedStyles, summaryColors } from "./ReportStyles";
 
@@ -27,11 +28,32 @@ interface AnalysisReportData {
     lang?: "ar" | "en";
 }
 
-export const AnalysisReportPdf: React.FC<{ data: AnalysisReportData }> = ({
+export interface ReportBrandingProps {
+    logoUrl?: string;
+    footerLogoUrl?: string;
+    orgNameAr?: string;
+    orgNameEn?: string;
+    footerNoteAr?: string;
+    footerNoteEn?: string;
+    showDecisionBadge?: boolean;
+}
+
+export const AnalysisReportPdf: React.FC<{
+    data: AnalysisReportData;
+    dateFormat?: string;
+    branding?: ReportBrandingProps;
+}> = ({
     data,
+    dateFormat,
+    branding,
 }) => {
     const { scriptTitle, clientName, findings, lang = "en" } = data;
     const isAr = lang === "ar";
+    const formatOpts = { lang, format: dateFormat };
+    const coverLogo = branding?.logoUrl || "/loginlogo.png";
+    const coverFooterImg = branding?.footerLogoUrl || branding?.logoUrl || "/footer.png";
+    const poweredByText = isAr ? (branding?.orgNameAr || "Raawi Film") : (branding?.orgNameEn || "Raawi Film");
+    const showDecisionBadge = branding?.showDecisionBadge !== false;
 
     // Group findings by severity for summary
     const grouped = findings.reduce((acc, finding) => {
@@ -62,7 +84,7 @@ export const AnalysisReportPdf: React.FC<{ data: AnalysisReportData }> = ({
             <Page size="A4" style={[styles.page, extendedStyles.coverPage]}>
                 <View style={{ alignItems: "center", width: "100%" }}>
                     {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                    <Image src="/loginlogo.png" style={extendedStyles.coverLogo} />
+                    <Image src={coverLogo} style={extendedStyles.coverLogo} />
                 </View>
 
                 <View style={[extendedStyles.coverTitleContainer, { flex: 1, justifyContent: 'center' }]}>
@@ -76,18 +98,14 @@ export const AnalysisReportPdf: React.FC<{ data: AnalysisReportData }> = ({
                         {isAr ? "العميل: " : "Client: "} {clientName}
                     </Text>
                     <Text style={[extendedStyles.coverSubtitle, { marginTop: 30, fontSize: 12, color: '#9CA3AF' }]}>
-                        {new Date(data.createdAt).toLocaleDateString(isAr ? "ar-SA" : "en-GB", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                        })}
+                        {dateFormat ? formatDate(new Date(data.createdAt), formatOpts) : formatDateLong(new Date(data.createdAt), { lang })}
                     </Text>
                 </View>
 
                 <View style={{ alignItems: "center", width: "100%" }}>
-                    <Text style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 10 }}>Powered by</Text>
+                    <Text style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 10 }}>{isAr ? "مدعوم من" : "Powered by"} {poweredByText}</Text>
                     {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                    <Image src="/footer.png" style={extendedStyles.coverFooterImage} />
+                    <Image src={coverFooterImg} style={extendedStyles.coverFooterImage} />
                 </View>
             </Page>
 
@@ -96,6 +114,10 @@ export const AnalysisReportPdf: React.FC<{ data: AnalysisReportData }> = ({
                 title={isAr ? "تفاصيل التقرير" : "Report Details"}
                 lang={lang}
                 clientName={clientName}
+                dateFormat={dateFormat}
+                logoUrl={branding?.logoUrl}
+                footerNoteAr={branding?.footerNoteAr}
+                footerNoteEn={branding?.footerNoteEn}
             >
                 {/* Executive Summary Section */}
                 <Text style={[styles.sectionTitle, isAr ? styles.rtlText : {}]}>
@@ -197,8 +219,8 @@ export const AnalysisReportPdf: React.FC<{ data: AnalysisReportData }> = ({
                                         </Text>
                                     </View>
 
-                                    {/* Footer: Review Status (if exists) */}
-                                    {finding.reviewStatus && (
+                                    {/* Footer: Review Status (if exists and branding allows) */}
+                                    {showDecisionBadge && finding.reviewStatus && (
                                         <View style={styles.cardFooter}>
                                             <Text style={[styles.textXs, { color: finding.reviewStatus === 'approved' ? themeColors.secondary : themeColors.danger }]}>
                                                 {finding.reviewStatus === 'approved'
@@ -207,7 +229,7 @@ export const AnalysisReportPdf: React.FC<{ data: AnalysisReportData }> = ({
                                             </Text>
                                             {finding.reviewedAt && (
                                                 <Text style={styles.textXs}>
-                                                    {new Date(finding.reviewedAt).toLocaleDateString(isAr ? 'ar-SA' : 'en-GB')}
+                                                    {formatDate(new Date(finding.reviewedAt), formatOpts)}
                                                 </Text>
                                             )}
                                         </View>

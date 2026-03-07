@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppLayout } from '@/layout/AppLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { useLangStore } from '@/store/langStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { Login } from '@/pages/Login';
 import { ForgotPassword } from '@/pages/ForgotPassword';
 import { ResetPassword } from '@/pages/ResetPassword';
@@ -17,9 +20,23 @@ import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 import { Audit } from '@/pages/Audit';
 import { Scripts } from '@/pages/Scripts';
+import { Certificates } from '@/pages/Certificates';
 import { NotFound } from '@/pages/NotFound';
 
+const LANG_INIT_KEY = 'raawi-lang-initialized';
+
 function App() {
+  useEffect(() => {
+    if (typeof window === 'undefined' || localStorage.getItem(LANG_INIT_KEY)) return;
+    const defaultLang = useSettingsStore.getState().settings?.platform?.defaultLanguage;
+    if (defaultLang === 'ar' || defaultLang === 'en') {
+      useLangStore.setState({ lang: defaultLang });
+      document.documentElement.dir = defaultLang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = defaultLang;
+    }
+    localStorage.setItem(LANG_INIT_KEY, '1');
+  }, []);
+
   return (
     <Router>
       <Routes>
@@ -99,6 +116,7 @@ function App() {
               <Audit />
             </ProtectedRoute>
           } />
+          <Route path="certificates" element={<Certificates />} />
           <Route path="settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Route>

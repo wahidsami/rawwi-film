@@ -13,10 +13,13 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
 import { Plus, Search, FileDown, FileUp, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate } from '@/utils/dateFormat';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
 
 export function Glossary() {
   const { t, lang } = useLangStore();
+  const { settings } = useSettingsStore();
   const { lexiconTerms, deactivateLexiconTerm } = useDataStore();
   const { user } = useAuthStore();
 
@@ -102,7 +105,7 @@ export function Glossary() {
       const replacements: Record<string, string> = {
         '{{lang}}': isAr ? 'ar' : 'en',
         '{{dir}}': isAr ? 'rtl' : 'ltr',
-        '{{formattedDate}}': new Date().toLocaleDateString(isAr ? 'ar-SA' : 'en-GB'),
+        '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
         '{{generationTimestamp}}': new Date().toLocaleString(),
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,
@@ -205,14 +208,18 @@ export function Glossary() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-text-main">{t('lexiconManagement')}</h1>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="flex items-center gap-2">
-            <FileUp className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('importCsv')}</span>
-          </Button>
-          <Button variant="outline" className="flex items-center gap-2">
-            <FileDown className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('exportCsv')}</span>
-          </Button>
+          {settings?.features?.enableLexiconCsv !== false && (
+            <>
+              <Button variant="outline" className="flex items-center gap-2">
+                <FileUp className="w-4 h-4" />
+                <span className="hidden sm:inline">{t('importCsv')}</span>
+              </Button>
+              <Button variant="outline" className="flex items-center gap-2">
+                <FileDown className="w-4 h-4" />
+                <span className="hidden sm:inline">{t('exportCsv')}</span>
+              </Button>
+            </>
+          )}
           <Button
             variant="outline"
             className="flex items-center gap-2"
@@ -413,7 +420,7 @@ function HistoryModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: (
                 <Badge variant={entry.operation === 'INSERT' ? 'success' : entry.operation === 'DELETE' ? 'error' : 'warning'} className="text-[10px]">
                   {entry.operation}
                 </Badge>
-                <span className="text-text-muted text-xs">{new Date(entry.changed_at).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                <span className="text-text-muted text-xs">{formatDate(new Date(entry.changed_at), { lang, format: settings?.platform?.dateFormat })}</span>
               </div>
               <div className="flex justify-between items-center text-xs text-text-main">
                 <span className="font-medium">بواسطة: {entry.changed_by}</span>

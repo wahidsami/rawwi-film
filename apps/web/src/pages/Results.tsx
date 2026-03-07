@@ -3,6 +3,8 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate, formatDateLong } from '@/utils/dateFormat';
 import { type AnalysisReport } from '@/services/reportService';
 import { reportsApi, findingsApi, type AnalysisFinding } from '@/api';
 import type { ReviewStatus } from '@/api/models';
@@ -45,6 +47,9 @@ export function Results() {
   const navigate = useNavigate();
   const { lang, t } = useLangStore();
   const { user } = useAuthStore();
+  const { settings } = useSettingsStore();
+  const dateFormat = settings?.platform?.dateFormat;
+  const isAr = lang === 'ar';
   
   const [report, setReport] = useState<AnalysisReport | null>(null);
   const [findings, setFindings] = useState<AnalysisFinding[]>([]);
@@ -128,12 +133,13 @@ export function Results() {
   const handleFindingReview = async () => {
     if (!reviewModal) return;
     const reason = reviewReason.trim();
-    if (!reason || reason.length < 2) {
+    const requireReason = settings?.platform?.requireOverrideReason !== false;
+    if (requireReason && (!reason || reason.length < 2)) {
       toast.error(lang === 'ar' ? 'يرجى إدخال سبب' : 'Please enter a reason');
       return;
     }
     try {
-      const res = await findingsApi.reviewFinding(reviewModal.findingId, reviewModal.toStatus, reason);
+      const res = await findingsApi.reviewFinding(reviewModal.findingId, reviewModal.toStatus, reason || '');
       // Update local findings state
       setFindings(prev => prev.map(f => f.id === reviewModal.findingId ? {
         ...f,
@@ -308,7 +314,7 @@ export function Results() {
             reviewStatus: f.reviewStatus,
             reviewStatusLabel: f.reviewStatus === 'approved' ? (isAr ? 'تم الاعتماد (آمن)' : 'Approved (Safe)') : (isAr ? 'مخالفة' : 'Violation'),
             isSafe: f.reviewStatus === 'approved',
-            reviewedAt: f.reviewedAt ? new Date(f.reviewedAt).toLocaleDateString(isAr ? 'ar-SA' : 'en-GB') : ''
+            reviewedAt: f.reviewedAt ? formatDate(new Date(f.reviewedAt), { lang: isAr ? 'ar' : 'en', format: dateFormat }) : ''
           }))
         };
       });
@@ -322,11 +328,15 @@ export function Results() {
         '{{dir}}': isAr ? 'rtl' : 'ltr',
         '{{scriptTitle}}': scriptTitle,
         '{{clientName}}': clientName,
-        '{{formattedDate}}': new Date().toLocaleDateString(isAr ? 'ar-SA' : 'en-GB'),
+        '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: dateFormat }),
         '{{generationTimestamp}}': new Date().toLocaleString(),
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,
         '{{dashboardLogoBase64}}': dashLogo,
+        '{{orgNameAr}}': settings?.branding?.orgNameAr ?? 'راوي فيلم',
+        '{{orgNameEn}}': settings?.branding?.orgNameEn ?? 'Raawi Film',
+        '{{footerNoteAr}}': settings?.branding?.footerNoteAr ?? '',
+        '{{footerNoteEn}}': settings?.branding?.footerNoteEn ?? '',
 
         // Stats
         '{{stats.critical}}': String(displaySc.critical),
@@ -484,7 +494,7 @@ export function Results() {
         {isApproved && f.reviewReason && (
           <div className="mt-2 p-2 bg-success/5 border border-success/10 rounded text-xs text-success">
             <span className="font-semibold">{lang === 'ar' ? 'السبب:' : 'Reason:'}</span> {f.reviewReason}
-            {f.reviewedAt && <span className="text-text-muted ms-2">({new Date(f.reviewedAt).toLocaleString()})</span>}
+            {f.reviewedAt && <span className="text-text-muted ms-2">({formatDate(new Date(f.reviewedAt), { lang, format: dateFormat })})</span>}
           </div>
         )}
         {/* Action buttons */}
@@ -631,7 +641,7 @@ export function Results() {
           <div>
             <h1 className="text-2xl font-bold text-text-main">{lang === 'ar' ? 'تقرير التحليل' : 'Analysis Report'}</h1>
             <p className="text-text-muted mt-1 text-sm">
-              {new Date(report.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              {formatDateLong(new Date(report.createdAt), { lang })}
             </p>
           </div>
         </div>
@@ -664,7 +674,7 @@ export function Results() {
                   report.reviewStatus === 'rejected' ? (lang === 'ar' ? 'مرفوض' : 'Rejected') :
                     (lang === 'ar' ? 'قيد المراجعة' : 'Under Review')}
               </span>
-              {report.reviewedAt && <span className="text-xs text-text-muted ms-2">{new Date(report.reviewedAt).toLocaleString()}</span>}
+              {report.reviewedAt && <span className="text-xs text-text-muted ms-2">{formatDate(new Date(report.reviewedAt), { lang, format: dateFormat })}</span>}
             </div>
           </div>
 
@@ -859,7 +869,7 @@ export function Results() {
             <Button
               variant={reviewModal?.toStatus === 'approved' ? 'primary' : 'danger'}
               onClick={handleFindingReview}
-              disabled={!reviewReason.trim()}
+              disabled={settings?.platform?.requireOverrideReason !== false && !reviewReason.trim()}
             >
               {reviewModal?.toStatus === 'approved'
                 ? (lang === 'ar' ? 'اعتماد' : 'Approve')

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate } from '@/utils/dateFormat';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { CheckCircle, XCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -18,6 +20,7 @@ interface Decision {
 
 export function RecentDecisionsWidget() {
     const { lang } = useLangStore();
+    const { settings } = useSettingsStore();
     const navigate = useNavigate();
     const [decisions, setDecisions] = useState<Decision[]>([]);
     const [loading, setLoading] = useState(true);
@@ -57,7 +60,7 @@ export function RecentDecisionsWidget() {
         } else if (diffDays < 7) {
             return lang === 'ar' ? `منذ ${diffDays} يوم` : `${diffDays} days ago`;
         } else {
-            return date.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-GB');
+            return formatDate(date, { lang, format: settings?.platform?.dateFormat });
         }
     };
 

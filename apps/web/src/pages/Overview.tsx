@@ -4,6 +4,8 @@ import { dashboardService, DashboardStats } from '../services/dashboardService';
 import { activityService, Activity } from '../services/activityService';
 import { useAuthStore } from '../store/authStore';
 import { useDataStore } from '../store/dataStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate } from '@/utils/dateFormat';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { RecentDecisionsWidget } from '../components/RecentDecisionsWidget';
@@ -33,6 +35,7 @@ export function Overview() {
   const { t, lang } = useLangStore();
   const { user, hasPermission } = useAuthStore();
   const { fetchInitialData } = useDataStore();
+  const { settings } = useSettingsStore();
   const navigate = useNavigate();
 
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -98,7 +101,7 @@ export function Overview() {
       const replacements: Record<string, string> = {
         '{{lang}}': isAr ? 'ar' : 'en',
         '{{dir}}': isAr ? 'rtl' : 'ltr',
-        '{{formattedDate}}': new Date().toLocaleDateString(isAr ? 'ar-SA' : 'en-GB'),
+        '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
         '{{generationTimestamp}}': new Date().toLocaleString(),
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,

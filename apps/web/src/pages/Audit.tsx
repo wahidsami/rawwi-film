@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Download, FileText, ChevronDown, ChevronRight, Filter } from 'lucide-react';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate } from '@/utils/dateFormat';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
 
 const PAGE_SIZE = 20;
@@ -22,6 +24,7 @@ const TARGET_TYPES = ['script', 'task', 'report', 'glossary', 'client'];
 
 export function Audit() {
   const { t, lang } = useLangStore();
+  const { settings } = useSettingsStore();
   const [data, setData] = useState<AuditEventRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -150,7 +153,7 @@ export function Audit() {
       const replacements: Record<string, string> = {
         '{{lang}}': isAr ? 'ar' : 'en',
         '{{dir}}': isAr ? 'rtl' : 'ltr',
-        '{{formattedDate}}': new Date().toLocaleDateString(isAr ? 'ar-SA' : 'en-GB'),
+        '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
         '{{generationTimestamp}}': new Date().toLocaleString(),
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,

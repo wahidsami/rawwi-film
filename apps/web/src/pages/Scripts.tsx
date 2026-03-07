@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
 import { useDataStore } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate } from '@/utils/dateFormat';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -240,7 +242,7 @@ export function Scripts() {
                                     <div className="space-y-2 text-xs text-text-muted">
                                         <div className="flex items-center justify-between">
                                             <span>{lang === 'ar' ? 'تاريخ الإنشاء' : 'Created'}</span>
-                                            <span>{new Date(script.createdAt || Date.now()).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-GB')}</span>
+                                            <span>{formatDate(new Date(script.createdAt || Date.now()), { lang, format: settings?.platform?.dateFormat })}</span>
                                         </div>
                                         {script.assigneeId && (
                                             <div className="flex items-center justify-between">

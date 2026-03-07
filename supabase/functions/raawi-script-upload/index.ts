@@ -69,6 +69,8 @@ Deno.serve(async (req: Request) => {
     const file = formData.get("file") as File | null;
     const scriptId = formData.get("scriptId") as string | null;
     const companyId = formData.get("companyId") as string | null;
+    const createVersionRaw = formData.get("createVersion") as string | null;
+    const createVersion = createVersionRaw !== "false" && createVersionRaw !== "0";
 
     if (!file) {
         return json({ error: "file is required" }, 400);
@@ -122,6 +124,19 @@ Deno.serve(async (req: Request) => {
     if (updateError) {
         console.error("[raawi-script-upload] script update error:", updateError);
         // Don't fail the upload, just log the error
+    }
+
+    if (!createVersion) {
+        console.log("[raawi-script-upload] createVersion=false: skipping version creation and extraction");
+        return json({
+            success: true,
+            fileUrl,
+            path: storagePath,
+            fileName: file.name,
+            fileSize: file.size,
+            versionId: null,
+            versionNumber: null,
+        });
     }
 
     // Create ScriptVersion record

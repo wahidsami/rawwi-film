@@ -25,12 +25,15 @@ import {
   UserCheck
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate } from '@/utils/dateFormat';
 import { cn } from '@/utils/cn';
 import { usersApi } from '@/api';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
 
 export function Clients() {
   const { t, lang } = useLangStore();
+  const { settings } = useSettingsStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -107,7 +110,7 @@ export function Clients() {
       const replacements: Record<string, string> = {
         '{{lang}}': isAr ? 'ar' : 'en',
         '{{dir}}': isAr ? 'rtl' : 'ltr',
-        '{{formattedDate}}': new Date().toLocaleDateString(isAr ? 'ar-SA' : 'en-GB'),
+        '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
         '{{generationTimestamp}}': new Date().toLocaleString(),
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,

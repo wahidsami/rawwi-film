@@ -11,29 +11,55 @@ import {
   Settings,
   LogOut,
   Globe,
-  History
+  History,
+  Award
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useDataStore } from '@/store/dataStore';
+import { useSettingsStore } from '@/store/settingsStore';
 
 export function AppLayout() {
   const { t, lang, toggleLang } = useLangStore();
   const { user, logout, hasPermission, hasSection } = useAuthStore();
+  const { settings } = useSettingsStore();
   const navigate = useNavigate();
   const { fetchInitialData } = useDataStore();
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     navigate('/login');
-  };
+  }, [logout, navigate]);
 
-  const navLinks = [
+  // Session idle timeout: logout after N minutes of no activity
+  useEffect(() => {
+    const minutes = settings?.security?.sessionTimeoutMinutes;
+    if (!minutes || minutes <= 0) return;
+
+    const scheduleLogout = () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => {
+        handleLogout();
+      }, minutes * 60 * 1000);
+    };
+
+    scheduleLogout();
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    const onActivity = () => scheduleLogout();
+    events.forEach((ev) => document.addEventListener(ev, onActivity));
+    return () => {
+      events.forEach((ev) => document.removeEventListener(ev, onActivity));
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [settings?.security?.sessionTimeoutMinutes, handleLogout]);
+
+  const baseNavLinks = [
     // Always visible to all authenticated users
     { to: '/', icon: LayoutDashboard, label: t('overview'), section: null as string | null, permission: null as string | null },
 
@@ -43,12 +69,15 @@ export function AppLayout() {
     { to: '/glossary', icon: BookOpen, label: t('glossary'), section: 'glossary', permission: 'manage_glossary' },
     { to: '/tasks', icon: FileText, label: lang === 'ar' ? 'المهام' : 'Tasks', section: 'tasks', permission: 'view_tasks' },
     { to: '/reports', icon: FileText, label: t('reports'), section: 'reports', permission: 'view_reports' },
+    ...(settings?.features?.enableCertificates ? [{ to: '/certificates', icon: Award, label: t('certificates'), section: null as string | null, permission: null as string | null }] : []),
     { to: '/access-control', icon: ShieldCheck, label: t('accessControl'), section: 'access_control', permission: 'manage_users' },
     { to: '/audit', icon: History, label: t('auditLog'), section: 'audit', permission: 'view_audit' },
 
     // Always visible
     { to: '/settings', icon: Settings, label: t('settings'), section: null as string | null, permission: null as string | null },
-  ].filter(link => {
+  ];
+
+  const navLinks = baseNavLinks.filter(link => {
     // If no section/permission required, always show
     if (!link.section && !link.permission) return true;
 

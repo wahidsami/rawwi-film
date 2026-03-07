@@ -3,6 +3,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
 import { useDataStore, Finding, type Script } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate } from '@/utils/dateFormat';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
@@ -69,8 +71,10 @@ export function ScriptWorkspace() {
   const navigate = useNavigate();
   const location = useLocation();
   const { lang } = useLangStore();
+  const { settings } = useSettingsStore();
   const { scripts, findings, updateFindingStatus, updateScript, fetchInitialData, isLoading, error: dataError } = useDataStore();
   const { user, hasPermission } = useAuthStore();
+  const dateFormat = settings?.platform?.dateFormat;
 
   const scriptFromList = scripts.find(s => s.id === id);
   const [scriptFetched, setScriptFetched] = useState<Script | null>(null);
@@ -1548,7 +1552,7 @@ export function ScriptWorkspace() {
                     options={[
                       { label: lang === 'ar' ? 'اختر...' : 'Select...', value: '' },
                       ...reportHistory.map(r => ({
-                        label: `${new Date(r.createdAt).toLocaleDateString()} - ${r.findingsCount} findings`,
+                        label: `${formatDate(new Date(r.createdAt), { lang, format: dateFormat })} - ${r.findingsCount} findings`,
                         value: r.id
                       }))
                     ]}
@@ -1699,7 +1703,7 @@ export function ScriptWorkspace() {
                     >
                       {/* Header: created_at, status */}
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-text-muted font-mono">{new Date(r.createdAt).toLocaleString()}</span>
+                        <span className="text-[10px] text-text-muted font-mono">{formatDate(new Date(r.createdAt), { lang, format: dateFormat })}</span>
                         <Badge variant={reviewColor as any} className="text-[10px]">{reviewLabel}</Badge>
                       </div>
                       {/* created_by (audit) */}
@@ -1826,7 +1830,7 @@ export function ScriptWorkspace() {
             value={formData.reportId}
             onChange={(e) => setFormData({ ...formData, reportId: e.target.value })}
             options={reportHistory.map((r) => ({
-              label: `${new Date(r.createdAt).toLocaleDateString()} — ${r.findingsCount ?? 0} findings`,
+              label: `${formatDate(new Date(r.createdAt), { lang, format: dateFormat })} — ${r.findingsCount ?? 0} findings`,
               value: r.id,
             }))}
           />

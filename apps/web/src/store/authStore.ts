@@ -43,7 +43,7 @@ function getDefaultSectionsForRole(role: Role): string[] {
     case 'Super Admin':
       return ['clients', 'tasks', 'glossary', 'reports', 'access_control', 'audit'];
     case 'Admin':
-      return ['clients', 'tasks', 'glossary', 'reports', 'audit'];
+      return ['clients', 'tasks', 'glossary', 'reports', 'access_control', 'audit'];
     case 'Regulator':
       return ['clients', 'reports', 'glossary'];
     default:

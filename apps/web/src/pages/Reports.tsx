@@ -4,6 +4,8 @@ import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
 import { reportService } from '@/services/reportService';
 import { useDataStore } from '@/store/dataStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate } from '@/utils/dateFormat';
 import { usersApi } from '@/api';
 import { ReportListItem } from '@/api/models';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -20,6 +22,7 @@ function Reports() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { companies, fetchInitialData } = useDataStore();
+  const { settings } = useSettingsStore();
 
   const [reports, setReports] = useState<ReportListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +87,15 @@ function Reports() {
     return matchSearch && matchCompany && matchDecision && matchUser;
   });
 
-  const handleOpen = (report: ReportListItem) => navigate(`/report/${report.jobId ?? report.id}?by=${report.jobId ? 'job' : 'id'}`);
+  const handleOpen = (report: ReportListItem) => {
+    const path = `/report/${report.jobId ?? report.id}?by=${report.jobId ? 'job' : 'id'}`;
+    const mode = settings?.platform?.reportMode ?? 'both';
+    if (mode === 'standalone') {
+      window.open(path, '_blank');
+    } else {
+      navigate(path);
+    }
+  };
 
   const handlePrint = (e: React.MouseEvent, report: ReportListItem) => {
     e.stopPropagation();
@@ -268,7 +279,7 @@ function Reports() {
                         <span className="font-semibold text-text-main">{report.scriptTitle}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-text-muted">{new Date(report.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</td>
+                    <td className="px-6 py-4 text-text-muted">{formatDate(new Date(report.createdAt), { lang, format: settings?.platform?.dateFormat })}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-xs">
                         <User className="w-4 h-4 text-text-muted" />

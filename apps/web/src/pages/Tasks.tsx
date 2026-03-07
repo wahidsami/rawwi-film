@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate } from '@/utils/dateFormat';
 import { useDataStore } from '@/store/dataStore';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -7,6 +9,7 @@ import { ArrowRight, FileText, Calendar, CheckCircle2 } from 'lucide-react';
 
 export function Tasks() {
   const { lang } = useLangStore();
+  const { settings } = useSettingsStore();
   const navigate = useNavigate();
   const { tasks } = useDataStore();
 
@@ -95,7 +98,7 @@ export function Tasks() {
                     <td className="px-6 py-4 text-text-muted">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-text-muted" />
-                        <span>{new Date('createdAt' in task ? task.createdAt : (task as { assignedAt?: string }).assignedAt ?? '').toLocaleDateString()}</span>
+                        <span>{formatDate(new Date('createdAt' in task ? task.createdAt : (task as { assignedAt?: string }).assignedAt ?? ''), { lang, format: settings?.platform?.dateFormat })}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-end">

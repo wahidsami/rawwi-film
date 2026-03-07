@@ -1,6 +1,8 @@
 import { useLangStore } from '@/store/langStore';
 import { Finding } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate } from '@/utils/dateFormat';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from './Badge';
 import { Button } from './Button';
@@ -23,6 +25,7 @@ const severityConfig: Record<string, { icon: any, color: string, bg: string, str
 export function FindingCard({ finding, onOverrideClick, onRestoreClick }: FindingCardProps) {
   const { lang, t } = useLangStore();
   const { user } = useAuthStore();
+  const { settings } = useSettingsStore();
   const navigate = useNavigate();
   const isAdminOrRegulator = user?.role === 'Super Admin' || user?.role === 'Regulator' || user?.role === 'Admin';
   
@@ -33,11 +36,13 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick }: Findin
 
   const isOverriddenNotViolation = finding.override?.eventType === 'not_violation';
   const isHiddenFromOwner = finding.override?.eventType === 'hidden_from_owner';
-  
+  const enableHiddenOverrides = settings?.features?.enableHiddenOverrides !== false;
+  const showHiddenFromOwner = isHiddenFromOwner && enableHiddenOverrides;
+
   // Strip Color Logic
   let stripColor = severityConfig[finding.severity].strip;
   if (isOverriddenNotViolation) stripColor = 'bg-success';
-  if (isHiddenFromOwner) stripColor = 'bg-text-muted';
+  if (showHiddenFromOwner) stripColor = 'bg-text-muted';
 
   const SevIcon = severityConfig[finding.severity].icon;
 
@@ -55,7 +60,7 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick }: Findin
   return (
     <div className={cn(
       "relative bg-surface rounded-xl shadow-sm border border-border overflow-hidden mb-4 print:break-inside-avoid print:shadow-none print:border-border/50",
-      isHiddenFromOwner && "opacity-75 grayscale-[20%]"
+      showHiddenFromOwner && "opacity-75 grayscale-[20%]"
     )}>
       {/* Left Strip */}
       <div className={cn("absolute top-0 bottom-0 w-1.5 start-0", stripColor)} />
@@ -100,7 +105,7 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick }: Findin
                   {t('overriddenOk')}
                 </Badge>
               )}
-              {isHiddenFromOwner && (
+              {showHiddenFromOwner && (
                 <Badge variant="outline" className="text-xs flex items-center gap-1 text-text-muted">
                   <EyeOff className="w-3 h-3" />
                   {t('hiddenOwner')}
@@ -140,7 +145,7 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick }: Findin
               <span className="font-semibold text-text-main">{t('overrideReason')}</span>
               <div className="text-xs text-text-muted flex gap-3">
                 <span><span className="font-medium">{t('byUser')}</span> {finding.override.byUser}</span>
-                <span>{new Date(finding.override.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                <span>{formatDate(new Date(finding.override.createdAt), { lang, format: settings?.platform?.dateFormat })}</span>
               </div>
             </div>
             <p className="text-text-muted">{finding.override.reason}</p>

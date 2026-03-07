@@ -20,6 +20,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { ArrowLeft, Trash2, FileText, Edit, Upload, User } from 'lucide-react';
 
 import { usersApi } from '@/api';
+import { useSettingsStore } from '@/store/settingsStore';
+import { formatDate } from '@/utils/dateFormat';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
 import { normalizeScriptStatusForDisplay, normalizeScriptStatusForFilter } from '@/utils/scriptStatus';
 
@@ -27,6 +29,7 @@ export function ClientDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t, lang } = useLangStore();
+  const { settings } = useSettingsStore();
   const { companies, scripts, addScript, addTask } = useDataStore();
   const { user, hasPermission } = useAuthStore();
 
@@ -156,6 +159,7 @@ export function ClientDetails() {
       formData.append('file', file);
       formData.append('scriptId', scriptId);
       formData.append('companyId', company.companyId);
+      formData.append('createVersion', settings?.platform?.createVersionOnFileReplace !== false ? 'true' : 'false');
 
       const tokenPrefix = token.substring(0, 10) + '...';
       if (import.meta.env.DEV) console.log(`🔍 DEBUG: Starting upload. Token prefix: ${tokenPrefix}, Expires at: ${session?.expires_at}`);
@@ -371,7 +375,7 @@ export function ClientDetails() {
         '{{lang}}': isAr ? 'ar' : 'en',
         '{{dir}}': isAr ? 'rtl' : 'ltr',
         '{{clientName}}': isAr ? company.nameAr : company.nameEn,
-        '{{formattedDate}}': new Date().toLocaleDateString(isAr ? 'ar-SA' : 'en-GB'),
+        '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
         '{{generationTimestamp}}': new Date().toLocaleString(),
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,
