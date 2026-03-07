@@ -20,6 +20,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { ArrowLeft, Trash2, FileText, Edit, Upload, User } from 'lucide-react';
 
 import { usersApi } from '@/api';
+import { escapeHtmlSafe } from '@/utils/escapeHtml';
+import { normalizeScriptStatusForDisplay, normalizeScriptStatusForFilter } from '@/utils/scriptStatus';
 
 export function ClientDetails() {
   const { id } = useParams<{ id: string }>();
@@ -104,7 +106,7 @@ export function ClientDetails() {
       })
     );
     setReportCountByScriptId((prev) => ({ ...prev, ...counts }));
-  }, [companyScripts.map((s) => s.id).join(',')]);
+  }, [companyScripts]);
 
   useEffect(() => {
     loadReportCounts();
@@ -119,10 +121,11 @@ export function ClientDetails() {
       await scriptsApi.deleteScript(scriptId);
       toast.success(lang === 'ar' ? 'تم حذف النص' : 'Script deleted');
       await fetchInitialData();
-    } catch (err: any) {
-      toast.error(err?.message ?? (lang === 'ar' ? 'فشل الحذف' : 'Delete failed'));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل الحذف' : 'Delete failed'));
+    } finally {
+      setDeletingId(null);
     }
-    setDeletingId(null);
   };
 
   if (!company) {
@@ -155,7 +158,7 @@ export function ClientDetails() {
       formData.append('companyId', company.companyId);
 
       const tokenPrefix = token.substring(0, 10) + '...';
-      console.log(`🔍 DEBUG: Starting upload. Token prefix: ${tokenPrefix}, Expires at: ${session?.expires_at}`);
+      if (import.meta.env.DEV) console.log(`🔍 DEBUG: Starting upload. Token prefix: ${tokenPrefix}, Expires at: ${session?.expires_at}`);
 
       const response = await fetch(`${API_BASE_URL}/raawi-script-upload`, {
         method: 'POST',
@@ -166,19 +169,19 @@ export function ClientDetails() {
         body: formData,
       });
 
-      console.log('🔍 DEBUG: Upload response status:', response.status);
+      if (import.meta.env.DEV) console.log('🔍 DEBUG: Upload response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('🔍 DEBUG: Upload failed with response:', errorText);
+        if (import.meta.env.DEV) console.error('🔍 DEBUG: Upload failed with response:', errorText);
         throw new Error(`Upload failed: ${response.status} ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('🔍 DEBUG: Upload successful, result:', result);
+      if (import.meta.env.DEV) console.log('🔍 DEBUG: Upload successful, result:', result);
       return result;
     } catch (error) {
-      console.error('Upload error:', error);
+      if (import.meta.env.DEV) console.error('Upload error:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to upload document');
     }
   };
@@ -198,9 +201,11 @@ export function ClientDetails() {
 
     setIsSaving(true);
     try {
-      console.log('🔍 DEBUG: formData.assigneeId =', formData.assigneeId);
-      console.log('🔍 DEBUG: current user.id =', user?.id);
-      console.log('🔍 DEBUG: isAssigning =', isAssigning);
+      if (import.meta.env.DEV) {
+        console.log('🔍 DEBUG: formData.assigneeId =', formData.assigneeId);
+        console.log('🔍 DEBUG: current user.id =', user?.id);
+        console.log('🔍 DEBUG: isAssigning =', isAssigning);
+      }
       const scriptPayload: Script = {
         id: '',
         companyId: company.companyId,
@@ -211,10 +216,10 @@ export function ClientDetails() {
         createdAt: new Date().toISOString().split('T')[0],
         assigneeId: formData.assigneeId,
       };
-      console.log('🔍 DEBUG: scriptPayload =', scriptPayload);
+      if (import.meta.env.DEV) console.log('🔍 DEBUG: scriptPayload =', scriptPayload);
 
       const saved = await addScript(scriptPayload);
-      console.log('🔍 DEBUG: saved script returned from API =', saved);
+      if (import.meta.env.DEV) console.log('🔍 DEBUG: saved script returned from API =', saved);
       if (!saved) {
         setIsSaving(false);
         return;
@@ -224,9 +229,9 @@ export function ClientDetails() {
       if (isAssigning && uploadFile) {
         toast.loading(lang === 'ar' ? 'جاري رفع المستند...' : 'Uploading document...', { id: 'upload-toast' });
         try {
-          console.log('🔍 DEBUG: Starting document upload for script', saved.id, 'file:', uploadFile.name);
+          if (import.meta.env.DEV) console.log('🔍 DEBUG: Starting document upload for script', saved.id, 'file:', uploadFile.name);
           const uploadResult = await uploadScriptDocument(saved.id, uploadFile);
-          console.log('🔍 DEBUG: Upload result =', uploadResult);
+          if (import.meta.env.DEV) console.log('🔍 DEBUG: Upload result =', uploadResult);
 
           // Extract text client-side
           if (uploadResult.versionId) {
@@ -262,14 +267,14 @@ export function ClientDetails() {
 
               toast.success(lang === 'ar' ? 'تم رفع وتحميل المستند بنجاح' : 'Document uploaded and loaded successfully', { id: 'upload-toast' });
             } catch (extractErr) {
-              console.error('🔍 DEBUG: Extraction error =', extractErr);
+              if (import.meta.env.DEV) console.error('🔍 DEBUG: Extraction error =', extractErr);
               toast.error(lang === 'ar' ? 'تم رفع الملف لكن فشل استخراج النص' : 'File uploaded but text extraction failed', { id: 'upload-toast' });
             }
           } else {
             toast.success(lang === 'ar' ? 'تم رفع المستند بنجاح' : 'Document uploaded successfully', { id: 'upload-toast' });
           }
         } catch (err) {
-          console.error('🔍 DEBUG: Upload error =', err);
+          if (import.meta.env.DEV) console.error('🔍 DEBUG: Upload error =', err);
           toast.error(lang === 'ar' ? 'فشل رفع المستند' : 'Failed to upload document', { id: 'upload-toast' });
         }
       }
@@ -337,10 +342,11 @@ export function ClientDetails() {
 
       // 2. Prepare Scripts Data
       const scriptsData = companyScripts.map(s => {
+        const norm = normalizeScriptStatusForFilter(s.status);
         let statusClass = 'badge-outline';
-        if (s.status === 'Approved') statusClass = 'badge-success';
-        if (s.status === 'In Review') statusClass = 'badge-warning';
-        if (s.status === 'Rejected') statusClass = 'badge-danger';
+        if (norm === 'approved') statusClass = 'badge-success';
+        if (norm === 'in_review' || norm === 'review_required') statusClass = 'badge-warning';
+        if (norm === 'rejected') statusClass = 'badge-danger';
 
         return {
           title: s.title,
@@ -348,16 +354,16 @@ export function ClientDetails() {
           date: s.createdAt,
           assignee: availableUsers.find(u => u.id === s.assigneeId)?.name || (isAr ? 'غير مسند' : 'Unassigned'),
           reportsCount: reportCountByScriptId[s.id] ?? 0,
-          status: s.status, // Ideally translate this
+          status: normalizeScriptStatusForDisplay(s.status),
           statusClass
         };
       });
 
-      // Stats
+      // Stats (normalized so API casing doesn't matter)
       const total = companyScripts.length;
-      const approved = companyScripts.filter(s => s.status === 'Approved').length;
-      const inReview = companyScripts.filter(s => s.status === 'In Review').length;
-      const draft = companyScripts.filter(s => s.status === 'Draft').length;
+      const approved = companyScripts.filter(s => normalizeScriptStatusForFilter(s.status) === 'approved').length;
+      const inReview = companyScripts.filter(s => ['in_review', 'review_required'].includes(normalizeScriptStatusForFilter(s.status))).length;
+      const draft = companyScripts.filter(s => normalizeScriptStatusForFilter(s.status) === 'draft').length;
 
       // 3. Replacements
       let html = template;
@@ -423,12 +429,12 @@ export function ClientDetails() {
       // 4. Generate Rows
       const rowsHtml = scriptsData.map(item => `
         <tr>
-            <td><div class="font-bold">${item.title}</div></td>
-            <td>${item.type}</td>
-            <td>${item.date}</td>
-            <td><div style="font-size: 10px;">${item.assignee}</div></td>
+            <td><div class="font-bold">${escapeHtmlSafe(item.title)}</div></td>
+            <td>${escapeHtmlSafe(item.type)}</td>
+            <td>${escapeHtmlSafe(item.date)}</td>
+            <td><div style="font-size: 10px;">${escapeHtmlSafe(item.assignee)}</div></td>
             <td style="text-align: center;"><span style="font-weight: 600;">${item.reportsCount}</span></td>
-            <td><span class="badge ${item.statusClass}">${item.status}</span></td>
+            <td><span class="badge ${item.statusClass}">${escapeHtmlSafe(String(item.status))}</span></td>
         </tr>
       `).join('');
 
@@ -449,7 +455,7 @@ export function ClientDetails() {
       }, 100);
 
     } catch (err: unknown) {
-      console.error(err);
+      if (import.meta.env.DEV) console.error(err);
       toast.error(err instanceof Error ? err.message : 'Report generation failed');
     } finally {
       setExportingPdf(false);
@@ -550,7 +556,7 @@ export function ClientDetails() {
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'التاريخ' : 'Date'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'الحالة' : 'Status'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'التقارير' : 'Reports'}</th>
-                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'التقارير' : 'Reports'}</th>
+                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'المعين' : 'Assignee'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'المعين' : 'Assignee'}</th>
                   {isAdmin && (
                     <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'أنشأ بواسطة' : 'Created By'}</th>
@@ -572,7 +578,7 @@ export function ClientDetails() {
                     <td className="px-6 py-4 text-text-muted">{script.createdAt}</td>
                     <td className="px-6 py-4">
                       <Badge variant={script.status === 'Draft' ? 'outline' : script.status === 'Approved' ? 'success' : 'warning'}>
-                        {script.status}
+                        {normalizeScriptStatusForDisplay(script.status)}
                       </Badge>
                     </td>
                     <td className="px-6 py-4">

@@ -107,6 +107,8 @@ export function ScriptWorkspace() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisJobId, setAnalysisJobId] = useState<string | null>(null);
   const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
+  /** When job completes, we fetch the report id so "View Report" can use by=id. */
+  const [reportIdWhenJobCompleted, setReportIdWhenJobCompleted] = useState<string | null>(null);
   const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
@@ -129,9 +131,11 @@ export function ScriptWorkspace() {
         setAnalysisJob(job);
         if (job.status === 'completed' || job.status === 'failed') {
           stopPolling();
-          // Fetch the report id so "View Report" navigates correctly
+          // Fetch the report id so "View Report" navigates correctly (by=id preferred)
           if (job.status === 'completed') {
-
+            reportsApi.getByJob(job.id).then((report) => {
+              setReportIdWhenJobCompleted(report.id);
+            }).catch(() => {});
           }
         }
       } catch (err) {
@@ -1925,7 +1929,7 @@ export function ScriptWorkspace() {
           {/* Action buttons */}
           <div className="flex items-center justify-between pt-2">
             {analysisJob?.status === 'completed' && (
-              <Button size="sm" onClick={() => { setAnalysisModalOpen(false); navigate(`/report/${analysisJobId}?by=job`); }}>
+              <Button size="sm" onClick={() => { setAnalysisModalOpen(false); const rid = reportIdWhenJobCompleted ?? analysisJobId; navigate(rid ? (reportIdWhenJobCompleted ? `/report/${rid}?by=id` : `/report/${rid}?by=job`) : '/reports'); }}>
                 <FileText className="w-4 h-4 mr-1" />
                 {lang === 'ar' ? 'عرض التقرير' : 'View Report'}
               </Button>

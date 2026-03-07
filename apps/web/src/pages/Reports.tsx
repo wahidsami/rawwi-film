@@ -80,7 +80,7 @@ function Reports() {
     return matchSearch && matchCompany && matchDecision && matchUser;
   });
 
-  const handleOpen = (report: ReportListItem) => navigate(`/report/${(report as any).jobId ?? (report as any).id}?by=${(report as any).jobId ? 'job' : 'id'}`);
+  const handleOpen = (report: ReportListItem) => navigate(`/report/${report.jobId ?? report.id}?by=${report.jobId ? 'job' : 'id'}`);
 
   const handlePrint = (e: React.MouseEvent, report: ReportListItem) => {
     e.stopPropagation();
@@ -93,6 +93,30 @@ function Reports() {
     under_review: { label: t('reviewRequired' as any) || 'Review', color: 'warning' }
   };
 
+  const handleExportCsv = () => {
+    const headers = ['id', 'jobId', 'companyId', 'companyNameEn', 'companyNameAr', 'scriptTitle', 'createdAt', 'reviewStatus', 'findingsCount', 'reportCreatorName'];
+    const rows = filteredReports.map(r => [
+      r.id ?? '',
+      r.jobId ?? '',
+      r.companyId ?? '',
+      (r.companyNameEn ?? '').replace(/"/g, '""'),
+      (r.companyNameAr ?? '').replace(/"/g, '""'),
+      (r.scriptTitle ?? '').replace(/"/g, '""'),
+      r.createdAt ?? '',
+      r.reviewStatus ?? '',
+      String(r.findingsCount ?? 0),
+      (r.reportCreatorName ?? '').replace(/"/g, '""'),
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reports-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -101,7 +125,7 @@ function Reports() {
           <h1 className="text-2xl font-bold tracking-tight text-text-main">{t('reports')}</h1>
           <p className="text-text-muted mt-1">{t('reportsSubtitle' as any)}</p>
         </div>
-        <Button variant="outline" className="flex items-center gap-2">
+        <Button variant="outline" className="flex items-center gap-2" onClick={handleExportCsv}>
           <FileDown className="w-4 h-4" />
           <span className="hidden sm:inline">{t('exportCsv')}</span>
         </Button>
@@ -207,10 +231,10 @@ function Reports() {
             <div className="p-12 text-center text-error flex flex-col items-center">
               <AlertTriangle className="w-8 h-8 mb-2" />
               <p>{error}</p>
-              <Button onClick={loadReports} className="mt-4" variant="outline">Retry</Button>
+              <Button onClick={loadReports} className="mt-4" variant="outline">{t('retry')}</Button>
             </div>
           ) : filteredReports.length === 0 ? (
-            <div className="text-center p-12 text-text-muted">{lang === 'ar' ? 'لا يوجد تقارير.' : 'No reports found.'}</div>
+            <div className="text-center p-12 text-text-muted">{t('noReportsFound')}</div>
           ) : (
             <table className="w-full text-sm text-start">
               <thead className="text-xs text-text-muted uppercase bg-background border-b border-border">

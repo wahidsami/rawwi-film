@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback, Fragment } from 'react';
 import toast from 'react-hot-toast';
 import { useLangStore } from '@/store/langStore';
 import { auditService, AuditEventRow, AuditListParams } from '@/services/auditService';
-import { supabase } from '@/lib/supabaseClient';
+import { usersApi } from '@/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Download, FileText, ChevronDown, ChevronRight, Filter } from 'lucide-react';
+import { escapeHtmlSafe } from '@/utils/escapeHtml';
 
 const PAGE_SIZE = 20;
 const EVENT_TYPES = [
@@ -63,41 +64,21 @@ export function Audit() {
     load();
   }, [load]);
 
-  // Fetch users list for filter dropdown
+  // Fetch users list for filter dropdown (use existing users API; auth.admin is server-only)
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        // Fetch all users from user_roles with their roles
-        const { data: userRolesData } = await supabase
-          .from('user_roles')
-          .select('user_id, role:roles(name)');
-
-        if (!userRolesData) return;
-
-        // Get unique user IDs
-        const userIds = [...new Set(userRolesData.map((ur: any) => ur.user_id))];
-
-        // Fetch user emails from auth
-        const userList: Array<{ id: string; email: string; role: string }> = [];
-        for (const userId of userIds) {
-          const { data: { user } } = await supabase.auth.admin.getUserById(userId);
-          if (user?.email) {
-            const userRole = userRolesData.find((ur: any) => ur.user_id === userId);
-            userList.push({
-              id: userId,
-              email: user.email,
-              role: (userRole as any)?.role?.name ?? 'No Role'
-            });
-          }
-        }
-
-        setUsers(userList.sort((a, b) => a.email.localeCompare(b.email)));
-      } catch (err) {
-        console.error('Failed to fetch users:', err);
-      }
-    };
-
-    fetchUsers();
+    let cancelled = false;
+    usersApi.getUsers()
+      .then((list) => {
+        if (cancelled) return;
+        const userList = list
+          .map(u => ({ id: u.id, email: u.email, role: u.roleKey ?? '—' }))
+          .sort((a, b) => a.email.localeCompare(b.email));
+        setUsers(userList);
+      })
+      .catch((err) => {
+        if (!cancelled) console.error('Failed to fetch users:', err);
+      });
+    return () => { cancelled = true; };
   }, []);
 
   const handleExportCsv = async () => {
@@ -226,21 +207,21 @@ export function Audit() {
       // 5. Generate Rows
       const rowsHtml = eventsData.map(item => `
         <tr>
-            <td><div class="font-bold">${item.eventType}</div></td>
+            <td><div class="font-bold">${escapeHtmlSafe(item.eventType)}</div></td>
             <td>
-                <div>${item.actorName}</div>
-                <div style="color: #6B7280; font-size: 8px;">${item.actorRole}</div>
+                <div>${escapeHtmlSafe(item.actorName)}</div>
+                <div style="color: #6B7280; font-size: 8px;">${escapeHtmlSafe(item.actorRole)}</div>
             </td>
-            <td dir="ltr" style="text-align: ${item.align};">${item.occurredAt}</td>
+            <td dir="ltr" style="text-align: ${item.align};">${escapeHtmlSafe(item.occurredAt)}</td>
             <td>
-                <span style="font-weight: 600;">${item.targetType}</span>
-                ${item.targetLabel ? `<span style="color: #6B7280;">: ${item.targetLabel}</span>` : ''}
-            </td>
-            <td>
-                <span class="badge ${item.statusClass}">${item.resultStatus}</span>
+                <span style="font-weight: 600;">${escapeHtmlSafe(item.targetType)}</span>
+                ${item.targetLabel ? `<span style="color: #6B7280;">: ${escapeHtmlSafe(item.targetLabel)}</span>` : ''}
             </td>
             <td>
-                <div style="font-family: monospace; white-space: pre-wrap; font-size: 8px; color: #4B5563;">${item.metadata}</div>
+                <span class="badge ${item.statusClass}">${escapeHtmlSafe(item.resultStatus)}</span>
+            </td>
+            <td>
+                <div style="font-family: monospace; white-space: pre-wrap; font-size: 8px; color: #4B5563;">${escapeHtmlSafe(item.metadata)}</div>
             </td>
         </tr>
       `).join('');
@@ -377,7 +358,7 @@ export function Audit() {
             />
           </div>
           <div className="flex justify-end">
-            <Button onClick={() => setPage(1)}>Apply</Button>
+            <Button onClick={() => setPage(1)}>{t('applyFilters')}</Button>
           </div>
         </CardContent>
       </Card>
@@ -469,7 +450,7 @@ export function Audit() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  Previous
+                  {t('previous')}
                 </Button>
                 <span className="flex items-center px-2 text-sm text-text-muted">
                   {page} / {totalPages}
@@ -480,7 +461,7 @@ export function Audit() {
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  Next
+                  {t('next')}
                 </Button>
               </div>
             </div>

@@ -17,6 +17,7 @@ import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 import { Audit } from '@/pages/Audit';
 import { Scripts } from '@/pages/Scripts';
+import { NotFound } from '@/pages/NotFound';
 
 function App() {
   return (
@@ -88,7 +89,6 @@ function App() {
               <Results />
             </ProtectedRoute>
           } />
-          <Route path="certificates" element={<div className="p-4">Certificates Placeholder</div>} />
           <Route path="reports" element={
             <ProtectedRoute requiredPermission="view_reports">
               <Reports />
@@ -100,7 +100,7 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="settings" element={<Settings />} />
-          <Route path="*" element={<div className="p-4">Page Not Found</div>} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </Router>

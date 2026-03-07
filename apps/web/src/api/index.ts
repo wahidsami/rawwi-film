@@ -1,5 +1,5 @@
 import { httpClient, USE_MOCK_API, API_BASE_URL } from './httpClient';
-import { Company, Script, ScriptVersion, Task, AnalysisJob, ChunkStatus, Finding, LexiconTerm, LexiconHistoryEntry, Report, ReportListItem } from './models';
+import { Company, Script, ScriptVersion, Task, AnalysisJob, ChunkStatus, Finding, LexiconTerm, LexiconHistoryEntry, Report, ReportListItem, FindingReviewResponse } from './models';
 import { supabase } from '@/lib/supabaseClient';
 
 /** Response from GET /me: current user with permissions from RBAC. */
@@ -189,7 +189,7 @@ export const findingsApi = {
   updateFindingOverride: (id: string, override: any) =>
     httpClient.put(`/findings/${id}`, { override }),
   /** Approve (mark safe) or revert a finding. */
-  reviewFinding: (findingId: string, toStatus: 'approved' | 'violation', reason: string): Promise<{ ok: boolean }> =>
+  reviewFinding: (findingId: string, toStatus: 'approved' | 'violation', reason: string): Promise<FindingReviewResponse> =>
     httpClient.post('/findings/review', { findingId, toStatus, reason }),
   /** Create a manual finding (POST /findings/manual). */
   createManual: (body: CreateManualFindingBody): Promise<AnalysisFinding> =>

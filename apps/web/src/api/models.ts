@@ -179,6 +179,17 @@ export interface LexiconHistoryEntry {
 
 export type ReviewStatus = 'under_review' | 'approved' | 'rejected';
 
+/** Response from POST /findings/review (finding-level review). */
+export interface FindingReviewResponse {
+  ok: boolean;
+  reportAggregates?: {
+    findingsCount: number;
+    severityCounts: { low: number; medium: number; high: number; critical: number };
+    approvedCount: number;
+    rejectedCount?: number;
+  };
+}
+
 /** Light item returned by GET /reports?scriptId=... (list). */
 export interface ReportListItem {
   id: string;

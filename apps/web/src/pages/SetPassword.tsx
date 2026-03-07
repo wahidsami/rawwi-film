@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { invitesApi } from '@/api';
 import toast from 'react-hot-toast';
 import { Globe } from 'lucide-react';
+import { validatePassword } from '@/utils/validation';
 
 export function SetPassword() {
   const [searchParams] = useSearchParams();
@@ -35,6 +36,11 @@ export function SetPassword() {
       toast.error(lang === 'ar' ? 'كلمة المرور 8 أحرف على الأقل' : 'Password must be at least 8 characters');
       return;
     }
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.ok) {
+      toast.error(lang === 'ar' ? (passwordValidation.message === 'Password must contain at least one letter' ? 'كلمة المرور يجب أن تحتوي على حرف واحد على الأقل' : passwordValidation.message === 'Password must contain at least one number' ? 'كلمة المرور يجب أن تحتوي على رقم واحد على الأقل' : passwordValidation.message) : passwordValidation.message);
+      return;
+    }
     if (password !== confirmPassword) {
       toast.error(lang === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match');
       return;
@@ -49,8 +55,8 @@ export function SetPassword() {
       setSuccess(true);
       toast.success(lang === 'ar' ? 'تم تعيين كلمة المرور بنجاح' : 'Password set successfully');
       setTimeout(() => navigate('/login', { replace: true }), 1500);
-    } catch (err: any) {
-      toast.error(err?.message ?? (lang === 'ar' ? 'فشل تعيين كلمة المرور' : 'Failed to set password'));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تعيين كلمة المرور' : 'Failed to set password'));
     } finally {
       setSubmitting(false);
     }

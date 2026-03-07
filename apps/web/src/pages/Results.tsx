@@ -74,7 +74,9 @@ export function Results() {
       if (updateScriptStatus) {
         toast.success(lang === 'ar' ? 'تم تحديث حالة النص' : 'Script status updated');
       }
-    } catch (err: any) { toast.error(err?.message ?? 'Failed'); }
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed');
+    }
     setReviewing(false);
   };
 
@@ -111,9 +113,9 @@ export function Results() {
           setLoading(false);
           if (r.jobId) loadFindings(r.jobId);
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!cancelled) {
-          setError(e?.message ?? (lang === 'ar' ? 'لم يتم العثور على التقرير' : 'Report not found'));
+          setError(e instanceof Error ? e.message : (lang === 'ar' ? 'لم يتم العثور على التقرير' : 'Report not found'));
           setLoading(false);
         }
       }
@@ -131,7 +133,7 @@ export function Results() {
       return;
     }
     try {
-      const res = await findingsApi.reviewFinding(reviewModal.findingId, reviewModal.toStatus, reason) as any;
+      const res = await findingsApi.reviewFinding(reviewModal.findingId, reviewModal.toStatus, reason);
       // Update local findings state
       setFindings(prev => prev.map(f => f.id === reviewModal.findingId ? {
         ...f,
@@ -161,8 +163,8 @@ export function Results() {
       );
       setReviewModal(null);
       setReviewReason('');
-    } catch (err: any) {
-      toast.error(err?.message ?? 'Failed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed');
     }
   };
 
@@ -257,8 +259,8 @@ export function Results() {
       const footerImg = `${baseUrl}/footer.png`;
       const dashLogo = `${baseUrl}/loginlogo.png`;
 
-      // Metadata from summary
-      const sum = summary as any;
+      // Metadata from summary (backend may attach client_name/script_title at top level or under metadata)
+      const sum = summary as typeof summary & { client_name?: string; script_title?: string; scriptTitle?: string; metadata?: { client_name?: string } };
       const clientName = report.clientName || sum.client_name || sum.metadata?.client_name || (isAr ? 'عميل' : 'Client');
       const scriptTitle = report.scriptTitle || sum.script_title || sum.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis');
 

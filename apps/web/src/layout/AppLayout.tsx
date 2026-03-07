@@ -7,7 +7,6 @@ import {
   BookOpen,
   Users,
   ShieldCheck,
-  Award,
   FileText,
   Settings,
   LogOut,
@@ -18,11 +17,9 @@ import { cn } from '@/utils/cn';
 
 import { useEffect } from 'react';
 import { useDataStore } from '@/store/dataStore';
-import { useSettingsStore } from '@/store/settingsStore';
 
 export function AppLayout() {
   const { t, lang, toggleLang } = useLangStore();
-  const { settings } = useSettingsStore();
   const { user, logout, hasPermission, hasSection } = useAuthStore();
   const navigate = useNavigate();
   const { fetchInitialData } = useDataStore();
@@ -42,24 +39,16 @@ export function AppLayout() {
 
     // Conditional sections - supports BOTH section-based and permission-based access
     { to: '/clients', icon: Users, label: t('clients'), section: 'clients', permission: 'view_clients' },
-    { to: '/scripts', icon: FileText, label: lang === 'ar' ? 'النصوص' : 'Scripts', section: 'scripts', permission: 'view_scripts' },
+    { to: '/scripts', icon: FileText, label: lang === 'ar' ? 'النصوص' : 'Scripts', section: 'clients', permission: 'view_scripts' },
     { to: '/glossary', icon: BookOpen, label: t('glossary'), section: 'glossary', permission: 'manage_glossary' },
     { to: '/tasks', icon: FileText, label: lang === 'ar' ? 'المهام' : 'Tasks', section: 'tasks', permission: 'view_tasks' },
     { to: '/reports', icon: FileText, label: t('reports'), section: 'reports', permission: 'view_reports' },
     { to: '/access-control', icon: ShieldCheck, label: t('accessControl'), section: 'access_control', permission: 'manage_users' },
     { to: '/audit', icon: History, label: t('auditLog'), section: 'audit', permission: 'view_audit' },
 
-    // Optional: Certificates feature (if enabled)
-    ...(settings.features.enableCertificates
-      ? [{ to: '/certificates', icon: Award as any, label: t('certificates'), section: null as string | null, permission: null as string | null }]
-      : []),
-
     // Always visible
     { to: '/settings', icon: Settings, label: t('settings'), section: null as string | null, permission: null as string | null },
   ].filter(link => {
-    // Tasks section hidden for all users
-    if (link.to === '/tasks') return false;
-
     // If no section/permission required, always show
     if (!link.section && !link.permission) return true;
 

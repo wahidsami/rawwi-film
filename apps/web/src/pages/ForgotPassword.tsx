@@ -26,8 +26,8 @@ export function ForgotPassword() {
 
       setSent(true);
       toast.success(lang === 'ar' ? 'تم إرسال رابط استعادة كلمة المرور' : 'Reset link sent to your email');
-    } catch (err: any) {
-      toast.error(err?.message ?? (lang === 'ar' ? 'فشل إرسال الرابط' : 'Failed to send reset link'));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل إرسال الرابط' : 'Failed to send reset link'));
     } finally {
       setSubmitting(false);
     }

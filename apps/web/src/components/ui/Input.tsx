@@ -18,7 +18,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
         <div className="relative">
           {icon && (
-            <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-text-muted">
+            <div className="absolute inset-y-0 start-0 flex items-center ps-3 pe-0 rtl:ps-0 rtl:pe-3 pointer-events-none text-text-muted">
               {icon}
             </div>
           )}
@@ -30,7 +30,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             "placeholder:text-text-muted",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary",
             "disabled:cursor-not-allowed disabled:opacity-50",
-            icon && "ps-10",
+            icon && "ps-10 rtl:ps-3 rtl:pe-10",
             error && "border-error focus-visible:border-error focus-visible:ring-error/20",
             className
           )}

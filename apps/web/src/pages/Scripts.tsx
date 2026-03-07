@@ -17,6 +17,7 @@ import {
     ArrowUpDown
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { normalizeScriptStatusForDisplay, normalizeScriptStatusForFilter } from '@/utils/scriptStatus';
 
 type StatusFilter = 'all' | 'approved' | 'rejected' | 'pending';
 
@@ -46,17 +47,15 @@ export function Scripts() {
     const getFilteredScripts = () => {
         let filtered = scripts;
 
-        // Status filter
+        // Status filter (normalize so API casing doesn't matter)
+        const norm = (st: string) => normalizeScriptStatusForFilter(st);
         if (statusFilter === 'approved') {
-            filtered = filtered.filter(s => s.status === 'approved');
+            filtered = filtered.filter(s => norm(s.status) === 'approved');
         } else if (statusFilter === 'rejected') {
-            filtered = filtered.filter(s => s.status === 'rejected');
+            filtered = filtered.filter(s => norm(s.status) === 'rejected');
         } else if (statusFilter === 'pending') {
             filtered = filtered.filter(s =>
-                s.status === 'draft' ||
-                s.status === 'pending' ||
-                s.status === 'review_required' ||
-                s.status === 'in_review'
+                ['draft', 'pending', 'review_required', 'in_review'].includes(norm(s.status))
             );
         }
 
@@ -64,8 +63,8 @@ export function Scripts() {
         if (search.trim()) {
             filtered = filtered.filter(s =>
                 s.title?.toLowerCase().includes(search.toLowerCase()) ||
-                companies.find(c => c.id === s.clientId)?.nameEn?.toLowerCase().includes(search.toLowerCase()) ||
-                companies.find(c => c.id === s.clientId)?.nameAr?.includes(search)
+                companies.find(c => c.companyId === s.companyId)?.nameEn?.toLowerCase().includes(search.toLowerCase()) ||
+                companies.find(c => c.companyId === s.companyId)?.nameAr?.includes(search)
             );
         }
 
@@ -76,8 +75,8 @@ export function Scripts() {
             } else if (sortBy === 'title') {
                 return (a.title || '').localeCompare(b.title || '');
             } else if (sortBy === 'client') {
-                const clientA = companies.find(c => c.id === a.clientId)?.nameEn || '';
-                const clientB = companies.find(c => c.id === b.clientId)?.nameEn || '';
+                const clientA = companies.find(c => c.companyId === a.companyId)?.nameEn || '';
+                const clientB = companies.find(c => c.companyId === b.companyId)?.nameEn || '';
                 return clientA.localeCompare(clientB);
             }
             return 0;
@@ -91,13 +90,10 @@ export function Scripts() {
     // Count by status
     const counts = {
         all: scripts.length,
-        approved: scripts.filter(s => s.status === 'approved').length,
-        rejected: scripts.filter(s => s.status === 'rejected').length,
+        approved: scripts.filter(s => normalizeScriptStatusForFilter(s.status) === 'approved').length,
+        rejected: scripts.filter(s => normalizeScriptStatusForFilter(s.status) === 'rejected').length,
         pending: scripts.filter(s =>
-            s.status === 'draft' ||
-            s.status === 'pending' ||
-            s.status === 'review_required' ||
-            s.status === 'in_review'
+            ['draft', 'pending', 'review_required', 'in_review'].includes(normalizeScriptStatusForFilter(s.status))
         ).length
     };
 
@@ -109,17 +105,17 @@ export function Scripts() {
     ];
 
     const getStatusBadge = (status: string) => {
-        if (status === 'approved') {
+        const n = normalizeScriptStatusForFilter(status);
+        if (n === 'approved') {
             return <Badge variant="outline" className="bg-success/10 text-success border-success/30">{lang === 'ar' ? 'مقبول' : 'Approved'}</Badge>;
-        } else if (status === 'rejected') {
+        } else if (n === 'rejected') {
             return <Badge variant="outline" className="bg-error/10 text-error border-error/30">{lang === 'ar' ? 'مرفوض' : 'Rejected'}</Badge>;
-        } else if (status === 'review_required' || status === 'in_review') {
+        } else if (n === 'review_required' || n === 'in_review') {
             return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">{lang === 'ar' ? 'قيد المراجعة' : 'Pending'}</Badge>;
-        } else if (status === 'draft') {
+        } else if (n === 'draft') {
             return <Badge variant="outline">{lang === 'ar' ? 'مسودة' : 'Draft'}</Badge>;
-        } else {
-            return <Badge variant="outline">{status}</Badge>;
         }
+        return <Badge variant="outline">{normalizeScriptStatusForDisplay(status)}</Badge>;
     };
 
     if (isLoading) {
@@ -219,7 +215,7 @@ export function Scripts() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredScripts.map(script => {
-                        const client = companies.find(c => c.id === script.clientId);
+                        const client = companies.find(c => c.companyId === script.companyId);
                         return (
                             <Card
                                 key={script.id}

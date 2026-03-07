@@ -4,7 +4,6 @@ import { useDataStore } from '@/store/dataStore';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ArrowRight, FileText, Calendar, CheckCircle2 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 export function Tasks() {
   const { lang } = useLangStore();
@@ -55,15 +54,7 @@ export function Tasks() {
                   <tr
                     key={task.id}
                     className="bg-surface border-b border-border hover:bg-background/50 transition-colors cursor-pointer group"
-                    onClick={async () => {
-                      try {
-                        // Basic check to see if script exists before navigating
-                        // (Optional optimization: catch 404 navigation instead)
-                        navigate(`/workspace/${task.scriptId}`);
-                      } catch (e) {
-                        toast.error('Failed to open script');
-                      }
-                    }}
+                    onClick={() => navigate(`/workspace/${task.scriptId}`)}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -104,7 +95,7 @@ export function Tasks() {
                     <td className="px-6 py-4 text-text-muted">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-text-muted" />
-                        <span>{new Date('createdAt' in task ? task.createdAt : (task as any).assignedAt).toLocaleDateString()}</span>
+                        <span>{new Date('createdAt' in task ? task.createdAt : (task as { assignedAt?: string }).assignedAt ?? '').toLocaleDateString()}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-end">

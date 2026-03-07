@@ -98,10 +98,6 @@ export function Login() {
                 )}
 
                 <div className="flex items-center justify-between text-xs">
-                  <label className="flex items-center gap-2 text-text-muted">
-                    <input type="checkbox" className="rounded border-border text-primary focus:ring-primary/20 accent-primary" />
-                    {t('rememberMe')}
-                  </label>
                   <Link to="/forgot-password" className="text-primary hover:text-primary-hover font-medium">
                     {t('forgotPassword')}
                   </Link>
@@ -117,7 +113,9 @@ export function Login() {
 
                 <div className="p-3 bg-info/5 border border-info/15 rounded-md text-[11px] text-info text-center space-y-1">
                   <p><strong>Sign in with your Supabase Auth account.</strong></p>
-                  <p>Local dev: <code className="bg-background/50 px-1 rounded">admin@raawi.film</code> / <code className="bg-background/50 px-1 rounded">raawi123</code> (after running <code className="bg-background/50 px-1 rounded">supabase db reset</code> once to seed), or sign up.</p>
+                  {import.meta.env.DEV && (
+                    <p>Local dev: <code className="bg-background/50 px-1 rounded">admin@raawi.film</code> / <code className="bg-background/50 px-1 rounded">raawi123</code> (after running <code className="bg-background/50 px-1 rounded">supabase db reset</code> once to seed), or sign up.</p>
+                  )}
                 </div>
               </form>
             </div>

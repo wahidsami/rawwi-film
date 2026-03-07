@@ -218,7 +218,7 @@ export function AccessControl() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-text-main">{t('accessControl')}</h1>
-          <p className="text-text-muted mt-1">Manage user roles and permissions</p>
+          <p className="text-text-muted mt-1">{t('accessControlSubtitle')}</p>
         </div>
 
         <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
@@ -263,7 +263,7 @@ export function AccessControl() {
                     <th className="px-6 py-4 font-medium">{t('name')}</th>
                     <th className="px-6 py-4 font-medium">{t('role')}</th>
                     <th className="px-6 py-4 font-medium">{t('status')}</th>
-                    <th className="px-6 py-4 font-medium text-end">Actions</th>
+                    <th className="px-6 py-4 font-medium text-end">{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>

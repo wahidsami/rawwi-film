@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
 import { Globe } from 'lucide-react';
+import { validatePassword } from '@/utils/validation';
 
 export function ResetPassword() {
     const navigate = useNavigate();
@@ -18,7 +19,8 @@ export function ResetPassword() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Verify the recovery token on mount
+        // Supabase recovery emails use the hash fragment (#access_token=...) for the token.
+        // If your Supabase config uses query params (?access_token=...), use window.location.search instead.
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
         const type = hashParams.get('type');
@@ -34,15 +36,9 @@ export function ResetPassword() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (password.length < 8) {
-            toast.error(lang === 'ar' ? 'كلمة المرور 8 أحرف على الأقل' : 'Password must be at least 8 characters');
-            return;
-        }
-
-        const hasLetter = /[a-zA-Z]/.test(password);
-        const hasNumber = /\d/.test(password);
-        if (!hasLetter || !hasNumber) {
-            toast.error(lang === 'ar' ? 'كلمة المرور يجب أن تحتوي على حرف ورقم على الأقل' : 'Password must contain at least one letter and one number');
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.ok) {
+            toast.error(lang === 'ar' ? (passwordValidation.message === 'Password must be at least 8 characters' ? 'كلمة المرور 8 أحرف على الأقل' : passwordValidation.message === 'Password must contain at least one letter' ? 'كلمة المرور يجب أن تحتوي على حرف ورقم على الأقل' : passwordValidation.message === 'Password must contain at least one number' ? 'كلمة المرور يجب أن تحتوي على حرف ورقم على الأقل' : passwordValidation.message) : passwordValidation.message);
             return;
         }
 
@@ -60,8 +56,8 @@ export function ResetPassword() {
 
             toast.success(lang === 'ar' ? 'تم تغيير كلمة المرور بنجاح' : 'Password updated successfully');
             setTimeout(() => navigate('/login', { replace: true }), 1500);
-        } catch (err: any) {
-            toast.error(err?.message ?? (lang === 'ar' ? 'فشل تغيير كلمة المرور' : 'Failed to update password'));
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تغيير كلمة المرور' : 'Failed to update password'));
         } finally {
             setSubmitting(false);
         }

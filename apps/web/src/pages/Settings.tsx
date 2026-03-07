@@ -10,6 +10,8 @@ import { Select } from '@/components/ui/Select';
 import { Switch } from '@/components/ui/Switch';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
+import { validatePassword } from '@/utils/validation';
 
 type TabId = 'account' | 'platform' | 'security' | 'branding' | 'features';
 
@@ -19,6 +21,11 @@ export default function Settings() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>('account');
   const { settings, updateSettings } = useSettingsStore();
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
 
@@ -40,6 +47,36 @@ export default function Settings() {
   const updateSection = <K extends keyof AppSettings>(section: K, values: Partial<AppSettings[K]>) => {
     updateSettings({ [section]: { ...settings[section], ...values } } as Partial<AppSettings>);
     toast.success(t('settingsUpdated'));
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword.trim()) {
+      toast.error(lang === 'ar' ? 'أدخل كلمة المرور الجديدة' : 'Enter new password');
+      return;
+    }
+    const validation = validatePassword(newPassword);
+    if (!validation.ok) {
+      toast.error(lang === 'ar' ? (validation.message ?? 'كلمة مرور غير صالحة') : (validation.message ?? 'Invalid password'));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error(lang === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match');
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success(lang === 'ar' ? 'تم تغيير كلمة المرور' : 'Password updated');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تغيير كلمة المرور' : 'Failed to update password'));
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   return (
@@ -113,7 +150,7 @@ export default function Settings() {
 
                   <form
                     className="space-y-4"
-                    onSubmit={(e) => e.preventDefault()}
+                    onSubmit={handleChangePassword}
                     aria-label={t('changePassword')}
                   >
                     {/* Hidden username for password-manager and a11y (Chrome recommends it) */}
@@ -130,19 +167,19 @@ export default function Settings() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2 max-w-md">
                         <label className="block text-sm font-medium text-text-muted mb-1.5">{t('currentPassword')}</label>
-                        <Input type="password" autoComplete="current-password" />
+                        <Input type="password" autoComplete="current-password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
                       </div>
                       <div className="max-w-md">
                         <label className="block text-sm font-medium text-text-muted mb-1.5">{t('newPassword')}</label>
-                        <Input type="password" autoComplete="new-password" />
+                        <Input type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                       </div>
                       <div className="max-w-md">
                         <label className="block text-sm font-medium text-text-muted mb-1.5">{t('confirmPassword')}</label>
-                        <Input type="password" autoComplete="new-password" />
+                        <Input type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                       </div>
                     </div>
-                    <button type="submit" className="px-4 py-2 bg-primary text-white text-sm rounded-md font-medium hover:bg-primary/90 transition-colors">
-                      {t('saveChanges')}
+                    <button type="submit" className="px-4 py-2 bg-primary text-white text-sm rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50" disabled={changingPassword}>
+                      {changingPassword ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : t('saveChanges')}
                     </button>
                   </form>
 

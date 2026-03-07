@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import toast from 'react-hot-toast';
+import { escapeHtmlSafe } from '@/utils/escapeHtml';
 
 export function Overview() {
   const { t, lang } = useLangStore();
@@ -82,15 +83,15 @@ export function Overview() {
       const totalScripts = Object.values(stats.scriptsByStatus).reduce((a, b) => a + b, 0) || 1;
       const totalFindings = Object.values(stats.findingsBySeverity).reduce((a, b) => a + b, 0) || 1;
 
-      const pDraft = Math.round((stats.scriptsByStatus.draft / totalScripts) * 100);
-      const pAssigned = Math.round((stats.scriptsByStatus.assigned / totalScripts) * 100);
-      const pReview = Math.round((stats.scriptsByStatus.review_required / totalScripts) * 100);
-      const pCompleted = Math.round((stats.scriptsByStatus.completed / totalScripts) * 100);
+      const pDraft = Math.round(((stats.scriptsByStatus.draft ?? 0) / totalScripts) * 100);
+      const pAssigned = Math.round(((stats.scriptsByStatus.assigned ?? 0) / totalScripts) * 100);
+      const pReview = Math.round(((stats.scriptsByStatus.review_required ?? 0) / totalScripts) * 100);
+      const pCompleted = Math.round(((stats.scriptsByStatus.completed ?? 0) / totalScripts) * 100);
 
-      const pCritical = Math.round((stats.findingsBySeverity.critical / totalFindings) * 100);
-      const pHigh = Math.round((stats.findingsBySeverity.high / totalFindings) * 100);
-      const pMedium = Math.round((stats.findingsBySeverity.medium / totalFindings) * 100);
-      const pLow = Math.round((stats.findingsBySeverity.low / totalFindings) * 100);
+      const pCritical = Math.round(((stats.findingsBySeverity.critical ?? 0) / totalFindings) * 100);
+      const pHigh = Math.round(((stats.findingsBySeverity.high ?? 0) / totalFindings) * 100);
+      const pMedium = Math.round(((stats.findingsBySeverity.medium ?? 0) / totalFindings) * 100);
+      const pLow = Math.round(((stats.findingsBySeverity.low ?? 0) / totalFindings) * 100);
 
       // 3. Replacements
       let html = template;
@@ -110,20 +111,20 @@ export function Overview() {
         '{{stats.criticalFindings}}': String(stats.highCriticalFindings),
 
         // Script Status
-        '{{stats.draft}}': String(stats.scriptsByStatus.draft),
-        '{{stats.assigned}}': String(stats.scriptsByStatus.assigned),
-        '{{stats.review}}': String(stats.scriptsByStatus.review_required),
-        '{{stats.completed}}': String(stats.scriptsByStatus.completed),
+        '{{stats.draft}}': String(stats.scriptsByStatus.draft ?? 0),
+        '{{stats.assigned}}': String(stats.scriptsByStatus.assigned ?? 0),
+        '{{stats.review}}': String(stats.scriptsByStatus.review_required ?? 0),
+        '{{stats.completed}}': String(stats.scriptsByStatus.completed ?? 0),
         '{{stats.percentDraft}}': String(pDraft),
         '{{stats.percentAssigned}}': String(pAssigned),
         '{{stats.percentReview}}': String(pReview),
         '{{stats.percentCompleted}}': String(pCompleted),
 
         // Findings Severity
-        '{{stats.critical}}': String(stats.findingsBySeverity.critical),
-        '{{stats.high}}': String(stats.findingsBySeverity.high),
-        '{{stats.medium}}': String(stats.findingsBySeverity.medium),
-        '{{stats.low}}': String(stats.findingsBySeverity.low),
+        '{{stats.critical}}': String(stats.findingsBySeverity.critical ?? 0),
+        '{{stats.high}}': String(stats.findingsBySeverity.high ?? 0),
+        '{{stats.medium}}': String(stats.findingsBySeverity.medium ?? 0),
+        '{{stats.low}}': String(stats.findingsBySeverity.low ?? 0),
         '{{stats.percentCritical}}': String(pCritical),
         '{{stats.percentHigh}}': String(pHigh),
         '{{stats.percentMedium}}': String(pMedium),
@@ -164,9 +165,9 @@ export function Overview() {
         <div class="activity-item">
             <div class="activity-icon"></div>
             <div class="activity-content">
-                <div class="activity-action">${act.action}</div>
+                <div class="activity-action">${escapeHtmlSafe(act.action)}</div>
                 <div class="activity-meta">
-                    <span style="font-weight: 600;">${act.actor}</span> • ${act.time}
+                    <span style="font-weight: 600;">${escapeHtmlSafe(act.actor)}</span> • ${escapeHtmlSafe(act.time)}
                 </div>
             </div>
         </div>
@@ -227,21 +228,21 @@ export function Overview() {
   const getStatusChartData = () => {
     if (!stats) return [];
     return [
-      { name: t('draft'), value: stats.scriptsByStatus.draft, fill: 'var(--color-primary)' },
-      { name: t('assigned'), value: stats.scriptsByStatus.assigned, fill: 'var(--color-info)' },
-      { name: t('analysis_running'), value: stats.scriptsByStatus.analysis_running, fill: 'var(--color-warning)' },
-      { name: t('review_required'), value: stats.scriptsByStatus.review_required, fill: 'var(--color-secondary)' },
-      { name: t('completed'), value: stats.scriptsByStatus.completed, fill: 'var(--color-success)' }
+      { name: t('draft'), value: stats.scriptsByStatus.draft ?? 0, fill: 'var(--color-primary)' },
+      { name: t('assigned'), value: stats.scriptsByStatus.assigned ?? 0, fill: 'var(--color-info)' },
+      { name: t('analysis_running'), value: stats.scriptsByStatus.analysis_running ?? 0, fill: 'var(--color-warning)' },
+      { name: t('review_required'), value: stats.scriptsByStatus.review_required ?? 0, fill: 'var(--color-secondary)' },
+      { name: t('completed'), value: stats.scriptsByStatus.completed ?? 0, fill: 'var(--color-success)' }
     ];
   };
 
   const getSeverityChartData = () => {
     if (!stats) return [];
     return [
-      { name: t('critical'), value: stats.findingsBySeverity.critical, fill: 'var(--color-error)' },
-      { name: t('high'), value: stats.findingsBySeverity.high, fill: 'var(--color-error-hover)' },
-      { name: t('medium'), value: stats.findingsBySeverity.medium, fill: 'var(--color-warning)' },
-      { name: t('low'), value: stats.findingsBySeverity.low, fill: 'var(--color-info)' }
+      { name: t('critical'), value: stats.findingsBySeverity.critical ?? 0, fill: 'var(--color-error)' },
+      { name: t('high'), value: stats.findingsBySeverity.high ?? 0, fill: 'var(--color-error-hover)' },
+      { name: t('medium'), value: stats.findingsBySeverity.medium ?? 0, fill: 'var(--color-warning)' },
+      { name: t('low'), value: stats.findingsBySeverity.low ?? 0, fill: 'var(--color-info)' }
     ];
   };
 
@@ -282,7 +283,7 @@ export function Overview() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-text-main">{stats?.scriptsInReview || 0}</div>
-            <button onClick={() => navigate('/clients')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
+            <button onClick={() => navigate('/scripts')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
               {lang === 'ar' ? 'فتح النصوص' : 'Open Scripts'} <ArrowIcon className="h-3 w-3" />
             </button>
           </CardContent>

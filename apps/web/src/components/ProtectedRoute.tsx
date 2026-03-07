@@ -42,7 +42,7 @@ export function ProtectedRoute({ children, requiredPermission, requiredSection }
           </div>
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-bold text-text-main">{t('accessDenied')}</h1>
-            <p className="text-text-muted">You do not have access to this section.</p>
+            <p className="text-text-muted">{t('accessDeniedSection')}</p>
           </div>
           <Button onClick={() => window.history.back()} variant="outline">
             {t('backToHome')}
@@ -61,7 +61,7 @@ export function ProtectedRoute({ children, requiredPermission, requiredSection }
         </div>
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-text-main">{t('accessDenied')}</h1>
-          <p className="text-text-muted">You do not have the required permissions to view this page.</p>
+          <p className="text-text-muted">{t('accessDeniedPermission')}</p>
         </div>
         <Button onClick={() => window.history.back()} variant="outline">
           {t('backToHome')}

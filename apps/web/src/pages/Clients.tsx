@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
@@ -27,18 +27,23 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/utils/cn';
 import { usersApi } from '@/api';
+import { escapeHtmlSafe } from '@/utils/escapeHtml';
 
 export function Clients() {
   const { t, lang } = useLangStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { companies, isLoading, removeCompany } = useDataStore();
+  const { companies, scripts, isLoading, removeCompany } = useDataStore();
 
   const filteredClients = companies.filter(c =>
     c.nameAr.includes(search) ||
     c.nameEn.toLowerCase().includes(search.toLowerCase())
   );
+
+  const companyIds = new Set(filteredClients.map(c => c.companyId));
+  const pendingScriptsCount = scripts.filter(s => companyIds.has(s.companyId) && (s.status === 'pending' || s.status === 'in_review' || (s.status as string) === 'In Review')).length;
+  const approvedScriptsCount = scripts.filter(s => companyIds.has(s.companyId) && s.status === 'approved').length;
 
   const { user, hasSection } = useAuthStore();
   const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
@@ -49,7 +54,7 @@ export function Clients() {
   // NEW: Fetch creators map for display
   const [creators, setCreators] = useState<Record<string, string>>({});
 
-  useState(() => {
+  useEffect(() => {
     if (isAdmin) {
       usersApi.getUsers()
         .then(users => {
@@ -59,7 +64,7 @@ export function Clients() {
         })
         .catch(err => console.error('Failed to load creators:', err));
     }
-  });
+  }, [isAdmin]);
 
   const handleExportPdf = async () => {
     setExportingPdf(true);
@@ -141,19 +146,19 @@ export function Clients() {
       const rowsHtml = clientsData.map(item => `
         <tr>
             <td>
-                <div class="font-bold">${item.name}</div>
-                <div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${item.nameSecondary}</div>
+                <div class="font-bold">${escapeHtmlSafe(item.name)}</div>
+                <div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${escapeHtmlSafe(item.nameSecondary)}</div>
             </td>
-            <td>${item.representative}</td>
+            <td>${escapeHtmlSafe(item.representative)}</td>
             <td>
-                <div style="font-size: 9px;">${item.email}</div>
-                <div style="font-size: 9px; color: #6B7280;">${item.phone}</div>
+                <div style="font-size: 9px;">${escapeHtmlSafe(item.email)}</div>
+                <div style="font-size: 9px; color: #6B7280;">${escapeHtmlSafe(item.phone)}</div>
             </td>
-            <td>${item.registrationDate}</td>
+            <td>${escapeHtmlSafe(item.registrationDate)}</td>
             <td style="text-align: center; font-weight: 600;">${item.scriptsCount}</td>
             <td>
                 <span style="padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; ${item.statusStyle}">
-                    ${item.status}
+                    ${escapeHtmlSafe(item.status)}
                 </span>
             </td>
         </tr>
@@ -272,7 +277,7 @@ export function Clients() {
             <Clock className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-text-main">0</div>
+            <div className="text-2xl font-bold text-text-main">{pendingScriptsCount}</div>
           </CardContent>
         </Card>
 
@@ -282,7 +287,7 @@ export function Clients() {
             <CheckCircle className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-text-main">0</div>
+            <div className="text-2xl font-bold text-text-main">{approvedScriptsCount}</div>
           </CardContent>
         </Card>
       </div>

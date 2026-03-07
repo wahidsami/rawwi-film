@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import toast from 'react-hot-toast';
 
+import { useLangStore } from '@/store/langStore';
+
 import { Script, ScriptVersion, Finding, Task, User, Company, AnalysisJob, LexiconTerm, LexiconHistoryEntry, Report } from '@/api/models';
 export type { Script, ScriptVersion, Finding, Task, User, Company, AnalysisJob, LexiconTerm, LexiconHistoryEntry, Report };
 
@@ -55,8 +57,8 @@ export const useDataStore = create<DataState>((set) => ({
         lexiconApi.getTerms()
       ]);
       set({ companies, scripts, tasks, findings, lexiconTerms, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : String(err), isLoading: false });
     }
   },
 
@@ -64,10 +66,10 @@ export const useDataStore = create<DataState>((set) => ({
     try {
       const saved = await companiesApi.addCompany(c);
       set((state) => ({ companies: [...state.companies, saved] }));
-      toast.success('Company created successfully');
+      toast.success(useLangStore.getState().t('companyCreated'));
       return saved;
-    } catch (err: any) {
-      toast.error(err.message || 'Error');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorGeneric'));
       return undefined;
     }
   },
@@ -76,8 +78,8 @@ export const useDataStore = create<DataState>((set) => ({
     try {
       const saved = await companiesApi.updateCompany(id, updates);
       set((state) => ({ companies: state.companies.map(c => c.companyId === id ? saved : c) }));
-      toast.success('Company updated successfully');
-    } catch (err: any) { toast.error(err.message || 'Error'); }
+      toast.success(useLangStore.getState().t('companyUpdated'));
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorGeneric')); }
   },
 
   removeCompany: async (id) => {
@@ -87,9 +89,9 @@ export const useDataStore = create<DataState>((set) => ({
         companies: state.companies.filter(c => c.companyId !== id),
         scripts: state.scripts.filter(s => s.companyId !== id),
       }));
-      toast.success('Client deleted');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to delete client');
+      toast.success(useLangStore.getState().t('clientDeleted'));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : useLangStore.getState().t('failedToDeleteClient'));
     }
   },
 
@@ -97,10 +99,10 @@ export const useDataStore = create<DataState>((set) => ({
     try {
       const saved = await scriptsApi.addScript(s);
       set((state) => ({ scripts: [...state.scripts, saved] }));
-      toast.success('Script created');
+      toast.success(useLangStore.getState().t('scriptCreated'));
       return saved;
-    } catch (err: any) {
-      toast.error(err.message || 'Error creating script');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorCreatingScript'));
       return undefined;
     }
   },
@@ -108,65 +110,65 @@ export const useDataStore = create<DataState>((set) => ({
 
   updateScript: async (id, updates) => {
     try {
-      // In a real app we would call a scriptsApi.updateScript endpoint
-      set((state) => ({ scripts: state.scripts.map(s => s.id === id ? { ...s, ...updates } : s) }));
-    } catch (err: any) { toast.error(err.message || 'Error'); }
+      const saved = await scriptsApi.updateScript(id, updates);
+      set((state) => ({ scripts: state.scripts.map(s => s.id === id ? { ...s, ...saved } : s) }));
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorGeneric')); }
   },
 
   addTask: async (t) => {
     try {
       const saved = await tasksApi.addTask(t);
       set((state) => ({ tasks: [...state.tasks, saved] }));
-      toast.success('Task assigned successfully');
-    } catch (err: any) { toast.error(err.message || 'Error'); }
+      toast.success(useLangStore.getState().t('taskAssignedSuccess'));
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorGeneric')); }
   },
 
   addFinding: async (f) => {
     try {
       const saved = await findingsApi.addFinding(f);
       set((state) => ({ findings: [...state.findings, saved] }));
-      toast.success('Violation marked successfully');
-    } catch (err: any) { toast.error(err.message || 'Error'); }
+      toast.success(useLangStore.getState().t('violationMarkedSuccess'));
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorGeneric')); }
   },
 
   updateFindingStatus: async (id, status, comment, author) => {
     try {
       const saved = await findingsApi.updateFindingStatus(id, status, comment, author);
       set((state) => ({ findings: state.findings.map(f => f.id === id ? saved : f) }));
-      toast.success('Status updated');
-    } catch (err: any) { toast.error(err.message || 'Error'); }
+      toast.success(useLangStore.getState().t('statusUpdated'));
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorGeneric')); }
   },
 
   updateFindingOverride: async (id, override) => {
     try {
       const saved = await findingsApi.updateFindingOverride(id, override);
       set((state) => ({ findings: state.findings.map(f => f.id === id ? saved : f) }));
-      toast.success(override ? 'Override saved' : 'Override reverted');
-    } catch (err: any) { toast.error(err.message || 'Error'); }
+      toast.success(override ? useLangStore.getState().t('overrideSaved') : useLangStore.getState().t('overrideReverted'));
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorGeneric')); }
   },
 
   addLexiconTerm: async (term) => {
     try {
       const saved = await lexiconApi.addTerm(term);
       set((state) => ({ lexiconTerms: [...state.lexiconTerms, saved] }));
-      toast.success('Term saved successfully');
-    } catch (err: any) { toast.error(err.message || 'Error'); }
+      toast.success(useLangStore.getState().t('termSavedSuccess'));
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorGeneric')); }
   },
 
   updateLexiconTerm: async (id, updates, changedBy, reason) => {
     try {
       const saved = await lexiconApi.updateTerm(id, updates, changedBy, reason);
       set((state) => ({ lexiconTerms: state.lexiconTerms.map(t => t.id === id ? saved : t) }));
-      toast.success('Term updated successfully');
-    } catch (err: any) { toast.error(err.message || 'Error'); }
+      toast.success(useLangStore.getState().t('termUpdatedSuccess'));
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorGeneric')); }
   },
 
   deactivateLexiconTerm: async (id, changedBy, reason) => {
     try {
       const saved = await lexiconApi.deactivateTerm(id, changedBy, reason);
       set((state) => ({ lexiconTerms: state.lexiconTerms.map(t => t.id === id ? saved : t) }));
-      toast.success('Term deleted successfully');
-    } catch (err: any) { toast.error(err.message || 'Error'); }
+      toast.success(useLangStore.getState().t('termDeletedSuccess'));
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorGeneric')); }
   },
 
   importLexiconTerms: async (terms) => {
@@ -176,7 +178,7 @@ export const useDataStore = create<DataState>((set) => ({
       }
       const freshTerms = await lexiconApi.getTerms();
       set({ lexiconTerms: freshTerms });
-      toast.success('Import completed');
-    } catch (err: any) { toast.error(err.message || 'Error'); }
+      toast.success(useLangStore.getState().t('importCompleted'));
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : useLangStore.getState().t('errorGeneric')); }
   }
 }));

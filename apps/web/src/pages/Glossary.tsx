@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
 import { Plus, Search, FileDown, FileUp, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { escapeHtmlSafe } from '@/utils/escapeHtml';
 
 export function Glossary() {
   const { t, lang } = useLangStore();
@@ -138,20 +139,20 @@ export function Glossary() {
       const rowsHtml = termsData.map(item => `
         <tr>
             <td>
-                <div class="font-bold">${item.term}</div>
-                ${item.description ? `<div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${item.description}</div>` : ''}
+                <div class="font-bold">${escapeHtmlSafe(item.term)}</div>
+                ${item.description ? `<div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${escapeHtmlSafe(item.description)}</div>` : ''}
             </td>
-            <td><span class="badge badge-outline">${item.type}</span></td>
-            <td><span class="badge badge-outline">${item.category}</span></td>
+            <td><span class="badge badge-outline">${escapeHtmlSafe(item.type)}</span></td>
+            <td><span class="badge badge-outline">${escapeHtmlSafe(item.category)}</span></td>
             <td>
-                <span class="badge ${item.severityClass}">${item.severity}</span>
-            </td>
-            <td>
-                <span class="badge ${item.modeClass}">${item.mode}</span>
+                <span class="badge ${item.severityClass}">${escapeHtmlSafe(String(item.severity))}</span>
             </td>
             <td>
-                <div style="font-weight: 600;">${item.articleId} ${item.atomId}</div>
-                ${item.articleTitle ? `<div style="font-size: 9px; color: #6B7280;">${item.articleTitle}</div>` : ''}
+                <span class="badge ${item.modeClass}">${escapeHtmlSafe(item.mode)}</span>
+            </td>
+            <td>
+                <div style="font-weight: 600;">${escapeHtmlSafe(item.articleId)} ${escapeHtmlSafe(item.atomId)}</div>
+                ${item.articleTitle ? `<div style="font-size: 9px; color: #6B7280;">${escapeHtmlSafe(item.articleTitle)}</div>` : ''}
             </td>
         </tr>
       `).join('');
@@ -431,47 +432,35 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
   const { lexiconTerms, addLexiconTerm, updateLexiconTerm } = useDataStore();
   const { user } = useAuthStore();
 
-  const existingTerm = termId ? lexiconTerms.find(t => t.id === termId) : null;
+  const defaultForm: Partial<LexiconTerm> = {
+    term: '',
+    term_type: 'word',
+    category: 'profanity',
+    severity_floor: 'Medium',
+    enforcement_mode: 'soft_signal',
+    gcam_article_id: 1,
+    gcam_atom_id: '',
+    gcam_article_title_ar: '',
+    description: '',
+    example_usage: ''
+  };
 
-  const [formData, setFormData] = useState<Partial<LexiconTerm>>(
-    existingTerm || {
-      term: '',
-      term_type: 'word',
-      category: 'profanity',
-      severity_floor: 'Medium',
-      enforcement_mode: 'soft_signal',
-      gcam_article_id: 1,
-      gcam_atom_id: '',
-      gcam_article_title_ar: '',
-      description: '',
-      example_usage: ''
-    }
-  );
+  const [formData, setFormData] = useState<Partial<LexiconTerm>>(defaultForm);
 
   const [error, setError] = useState('');
 
-  // Reset form when modal opens with new termId
+  // Reset form when modal opens or termId/lexiconTerms change; derive existingTerm inside effect to avoid stale closure
   useEffect(() => {
     if (isOpen) {
+      const existingTerm = termId ? lexiconTerms.find(t => t.id === termId) : null;
       if (existingTerm) {
         setFormData(existingTerm);
       } else {
-        setFormData({
-          term: '',
-          term_type: 'word',
-          category: 'profanity',
-          severity_floor: 'Medium',
-          enforcement_mode: 'soft_signal',
-          gcam_article_id: 1,
-          gcam_atom_id: '',
-          gcam_article_title_ar: '',
-          description: '',
-          example_usage: ''
-        });
+        setFormData(defaultForm);
       }
       setError('');
     }
-  }, [isOpen, termId, existingTerm]);
+  }, [isOpen, termId, lexiconTerms]);
 
   const handleSubmit = () => {
     setError('');
@@ -599,7 +588,7 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
               });
             }}
             options={getPolicyArticles().map(a => ({
-              label: `${lang === 'ar' ? 'مادة' : 'Art'} ${a.articleId} - ${lang === 'ar' ? a.title_ar : (a as any).title_en}`,
+              label: `${lang === 'ar' ? 'مادة' : 'Art'} ${a.articleId} - ${lang === 'ar' ? a.title_ar : ((a as { title_en?: string }).title_en ?? `Art ${a.articleId}`)}`,
               value: String(a.articleId)
             }))}
             className="w-full"
@@ -619,7 +608,7 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
                   options={[
                     { label: lang === 'ar' ? 'الكل (لا تحديد)' : 'All (None)', value: '' },
                     ...atoms.map(atom => ({
-                      label: `${atom.atomId} - ${lang === 'ar' ? atom.title_ar : (atom as any).title_en}`,
+                      label: `${atom.atomId} - ${lang === 'ar' ? atom.title_ar : ((atom as { title_en?: string }).title_en ?? atom.atomId)}`,
                       value: atom.atomId
                     }))
                   ]}
