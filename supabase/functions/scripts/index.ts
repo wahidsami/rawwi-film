@@ -215,7 +215,8 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Script not found" }, 404);
     }
     const s = script as { created_by: string | null; assignee_id: string | null };
-    if (s.created_by !== uid && s.assignee_id !== uid) {
+    const isAdmin = await isUserAdmin(supabase, uid);
+    if (!isAdmin && s.created_by !== uid && s.assignee_id !== uid) {
       return json({ error: "Forbidden" }, 403);
     }
     const { data: version, error: versionErr } = await supabase
@@ -271,7 +272,8 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
     if (scriptErr || !script) return json({ error: "Script not found" }, 404);
     const s = script as { created_by: string | null; assignee_id: string | null };
-    if (s.created_by !== uid && s.assignee_id !== uid) return json({ error: "Forbidden" }, 403);
+    const isAdminHighlight = await isUserAdmin(supabase, uid);
+    if (!isAdminHighlight && s.created_by !== uid && s.assignee_id !== uid) return json({ error: "Forbidden" }, 403);
     const { data: row, error: rowErr } = await supabase
       .from("user_script_highlight")
       .select("job_id")
@@ -304,7 +306,8 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
     if (scriptErr || !script) return json({ error: "Script not found" }, 404);
     const s = script as { created_by: string | null; assignee_id: string | null };
-    if (s.created_by !== uid && s.assignee_id !== uid) return json({ error: "Forbidden" }, 403);
+    const isAdminPref = await isUserAdmin(supabase, uid);
+    if (!isAdminPref && s.created_by !== uid && s.assignee_id !== uid) return json({ error: "Forbidden" }, 403);
     const { data: job, error: jobErr } = await supabase
       .from("analysis_jobs")
       .select("id, script_id, created_by")
@@ -428,7 +431,8 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Script not found" }, 404);
     }
     const s = script as { created_by: string | null; assignee_id: string | null };
-    if (s.created_by !== uid && s.assignee_id !== uid) {
+    const isAdminVers = await isUserAdmin(supabase, uid);
+    if (!isAdminVers && s.created_by !== uid && s.assignee_id !== uid) {
       return json({ error: "Forbidden" }, 403);
     }
     const { data: maxRow } = await supabase
@@ -482,19 +486,8 @@ Deno.serve(async (req: Request) => {
     if (scriptErr || !script) return json({ error: "Script not found" }, 404);
 
     const s = script as { created_by: string | null; assignee_id: string | null };
-    // Allow owner, assignee, or admin (admin check done via RLS effectively, but here we do manual check)
-    // Actually requireAuth checks JWT. 
-    // If not owner/assignee, forbid? 
-    // Admin role check is not explicit here but usually desired.
-    // For now, consistent with other endpoints: check created_by/assignee_id locally if not admin?
-    // The previous endpoints check explicitly. 
-    // Let's allow if created_by or assignee_id match uid. 
-    // (Note: Admins override is not implemented in other endpoints in this file except by implied access? 
-    // actually other endpoints return 403 explicit. This might be a bug for Admins. 
-    // But let's stick to the pattern: owner/assignee only for now.)
-    if (s.created_by !== uid && s.assignee_id !== uid) {
-      // TODO: Check if admin
-      // For now return 403 to be safe
+    const isAdminVersions = await isUserAdmin(supabase, uid);
+    if (!isAdminVersions && s.created_by !== uid && s.assignee_id !== uid) {
       return json({ error: "Forbidden" }, 403);
     }
 
