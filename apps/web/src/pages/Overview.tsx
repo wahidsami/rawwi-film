@@ -33,7 +33,7 @@ import { escapeHtmlSafe } from '@/utils/escapeHtml';
 
 export function Overview() {
   const { t, lang } = useLangStore();
-  const { user, hasPermission } = useAuthStore();
+  const { user, hasPermission, hasSection } = useAuthStore();
   const { fetchInitialData } = useDataStore();
   const { settings } = useSettingsStore();
   const navigate = useNavigate();
@@ -201,7 +201,7 @@ export function Overview() {
   };
 
   const canManage = user?.role === 'Super Admin' || user?.role === 'Admin' || user?.role === 'Regulator';
-  const canViewAudit = hasPermission('view_audit');
+  const canViewAudit = hasSection('audit');
 
   if (loading) {
     return (
@@ -273,9 +273,11 @@ export function Overview() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-text-main">{stats?.pendingTasks || 0}</div>
-            <button onClick={() => navigate('/tasks')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
-              {t('viewTasks')} <ArrowIcon className="h-3 w-3" />
-            </button>
+            {hasSection('tasks') && (
+              <button onClick={() => navigate('/tasks')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
+                {t('viewTasks')} <ArrowIcon className="h-3 w-3" />
+              </button>
+            )}
           </CardContent>
         </Card>
 
@@ -286,9 +288,11 @@ export function Overview() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-text-main">{stats?.scriptsInReview || 0}</div>
-            <button onClick={() => navigate('/scripts')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
-              {lang === 'ar' ? 'فتح النصوص' : 'Open Scripts'} <ArrowIcon className="h-3 w-3" />
-            </button>
+            {hasSection('clients') && (
+              <button onClick={() => navigate('/scripts')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
+                {lang === 'ar' ? 'فتح النصوص' : 'Open Scripts'} <ArrowIcon className="h-3 w-3" />
+              </button>
+            )}
           </CardContent>
         </Card>
 
@@ -299,9 +303,11 @@ export function Overview() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-text-main">{stats?.reportsThisMonth || 0}</div>
-            <button onClick={() => navigate('/reports')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
-              {t('goToReports')} <ArrowIcon className="h-3 w-3" />
-            </button>
+            {hasSection('reports') && (
+              <button onClick={() => navigate('/reports')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
+                {t('goToReports')} <ArrowIcon className="h-3 w-3" />
+              </button>
+            )}
           </CardContent>
         </Card>
 
@@ -312,9 +318,11 @@ export function Overview() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-text-main">{stats?.highCriticalFindings || 0}</div>
-            <button onClick={() => navigate('/reports')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
-              {t('viewResults')} <ArrowIcon className="h-3 w-3" />
-            </button>
+            {hasSection('reports') && (
+              <button onClick={() => navigate('/reports')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
+                {t('viewResults')} <ArrowIcon className="h-3 w-3" />
+              </button>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -332,12 +340,14 @@ export function Overview() {
             <div className="text-3xl font-bold text-text-main">
               {stats?.scriptsByStatus?.approved || 0}
             </div>
-            <button
-              onClick={() => navigate('/scripts?status=approved')}
-              className="mt-4 text-xs text-success hover:underline flex items-center gap-1"
-            >
-              {lang === 'ar' ? 'عرض النصوص المقبولة' : 'View Approved'} <ArrowIcon className="h-3 w-3" />
-            </button>
+            {hasSection('clients') && (
+              <button
+                onClick={() => navigate('/scripts?status=approved')}
+                className="mt-4 text-xs text-success hover:underline flex items-center gap-1"
+              >
+                {lang === 'ar' ? 'عرض النصوص المقبولة' : 'View Approved'} <ArrowIcon className="h-3 w-3" />
+              </button>
+            )}
           </CardContent>
         </Card>
 
@@ -352,12 +362,14 @@ export function Overview() {
             <div className="text-3xl font-bold text-text-main">
               {stats?.scriptsByStatus?.rejected || 0}
             </div>
-            <button
-              onClick={() => navigate('/scripts?status=rejected')}
-              className="mt-4 text-xs text-error hover:underline flex items-center gap-1"
-            >
-              {lang === 'ar' ? 'عرض النصوص المرفوضة' : 'View Rejected'} <ArrowIcon className="h-3 w-3" />
-            </button>
+            {hasSection('clients') && (
+              <button
+                onClick={() => navigate('/scripts?status=rejected')}
+                className="mt-4 text-xs text-error hover:underline flex items-center gap-1"
+              >
+                {lang === 'ar' ? 'عرض النصوص المرفوضة' : 'View Rejected'} <ArrowIcon className="h-3 w-3" />
+              </button>
+            )}
           </CardContent>
         </Card>
 
@@ -372,12 +384,14 @@ export function Overview() {
             <div className="text-3xl font-bold text-text-main">
               {(stats?.scriptsByStatus?.review_required || 0) + (stats?.scriptsByStatus?.in_review || 0)}
             </div>
-            <button
-              onClick={() => navigate('/scripts?status=pending')}
-              className="mt-4 text-xs text-warning hover:underline flex items-center gap-1"
-            >
-              {lang === 'ar' ? 'مراجعة الآن' : 'Review Now'} <ArrowIcon className="h-3 w-3" />
-            </button>
+            {hasSection('clients') && (
+              <button
+                onClick={() => navigate('/scripts?status=pending')}
+                className="mt-4 text-xs text-warning hover:underline flex items-center gap-1"
+              >
+                {lang === 'ar' ? 'مراجعة الآن' : 'Review Now'} <ArrowIcon className="h-3 w-3" />
+              </button>
+            )}
           </CardContent>
         </Card>
 
@@ -507,7 +521,7 @@ export function Overview() {
               <CardTitle className="text-primary-dark">{t('quickActions')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {canManage && (
+              {hasSection('clients') && (
                 <>
                   <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/clients')}>
                     <Plus className="h-4 w-4" /> {t('addClientAction')}
@@ -517,13 +531,17 @@ export function Overview() {
                   </Button>
                 </>
               )}
-              <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/tasks')}>
-                <PlayCircle className="h-4 w-4" /> {t('startAnalysisAction')}
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/reports')}>
-                <FileBarChart className="h-4 w-4" /> {t('generateReportAction')}
-              </Button>
-              {canManage && (
+              {hasSection('tasks') && (
+                <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/tasks')}>
+                  <PlayCircle className="h-4 w-4" /> {t('startAnalysisAction')}
+                </Button>
+              )}
+              {hasSection('reports') && (
+                <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/reports')}>
+                  <FileBarChart className="h-4 w-4" /> {t('generateReportAction')}
+                </Button>
+              )}
+              {hasSection('glossary') && (
                 <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/glossary')}>
                   <BookOpen className="h-4 w-4" /> {t('addTermAction')}
                 </Button>

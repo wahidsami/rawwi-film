@@ -228,6 +228,7 @@ export interface UserListItem {
   name: string;
   roleKey: string | null;
   status: 'active' | 'disabled';
+  allowedSections?: string[];
 }
 
 export interface CreateUserBody {
@@ -237,6 +238,7 @@ export interface CreateUserBody {
   permissions?: string[];
   mode?: 'invite' | 'temp_password';
   tempPassword?: string;
+  allowedSections?: string[];
 }
 
 export interface CreateUserResponse {
@@ -252,6 +254,7 @@ export interface UpdateUserBody {
   name?: string;
   roleKey?: string;
   status?: 'active' | 'disabled';
+  allowedSections?: string[];
 }
 
 export interface DeleteUserBody {

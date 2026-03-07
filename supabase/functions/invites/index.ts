@@ -15,6 +15,16 @@ const INVITE_EXPIRY_HOURS = 48;
 const RESEND_API = "https://api.resend.com/emails";
 const FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
 
+const ALL_SECTIONS = ["clients", "tasks", "glossary", "reports", "access_control", "audit"];
+
+function getDefaultSectionsForRoleKey(roleKey: string): string[] {
+  const k = roleKey.toLowerCase().replace(/\s/g, "_");
+  if (k === "super_admin") return [...ALL_SECTIONS];
+  if (k === "admin") return [...ALL_SECTIONS];
+  if (k === "regulator") return ["clients", "reports", "glossary"];
+  return ["clients", "reports"];
+}
+
 async function callerHasManageUsers(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   userId: string
@@ -105,7 +115,8 @@ Deno.serve(async (req: Request) => {
   const roleId = roleRow.id;
 
   const permissions = body.permissions != null && typeof body.permissions === "object" ? body.permissions : {};
-  const allowedSections = Array.isArray(body.allowedSections) ? body.allowedSections : undefined;
+  const allowedSectionsFromBody = Array.isArray(body.allowedSections) ? body.allowedSections : undefined;
+  const allowedSections = (allowedSectionsFromBody?.length ? allowedSectionsFromBody : getDefaultSectionsForRoleKey(roleKey)) as string[];
 
   const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
   const token = base64url(tokenBytes);
@@ -138,11 +149,9 @@ Deno.serve(async (req: Request) => {
   const roleDisplayName = roleKey === "super_admin" ? "Super Admin" : roleKey === "regulator" ? "Regulator" : "Admin";
   const userMetadata: Record<string, unknown> = {
     name: (body.name ?? "").trim() || email.split("@")[0],
-    role: roleDisplayName
+    role: roleDisplayName,
+    allowedSections,
   };
-  if (allowedSections) {
-    userMetadata.allowedSections = allowedSections;
-  }
 
   console.log(`[invites] STEP:auth_create_user - Creating auth user for ${email}`);
   const { data: createData, error: createErr } = await supabase.auth.admin.createUser({

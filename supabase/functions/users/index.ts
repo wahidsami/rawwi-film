@@ -9,6 +9,16 @@ import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 
 const PROD = Deno.env.get("PROD") === "true" || Deno.env.get("SUPABASE_ENV") === "production";
 
+const ALL_SECTIONS = ["clients", "tasks", "glossary", "reports", "access_control", "audit"];
+
+function getDefaultSectionsForRoleKey(roleKey: string): string[] {
+  const k = roleKey.toLowerCase().replace(/\s/g, "_");
+  if (k === "super_admin") return [...ALL_SECTIONS];
+  if (k === "admin") return [...ALL_SECTIONS];
+  if (k === "regulator") return ["clients", "reports", "glossary"];
+  return ["clients", "reports"];
+}
+
 function generateTempPassword(length = 20): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
   const arr = new Uint8Array(length);
@@ -136,7 +146,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (method === "POST") {
-    let body: { name?: string; email?: string; roleKey?: string; permissions?: string[]; mode?: string; tempPassword?: string };
+    let body: { name?: string; email?: string; roleKey?: string; permissions?: string[]; mode?: string; tempPassword?: string; allowedSections?: string[] };
     try {
       body = await req.json();
     } catch {
@@ -147,6 +157,9 @@ Deno.serve(async (req: Request) => {
     const roleKey = (body.roleKey ?? "admin").trim() || "admin";
     const mode = (body.mode === "invite" || body.mode === "temp_password") ? body.mode : "temp_password";
     const tempPassword = typeof body.tempPassword === "string" ? body.tempPassword.trim() : undefined;
+    const allowedSectionsFromBody = Array.isArray(body.allowedSections) ? body.allowedSections : undefined;
+    const defaultSections = getDefaultSectionsForRoleKey(roleKey);
+    const allowedSections = allowedSectionsFromBody?.length ? allowedSectionsFromBody : defaultSections;
 
     if (!email) return jsonResponse({ error: "email is required" }, 400, { origin });
 
@@ -166,12 +179,16 @@ Deno.serve(async (req: Request) => {
       const finalEmail = email || (existingUser.email ?? "");
       await upsertProfile(supabase, targetUserId, displayName, finalEmail);
       await ensureUserRole(supabase, targetUserId, roleKey);
+      const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
+        user_metadata: { ...(existingUser.user_metadata ?? {}), name: displayName, allowedSections },
+      });
+      if (metaErr) console.error("[users] updateUserById existing:", metaErr.message);
       return jsonResponse({ userId: targetUserId, invited: false, existing: true }, 200, { origin });
     }
 
     if (mode === "invite") {
       const { data: inviteData, error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
-        data: { name: name || email.split("@")[0] },
+        data: { name: name || email.split("@")[0], allowedSections },
       });
       if (inviteErr) {
         console.error("[users] inviteUserByEmail:", inviteErr.message);
@@ -185,6 +202,10 @@ Deno.serve(async (req: Request) => {
       const finalEmail = email || (user.email ?? "");
       await upsertProfile(supabase, targetUserId, displayName, finalEmail);
       await ensureUserRole(supabase, targetUserId, roleKey);
+      const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
+        user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections },
+      });
+      if (metaErr) console.error("[users] updateUserById invite:", metaErr.message);
       return jsonResponse({ userId: targetUserId, invited: true }, 200, { origin });
     }
 
@@ -193,7 +214,7 @@ Deno.serve(async (req: Request) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { name: name || email.split("@")[0] },
+      user_metadata: { name: name || email.split("@")[0], allowedSections },
     });
     if (createErr) {
       console.error("[users] createUser:", createErr.message);
@@ -206,6 +227,10 @@ Deno.serve(async (req: Request) => {
     const finalEmail = email || (user.email ?? "");
     await upsertProfile(supabase, targetUserId, displayName, finalEmail);
     await ensureUserRole(supabase, targetUserId, roleKey);
+    const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
+      user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections },
+    });
+    if (metaErr) console.error("[users] updateUserById create:", metaErr.message);
     if (!PROD) returnedTempPassword = password;
     return jsonResponse({ userId: targetUserId, invited: false, tempPassword: returnedTempPassword }, 200, { origin });
   }

@@ -78,16 +78,14 @@ export function AppLayout() {
   ];
 
   const navLinks = baseNavLinks.filter(link => {
-    // If no section/permission required, always show
+    // No section/permission required → always show (Overview, Settings, Certificates)
     if (!link.section && !link.permission) return true;
 
-    // NEW: Check section access first (preferred method)
-    if (link.section && hasSection(link.section)) return true;
+    // Section-based: single source of truth — show only if user has this section
+    if (link.section) return hasSection(link.section);
 
-    // LEGACY: Fall back to permission check
-    if (link.permission && hasPermission(link.permission)) return true;
-
-    return false;
+    // Legacy: link has permission but no section
+    return link.permission ? hasPermission(link.permission) : false;
   });
 
   return (

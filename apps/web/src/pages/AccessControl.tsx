@@ -16,6 +16,25 @@ const ROLE_OPTIONS = [
   { value: 'regulator', labelKey: 'regulator' as const },
 ];
 
+const ALL_SECTIONS = ['clients', 'tasks', 'glossary', 'reports', 'access_control', 'audit'] as const;
+
+const SECTION_OPTIONS: { value: string; labelKey: string }[] = [
+  { value: 'clients', labelKey: 'clients' },
+  { value: 'tasks', labelKey: 'tasks' },
+  { value: 'glossary', labelKey: 'glossary' },
+  { value: 'reports', labelKey: 'reports' },
+  { value: 'access_control', labelKey: 'accessControl' },
+  { value: 'audit', labelKey: 'auditLog' },
+];
+
+function getDefaultSectionsForRoleKey(roleKey: string): string[] {
+  const k = roleKey.toLowerCase().replace(/\s/g, '_');
+  if (k === 'super_admin') return [...ALL_SECTIONS];
+  if (k === 'admin') return [...ALL_SECTIONS];
+  if (k === 'regulator') return ['clients', 'reports', 'glossary'];
+  return ['clients', 'reports'];
+}
+
 export function AccessControl() {
   const { t, lang } = useLangStore();
   const [search, setSearch] = useState('');
@@ -27,6 +46,7 @@ export function AccessControl() {
     name: '',
     email: '',
     roleKey: 'admin',
+    allowedSections: getDefaultSectionsForRoleKey('admin'),
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -36,6 +56,7 @@ export function AccessControl() {
     name: '',
     roleKey: 'admin',
     status: 'active' as 'active' | 'disabled',
+    allowedSections: [] as string[],
   });
   const [editSaving, setEditSaving] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
@@ -83,10 +104,11 @@ export function AccessControl() {
         email,
         name: name || undefined,
         role: form.roleKey,
+        allowedSections: form.allowedSections.length ? form.allowedSections : undefined,
       });
       toast.success(lang === 'ar' ? 'تم إرسال الدعوة إلى البريد الإلكتروني' : 'Invite sent to email');
       setIsModalOpen(false);
-      setForm({ name: '', email: '', roleKey: 'admin' });
+      setForm({ name: '', email: '', roleKey: 'admin', allowedSections: getDefaultSectionsForRoleKey('admin') });
       await loadUsers();
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to send invite');
@@ -97,10 +119,12 @@ export function AccessControl() {
 
   const openEdit = (user: UserListItem) => {
     setEditUser(user);
+    const roleKey = user.roleKey ?? 'admin';
     setEditForm({
       name: user.name,
-      roleKey: user.roleKey ?? 'admin',
+      roleKey,
       status: user.status,
+      allowedSections: (user.allowedSections && user.allowedSections.length > 0) ? user.allowedSections : getDefaultSectionsForRoleKey(roleKey),
     });
   };
 
@@ -113,6 +137,7 @@ export function AccessControl() {
         name: editForm.name.trim() || undefined,
         roleKey: editForm.roleKey,
         status: editForm.status,
+        allowedSections: editForm.allowedSections,
       });
       toast.success(lang === 'ar' ? 'تم تحديث المستخدم' : 'User updated');
       setEditUser(null);
@@ -339,7 +364,10 @@ export function AccessControl() {
               <select
                 className="flex h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
                 value={editForm.roleKey}
-                onChange={(e) => setEditForm((f) => ({ ...f, roleKey: e.target.value }))}
+                onChange={(e) => {
+                  const roleKey = e.target.value;
+                  setEditForm((f) => ({ ...f, roleKey, allowedSections: getDefaultSectionsForRoleKey(roleKey) }));
+                }}
               >
                 {ROLE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
@@ -348,6 +376,31 @@ export function AccessControl() {
               <p className="text-xs text-text-muted">
                 {lang === 'ar' ? 'يحدد صلاحيات المستخدم في النظام' : 'Defines backend permissions.'}
               </p>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-text-main">
+                {lang === 'ar' ? 'الأقسام الظاهرة في لوحة التحكم' : 'Dashboard sections this user can see'}
+              </label>
+              <div className="flex flex-wrap gap-3">
+                {SECTION_OPTIONS.map((opt) => (
+                  <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editForm.allowedSections.includes(opt.value)}
+                      onChange={(e) => {
+                        setEditForm((f) => ({
+                          ...f,
+                          allowedSections: e.target.checked
+                            ? [...f.allowedSections, opt.value]
+                            : f.allowedSections.filter((s) => s !== opt.value),
+                        }));
+                      }}
+                      className="rounded border-border"
+                    />
+                    <span className="text-sm text-text-main">{t(opt.labelKey)}</span>
+                  </label>
+                ))}
+              </div>
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-text-main">{t('status')}</label>
@@ -396,7 +449,10 @@ export function AccessControl() {
             <select
               className="flex h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
               value={form.roleKey}
-              onChange={(e) => setForm((f) => ({ ...f, roleKey: e.target.value }))}
+              onChange={(e) => {
+                const roleKey = e.target.value;
+                setForm((f) => ({ ...f, roleKey, allowedSections: getDefaultSectionsForRoleKey(roleKey) }));
+              }}
             >
               {ROLE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -407,6 +463,32 @@ export function AccessControl() {
             <p className="text-xs text-text-muted">
               {lang === 'ar' ? 'يحدد صلاحيات المستخدم وما يظهر له في القائمة' : 'Defines what they can do and which dashboard sections they see.'}
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-text-main">
+              {lang === 'ar' ? 'الأقسام الظاهرة في لوحة التحكم' : 'Dashboard sections this user can see'}
+            </label>
+            <div className="flex flex-wrap gap-3">
+              {SECTION_OPTIONS.map((opt) => (
+                <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.allowedSections.includes(opt.value)}
+                    onChange={(e) => {
+                      setForm((f) => ({
+                        ...f,
+                        allowedSections: e.target.checked
+                          ? [...f.allowedSections, opt.value]
+                          : f.allowedSections.filter((s) => s !== opt.value),
+                      }));
+                    }}
+                    className="rounded border-border"
+                  />
+                  <span className="text-sm text-text-main">{t(opt.labelKey)}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border">
