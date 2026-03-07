@@ -264,7 +264,7 @@ export const usersApi = {
   updateUser: (body: UpdateUserBody): Promise<{ userId: string; updated: boolean }> =>
     httpClient.patch('/users', body),
   deleteUser: (body: DeleteUserBody): Promise<{ userId: string; deleted: boolean }> =>
-    httpClient.delete(`/users?userId=${encodeURIComponent(body.userId)}`),
+    httpClient.delete(`/users?userId=${encodeURIComponent(body.userId)}`, { body: { userId: body.userId } }),
 };
 
 export interface SendInviteBody {

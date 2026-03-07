@@ -278,18 +278,18 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     let targetUserId = url.searchParams.get("userId")?.trim();
 
-    // If not in query, try body (legacy support)
+    // Prefer body for DELETE (some proxies don't forward query params on DELETE)
     if (!targetUserId) {
       try {
         const body: { userId?: string } = await req.json();
         targetUserId = (body.userId ?? "").trim();
       } catch {
-        // Body parsing failed or empty, and no query param
-        return jsonResponse({ error: "userId is required (via query param 'userId' or JSON body)" }, 400, { origin });
+        // Body parsing failed or empty
       }
     }
-
-    if (!targetUserId) return jsonResponse({ error: "userId is required" }, 400, { origin });
+    if (!targetUserId) {
+      return jsonResponse({ error: "userId is required (send in query ?userId=... or JSON body { userId: \"...\" })" }, 400, { origin });
+    }
     if (targetUserId === callerId) {
       return jsonResponse({ error: "Cannot delete your own account" }, 400, { origin });
     }
