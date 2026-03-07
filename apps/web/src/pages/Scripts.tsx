@@ -25,6 +25,7 @@ type StatusFilter = 'all' | 'approved' | 'rejected' | 'pending';
 
 export function Scripts() {
     const { lang } = useLangStore();
+    const { settings } = useSettingsStore();
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { scripts, companies, isLoading } = useDataStore();
