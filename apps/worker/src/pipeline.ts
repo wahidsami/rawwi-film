@@ -209,6 +209,16 @@ export async function processChunkJudge(
     return;
   }
 
+  logger.info("[DEBUG] processChunkJudge started", {
+    jobId,
+    chunkId: chunk.id,
+    chunkTextLength: chunkText.length,
+    chunkStart,
+    chunkEnd,
+    ALWAYS_CHECK_ARTICLES_count: ALWAYS_CHECK_ARTICLES.length,
+    ALWAYS_CHECK_ARTICLES_ids: [...ALWAYS_CHECK_ARTICLES],
+  });
+
   // 0) Fetch lexicon terms for prompt injection
   const { data: lexiconTerms } = await supabase
     .from("slang_lexicon")
@@ -396,6 +406,11 @@ export async function processChunkJudge(
     }
     const selectedArticles: GCAMArticle[] = selectedIds.map((id) => getScriptStandardArticle(id));
     logger.info("Articles selected for Multi-Pass Judge", { chunkId: chunk.id, count: selectedIds.length, ids: selectedIds });
+    logger.info("[DEBUG] Articles passed to multi-pass", {
+      chunkId: chunk.id,
+      selectedArticlesCount: selectedArticles.length,
+      selectedArticleIds: selectedArticles.map(a => a.id),
+    });
 
     // 3) Multi-Pass Detection (6 specialized scanners running in parallel)
     allFindings = [];

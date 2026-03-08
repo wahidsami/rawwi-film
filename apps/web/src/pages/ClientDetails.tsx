@@ -90,11 +90,22 @@ export function ClientDetails() {
 
 
   useEffect(() => {
-    usersApi.getUsers().then(users => {
-      // Filter out disabled users if needed? For now just take all
-      setAvailableUsers(users.map(u => ({ ...u, role: u.roleKey || 'user', permissions: [] })));
-    }).catch(err => console.error('Failed to load users', err));
-  }, []);
+    usersApi
+      .getUsers()
+      .then(users => {
+        setAvailableUsers(users.map(u => ({ ...u, role: u.roleKey || 'user', permissions: [] })));
+      })
+      .catch(err => {
+        // Regulators (and others without manage_users) get 403 on /users — use only current user for assignee dropdown
+        if (err?.message?.includes('403') || err?.message?.includes('Forbidden')) {
+          setAvailableUsers(
+            user ? [{ id: user.id, name: user.name, email: user.email, role: user.role, permissions: [] }] : []
+          );
+          return;
+        }
+        console.error('Failed to load users', err);
+      });
+  }, [user]);
 
   const loadReportCounts = useCallback(async () => {
     if (companyScripts.length === 0) return;

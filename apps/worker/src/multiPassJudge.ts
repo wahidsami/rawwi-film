@@ -439,7 +439,7 @@ async function runSinglePass(
     const articles = allArticles.filter(a => articleIds.includes(a.id));
     
     if (articles.length === 0 && pass.name !== "glossary") {
-      logger.warn(`No articles for pass ${pass.name}`, { articleIds });
+      logger.warn(`[DEBUG] Pass skipped: no articles`, { passName: pass.name, articleIds, allArticleIds: allArticles.map(a => a.id) });
       return { passName: pass.name, findings: [], duration: 0 };
     }
 
@@ -521,6 +521,16 @@ export async function runMultiPassDetection(
 }> {
   const startTime = Date.now();
   
+  logger.info("[DEBUG] runMultiPassDetection started", {
+    chunkTextLength: chunkText.length,
+    chunkStart,
+    chunkEnd,
+    allArticlesCount: allArticles.length,
+    allArticleIds: allArticles.map(a => a.id),
+    lexiconTermsCount: lexiconTerms.length,
+    passCount: DETECTION_PASSES.length,
+  });
+  
   logger.info("Starting multi-pass detection", { 
     chunkStart, 
     chunkEnd, 
@@ -548,12 +558,21 @@ export async function runMultiPassDetection(
     afterDedup: deduplicated.length,
     dropped: allFindings.length - deduplicated.length,
     totalDuration,
-    passResults: passResults.map(r => ({ 
-      pass: r.passName, 
-      findings: r.findings.length, 
-      duration: r.duration 
+    passResults: passResults.map(r => ({
+      pass: r.passName,
+      findings: r.findings.length,
+      duration: r.duration
     }))
   });
+  
+  if (deduplicated.length === 0) {
+    logger.warn("[DEBUG] Multi-pass returned ZERO findings", {
+      chunkStart,
+      chunkEnd,
+      totalPassFindings: allFindings.length,
+      passBreakdown: passResults.map(r => ({ pass: r.passName, count: r.findings.length })),
+    });
+  }
 
   return {
     findings: deduplicated,
