@@ -57,10 +57,39 @@ function isVerbatim(sourceText: string, snippet: string): boolean {
 
 const MAX_EVIDENCE_SPAN = 280;
 const MAX_EVIDENCE_LEN = 260;
+const HARD_FALLBACK_INSULTS = [
+  { term: "نصاب", articleId: 5, atomId: "5-2", severity: "high" as const },
+  { term: "حرامي", articleId: 5, atomId: "5-2", severity: "high" as const },
+  { term: "كذاب", articleId: 5, atomId: "5-2", severity: "medium" as const },
+  { term: "محتال", articleId: 5, atomId: "5-2", severity: "high" as const },
+  { term: "لص", articleId: 5, atomId: "5-2", severity: "medium" as const },
+] as const;
 
 function compactEvidenceText(s: string): string {
   const cleaned = (s ?? "").replace(/\s+/g, " ").trim();
   return cleaned.length > MAX_EVIDENCE_LEN ? `${cleaned.slice(0, MAX_EVIDENCE_LEN)}…` : cleaned;
+}
+
+function isLetterOrNumber(ch: string): boolean {
+  return /[\p{L}\p{N}]/u.test(ch);
+}
+
+function isWholeWordAt(text: string, index: number, term: string): boolean {
+  const before = index > 0 ? text[index - 1] : "";
+  const afterIndex = index + term.length;
+  const after = afterIndex < text.length ? text[afterIndex] : "";
+  const beforeOk = before === "" || !isLetterOrNumber(before);
+  const afterOk = after === "" || !isLetterOrNumber(after);
+  return beforeOk && afterOk;
+}
+
+function getLineNumberAt(text: string, index: number): number {
+  if (index <= 0) return 1;
+  let lines = 1;
+  for (let i = 0; i < index && i < text.length; i++) {
+    if (text[i] === "\n") lines++;
+  }
+  return lines;
 }
 
 /**
@@ -335,6 +364,60 @@ export async function processChunkJudge(
     if (lexErr) {
       logger.error("Lexicon finding upsert FAILED", { jobId, chunkId: chunk.id, error: lexErr });
     }
+  }
+
+  // 1a) Tiny hard fallback for critical direct insults (deterministic match; independent from model output).
+  let hardFallbackInserted = 0;
+  for (const rule of HARD_FALLBACK_INSULTS) {
+    let idx = chunkText.indexOf(rule.term);
+    while (idx !== -1) {
+      if (isWholeWordAt(chunkText, idx, rule.term)) {
+        const startLocal = idx;
+        const endLocal = idx + rule.term.length;
+        const startGlobal = chunkStart + startLocal;
+        const endGlobal = chunkStart + endLocal;
+        const line = getLineNumberAt(chunkText, startLocal);
+        const hash = lexiconEvidenceHash(jobId, rule.articleId, rule.term, line);
+        const evidence =
+          normalizedText != null && startGlobal >= 0 && endGlobal <= normalizedText.length
+            ? normalizedText.slice(startGlobal, endGlobal)
+            : rule.term;
+
+        const fallbackRow = {
+          job_id: jobId,
+          script_id: scriptId,
+          version_id: versionId,
+          source: "lexicon_mandatory",
+          article_id: rule.articleId,
+          atom_id: rule.atomId,
+          severity: rule.severity,
+          confidence: 1,
+          title_ar: `مخالفة إساءة مباشرة: ${rule.term}`,
+          description_ar: evidence,
+          evidence_snippet: evidence,
+          start_offset_global: startGlobal,
+          end_offset_global: endGlobal,
+          start_line_chunk: line,
+          end_line_chunk: line,
+          location: {},
+          evidence_hash: hash,
+        };
+
+        const { data: fbData, error: fbErr } = await supabase
+          .from("analysis_findings")
+          .upsert(fallbackRow, { onConflict: "job_id,evidence_hash", ignoreDuplicates: true })
+          .select("id");
+        if (fbErr) {
+          logger.error("Hard fallback insult upsert FAILED", { jobId, chunkId: chunk.id, term: rule.term, error: fbErr });
+        } else {
+          hardFallbackInserted += fbData?.length ?? 0;
+        }
+      }
+      idx = chunkText.indexOf(rule.term, idx + rule.term.length);
+    }
+  }
+  if (hardFallbackInserted > 0) {
+    logger.info("Hard fallback insults inserted", { jobId, chunkId: chunk.id, inserted: hardFallbackInserted });
   }
 
   // 1b) Idempotency Check & Config Setup
