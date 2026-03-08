@@ -613,10 +613,27 @@ export function ScriptWorkspace() {
     return () => clearInterval(t);
   }, [analysisModalOpen, isAnalysisRunning, analysisPasses.length]);
 
-  const canImport = user?.role === 'Super Admin' || user?.role === 'Admin' || user?.role === 'Regulator' || script?.assigneeId === user?.id;
+  const canReplaceFile = user?.role === 'Super Admin' || user?.role === 'Admin';
   const hasVersionForAnalysis = Boolean(script?.currentVersionId);
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleOpenFilePicker = useCallback(() => {
+    if (!canReplaceFile || isUploading) return;
+    const replacingExistingContent =
+      ((editorData?.content != null && editorData.content.trim() !== '') || !!extractedText) ||
+      reportHistory.length > 0 ||
+      hasVersionForAnalysis;
+    if (replacingExistingContent) {
+      const ok = window.confirm(
+        lang === 'ar'
+          ? 'استبدال الملف سيحذف نتائج التحليل السابقة والتقارير المرتبطة بهذا النص. هل تريد المتابعة؟'
+          : 'Replacing this file will delete previous analysis findings and reports for this script. Continue?'
+      );
+      if (!ok) return;
+    }
+    fileInputRef.current?.click();
+  }, [canReplaceFile, isUploading, editorData?.content, extractedText, reportHistory.length, hasVersionForAnalysis, lang]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !script) return;
 
@@ -638,6 +655,7 @@ export function ScriptWorkspace() {
         source_file_size: file.size,
         source_file_path: storagePath,
         source_file_url: storagePath,
+        clearAnalysisOnReplace: true,
       });
       
       setUploadStatus('extracting');
@@ -690,6 +708,12 @@ export function ScriptWorkspace() {
         return;
       }
       setExtractedText(textToShow);
+      // The file/context was replaced: clear stale highlight/report state immediately in UI.
+      setReportFindings([]);
+      setSelectedReportForHighlights(null);
+      setSelectedJobCanonicalHash(null);
+      setSelectedFindingId(null);
+      loadReportHistory();
       setUploadStatus('done');
       toast.success(lang === 'ar' ? 'تم استخراج النص بنجاح' : 'Text extracted successfully');
       await updateScript(script.id, { currentVersionId: version.id });
@@ -1335,28 +1359,24 @@ export function ScriptWorkspace() {
             accept=".pdf,.docx,.txt" 
             onChange={handleFileUpload}
           />
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={!canImport || isUploading}
-            title={!canImport ? (lang === 'ar' ? 'ليس لديك صلاحية' : 'You do not have permission') : ''}
-            className="hidden sm:flex gap-2 relative overflow-hidden group"
-          >
-            <Upload className="w-4 h-4" />
-            {isUploading ? (
-              uploadStatus === 'uploading' ? 'Uploading...' : 'Extracting...'
-            ) : extractedText ? (
-              lang === 'ar' ? 'استبدال الملف' : 'Replace File'
-            ) : (
-              lang === 'ar' ? 'استيراد ملف النص' : 'Import Script Document'
-            )}
-            {!canImport && (
-              <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface text-xs p-1 rounded border shadow opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                {lang === 'ar' ? 'ليس لديك صلاحية' : 'You do not have permission'}
-              </span>
-            )}
-          </Button>
+          {canReplaceFile && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenFilePicker}
+              disabled={isUploading}
+              className="hidden sm:flex gap-2 relative overflow-hidden group"
+            >
+              <Upload className="w-4 h-4" />
+              {isUploading ? (
+                uploadStatus === 'uploading' ? 'Uploading...' : 'Extracting...'
+              ) : extractedText ? (
+                lang === 'ar' ? 'استبدال الملف' : 'Replace File'
+              ) : (
+                lang === 'ar' ? 'استيراد ملف النص' : 'Import Script Document'
+              )}
+            </Button>
+          )}
           <div className="relative hidden sm:block">
             <Button
               variant="outline"

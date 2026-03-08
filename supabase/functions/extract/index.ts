@@ -14,6 +14,7 @@ import {
   htmlToText,
 } from "../_shared/utils.ts";
 import { saveScriptEditorContent } from "../_shared/scriptEditor.ts";
+import { isSuperAdminOrAdmin } from "../_shared/roleCheck.ts";
 import {
   DEFAULT_DETERMINISTIC_CONFIG,
   PROMPT_VERSIONS,
@@ -156,10 +157,8 @@ Deno.serve(async (req: Request) => {
   }
 
   const v = version as ScriptVersionRow;
-  const { data: script } = await supabase.from("scripts").select("id, created_by").eq("id", v.script_id).single();
-  if (!script || (script as { created_by: string | null }).created_by !== auth.userId) {
-    return json({ error: "Forbidden" }, 403);
-  }
+  const canReplace = await isSuperAdminOrAdmin(supabase, auth.userId);
+  if (!canReplace) return json({ error: "Only Admin/Super Admin can replace script files." }, 403);
 
   if (v.extraction_status === "done" && v.extracted_text) {
     return json(toFrontendVersion(v));

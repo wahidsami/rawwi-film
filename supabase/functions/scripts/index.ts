@@ -89,6 +89,33 @@ function normalizeStatus(s: unknown): string {
   return allowed.includes(v) ? v : "draft";
 }
 
+async function clearScriptAnalysisArtifacts(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  scriptId: string,
+  correlationId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { error: highlightErr } = await supabase
+    .from("user_script_highlight")
+    .delete()
+    .eq("script_id", scriptId);
+  if (highlightErr) {
+    console.error(`[scripts] correlationId=${correlationId} clear highlight preference error=`, highlightErr.message);
+    return { ok: false, error: highlightErr.message };
+  }
+
+  // analysis_jobs has FK cascades to chunks/findings/reports.
+  const { error: jobsErr } = await supabase
+    .from("analysis_jobs")
+    .delete()
+    .eq("script_id", scriptId);
+  if (jobsErr) {
+    console.error(`[scripts] correlationId=${correlationId} clear analysis jobs error=`, jobsErr.message);
+    return { ok: false, error: jobsErr.message };
+  }
+
+  return { ok: true };
+}
+
 const RESEND_API = "https://api.resend.com/emails";
 const NOTIFY_FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
 
@@ -478,10 +505,11 @@ Deno.serve(async (req: Request) => {
     if (scriptErr || !script) {
       return json({ error: "Script not found" }, 404);
     }
-    const s = script as { created_by: string | null; assignee_id: string | null };
-    const isAdminVers = await isUserAdmin(supabase, uid);
-    if (!isAdminVers && s.created_by !== uid && s.assignee_id !== uid) {
-      return json({ error: "Forbidden" }, 403);
+    const canReplace = await isSuperAdminOrAdmin(supabase, uid);
+    if (!canReplace) return json({ error: "Only Admin/Super Admin can replace script files." }, 403);
+    if (body.clearAnalysisOnReplace === true) {
+      const cleared = await clearScriptAnalysisArtifacts(supabase, sid, correlationId);
+      if (!cleared.ok) return json({ error: cleared.error }, 500);
     }
     const { data: maxRow } = await supabase
       .from("script_versions")
