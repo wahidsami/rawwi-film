@@ -566,7 +566,9 @@ export function ScriptWorkspace() {
     return () => window.removeEventListener('keydown', handleEscape);
   }, []);
 
-  const showLoading = isLoading;
+  // Keep workspace content visible once script is loaded; global background refreshes should
+  // not blank the editor text view.
+  const showLoading = isLoading && !script;
   const showError = !isLoading && !script;
 
   const handleRetryScript = async () => {
@@ -1601,7 +1603,8 @@ export function ScriptWorkspace() {
                 onDecisionMade={(newStatus) => {
                   updateScript(script.id, { status: newStatus });
                   if (scriptFetched && scriptFetched.id === script.id) setScriptFetched((s) => s ? { ...s, status: newStatus } : null);
-                  fetchInitialData();
+                  // Avoid full-store refetch here: it toggles global loading and briefly clears
+                  // workspace content. Dashboard can refresh via lightweight invalidation event.
                   window.dispatchEvent(new CustomEvent('dashboard-invalidate'));
                 }}
               />
