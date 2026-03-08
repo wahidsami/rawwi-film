@@ -3,6 +3,7 @@ import { config } from "./config.js";
 import type { GCAMArticle } from "./gcam.js";
 import {
   extractJsonFromText,
+  judgeFindingSchema,
   judgeOutputSchema,
   parseJudgeOutput,
   parseRouterOutput,
@@ -92,7 +93,7 @@ export async function callJudgeRaw(
 ): Promise<string> {
   const payload = buildJudgeArticlesPayload(selectedArticles);
   const textSlice = chunkText.slice(0, 30_000);
-  const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nقواعد تنسيق إلزامية:\n- location.start_offset و location.end_offset يجب أن يكونا أرقاماً (لا تُرجع null).\n- severity يجب أن تكون إحدى القيم: low | medium | high | critical.\n- confidence يجب أن تكون رقماً بين 0 و 1.\n- evidence_snippet يجب أن تكون نصاً غير null.\nأرجع JSON بمصفوفة findings فقط.`;
+  const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nقواعد تنسيق إلزامية:\n- article_id مطلوب ويجب أن يكون رقماً صحيحاً بين 1 و 25.\n- location.start_offset و location.end_offset يجب أن يكونا أرقاماً (لا تُرجع null).\n- severity يجب أن تكون إحدى القيم: low | medium | high | critical.\n- confidence يجب أن تكون رقماً بين 0 و 1.\n- evidence_snippet يجب أن تكون نصاً غير null.\nأرجع JSON بمصفوفة findings فقط.`;
 
   const resp = await openai.chat.completions.create({
     model: jobConfig.judge_model,
@@ -145,6 +146,43 @@ export async function parseJudgeWithRepair(
       return { findings: out.findings };
     } catch (e) {
       logger.warn("Judge parse/validation failed, attempting repair", { attempt, error: String(e) });
+
+      // Salvage valid findings instead of dropping entire pass when some items are malformed.
+      try {
+        const json = extractJsonFromText(content);
+        const parsed = JSON.parse(json) as any;
+        const rawFindings: any[] = Array.isArray(parsed?.findings) ? parsed.findings : [];
+        if (rawFindings.length > 0) {
+          const salvaged: JudgeFinding[] = [];
+          let dropped = 0;
+          for (const rf of rawFindings) {
+            const normalized = { ...(rf ?? {}) } as Record<string, unknown>;
+            // Derive article_id from atom_id if model omitted article_id (e.g. "5-2").
+            if (
+              (normalized.article_id == null || normalized.article_id === "") &&
+              typeof normalized.atom_id === "string"
+            ) {
+              const m = normalized.atom_id.match(/^(\d+)[-.]/);
+              if (m) normalized.article_id = Number(m[1]);
+            }
+            const one = judgeFindingSchema.safeParse(normalized);
+            if (one.success) salvaged.push(one.data);
+            else dropped++;
+          }
+          if (salvaged.length > 0) {
+            logger.warn("Judge partial salvage applied", {
+              attempt,
+              rawCount: rawFindings.length,
+              salvaged: salvaged.length,
+              dropped,
+            });
+            return { findings: salvaged };
+          }
+        }
+      } catch {
+        // ignore salvage errors; continue to repair path
+      }
+
       content = await callRepairJson(model, content, "Judge findings JSON");
     }
   }
