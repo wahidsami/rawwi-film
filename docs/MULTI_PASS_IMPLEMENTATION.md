@@ -2,7 +2,7 @@
 
 ## 🎯 Overview
 
-Replaced single-pass detection with **6 specialized scanners** running in parallel:
+Replaced single-pass detection with **10 specialized scanners** running in parallel for **COMPLETE GCAM COVERAGE**:
 
 ### **Pass 0: Glossary Scanner** 🔍
 - **Focus:** Terms from `slang_lexicon` table (نصاب, حرامي, etc.)
@@ -39,6 +39,30 @@ Replaced single-pass detection with **6 specialized scanners** running in parall
 - **Articles:** 5, 6, 7, 8, 13, 17
 - **Model:** gpt-4.1 (expensive, needs nuance)
 - **Keywords:** تمييز عنصري، تمييز جندري، تحريض، كراهية، تطرف، تكفير...
+
+### **Pass 6: National Security & Governance Scanner** 🛡️
+- **Focus:** National security, governance, public order
+- **Articles:** 4, 12, 13, 14
+- **Model:** gpt-4.1 (high sensitivity)
+- **Keywords:** المساس بالأمن الوطني، الإساءة للرموز الوطنية، التحريض على قلب نظام الحكم، الإخلال بالنظام العام...
+
+### **Pass 7: Extremism & Banned Groups Scanner** 🚨
+- **Focus:** Terrorism, extremism, banned organizations
+- **Articles:** 9, 14, 15
+- **Model:** gpt-4.1 (high sensitivity)
+- **Keywords:** الترويج للإرهاب، الترويج للجماعات المحظورة، التطرف، الغلو، رموز الجماعات المحظورة...
+
+### **Pass 8: Misinformation & Credibility Scanner** 📰
+- **Focus:** False information, rumors, misleading content
+- **Articles:** 11, 16, 19, 20, 21, 22
+- **Model:** gpt-4.1 (needs context)
+- **Keywords:** معلومات مضللة، شائعات، تحريف التاريخ، التضليل الديني، كشف وثائق سرية...
+
+### **Pass 9: International Relations Scanner** 🌍
+- **Focus:** Diplomatic relations, foreign affairs
+- **Articles:** 18, 22
+- **Model:** gpt-4.1 (diplomatic sensitivity)
+- **Keywords:** الإساءة إلى الدول، الإساءة إلى الشعوب، الإضرار بالمصالح المشتركة، تشويه الاتفاقيات الدولية...
 
 ---
 
