@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { cn } from '@/utils/cn';
 import toast from 'react-hot-toast';
 import {
-  ArrowLeft, RefreshCw, CheckCircle, ShieldAlert,
+  ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
   CheckCircle2, Shield, FileDown,
 } from 'lucide-react';
@@ -646,10 +646,7 @@ export function Results() {
           </div>
         </div>
         <div className="flex items-center gap-3 print:hidden">
-          <Button variant="outline" onClick={() => { if (report.jobId) loadFindings(report.jobId); }} className="h-10 px-3">
-            <RefreshCw className="w-4 h-4" />
-          </Button>
-          <Button onClick={generateHtmlPrint} variant="outline" className="h-10 px-4 flex gap-2">
+          <Button variant="outline" onClick={generateHtmlPrint} className="h-10 px-4 flex gap-2">
             <FileDown className="w-4 h-4" />
             {lang === 'ar' ? 'تصدير PDF' : 'Export PDF'}
           </Button>

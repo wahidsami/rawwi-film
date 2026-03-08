@@ -48,6 +48,7 @@ function formatAtomDisplay(articleId: number, atomId: string | null): string {
 import { scriptsApi, tasksApi, reportsApi, findingsApi } from '@/api';
 import type { AnalysisFinding } from '@/api';
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
+import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
 import type { AnalysisJob, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
 import { extractDocx, extractTextFromPdf } from '@/utils/documentExtract';
@@ -917,45 +918,68 @@ export function ScriptWorkspace() {
 
   /** 
    * Locates the finding in the content using exact offsets first, then falling back to text search.
-   * Returns the valid finding with potentially corrected offsets range for this render cycle.
+   * Uses canonical normalization for offset check (matches backend/DOM). Falls back to substring
+   * search so more findings get highlighted even when evidence_snippet differs slightly.
    */
   const locateFindingInContent = useCallback((content: string, f: AnalysisFinding | Finding): { start: number; end: number; matched: boolean } | null => {
     if (!content) return null;
 
-    // 1. Try Original Offsets
-    // We treat existing offsets as "Primary" if they are valid text-wise.
+    const evidence = (f.evidenceSnippet ?? '').trim();
+    const hint = f.startOffsetGlobal ?? 0;
+
+    // 1. Try original offsets (use canonical normalization to match backend/DOM)
     const s = f.startOffsetGlobal ?? -1;
     const e = f.endOffsetGlobal ?? -1;
-
-    // Check if offsets are structurally valid
     if (s >= 0 && e > s && e <= content.length) {
       const slice = content.slice(s, e);
-      const evidence = f.evidenceSnippet ?? '';
-      // Strict check: if the text at offsets essentially matches the evidence
-      if (normalizeText(slice) === normalizeText(evidence)) {
+      if (canonicalNormalize(slice) === canonicalNormalize(evidence)) {
+        return { start: s, end: e, matched: true };
+      }
+      // Relaxed: if slice contains evidence or evidence contains slice (e.g. truncated snippet)
+      const ns = canonicalNormalize(slice);
+      const ne = canonicalNormalize(evidence);
+      if (ns && ne && (ns.includes(ne) || ne.includes(ns))) {
         return { start: s, end: e, matched: true };
       }
     }
 
-    // 2. Fallback: Text Search
-    // Try both evidenceSnippet and excerpt (if available on the object at runtime)
-    const candidates = [
-      f.evidenceSnippet,
-      (f as any).excerpt // Cast because AnalysisFinding type might not have excerpt even if runtime does
-    ].filter(t => t && typeof t === 'string' && t.trim().length > 0) as string[];
-
-    if (candidates.length === 0) return null;
-
-    // Sort candidates by length (longest first) to prefer full sentence over partial fragment
+    // 2. Fallback: text search with full evidence and excerpt
+    const baseCandidates = [
+      evidence,
+      (f as any).excerpt
+    ].filter((t): t is string => typeof t === 'string' && t.trim().length > 0);
+    const seen = new Set<string>();
+    const candidates: string[] = [];
+    for (const t of baseCandidates) {
+      const key = canonicalNormalize(t);
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        candidates.push(t);
+      }
+    }
     candidates.sort((a, b) => b.length - a.length);
 
     for (const textToFind of candidates) {
       const matches = findTextOccurrences(content, textToFind);
       if (matches.length > 0) {
-        // Use hint to pick best match
-        const best = findBestMatch(matches, f.startOffsetGlobal ?? 0);
-        if (best) {
-          return { start: best.start, end: best.end, matched: true };
+        const best = findBestMatch(matches, hint);
+        if (best) return { start: best.start, end: best.end, matched: true };
+      }
+    }
+
+    // 3. Substring fallback: try shorter parts of evidence so we still highlight something
+    const minLen = 4;
+    if (evidence.length >= minLen) {
+      const subs: string[] = [];
+      if (evidence.length > 40) subs.push(evidence.slice(0, 40), evidence.slice(-40));
+      if (evidence.length > 20) subs.push(evidence.slice(0, 20), evidence.slice(-20));
+      if (evidence.length > 12) subs.push(evidence.slice(0, 12), evidence.slice(-12));
+      for (const sub of subs) {
+        if (sub.length < minLen) continue;
+        const matches = findTextOccurrences(content, sub);
+        if (matches.length > 0) {
+          const best = findBestMatch(matches, hint);
+          if (best) return { start: best.start, end: best.end, matched: true };
         }
       }
     }
