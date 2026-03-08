@@ -29,6 +29,7 @@ type ScriptRow = {
   created_at: string;
   assignee_id: string | null;
   current_version_id: string | null;
+  is_quick_analysis?: boolean | null;
 };
 
 function toScriptFrontend(row: ScriptRow) {
@@ -45,6 +46,7 @@ function toScriptFrontend(row: ScriptRow) {
     assigneeId: row.assignee_id ?? undefined,
     created_by: row.created_by ?? undefined, // NEW
     currentVersionId: row.current_version_id ?? undefined,
+    isQuickAnalysis: row.is_quick_analysis ?? false,
   };
 }
 
@@ -87,6 +89,47 @@ function normalizeStatus(s: unknown): string {
   const v = String(s).toLowerCase().replace(/\s+/g, "_");
   const allowed = ["draft", "in_review", "analysis_running", "review_required", "approved", "rejected"];
   return allowed.includes(v) ? v : "draft";
+}
+
+async function ensureQuickAnalysisClientId(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  uid: string,
+): Promise<string> {
+  const envClientId = Deno.env.get("QUICK_ANALYSIS_CLIENT_ID")?.trim();
+  if (envClientId) {
+    const { data: existing } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("id", envClientId)
+      .maybeSingle();
+    if (existing) return envClientId;
+  }
+
+  const quickNameAr = "تحليل سريع (داخلي)";
+  const quickNameEn = "Quick Analysis (Internal)";
+
+  const { data: found, error: findErr } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("name_en", quickNameEn)
+    .maybeSingle();
+  if (findErr) throw new Error(findErr.message);
+  if (found) return (found as { id: string }).id;
+
+  const { data: created, error: createErr } = await supabase
+    .from("clients")
+    .insert({
+      name_ar: quickNameAr,
+      name_en: quickNameEn,
+      representative_name: "System",
+      representative_title: "Internal",
+      email: "quick-analysis@internal.local",
+      created_by: uid,
+    })
+    .select("id")
+    .single();
+  if (createErr || !created) throw new Error(createErr?.message || "Failed to create quick analysis client");
+  return (created as { id: string }).id;
 }
 
 async function clearScriptAnalysisArtifacts(
@@ -242,7 +285,8 @@ Deno.serve(async (req: Request) => {
   if (method === "GET" && rest === "") {
     let query = supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
+      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .eq("is_quick_analysis", false)
       .order("created_at", { ascending: false });
     const seeAll = await isSuperAdminOrAdmin(supabase, uid);
     if (!seeAll) {
@@ -263,6 +307,59 @@ Deno.serve(async (req: Request) => {
       });
     }
     return json(list);
+  }
+
+  // POST /scripts/quick — create a standalone quick-analysis script for current user.
+  if (method === "POST" && rest === "quick") {
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
+    const titleRaw = typeof body.title === "string" ? body.title.trim() : "";
+    const title = titleRaw || `Quick Analysis ${new Date().toISOString().slice(0, 19).replace("T", " ")}`;
+    const typeRaw = typeof body.type === "string" ? body.type.trim() : "film";
+    const statusRaw = typeof body.status === "string" ? body.status.trim() : "draft";
+    const clientId = await ensureQuickAnalysisClientId(supabase, uid);
+
+    const insert = {
+      client_id: clientId,
+      company_id: clientId,
+      title,
+      type: normalizeType(typeRaw),
+      status: normalizeStatus(statusRaw),
+      synopsis: typeof body.synopsis === "string" ? body.synopsis.trim() || null : null,
+      file_url: null,
+      created_by: uid,
+      assignee_id: uid,
+      is_quick_analysis: true,
+    };
+    const { data: row, error } = await supabase
+      .from("scripts")
+      .insert(insert)
+      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .single();
+    if (error || !row) {
+      console.error(`[scripts] correlationId=${correlationId} quick insert error=`, error?.message);
+      return json({ error: error?.message || "Failed to create quick analysis script" }, 500);
+    }
+    return json(toScriptFrontend(row as ScriptRow));
+  }
+
+  // GET /scripts/quick — quick-analysis history (own items only).
+  if (method === "GET" && rest === "quick") {
+    const { data: rows, error } = await supabase
+      .from("scripts")
+      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .eq("is_quick_analysis", true)
+      .eq("created_by", uid)
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error(`[scripts] correlationId=${correlationId} quick list error=`, error.message);
+      return json({ error: error.message }, 500);
+    }
+    return json((rows ?? []).map((r) => toScriptFrontend(r as ScriptRow)));
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -409,7 +506,7 @@ Deno.serve(async (req: Request) => {
     const scriptId = rest.trim();
     const { data: row, error } = await supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
+      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("id", scriptId)
       .maybeSingle();
     if (error) return json({ error: error.message }, 500);
@@ -464,11 +561,12 @@ Deno.serve(async (req: Request) => {
       file_url: typeof body.fileUrl === "string" ? body.fileUrl.trim() || null : null,
       created_by: uid,
       assignee_id: typeof body.assigneeId === "string" && body.assigneeId.trim() ? body.assigneeId.trim() : (typeof body.assignee_id === "string" && body.assignee_id.trim() ? body.assignee_id.trim() : null),
+      is_quick_analysis: false,
     };
     const { data: row, error } = await supabase
       .from("scripts")
       .insert(insert)
-      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
+      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .single();
     if (error) {
       console.error(`[scripts] correlationId=${correlationId} insert error=`, error.message);
@@ -499,15 +597,20 @@ Deno.serve(async (req: Request) => {
     const sid = scriptId.trim();
     const { data: script, error: scriptErr } = await supabase
       .from("scripts")
-      .select("id, created_by, assignee_id")
+      .select("id, created_by, assignee_id, is_quick_analysis")
       .eq("id", sid)
       .single();
     if (scriptErr || !script) {
       return json({ error: "Script not found" }, 404);
     }
-    const canReplace = await isSuperAdminOrAdmin(supabase, uid);
-    if (!canReplace) return json({ error: "Only Admin/Super Admin can replace script files." }, 403);
-    if (body.clearAnalysisOnReplace === true) {
+    const s = script as { created_by: string | null; assignee_id: string | null; is_quick_analysis?: boolean | null };
+    const canAdminReplace = await isSuperAdminOrAdmin(supabase, uid);
+    const isQuick = s.is_quick_analysis === true;
+    const canAccessQuick = isQuick && (s.created_by === uid || s.assignee_id === uid || canAdminReplace);
+    if (!canAdminReplace && !canAccessQuick) {
+      return json({ error: "Only Admin/Super Admin can replace script files." }, 403);
+    }
+    if (body.clearAnalysisOnReplace === true && !isQuick) {
       const cleared = await clearScriptAnalysisArtifacts(supabase, sid, correlationId);
       if (!cleared.ok) return json({ error: cleared.error }, 500);
     }

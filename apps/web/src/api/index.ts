@@ -75,6 +75,9 @@ export type UploadUrlResponse = { url: string; path?: string };
 
 export const scriptsApi = {
   getScripts: (): Promise<Script[]> => httpClient.get('/scripts'),
+  getQuickScripts: (): Promise<Script[]> => httpClient.get('/scripts/quick'),
+  createQuickScript: (body?: { title?: string; synopsis?: string; type?: 'Film' | 'Series' | 'film' | 'series'; status?: string }): Promise<Script> =>
+    httpClient.post('/scripts/quick', body ?? {}),
   getScript: (id: string): Promise<Script> => httpClient.get(`/scripts/${encodeURIComponent(id)}`),
   addScript: (script: Script): Promise<Script> => httpClient.post('/scripts', script),
   updateScript: (id: string, updates: Partial<Script>): Promise<Script> => httpClient.patch(`/scripts/${encodeURIComponent(id)}`, updates), // NEW

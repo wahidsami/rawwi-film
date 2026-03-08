@@ -13,7 +13,8 @@ import {
   Globe,
   History,
   Award,
-  Bell
+  Bell,
+  Wand2
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { formatDateTime } from '@/utils/dateFormat';
@@ -22,6 +23,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useDataStore } from '@/store/dataStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { notificationsApi, NotificationItem } from '@/api';
+import { ENABLE_QUICK_ANALYSIS } from '@/lib/env';
 
 export function AppLayout() {
   const { t, lang, toggleLang } = useLangStore();
@@ -69,6 +71,9 @@ export function AppLayout() {
     // Conditional sections - supports BOTH section-based and permission-based access
     { to: '/clients', icon: Users, label: t('clients'), section: 'clients', permission: 'view_clients' },
     { to: '/scripts', icon: FileText, label: lang === 'ar' ? 'النصوص' : 'Scripts', section: 'clients', permission: 'view_scripts' },
+    ...(ENABLE_QUICK_ANALYSIS
+      ? [{ to: '/quick-analysis', icon: Wand2, label: lang === 'ar' ? 'تحليل سريع' : 'Quick Analysis', section: null as string | null, permission: null as string | null }]
+      : []),
     { to: '/glossary', icon: BookOpen, label: t('glossary'), section: 'glossary', permission: 'manage_glossary' },
     { to: '/tasks', icon: FileText, label: lang === 'ar' ? 'المهام' : 'Tasks', section: 'tasks', permission: 'view_tasks' },
     { to: '/reports', icon: FileText, label: t('reports'), section: 'reports', permission: 'view_reports' },

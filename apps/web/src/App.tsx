@@ -22,6 +22,8 @@ import { Audit } from '@/pages/Audit';
 import { Scripts } from '@/pages/Scripts';
 import { Certificates } from '@/pages/Certificates';
 import { NotFound } from '@/pages/NotFound';
+import { QuickAnalysis } from '@/pages/QuickAnalysis';
+import { ENABLE_QUICK_ANALYSIS } from '@/lib/env';
 
 const LANG_INIT_KEY = 'raawi-lang-initialized';
 
@@ -91,13 +93,20 @@ function App() {
               <Scripts />
             </ProtectedRoute>
           } />
+          {ENABLE_QUICK_ANALYSIS && (
+            <Route path="quick-analysis" element={
+              <ProtectedRoute>
+                <QuickAnalysis />
+              </ProtectedRoute>
+            } />
+          )}
           <Route path="scripts/:id/workspace" element={
-            <ProtectedRoute requiredPermission="upload_scripts">
+            <ProtectedRoute>
               <ScriptWorkspace />
             </ProtectedRoute>
           } />
           <Route path="workspace/:id" element={
-            <ProtectedRoute requiredPermission="upload_scripts">
+            <ProtectedRoute>
               <ScriptWorkspace />
             </ProtectedRoute>
           } />

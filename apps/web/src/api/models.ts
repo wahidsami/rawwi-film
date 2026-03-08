@@ -78,6 +78,7 @@ export interface Script {
   assigneeName?: string;
   created_by?: string;
   currentVersionId?: string;
+  isQuickAnalysis?: boolean;
 }
 
 /** Assignment task (script assigned to user for review) — used by addTask / legacy UI. */
