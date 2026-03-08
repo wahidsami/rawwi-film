@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+function toNullableNumber(v: unknown): number | null | undefined {
+  if (v == null) return null;
+  if (typeof v === "number") return Number.isFinite(v) ? v : undefined;
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (!s) return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : undefined;
+  }
+  return undefined;
+}
+
 export const routerOutputSchema = z.object({
   candidate_articles: z.array(
     z.object({ article_id: z.number().min(1).max(25), confidence: z.number().min(0).max(1) })
@@ -11,26 +23,22 @@ export type RouterOutput = z.infer<typeof routerOutputSchema>;
 
 const locationSchema = z.object({
   // OpenAI occasionally emits null offsets/lines; accept null to avoid dropping valid findings.
-  start_offset: z.number().nullable(),
-  end_offset: z.number().nullable(),
+  start_offset: z.preprocess(toNullableNumber, z.number().nullable()),
+  end_offset: z.preprocess(toNullableNumber, z.number().nullable()),
   // OpenAI occasionally emits null for line numbers; accept null to avoid dropping valid findings.
-  start_line: z.number().nullable(),
-  end_line: z.number().nullable(),
+  start_line: z.preprocess(toNullableNumber, z.number().nullable()),
+  end_line: z.preprocess(toNullableNumber, z.number().nullable()),
 });
 
 export const judgeFindingSchema = z.object({
-  article_id: z.number().min(1).max(25),
+  article_id: z.preprocess(toNullableNumber, z.number().int().min(1).max(25)),
   atom_id: z.string().optional().nullable(),
   title_ar: z.string().nullable().transform((v) => v ?? "مخالفة محتوى"),
   description_ar: z.string().nullable().transform((v) => v ?? ""),
   // OpenAI may emit null; default to medium instead of dropping the whole finding.
   severity: z.enum(["low", "medium", "high", "critical"]).nullable().transform((v) => v ?? "medium"),
   // OpenAI may emit null; default to a conservative confidence instead of dropping.
-  confidence: z
-    .number()
-    .min(0)
-    .max(1)
-    .nullable()
+  confidence: z.preprocess(toNullableNumber, z.number().min(0).max(1).nullable())
     .transform((v) => (typeof v === "number" ? Math.max(0, Math.min(1, v)) : 0.7)),
   is_interpretive: z.boolean().nullable().optional().transform((v) => v ?? false),
   evidence_snippet: z.string().nullable().transform((v) => v ?? ""),
