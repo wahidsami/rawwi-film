@@ -11,6 +11,7 @@ import { config } from "./config.js";
 import { isValidAtomForArticle, normalizeAtomId } from "./policyMap.js";
 import type { JudgeFinding } from "./schemas.js";
 import { getScriptStandardRouterList } from "./gcam.js";
+import { ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG, injectLexiconIntoPrompts } from "./aiConstants.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   start_offset_global: number;
@@ -207,6 +208,26 @@ export async function processChunkJudge(
     return;
   }
 
+  // 0) Fetch lexicon terms for prompt injection
+  const { data: lexiconTerms } = await supabase
+    .from("slang_lexicon")
+    .select("term, gcam_article_id, severity_floor, gcam_article_title_ar")
+    .eq("is_active", true);
+  
+  const terms = lexiconTerms || [];
+  const { router: routerPrompt, judge: judgePrompt } = injectLexiconIntoPrompts(
+    ROUTER_SYSTEM_MSG,
+    JUDGE_SYSTEM_MSG,
+    terms
+  );
+  
+  logger.info("Lexicon terms injected into prompts", { 
+    jobId, 
+    chunkId: chunk.id, 
+    termsCount: terms.length,
+    sampleTerms: terms.slice(0, 3).map(t => t.term)
+  });
+
   // 1) Lexicon mandatory findings (global offsets = chunk start + match range in chunk)
   // evidence_snippet from canonical slice so it matches viewer content; optional context in location for debugging
   const isDev = process.env.NODE_ENV !== "production";
@@ -352,7 +373,7 @@ export async function processChunkJudge(
           temperature,
           seed,
           max_router_candidates: maxRouter,
-        });
+        }, routerPrompt);
         routerOutputJson = routerOut;
         const candidateIds = routerOut.candidate_articles.map((a) => a.article_id);
         selectedIds = [...new Set([...ALWAYS_CHECK_ARTICLES, ...candidateIds])].slice(0, 25);
@@ -382,7 +403,7 @@ export async function processChunkJudge(
         judge_model: judgeModel,
         temperature,
         seed,
-      });
+      }, judgePrompt);
       const { findings } = await parseJudgeWithRepair(raw, judgeModel);
       const enforced = enforceAtomIds(findings);
       const withGlobal = enforced.map((f) => toGlobalFinding(f, chunkStart));
@@ -407,7 +428,7 @@ export async function processChunkJudge(
           judge_model: judgeModel,
           temperature,
           seed,
-        });
+        }, judgePrompt);
         const { findings } = await parseJudgeWithRepair(raw, judgeModel);
         const enforced = enforceAtomIds(findings);
         const withGlobal = enforced.map((f) => toGlobalFinding(f, w.globalStart));
