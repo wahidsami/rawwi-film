@@ -33,8 +33,8 @@ const locationSchema = z.object({
 export const judgeFindingSchema = z.object({
   article_id: z.preprocess(toNullableNumber, z.number().int().min(1).max(25)),
   atom_id: z.string().optional().nullable(),
-  title_ar: z.string().nullable().transform((v) => v ?? "مخالفة محتوى"),
-  description_ar: z.string().nullable().transform((v) => v ?? ""),
+  title_ar: z.string().optional().nullable().transform((v) => v ?? "مخالفة محتوى"),
+  description_ar: z.string().optional().nullable().transform((v) => v ?? ""),
   // OpenAI may emit null; default to medium instead of dropping the whole finding.
   severity: z.enum(["low", "medium", "high", "critical"]).nullable().transform((v) => v ?? "medium"),
   // OpenAI may emit null; default to a conservative confidence instead of dropping.

@@ -55,6 +55,14 @@ function isVerbatim(sourceText: string, snippet: string): boolean {
   return relaxSrc.includes(relaxSnip);
 }
 
+const MAX_EVIDENCE_SPAN = 280;
+const MAX_EVIDENCE_LEN = 260;
+
+function compactEvidenceText(s: string): string {
+  const cleaned = (s ?? "").replace(/\s+/g, " ").trim();
+  return cleaned.length > MAX_EVIDENCE_LEN ? `${cleaned.slice(0, MAX_EVIDENCE_LEN)}…` : cleaned;
+}
+
 /**
  * Build micro-windows for long chunks. Returns windows with global offsets.
  */
@@ -521,13 +529,21 @@ export async function processChunkJudge(
 
   // 6) Insert AI findings (batch upsert with logging). Derive excerpt from canonical when available.
   if (allFindings.length > 0) {
-    const rows = allFindings.map((f) => {
+      const rows = allFindings.map((f) => {
       const start = f.start_offset_global ?? 0;
       const end = f.end_offset_global ?? start;
-      const excerpt =
-        normalizedText != null && start >= 0 && end <= normalizedText.length && end > start
-          ? normalizedText.slice(start, end)
-          : f.evidence_snippet;
+        const hasSaneGlobalOffsets =
+          normalizedText != null &&
+          start >= 0 &&
+          end > start &&
+          end <= normalizedText.length &&
+          (end - start) <= MAX_EVIDENCE_SPAN;
+
+        // Prefer canonical offsets only when span is reasonable; otherwise use model snippet compacted.
+        const excerptRaw = hasSaneGlobalOffsets
+          ? normalizedText!.slice(start, end)
+          : (f.evidence_snippet ?? "");
+        const excerpt = compactEvidenceText(excerptRaw);
       const h = evidenceHash(
         f.article_id,
         f.atom_id ?? null,
