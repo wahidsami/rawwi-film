@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Upload, Loader2, FileText, History, PlayCircle } from 'lucide-react';
+import { Upload, Loader2, FileText, History, PlayCircle, Trash2 } from 'lucide-react';
 
 import { useLangStore } from '@/store/langStore';
 import { scriptsApi, reportsApi } from '@/api';
@@ -41,6 +41,7 @@ export function QuickAnalysis() {
   const [history, setHistory] = useState<QuickHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deletingScriptId, setDeletingScriptId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isAr = lang === 'ar';
@@ -71,6 +72,26 @@ export function QuickAnalysis() {
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
+
+  const handleDeleteQuickAnalysis = useCallback(async (script: Script) => {
+    const confirmed = window.confirm(
+      isAr
+        ? `سيتم حذف التحليل السريع "${script.title}" مع كل التقارير والنتائج المرتبطة به. هل تريد المتابعة؟`
+        : `Delete quick analysis "${script.title}" and all related reports/findings?`,
+    );
+    if (!confirmed) return;
+
+    setDeletingScriptId(script.id);
+    try {
+      await scriptsApi.deleteScript(script.id);
+      toast.success(isAr ? 'تم حذف التحليل السريع' : 'Quick analysis deleted');
+      await loadHistory();
+    } catch (err: any) {
+      toast.error(err?.message ?? (isAr ? 'فشل حذف التحليل السريع' : 'Failed to delete quick analysis'));
+    } finally {
+      setDeletingScriptId(null);
+    }
+  }, [isAr, loadHistory]);
 
   const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -206,6 +227,16 @@ export function QuickAnalysis() {
                     <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate(`/workspace/${script.id}`)}>
                       <PlayCircle className="w-3.5 h-3.5" />
                       {isAr ? 'فتح مساحة العمل' : 'Open Workspace'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      className="gap-1.5"
+                      onClick={() => handleDeleteQuickAnalysis(script)}
+                      disabled={deletingScriptId === script.id}
+                    >
+                      {deletingScriptId === script.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      {isAr ? 'حذف' : 'Delete'}
                     </Button>
                     {latestReport && (
                       <Button

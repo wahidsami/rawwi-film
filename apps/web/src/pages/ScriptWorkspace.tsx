@@ -78,6 +78,16 @@ function safeUploadFileName(fileName: string): string {
   return `${safeBase}_${Date.now()}${ext}`;
 }
 
+function isTerminalJobStatus(status?: string | null): boolean {
+  const s = (status ?? '').toLowerCase();
+  return s === 'completed' || s === 'failed' || s === 'done' || s === 'succeeded' || s === 'cancelled' || s === 'canceled';
+}
+
+function isSuccessfulJobStatus(status?: string | null): boolean {
+  const s = (status ?? '').toLowerCase();
+  return s === 'completed' || s === 'done' || s === 'succeeded';
+}
+
 export function ScriptWorkspace() {
 
   const { id } = useParams<{ id: string }>();
@@ -176,10 +186,10 @@ export function ScriptWorkspace() {
       try {
         const job = await tasksApi.getJob(jobId);
         setAnalysisJob(job);
-        if (job.status === 'completed' || job.status === 'failed') {
+        if (isTerminalJobStatus(job.status)) {
           stopPolling();
           // Fetch the report id so "View Report" navigates correctly (by=id preferred)
-          if (job.status === 'completed') {
+          if (isSuccessfulJobStatus(job.status)) {
             reportsApi.getByJob(job.id).then((report) => {
               setReportIdWhenJobCompleted(report.id);
             }).catch(() => {});
@@ -378,7 +388,7 @@ export function ScriptWorkspace() {
 
   // Also refresh report history when analysis completes
   useEffect(() => {
-    if (analysisJob?.status === 'completed') loadReportHistory();
+    if (isSuccessfulJobStatus(analysisJob?.status)) loadReportHistory();
   }, [analysisJob?.status, loadReportHistory]);
 
   const handleReview = async (reportId: string, status: ReviewStatus, notes?: string) => {
@@ -622,7 +632,7 @@ export function ScriptWorkspace() {
 
 
 
-  const isAnalysisRunning = analysisJob != null && analysisJob.status !== 'completed' && analysisJob.status !== 'failed';
+  const isAnalysisRunning = analysisJob != null && !isTerminalJobStatus(analysisJob.status);
   useEffect(() => {
     if (!analysisModalOpen || !isAnalysisRunning) {
       setActivePassIdx(0);
@@ -2067,18 +2077,18 @@ export function ScriptWorkspace() {
         <div className="space-y-5">
           {/* Status header */}
           <div className="flex items-center gap-3">
-            {analysisJob?.status === 'completed' ? (
+            {isSuccessfulJobStatus(analysisJob?.status) ? (
               <CheckCircle2 className="w-8 h-8 text-success flex-shrink-0" />
-            ) : analysisJob?.status === 'failed' ? (
+            ) : (analysisJob?.status ?? '').toLowerCase() === 'failed' ? (
               <XCircle className="w-8 h-8 text-error flex-shrink-0" />
             ) : (
               <Loader2 className="w-8 h-8 text-primary animate-spin flex-shrink-0" />
             )}
             <div>
               <p className="font-semibold text-text-main">
-                {analysisJob?.status === 'completed'
+                {isSuccessfulJobStatus(analysisJob?.status)
                   ? (lang === 'ar' ? 'اكتمل التحليل' : 'Analysis Complete')
-                  : analysisJob?.status === 'failed'
+                  : (analysisJob?.status ?? '').toLowerCase() === 'failed'
                     ? (lang === 'ar' ? 'فشل التحليل' : 'Analysis Failed')
                     : (lang === 'ar' ? 'جاري التحليل…' : 'Analyzing…')}
               </p>
@@ -2093,8 +2103,8 @@ export function ScriptWorkspace() {
             <div
               className={cn(
                 "h-full rounded-full transition-all duration-300",
-                analysisJob?.status === 'completed' ? 'bg-success' :
-                  analysisJob?.status === 'failed' ? 'bg-error' : 'bg-primary'
+                isSuccessfulJobStatus(analysisJob?.status) ? 'bg-success' :
+                  (analysisJob?.status ?? '').toLowerCase() === 'failed' ? 'bg-error' : 'bg-primary'
               )}
               style={{ width: `${Math.min(100, analysisJob?.progressPercent ?? 0)}%` }}
             />
@@ -2143,7 +2153,7 @@ export function ScriptWorkspace() {
 
           {/* Action buttons */}
           <div className="flex items-center justify-between pt-2">
-            {analysisJob?.status === 'completed' && (
+            {isSuccessfulJobStatus(analysisJob?.status) && (
               <Button size="sm" onClick={() => { setAnalysisModalOpen(false); const rid = reportIdWhenJobCompleted ?? analysisJobId; navigate(rid ? (reportIdWhenJobCompleted ? `/report/${rid}?by=id` : `/report/${rid}?by=job`) : '/reports'); }}>
                 <FileText className="w-4 h-4 mr-1" />
                 {lang === 'ar' ? 'عرض التقرير' : 'View Report'}
