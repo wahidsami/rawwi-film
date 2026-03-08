@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Upload, Loader2, FileText, History, PlayCircle } from 'lucide-react';
@@ -29,6 +29,7 @@ export function QuickAnalysis() {
   const [history, setHistory] = useState<QuickHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isAr = lang === 'ar';
 
@@ -138,21 +139,25 @@ export function QuickAnalysis() {
               : 'Upload a script without linking to a company and run the same smart analysis pipeline.'}
           </p>
         </div>
-        <label className="inline-flex">
+        <div className="inline-flex">
           <input
+            ref={fileInputRef}
             type="file"
             className="hidden"
             accept=".pdf,.docx,.txt"
             onChange={onPickFile}
             disabled={uploading}
           />
-          <span>
-            <Button className="gap-2" disabled={uploading} type="button">
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-              {uploading ? (isAr ? 'جاري الرفع...' : 'Uploading...') : (isAr ? 'رفع ملف للتحليل السريع' : 'Upload Script File')}
-            </Button>
-          </span>
-        </label>
+          <Button
+            className="gap-2"
+            disabled={uploading}
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {uploading ? (isAr ? 'جاري الرفع...' : 'Uploading...') : (isAr ? 'رفع ملف للتحليل السريع' : 'Upload Script File')}
+          </Button>
+        </div>
       </div>
 
       <Card>
