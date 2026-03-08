@@ -4,7 +4,7 @@ import { useLangStore } from '@/store/langStore';
 import { useDataStore, Finding, type Script } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate } from '@/utils/dateFormat';
+import { formatDate, formatTime } from '@/utils/dateFormat';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
@@ -2167,11 +2167,11 @@ export function ScriptWorkspace() {
                     <span className="text-text-muted">progress:</span>
                     <span className="text-text-main">{analysisJob.progressDone}/{analysisJob.progressTotal} ({analysisJob.progressPercent}%)</span>
                     <span className="text-text-muted">created:</span>
-                    <span className="text-text-main">{analysisJob.createdAt ? new Date(analysisJob.createdAt).toLocaleTimeString() : '-'}</span>
+                    <span className="text-text-main">{analysisJob.createdAt ? formatTime(new Date(analysisJob.createdAt), { lang }) : '-'}</span>
                     <span className="text-text-muted">started:</span>
-                    <span className="text-text-main">{analysisJob.startedAt ? new Date(analysisJob.startedAt).toLocaleTimeString() : '-'}</span>
+                    <span className="text-text-main">{analysisJob.startedAt ? formatTime(new Date(analysisJob.startedAt), { lang }) : '-'}</span>
                     <span className="text-text-muted">completed:</span>
-                    <span className="text-text-main">{analysisJob.completedAt ? new Date(analysisJob.completedAt).toLocaleTimeString() : '-'}</span>
+                    <span className="text-text-main">{analysisJob.completedAt ? formatTime(new Date(analysisJob.completedAt), { lang }) : '-'}</span>
                   </div>
                   <div className="text-text-muted pt-1 border-t border-border/50">Chunks:</div>
                   {chunkStatuses.length > 0 ? (

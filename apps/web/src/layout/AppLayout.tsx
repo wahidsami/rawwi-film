@@ -16,6 +16,7 @@ import {
   Bell
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { formatDateTime } from '@/utils/dateFormat';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useDataStore } from '@/store/dataStore';
@@ -246,7 +247,7 @@ export function AppLayout() {
                         >
                           <p className="text-sm font-medium text-text-main">{n.title}</p>
                           {n.body && <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{n.body}</p>}
-                          <p className="text-xs text-text-muted mt-1">{new Date(n.createdAt).toLocaleString(lang === 'ar' ? 'ar' : 'en')}</p>
+                          <p className="text-xs text-text-muted mt-1">{formatDateTime(new Date(n.createdAt), { lang })}</p>
                         </button>
                       ))
                     )}

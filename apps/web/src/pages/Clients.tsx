@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate } from '@/utils/dateFormat';
+import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import { cn } from '@/utils/cn';
 import { usersApi } from '@/api';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
@@ -111,7 +111,7 @@ export function Clients() {
         '{{lang}}': isAr ? 'ar' : 'en',
         '{{dir}}': isAr ? 'rtl' : 'ltr',
         '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
-        '{{generationTimestamp}}': new Date().toLocaleString(),
+        '{{generationTimestamp}}': formatDateTime(new Date(), { lang: isAr ? 'ar' : 'en' }),
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,
         '{{dashboardLogoBase64}}': dashLogo,

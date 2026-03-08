@@ -21,7 +21,7 @@ import { ArrowLeft, Trash2, FileText, Edit, Upload, User } from 'lucide-react';
 
 import { usersApi } from '@/api';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate } from '@/utils/dateFormat';
+import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
 import { normalizeScriptStatusForDisplay, normalizeScriptStatusForFilter } from '@/utils/scriptStatus';
 
@@ -388,7 +388,7 @@ export function ClientDetails() {
         '{{dir}}': isAr ? 'rtl' : 'ltr',
         '{{clientName}}': isAr ? company.nameAr : company.nameEn,
         '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
-        '{{generationTimestamp}}': new Date().toLocaleString(),
+        '{{generationTimestamp}}': formatDateTime(new Date(), { lang: isAr ? 'ar' : 'en' }),
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,
         '{{dashboardLogoBase64}}': dashLogo,

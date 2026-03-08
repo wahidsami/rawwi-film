@@ -4,7 +4,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate, formatDateLong } from '@/utils/dateFormat';
+import { formatDate, formatDateLong, formatDateTime } from '@/utils/dateFormat';
 import { type AnalysisReport } from '@/services/reportService';
 import { reportsApi, findingsApi, type AnalysisFinding } from '@/api';
 import type { ReviewStatus } from '@/api/models';
@@ -329,7 +329,7 @@ export function Results() {
         '{{scriptTitle}}': scriptTitle,
         '{{clientName}}': clientName,
         '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: dateFormat }),
-        '{{generationTimestamp}}': new Date().toLocaleString(),
+        '{{generationTimestamp}}': formatDateTime(new Date(), { lang: isAr ? 'ar' : 'en' }),
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,
         '{{dashboardLogoBase64}}': dashLogo,

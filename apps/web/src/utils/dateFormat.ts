@@ -1,14 +1,24 @@
-import { format as dateFnsFormat } from 'date-fns';
+export const APP_TIME_ZONE = 'Asia/Riyadh';
 
-/**
- * Maps settings-style format string (DD/MM/YYYY) to date-fns tokens.
- * date-fns uses: yyyy, MM, dd
- */
-function toDateFnsFormat(settingsFormat: string): string {
-  return settingsFormat
-    .replace(/YYYY/g, 'yyyy')
-    .replace(/DD/g, 'dd')
-    .replace(/D(?!\d)/g, 'd');
+function getLocale(lang: 'ar' | 'en'): string {
+  return lang === 'ar' ? 'ar-SA' : 'en-GB';
+}
+
+function getDateParts(date: Date, lang: 'ar' | 'en'): Record<string, string> {
+  const locale = getLocale(lang);
+  const parts = new Intl.DateTimeFormat(locale, {
+    timeZone: APP_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+
+  const year = parts.find((p) => p.type === 'year')?.value ?? '';
+  const month2 = parts.find((p) => p.type === 'month')?.value ?? '';
+  const day2 = parts.find((p) => p.type === 'day')?.value ?? '';
+  const month = month2.replace(/^0+/, '') || month2;
+  const day = day2.replace(/^0+/, '') || day2;
+  return { YYYY: year, MM: month2, M: month, DD: day2, D: day };
 }
 
 /**
@@ -20,19 +30,24 @@ export function formatDate(
   options?: { lang?: 'ar' | 'en'; format?: string }
 ): string {
   const lang = options?.lang ?? 'en';
-  const locale = lang === 'ar' ? 'ar-SA' : 'en-GB';
+  const locale = getLocale(lang);
   const formatStr = options?.format?.trim();
 
   if (formatStr) {
     try {
-      const tokens = toDateFnsFormat(formatStr);
-      return dateFnsFormat(date, tokens);
+      const p = getDateParts(date, lang);
+      return formatStr.replace(/YYYY|DD|MM|D|M/g, (token) => p[token] ?? token);
     } catch {
       // fall through to locale fallback
     }
   }
 
-  return date.toLocaleDateString(locale);
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: APP_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
 }
 
 /**
@@ -43,11 +58,37 @@ export function formatDateLong(
   options?: { lang?: 'ar' | 'en' }
 ): string {
   const lang = options?.lang ?? 'en';
-  const locale = lang === 'ar' ? 'ar-SA' : 'en-GB';
-  return date.toLocaleDateString(locale, {
+  const locale = getLocale(lang);
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: APP_TIME_ZONE,
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-  });
+  }).format(date);
+}
+
+export function formatDateTime(
+  date: Date,
+  options?: { lang?: 'ar' | 'en' }
+): string {
+  const lang = options?.lang ?? 'en';
+  const locale = getLocale(lang);
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: APP_TIME_ZONE,
+    dateStyle: 'short',
+    timeStyle: 'medium',
+  }).format(date);
+}
+
+export function formatTime(
+  date: Date,
+  options?: { lang?: 'ar' | 'en' }
+): string {
+  const lang = options?.lang ?? 'en';
+  const locale = getLocale(lang);
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: APP_TIME_ZONE,
+    timeStyle: 'medium',
+  }).format(date);
 }

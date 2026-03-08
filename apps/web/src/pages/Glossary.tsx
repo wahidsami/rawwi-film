@@ -14,7 +14,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
 import { Plus, Search, FileDown, FileUp, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate } from '@/utils/dateFormat';
+import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
 import { lexiconApi } from '@/api';
 import type { LexiconHistoryEntry } from '@/api/models';
@@ -108,7 +108,7 @@ export function Glossary() {
         '{{lang}}': isAr ? 'ar' : 'en',
         '{{dir}}': isAr ? 'rtl' : 'ltr',
         '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
-        '{{generationTimestamp}}': new Date().toLocaleString(),
+        '{{generationTimestamp}}': formatDateTime(new Date(), { lang: isAr ? 'ar' : 'en' }),
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,
         '{{dashboardLogoBase64}}': dashLogo,

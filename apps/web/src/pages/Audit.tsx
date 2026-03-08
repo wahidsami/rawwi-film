@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Download, FileText, ChevronDown, ChevronRight, Filter } from 'lucide-react';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate } from '@/utils/dateFormat';
+import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
 
 const PAGE_SIZE = 20;
@@ -154,7 +154,7 @@ export function Audit() {
         '{{lang}}': isAr ? 'ar' : 'en',
         '{{dir}}': isAr ? 'rtl' : 'ltr',
         '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
-        '{{generationTimestamp}}': new Date().toLocaleString(),
+        '{{generationTimestamp}}': formatDateTime(new Date(), { lang: isAr ? 'ar' : 'en' }),
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,
         '{{dashboardLogoBase64}}': dashLogo,
@@ -255,12 +255,7 @@ export function Audit() {
 
   const formatWhen = (iso: string) => {
     try {
-      const d = new Date(iso);
-      return d.toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-GB', {
-        dateStyle: 'short',
-        timeStyle: 'medium',
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      });
+      return formatDateTime(new Date(iso), { lang });
     } catch {
       return iso;
     }
