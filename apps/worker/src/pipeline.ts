@@ -539,11 +539,13 @@ export async function processChunkJudge(
           end <= normalizedText.length &&
           (end - start) <= MAX_EVIDENCE_SPAN;
 
-        // Prefer canonical offsets only when span is reasonable; otherwise use model snippet compacted.
-        const excerptRaw = hasSaneGlobalOffsets
-          ? normalizedText!.slice(start, end)
-          : (f.evidence_snippet ?? "");
-        const excerpt = compactEvidenceText(excerptRaw);
+        const modelSnippet = compactEvidenceText(f.evidence_snippet ?? "");
+        const canonicalSnippet = hasSaneGlobalOffsets
+          ? compactEvidenceText(normalizedText!.slice(start, end))
+          : "";
+        // Prefer model-provided evidence text for report readability.
+        // Use canonical slice only when model snippet is missing.
+        const excerpt = modelSnippet.length > 0 ? modelSnippet : canonicalSnippet;
       const h = evidenceHash(
         f.article_id,
         f.atom_id ?? null,
