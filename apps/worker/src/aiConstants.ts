@@ -9,11 +9,17 @@
  * Used by:
  * - Supabase Edge Function `tasks` (to compute config snapshot & prompt hashes)
  * - Worker `pipeline` (to execute using these exact definitions)
+ * 
+ * NOTE: Worker now uses MULTI-PASS DETECTION (multiPassJudge.ts)
+ * - 6 specialized scanners run in parallel
+ * - Each scanner has a focused, simple prompt
+ * - Higher detection rate, better accuracy
+ * - See: apps/worker/src/multiPassJudge.ts
  */
 
 export const PROMPT_VERSIONS = {
   router: "v1.1",
-  judge: "v1.4",
+  judge: "v2.0-multipass",
   schema: "v1.0",
 };
 

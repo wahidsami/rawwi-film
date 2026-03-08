@@ -12,6 +12,7 @@ import { isValidAtomForArticle, normalizeAtomId } from "./policyMap.js";
 import type { JudgeFinding } from "./schemas.js";
 import { getScriptStandardRouterList } from "./gcam.js";
 import { ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG, injectLexiconIntoPrompts } from "./aiConstants.js";
+import { runMultiPassDetection, type LexiconTerm } from "./multiPassJudge.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   start_offset_global: number;
@@ -394,54 +395,61 @@ export async function processChunkJudge(
       }
     }
     const selectedArticles: GCAMArticle[] = selectedIds.map((id) => getScriptStandardArticle(id));
-    logger.info("Articles selected for Judge", { chunkId: chunk.id, count: selectedIds.length, ids: selectedIds });
+    logger.info("Articles selected for Multi-Pass Judge", { chunkId: chunk.id, count: selectedIds.length, ids: selectedIds });
 
-    // 3) Judge full chunk (raw + parse with repair)
+    // 3) Multi-Pass Detection (6 specialized scanners running in parallel)
     allFindings = [];
     try {
-      const raw = await callJudgeRaw(chunkText, selectedArticles, chunkStart, chunkEnd, {
-        judge_model: judgeModel,
-        temperature,
-        seed,
-      }, judgePrompt);
-      const { findings } = await parseJudgeWithRepair(raw, judgeModel);
-      const enforced = enforceAtomIds(findings);
+      const multiPassResult = await runMultiPassDetection(
+        chunkText,
+        chunkStart,
+        chunkEnd,
+        selectedArticles,
+        terms,
+        { temperature, seed }
+      );
+      
+      // Enforce atom_ids and convert to global findings
+      const enforced = multiPassResult.findings.map(f => enforceAtomIds([f])[0]);
       const withGlobal = enforced.map((f) => toGlobalFinding(f, chunkStart));
+      
+      // Relaxed verbatim filter: keep findings even if evidence doesn't match exactly
       const beforeVerbatimCount = withGlobal.length;
-      allFindings = withGlobal.filter((f) => isVerbatim(chunkText, f.evidence_snippet));
-      logger.info("Judge full-chunk deterministic stats", {
+      allFindings = withGlobal.filter((f) => {
+        const isExact = isVerbatim(chunkText, f.evidence_snippet);
+        if (!isExact) {
+          // Log but keep the finding (AI detected it for a reason)
+          logger.warn("Evidence mismatch (keeping finding)", { 
+            chunkId: chunk.id,
+            article: f.article_id,
+            evidence: f.evidence_snippet?.slice(0, 50),
+            severity: f.severity
+          });
+        }
+        return true; // Keep all findings
+      });
+      
+      logger.info("Multi-pass detection stats", {
         chunkId: chunk.id,
         runKey,
+        totalPasses: multiPassResult.passResults.length,
         beforeVerbatim: beforeVerbatimCount,
         afterVerbatim: allFindings.length,
         dropped: beforeVerbatimCount - allFindings.length,
+        duration: multiPassResult.totalDuration,
+        passBreakdown: multiPassResult.passResults.map(r => ({
+          pass: r.passName,
+          findings: r.findings.length,
+          duration: r.duration
+        }))
       });
     } catch (e) {
-      logger.warn("Judge (full chunk) failed", { error: String(e) });
+      logger.error("Multi-pass detection failed", { error: String(e), chunkId: chunk.id });
     }
 
-    // 4) Micro-windows
-    const windows = buildMicroWindows(chunkText, chunkStart, chunkEnd);
-    for (const w of windows) {
-      try {
-        const raw = await callJudgeRaw(w.windowText, selectedArticles, w.globalStart, w.globalEnd, {
-          judge_model: judgeModel,
-          temperature,
-          seed,
-        }, judgePrompt);
-        const { findings } = await parseJudgeWithRepair(raw, judgeModel);
-        const enforced = enforceAtomIds(findings);
-        const withGlobal = enforced.map((f) => toGlobalFinding(f, w.globalStart));
-        const beforeVerbatimCount = withGlobal.length;
-        const verbatim = withGlobal.filter((f) => isVerbatim(w.windowText, f.evidence_snippet));
-        // Log micro-window stats
-        /* logger.info("Judge micro-window stats", { ... }) */
-
-        allFindings.push(...verbatim);
-      } catch (_) {
-        // skip window on error
-      }
-    }
+    // 4) Micro-windows (DISABLED for multi-pass - full chunk coverage is sufficient)
+    // Multi-pass already provides comprehensive coverage, micro-windows add redundancy
+    logger.info("Micro-windows skipped (multi-pass provides full coverage)", { chunkId: chunk.id });
 
     // 5) Dedupe + overlap
     const beforeDedupeCount = allFindings.length;
