@@ -16,8 +16,6 @@ export function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/';
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -25,7 +23,8 @@ export function Login() {
 
     try {
       await login(email, password);
-      navigate(from, { replace: true });
+      // Always redirect to dashboard after login (not to previous location)
+      navigate('/', { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Login failed';
       const isInvalidCreds = /400|invalid|credentials|password/i.test(msg);

@@ -36,7 +36,7 @@ export function AppLayout() {
 
   const handleLogout = useCallback(() => {
     logout();
-    navigate('/login');
+    navigate('/login', { replace: true, state: {} });
   }, [logout, navigate]);
 
   // Session idle timeout: logout after N minutes of no activity

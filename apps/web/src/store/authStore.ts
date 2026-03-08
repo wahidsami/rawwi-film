@@ -140,6 +140,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: () => {
     supabase.auth.signOut();
     set({ user: null, isAuthenticated: false });
+    // Clear any saved redirect location to ensure users land on dashboard after re-login
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, document.title);
+    }
   },
 
   hasPermission: (permission) => {
