@@ -11,8 +11,8 @@ import { config } from "./config.js";
 import { isValidAtomForArticle, normalizeAtomId } from "./policyMap.js";
 import type { JudgeFinding } from "./schemas.js";
 import { getScriptStandardRouterList } from "./gcam.js";
-import { ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG, injectLexiconIntoPrompts } from "./aiConstants.js";
-import { runMultiPassDetection, type LexiconTerm } from "./multiPassJudge.js";
+import { ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG, injectLexiconIntoPrompts, PROMPT_VERSIONS } from "./aiConstants.js";
+import { runMultiPassDetection, DETECTION_PASSES, type LexiconTerm } from "./multiPassJudge.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   start_offset_global: number;
@@ -330,8 +330,9 @@ export async function processChunkJudge(
   }
 
   // 1b) Idempotency Check & Config Setup
-  // Bump when detection logic/prompting changes to avoid stale cached zero-result runs.
-  const logicVersion = "v2-strict-multipass-cachebust-20260308";
+  // Build logicVersion dynamically so cache invalidates automatically when prompts/passes change.
+  const passSignature = DETECTION_PASSES.map((p) => `${p.name}:${p.model ?? "default"}`).join("|");
+  const logicVersion = `v2-strict|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}`;
   const jobConfig = (job.config_snapshot as any) || {};
   const routerModel = jobConfig.router_model || config.OPENAI_ROUTER_MODEL;
   const judgeModel = jobConfig.judge_model || config.OPENAI_JUDGE_MODEL;
