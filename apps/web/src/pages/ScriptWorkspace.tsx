@@ -116,8 +116,38 @@ export function ScriptWorkspace() {
   const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
+  const [activePassIdx, setActivePassIdx] = useState(0);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [decisionCan, setDecisionCan] = useState<{ canApprove: boolean; canReject: boolean; reason?: string } | null>(null);
+  const analysisPasses = useMemo(
+    () =>
+      lang === 'ar'
+        ? [
+            'المعجم',
+            'الإهانات',
+            'العنف',
+            'المحتوى الجنسي',
+            'المخدرات والكحول',
+            'التمييز والتحريض',
+            'الأمن الوطني',
+            'التطرف والجماعات المحظورة',
+            'التضليل والمصداقية',
+            'العلاقات الدولية',
+          ]
+        : [
+            'Glossary',
+            'Insults',
+            'Violence',
+            'Sexual Content',
+            'Drugs & Alcohol',
+            'Discrimination & Incitement',
+            'National Security',
+            'Extremism & Banned Groups',
+            'Misinformation & Credibility',
+            'International Relations',
+          ],
+    [lang]
+  );
 
   // Polling for analysis job progress
   const stopPolling = useCallback(() => {
@@ -571,6 +601,16 @@ export function ScriptWorkspace() {
 
 
   const isAnalysisRunning = analysisJob != null && analysisJob.status !== 'completed' && analysisJob.status !== 'failed';
+  useEffect(() => {
+    if (!analysisModalOpen || !isAnalysisRunning) {
+      setActivePassIdx(0);
+      return;
+    }
+    const t = setInterval(() => {
+      setActivePassIdx((prev) => (prev + 1) % analysisPasses.length);
+    }, 1200);
+    return () => clearInterval(t);
+  }, [analysisModalOpen, isAnalysisRunning, analysisPasses.length]);
 
   const canImport = user?.role === 'Super Admin' || user?.role === 'Admin' || user?.role === 'Regulator' || script?.assigneeId === user?.id;
   const hasVersionForAnalysis = Boolean(script?.currentVersionId);
@@ -1923,6 +1963,40 @@ export function ScriptWorkspace() {
               style={{ width: `${Math.min(100, analysisJob?.progressPercent ?? 0)}%` }}
             />
           </div>
+
+          {isAnalysisRunning && (
+            <div className="space-y-3 rounded-md border border-border bg-background/40 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-text-muted">
+                  {lang === 'ar' ? 'الماسح النشط الآن' : 'Active scanner'}
+                </p>
+                <div className="flex items-center gap-2 text-xs font-medium text-primary">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>{analysisPasses[activePassIdx]}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {analysisPasses.map((pass, idx) => (
+                  <div
+                    key={pass}
+                    className={cn(
+                      "rounded border px-2 py-1 text-[11px] transition-colors",
+                      idx === activePassIdx
+                        ? "border-primary/40 bg-primary/10 text-primary"
+                        : "border-border bg-surface text-text-muted"
+                    )}
+                  >
+                    {idx + 1}. {pass}
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-text-muted">
+                {lang === 'ar'
+                  ? 'كل جزء نصي يمر على 10 ماسحات متخصصة بالتوازي.'
+                  : 'Each text chunk runs through 10 specialized scanners in parallel.'}
+              </p>
+            </div>
+          )}
 
           {/* Error message */}
           {analysisJob?.errorMessage && (
