@@ -711,18 +711,9 @@ Deno.serve(async (req: Request) => {
 
     if (findErr || !script) return json({ error: "Script not found" }, 404);
 
-    // Authorization: Only Owner (created_by) or Admin can edit.
-    // Since we don't have explicit Admin role check here easily without querying profile/claims,
-    // we'll stick to created_by for now. 
-    // TODO: Add Admin check if possible via `auth.role` if available or `createSupabaseAdmin` bypass logic?
-    // User claims in `auth` object might have role. `auth.role`?
-    // `requireAuth` returns { userId, ... }.
-    // For now, allow valid users to try, RLS might block if not owner?
-    // But we are using `createSupabaseAdmin` (service role), so we MUST check permissions manually.
-
-    // We'll allow created_by check. If needed, we can also check if user is assignee? Assignee usually shouldn't change title/assignment.
-    if ((script as any).created_by !== uid) {
-      // Strict ownership for editing metadata for now
+    // Authorization: Owner (created_by) or Admin/Super Admin can edit.
+    const isAdmin = await isUserAdmin(supabase, uid);
+    if (!isAdmin && (script as any).created_by !== uid) {
       return json({ error: "Forbidden" }, 403);
     }
 
@@ -730,6 +721,16 @@ Deno.serve(async (req: Request) => {
     if (body.title && typeof body.title === 'string' && body.title.trim()) updates.title = body.title.trim();
     if (body.synopsis !== undefined) updates.synopsis = typeof body.synopsis === 'string' ? body.synopsis.trim() || null : null;
     if (body.status && typeof body.status === 'string') updates.status = normalizeStatus(body.status);
+
+    // Handle currentVersionId (set after import/new version so workspace shows correct version).
+    const versionId = body.currentVersionId ?? body.current_version_id;
+    if (versionId !== undefined) {
+      if (versionId === null || versionId === "") {
+        updates.current_version_id = null;
+      } else if (typeof versionId === 'string' && versionId.trim()) {
+        updates.current_version_id = versionId.trim();
+      }
+    }
 
     // Handle assignee update
     if (body.assigneeId !== undefined) {
