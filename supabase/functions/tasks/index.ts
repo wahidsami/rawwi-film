@@ -92,15 +92,15 @@ Deno.serve(async (req: Request) => {
 
     // --- GET /tasks?jobId=...&chunks=true  → per-chunk status (debug) ---
     if (jobId && chunks) {
-      // Ownership check: job must belong to this user
+      // Admin can inspect any job chunks; non-admin must own the job.
       const { data: ownerCheck, error: ownerErr } = await supabase
         .from("analysis_jobs")
-        .select("id")
+        .select("id, created_by")
         .eq("id", jobId)
-        .eq("created_by", uid)
         .maybeSingle();
-      if (ownerErr || !ownerCheck) {
-        if (!isAdmin) return json({ error: "Job not found or access denied" }, 404);
+      if (ownerErr || !ownerCheck) return json({ error: "Job not found or access denied" }, 404);
+      if (!isAdmin && (ownerCheck as any).created_by !== uid) {
+        return json({ error: "Job not found or access denied" }, 404);
       }
       const { data: chunkRows, error: chunkErr } = await supabase
         .from("analysis_chunks")
@@ -124,15 +124,15 @@ Deno.serve(async (req: Request) => {
     if (jobId) {
       const { data: row, error: err } = await supabase
         .from("analysis_jobs")
-        .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, error_message, script_content_hash")
+        .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, error_message, script_content_hash")
         .eq("id", jobId)
-        .eq("created_by", uid)
         .maybeSingle();
       if (err) {
         console.error(`[tasks] GET jobId=${jobId} correlationId=${correlationId} error=`, err.message);
         return json({ error: err.message }, 500);
       }
       if (!row) return json({ error: "Job not found" }, 404);
+      if (!isAdmin && (row as any).created_by !== uid) return json({ error: "Job not found" }, 404);
       return json(toCamel(row as JobRow));
     }
 

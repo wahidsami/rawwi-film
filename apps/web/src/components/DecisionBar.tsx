@@ -44,22 +44,8 @@ export function DecisionBar({
         : (hasPermission('reject_scripts') || hasPermission('manage_script_status'));
     const reasonIfDisabled = capabilitiesProp?.reasonIfDisabled ?? null;
 
-    if (!canApprove && !canReject) {
-        if (reasonIfDisabled) {
-            return (
-                <div
-                    className="flex items-center gap-2 px-4 py-2 bg-surface-elevated rounded-lg border border-border text-sm text-text-muted"
-                    title={reasonIfDisabled}
-                >
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    <span>{reasonIfDisabled}</span>
-                </div>
-            );
-        }
-        return null;
-    }
-
-    // Don't show if already approved/rejected
+    // Always show final state first. For approved/rejected scripts, reviewers need to see
+    // status outcome, not permission prompts.
     if (currentStatus === 'approved' || currentStatus === 'rejected') {
         return (
             <div className="flex items-center gap-2 px-4 py-2 bg-surface-elevated rounded-lg border border-border">
@@ -80,6 +66,21 @@ export function DecisionBar({
                 )}
             </div>
         );
+    }
+
+    if (!canApprove && !canReject) {
+        if (reasonIfDisabled) {
+            return (
+                <div
+                    className="flex items-center gap-2 px-4 py-2 bg-surface-elevated rounded-lg border border-border text-sm text-text-muted"
+                    title={reasonIfDisabled}
+                >
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{reasonIfDisabled}</span>
+                </div>
+            );
+        }
+        return null;
     }
 
     const handleDecisionClick = (decision: 'approve' | 'reject') => {
