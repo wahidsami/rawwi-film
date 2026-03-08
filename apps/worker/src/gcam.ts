@@ -4,7 +4,9 @@
  */
 import { getPolicyArticle, getScannableArticleIds } from "./policyMap.js";
 
-export const ALWAYS_CHECK_ARTICLES = [4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 23, 24] as const;
+// Use all scannable articles (4-24, excluding admin/out-of-scope)
+// This ensures multi-pass system has access to all articles it needs
+export const ALWAYS_CHECK_ARTICLES = getScannableArticleIds();
 
 export type GCAMArticle = {
   id: number;
