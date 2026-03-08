@@ -94,20 +94,48 @@ export function AppLayout() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifList, setNotifList] = useState<NotificationItem[]>([]);
   const notifRef = useRef<HTMLDivElement>(null);
+  const [notifPanelStyle, setNotifPanelStyle] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  const updateNotifPanelPosition = useCallback(() => {
+    if (!notifRef.current || typeof window === 'undefined') return;
+    const rect = notifRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const width = Math.min(320, Math.max(220, viewportWidth - 16));
+    const preferredLeft = lang === 'ar' ? rect.left : rect.right - width;
+    const left = Math.max(8, Math.min(preferredLeft, viewportWidth - width - 8));
+    const top = rect.bottom + 8;
+    setNotifPanelStyle({ top, left, width });
+  }, [lang]);
 
   useEffect(() => {
     notificationsApi.getUnreadCount().then(r => setNotifUnreadCount(r.unreadCount)).catch(() => {});
   }, []);
 
   const openNotifPanel = useCallback(() => {
+    const nextOpen = !notifOpen;
     if (!notifOpen) {
       notificationsApi.getList().then(r => {
         setNotifList(r.data);
         setNotifUnreadCount(r.unreadCount);
       }).catch(() => {});
     }
-    setNotifOpen(prev => !prev);
-  }, [notifOpen]);
+    setNotifOpen(nextOpen);
+    if (nextOpen) {
+      requestAnimationFrame(() => updateNotifPanelPosition());
+    }
+  }, [notifOpen, updateNotifPanelPosition]);
+
+  useEffect(() => {
+    if (!notifOpen) return;
+    updateNotifPanelPosition();
+    const onViewportChange = () => updateNotifPanelPosition();
+    window.addEventListener('resize', onViewportChange);
+    window.addEventListener('scroll', onViewportChange, true);
+    return () => {
+      window.removeEventListener('resize', onViewportChange);
+      window.removeEventListener('scroll', onViewportChange, true);
+    };
+  }, [notifOpen, lang, updateNotifPanelPosition]);
 
   useEffect(() => {
     const onOutside = (e: MouseEvent) => {
@@ -188,7 +216,10 @@ export function AppLayout() {
                 )}
               </button>
               {notifOpen && (
-                <div className="absolute top-full right-0 mt-2 w-80 max-h-[min(24rem,70vh)] overflow-hidden rounded-lg border border-border bg-surface shadow-lg z-50 flex flex-col">
+                <div
+                  className="fixed max-h-[min(24rem,70vh)] overflow-hidden rounded-lg border border-border bg-surface shadow-lg z-50 flex flex-col"
+                  style={notifPanelStyle ? { top: notifPanelStyle.top, left: notifPanelStyle.left, width: notifPanelStyle.width } : undefined}
+                >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                     <span className="text-sm font-semibold text-text-main">{lang === 'ar' ? 'الإشعارات' : 'Notifications'}</span>
                     {notifUnreadCount > 0 && (
