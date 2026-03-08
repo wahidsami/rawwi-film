@@ -92,7 +92,7 @@ export async function callJudgeRaw(
 ): Promise<string> {
   const payload = buildJudgeArticlesPayload(selectedArticles);
   const textSlice = chunkText.slice(0, 30_000);
-  const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nأرجع JSON بمصفوفة findings فقط.`;
+  const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nقاعدة تنسيق إلزامية: location.start_offset و location.end_offset يجب أن يكونا أرقاماً (لا تُرجع null).\nأرجع JSON بمصفوفة findings فقط.`;
 
   const resp = await openai.chat.completions.create({
     model: jobConfig.judge_model,
