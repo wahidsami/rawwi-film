@@ -21,10 +21,17 @@ const locationSchema = z.object({
 export const judgeFindingSchema = z.object({
   article_id: z.number().min(1).max(25),
   atom_id: z.string().optional().nullable(),
-  title_ar: z.string(),
-  description_ar: z.string(),
-  severity: z.enum(["low", "medium", "high", "critical"]),
-  confidence: z.number().min(0).max(1),
+  title_ar: z.string().nullable().transform((v) => v ?? "مخالفة محتوى"),
+  description_ar: z.string().nullable().transform((v) => v ?? ""),
+  // OpenAI may emit null; default to medium instead of dropping the whole finding.
+  severity: z.enum(["low", "medium", "high", "critical"]).nullable().transform((v) => v ?? "medium"),
+  // OpenAI may emit null; default to a conservative confidence instead of dropping.
+  confidence: z
+    .number()
+    .min(0)
+    .max(1)
+    .nullable()
+    .transform((v) => (typeof v === "number" ? Math.max(0, Math.min(1, v)) : 0.7)),
   is_interpretive: z.boolean().nullable().optional().transform((v) => v ?? false),
   evidence_snippet: z.string().nullable().transform((v) => v ?? ""),
   location: locationSchema
