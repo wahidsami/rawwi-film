@@ -334,6 +334,7 @@ export async function processChunkJudge(
   const passSignature = DETECTION_PASSES.map((p) => `${p.name}:${p.model ?? "default"}`).join("|");
   const logicVersion = `v2-strict|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}`;
   const jobConfig = (job.config_snapshot as any) || {};
+  const forceFresh = jobConfig.force_fresh === true;
   const routerModel = jobConfig.router_model || config.OPENAI_ROUTER_MODEL;
   const judgeModel = jobConfig.judge_model || config.OPENAI_JUDGE_MODEL;
   const temperature = jobConfig.temperature ?? (config.DETERMINISTIC_MODE ? 0 : 0.4);
@@ -354,11 +355,21 @@ export async function processChunkJudge(
   }
 
   // Check cache table
-  const { data: cachedRun } = await supabase
-    .from("analysis_chunk_runs")
-    .select("ai_findings, router_candidates")
-    .eq("run_key", runKey)
-    .maybeSingle();
+  const { data: cachedRun } = forceFresh
+    ? { data: null as null }
+    : await supabase
+        .from("analysis_chunk_runs")
+        .select("ai_findings, router_candidates")
+        .eq("run_key", runKey)
+        .maybeSingle();
+
+  if (forceFresh) {
+    logger.info("Force-fresh enabled: bypassing idempotency cache for this job", {
+      jobId,
+      chunkId: chunk.id,
+      runKey,
+    });
+  }
 
   // Variables for subsequent steps
   let allFindings: FindingWithGlobal[] = [];

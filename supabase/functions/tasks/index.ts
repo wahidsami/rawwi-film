@@ -4,7 +4,7 @@
  * Returns: [{ id, scriptId, versionId, status, progressTotal, progressDone, progressPercent, createdAt, startedAt, completedAt, errorMessage }, ...]
  *
  * POST /tasks — Queue analysis (creates analysis_jobs + analysis_chunks).
- * Body: { versionId: string }
+ * Body: { versionId: string, forceFresh?: boolean }
  * Returns: { jobId: string }
  */
 // @ts-ignore
@@ -242,6 +242,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const versionId = body?.versionId;
+  const forceFresh = body?.forceFresh === true;
   if (!versionId || typeof versionId !== "string" || !versionId.trim()) {
     return json({ error: "versionId is required" }, 400);
   }
@@ -356,6 +357,7 @@ Deno.serve(async (req: Request) => {
       canonical_length,
       config_snapshot: {
         ...DEFAULT_DETERMINISTIC_CONFIG,
+        force_fresh: forceFresh,
         router_prompt_version: PROMPT_VERSIONS.router,
         router_prompt_hash: await sha256Hash(ROUTER_SYSTEM_MSG),
         judge_prompt_version: PROMPT_VERSIONS.judge,

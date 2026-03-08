@@ -550,7 +550,8 @@ export function ScriptWorkspace() {
     console.log('[ScriptWorkspace] Analyze clicked, versionId:', script.currentVersionId);
     setIsAnalyzing(true);
     try {
-      const { jobId } = await scriptsApi.createTask(script.currentVersionId);
+      // Force a fresh AI run when user clicks Smart Analysis (do not reuse prior cross-job cache blindly).
+      const { jobId } = await scriptsApi.createTask(script.currentVersionId, { forceFresh: true });
       setAnalysisJobId(jobId);
 
       setAnalysisJob(null);
