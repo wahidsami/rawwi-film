@@ -936,6 +936,18 @@ export function ScriptWorkspace() {
     return { approved, severity };
   };
 
+  const extractQuotedTokens = useCallback((text: string): string[] => {
+    if (!text || !text.trim()) return [];
+    const out: string[] = [];
+    const regex = /['"“”«»](.{2,80}?)['"“”«»]/g;
+    let m: RegExpExecArray | null;
+    while ((m = regex.exec(text)) !== null) {
+      const token = m[1]?.trim();
+      if (token && token.length >= 2) out.push(token);
+    }
+    return out;
+  }, []);
+
   // Inside ScriptWorkspace component:
 
   // const norm = (t: string) => normalizeText(t); // Use our new robust normalizer
@@ -950,6 +962,8 @@ export function ScriptWorkspace() {
 
     const evidence = (f.evidenceSnippet ?? '').trim();
     const hint = f.startOffsetGlobal ?? 0;
+    const title = typeof (f as any).titleAr === 'string' ? (f as any).titleAr.trim() : '';
+    const description = typeof (f as any).descriptionAr === 'string' ? (f as any).descriptionAr.trim() : '';
 
     // 1. Try original offsets (use canonical normalization to match backend/DOM)
     const s = f.startOffsetGlobal ?? -1;
@@ -959,18 +973,37 @@ export function ScriptWorkspace() {
       if (canonicalNormalize(slice) === canonicalNormalize(evidence)) {
         return { start: s, end: e, matched: true };
       }
-      // Relaxed: if slice contains evidence or evidence contains slice (e.g. truncated snippet)
+      // Guardrail: accept offsets only when lengths are reasonably close.
       const ns = canonicalNormalize(slice);
       const ne = canonicalNormalize(evidence);
-      if (ns && ne && (ns.includes(ne) || ne.includes(ns))) {
+      const lenRatio = ne.length > 0 ? Math.min(ns.length, ne.length) / Math.max(ns.length, ne.length) : 0;
+      if (ns && ne && lenRatio >= 0.75 && (ns.includes(ne) || ne.includes(ns))) {
         return { start: s, end: e, matched: true };
       }
     }
 
-    // 2. Fallback: text search with full evidence and excerpt
+    // 2. Prefer exact quoted tokens from finding title/description/evidence (e.g. "نصاب").
+    const quotedCandidates = [
+      ...extractQuotedTokens(title),
+      ...extractQuotedTokens(description),
+      ...extractQuotedTokens(evidence),
+    ];
+    const uniqueQuoted = Array.from(new Set(quotedCandidates.map((t) => canonicalNormalize(t))))
+      .filter((t) => t.length >= 2);
+    for (const q of uniqueQuoted) {
+      const matches = findTextOccurrences(content, q, { minConfidence: 1.0 });
+      if (matches.length > 0) {
+        const best = findBestMatch(matches, hint);
+        if (best) return { start: best.start, end: best.end, matched: true };
+      }
+    }
+
+    // 3. Fallback: exact text search with concise candidates first
     const baseCandidates = [
+      (f as any).excerpt,
       evidence,
-      (f as any).excerpt
+      description,
+      title,
     ].filter((t): t is string => typeof t === 'string' && t.trim().length > 0);
     const seen = new Set<string>();
     const candidates: string[] = [];
@@ -981,26 +1014,26 @@ export function ScriptWorkspace() {
         candidates.push(t);
       }
     }
-    candidates.sort((a, b) => b.length - a.length);
+    // Prefer shorter precise snippets over long sentences.
+    candidates.sort((a, b) => a.length - b.length);
 
     for (const textToFind of candidates) {
-      const matches = findTextOccurrences(content, textToFind);
+      const matches = findTextOccurrences(content, textToFind, { minConfidence: 1.0 });
       if (matches.length > 0) {
         const best = findBestMatch(matches, hint);
         if (best) return { start: best.start, end: best.end, matched: true };
       }
     }
 
-    // 3. Substring fallback: try shorter parts of evidence so we still highlight something
+    // 4. Last-resort substring fallback (strict and longer parts only).
     const minLen = 4;
     if (evidence.length >= minLen) {
       const subs: string[] = [];
-      if (evidence.length > 40) subs.push(evidence.slice(0, 40), evidence.slice(-40));
-      if (evidence.length > 20) subs.push(evidence.slice(0, 20), evidence.slice(-20));
-      if (evidence.length > 12) subs.push(evidence.slice(0, 12), evidence.slice(-12));
+      if (evidence.length > 48) subs.push(evidence.slice(0, 48), evidence.slice(-48));
+      if (evidence.length > 24) subs.push(evidence.slice(0, 24), evidence.slice(-24));
       for (const sub of subs) {
-        if (sub.length < minLen) continue;
-        const matches = findTextOccurrences(content, sub);
+        if (sub.length < 8) continue;
+        const matches = findTextOccurrences(content, sub, { minConfidence: 0.9 });
         if (matches.length > 0) {
           const best = findBestMatch(matches, hint);
           if (best) return { start: best.start, end: best.end, matched: true };
@@ -1009,7 +1042,7 @@ export function ScriptWorkspace() {
     }
 
     return null;
-  }, []);
+  }, [extractQuotedTokens]);
 
 
   const buildFindingSegments = useCallback((content: string, findings: AnalysisFinding[]): Segment[] => {
