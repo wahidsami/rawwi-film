@@ -23,6 +23,18 @@ function fileTitle(fileName: string): string {
   return base || 'Quick Analysis';
 }
 
+function safeUploadFileName(fileName: string): string {
+  const trimmed = fileName.trim();
+  const dotIdx = trimmed.lastIndexOf('.');
+  const ext = dotIdx > 0 ? trimmed.slice(dotIdx).toLowerCase() : '';
+  const base = (dotIdx > 0 ? trimmed.slice(0, dotIdx) : trimmed)
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+    .slice(0, 64);
+  const safeBase = base || 'quick_analysis';
+  return `${safeBase}_${Date.now()}${ext}`;
+}
+
 export function QuickAnalysis() {
   const { lang } = useLangStore();
   const navigate = useNavigate();
@@ -78,7 +90,8 @@ export function QuickAnalysis() {
         status: 'draft',
       });
 
-      const { url, path } = await scriptsApi.getUploadUrl(file.name);
+      const uploadName = safeUploadFileName(file.name);
+      const { url, path } = await scriptsApi.getUploadUrl(uploadName);
       await scriptsApi.uploadToSignedUrl(file, url);
       const storagePath = path ?? url;
       const sourceFileType =

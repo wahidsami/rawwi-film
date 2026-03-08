@@ -66,6 +66,18 @@ import toast from 'react-hot-toast';
 /// <reference types="vite/client" />
 const IS_DEV = (import.meta as any).env?.DEV ?? false;
 
+function safeUploadFileName(fileName: string): string {
+  const trimmed = fileName.trim();
+  const dotIdx = trimmed.lastIndexOf('.');
+  const ext = dotIdx > 0 ? trimmed.slice(dotIdx).toLowerCase() : '';
+  const base = (dotIdx > 0 ? trimmed.slice(0, dotIdx) : trimmed)
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+    .slice(0, 64);
+  const safeBase = base || 'script_file';
+  return `${safeBase}_${Date.now()}${ext}`;
+}
+
 export function ScriptWorkspace() {
 
   const { id } = useParams<{ id: string }>();
@@ -651,7 +663,8 @@ export function ScriptWorkspace() {
 
     try {
       setUploadStatus('uploading');
-      const { url, path } = await scriptsApi.getUploadUrl(file.name);
+      const uploadName = safeUploadFileName(file.name);
+      const { url, path } = await scriptsApi.getUploadUrl(uploadName);
       await scriptsApi.uploadToSignedUrl(file, url);
 
       const storagePath = path ?? url;
