@@ -306,6 +306,10 @@ export function ScriptWorkspace() {
   const [selectedReportForHighlights, setSelectedReportForHighlights] = useState<ReportListItem | null>(null);
   const [selectedJobCanonicalHash, setSelectedJobCanonicalHash] = useState<string | null>(null);
   const [reportFindings, setReportFindings] = useState<AnalysisFinding[]>([]);
+  const [highlightExpectedCount, setHighlightExpectedCount] = useState(0);
+  const [highlightLocatableCount, setHighlightLocatableCount] = useState(0);
+  const [highlightRenderedCount, setHighlightRenderedCount] = useState(0);
+  const [highlightRetryTick, setHighlightRetryTick] = useState(0);
   // const [reportFindingsLoading, setReportFindingsLoading] = useState(false);
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
   const [tooltipFinding, setTooltipFinding] = useState<AnalysisFinding | null>(null);
@@ -400,6 +404,9 @@ export function ScriptWorkspace() {
     setSelectedReportForHighlights(report);
     // setReportFindingsLoading(true);
     setSelectedFindingId(null);
+    setHighlightExpectedCount(0);
+    setHighlightLocatableCount(0);
+    setHighlightRenderedCount(0);
     try {
       if (jobId) {
         const [job, list] = await Promise.all([
@@ -1199,11 +1206,16 @@ export function ScriptWorkspace() {
       selectedJobCanonicalHash !== editorData.contentHash);
   useEffect(() => {
     const container = editorRef.current;
-    if (!container || !domTextIndex || !canonicalContentForHighlights) return;
-    if (!editorData?.contentHtml) return;
+    if (!container || !domTextIndex || !canonicalContentForHighlights || !editorData?.contentHtml) {
+      setHighlightExpectedCount(reportFindings.length);
+      setHighlightLocatableCount(0);
+      setHighlightRenderedCount(0);
+      return;
+    }
 
     lastHighlightGuardLogFindingsRef.current = null;
     const canonical = domTextIndex ? domTextIndex.normalizedText : canonicalContentForHighlights;
+    setHighlightExpectedCount(reportFindings.length);
 
     // Use LOCATOR to find valid ranges
     const validFindings = reportFindings.map(f => {
@@ -1211,6 +1223,7 @@ export function ScriptWorkspace() {
       if (!loc && IS_DEV) console.log(`[ScriptWorkspace] Failed to locate finding ${f.id} ("${f.evidenceSnippet?.slice(0, 20)}...") in text of len ${canonical.length}`);
       return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
     }).filter((f) => f !== null) as AnalysisFinding[];
+    setHighlightLocatableCount(validFindings.length);
 
     if (IS_DEV) console.log(`[ScriptWorkspace] Valid findings for highlights: ${validFindings.length}/${reportFindings.length}`);
 
@@ -1316,8 +1329,9 @@ export function ScriptWorkspace() {
       }
     }
     if (IS_DEV) console.log(`[ScriptWorkspace] Applied ${appliedCount} DOM marks.`);
+    setHighlightRenderedCount(appliedCount);
 
-  }, [domTextIndex, canonicalContentForHighlights, reportFindings, canonicalHashMismatch, editorData?.contentHtml, locateFindingInContent]);
+  }, [domTextIndex, canonicalContentForHighlights, reportFindings, canonicalHashMismatch, editorData?.contentHtml, locateFindingInContent, highlightRetryTick]);
 
   if (showLoading) {
     return (
@@ -1696,6 +1710,35 @@ export function ScriptWorkspace() {
               )}
               {reportFindings.length > 0 && (
                 <div className="space-y-2 mb-4">
+                  {!canonicalHashMismatch && highlightRenderedCount < highlightExpectedCount && (
+                    <div className="rounded-md border border-warning/40 bg-warning/10 p-2.5 text-[11px] text-text-main">
+                      <p>
+                        {lang === 'ar'
+                          ? `تنبيه تمييز: تم عرض ${highlightRenderedCount} من أصل ${highlightExpectedCount} ملاحظة في النص (${highlightLocatableCount} قابلة للتحديد).`
+                          : `Highlight check: ${highlightRenderedCount}/${highlightExpectedCount} findings are currently marked in text (${highlightLocatableCount} locatable).`}
+                      </p>
+                      <div className="mt-2 flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 px-2 text-[10px]"
+                          onClick={() => setHighlightRetryTick((n) => n + 1)}
+                        >
+                          {lang === 'ar' ? 'إعادة محاولة التمييز' : 'Retry highlight mapping'}
+                        </Button>
+                        {selectedReportForHighlights && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-6 px-2 text-[10px]"
+                            onClick={() => handleSelectReportForHighlights(selectedReportForHighlights)}
+                          >
+                            {lang === 'ar' ? 'إعادة تحميل ملاحظات التقرير' : 'Reload report findings'}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
                     {lang === 'ar' ? 'ملاحظات التقرير' : 'Report findings'}
                   </h3>
