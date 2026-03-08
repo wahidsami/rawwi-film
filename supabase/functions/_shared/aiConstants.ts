@@ -14,7 +14,7 @@
 export const PROMPT_VERSIONS = {
   router: "v1.1",
   judge: "v2.0-multipass",
-  schema: "v1.2",
+  schema: "v1.3",
 };
 
 export const DEFAULT_DETERMINISTIC_CONFIG = {

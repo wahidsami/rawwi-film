@@ -25,9 +25,11 @@ export const judgeFindingSchema = z.object({
   description_ar: z.string(),
   severity: z.enum(["low", "medium", "high", "critical"]),
   confidence: z.number().min(0).max(1),
-  is_interpretive: z.boolean().optional().default(false),
-  evidence_snippet: z.string(),
-  location: locationSchema,
+  is_interpretive: z.boolean().nullable().optional().transform((v) => v ?? false),
+  evidence_snippet: z.string().nullable().transform((v) => v ?? ""),
+  location: locationSchema
+    .nullable()
+    .transform((v) => v ?? { start_offset: 0, end_offset: 0, start_line: null, end_line: null }),
 });
 
 export const judgeOutputSchema = z.object({

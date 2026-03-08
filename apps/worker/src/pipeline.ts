@@ -437,9 +437,16 @@ export async function processChunkJudge(
         { temperature, seed }
       );
       
-      // Enforce atom_ids and convert to global findings
+      // Enforce atom_ids and fill missing evidence snippets from local offsets when needed.
       const enforced = multiPassResult.findings.map(f => enforceAtomIds([f])[0]);
-      const withGlobal = enforced.map((f) => toGlobalFinding(f, chunkStart));
+      const enriched = enforced.map((f) => {
+        if (f.evidence_snippet && f.evidence_snippet.trim().length > 0) return f;
+        const localStart = Math.max(0, f.location?.start_offset ?? 0);
+        const localEnd = Math.min(chunkText.length, f.location?.end_offset ?? localStart);
+        const fallback = localEnd > localStart ? chunkText.slice(localStart, localEnd) : "";
+        return { ...f, evidence_snippet: fallback };
+      });
+      const withGlobal = enriched.map((f) => toGlobalFinding(f, chunkStart));
       
       // Relaxed verbatim filter: keep findings even if evidence doesn't match exactly
       const beforeVerbatimCount = withGlobal.length;
