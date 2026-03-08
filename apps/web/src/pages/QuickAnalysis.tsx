@@ -124,8 +124,8 @@ export function QuickAnalysis() {
       }
 
       await scriptsApi.updateScript(quickScript.id, { currentVersionId: version.id });
-      await scriptsApi.createTask(version.id, { forceFresh: true });
-      toast.success(isAr ? 'تم بدء التحليل السريع بنجاح' : 'Quick analysis started successfully');
+      // Keep the same UX as normal scripts: upload/extract first, then user starts analysis from workspace.
+      toast.success(isAr ? 'تم تجهيز النص. ابدأ التحليل من مساحة العمل.' : 'Script prepared. Start analysis from workspace.');
       await loadHistory();
       navigate(`/workspace/${quickScript.id}`);
     } catch (err: any) {
