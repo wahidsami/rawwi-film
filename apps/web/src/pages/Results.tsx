@@ -369,7 +369,25 @@ export function Results() {
       // Since we don't have handlebars lib, we'll manual construct the findings HTML string and inject it)
       // Actually, to avoid complexity, let's just construct the 'groupedFindings' HTML section manually:
 
-      const findingsHtmlStr = groupedFindingsHtml.map(g => `
+      const zeroFindingsMessage = isAr
+        ? 'لم يتم رصد أي مخالفات في هذا النص وفق قواعد التحليل الحالية.'
+        : 'No violations were detected in this script under the current analysis policy.';
+
+      const findingsHtmlStr = groupedFindingsHtml.length === 0
+        ? `
+        <div class="finding-card" style="background:#F0FDF4;border-color:#BBF7D0;">
+            <div class="card-header" style="justify-content:flex-start;">
+                <span class="severity-badge" style="background:#DCFCE7;color:#166534;border:1px solid #86EFAC;">
+                    ${isAr ? 'سليم' : 'Compliant'}
+                </span>
+                <span class="finding-title">${isAr ? 'نتيجة التحليل' : 'Analysis Result'}</span>
+            </div>
+            <div class="evidence-box" style="border-color:#86EFAC;background:#F0FDF4;font-style:normal;">
+                ${zeroFindingsMessage}
+            </div>
+        </div>
+      `
+        : groupedFindingsHtml.map(g => `
         <div class="article-group">
             <div class="article-header">
                 <span class="article-title">${g.articleTitle}</span>
@@ -820,8 +838,12 @@ export function Results() {
           {(hasRealFindings ? violations.length === 0 : summary.findings_by_article.length === 0) ? (
             <div className="text-center py-16 bg-surface border-2 border-dashed border-border rounded-2xl">
               <CheckCircle className="w-12 h-12 text-success mx-auto mb-4 opacity-50" />
-              <h4 className="text-lg font-bold text-text-main">{lang === 'ar' ? 'سجل نظيف' : 'Clean Log'}</h4>
-              <p className="text-text-muted mt-2">{lang === 'ar' ? 'لا توجد مخالفات نشطة.' : 'No active violations.'}</p>
+              <h4 className="text-lg font-bold text-text-main">{lang === 'ar' ? 'النص سليم' : 'Script Is Compliant'}</h4>
+              <p className="text-text-muted mt-2">
+                {lang === 'ar'
+                  ? 'لم يتم رصد أي مخالفات في هذا النص وفق قواعد التحليل الحالية.'
+                  : 'No violations were detected in this script under the current analysis policy.'}
+              </p>
             </div>
           ) : hasRealFindings ? renderFindingsFromReal(violations) : renderFindingsFromSummary()}
 
