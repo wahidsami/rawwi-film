@@ -12,8 +12,9 @@ export type RouterOutput = z.infer<typeof routerOutputSchema>;
 const locationSchema = z.object({
   start_offset: z.number(),
   end_offset: z.number(),
-  start_line: z.number(),
-  end_line: z.number(),
+  // OpenAI occasionally emits null for line numbers; accept null to avoid dropping valid findings.
+  start_line: z.number().nullable(),
+  end_line: z.number().nullable(),
 });
 
 export const judgeFindingSchema = z.object({
