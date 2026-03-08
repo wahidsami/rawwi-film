@@ -330,7 +330,8 @@ export async function processChunkJudge(
   }
 
   // 1b) Idempotency Check & Config Setup
-  const logicVersion = "v2-strict";
+  // Bump when detection logic/prompting changes to avoid stale cached zero-result runs.
+  const logicVersion = "v2-strict-multipass-cachebust-20260308";
   const jobConfig = (job.config_snapshot as any) || {};
   const routerModel = jobConfig.router_model || config.OPENAI_ROUTER_MODEL;
   const judgeModel = jobConfig.judge_model || config.OPENAI_JUDGE_MODEL;
