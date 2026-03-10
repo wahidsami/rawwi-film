@@ -25,6 +25,22 @@ export type LexiconMatch = {
 let cache: LexiconTerm[] = [];
 let isRefreshing = false;
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
+const ARABIC_NON_SIGNAL_WORDS = new Set<string>(["ال"]);
+
+function canonicalArabicToken(v: string): string {
+  // Remove common Arabic diacritics/tatweel, trim spaces, lowercase.
+  return (v || "")
+    .replace(/[\u064B-\u0652\u0670\u0640]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function shouldSkipStandaloneWordTerm(term: LexiconTerm): boolean {
+  if (term.term_type !== "word") return false;
+  const normalized = canonicalArabicToken(term.term);
+  return ARABIC_NON_SIGNAL_WORDS.has(normalized);
+}
 
 function getLineAndColumn(text: string, index: number): { line: number; column: number } {
   const before = text.slice(0, index);
@@ -85,6 +101,7 @@ export class LexiconCache {
   findMatches(text: string): LexiconMatch[] {
     const results: LexiconMatch[] = [];
     for (const term of cache) {
+      if (shouldSkipStandaloneWordTerm(term)) continue;
       let re: RegExp;
       if (term.term_type === "word") {
         re = wordBoundaryRegex(term.term);
