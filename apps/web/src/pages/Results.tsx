@@ -562,9 +562,8 @@ export function Results() {
       URL.revokeObjectURL(objectUrl);
       toast.success(isAr ? 'تم تنزيل PDF' : 'PDF downloaded');
     } catch (err) {
-      console.error('[Results] Direct PDF download failed, fallback to print', err);
-      toast.error(isAr ? 'تعذر تنزيل PDF مباشرة، سيتم فتح وضع الطباعة.' : 'Direct PDF download failed, opening print mode.');
-      await generateHtmlPrint();
+      console.error('[Results] Direct PDF download failed', err);
+      toast.error(isAr ? 'تعذر تنزيل PDF مباشرة. حاول مرة أخرى.' : 'Direct PDF download failed. Please try again.');
     } finally {
       setIsDownloadingPdf(false);
     }
