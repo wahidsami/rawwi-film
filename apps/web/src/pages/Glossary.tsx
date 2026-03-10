@@ -12,7 +12,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
-import { Plus, Search, FileDown, FileUp, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { Plus, Search, FileDown, FileUp, FileText, Edit2, Trash2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
@@ -29,6 +29,8 @@ export function Glossary() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterSeverity, setFilterSeverity] = useState('all');
   const [filterMode, setFilterMode] = useState('all');
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTermId, setEditingTermId] = useState<string | null>(null);
@@ -321,7 +323,7 @@ export function Glossary() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredTerms.map((term) => (
+              {paginatedTerms.map((term) => (
                 <tr key={term.id} className="hover:bg-background/50 transition-colors">
                   <td className="px-6 py-4">
                     <p className="font-bold text-text-main">{term.term}</p>
@@ -383,7 +385,7 @@ export function Glossary() {
               ))}
               {filteredTerms.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-text-muted">
+                  <td colSpan={8} className="px-6 py-8 text-center text-text-muted">
                     {lang === 'ar' ? 'لم يتم العثور على مصطلحات تطابق بحثك.' : 'No terms found matching your criteria.'}
                   </td>
                 </tr>
@@ -391,6 +393,58 @@ export function Glossary() {
             </tbody>
           </table>
         </div>
+        {totalFiltered > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-border bg-background">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-text-muted">
+                {lang === 'ar' ? 'عرض' : 'Show'}
+              </span>
+              <Select
+                value={String(pageSize)}
+                onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                options={[
+                  { label: '10', value: '10' },
+                  { label: '30', value: '30' },
+                  { label: '50', value: '50' },
+                  { label: '100', value: '100' },
+                ]}
+                className="w-20"
+              />
+              <span className="text-sm text-text-muted">
+                {lang === 'ar' ? 'في الصفحة' : 'per page'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-text-muted">
+              <span>
+                {lang === 'ar'
+                  ? `${start + 1}–${Math.min(start + pageSize, totalFiltered)} من ${totalFiltered}`
+                  : `${start + 1}–${Math.min(start + pageSize, totalFiltered)} of ${totalFiltered}`}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  aria-label={lang === 'ar' ? 'السابق' : 'Previous'}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  aria-label={lang === 'ar' ? 'التالي' : 'Next'}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <TermModal
