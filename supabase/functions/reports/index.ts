@@ -21,7 +21,7 @@ declare const Deno: any;
 import { corsHeaders, jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
-import { isUserAdmin } from "../_shared/roleCheck.ts";
+import { isUserAdmin, isSuperAdminOrAdmin } from "../_shared/roleCheck.ts";
 // Imports for PDF generation removed (migrated to client-side)
 
 // Base columns always available; extended columns added by migrations 0005/0007/0010.
@@ -228,22 +228,57 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // ── GET /reports (no query params, no subpath) → List ALL user reports ──
-      // RLS handles filtering: users see only their reports, admins see all
+      // ── GET /reports (no query params, no subpath) → List reports (Regulator: only own; Admin/Super Admin: all)
       if (pathRest !== "" && pathRest !== "analysis.pdf") {
         return json({ error: "Not Found" }, 404);
       }
       if (!jobId && !scriptId && !reportId) {
-        console.log(`[reports] Listing all reports for uid=${uid}, isAdmin=${isAdmin}`);
+        const seeAllReports = await isSuperAdminOrAdmin(supabase, uid);
+        console.log(`[reports] Listing reports for uid=${uid}, seeAllReports=${seeAllReports}`);
 
-        const { data: reports, error } = await supabase
-          .from("analysis_reports")
-          .select("id, job_id, script_id, created_at, review_status, reviewed_by, reviewed_at, review_notes, approved_count, findings_count")
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error(`[reports] List all error:`, error.message);
-          return json({ error: error.message }, 500);
+        let reports: any[] | null;
+        if (seeAllReports) {
+          const { data, error } = await supabase
+            .from("analysis_reports")
+            .select("id, job_id, script_id, created_at, review_status, reviewed_by, reviewed_at, review_notes, approved_count, findings_count")
+            .order("created_at", { ascending: false });
+          if (error) {
+            console.error(`[reports] List all error:`, error.message);
+            return json({ error: error.message }, 500);
+          }
+          reports = data;
+        } else {
+          // Regulator (or non-admin): only reports for scripts assigned to them or jobs they created
+          const { data: assignedScripts } = await supabase.from("scripts").select("id").eq("assignee_id", uid);
+          const { data: myJobs } = await supabase.from("analysis_jobs").select("id").eq("created_by", uid);
+          const scriptIds = (assignedScripts ?? []).map((s: any) => s.id);
+          const jobIds = (myJobs ?? []).map((j: any) => j.id);
+          if (scriptIds.length === 0 && jobIds.length === 0) {
+            reports = [];
+          } else {
+            const byScript = scriptIds.length > 0
+              ? await supabase.from("analysis_reports").select("id, job_id, script_id, created_at, review_status, reviewed_by, reviewed_at, review_notes, approved_count, findings_count").in("script_id", scriptIds)
+              : { data: [] as any[] };
+            const byJob = jobIds.length > 0
+              ? await supabase.from("analysis_reports").select("id, job_id, script_id, created_at, review_status, reviewed_by, reviewed_at, review_notes, approved_count, findings_count").in("job_id", jobIds)
+              : { data: [] as any[] };
+            if (byScript.error) {
+              console.error(`[reports] List regulator by script error:`, byScript.error.message);
+              return json({ error: byScript.error.message }, 500);
+            }
+            if (byJob.error) {
+              console.error(`[reports] List regulator by job error:`, byJob.error.message);
+              return json({ error: byJob.error.message }, 500);
+            }
+            const seen = new Set<string>();
+            reports = [...(byScript.data ?? []), ...(byJob.data ?? [])]
+              .filter((r: any) => {
+                if (seen.has(r.id)) return false;
+                seen.add(r.id);
+                return true;
+              })
+              .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          }
         }
 
         if (!reports || reports.length === 0) {
