@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Upload, Loader2, FileText, History, PlayCircle, Trash2 } from 'lucide-react';
 
 import { useLangStore } from '@/store/langStore';
+import { useDataStore } from '@/store/dataStore';
 import { scriptsApi, reportsApi } from '@/api';
 import type { Script } from '@/api/models';
 import type { ReportListItem } from '@/api/models';
@@ -37,6 +38,7 @@ function safeUploadFileName(fileName: string): string {
 
 export function QuickAnalysis() {
   const { lang } = useLangStore();
+  const pushScript = useDataStore((s) => s.pushScript);
   const navigate = useNavigate();
   const [history, setHistory] = useState<QuickHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -146,7 +148,8 @@ export function QuickAnalysis() {
       }
 
       await scriptsApi.updateScript(quickScript.id, { currentVersionId: version.id });
-      // Keep the same UX as normal scripts: upload/extract first, then user starts analysis from workspace.
+      const scriptForStore: Script = { ...quickScript, currentVersionId: version.id };
+      pushScript(scriptForStore);
       toast.success(isAr ? 'تم تجهيز النص. ابدأ التحليل من مساحة العمل.' : 'Script prepared. Start analysis from workspace.');
       await loadHistory();
       navigate(`/workspace/${quickScript.id}`);

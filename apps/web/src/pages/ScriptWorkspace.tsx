@@ -105,6 +105,18 @@ export function ScriptWorkspace() {
   const script = scriptFromList ?? scriptFetched ?? undefined;
   const scriptFindings = findings.filter(f => f.scriptId === id);
 
+  // When route id changes (e.g. Open Workspace from Quick Analysis), reset so we show loading
+  // instead of flashing the previous script or the error screen.
+  useEffect(() => {
+    if (!id) {
+      setScriptFetched(null);
+      setScriptByIdLoading(false);
+      return;
+    }
+    setScriptFetched(null);
+    setScriptByIdLoading(true);
+  }, [id]);
+
   useEffect(() => {
     if (!id) {
       setScriptFetched(null);

@@ -23,6 +23,8 @@ interface DataState {
   updateCompany: (id: string, updates: Partial<Company>) => Promise<void>;
   removeCompany: (id: string) => Promise<void>;
   addScript: (s: Script) => Promise<Script | undefined>;
+  /** Add a script to the store without API (e.g. after Quick Analysis create so workspace finds it on navigate). */
+  pushScript: (s: Script) => void;
   updateScript: (id: string, updates: Partial<Script>) => Promise<void>;
   addTask: (t: Task) => Promise<void>;
   addFinding: (f: Finding) => Promise<void>;
@@ -107,6 +109,11 @@ export const useDataStore = create<DataState>((set) => ({
     }
   },
 
+  pushScript: (s) => {
+    set((state) => ({
+      scripts: state.scripts.some((x) => x.id === s.id) ? state.scripts : [...state.scripts, s],
+    }));
+  },
 
   updateScript: async (id, updates) => {
     try {
