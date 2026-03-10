@@ -158,7 +158,18 @@ Deno.serve(async (req: Request) => {
 
   const v = version as ScriptVersionRow;
   const canReplace = await isSuperAdminOrAdmin(supabase, auth.userId);
-  if (!canReplace) return json({ error: "Only Admin/Super Admin can replace script files." }, 403);
+  // Allow Regulators (and any user) to extract for their own quick-analysis script
+  let canExtract = canReplace;
+  if (!canExtract) {
+    const { data: script } = await supabase
+      .from("scripts")
+      .select("id, created_by, assignee_id, is_quick_analysis")
+      .eq("id", v.script_id)
+      .single();
+    const s = script as { created_by: string | null; assignee_id: string | null; is_quick_analysis?: boolean } | null;
+    canExtract = !!s && s.is_quick_analysis === true && (s.created_by === auth.userId || s.assignee_id === auth.userId);
+  }
+  if (!canExtract) return json({ error: "Only Admin/Super Admin can replace script files." }, 403);
 
   if (v.extraction_status === "done" && v.extracted_text) {
     return json(toFrontendVersion(v));
