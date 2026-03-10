@@ -161,6 +161,14 @@ Deno.serve(async (req: Request) => {
       const langParam = (url.searchParams.get("lang")?.trim() || "en").toLowerCase();
       const pdfLang = langParam === "ar" ? "ar" : "en";
 
+      // ── Legacy PDF routes (removed; return 410 so frontend can show clear message — BUG-06) ──
+      if (pathRest === "audit.pdf" || pathRest === "glossary.pdf" || pathRest === "clients.pdf") {
+        return json(
+          { error: "PDF export for this report has been moved to client-side; use the in-app export or download from the report page." },
+          410
+        );
+      }
+
       // ── GET /reports/analysis.pdf?jobId=<uuid>&lang=(en|ar) ──
       if (pathRest === "analysis.pdf") {
         const jobId = url.searchParams.get("jobId")?.trim();
@@ -220,8 +228,11 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // ── GET /reports (no query params) → List ALL user reports ──
+      // ── GET /reports (no query params, no subpath) → List ALL user reports ──
       // RLS handles filtering: users see only their reports, admins see all
+      if (pathRest !== "" && pathRest !== "analysis.pdf") {
+        return json({ error: "Not Found" }, 404);
+      }
       if (!jobId && !scriptId && !reportId) {
         console.log(`[reports] Listing all reports for uid=${uid}, isAdmin=${isAdmin}`);
 

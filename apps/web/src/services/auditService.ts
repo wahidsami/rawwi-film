@@ -101,8 +101,10 @@ export const auditService = {
       headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ message: res.statusText }));
-      const msg = err?.detail || err?.error || err?.message || 'PDF export failed';
+      const err = await res.json().catch(() => ({ message: res.statusText, error: res.statusText }));
+      const msg = res.status === 410
+        ? (params.lang === 'ar' ? 'تصدير PDF لهذا التقرير متوفر من داخل التطبيق فقط.' : 'PDF export for this report is available from the in-app report view only.')
+        : (err?.detail || err?.error || err?.message || 'PDF export failed');
       throw new Error(msg);
     }
     return res.blob();

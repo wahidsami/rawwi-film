@@ -27,8 +27,11 @@ export async function exportGlossaryPdf(params: GlossaryExportPdfParams = {}): P
     headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err?.message || err?.error || 'Glossary PDF export failed');
+    const err = await res.json().catch(() => ({ message: res.statusText, error: res.statusText }));
+    const msg = res.status === 410
+      ? (params.lang === 'ar' ? 'تصدير PDF للمعجم متوفر من داخل التطبيق فقط.' : 'PDF export for glossary is available from the in-app view only.')
+      : (err?.message || err?.error || 'Glossary PDF export failed');
+    throw new Error(msg);
   }
   return res.blob();
 }
