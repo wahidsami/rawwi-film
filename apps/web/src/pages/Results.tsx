@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { pdf } from '@react-pdf/renderer';
 
 import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
@@ -16,7 +15,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { cn } from '@/utils/cn';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
 import toast from 'react-hot-toast';
-import { AnalysisReportPdf } from '@/components/reports/AnalysisReportPdf';
+import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
@@ -455,112 +454,19 @@ export function Results() {
     }
   };
 
-  const buildPdfFindings = () => {
-    if (hasRealFindings) {
-      return (findings || [])
-        .filter((f): f is AnalysisFinding => f != null)
-        .map((f, idx) => ({
-          id: f.id ?? `finding-${idx}`,
-          articleId: f.articleId,
-          titleAr: f.titleAr,
-          severity: f.severity,
-          confidence: f.confidence ?? 0,
-          evidenceSnippet: f.evidenceSnippet,
-          source: f.source,
-          startLineChunk: f.startLineChunk ?? undefined,
-          endLineChunk: f.endLineChunk ?? undefined,
-          reviewStatus: f.reviewStatus,
-          reviewReason: f.reviewReason ?? undefined,
-          reviewedAt: f.reviewedAt ?? undefined,
-        }));
-    }
-    const byArticle = summary?.findings_by_article;
-    if (!byArticle || !Array.isArray(byArticle)) return [];
-    return byArticle.flatMap((art, idxBase) => {
-      if (!art?.top_findings) return [];
-      return (art.top_findings as Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }>)
-        .filter((f) => f != null)
-        .map((f, idx) => ({
-          id: `summary-${art.article_id}-${idxBase}-${idx}`,
-          articleId: art.article_id,
-          titleAr: f.title_ar ?? '—',
-          severity: f.severity ?? 'info',
-          confidence: f.confidence ?? 0,
-          evidenceSnippet: f.evidence_snippet ?? '',
-          source: 'ai' as const,
-        }));
-    });
-  };
-
-  function buildPdfFileName(): string {
-    const rawTitle = (report?.scriptTitle ?? '').trim();
-    const safeTitle = (rawTitle || (isAr ? 'تقرير' : 'report'))
-      .replace(/[\\/:*?"<>|]/g, ' ')
-      .replace(/\s+/g, '_')
-      .slice(0, 80);
-    const datePart = new Intl.DateTimeFormat('en-CA', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(new Date()).replaceAll('/', '-');
-    return `raawi_report_${safeTitle}_${datePart}.pdf`;
-  }
-
   const handleDownloadPdf = async () => {
     if (!report) return;
     setIsDownloadingPdf(true);
     try {
-      const origin = window.location.origin;
-      const logoImageUrl = `${origin}/dashboardlogo.png`;
-      // Embed cover as data URL so it reliably shows as full-page background in PDF
-      let coverImageDataUrl: string | null = null;
-      try {
-        const res = await fetch(`${origin}/cover.jpg`);
-        if (res.ok) {
-          const blob = await res.blob();
-          coverImageDataUrl = await new Promise<string>((resolve, reject) => {
-            const r = new FileReader();
-            r.onload = () => resolve(r.result as string);
-            r.onerror = reject;
-            r.readAsDataURL(blob);
-          });
-        }
-      } catch (_) {
-        // fallback: no cover image, PDF will use solid background
-      }
-
-      const pdfFindings = buildPdfFindings();
-      const doc = (
-        <AnalysisReportPdf
-          data={{
-            jobId: report.jobId,
-            scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
-            clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
-            createdAt: report.createdAt,
-            findings: pdfFindings,
-            lang: isAr ? 'ar' : 'en',
-          }}
-          dateFormat={dateFormat}
-          branding={{
-            logoUrl: logoImageUrl,
-            footerLogoUrl: '/footer.png',
-            orgNameAr: settings?.branding?.orgNameAr,
-            orgNameEn: settings?.branding?.orgNameEn,
-            footerNoteAr: settings?.branding?.footerNoteAr,
-            footerNoteEn: settings?.branding?.footerNoteEn,
-          }}
-          coverImageDataUrl={coverImageDataUrl}
-        />
-      );
-      const blob = await pdf(doc).toBlob();
-      const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objectUrl;
-      a.download = buildPdfFileName();
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(objectUrl);
+      await downloadAnalysisPdf({
+        scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
+        clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
+        createdAt: report.createdAt,
+        findings,
+        findingsByArticle: summary?.findings_by_article,
+        lang: isAr ? 'ar' : 'en',
+        dateFormat,
+      });
       toast.success(isAr ? 'تم تنزيل PDF' : 'PDF downloaded');
     } catch (err) {
       console.error('[Results] Direct PDF download failed', err);

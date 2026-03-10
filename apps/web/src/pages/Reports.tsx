@@ -6,8 +6,7 @@ import { reportService } from '@/services/reportService';
 import { useDataStore } from '@/store/dataStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate } from '@/utils/dateFormat';
-import { pdf } from '@react-pdf/renderer';
-import { AnalysisReportPdf } from '@/components/reports/AnalysisReportPdf';
+import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
 import toast from 'react-hot-toast';
 import { reportsApi, findingsApi, type AnalysisFinding } from '@/api';
 import { usersApi } from '@/api';
@@ -125,79 +124,15 @@ function Reports() {
       const isAr = lang === 'ar';
       const hasRealFindings = findings.length > 0;
 
-      const buildPdfFindings = () => {
-        if (hasRealFindings) {
-          return (findings || [])
-            .filter((f): f is AnalysisFinding => f != null)
-            .map((f, idx) => ({
-              id: f.id ?? `finding-${idx}`,
-              articleId: f.articleId,
-              titleAr: f.titleAr,
-              severity: f.severity,
-              confidence: f.confidence ?? 0,
-              evidenceSnippet: f.evidenceSnippet,
-              source: f.source,
-              startLineChunk: f.startLineChunk ?? undefined,
-              endLineChunk: f.endLineChunk ?? undefined,
-              reviewStatus: f.reviewStatus,
-              reviewReason: f.reviewReason ?? undefined,
-              reviewedAt: f.reviewedAt ?? undefined,
-            }));
-        }
-
-        const summary = fullReport.summaryJson;
-        const byArticle = summary?.findings_by_article;
-        if (!byArticle || !Array.isArray(byArticle)) return [];
-        return byArticle.flatMap((art: { article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }> }, idxBase: number) => {
-          if (!art?.top_findings) return [];
-          return (art.top_findings as Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }>)
-            .filter((f) => f != null)
-            .map((f, idx) => ({
-              id: `summary-${art.article_id}-${idxBase}-${idx}`,
-              articleId: art.article_id,
-              titleAr: f.title_ar ?? '—',
-              severity: f.severity ?? 'info',
-              confidence: f.confidence ?? 0,
-              evidenceSnippet: f.evidence_snippet ?? '',
-              source: 'ai' as const,
-            }));
-        });
-      };
-
-      const pdfFindings = buildPdfFindings();
-      const doc = (
-        <AnalysisReportPdf
-          data={{
-            jobId: fullReport.jobId,
-            scriptTitle: fullReport.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
-            clientName: fullReport.clientName || (isAr ? 'عميل' : 'Client'),
-            createdAt: fullReport.createdAt,
-            findings: pdfFindings,
-            lang: isAr ? 'ar' : 'en',
-          }}
-          dateFormat={settings?.platform?.dateFormat}
-          branding={{
-            logoUrl: '/loginlogo.png',
-            footerLogoUrl: '/footer.png',
-            orgNameAr: settings?.branding?.orgNameAr,
-            orgNameEn: settings?.branding?.orgNameEn,
-            footerNoteAr: settings?.branding?.footerNoteAr,
-            footerNoteEn: settings?.branding?.footerNoteEn,
-          }}
-        />
-      );
-
-      const blob = await pdf(doc).toBlob();
-      const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objectUrl;
-      const safeTitle = (fullReport.scriptTitle || (isAr ? 'تقرير' : 'report')).replace(/[\\/:*?"<>|]/g, ' ').replace(/\s+/g, '_').slice(0, 80);
-      const datePart = new Date().toISOString().slice(0, 10);
-      a.download = `raawi_report_${safeTitle}_${datePart}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(objectUrl);
+      await downloadAnalysisPdf({
+        scriptTitle: fullReport.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
+        clientName: fullReport.clientName || (isAr ? 'عميل' : 'Client'),
+        createdAt: fullReport.createdAt,
+        findings,
+        findingsByArticle: fullReport.summaryJson?.findings_by_article,
+        lang: isAr ? 'ar' : 'en',
+        dateFormat: settings?.platform?.dateFormat,
+      });
 
       toast.success(isAr ? 'تم تنزيل PDF' : 'PDF downloaded');
     } catch (err: any) {

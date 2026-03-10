@@ -14,10 +14,10 @@ import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
 import { Plus, Search, FileDown, FileUp, FileText, Edit2, Trash2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate, formatDateTime } from '@/utils/dateFormat';
-import { escapeHtmlSafe } from '@/utils/escapeHtml';
+import { formatDate } from '@/utils/dateFormat';
 import { lexiconApi } from '@/api';
 import type { LexiconHistoryEntry } from '@/api/models';
+import { downloadGlossaryPdf } from '@/components/reports/glossary/download';
 
 export function Glossary() {
   const { t, lang } = useLangStore();
@@ -81,119 +81,12 @@ export function Glossary() {
   const handleExportPdf = async () => {
     setExportingPdf(true);
     try {
-      // 1. Fetch Template
-      const response = await fetch('/templates/glossary-report-template.html');
-      const template = await response.text();
-
-      const isAr = lang === 'ar';
-      const baseUrl = window.location.origin;
-
-      // Images
-      const loginLogo = `${baseUrl}/loginlogo.png`;
-      const footerImg = `${baseUrl}/footer.png`;
-      const dashLogo = `${baseUrl}/loginlogo.png`;
-
-      // 2. Prepare Data
-      // Map terms to simple objects for template
-      const termsData = filteredTerms.map(t => ({
-        term: t.term,
-        description: t.description || '',
-        type: t.term_type === 'regex' ? (isAr ? 'تعبير' : 'Regex') : (t.term_type === 'phrase' ? (isAr ? 'عبارة' : 'Phrase') : (isAr ? 'كلمة' : 'Word')),
-        category: t.category,
-        severity: t.severity_floor,
-        severityClass: t.severity_floor === 'Critical' ? 'badge-error' : (t.severity_floor === 'High' ? 'badge-warning' : 'badge-outline'),
-        mode: t.enforcement_mode === 'mandatory_finding' ? (isAr ? 'إلزامي' : 'Mandatory') : (isAr ? 'إشارة' : 'Signal'),
-        modeClass: t.enforcement_mode === 'mandatory_finding' ? 'badge-error' : 'badge-warning',
-        articleId: isAr ? `مادة ${t.gcam_article_id}` : `Art ${t.gcam_article_id}`,
-        atomId: t.gcam_atom_id ? `(${t.gcam_atom_id})` : '',
-        articleTitle: t.gcam_article_title_ar || '',
-      }));
-
-      // Stats
-      const total = activeTerms.length;
-      const soft = activeTerms.filter(t => t.enforcement_mode === 'soft_signal').length;
-      const mandatory = activeTerms.filter(t => t.enforcement_mode === 'mandatory_finding').length;
-
-      // 3. Replacements
-      let html = template;
-      const replacements: Record<string, string> = {
-        '{{lang}}': isAr ? 'ar' : 'en',
-        '{{dir}}': isAr ? 'rtl' : 'ltr',
-        '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
-        '{{generationTimestamp}}': formatDateTime(new Date(), { lang: isAr ? 'ar' : 'en' }),
-        '{{loginLogoBase64}}': loginLogo,
-        '{{footerImageBase64}}': footerImg,
-        '{{dashboardLogoBase64}}': dashLogo,
-
-        // Labels
-        '{{labels.reportTitle}}': isAr ? 'تقرير المصطلحات' : 'Glossary Report',
-        '{{labels.subtitle}}': isAr ? 'نظام إدارة المصطلحات' : 'Lexicon Management System',
-        '{{labels.totalTerms}}': isAr ? 'إجمالي المصطلحات' : 'Total Terms',
-        '{{labels.date}}': isAr ? 'التاريخ' : 'Date',
-        '{{labels.summary}}': isAr ? 'ملخص الإحصائيات' : 'Summary Statistics',
-        '{{labels.termsDetails}}': isAr ? 'تفاصيل المصطلحات' : 'Terms Details',
-        '{{labels.softSignals}}': isAr ? 'إشارات تنبيهية' : 'Soft Signals',
-        '{{labels.mandatory}}': isAr ? 'مخالفات إلزامية' : 'Mandatory Violations',
-        '{{labels.term}}': isAr ? 'المصطلح' : 'Term',
-        '{{labels.type}}': isAr ? 'النوع' : 'Type',
-        '{{labels.category}}': isAr ? 'التصنيف' : 'Category',
-        '{{labels.severity}}': isAr ? 'الخطورة' : 'Severity',
-        '{{labels.mode}}': isAr ? 'وضع التنفيذ' : 'Mode',
-        '{{labels.article}}': isAr ? 'المادة' : 'Article',
-
-        // Stats Values
-        '{{stats.total}}': String(total),
-        '{{stats.soft}}': String(soft),
-        '{{stats.mandatory}}': String(mandatory),
-        '{{totalTerms}}': String(total),
-      };
-
-      Object.entries(replacements).forEach(([key, val]) => {
-        html = html.split(key).join(val);
+      await downloadGlossaryPdf({
+        terms: filteredTerms,
+        lang: lang === 'ar' ? 'ar' : 'en',
+        dateFormat: settings?.platform?.dateFormat,
       });
-
-      // 4. Generate Table Rows
-      const rowsHtml = termsData.map(item => `
-        <tr>
-            <td>
-                <div class="font-bold">${escapeHtmlSafe(item.term)}</div>
-                ${item.description ? `<div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${escapeHtmlSafe(item.description)}</div>` : ''}
-            </td>
-            <td><span class="badge badge-outline">${escapeHtmlSafe(item.type)}</span></td>
-            <td><span class="badge badge-outline">${escapeHtmlSafe(item.category)}</span></td>
-            <td>
-                <span class="badge ${item.severityClass}">${escapeHtmlSafe(String(item.severity))}</span>
-            </td>
-            <td>
-                <span class="badge ${item.modeClass}">${escapeHtmlSafe(item.mode)}</span>
-            </td>
-            <td>
-                <div style="font-weight: 600;">${escapeHtmlSafe(item.articleId)} ${escapeHtmlSafe(item.atomId)}</div>
-                ${item.articleTitle ? `<div style="font-size: 9px; color: #6B7280;">${escapeHtmlSafe(item.articleTitle)}</div>` : ''}
-            </td>
-        </tr>
-      `).join('');
-
-      // Replace loop block
-      const loopRegex = /{{#each terms}}([\s\S]*?){{\/each}}/m;
-      html = html.replace(loopRegex, rowsHtml);
-
-      // 5. Open Window
-      const win = window.open('', '_blank');
-      if (!win) {
-        toast.error(isAr ? 'تم حظر النافذة المنبثقة' : 'Popup blocked');
-        return;
-      }
-
-      setTimeout(() => {
-        win.document.write(html);
-        win.document.close();
-
-        // Delay print to allow images to load
-        setTimeout(() => {
-          win.print();
-        }, 500);
-      }, 100);
+      toast.success(lang === 'ar' ? 'تم تنزيل التقرير' : 'Report downloaded');
 
     } catch (err: unknown) {
       console.error(err);

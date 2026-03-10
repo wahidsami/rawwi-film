@@ -21,9 +21,9 @@ import { ArrowLeft, Trash2, FileText, Edit, Upload, User } from 'lucide-react';
 
 import { usersApi } from '@/api';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate, formatDateTime } from '@/utils/dateFormat';
-import { escapeHtmlSafe } from '@/utils/escapeHtml';
-import { normalizeScriptStatusForDisplay, normalizeScriptStatusForFilter } from '@/utils/scriptStatus';
+import { formatDate } from '@/utils/dateFormat';
+import { normalizeScriptStatusForDisplay } from '@/utils/scriptStatus';
+import { downloadClientDetailsPdf } from '@/components/reports/client-details/download';
 
 export function ClientDetails() {
   const { id } = useParams<{ id: string }>();
@@ -337,141 +337,15 @@ export function ClientDetails() {
     if (!company) return;
     setExportingPdf(true);
     try {
-      // 1. Fetch Template
-      const response = await fetch('/templates/client-detail-report-template.html');
-      const template = await response.text();
-
-      const isAr = lang === 'ar';
-      const baseUrl = window.location.origin;
-
-      // Images
-      const loginLogo = `${baseUrl}/loginlogo.png`;
-      const footerImg = `${baseUrl}/footer.png`;
-      const dashLogo = `${baseUrl}/loginlogo.png`;
-
-      // Client Logo (handle absolute/relative paths)
-      let clientLogo = company.logoUrl ?? company.avatarUrl ?? '';
-      if (clientLogo && !clientLogo.startsWith('http')) {
-        // If it's a relative path or storage path, we might need a placeholder or handle it.
-        // For now assume if it's not http, it might be a relative path from public?
-        // Actually, if it comes from storage it's usually a full URL. 
-        // If empty, template handles it.
-      }
-      const clientLogoVisible = !!clientLogo;
-
-      // 2. Prepare Scripts Data
-      const scriptsData = companyScripts.map(s => {
-        const norm = normalizeScriptStatusForFilter(s.status);
-        let statusClass = 'badge-outline';
-        if (norm === 'approved') statusClass = 'badge-success';
-        if (norm === 'in_review' || norm === 'review_required') statusClass = 'badge-warning';
-        if (norm === 'rejected') statusClass = 'badge-danger';
-
-        return {
-          title: s.title,
-          type: s.type,
-          date: s.createdAt,
-          assignee: availableUsers.find(u => u.id === s.assigneeId)?.name || (isAr ? 'غير مسند' : 'Unassigned'),
-          reportsCount: reportCountByScriptId[s.id] ?? 0,
-          status: normalizeScriptStatusForDisplay(s.status),
-          statusClass
-        };
+      await downloadClientDetailsPdf({
+        company,
+        scripts: companyScripts,
+        reportCountByScriptId,
+        users: availableUsers.map((u) => ({ id: u.id, name: u.name || u.email || "Unknown" })),
+        lang: lang === 'ar' ? 'ar' : 'en',
+        dateFormat: settings?.platform?.dateFormat,
       });
-
-      // Stats (normalized so API casing doesn't matter)
-      const total = companyScripts.length;
-      const approved = companyScripts.filter(s => normalizeScriptStatusForFilter(s.status) === 'approved').length;
-      const inReview = companyScripts.filter(s => ['in_review', 'review_required'].includes(normalizeScriptStatusForFilter(s.status))).length;
-      const draft = companyScripts.filter(s => normalizeScriptStatusForFilter(s.status) === 'draft').length;
-
-      // 3. Replacements
-      let html = template;
-      const replacements: Record<string, string> = {
-        '{{lang}}': isAr ? 'ar' : 'en',
-        '{{dir}}': isAr ? 'rtl' : 'ltr',
-        '{{clientName}}': isAr ? company.nameAr : company.nameEn,
-        '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
-        '{{generationTimestamp}}': formatDateTime(new Date(), { lang: isAr ? 'ar' : 'en' }),
-        '{{loginLogoBase64}}': loginLogo,
-        '{{footerImageBase64}}': footerImg,
-        '{{dashboardLogoBase64}}': dashLogo,
-        '{{clientLogoBase64}}': clientLogo,
-
-        // Labels
-        '{{labels.reportTitle}}': isAr ? 'تقرير العميل التفصيلي' : 'Client Detailed Report',
-        '{{labels.clientProfile}}': isAr ? 'ملف العميل' : 'Client Profile',
-        '{{labels.scriptsOverview}}': isAr ? 'ملخص النصوص' : 'Scripts Overview',
-        '{{labels.scriptsList}}': isAr ? 'قائمة النصوص' : 'Scripts List',
-        '{{labels.totalScripts}}': isAr ? 'إجمالي النصوص' : 'Total Scripts',
-        '{{labels.generatedOn}}': isAr ? 'تاريخ التقرير' : 'Generated On',
-        '{{labels.clientName}}': isAr ? 'اسم العميل' : 'Client Name',
-        '{{labels.representative}}': isAr ? 'المندوب' : 'Representative',
-        '{{labels.email}}': isAr ? 'البريد الإلكتروني' : 'Email',
-        '{{labels.phone}}': isAr ? 'الهاتف' : 'Phone',
-        '{{labels.registrationDate}}': isAr ? 'تاريخ التسجيل' : 'Registration Date',
-        '{{labels.status}}': isAr ? 'الحالة' : 'Status',
-        '{{labels.approved}}': isAr ? 'تمت الموافقة' : 'Approved',
-        '{{labels.inReview}}': isAr ? 'قيد المراجعة' : 'In Review',
-        '{{labels.draft}}': isAr ? 'مسودة' : 'Draft',
-        '{{labels.scriptTitle}}': isAr ? 'عنوان النص' : 'Script Title',
-        '{{labels.type}}': isAr ? 'النوع' : 'Type',
-        '{{labels.date}}': isAr ? 'التاريخ' : 'Date',
-        '{{labels.assignee}}': isAr ? 'المسند إليه' : 'Assignee',
-        '{{labels.reports}}': isAr ? 'التقارير' : 'Reports',
-
-        // Client Data
-        '{{client.representative}}': company.representativeName,
-        '{{client.email}}': company.email,
-        '{{client.phone}}': company.phone || company.mobile || '—',
-        '{{client.registrationDate}}': company.createdAt,
-        '{{client.status}}': total > 0 ? (isAr ? 'نشط' : 'Active') : (isAr ? 'غير نشط' : 'Inactive'),
-
-        // Stats Values
-        '{{stats.totalScripts}}': String(total),
-        '{{stats.approvedScripts}}': String(approved),
-        '{{stats.inReviewScripts}}': String(inReview),
-        '{{stats.draftScripts}}': String(draft),
-      };
-
-      Object.entries(replacements).forEach(([key, val]) => {
-        html = html.split(key).join(val);
-      });
-
-      // Conditional Logo
-      if (clientLogoVisible) {
-        html = html.replace('{{#if clientLogoVisible}}', '').replace('{{/if}}', '').replace('{{#if clientLogoVisible}}', '').replace('{{/if}}', '');
-      } else {
-        // Remove blocks
-        html = html.replace(/{{#if clientLogoVisible}}[\s\S]*?{{\/if}}/g, '');
-      }
-
-      // 4. Generate Rows
-      const rowsHtml = scriptsData.map(item => `
-        <tr>
-            <td><div class="font-bold">${escapeHtmlSafe(item.title)}</div></td>
-            <td>${escapeHtmlSafe(item.type)}</td>
-            <td>${escapeHtmlSafe(item.date)}</td>
-            <td><div style="font-size: 10px;">${escapeHtmlSafe(item.assignee)}</div></td>
-            <td style="text-align: center;"><span style="font-weight: 600;">${item.reportsCount}</span></td>
-            <td><span class="badge ${item.statusClass}">${escapeHtmlSafe(String(item.status))}</span></td>
-        </tr>
-      `).join('');
-
-      const loopRegex = /{{#each scripts}}([\s\S]*?){{\/each}}/m;
-      html = html.replace(loopRegex, rowsHtml);
-
-      // 5. Open Window
-      const win = window.open('', '_blank');
-      if (!win) {
-        toast.error(isAr ? 'تم حظر النافذة المنبثقة' : 'Popup blocked');
-        return;
-      }
-
-      setTimeout(() => {
-        win.document.write(html);
-        win.document.close();
-        setTimeout(() => win.print(), 500);
-      }, 100);
+      toast.success(lang === 'ar' ? 'تم تنزيل التقرير' : 'Report downloaded');
 
     } catch (err: unknown) {
       if (import.meta.env.DEV) console.error(err);

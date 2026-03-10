@@ -10,8 +10,8 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Download, FileText, ChevronDown, ChevronRight, Filter } from 'lucide-react';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate, formatDateTime } from '@/utils/dateFormat';
-import { escapeHtmlSafe } from '@/utils/escapeHtml';
+import { formatDateTime } from '@/utils/dateFormat';
+import { downloadAuditPdf } from '@/components/reports/audit/download';
 
 const PAGE_SIZE = 20;
 const EVENT_TYPES = [
@@ -118,140 +118,21 @@ export function Audit() {
   const handleExportPdf = async () => {
     setExporting(true);
     try {
-      // 1. Fetch Template
-      const response = await fetch('/templates/audit-report-template.html');
-      const template = await response.text();
-
-      const isAr = lang === 'ar';
-      const baseUrl = window.location.origin;
-
-      // Images
-      const loginLogo = `${baseUrl}/loginlogo.png`;
-      const footerImg = `${baseUrl}/footer.png`;
-      const dashLogo = `${baseUrl}/loginlogo.png`;
-
-      // 2. Fetch ALL Data (not just current page)
       const allDataRes = await auditService.list({
         ...filters,
         page: 1,
-        pageSize: 1000, // Reasonable limit for browser print
+        pageSize: 1000,
       });
-      const allEvents = allDataRes.data;
-
-      // 3. Prepare Data
-      const eventsData = allEvents.map(row => ({
-        eventType: row.eventType,
-        actorName: row.actorName || '—',
-        actorRole: row.actorRole || '',
-        occurredAt: formatWhen(row.occurredAt),
-        targetType: row.targetType,
-        targetLabel: row.targetLabel || '',
-        resultStatus: row.resultStatus,
-        statusClass: row.resultStatus === 'failure' ? 'badge-error' : 'badge-success',
-        metadata: row.metadata ? JSON.stringify(row.metadata).slice(0, 100) + (JSON.stringify(row.metadata).length > 100 ? '...' : '') : '',
-        align: isAr ? 'right' : 'left'
-      }));
-
-      // 4. Replacements
-      let html = template;
-      const replacements: Record<string, string> = {
-        '{{lang}}': isAr ? 'ar' : 'en',
-        '{{dir}}': isAr ? 'rtl' : 'ltr',
-        '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
-        '{{generationTimestamp}}': formatDateTime(new Date(), { lang: isAr ? 'ar' : 'en' }),
-        '{{loginLogoBase64}}': loginLogo,
-        '{{footerImageBase64}}': footerImg,
-        '{{dashboardLogoBase64}}': dashLogo,
-        '{{totalEvents}}': String(allDataRes.total),
-
-        // Labels
-        '{{labels.reportTitle}}': isAr ? 'سجل التدقيق' : 'Audit Log Report',
-        '{{labels.subtitle}}': isAr ? 'نظام راوي' : 'Raawi System',
-        '{{labels.totalEvents}}': isAr ? 'إجمالي السجلات' : 'Total Events',
-        '{{labels.generatedOn}}': isAr ? 'تم الإنشاء في' : 'Generated On',
-        '{{labels.dateRange}}': isAr ? 'النطاق الزمني' : 'Date Range',
-        '{{labels.eventType}}': isAr ? 'نوع الحدث' : 'Event Type',
-        '{{labels.targetType}}': isAr ? 'نوع الهدف' : 'Target Type',
-        '{{labels.resultStatus}}': isAr ? 'الحالة' : 'Result Status',
-        '{{labels.search}}': isAr ? 'بحث' : 'Search',
-
-        // Table Headers
-        '{{labels.event}}': isAr ? 'الحدث' : 'Event',
-        '{{labels.who}}': isAr ? 'المستخدم' : 'Who',
-        '{{labels.when}}': isAr ? 'التوقيت' : 'When',
-        '{{labels.target}}': isAr ? 'الهدف' : 'Target',
-        '{{labels.result}}': isAr ? 'النتيجة' : 'Result',
-        '{{labels.details}}': isAr ? 'التفاصيل' : 'Details',
-
-        // Filters Values
-        '{{filters.dateRange}}': `${filters.dateFrom || 'Start'} — ${filters.dateTo || 'Now'}`,
-        '{{filters.eventType}}': filters.eventType || '',
-        '{{filters.targetType}}': filters.targetType || '',
-        '{{filters.resultStatus}}': filters.resultStatus || '',
-        '{{filters.search}}': filters.q || '',
-      };
-
-      Object.entries(replacements).forEach(([key, val]) => {
-        html = html.split(key).join(val);
+      await downloadAuditPdf({
+        events: allDataRes.data,
+        total: allDataRes.total,
+        lang: lang === 'ar' ? 'ar' : 'en',
+        dateFormat: settings?.platform?.dateFormat,
       });
-
-      // Conditional Filters Blocks
-      ['eventType', 'targetType', 'resultStatus', 'search'].forEach(key => {
-        // Simple hack: if value is empty in replacements, we rely on handlebars-like regex to remove block?
-        // Actually, my regex below handles "if filter.key". 
-        // But I need to ensure the block key matches.
-        // Let's do a simple replace for blocks if the value was empty string.
-        const val = (filters as any)[key];
-        if (!val) {
-          const regex = new RegExp(`{{#if filters.${key}}}[\\s\\S]*?{{/if}}`, 'g');
-          html = html.replace(regex, '');
-        } else {
-          html = html.replace(`{{#if filters.${key}}}`, '').replace('{{/if}}', '');
-        }
-      });
-
-
-      // 5. Generate Rows
-      const rowsHtml = eventsData.map(item => `
-        <tr>
-            <td><div class="font-bold">${escapeHtmlSafe(item.eventType)}</div></td>
-            <td>
-                <div>${escapeHtmlSafe(item.actorName)}</div>
-                <div style="color: #6B7280; font-size: 8px;">${escapeHtmlSafe(item.actorRole)}</div>
-            </td>
-            <td dir="ltr" style="text-align: ${item.align};">${escapeHtmlSafe(item.occurredAt)}</td>
-            <td>
-                <span style="font-weight: 600;">${escapeHtmlSafe(item.targetType)}</span>
-                ${item.targetLabel ? `<span style="color: #6B7280;">: ${escapeHtmlSafe(item.targetLabel)}</span>` : ''}
-            </td>
-            <td>
-                <span class="badge ${item.statusClass}">${escapeHtmlSafe(item.resultStatus)}</span>
-            </td>
-            <td>
-                <div style="font-family: monospace; white-space: pre-wrap; font-size: 8px; color: #4B5563;">${escapeHtmlSafe(item.metadata)}</div>
-            </td>
-        </tr>
-      `).join('');
-
-      const loopRegex = /{{#each events}}([\s\S]*?){{\/each}}/m;
-      html = html.replace(loopRegex, rowsHtml);
-
-      // 6. Open Window
-      const win = window.open('', '_blank');
-      if (!win) {
-        toast.error(isAr ? 'تم حظر النافذة المنبثقة' : 'Popup blocked');
-        return;
-      }
-
-      setTimeout(() => {
-        win.document.write(html);
-        win.document.close();
-        setTimeout(() => win.print(), 500);
-      }, 100);
-
+      toast.success(lang === 'ar' ? 'تم تنزيل التقرير' : 'Report downloaded');
     } catch (err: unknown) {
-      console.error(err);
-      toast.error(err instanceof Error ? err.message : 'PDF export failed');
+      setError(err instanceof Error ? err.message : 'Export failed');
+      toast.error(err instanceof Error ? err.message : 'Export failed');
     } finally {
       setExporting(false);
     }

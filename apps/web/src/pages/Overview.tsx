@@ -30,8 +30,7 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import toast from 'react-hot-toast';
-import { pdf } from '@react-pdf/renderer';
-import { StatusReportPdf } from '@/components/reports/StatusReportPdf';
+import { downloadStatusPdf } from '@/components/reports/status/download';
 
 export function Overview() {
   const { t, lang } = useLangStore();
@@ -72,42 +71,12 @@ export function Overview() {
     if (!stats) return;
     setExportingReport(true);
     try {
-      const origin = window.location.origin;
-      let coverImageDataUrl: string | null = null;
-      try {
-        const res = await fetch(`${origin}/cover.jpg`);
-        if (res.ok) {
-          const blob = await res.blob();
-          coverImageDataUrl = await new Promise<string>((resolve, reject) => {
-            const r = new FileReader();
-            r.onload = () => resolve(r.result as string);
-            r.onerror = reject;
-            r.readAsDataURL(blob);
-          });
-        }
-      } catch (_) {
-        // fallback: no cover image
-      }
-
-      const doc = (
-        <StatusReportPdf
-          stats={stats}
-          activities={activities}
-          lang={lang === 'ar' ? 'ar' : 'en'}
-          dateFormat={settings?.platform?.dateFormat}
-          coverImageDataUrl={coverImageDataUrl}
-          generatedAt={new Date().toISOString()}
-        />
-      );
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `status_report_${new Date().toISOString().slice(0, 10)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      await downloadStatusPdf({
+        stats,
+        activities,
+        lang: lang === 'ar' ? 'ar' : 'en',
+        dateFormat: settings?.platform?.dateFormat,
+      });
       toast.success(lang === 'ar' ? 'تم تنزيل التقرير' : 'Report downloaded');
     } catch (err: unknown) {
       console.error(err);

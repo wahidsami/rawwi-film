@@ -30,8 +30,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate } from '@/utils/dateFormat';
 import { cn } from '@/utils/cn';
 import { usersApi } from '@/api';
-import { pdf } from '@react-pdf/renderer';
-import { ClientsReportPdf } from '@/components/reports/ClientsReportPdf';
+import { downloadClientsPdf } from '@/components/reports/clients/download';
 
 export function Clients() {
   const { t, lang } = useLangStore();
@@ -74,74 +73,12 @@ export function Clients() {
   const handleExportPdf = async () => {
     setExportingPdf(true);
     try {
+      await downloadClientsPdf({
+        companies: filteredClients,
+        lang: lang === 'ar' ? 'ar' : 'en',
+        dateFormat: settings?.platform?.dateFormat,
+      });
       const isAr = lang === 'ar';
-      const origin = window.location.origin;
-      let coverImageDataUrl: string | null = null;
-      let logoDataUrl: string | null = null;
-      try {
-        const [coverRes, logoRes] = await Promise.all([
-          fetch(`${origin}/cover.jpg`),
-          fetch(`${origin}/dashboardlogo.png`),
-        ]);
-        if (coverRes.ok) {
-          const blob = await coverRes.blob();
-          coverImageDataUrl = await new Promise<string>((resolve, reject) => {
-            const r = new FileReader();
-            r.onload = () => resolve(r.result as string);
-            r.onerror = reject;
-            r.readAsDataURL(blob);
-          });
-        }
-        if (logoRes.ok) {
-          const blob = await logoRes.blob();
-          logoDataUrl = await new Promise<string>((resolve, reject) => {
-            const r = new FileReader();
-            r.onload = () => resolve(r.result as string);
-            r.onerror = reject;
-            r.readAsDataURL(blob);
-          });
-        }
-      } catch (_) {}
-
-      const clientsData = filteredClients.map(c => ({
-        name: isAr ? c.nameAr : c.nameEn,
-        nameSecondary: isAr ? c.nameEn : c.nameAr,
-        representative: c.representativeName ?? '',
-        email: c.email ?? '',
-        phone: c.phone || c.mobile || '—',
-        registrationDate: c.createdAt ?? '',
-        scriptsCount: c.scriptsCount ?? 0,
-        status: (c.scriptsCount ?? 0) > 0 ? (isAr ? 'نشط' : 'Active') : (isAr ? 'غير نشط' : 'Inactive'),
-      }));
-
-      const totalClients = companies.length;
-      const totalScripts = companies.reduce((acc, c) => acc + (c.scriptsCount || 0), 0);
-      const avgScripts = totalClients > 0 ? Math.round((totalScripts / totalClients) * 10) / 10 : 0;
-      const activeClients = companies.filter(c => (c.scriptsCount || 0) > 0).length;
-
-      const doc = (
-        <ClientsReportPdf
-          clientsData={clientsData}
-          totalClients={totalClients}
-          totalScripts={totalScripts}
-          avgScripts={avgScripts}
-          activeClients={activeClients}
-          lang={isAr ? 'ar' : 'en'}
-          dateFormat={settings?.platform?.dateFormat}
-          coverImageDataUrl={coverImageDataUrl}
-          logoUrl={logoDataUrl}
-          generatedAt={new Date().toISOString()}
-        />
-      );
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `clients_report_${new Date().toISOString().slice(0, 10)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
       toast.success(isAr ? 'تم تنزيل التقرير' : 'Report downloaded');
     } catch (err: unknown) {
       console.error(err);
