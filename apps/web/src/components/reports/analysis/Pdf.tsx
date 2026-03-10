@@ -31,14 +31,26 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
 }) => {
   const isAr = data.lang === "ar";
   const rtl = isAr ? s.rtl : {};
-  const groups = data.findings.reduce<Record<number, AnalysisPdfFinding[]>>((acc, f) => {
+  const safeFindings: AnalysisPdfFinding[] = (data.findings || [])
+    .filter((f): f is AnalysisPdfFinding => !!f)
+    .map((f, idx) => ({
+      ...f,
+      id: f.id ?? `finding-${idx}`,
+      articleId: Number.isFinite(f.articleId) ? f.articleId : 0,
+      titleAr: f.titleAr ?? "—",
+      severity: f.severity ?? "info",
+      confidence: f.confidence ?? 0,
+      evidenceSnippet: f.evidenceSnippet ?? "",
+    }));
+
+  const groups = safeFindings.reduce<Record<number, AnalysisPdfFinding[]>>((acc, f) => {
     const key = Number.isFinite(f.articleId) ? f.articleId : 0;
     if (!acc[key]) acc[key] = [];
     acc[key].push(f);
     return acc;
   }, {});
 
-  const sevCount = data.findings.reduce<Record<string, number>>((acc, f) => {
+  const sevCount = safeFindings.reduce<Record<string, number>>((acc, f) => {
     const k = (f.severity || "info").toLowerCase();
     acc[k] = (acc[k] || 0) + 1;
     return acc;
@@ -85,7 +97,7 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
         {logoUrl ? <Image src={logoUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 10 }} /> : null}
         <Text style={[s.title, rtl]}>{isAr ? "تفاصيل التقرير" : "Report Details"}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? `النص: ${data.scriptTitle}` : `Script: ${data.scriptTitle}`}</Text>
-        <Text style={[s.subtitle, rtl]}>{isAr ? `إجمالي الملاحظات: ${data.findings.length}` : `Total findings: ${data.findings.length}`}</Text>
+        <Text style={[s.subtitle, rtl]}>{isAr ? `إجمالي الملاحظات: ${safeFindings.length}` : `Total findings: ${safeFindings.length}`}</Text>
 
         <View style={s.row}>
           <View style={s.stat}><Text style={s.statValue}>{sevCount.critical || 0}</Text><Text style={s.statLabel}>{isAr ? "حرجة" : "Critical"}</Text></View>
@@ -113,8 +125,8 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                 ? `مادة ${articleId}: ${getPolicyArticle(Number(articleId))?.title_ar ?? ""}`
                 : `Article ${articleId}${getPolicyArticle(Number(articleId))?.title_ar ? ` - ${getPolicyArticle(Number(articleId))?.title_ar}` : ""}`}
             </Text>
-            {list.map((f, idx) => (
-              <View key={`${f.id}-${idx}`} style={s.finding}>
+            {list.filter(Boolean).map((f, idx) => (
+              <View key={`${f?.id ?? `finding-${idx}`}-${idx}`} style={s.finding}>
                 <Text style={[s.findingTitle, rtl]}>{f.titleAr || "—"}</Text>
                 <Text style={[s.findingSnippet, rtl]}>
                   {isAr ? "النص المخالف: " : "Violation text: "}
