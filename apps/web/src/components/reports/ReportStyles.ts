@@ -1,21 +1,22 @@
 import { StyleSheet, Font } from "@react-pdf/renderer";
 
-// Register fonts
+const fontBase = typeof window !== "undefined" ? window.location.origin : "";
+
 Font.register({
   family: "Cairo",
   fonts: [
-    { src: "/fonts/Cairo-Regular.ttf" },
-    { src: "/fonts/Cairo-Bold.ttf", fontWeight: "bold" },
+    { src: `${fontBase}/fonts/Cairo-Regular.ttf` },
+    { src: `${fontBase}/fonts/Cairo-Bold.ttf`, fontWeight: "bold" },
   ],
 });
 
 Font.register({
   family: "Roboto",
   fonts: [
-    { src: "/fonts/Roboto-Regular.ttf" },
-    { src: "/fonts/Roboto-Medium.ttf", fontWeight: "medium" },
-    { src: "/fonts/Roboto-Bold.ttf", fontWeight: "bold" },
-    { src: "/fonts/Roboto-Italic.ttf", fontStyle: "italic" },
+    { src: `${fontBase}/fonts/Roboto-Regular.ttf` },
+    { src: `${fontBase}/fonts/Roboto-Medium.ttf`, fontWeight: "medium" },
+    { src: `${fontBase}/fonts/Roboto-Bold.ttf`, fontWeight: "bold" },
+    { src: `${fontBase}/fonts/Roboto-Italic.ttf`, fontStyle: "italic" },
   ],
 });
 

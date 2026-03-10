@@ -473,8 +473,9 @@ export function Results() {
         reviewedAt: f.reviewedAt ?? undefined,
       }));
     }
-
-    return summary.findings_by_article.flatMap((art, idxBase) =>
+    const byArticle = summary?.findings_by_article;
+    if (!byArticle || !Array.isArray(byArticle)) return [];
+    return byArticle.flatMap((art, idxBase) =>
       art.top_findings.map((f, idx) => ({
         id: `summary-${art.article_id}-${idxBase}-${idx}`,
         articleId: art.article_id,
@@ -505,6 +506,28 @@ export function Results() {
     if (!report) return;
     setIsDownloadingPdf(true);
     try {
+      // Fetch images as data URLs so pdf().toBlob() can render them (relative URLs often fail in blob context)
+      const toDataUrl = async (url: string): Promise<string | null> => {
+        try {
+          const base = window.location.origin;
+          const res = await fetch(`${base}${url.startsWith('/') ? url : `/${url}`}`);
+          if (!res.ok) return null;
+          const blob = await res.blob();
+          return await new Promise<string | null>((resolve) => {
+            const r = new FileReader();
+            r.onloadend = () => resolve(typeof r.result === 'string' ? r.result : null);
+            r.onerror = () => resolve(null);
+            r.readAsDataURL(blob);
+          });
+        } catch {
+          return null;
+        }
+      };
+      const [coverDataUrl, logoDataUrl] = await Promise.all([
+        toDataUrl('/cover.jpg'),
+        toDataUrl('/dashboardlogo.png'),
+      ]);
+
       const pdfFindings = buildPdfFindings();
       const doc = (
         <AnalysisReportPdf
@@ -518,13 +541,14 @@ export function Results() {
           }}
           dateFormat={dateFormat}
           branding={{
-            logoUrl: '/loginlogo.png',
+            logoUrl: logoDataUrl ?? undefined,
             footerLogoUrl: '/footer.png',
             orgNameAr: settings?.branding?.orgNameAr,
             orgNameEn: settings?.branding?.orgNameEn,
             footerNoteAr: settings?.branding?.footerNoteAr,
             footerNoteEn: settings?.branding?.footerNoteEn,
           }}
+          coverImageDataUrl={coverDataUrl}
         />
       );
       const blob = await pdf(doc).toBlob();
@@ -760,6 +784,7 @@ export function Results() {
           </div>
         </div>
         <div className="flex items-center gap-3 print:hidden">
+          {/* Direct PDF download (blob + link); fallback to print dialog on error */}
           <Button variant="outline" onClick={handleDownloadPdf} className="h-10 px-4 flex gap-2" disabled={isDownloadingPdf}>
             {isDownloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
             {isDownloadingPdf ? (lang === 'ar' ? 'جاري تجهيز PDF...' : 'Preparing PDF...') : (lang === 'ar' ? 'تنزيل PDF' : 'Download PDF')}

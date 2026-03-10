@@ -38,19 +38,23 @@ export interface ReportBrandingProps {
     showDecisionBadge?: boolean;
 }
 
+/** When provided, used as Image src for the cover (data URL). Avoids relative URL failures in pdf().toBlob(). */
+export type CoverImageDataUrl = string | null | undefined;
+
 export const AnalysisReportPdf: React.FC<{
     data: AnalysisReportData;
     dateFormat?: string;
     branding?: ReportBrandingProps;
+    coverImageDataUrl?: CoverImageDataUrl;
 }> = ({
     data,
     dateFormat,
     branding,
+    coverImageDataUrl,
 }) => {
     const { scriptTitle, clientName, findings, lang = "en" } = data;
     const isAr = lang === "ar";
     const formatOpts = { lang, format: dateFormat };
-    const coverBackground = "/cover.jpg";
     const showDecisionBadge = branding?.showDecisionBadge !== false;
 
     // Group findings by severity for summary
@@ -80,8 +84,11 @@ export const AnalysisReportPdf: React.FC<{
         <Document>
             {/* Cover Page */}
             <Page size="A4" wrap={false} style={[extendedStyles.coverPage, isAr ? styles.pageAr : {}]}>
-                {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                <Image src={coverBackground} style={extendedStyles.coverBackground} />
+                {coverImageDataUrl ? (
+                    <Image src={coverImageDataUrl} style={extendedStyles.coverBackground} />
+                ) : (
+                    <View style={[extendedStyles.coverBackground, { backgroundColor: "#1e3a5f" }]} />
+                )}
                 <View style={extendedStyles.coverOverlayMeta}>
                     <Text style={[extendedStyles.coverMetaTitle, isAr ? styles.rtlText : {}]}>
                         {isAr ? "تقرير التحليل" : "Analysis Report"}
