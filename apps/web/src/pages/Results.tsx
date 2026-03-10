@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate, formatDateLong, formatDateTime } from '@/utils/dateFormat';
 import { type AnalysisReport } from '@/services/reportService';
-import { reportsApi, findingsApi, type AnalysisFinding } from '@/api';
+import { reportsApi, findingsApi, scriptsApi, type AnalysisFinding } from '@/api';
 import type { ReviewStatus } from '@/api/models';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -16,6 +16,7 @@ import { cn } from '@/utils/cn';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
 import toast from 'react-hot-toast';
 import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
+import { downloadQuickAnalysisPdf } from '@/components/reports/quick-analysis/download';
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
@@ -62,6 +63,7 @@ export function Results() {
   const [reviewing, setReviewing] = useState(false);
   const [updateScriptStatus, setUpdateScriptStatus] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isQuickAnalysisReport, setIsQuickAnalysisReport] = useState(false);
 
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
@@ -118,6 +120,16 @@ export function Results() {
         }
         if (!cancelled) {
           setReport(r);
+          if (r.scriptId) {
+            try {
+              const script = await scriptsApi.getScript(r.scriptId);
+              if (!cancelled) setIsQuickAnalysisReport(Boolean(script?.isQuickAnalysis));
+            } catch {
+              if (!cancelled) setIsQuickAnalysisReport(false);
+            }
+          } else {
+            setIsQuickAnalysisReport(false);
+          }
           setLoading(false);
           if (r.jobId) loadFindings(r.jobId);
         }
@@ -458,15 +470,20 @@ export function Results() {
     if (!report) return;
     setIsDownloadingPdf(true);
     try {
-      await downloadAnalysisPdf({
+      const basePayload = {
         scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
         clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
         createdAt: report.createdAt,
-        findings,
+        findings: (findings || []).filter((f): f is AnalysisFinding => Boolean(f)),
         findingsByArticle: summary?.findings_by_article,
-        lang: isAr ? 'ar' : 'en',
+        lang: (isAr ? 'ar' : 'en') as const,
         dateFormat,
-      });
+      };
+      if (isQuickAnalysisReport) {
+        await downloadQuickAnalysisPdf(basePayload);
+      } else {
+        await downloadAnalysisPdf(basePayload);
+      }
       toast.success(isAr ? 'تم تنزيل PDF' : 'PDF downloaded');
     } catch (err) {
       console.error('[Results] Direct PDF download failed', err);
