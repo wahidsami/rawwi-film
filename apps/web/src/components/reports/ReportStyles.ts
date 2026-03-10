@@ -305,10 +305,9 @@ export const extendedStyles = StyleSheet.create({
     height: 842,
   },
   coverOverlayMeta: {
-    position: "absolute",
-    top: 520,
-    left: 60,
-    right: 60,
+    marginTop: 520,
+    marginLeft: 60,
+    marginRight: 60,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 14,

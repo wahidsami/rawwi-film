@@ -79,7 +79,7 @@ export const AnalysisReportPdf: React.FC<{
     return (
         <Document>
             {/* Cover Page */}
-            <Page size="A4" style={[extendedStyles.coverPage, isAr ? styles.pageAr : {}]}>
+            <Page size="A4" wrap={false} style={[extendedStyles.coverPage, isAr ? styles.pageAr : {}]}>
                 {/* eslint-disable-next-line jsx-a11y/alt-text */}
                 <Image src={coverBackground} style={extendedStyles.coverBackground} />
                 <View style={extendedStyles.coverOverlayMeta}>
