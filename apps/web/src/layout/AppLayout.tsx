@@ -42,10 +42,11 @@ export function AppLayout() {
     navigate('/login', { replace: true, state: {} });
   }, [logout, navigate]);
 
-  // Session idle timeout: logout after N minutes of no activity
+  // Session idle timeout: logout after N minutes of no activity (BUG-08: enforce minimum 60 min)
   useEffect(() => {
-    const minutes = settings?.security?.sessionTimeoutMinutes;
-    if (!minutes || minutes <= 0) return;
+    const raw = settings?.security?.sessionTimeoutMinutes ?? 60;
+    const minutes = Math.max(60, raw);
+    if (minutes <= 0) return;
 
     const scheduleLogout = () => {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);

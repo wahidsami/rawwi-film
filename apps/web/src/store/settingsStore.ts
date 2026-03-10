@@ -70,19 +70,30 @@ const defaultSettings: AppSettings = {
   }
 };
 
+/** Minimum session timeout (minutes) — BUG-08: avoid sessions expiring after only a few minutes. */
+const MIN_SESSION_TIMEOUT_MINUTES = 60;
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       settings: defaultSettings,
-      updateSettings: (newSettings) => set((state) => ({
-        settings: {
-          ...state.settings,
-          ...newSettings
+      updateSettings: (newSettings) => set((state) => {
+        const next = { ...state.settings, ...newSettings };
+        if (next.security?.sessionTimeoutMinutes != null && next.security.sessionTimeoutMinutes < MIN_SESSION_TIMEOUT_MINUTES) {
+          next.security = { ...next.security, sessionTimeoutMinutes: MIN_SESSION_TIMEOUT_MINUTES };
         }
-      })),
+        return { settings: next };
+      }),
     }),
     {
       name: 'raawi-settings',
+      partialize: (state) => ({ settings: state.settings }),
+      onRehydrateStorage: () => (state) => {
+        if (!state?.settings?.security) return;
+        if (state.settings.security.sessionTimeoutMinutes < MIN_SESSION_TIMEOUT_MINUTES) {
+          state.settings.security.sessionTimeoutMinutes = MIN_SESSION_TIMEOUT_MINUTES;
+        }
+      },
     }
   )
 );

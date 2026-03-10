@@ -273,15 +273,16 @@ export default function Settings() {
                       <div>
                         <label className="block text-sm font-medium text-text-muted mb-1.5">{t('sessionTimeout')}</label>
                         <Select 
-                          value={settings.security.sessionTimeoutMinutes.toString()}
-                          onChange={(e) => updateSection('security', { sessionTimeoutMinutes: parseInt(e.target.value) })}
+                          value={Math.max(60, settings.security.sessionTimeoutMinutes).toString()}
+                          onChange={(e) => updateSection('security', { sessionTimeoutMinutes: Math.max(60, parseInt(e.target.value, 10) || 60) })}
                           options={[
-                            { value: '15', label: '15' },
-                            { value: '30', label: '30' },
                             { value: '60', label: '60' },
-                            { value: '240', label: '240' }
+                            { value: '120', label: '120' },
+                            { value: '240', label: '240' },
+                            { value: '480', label: '480' }
                           ]}
                         />
+                        <p className="text-xs text-text-muted mt-1">{lang === 'ar' ? 'الحد الأدنى الموصى به: 60 دقيقة (لتجنب انقطاع الجلسة).' : 'Minimum recommended: 60 minutes (avoids session interruption).'}</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-text-muted mb-1.5">{t('auditLogRetention')}</label>
