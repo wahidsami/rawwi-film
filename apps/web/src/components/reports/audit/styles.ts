@@ -26,4 +26,13 @@ export const auditStyles = StyleSheet.create({
   c4: { width: "18%" },
   c5: { width: "10%" },
   c6: { width: "22%", borderRightWidth: 0 },
+  cover: { backgroundColor: "transparent", padding: 0, justifyContent: "flex-end" },
+  coverTitle: { color: "#FFF", fontSize: 22, fontWeight: "bold", marginBottom: 8 },
+  coverText: { color: "#FFF", fontSize: 11, marginBottom: 3 },
+  coverMetaBlock: {
+    backgroundColor: "rgba(0,0,0,0.22)",
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
 });

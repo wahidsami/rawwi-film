@@ -29,7 +29,13 @@ export const glossaryStyles = StyleSheet.create({
   c4: { width: "12%" },
   c5: { width: "14%" },
   c6: { width: "24%", borderRightWidth: 0 },
-  cover: { backgroundColor: "#1e3a5f", padding: 36, justifyContent: "flex-end" },
+  cover: { backgroundColor: "transparent", padding: 0, justifyContent: "flex-end" },
   coverTitle: { color: "#FFF", fontSize: 22, fontWeight: "bold", marginBottom: 8 },
   coverText: { color: "#FFF", fontSize: 11, marginBottom: 3 },
+  coverMetaBlock: {
+    backgroundColor: "rgba(0,0,0,0.22)",
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
 });

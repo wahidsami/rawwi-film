@@ -23,19 +23,21 @@ export const AuditSectionPdf: React.FC<{
   const rtl = isAr ? s.rtl : {};
   return (
     <Document>
-      <Page size="A4" wrap={false} style={[{ backgroundColor: "#1e3a5f", padding: 36 }, isAr ? s.pageAr : {}]}>
+      <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
         <View style={{ width: A4_WIDTH, height: A4_HEIGHT, position: "relative" }}>
           {p.coverImageDataUrl ? (
             <Image
               src={p.coverImageDataUrl}
-              style={{ position: "absolute", top: 0, left: 0, width: A4_WIDTH, height: A4_HEIGHT, objectFit: "cover" }}
+              style={{ position: "absolute", top: -2, left: -2, width: A4_WIDTH + 4, height: A4_HEIGHT + 4, objectFit: "cover" }}
             />
           ) : null}
-          <View style={{ position: "absolute", left: 36, right: 36, bottom: 64 }}>
-            <Text style={[{ color: "#FFF", fontSize: 22, fontWeight: "bold", marginBottom: 8 }, rtl]}>{isAr ? "سجل التدقيق" : "Audit Log Report"}</Text>
-            <Text style={[{ color: "#FFF", fontSize: 11, marginBottom: 3 }, rtl]}>
-              {formatDate(new Date(p.generatedAt), { lang: p.lang, format: p.dateFormat })}
-            </Text>
+          <View style={{ position: "absolute", left: 44, right: 44, bottom: 92 }}>
+            <View style={s.coverMetaBlock}>
+              <Text style={[s.coverTitle, rtl]}>{isAr ? "سجل التدقيق" : "Audit Log Report"}</Text>
+              <Text style={[s.coverText, rtl]}>
+                {formatDate(new Date(p.generatedAt), { lang: p.lang, format: p.dateFormat })}
+              </Text>
+            </View>
           </View>
         </View>
       </Page>

@@ -28,7 +28,13 @@ export const statusStyles = StyleSheet.create({
   activityTitle: { fontSize: 10, fontWeight: "bold", marginBottom: 2 },
   activityMeta: { fontSize: 8, color: "#6B7280" },
   rtl: { textAlign: "right" },
-  cover: { backgroundColor: "#1e3a5f", padding: 36, justifyContent: "flex-end" },
+  cover: { backgroundColor: "transparent", padding: 0, justifyContent: "flex-end" },
   coverTitle: { color: "#FFF", fontSize: 24, fontWeight: "bold", marginBottom: 8 },
   coverText: { color: "#FFF", fontSize: 11, marginBottom: 4 },
+  coverMetaBlock: {
+    backgroundColor: "rgba(0,0,0,0.22)",
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
 });

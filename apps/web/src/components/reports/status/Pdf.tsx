@@ -36,14 +36,16 @@ export const StatusSectionPdf: React.FC<StatusSectionPdfProps> = ({
           {coverImageDataUrl ? (
             <Image
               src={coverImageDataUrl}
-              style={{ position: "absolute", top: 0, left: 0, width: A4_WIDTH, height: A4_HEIGHT, objectFit: "cover" }}
+              style={{ position: "absolute", top: -2, left: -2, width: A4_WIDTH + 4, height: A4_HEIGHT + 4, objectFit: "cover" }}
             />
           ) : null}
-          <View style={{ position: "absolute", left: 36, right: 36, bottom: 64 }}>
-            <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير حالة النظام" : "System Status Report"}</Text>
-            <Text style={[s.coverText, rtl]}>
-              {formatDate(new Date(generatedAt), { lang, format: dateFormat })}
-            </Text>
+          <View style={{ position: "absolute", left: 44, right: 44, bottom: 92 }}>
+            <View style={s.coverMetaBlock}>
+              <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير حالة النظام" : "System Status Report"}</Text>
+              <Text style={[s.coverText, rtl]}>
+                {formatDate(new Date(generatedAt), { lang, format: dateFormat })}
+              </Text>
+            </View>
           </View>
         </View>
       </Page>
