@@ -72,7 +72,7 @@ export function ClientDetails() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
-  const canAddScript = hasPermission('upload_scripts');
+  const canAddScript = isAdmin && hasPermission('upload_scripts');
   const [formData, setFormData] = useState({
     title: '',
     type: 'Film' as 'Film' | 'Series',
@@ -203,6 +203,10 @@ export function ClientDetails() {
   };
 
   const handleSaveNewScript = async () => {
+    if (!canAddScript) {
+      toast.error(lang === 'ar' ? 'ليس لديك صلاحية رفع نص جديد' : 'You do not have permission to upload a new script');
+      return;
+    }
     if (!formData.title) return;
 
     const isAssigning = formData.assigneeId && formData.assigneeId !== user?.id;
