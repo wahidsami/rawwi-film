@@ -176,7 +176,7 @@ export const AnalysisReportPdf: React.FC<{
 
                             {/* Finding Cards */}
                             {artFindings.map((finding, idx) => (
-                                <View key={idx} style={styles.card} wrap={false}>
+                                <View key={idx} style={styles.card}>
                                     {/* Header: Title + Severity */}
                                     <View style={styles.cardHeader}>
                                         <View style={[styles.badge, getSeverityColor(finding.severity)]}>

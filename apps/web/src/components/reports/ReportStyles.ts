@@ -302,6 +302,8 @@ export const extendedStyles = StyleSheet.create({
     color: "#333333",
     padding: 0,
     margin: 0,
+    width: A4_WIDTH,
+    height: A4_HEIGHT,
   },
   coverBackground: {
     position: "absolute",
