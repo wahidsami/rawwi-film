@@ -101,26 +101,36 @@ export function ScriptWorkspace() {
 
   const scriptFromList = scripts.find(s => s.id === id);
   const [scriptFetched, setScriptFetched] = useState<Script | null>(null);
+  const [scriptByIdLoading, setScriptByIdLoading] = useState(true);
   const script = scriptFromList ?? scriptFetched ?? undefined;
   const scriptFindings = findings.filter(f => f.scriptId === id);
 
   useEffect(() => {
     if (!id) {
       setScriptFetched(null);
+      setScriptByIdLoading(false);
       return;
     }
     if (scriptFromList) {
       setScriptFetched(null);
+      setScriptByIdLoading(false);
       return;
     }
     let cancelled = false;
+    setScriptByIdLoading(true);
     scriptsApi
       .getScript(id)
       .then((s) => {
-        if (!cancelled) setScriptFetched(s);
+        if (!cancelled) {
+          setScriptFetched(s);
+          setScriptByIdLoading(false);
+        }
       })
       .catch(() => {
-        if (!cancelled) setScriptFetched(null);
+        if (!cancelled) {
+          setScriptFetched(null);
+          setScriptByIdLoading(false);
+        }
       });
     return () => { cancelled = true; };
   }, [id, scriptFromList]);
@@ -596,9 +606,10 @@ export function ScriptWorkspace() {
   }, []);
 
   // Keep workspace content visible once script is loaded; global background refreshes should
-  // not blank the editor text view.
-  const showLoading = isLoading && !script;
-  const showError = !isLoading && !script;
+  // not blank the editor text view. When script is not in list we fetch by id (e.g. after Quick Analysis);
+  // treat that as loading so we don't flash the error screen.
+  const showLoading = (isLoading && !script) || (scriptByIdLoading && !script);
+  const showError = !isLoading && !scriptByIdLoading && !script;
 
   const handleRetryScript = async () => {
     await fetchInitialData();
