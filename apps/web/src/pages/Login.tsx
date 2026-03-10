@@ -130,8 +130,8 @@ export function Login() {
               <h1 className="text-3xl font-bold tracking-tight">{lang === 'ar' ? 'راوي فيلم' : 'Raawi Film'}</h1>
               <p className="text-white/70 text-sm leading-relaxed max-w-xs mx-auto">
                 {lang === 'ar'
-                  ? 'منصة التحليل الآلي للمحتوى المرئي والمسموع'
-                  : 'Automated content analysis platform for audiovisual media'}
+                  ? 'منصة التحليل الرقمي للنصوص السنمائية'
+                  : 'automated film script analysis platform'}
               </p>
             </div>
           </div>

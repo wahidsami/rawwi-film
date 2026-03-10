@@ -581,7 +581,6 @@ export function ClientDetails() {
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'الحالة' : 'Status'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'التقارير' : 'Reports'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'المعين' : 'Assignee'}</th>
-                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'المعين' : 'Assignee'}</th>
                   {isAdmin && (
                     <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'أنشأ بواسطة' : 'Created By'}</th>
                   )}
