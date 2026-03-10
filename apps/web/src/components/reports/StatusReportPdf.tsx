@@ -100,6 +100,13 @@ export const StatusReportPdf: React.FC<StatusReportPdfProps> = ({
 
   const activityRows = activities.slice(0, 15);
 
+  const headerCellStyle = [
+    styles.tableCellHeader,
+    isAr ? styles.rtlText : {},
+    { color: "#111827", fontSize: 10 },
+    isAr ? { fontFamily: "Cairo" } : {},
+  ];
+
   return (
     <Document>
       {/* Cover */}
@@ -261,24 +268,16 @@ export const StatusReportPdf: React.FC<StatusReportPdfProps> = ({
         <View style={[styles.table, { marginBottom: 12 }]}>
           <View style={[styles.tableRow, styles.tableRowHeader]}>
             <View style={styles.tableCol}>
-              <Text style={[styles.tableCellHeader, isAr ? styles.rtlText : {}]}>
-                {labels.statusDraft}
-              </Text>
+              <Text style={headerCellStyle}>{labels.statusDraft}</Text>
             </View>
             <View style={styles.tableCol}>
-              <Text style={[styles.tableCellHeader, isAr ? styles.rtlText : {}]}>
-                {labels.statusAssigned}
-              </Text>
+              <Text style={headerCellStyle}>{labels.statusAssigned}</Text>
             </View>
             <View style={styles.tableCol}>
-              <Text style={[styles.tableCellHeader, isAr ? styles.rtlText : {}]}>
-                {labels.statusReview}
-              </Text>
+              <Text style={headerCellStyle}>{labels.statusReview}</Text>
             </View>
             <View style={styles.tableCol}>
-              <Text style={[styles.tableCellHeader, isAr ? styles.rtlText : {}]}>
-                {labels.statusCompleted}
-              </Text>
+              <Text style={headerCellStyle}>{labels.statusCompleted}</Text>
             </View>
           </View>
           <View style={styles.tableRow}>
@@ -317,24 +316,16 @@ export const StatusReportPdf: React.FC<StatusReportPdfProps> = ({
         <View style={[styles.table, { marginBottom: 12 }]}>
           <View style={[styles.tableRow, styles.tableRowHeader]}>
             <View style={styles.tableCol}>
-              <Text style={[styles.tableCellHeader, isAr ? styles.rtlText : {}]}>
-                {labels.severityCritical}
-              </Text>
+              <Text style={headerCellStyle}>{labels.severityCritical}</Text>
             </View>
             <View style={styles.tableCol}>
-              <Text style={[styles.tableCellHeader, isAr ? styles.rtlText : {}]}>
-                {labels.severityHigh}
-              </Text>
+              <Text style={headerCellStyle}>{labels.severityHigh}</Text>
             </View>
             <View style={styles.tableCol}>
-              <Text style={[styles.tableCellHeader, isAr ? styles.rtlText : {}]}>
-                {labels.severityMedium}
-              </Text>
+              <Text style={headerCellStyle}>{labels.severityMedium}</Text>
             </View>
             <View style={styles.tableCol}>
-              <Text style={[styles.tableCellHeader, isAr ? styles.rtlText : {}]}>
-                {labels.severityLow}
-              </Text>
+              <Text style={headerCellStyle}>{labels.severityLow}</Text>
             </View>
           </View>
           <View style={styles.tableRow}>
