@@ -6,6 +6,10 @@ import { reportService } from '@/services/reportService';
 import { useDataStore } from '@/store/dataStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate } from '@/utils/dateFormat';
+import { pdf } from '@react-pdf/renderer';
+import { AnalysisReportPdf } from '@/components/reports/AnalysisReportPdf';
+import toast from 'react-hot-toast';
+import { reportsApi, findingsApi, type AnalysisFinding } from '@/api';
 import { usersApi } from '@/api';
 import { ReportListItem } from '@/api/models';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -14,7 +18,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import {
-  FileText, Search, FileDown, Printer, Eye, Calendar, Building2, User, RefreshCw, XCircle, CheckCircle, AlertTriangle
+  FileText, Search, FileDown, Eye, Calendar, Building2, User, RefreshCw, XCircle, CheckCircle, AlertTriangle, Loader2
 } from 'lucide-react';
 
 function Reports() {
@@ -28,6 +32,7 @@ function Reports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [usersList, setUsersList] = useState<{ id: string; name: string }[]>([]);
+  const [downloadingReportId, setDownloadingReportId] = useState<string | null>(null);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -97,9 +102,98 @@ function Reports() {
     }
   };
 
-  const handlePrint = (e: React.MouseEvent, report: ReportListItem) => {
+  const handleDownloadPdf = async (e: React.MouseEvent, report: ReportListItem) => {
     e.stopPropagation();
-    handleOpen(report);
+    if (downloadingReportId) return;
+    setDownloadingReportId(report.id || null);
+
+    try {
+      const fullReport = await reportsApi.getById(report.id!);
+      let findings: AnalysisFinding[] = [];
+      if (fullReport.jobId) {
+        try {
+          findings = await findingsApi.getByJob(fullReport.jobId);
+        } catch { /* proceed with summary if findings fail */ }
+      }
+
+      const isAr = lang === 'ar';
+      const hasRealFindings = findings.length > 0;
+
+      const buildPdfFindings = () => {
+        if (hasRealFindings) {
+          return findings.map((f) => ({
+            id: f.id,
+            articleId: f.articleId,
+            titleAr: f.titleAr,
+            severity: f.severity,
+            confidence: f.confidence ?? 0,
+            evidenceSnippet: f.evidenceSnippet,
+            source: f.source,
+            startLineChunk: f.startLineChunk ?? undefined,
+            endLineChunk: f.endLineChunk ?? undefined,
+            reviewStatus: f.reviewStatus,
+            reviewReason: f.reviewReason ?? undefined,
+            reviewedAt: f.reviewedAt ?? undefined,
+          }));
+        }
+
+        const summary = fullReport.summaryJson;
+        return summary.findings_by_article.flatMap((art: any, idxBase: number) =>
+          art.top_findings.map((f: any, idx: number) => ({
+            id: `summary-${art.article_id}-${idxBase}-${idx}`,
+            articleId: art.article_id,
+            titleAr: f.title_ar,
+            severity: f.severity,
+            confidence: f.confidence ?? 0,
+            evidenceSnippet: f.evidence_snippet,
+            source: 'ai',
+          }))
+        );
+      };
+
+      const pdfFindings = buildPdfFindings();
+      const doc = (
+        <AnalysisReportPdf
+          data={{
+            jobId: fullReport.jobId,
+            scriptTitle: fullReport.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
+            clientName: fullReport.clientName || (isAr ? 'عميل' : 'Client'),
+            createdAt: fullReport.createdAt,
+            findings: pdfFindings,
+            lang: isAr ? 'ar' : 'en',
+          }}
+          dateFormat={settings?.platform?.dateFormat}
+          branding={{
+            logoUrl: '/loginlogo.png',
+            footerLogoUrl: '/footer.png',
+            orgNameAr: settings?.branding?.orgNameAr,
+            orgNameEn: settings?.branding?.orgNameEn,
+            footerNoteAr: settings?.branding?.footerNoteAr,
+            footerNoteEn: settings?.branding?.footerNoteEn,
+          }}
+        />
+      );
+
+      const blob = await pdf(doc).toBlob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      const safeTitle = (fullReport.scriptTitle || (isAr ? 'تقرير' : 'report')).replace(/[\\/:*?"<>|]/g, ' ').replace(/\s+/g, '_').slice(0, 80);
+      const datePart = new Date().toISOString().slice(0, 10);
+      a.download = `raawi_report_${safeTitle}_${datePart}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+
+      toast.success(isAr ? 'تم تنزيل PDF' : 'PDF downloaded');
+    } catch (err: any) {
+      console.error(err);
+      toast.error(lang === 'ar' ? 'تعذر تنزيل PDF، سيتم الفتح للطباعة' : 'PDF direct download failed, opening print view');
+      handleOpen(report);
+    } finally {
+      setDownloadingReportId(null);
+    }
   };
 
   const decisionConfig: Record<string, { label: string; color: string }> = {
@@ -302,8 +396,8 @@ function Reports() {
                           <Eye className="w-3.5 h-3.5 mr-1.5 rtl:ml-1.5 rtl:mr-0" />
                           {t('open' as any)}
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={(e) => handlePrint(e, report)} className="h-8 hover:bg-primary/10 hover:text-primary">
-                          <Printer className="w-3.5 h-3.5" />
+                        <Button variant="ghost" size="sm" onClick={(e) => handleDownloadPdf(e, report)} disabled={downloadingReportId === report.id} className="h-8 hover:bg-primary/10 hover:text-primary transition-colors">
+                          {downloadingReportId === report.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
                         </Button>
                       </div>
                     </td>
