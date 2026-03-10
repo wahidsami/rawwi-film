@@ -551,7 +551,17 @@ export function Results() {
           coverImageDataUrl={coverDataUrl}
         />
       );
-      const blob = await pdf(doc).toBlob();
+      // Workaround: pdf(doc).toBlob() often throws in browser. Use empty container + updateContainer then toBlob.
+      const pdfInstance = pdf();
+      await Promise.race([
+        new Promise<void>((resolve) => {
+          pdfInstance.updateContainer(doc, () => resolve());
+        }),
+        new Promise<void>((_, reject) =>
+          setTimeout(() => reject(new Error('PDF render timeout (60s)')), 60000)
+        ),
+      ]);
+      const blob = await pdfInstance.toBlob();
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = objectUrl;
@@ -562,7 +572,9 @@ export function Results() {
       URL.revokeObjectURL(objectUrl);
       toast.success(isAr ? 'تم تنزيل PDF' : 'PDF downloaded');
     } catch (err) {
-      console.error('[Results] Direct PDF download failed, fallback to print', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : '';
+      console.error('[Results] Direct PDF download failed, fallback to print', msg, stack || err);
       toast.error(isAr ? 'تعذر تنزيل PDF مباشرة، سيتم فتح وضع الطباعة.' : 'Direct PDF download failed, opening print mode.');
       await generateHtmlPrint();
     } finally {
