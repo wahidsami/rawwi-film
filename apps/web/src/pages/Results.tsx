@@ -505,28 +505,9 @@ export function Results() {
     if (!report) return;
     setIsDownloadingPdf(true);
     try {
-      // Convert static assets to data URLs for stable browser-side PDF generation.
-      const toDataUrl = async (url: string): Promise<string | null> => {
-        try {
-          const base = window.location.origin;
-          const res = await fetch(`${base}${url.startsWith('/') ? url : `/${url}`}`);
-          if (!res.ok) return null;
-          const blob = await res.blob();
-          return await new Promise<string | null>((resolve) => {
-            const r = new FileReader();
-            r.onloadend = () => resolve(typeof r.result === 'string' ? r.result : null);
-            r.onerror = () => resolve(null);
-            r.readAsDataURL(blob);
-          });
-        } catch {
-          return null;
-        }
-      };
-
-      const [coverDataUrl, logoDataUrl] = await Promise.all([
-        toDataUrl('/cover.jpg'),
-        toDataUrl('/dashboardlogo.png'),
-      ]);
+      const origin = window.location.origin;
+      const coverImageUrl = `${origin}/cover.jpg`;
+      const logoImageUrl = `${origin}/dashboardlogo.png`;
 
       const pdfFindings = buildPdfFindings();
       const doc = (
@@ -541,14 +522,14 @@ export function Results() {
           }}
           dateFormat={dateFormat}
           branding={{
-            logoUrl: logoDataUrl ?? undefined,
+            logoUrl: logoImageUrl,
             footerLogoUrl: '/footer.png',
             orgNameAr: settings?.branding?.orgNameAr,
             orgNameEn: settings?.branding?.orgNameEn,
             footerNoteAr: settings?.branding?.footerNoteAr,
             footerNoteEn: settings?.branding?.footerNoteEn,
           }}
-          coverImageDataUrl={coverDataUrl}
+          coverImageDataUrl={coverImageUrl}
         />
       );
       const blob = await pdf(doc).toBlob();
