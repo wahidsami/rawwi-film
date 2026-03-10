@@ -91,7 +91,19 @@ export const ClientsReportPdf: React.FC<ClientsReportPdfProps> = ({
   const isAr = lang === "ar";
   const dateStr = formatDate(new Date(generatedAt), { lang, format: dateFormat });
 
-  const safeClientsData = (clientsData || []).filter((r): r is ClientRow => r != null);
+  const safeClientsData: ClientRow[] = (clientsData || [])
+    .filter((r): r is ClientRow => r != null)
+    .map((r) => ({
+      ...r,
+      name: r.name ?? "",
+      nameSecondary: r.nameSecondary ?? "",
+      representative: r.representative ?? "",
+      email: r.email ?? "",
+      phone: r.phone ?? "",
+      registrationDate: r.registrationDate ?? "",
+      scriptsCount: Number.isFinite(r.scriptsCount) ? r.scriptsCount : 0,
+      status: r.status ?? "",
+    }));
 
   const labels = isAr
     ? {

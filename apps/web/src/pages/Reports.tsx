@@ -127,10 +127,10 @@ function Reports() {
 
       const buildPdfFindings = () => {
         if (hasRealFindings) {
-          return findings
-            .filter((f): f is AnalysisFinding => f != null && f.id != null)
-            .map((f) => ({
-              id: f.id,
+          return (findings || [])
+            .filter((f): f is AnalysisFinding => f != null)
+            .map((f, idx) => ({
+              id: f.id ?? `finding-${idx}`,
               articleId: f.articleId,
               titleAr: f.titleAr,
               severity: f.severity,

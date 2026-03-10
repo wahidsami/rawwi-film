@@ -57,8 +57,18 @@ export const AnalysisReportPdf: React.FC<{
     const formatOpts = { lang, format: dateFormat };
     const showDecisionBadge = branding?.showDecisionBadge !== false;
 
-    // Defensive: ensure no undefined entries (avoids "reading 'id' of undefined" in maps)
-    const findings = (rawFindings || []).filter((f): f is Finding => f != null && typeof (f as Finding).id !== "undefined");
+    // Defensive: normalize findings so renderer never receives sparse/invalid entries
+    const findings: Finding[] = (rawFindings || [])
+        .filter((f): f is Finding => f != null)
+        .map((f, idx) => ({
+            ...f,
+            id: f.id ?? `finding-${idx}`,
+            articleId: Number.isFinite(f.articleId) ? f.articleId : 0,
+            titleAr: f.titleAr ?? "—",
+            severity: f.severity ?? "info",
+            confidence: f.confidence ?? 0,
+            evidenceSnippet: f.evidenceSnippet ?? "",
+        }));
 
     // Group findings by severity for summary
     const grouped = findings.reduce((acc, finding) => {
