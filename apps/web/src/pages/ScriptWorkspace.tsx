@@ -139,7 +139,6 @@ export function ScriptWorkspace() {
   const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
-  const [activePassIdx, setActivePassIdx] = useState(0);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [decisionCan, setDecisionCan] = useState<{ canApprove: boolean; canReject: boolean; reason?: string } | null>(null);
   const analysisPasses = useMemo(
@@ -305,9 +304,10 @@ export function ScriptWorkspace() {
       .catch(() => { /* ignore — no jobs yet */ });
   }, [script?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load debug chunk statuses when debug panel is open
+  // Keep chunk statuses updated while analysis is running (used by modal + debug panel).
   useEffect(() => {
-    if (!debugOpen || !analysisJobId) return;
+    const isRunning = analysisJob != null && !isTerminalJobStatus(analysisJob.status);
+    if (!analysisJobId || !isRunning) return;
     let cancelled = false;
     const fetchChunks = async () => {
       try {
@@ -316,9 +316,9 @@ export function ScriptWorkspace() {
       } catch (_) { /* ignore */ }
     };
     fetchChunks();
-    const iv = setInterval(fetchChunks, 3000);
+    const iv = setInterval(fetchChunks, 2000);
     return () => { cancelled = true; clearInterval(iv); };
-  }, [debugOpen, analysisJobId, analysisJob?.progressDone]); // re-fetch when progress changes
+  }, [analysisJobId, analysisJob?.status]);
 
   // ── Report history ──
   const [sidebarTab, setSidebarTab] = useState<'findings' | 'reports'>('findings');
@@ -633,16 +633,11 @@ export function ScriptWorkspace() {
 
 
   const isAnalysisRunning = analysisJob != null && !isTerminalJobStatus(analysisJob.status);
-  useEffect(() => {
-    if (!analysisModalOpen || !isAnalysisRunning) {
-      setActivePassIdx(0);
-      return;
-    }
-    const t = setInterval(() => {
-      setActivePassIdx((prev) => (prev + 1) % analysisPasses.length);
-    }, 1200);
-    return () => clearInterval(t);
-  }, [analysisModalOpen, isAnalysisRunning, analysisPasses.length]);
+  const chunkCountFromJob = Math.max(0, (analysisJob?.progressTotal ?? 0) - 1);
+  const totalChunksTracked = chunkStatuses.length > 0 ? chunkStatuses.length : chunkCountFromJob;
+  const doneChunks = chunkStatuses.filter((c) => c.status === 'done').length;
+  const activeChunk = chunkStatuses.find((c) => c.status === 'judging') ?? null;
+  const activeChunkNumber = activeChunk ? activeChunk.chunkIndex + 1 : null;
 
   const canReplaceFile = user?.role === 'Super Admin' || user?.role === 'Admin';
   const hasVersionForAnalysis = Boolean(script?.currentVersionId);
@@ -2114,32 +2109,28 @@ export function ScriptWorkspace() {
             <div className="space-y-3 rounded-md border border-border bg-background/40 p-3">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs text-text-muted">
-                  {lang === 'ar' ? 'الماسح النشط الآن' : 'Active scanner'}
+                  {lang === 'ar' ? 'المرحلة الجارية (من الخادم)' : 'Current backend stage'}
                 </p>
                 <div className="flex items-center gap-2 text-xs font-medium text-primary">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>{analysisPasses[activePassIdx]}</span>
+                  <span>
+                    {activeChunkNumber != null && totalChunksTracked > 0
+                      ? (lang === 'ar'
+                        ? `جاري فحص الجزء ${activeChunkNumber} من ${totalChunksTracked}`
+                        : `Processing chunk ${activeChunkNumber} of ${totalChunksTracked}`)
+                      : (lang === 'ar' ? 'جاري الفحص' : 'Processing')}
+                  </span>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {analysisPasses.map((pass, idx) => (
-                  <div
-                    key={pass}
-                    className={cn(
-                      "rounded border px-2 py-1 text-[11px] transition-colors",
-                      idx === activePassIdx
-                        ? "border-primary/40 bg-primary/10 text-primary"
-                        : "border-border bg-surface text-text-muted"
-                    )}
-                  >
-                    {idx + 1}. {pass}
-                  </div>
-                ))}
+              <div className="text-[11px] text-text-muted">
+                {lang === 'ar'
+                  ? `الأجزاء المكتملة: ${doneChunks} من ${Math.max(totalChunksTracked, doneChunks)}`
+                  : `Completed chunks: ${doneChunks} of ${Math.max(totalChunksTracked, doneChunks)}`}
               </div>
               <p className="text-[11px] text-text-muted">
                 {lang === 'ar'
-                  ? 'كل جزء نصي يمر على 10 ماسحات متخصصة بالتوازي.'
-                  : 'Each text chunk runs through 10 specialized scanners in parallel.'}
+                  ? `الماسحات المتخصصة تعمل بالتوازي لكل جزء: ${analysisPasses.join('، ')}`
+                  : `Specialized scanners run in parallel for each chunk: ${analysisPasses.join(', ')}`}
               </p>
             </div>
           )}

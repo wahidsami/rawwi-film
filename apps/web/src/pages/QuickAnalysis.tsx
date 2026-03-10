@@ -218,7 +218,7 @@ export function QuickAnalysis() {
                       {formatDate(new Date(script.createdAt), { lang })} {formatTime(new Date(script.createdAt), { lang })}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
                     <Badge variant={latestReport ? 'warning' : 'outline'} className="text-[10px]">
                       {latestReport
                         ? `${latestReport.findingsCount ?? 0} ${isAr ? 'ملاحظة' : 'findings'}`
@@ -230,8 +230,8 @@ export function QuickAnalysis() {
                     </Button>
                     <Button
                       size="sm"
-                      variant="danger"
-                      className="gap-1.5"
+                      variant="outline"
+                      className="gap-1.5 border-error/30 text-error hover:bg-error/10"
                       onClick={() => handleDeleteQuickAnalysis(script)}
                       disabled={deletingScriptId === script.id}
                     >
