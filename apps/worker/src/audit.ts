@@ -1,6 +1,6 @@
 /**
  * Append-only audit log for worker (ANALYSIS_STARTED, ANALYSIS_COMPLETED).
- * Uses canonical schema; actor is null (system).
+ * Pass actor_user_id (e.g. job.created_by) so audit log shows who triggered the action.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -13,13 +13,15 @@ export async function logAuditEvent(
     target_label?: string | null;
     result_status?: "success" | "failure";
     result_message?: string | null;
+    /** User who triggered the action (e.g. job created_by); displayed in audit log. */
+    actor_user_id?: string | null;
   }
 ): Promise<void> {
   const { error } = await supabase.from("audit_events").insert({
     event_type: payload.event_type,
-    actor_user_id: null,
+    actor_user_id: payload.actor_user_id ?? null,
     actor_name: null,
-    actor_role: "system",
+    actor_role: null,
     occurred_at: new Date().toISOString(),
     target_type: payload.target_type,
     target_id: payload.target_id,

@@ -33,7 +33,8 @@ async function testAuditPayloadShape() {
   assert(row.target_id === "550e8400-e29b-41d4-a716-446655440000", "target_id");
   assert(row.target_label === "script-1", "target_label");
   assert(row.result_status === "success", "result_status");
-  assert(row.actor_role === "system", "actor_role");
+  assert(row.actor_user_id == null, "actor_user_id absent when not passed");
+  assert(row.actor_role == null, "actor_role null (enriched on read)");
   assert(typeof row.occurred_at === "string", "occurred_at ISO string");
   console.log("✓ Audit event payload shape (event_type, target_*, result_status, occurred_at)");
 }

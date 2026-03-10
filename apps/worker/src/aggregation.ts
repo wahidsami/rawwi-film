@@ -325,11 +325,13 @@ export async function runAggregation(jobId: string): Promise<void> {
       .update({ status: "completed", completed_at: new Date().toISOString() })
       .eq("id", jobId);
     const { logAuditEvent } = await import("./audit.js");
+    const j = job as { script_id: string; created_by?: string | null };
     logAuditEvent(supabase, {
       event_type: "ANALYSIS_COMPLETED",
       target_type: "task",
       target_id: jobId,
-      target_label: job.script_id,
+      target_label: j.script_id,
+      actor_user_id: j.created_by ?? null,
     }).catch(() => { });
     logger.info("Report already exists, job marked completed", { jobId });
     return;
@@ -404,11 +406,13 @@ export async function runAggregation(jobId: string): Promise<void> {
     .eq("id", jobId);
 
   const { logAuditEvent } = await import("./audit.js");
+  const jobRow = job as { script_id: string; created_by?: string | null };
   logAuditEvent(supabase, {
     event_type: "ANALYSIS_COMPLETED",
     target_type: "task",
     target_id: jobId,
-    target_label: job.script_id,
+    target_label: jobRow.script_id,
+    actor_user_id: jobRow.created_by ?? null,
   }).catch(() => { });
 
   logger.info("Aggregation done", {

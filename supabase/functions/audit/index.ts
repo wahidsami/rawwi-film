@@ -6,6 +6,7 @@
 import { corsHeaders, jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { userHasViewAudit } from "../_shared/auditPermissions.ts";
+import { getUserInfo } from "../_shared/userInfo.ts";
 
 const DEFAULT_RETENTION_DAYS = 180;
 const MAX_PAGE_SIZE = 100;
@@ -91,15 +92,30 @@ Deno.serve(async (req: Request) => {
   if (rest === "export") {
     const format = url.searchParams.get("format")?.toLowerCase() || "csv";
     if (format !== "csv") return json({ error: "Only format=csv supported" }, 400);
-    const { data: rows, error } = await query.order("occurred_at", { ascending: false }).limit(10000);
+    const { data: exportRows, error } = await query.order("occurred_at", { ascending: false }).limit(10000);
     if (error) {
       console.error("[audit] export error:", error.message);
       return json({ error: error.message }, 500);
     }
+    const rows = exportRows ?? [];
+    const exportActorIds = [...new Set((rows as { actor_user_id?: string | null; actor_name?: string | null }[])
+      .filter((r) => r.actor_user_id && !r.actor_name)
+      .map((r) => r.actor_user_id as string))];
+    const exportActorMap: Record<string, { name: string | null; role: string | null }> = {};
+    for (const aid of exportActorIds) {
+      const info = await getUserInfo(supabase, aid);
+      exportActorMap[aid] = { name: info.name, role: info.role };
+    }
+    for (const row of rows as { actor_user_id?: string | null; actor_name?: string | null; actor_role?: string | null }[]) {
+      if (row.actor_user_id && !row.actor_name && exportActorMap[row.actor_user_id]) {
+        row.actor_name = exportActorMap[row.actor_user_id].name;
+        row.actor_role = exportActorMap[row.actor_user_id].role;
+      }
+    }
     const headers = ["id", "event_type", "actor_name", "actor_role", "occurred_at", "target_type", "target_id", "target_label", "result_status", "result_message"];
     const escape = (v: unknown) => (v == null ? "" : String(v).replace(/"/g, '""'));
     const csvLines = [headers.join(",")];
-    for (const r of rows ?? []) {
+    for (const r of rows) {
       const row = r as Record<string, unknown>;
       csvLines.push(headers.map((h) => `"${escape(row[h])}"`).join(","));
     }
@@ -127,6 +143,22 @@ Deno.serve(async (req: Request) => {
   }
 
   const list = (rows ?? []).map((r) => toCamel(r as Record<string, unknown>));
+  // Enrich actor display: when actor_user_id is set but actor_name is null (e.g. worker-logged events), resolve to email/role
+  const actorIds = [...new Set((list as { actorUserId?: string | null; actorName?: string | null }[])
+    .filter((r) => r.actorUserId && !r.actorName)
+    .map((r) => r.actorUserId as string))];
+  const actorMap: Record<string, { name: string | null; role: string | null }> = {};
+  for (const aid of actorIds) {
+    const info = await getUserInfo(supabase, aid);
+    actorMap[aid] = { name: info.name, role: info.role };
+  }
+  for (const row of list as { actorUserId?: string | null; actorName?: string | null; actorRole?: string | null }[]) {
+    if (row.actorUserId && !row.actorName && actorMap[row.actorUserId]) {
+      row.actorName = actorMap[row.actorUserId].name;
+      row.actorRole = actorMap[row.actorUserId].role;
+    }
+  }
+
   return json({
     data: list,
     total: count ?? 0,

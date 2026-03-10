@@ -83,21 +83,23 @@ export async function claimChunk(chunkId: string): Promise<AnalysisChunk | null>
   const jobId = (updated as AnalysisChunk).job_id;
   const { data: job } = await supabase
     .from("analysis_jobs")
-    .select("started_at")
+    .select("started_at, created_by")
     .eq("id", jobId)
     .single();
 
-  if (job && job.started_at == null) {
+  if (job && (job as { started_at: string | null }).started_at == null) {
     await supabase
       .from("analysis_jobs")
       .update({ status: "running", started_at: new Date().toISOString() })
       .eq("id", jobId);
     logger.info("Job started", { jobId });
+    const jobRow = job as { started_at: string | null; created_by?: string | null };
     logAuditEvent(supabase, {
       event_type: "ANALYSIS_STARTED",
       target_type: "task",
       target_id: jobId,
       target_label: jobId,
+      actor_user_id: jobRow.created_by ?? null,
     }).catch(() => { });
   }
 
