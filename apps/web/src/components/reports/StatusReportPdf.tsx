@@ -98,7 +98,7 @@ export const StatusReportPdf: React.FC<StatusReportPdfProps> = ({
         severityLow: "Low",
       };
 
-  const activityRows = activities.slice(0, 15);
+  const activityRows = (activities || []).filter((a): a is Activity => a != null && (a as Activity).id != null).slice(0, 15);
 
   const headerCellStyle = [
     styles.tableCellHeader,
@@ -369,7 +369,7 @@ export const StatusReportPdf: React.FC<StatusReportPdfProps> = ({
           <View>
             {activityRows.map((act, idx) => (
               <View
-                key={act.id}
+                key={act?.id ?? `act-${idx}`}
                 style={[
                   styles.card,
                   idx > 0 ? { marginTop: 6 } : {},

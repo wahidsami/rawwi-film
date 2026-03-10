@@ -91,6 +91,8 @@ export const ClientsReportPdf: React.FC<ClientsReportPdfProps> = ({
   const isAr = lang === "ar";
   const dateStr = formatDate(new Date(generatedAt), { lang, format: dateFormat });
 
+  const safeClientsData = (clientsData || []).filter((r): r is ClientRow => r != null);
+
   const labels = isAr
     ? {
         reportTitle: "تقرير محفظة العملاء",
@@ -215,7 +217,7 @@ export const ClientsReportPdf: React.FC<ClientsReportPdfProps> = ({
               <Text style={headerCellStyle}>{labels.status}</Text>
             </View>
           </View>
-          {clientsData.map((row, idx) => (
+          {safeClientsData.map((row, idx) => (
             <View
               key={idx}
               style={[
