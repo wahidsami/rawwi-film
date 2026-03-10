@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import html2pdf from 'html2pdf.js';
+import { pdf } from '@react-pdf/renderer';
 
 import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { cn } from '@/utils/cn';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
 import toast from 'react-hot-toast';
+import { AnalysisReportPdf } from '@/components/reports/AnalysisReportPdf';
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
@@ -62,7 +63,6 @@ export function Results() {
   const [reviewing, setReviewing] = useState(false);
   const [updateScriptStatus, setUpdateScriptStatus] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
-  const reportContentRef = useRef<HTMLDivElement>(null);
 
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
@@ -232,7 +232,6 @@ export function Results() {
 
 
   // Prepare findings for PDF: use real findings if available, otherwise fallback to summary
-  // PDF export now handled client-side with PDFDownloadLink (see render below)
 
   const generateHtmlPrint = async () => {
     try {
@@ -503,64 +502,73 @@ export function Results() {
   }
 
   const handleDownloadPdf = async () => {
-    const el = reportContentRef.current;
-    if (!report || !el) return;
+    if (!report) return;
     setIsDownloadingPdf(true);
-    el.classList.add('pdf-generating');
     try {
-      await html2pdf()
-        .set({
-          margin: 10,
-          filename: buildPdfFileName(),
-          image: { type: 'jpeg', quality: 0.95 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff',
-            onclone: (doc: Document) => {
-              const style = doc.createElement('style');
-              style.textContent = `
-                .pdf-generating, .pdf-generating * {
-                  color: #111827 !important;
-                  border-color: #d1d5db !important;
-                  box-shadow: none !important;
-                  text-shadow: none !important;
-                }
-                .pdf-generating .bg-surface,
-                .pdf-generating [class*="bg-surface"],
-                .pdf-generating [class*="bg-background"] {
-                  background-color: #ffffff !important;
-                }
-                .pdf-generating .text-text-muted,
-                .pdf-generating [class*="text-text-muted"] {
-                  color: #6b7280 !important;
-                }
-                .pdf-generating .no-pdf {
-                  display: none !important;
-                }
-              `;
-              doc.head.appendChild(style);
-            },
-          },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        })
-        .from(el)
-        .save();
+      // Convert static assets to data URLs for stable browser-side PDF generation.
+      const toDataUrl = async (url: string): Promise<string | null> => {
+        try {
+          const base = window.location.origin;
+          const res = await fetch(`${base}${url.startsWith('/') ? url : `/${url}`}`);
+          if (!res.ok) return null;
+          const blob = await res.blob();
+          return await new Promise<string | null>((resolve) => {
+            const r = new FileReader();
+            r.onloadend = () => resolve(typeof r.result === 'string' ? r.result : null);
+            r.onerror = () => resolve(null);
+            r.readAsDataURL(blob);
+          });
+        } catch {
+          return null;
+        }
+      };
+
+      const [coverDataUrl, logoDataUrl] = await Promise.all([
+        toDataUrl('/cover.jpg'),
+        toDataUrl('/dashboardlogo.png'),
+      ]);
+
+      const pdfFindings = buildPdfFindings();
+      const doc = (
+        <AnalysisReportPdf
+          data={{
+            jobId: report.jobId,
+            scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
+            clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
+            createdAt: report.createdAt,
+            findings: pdfFindings,
+            lang: isAr ? 'ar' : 'en',
+          }}
+          dateFormat={dateFormat}
+          branding={{
+            logoUrl: logoDataUrl ?? undefined,
+            footerLogoUrl: '/footer.png',
+            orgNameAr: settings?.branding?.orgNameAr,
+            orgNameEn: settings?.branding?.orgNameEn,
+            footerNoteAr: settings?.branding?.footerNoteAr,
+            footerNoteEn: settings?.branding?.footerNoteEn,
+          }}
+          coverImageDataUrl={coverDataUrl}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = buildPdfFileName();
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
       toast.success(isAr ? 'تم تنزيل PDF' : 'PDF downloaded');
     } catch (err) {
-      console.error('[Results] PDF download failed', err);
-      toast.error(isAr ? 'فشل تنزيل PDF' : 'PDF download failed');
+      console.error('[Results] Direct PDF download failed, fallback to print', err);
+      toast.error(isAr ? 'تعذر تنزيل PDF مباشرة، سيتم فتح وضع الطباعة.' : 'Direct PDF download failed, opening print mode.');
       await generateHtmlPrint();
     } finally {
-      el.classList.remove('pdf-generating');
       setIsDownloadingPdf(false);
     }
   };
-
-  // const pdfFindings = ... (unused)
-
-  // PDF export now handled client-side with PDFDownloadLink (see render below)
 
   const sevColor = (s: string) =>
     s === 'critical' ? 'bg-error/10 text-error border-error/20' :
@@ -757,29 +765,11 @@ export function Results() {
   }
 
   return (
-    <div ref={reportContentRef} className="flex flex-col min-h-full w-full pb-20">
-      <style>{`
-        .pdf-generating .no-pdf { display: none !important; }
-        .pdf-generating, .pdf-generating * {
-          color: #111827 !important;
-          border-color: #d1d5db !important;
-          box-shadow: none !important;
-          text-shadow: none !important;
-        }
-        .pdf-generating .bg-surface,
-        .pdf-generating [class*="bg-surface"],
-        .pdf-generating [class*="bg-background"] {
-          background-color: #ffffff !important;
-        }
-        .pdf-generating .text-text-muted,
-        .pdf-generating [class*="text-text-muted"] {
-          color: #6b7280 !important;
-        }
-      `}</style>
+    <div className="flex flex-col min-h-full w-full pb-20">
       {/* Header */}
       <div className="flex items-center justify-between mb-8 print:mb-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" className="px-2 print:hidden no-pdf" onClick={() => navigate(-1)} aria-label="Go back">
+          <Button variant="ghost" className="px-2 print:hidden" onClick={() => navigate(-1)} aria-label="Go back">
             <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
           </Button>
           <div>
@@ -789,7 +779,7 @@ export function Results() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 print:hidden no-pdf">
+        <div className="flex items-center gap-3 print:hidden">
           <Button variant="outline" onClick={handleDownloadPdf} className="h-10 px-4 flex gap-2" disabled={isDownloadingPdf}>
             {isDownloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
             {isDownloadingPdf ? (lang === 'ar' ? 'جاري تجهيز PDF...' : 'Preparing PDF...') : (lang === 'ar' ? 'تنزيل PDF' : 'Download PDF')}
