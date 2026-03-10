@@ -19,6 +19,14 @@ function getDefaultSectionsForRoleKey(roleKey: string): string[] {
   return ["clients", "reports"];
 }
 
+/** Map roleKey to display name for user_metadata.role so session has correct role at login (RBAC before getMe()). */
+function getRoleDisplayName(roleKey: string): string {
+  const k = roleKey.toLowerCase().replace(/\s/g, "_");
+  if (k === "super_admin") return "Super Admin";
+  if (k === "regulator") return "Regulator";
+  return "Admin";
+}
+
 function generateTempPassword(length = 20): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
   const arr = new Uint8Array(length);
@@ -180,7 +188,7 @@ Deno.serve(async (req: Request) => {
       await upsertProfile(supabase, targetUserId, displayName, finalEmail);
       await ensureUserRole(supabase, targetUserId, roleKey);
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
-        user_metadata: { ...(existingUser.user_metadata ?? {}), name: displayName, allowedSections },
+        user_metadata: { ...(existingUser.user_metadata ?? {}), name: displayName, allowedSections, role: getRoleDisplayName(roleKey) },
       });
       if (metaErr) console.error("[users] updateUserById existing:", metaErr.message);
       return jsonResponse({ userId: targetUserId, invited: false, existing: true }, 200, { origin });
@@ -203,7 +211,7 @@ Deno.serve(async (req: Request) => {
       await upsertProfile(supabase, targetUserId, displayName, finalEmail);
       await ensureUserRole(supabase, targetUserId, roleKey);
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
-        user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections },
+        user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, role: getRoleDisplayName(roleKey) },
       });
       if (metaErr) console.error("[users] updateUserById invite:", metaErr.message);
       return jsonResponse({ userId: targetUserId, invited: true }, 200, { origin });
@@ -214,7 +222,7 @@ Deno.serve(async (req: Request) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { name: name || email.split("@")[0], allowedSections },
+      user_metadata: { name: name || email.split("@")[0], allowedSections, role: getRoleDisplayName(roleKey) },
     });
     if (createErr) {
       console.error("[users] createUser:", createErr.message);
@@ -228,7 +236,7 @@ Deno.serve(async (req: Request) => {
     await upsertProfile(supabase, targetUserId, displayName, finalEmail);
     await ensureUserRole(supabase, targetUserId, roleKey);
     const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
-      user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections },
+      user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, role: getRoleDisplayName(roleKey) },
     });
     if (metaErr) console.error("[users] updateUserById create:", metaErr.message);
     if (!PROD) returnedTempPassword = password;
@@ -281,14 +289,15 @@ Deno.serve(async (req: Request) => {
     // Update role if changed
     if (roleKey !== undefined) await ensureUserRole(supabase, targetUserId, roleKey);
 
-    // Update user_metadata if name or allowedSections changed
-    const metadataUpdates: any = {};
+    // Update user_metadata if name, allowedSections, or role changed (keeps session in sync for fast login RBAC)
+    const metadataUpdates: Record<string, unknown> = {};
     if (name !== undefined) metadataUpdates.name = name;
     if (allowedSections !== undefined) metadataUpdates.allowedSections = allowedSections;
+    if (roleKey !== undefined) metadataUpdates.role = getRoleDisplayName(roleKey);
 
     if (Object.keys(metadataUpdates).length > 0) {
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
-        user_metadata: metadataUpdates
+        user_metadata: { ...(authUser.user_metadata ?? {}), ...metadataUpdates }
       });
       if (metaErr) {
         console.error("[users] updateUserById metadata:", metaErr.message);

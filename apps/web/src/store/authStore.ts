@@ -113,27 +113,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
     if (data.session?.user) {
+      // Session user_metadata (role + allowedSections) is kept in sync by users/invites Edge functions, so RBAC is correct at first paint
       set({ user: mapSupabaseUserToAppUser(data.session.user), isAuthenticated: true });
-      try {
-        const res = await authApi.getMe();
-            if (res?.user) {
-          const role = (res.user.role as Role) || 'Admin';
-          set({
-            user: {
-              id: res.user.id,
-              email: res.user.email,
-              name: res.user.name,
-              role,
-              permissions: res.user.permissions ?? [],
-              allowedSections: (!res.user.allowedSections || res.user.allowedSections.length === 0)
-                ? getDefaultSectionsForRole(role)
-                : res.user.allowedSections,
-            },
-          });
-        }
-      } catch (_) {
-        /* keep metadata-based user */
-      }
+      // Enrich with /me in background so login completes fast; when it returns we update with authoritative role/sections
+      authApi.getMe()
+        .then((res) => {
+          if (res?.user) {
+            const role = (res.user.role as Role) || 'Admin';
+            set({
+              user: {
+                id: res.user.id,
+                email: res.user.email,
+                name: res.user.name,
+                role,
+                permissions: res.user.permissions ?? [],
+                allowedSections: (!res.user.allowedSections || res.user.allowedSections.length === 0)
+                  ? getDefaultSectionsForRole(role)
+                  : res.user.allowedSections,
+              },
+            });
+          }
+        })
+        .catch(() => { /* keep metadata-based user */ });
     }
   },
 
