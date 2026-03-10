@@ -52,10 +52,13 @@ export const AnalysisReportPdf: React.FC<{
     branding,
     coverImageDataUrl,
 }) => {
-    const { scriptTitle, clientName, findings, lang = "en" } = data;
+    const { scriptTitle, clientName, findings: rawFindings, lang = "en" } = data;
     const isAr = lang === "ar";
     const formatOpts = { lang, format: dateFormat };
     const showDecisionBadge = branding?.showDecisionBadge !== false;
+
+    // Defensive: ensure no undefined entries (avoids "reading 'id' of undefined" in maps)
+    const findings = (rawFindings || []).filter((f): f is Finding => f != null && typeof (f as Finding).id !== "undefined");
 
     // Group findings by severity for summary
     const grouped = findings.reduce((acc, finding) => {

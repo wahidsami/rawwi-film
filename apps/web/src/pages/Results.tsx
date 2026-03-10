@@ -457,34 +457,39 @@ export function Results() {
 
   const buildPdfFindings = () => {
     if (hasRealFindings) {
-      return findings.map((f) => ({
-        id: f.id,
-        articleId: f.articleId,
-        titleAr: f.titleAr,
-        severity: f.severity,
-        confidence: f.confidence ?? 0,
-        evidenceSnippet: f.evidenceSnippet,
-        source: f.source,
-        startLineChunk: f.startLineChunk ?? undefined,
-        endLineChunk: f.endLineChunk ?? undefined,
-        reviewStatus: f.reviewStatus,
-        reviewReason: f.reviewReason ?? undefined,
-        reviewedAt: f.reviewedAt ?? undefined,
-      }));
+      return findings
+        .filter((f): f is AnalysisFinding => f != null && f.id != null)
+        .map((f) => ({
+          id: f.id,
+          articleId: f.articleId,
+          titleAr: f.titleAr,
+          severity: f.severity,
+          confidence: f.confidence ?? 0,
+          evidenceSnippet: f.evidenceSnippet,
+          source: f.source,
+          startLineChunk: f.startLineChunk ?? undefined,
+          endLineChunk: f.endLineChunk ?? undefined,
+          reviewStatus: f.reviewStatus,
+          reviewReason: f.reviewReason ?? undefined,
+          reviewedAt: f.reviewedAt ?? undefined,
+        }));
     }
     const byArticle = summary?.findings_by_article;
     if (!byArticle || !Array.isArray(byArticle)) return [];
-    return byArticle.flatMap((art, idxBase) =>
-      art.top_findings.map((f, idx) => ({
-        id: `summary-${art.article_id}-${idxBase}-${idx}`,
-        articleId: art.article_id,
-        titleAr: f.title_ar,
-        severity: f.severity,
-        confidence: f.confidence ?? 0,
-        evidenceSnippet: f.evidence_snippet,
-        source: 'ai',
-      }))
-    );
+    return byArticle.flatMap((art, idxBase) => {
+      if (!art?.top_findings) return [];
+      return (art.top_findings as Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }>)
+        .filter((f) => f != null)
+        .map((f, idx) => ({
+          id: `summary-${art.article_id}-${idxBase}-${idx}`,
+          articleId: art.article_id,
+          titleAr: f.title_ar ?? '—',
+          severity: f.severity ?? 'info',
+          confidence: f.confidence ?? 0,
+          evidenceSnippet: f.evidence_snippet ?? '',
+          source: 'ai' as const,
+        }));
+    });
   };
 
   function buildPdfFileName(): string {
