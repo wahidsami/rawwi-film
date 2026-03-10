@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View, Image, Page, Document } from "@react-pdf/renderer";
 import { formatDate, formatDateLong } from "@/utils/dateFormat";
 import { ReportLayout } from "./ReportLayout";
-import { styles, themeColors, extendedStyles, summaryColors, A4_PAGE_SIZE_OBJ } from "./ReportStyles";
+import { styles, themeColors, extendedStyles, summaryColors } from "./ReportStyles";
 
 interface Finding {
     id: string;
@@ -83,7 +83,7 @@ export const AnalysisReportPdf: React.FC<{
     return (
         <Document>
             {/* Cover Page */}
-            <Page size={A4_PAGE_SIZE_OBJ} wrap={false} style={[extendedStyles.coverPage, isAr ? styles.pageAr : {}]}>
+            <Page size="A4" wrap={false} style={[extendedStyles.coverPage, isAr ? styles.pageAr : {}]}>
                 {coverImageDataUrl ? (
                     <Image src={coverImageDataUrl} style={extendedStyles.coverBackground} />
                 ) : (
@@ -140,7 +140,7 @@ export const AnalysisReportPdf: React.FC<{
                     </View>
                 </View>
 
-                <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 8, marginBottom: 30 }}>
+                <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
                     <View style={styles.metadataChip}>
                         <Text style={styles.textXs}>{isAr ? "إجمالي المخالفات: " : "Total Violations: "} {findings.length}</Text>
                     </View>
@@ -149,8 +149,8 @@ export const AnalysisReportPdf: React.FC<{
                     </View>
                 </View>
 
-                {/* Findings Section (Grouped by Article) */}
-                <Text style={[styles.sectionTitle, isAr ? styles.rtlText : {}]}>
+                {/* Findings Section (Grouped by Article) — compact so first cards appear on page 2 */}
+                <Text style={[styles.sectionTitle, isAr ? styles.rtlText : {}]} break={false}>
                     {isAr ? "تفاصيل القضايا" : "Findings Details"}
                 </Text>
 

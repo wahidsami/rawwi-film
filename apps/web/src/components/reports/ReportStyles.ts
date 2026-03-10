@@ -129,7 +129,7 @@ export const styles = StyleSheet.create({
   statGrid: {
     flexDirection: "row-reverse", // RTL
     gap: 10,
-    marginBottom: 20,
+    marginBottom: 12,
   },
   statCard: {
     flex: 1,
@@ -168,8 +168,8 @@ export const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 10,
-    marginTop: 20,
+    marginBottom: 8,
+    marginTop: 12,
     color: "#111827",
     paddingBottom: 5,
     borderBottomWidth: 2,
@@ -295,7 +295,7 @@ export const summaryColors = {
 };
 
 export const extendedStyles = StyleSheet.create({
-  // Cover Page
+  // Cover Page — do not set width/height here; Page size="A4" controls dimensions
   coverPage: {
     backgroundColor: "#FFFFFF",
     fontFamily: "Roboto",
@@ -303,21 +303,22 @@ export const extendedStyles = StyleSheet.create({
     color: "#333333",
     padding: 0,
     margin: 0,
-    width: A4_WIDTH,
-    height: A4_HEIGHT,
   },
   coverBackground: {
     position: "absolute",
     top: 0,
     left: 0,
+    right: 0,
+    bottom: 0,
     width: A4_WIDTH,
     height: A4_HEIGHT,
     objectFit: "fill",
   },
   coverOverlayMeta: {
-    marginTop: 520,
-    marginLeft: 60,
-    marginRight: 60,
+    position: "absolute",
+    bottom: 80,
+    left: 60,
+    right: 60,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 14,
