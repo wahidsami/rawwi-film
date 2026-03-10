@@ -22,14 +22,16 @@ import {
   Edit2,
   Trash2,
   Download,
-  UserCheck
+  UserCheck,
+  Loader2,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate, formatDateTime } from '@/utils/dateFormat';
+import { formatDate } from '@/utils/dateFormat';
 import { cn } from '@/utils/cn';
 import { usersApi } from '@/api';
-import { escapeHtmlSafe } from '@/utils/escapeHtml';
+import { pdf } from '@react-pdf/renderer';
+import { ClientsReportPdf } from '@/components/reports/ClientsReportPdf';
 
 export function Clients() {
   const { t, lang } = useLangStore();
@@ -72,122 +74,61 @@ export function Clients() {
   const handleExportPdf = async () => {
     setExportingPdf(true);
     try {
-      // 1. Fetch Template
-      const response = await fetch('/templates/clients-overview-report-template.html');
-      const template = await response.text();
-
       const isAr = lang === 'ar';
-      const baseUrl = window.location.origin;
+      const origin = window.location.origin;
+      let coverImageDataUrl: string | null = null;
+      try {
+        const res = await fetch(`${origin}/cover.jpg`);
+        if (res.ok) {
+          const blob = await res.blob();
+          coverImageDataUrl = await new Promise<string>((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(r.result as string);
+            r.onerror = reject;
+            r.readAsDataURL(blob);
+          });
+        }
+      } catch (_) {}
 
-      // Images
-      const loginLogo = `${baseUrl}/loginlogo.png`;
-      const footerImg = `${baseUrl}/footer.png`;
-      const dashLogo = `${baseUrl}/loginlogo.png`;
-
-      // 2. Prepare Data
       const clientsData = filteredClients.map(c => ({
         name: isAr ? c.nameAr : c.nameEn,
         nameSecondary: isAr ? c.nameEn : c.nameAr,
-        representative: c.representativeName,
-        email: c.email,
+        representative: c.representativeName ?? '',
+        email: c.email ?? '',
         phone: c.phone || c.mobile || '—',
-        registrationDate: c.createdAt,
-        scriptsCount: c.scriptsCount,
-        status: c.scriptsCount > 0 ? (isAr ? 'نشط' : 'Active') : (isAr ? 'غير نشط' : 'Inactive'),
-        statusStyle: c.scriptsCount > 0
-          ? 'background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0;'
-          : 'background: #F3F4F6; color: #6B7280; border: 1px solid #E5E7EB;'
+        registrationDate: c.createdAt ?? '',
+        scriptsCount: c.scriptsCount ?? 0,
+        status: (c.scriptsCount ?? 0) > 0 ? (isAr ? 'نشط' : 'Active') : (isAr ? 'غير نشط' : 'Inactive'),
       }));
 
-      // Stats
       const totalClients = companies.length;
       const totalScripts = companies.reduce((acc, c) => acc + (c.scriptsCount || 0), 0);
       const avgScripts = totalClients > 0 ? Math.round((totalScripts / totalClients) * 10) / 10 : 0;
       const activeClients = companies.filter(c => (c.scriptsCount || 0) > 0).length;
 
-      // 3. Replacements
-      let html = template;
-      const replacements: Record<string, string> = {
-        '{{lang}}': isAr ? 'ar' : 'en',
-        '{{dir}}': isAr ? 'rtl' : 'ltr',
-        '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
-        '{{generationTimestamp}}': formatDateTime(new Date(), { lang: isAr ? 'ar' : 'en' }),
-        '{{loginLogoBase64}}': loginLogo,
-        '{{footerImageBase64}}': footerImg,
-        '{{dashboardLogoBase64}}': dashLogo,
-
-        // Labels
-        '{{labels.reportTitle}}': isAr ? 'تقرير محفظة العملاء' : 'Clients Portfolio Report',
-        '{{labels.subtitle}}': isAr ? 'نظام إدارة العملاء' : 'Client Management System',
-        '{{labels.totalClients}}': isAr ? 'إجمالي العملاء' : 'Total Clients',
-        '{{labels.date}}': isAr ? 'التاريخ' : 'Date',
-        '{{labels.executiveSummary}}': isAr ? 'الملخص التنفيذي' : 'Executive Summary',
-        '{{labels.totalScripts}}': isAr ? 'إجمالي النصوص' : 'Total Scripts',
-        '{{labels.avgScripts}}': isAr ? 'متوسط النصوص' : 'Avg Scripts',
-        '{{labels.activeClients}}': isAr ? 'عملاء نشطون' : 'Active Clients',
-        '{{labels.clientsDetails}}': isAr ? 'تفاصيل العملاء' : 'Clients Details',
-        '{{labels.clientName}}': isAr ? 'اسم العميل' : 'Client Name',
-        '{{labels.representative}}': isAr ? 'المندوب' : 'Representative',
-        '{{labels.contact}}': isAr ? 'الاتصال' : 'Contact',
-        '{{labels.registrationDate}}': isAr ? 'تاريخ التسجيل' : 'Registration Date',
-        '{{labels.scriptsCount}}': isAr ? 'عدد النصوص' : 'Scripts',
-        '{{labels.status}}': isAr ? 'الحالة' : 'Status',
-
-        // Stats Values
-        '{{stats.totalClients}}': String(totalClients),
-        '{{stats.totalScripts}}': String(totalScripts),
-        '{{stats.avgScriptsPerClient}}': String(avgScripts),
-        '{{stats.activeClients}}': String(activeClients),
-        '{{totalClients}}': String(totalClients),
-      };
-
-      Object.entries(replacements).forEach(([key, val]) => {
-        html = html.split(key).join(val);
-      });
-
-      // 4. Generate Table Rows
-      const rowsHtml = clientsData.map(item => `
-        <tr>
-            <td>
-                <div class="font-bold">${escapeHtmlSafe(item.name)}</div>
-                <div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${escapeHtmlSafe(item.nameSecondary)}</div>
-            </td>
-            <td>${escapeHtmlSafe(item.representative)}</td>
-            <td>
-                <div style="font-size: 9px;">${escapeHtmlSafe(item.email)}</div>
-                <div style="font-size: 9px; color: #6B7280;">${escapeHtmlSafe(item.phone)}</div>
-            </td>
-            <td>${escapeHtmlSafe(item.registrationDate)}</td>
-            <td style="text-align: center; font-weight: 600;">${item.scriptsCount}</td>
-            <td>
-                <span style="padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; ${item.statusStyle}">
-                    ${escapeHtmlSafe(item.status)}
-                </span>
-            </td>
-        </tr>
-      `).join('');
-
-      // Replace loop block
-      const loopRegex = /{{#each clients}}([\s\S]*?){{\/each}}/m;
-      html = html.replace(loopRegex, rowsHtml);
-
-      // 5. Open Window
-      const win = window.open('', '_blank');
-      if (!win) {
-        toast.error(isAr ? 'تم حظر النافذة المنبثقة' : 'Popup blocked');
-        return;
-      }
-
-      setTimeout(() => {
-        win.document.write(html);
-        win.document.close();
-
-        // Delay print to allow images to load
-        setTimeout(() => {
-          win.print();
-        }, 500);
-      }, 100);
-
+      const doc = (
+        <ClientsReportPdf
+          clientsData={clientsData}
+          totalClients={totalClients}
+          totalScripts={totalScripts}
+          avgScripts={avgScripts}
+          activeClients={activeClients}
+          lang={isAr ? 'ar' : 'en'}
+          dateFormat={settings?.platform?.dateFormat}
+          coverImageDataUrl={coverImageDataUrl}
+          generatedAt={new Date().toISOString()}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `clients_report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success(isAr ? 'تم تنزيل التقرير' : 'Report downloaded');
     } catch (err: unknown) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : 'PDF export failed');
@@ -238,8 +179,8 @@ export function Clients() {
             onClick={handleExportPdf}
             disabled={exportingPdf}
           >
-            <Download className="w-4 h-4" />
-            {t('exportPdf')}
+            {exportingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {exportingPdf ? (lang === 'ar' ? 'جاري تجهيز PDF...' : 'Preparing PDF...') : t('exportPdf')}
           </Button>
           {isAdmin && (
             <Button className="flex items-center gap-2" onClick={handleOpenAddModal}>
