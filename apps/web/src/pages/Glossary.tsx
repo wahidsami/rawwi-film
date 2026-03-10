@@ -35,6 +35,10 @@ export function Glossary() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTermId, setEditingTermId] = useState<string | null>(null);
 
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, filterCategory, filterSeverity, filterMode]);
+
   const isAdminOrRegulator = user?.role === 'Super Admin' || user?.role === 'Admin' || user?.role === 'Regulator';
 
   if (!isAdminOrRegulator) {
@@ -55,6 +59,12 @@ export function Glossary() {
     const matchesMode = filterMode === 'all' || term.enforcement_mode === filterMode;
     return matchesSearch && matchesCategory && matchesSeverity && matchesMode;
   });
+
+  const totalFiltered = filteredTerms.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const start = (currentPage - 1) * pageSize;
+  const paginatedTerms = filteredTerms.slice(start, start + pageSize);
 
   const softSignalsCount = activeTerms.filter(t => t.enforcement_mode === 'soft_signal').length;
   const mandatoryCount = activeTerms.filter(t => t.enforcement_mode === 'mandatory_finding').length;
