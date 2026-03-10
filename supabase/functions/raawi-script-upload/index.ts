@@ -93,7 +93,8 @@ Deno.serve(async (req: Request) => {
 
     // Create storage path: {companyId}/{scriptId}/{timestamp}_{filename}
     const timestamp = Date.now();
-    const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    // Allow letters from any language, numbers, spaces, dots, dashes, underscores, and the Arabic comma (،)
+    const sanitizedFilename = file.name.replace(/[^\p{L}\p{N}\s._\-،]/gu, '_');
     const storagePath = companyId
         ? `${companyId}/${scriptId}/${timestamp}_${sanitizedFilename}`
         : `${scriptId}/${timestamp}_${sanitizedFilename}`;
