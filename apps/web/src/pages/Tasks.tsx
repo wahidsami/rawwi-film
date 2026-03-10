@@ -6,12 +6,22 @@ import { useDataStore } from '@/store/dataStore';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ArrowRight, FileText, Calendar, CheckCircle2 } from 'lucide-react';
+import type { AnalysisJob, Task } from '@/api/models';
 
 export function Tasks() {
   const { lang } = useLangStore();
   const { settings } = useSettingsStore();
   const navigate = useNavigate();
-  const { tasks } = useDataStore();
+  const { tasks, scripts } = useDataStore();
+
+  /** Resolve script display name: assignment Task has scriptTitle; AnalysisJob has only scriptId — resolve from scripts list when possible. */
+  const getScriptDisplayName = (task: AnalysisJob | Task): string => {
+    if ('scriptTitle' in task && typeof (task as Task).scriptTitle === 'string' && (task as Task).scriptTitle.trim()) {
+      return (task as Task).scriptTitle.trim();
+    }
+    const script = scripts.find((s) => s.id === task.scriptId);
+    return script?.title?.trim() ?? task.scriptId;
+  };
 
   return (
     <div className="space-y-6">
@@ -61,9 +71,9 @@ export function Tasks() {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <FileText className="w-5 h-5 text-primary/70" />
-                        <span className="font-medium text-text-main group-hover:text-primary transition-colors">
-                          {task.scriptId}
+                        <FileText className="w-5 h-5 text-primary/70 shrink-0" />
+                        <span className="font-medium text-text-main group-hover:text-primary transition-colors" title={task.scriptId}>
+                          {getScriptDisplayName(task)}
                         </span>
                       </div>
                     </td>
