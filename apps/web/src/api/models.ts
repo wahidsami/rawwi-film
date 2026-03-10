@@ -162,6 +162,8 @@ export interface LexiconTerm {
   description?: string;
   example_usage?: string;
   created_by: string;
+  /** Display name of user who added the term (from API). */
+  created_by_name?: string | null;
   created_at: string;
   updated_at: string;
   is_active: boolean;

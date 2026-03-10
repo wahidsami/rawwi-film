@@ -316,6 +316,7 @@ export function Glossary() {
                 <th className="px-6 py-4 font-semibold">{t('severity')}</th>
                 <th className="px-6 py-4 font-semibold">{t('enforcementMode')}</th>
                 <th className="px-6 py-4 font-semibold">{t('article')}</th>
+                <th className="px-6 py-4 font-semibold">{lang === 'ar' ? 'أضافه' : 'Added by'}</th>
                 <th className="px-6 py-4 font-semibold text-end">{t('actions')}</th>
               </tr>
             </thead>
@@ -352,6 +353,9 @@ export function Glossary() {
                       <p className="font-semibold">{t('article')} {term.gcam_article_id} {term.gcam_atom_id ? `(${term.gcam_atom_id})` : ''}</p>
                       {term.gcam_article_title_ar && <p className="text-text-muted mt-0.5">{term.gcam_article_title_ar}</p>}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 text-text-muted text-xs">
+                    {term.created_by_name ?? (lang === 'ar' ? '—' : '—')}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">

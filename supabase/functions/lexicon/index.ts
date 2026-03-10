@@ -89,7 +89,24 @@ Deno.serve(async (req: Request) => {
       console.error("[lexicon] GET terms error:", error.message);
       return json({ error: error.message }, 500);
     }
-    const rows = (data ?? []).map((r) => toCamel(r as Record<string, unknown>));
+    const rawRows = (data ?? []) as { created_by?: string }[];
+    const creatorIds = [...new Set(rawRows.map((r) => r.created_by).filter(Boolean))] as string[];
+    const creatorNames: Record<string, string> = {};
+    if (creatorIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, name")
+        .in("user_id", creatorIds);
+      (profiles ?? []).forEach((p: { user_id: string; name?: string }) => {
+        creatorNames[p.user_id] = p.name ?? p.user_id;
+      });
+    }
+    const rows = rawRows.map((r) => {
+      const out = toCamel(r as Record<string, unknown>) as Record<string, unknown>;
+      const createdBy = r.created_by;
+      out.created_by_name = createdBy ? (creatorNames[createdBy] ?? null) : null;
+      return out;
+    });
     return json(rows);
   }
 
