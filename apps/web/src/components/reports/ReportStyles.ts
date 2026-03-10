@@ -3,6 +3,7 @@ import { StyleSheet, Font } from "@react-pdf/renderer";
 export const A4_WIDTH = 595.28;
 export const A4_HEIGHT = 841.89;
 export const A4_PAGE_SIZE: [number, number] = [A4_WIDTH, A4_HEIGHT];
+export const A4_PAGE_SIZE_OBJ = { width: A4_WIDTH, height: A4_HEIGHT } as const;
 
 const fontBase = typeof window !== "undefined" ? window.location.origin : "";
 
