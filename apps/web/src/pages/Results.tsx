@@ -764,10 +764,6 @@ export function Results() {
             {isDownloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
             {isDownloadingPdf ? (lang === 'ar' ? 'جاري تجهيز PDF...' : 'Preparing PDF...') : (lang === 'ar' ? 'تنزيل PDF' : 'Download PDF')}
           </Button>
-          <Button variant="ghost" onClick={generateHtmlPrint} className="h-10 px-4 flex gap-2">
-            <FileDown className="w-4 h-4" />
-            {lang === 'ar' ? 'طباعة' : 'Print'}
-          </Button>
         </div>
       </div>
 
