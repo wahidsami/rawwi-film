@@ -39,6 +39,7 @@ function Reports() {
   const [companyId, setCompanyId] = useState('all');
   const [decision, setDecision] = useState('all');
   const [userFilter, setUserFilter] = useState('all');
+  const [filterKey, setFilterKey] = useState(0);
 
   useEffect(() => {
     fetchInitialData();
@@ -81,6 +82,7 @@ function Reports() {
     setCompanyId('all');
     setDecision('all');
     setUserFilter('all');
+    setFilterKey((k) => k + 1);
   }, []);
 
   const filteredReports = reports.filter(r => {
@@ -286,7 +288,7 @@ function Reports() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-4" key={filterKey}>
         <div className="w-full lg:w-1/3">
           <Input
             placeholder={t('search')}
@@ -325,7 +327,7 @@ function Reports() {
               ]}
             />
           )}
-          <Button type="button" variant="ghost" onClick={handleResetFilters}>
+          <Button type="button" variant="ghost" onClick={handleResetFilters} aria-label={lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset filters'}>
             <RefreshCw className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
             {lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
           </Button>
