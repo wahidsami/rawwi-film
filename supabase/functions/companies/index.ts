@@ -14,6 +14,7 @@ import { isRegulatorOnly, isSuperAdminOrAdmin } from "../_shared/roleCheck.ts";
 const LOGO_BUCKET = "company-logos";
 const LOGO_MAX_BYTES = 2 * 1024 * 1024; // 2MB
 const LOGO_MIMES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const HTML_TAG_LIKE = /<|>/;
 
 type ClientRow = {
   id: string;
@@ -64,6 +65,22 @@ function getPathAfterCompanies(url: string): string {
   const match = pathname.match(/\/companies\/?(.*)$/);
   const rest = match?.[1] ?? "";
   return rest.replace(/^\/+/, "").trim();
+}
+
+function hasHtmlLikeContent(value: string): boolean {
+  return HTML_TAG_LIKE.test(value);
+}
+
+function validateSafeClientText(
+  fieldLabel: string,
+  value: string,
+): string | null {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return null;
+  if (hasHtmlLikeContent(trimmed)) {
+    return `${fieldLabel} contains disallowed characters`;
+  }
+  return null;
 }
 
 async function getActorUserId(req: Request, supabase: ReturnType<typeof createSupabaseAdmin>): Promise<string | null> {
@@ -167,6 +184,20 @@ Deno.serve(async (req: Request) => {
       const nameEn = typeof body.nameEn === "string" ? body.nameEn.trim() : "";
       if (!nameAr || !nameEn) {
         return jsonResponse({ error: "nameAr and nameEn are required" }, 400);
+      }
+      const nameArErr = validateSafeClientText("nameAr", nameAr);
+      if (nameArErr) return jsonResponse({ error: nameArErr }, 400);
+      const nameEnErr = validateSafeClientText("nameEn", nameEn);
+      if (nameEnErr) return jsonResponse({ error: nameEnErr }, 400);
+      const repName = typeof body.representativeName === "string" ? body.representativeName.trim() : "";
+      if (repName) {
+        const repErr = validateSafeClientText("representativeName", repName);
+        if (repErr) return jsonResponse({ error: repErr }, 400);
+      }
+      const repTitle = typeof body.representativeTitle === "string" ? body.representativeTitle.trim() : "";
+      if (repTitle) {
+        const repTitleErr = validateSafeClientText("representativeTitle", repTitle);
+        if (repTitleErr) return jsonResponse({ error: repTitleErr }, 400);
       }
 
       const insert: Record<string, unknown> = {
@@ -298,6 +329,8 @@ Deno.serve(async (req: Request) => {
         if (v === "") {
           return jsonResponse({ error: "nameAr cannot be empty when provided" }, 400);
         }
+        const err = validateSafeClientText("nameAr", v);
+        if (err) return jsonResponse({ error: err }, 400);
         updates.name_ar = v;
       }
       if (body.nameEn !== undefined) {
@@ -305,10 +338,26 @@ Deno.serve(async (req: Request) => {
         if (v === "") {
           return jsonResponse({ error: "nameEn cannot be empty when provided" }, 400);
         }
+        const err = validateSafeClientText("nameEn", v);
+        if (err) return jsonResponse({ error: err }, 400);
         updates.name_en = v;
       }
-      if (body.representativeName !== undefined) updates.representative_name = typeof body.representativeName === "string" ? body.representativeName.trim() || null : null;
-      if (body.representativeTitle !== undefined) updates.representative_title = typeof body.representativeTitle === "string" ? body.representativeTitle.trim() || null : null;
+      if (body.representativeName !== undefined) {
+        const rep = typeof body.representativeName === "string" ? body.representativeName.trim() : "";
+        if (rep) {
+          const err = validateSafeClientText("representativeName", rep);
+          if (err) return jsonResponse({ error: err }, 400);
+        }
+        updates.representative_name = rep || null;
+      }
+      if (body.representativeTitle !== undefined) {
+        const repTitle = typeof body.representativeTitle === "string" ? body.representativeTitle.trim() : "";
+        if (repTitle) {
+          const err = validateSafeClientText("representativeTitle", repTitle);
+          if (err) return jsonResponse({ error: err }, 400);
+        }
+        updates.representative_title = repTitle || null;
+      }
       if (body.mobile !== undefined) updates.mobile = typeof body.mobile === "string" ? body.mobile.trim() || null : null;
       if (body.email !== undefined) updates.email = typeof body.email === "string" ? body.email.trim() || null : null;
       if (body.logoUrl !== undefined) {

@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
 import { cn } from '@/utils/cn';
+import { escapeHtmlSafe } from '@/utils/escapeHtml';
 import toast from 'react-hot-toast';
 import { AnalysisReportPdf } from '@/components/reports/AnalysisReportPdf';
 import {
@@ -270,8 +271,10 @@ export function Results() {
 
       // Metadata from summary (backend may attach client_name/script_title at top level or under metadata)
       const sum = summary as typeof summary & { client_name?: string; script_title?: string; scriptTitle?: string; metadata?: { client_name?: string } };
-      const clientName = report.clientName || sum.client_name || sum.metadata?.client_name || (isAr ? 'عميل' : 'Client');
-      const scriptTitle = report.scriptTitle || sum.script_title || sum.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis');
+      const clientNameRaw = report.clientName || sum.client_name || sum.metadata?.client_name || (isAr ? 'عميل' : 'Client');
+      const scriptTitleRaw = report.scriptTitle || sum.script_title || sum.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis');
+      const clientName = escapeHtmlSafe(clientNameRaw);
+      const scriptTitle = escapeHtmlSafe(scriptTitleRaw);
 
       // Findings Grouping
 
@@ -336,10 +339,10 @@ export function Results() {
         '{{loginLogoBase64}}': loginLogo,
         '{{footerImageBase64}}': footerImg,
         '{{dashboardLogoBase64}}': dashLogo,
-        '{{orgNameAr}}': settings?.branding?.orgNameAr ?? 'راوي فيلم',
-        '{{orgNameEn}}': settings?.branding?.orgNameEn ?? 'Raawi Film',
-        '{{footerNoteAr}}': settings?.branding?.footerNoteAr ?? '',
-        '{{footerNoteEn}}': settings?.branding?.footerNoteEn ?? '',
+        '{{orgNameAr}}': escapeHtmlSafe(settings?.branding?.orgNameAr ?? 'راوي فيلم'),
+        '{{orgNameEn}}': escapeHtmlSafe(settings?.branding?.orgNameEn ?? 'Raawi Film'),
+        '{{footerNoteAr}}': escapeHtmlSafe(settings?.branding?.footerNoteAr ?? ''),
+        '{{footerNoteEn}}': escapeHtmlSafe(settings?.branding?.footerNoteEn ?? ''),
 
         // Stats
         '{{stats.critical}}': String(displaySc.critical),
@@ -381,38 +384,38 @@ export function Results() {
         <div class="finding-card" style="background:#F0FDF4;border-color:#BBF7D0;">
             <div class="card-header" style="justify-content:flex-start;">
                 <span class="severity-badge" style="background:#DCFCE7;color:#166534;border:1px solid #86EFAC;">
-                    ${isAr ? 'سليم' : 'Compliant'}
+                    ${escapeHtmlSafe(isAr ? 'سليم' : 'Compliant')}
                 </span>
-                <span class="finding-title">${isAr ? 'نتيجة التحليل' : 'Analysis Result'}</span>
+                <span class="finding-title">${escapeHtmlSafe(isAr ? 'نتيجة التحليل' : 'Analysis Result')}</span>
             </div>
             <div class="evidence-box" style="border-color:#86EFAC;background:#F0FDF4;font-style:normal;">
-                ${zeroFindingsMessage}
+                ${escapeHtmlSafe(zeroFindingsMessage)}
             </div>
         </div>
       `
         : groupedFindingsHtml.map(g => `
         <div class="article-group">
             <div class="article-header">
-                <span class="article-title">${g.articleTitle}</span>
+                <span class="article-title">${escapeHtmlSafe(g.articleTitle)}</span>
                 <span class="meta-chip">${g.count} ${replacements['{{labels.issues}}']}</span>
             </div>
             ${g.findings.map(f => `
             <div class="finding-card">
                 <div class="card-header">
-                    <span class="severity-badge sev-${f.severity}">${f.severityLabel}</span>
-                    <span class="finding-title">${f.title}</span>
+                    <span class="severity-badge sev-${escapeHtmlSafe(f.severity)}">${escapeHtmlSafe(f.severityLabel)}</span>
+                    <span class="finding-title">${escapeHtmlSafe(f.title)}</span>
                 </div>
                 <div class="card-meta">
                     <span class="meta-chip">${replacements['{{labels.confidence}}']}: ${f.confidence}%</span>
-                    <span class="meta-chip">${replacements['{{labels.source}}']}: ${f.source}</span>
-                    ${f.lines ? `<span class="meta-chip">${replacements['{{labels.lines}}']}: ${f.lines}</span>` : ''}
+                    <span class="meta-chip">${replacements['{{labels.source}}']}: ${escapeHtmlSafe(f.source)}</span>
+                    ${f.lines ? `<span class="meta-chip">${replacements['{{labels.lines}}']}: ${escapeHtmlSafe(f.lines)}</span>` : ''}
                 </div>
-                <div class="evidence-box">"${f.evidence}"</div>
+                <div class="evidence-box">"${escapeHtmlSafe(f.evidence)}"</div>
                 ${f.reviewStatus ? `
                 <div class="review-status">
                     ${replacements['{{labels.status}}']}: 
-                    <span class="${f.isSafe ? 'status-safe' : 'status-violation'}">${f.reviewStatusLabel}</span>
-                    ${f.reviewedAt ? `<span style="margin-inline-start: 10px;">(${f.reviewedAt})</span>` : ''}
+                    <span class="${f.isSafe ? 'status-safe' : 'status-violation'}">${escapeHtmlSafe(f.reviewStatusLabel)}</span>
+                    ${f.reviewedAt ? `<span style="margin-inline-start: 10px;">(${escapeHtmlSafe(f.reviewedAt)})</span>` : ''}
                 </div>` : ''}
             </div>`).join('')}
         </div>
