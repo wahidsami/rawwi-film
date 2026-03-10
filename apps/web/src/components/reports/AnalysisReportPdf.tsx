@@ -82,14 +82,15 @@ export const AnalysisReportPdf: React.FC<{
 
     return (
         <Document>
-            {/* Cover Page */}
+            {/* Cover Page: full A4 wrapper so height matches content pages; image as background, overlay on top */}
             <Page size="A4" wrap={false} style={[extendedStyles.coverPage, isAr ? styles.pageAr : {}]}>
-                {coverImageDataUrl ? (
-                    <Image src={coverImageDataUrl} style={extendedStyles.coverBackground} />
-                ) : (
-                    <View style={[extendedStyles.coverBackground, { backgroundColor: "#1e3a5f" }]} />
-                )}
-                <View style={extendedStyles.coverOverlayMeta}>
+                <View style={extendedStyles.coverWrapper}>
+                    {coverImageDataUrl ? (
+                        <Image src={coverImageDataUrl} style={extendedStyles.coverBackground} />
+                    ) : (
+                        <View style={[extendedStyles.coverBackground, { backgroundColor: "#1e3a5f" }]} />
+                    )}
+                    <View style={extendedStyles.coverOverlayMeta}>
                     <Text style={[extendedStyles.coverMetaTitle, isAr ? styles.rtlText : {}]}>
                         {isAr ? "تقرير التحليل" : "Analysis Report"}
                     </Text>
@@ -102,6 +103,7 @@ export const AnalysisReportPdf: React.FC<{
                     <Text style={[extendedStyles.coverMetaText, isAr ? styles.rtlText : {}]}>
                         {dateFormat ? formatDate(new Date(data.createdAt), formatOpts) : formatDateLong(new Date(data.createdAt), { lang })}
                     </Text>
+                    </View>
                 </View>
             </Page>
 

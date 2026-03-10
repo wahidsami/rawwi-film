@@ -295,24 +295,29 @@ export const summaryColors = {
 };
 
 export const extendedStyles = StyleSheet.create({
-  // Cover Page — do not set width/height here; Page size="A4" controls dimensions
+  // Cover Page
   coverPage: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#1e3a5f",
     fontFamily: "Roboto",
     fontSize: 10,
     color: "#333333",
     padding: 0,
     margin: 0,
   },
+  // Wrapper forces cover to full A4 so page is same height as content pages
+  coverWrapper: {
+    width: A4_WIDTH,
+    height: A4_HEIGHT,
+    position: "relative",
+  },
+  // Full-bleed background image or color behind overlay
   coverBackground: {
     position: "absolute",
     top: 0,
     left: 0,
-    right: 0,
-    bottom: 0,
     width: A4_WIDTH,
     height: A4_HEIGHT,
-    objectFit: "fill",
+    objectFit: "cover",
   },
   coverOverlayMeta: {
     position: "absolute",

@@ -506,8 +506,23 @@ export function Results() {
     setIsDownloadingPdf(true);
     try {
       const origin = window.location.origin;
-      const coverImageUrl = `${origin}/cover.jpg`;
       const logoImageUrl = `${origin}/dashboardlogo.png`;
+      // Embed cover as data URL so it reliably shows as full-page background in PDF
+      let coverImageDataUrl: string | null = null;
+      try {
+        const res = await fetch(`${origin}/cover.jpg`);
+        if (res.ok) {
+          const blob = await res.blob();
+          coverImageDataUrl = await new Promise<string>((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(r.result as string);
+            r.onerror = reject;
+            r.readAsDataURL(blob);
+          });
+        }
+      } catch (_) {
+        // fallback: no cover image, PDF will use solid background
+      }
 
       const pdfFindings = buildPdfFindings();
       const doc = (
@@ -529,7 +544,7 @@ export function Results() {
             footerNoteAr: settings?.branding?.footerNoteAr,
             footerNoteEn: settings?.branding?.footerNoteEn,
           }}
-          coverImageDataUrl={coverImageUrl}
+          coverImageDataUrl={coverImageDataUrl}
         />
       );
       const blob = await pdf(doc).toBlob();
