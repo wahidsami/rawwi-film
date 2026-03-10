@@ -1,5 +1,9 @@
 import { StyleSheet, Font } from "@react-pdf/renderer";
 
+export const A4_WIDTH = 595.28;
+export const A4_HEIGHT = 841.89;
+export const A4_PAGE_SIZE: [number, number] = [A4_WIDTH, A4_HEIGHT];
+
 const fontBase = typeof window !== "undefined" ? window.location.origin : "";
 
 Font.register({
@@ -303,11 +307,9 @@ export const extendedStyles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
-    right: 0,
-    bottom: 0,
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
+    width: A4_WIDTH,
+    height: A4_HEIGHT,
+    objectFit: "fill",
   },
   coverOverlayMeta: {
     marginTop: 520,

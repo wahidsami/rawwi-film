@@ -1,7 +1,7 @@
 import React from "react";
 import { Page, Text, View, Image } from "@react-pdf/renderer";
 import { formatDate, formatDateLong } from "@/utils/dateFormat";
-import { styles } from "./ReportStyles";
+import { styles, A4_PAGE_SIZE } from "./ReportStyles";
 
 interface ReportLayoutProps {
   children: React.ReactNode;
@@ -35,7 +35,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
   const safeLogoUrl = headerLogo && (headerLogo.startsWith("data:") || headerLogo.startsWith("http")) ? headerLogo : null;
 
   return (
-    <Page size="A4" style={[styles.page, isAr ? styles.pageAr : {}]}>
+    <Page size={A4_PAGE_SIZE} style={[styles.page, isAr ? styles.pageAr : {}]}>
       {/* Header */}
       <View style={[styles.headerContainer, isAr ? styles.rowReverse : {}]} fixed>
         <View style={{ width: 100 }}>

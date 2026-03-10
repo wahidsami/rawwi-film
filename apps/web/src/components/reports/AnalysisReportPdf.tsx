@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View, Image, Page, Document } from "@react-pdf/renderer";
 import { formatDate, formatDateLong } from "@/utils/dateFormat";
 import { ReportLayout } from "./ReportLayout";
-import { styles, themeColors, extendedStyles, summaryColors } from "./ReportStyles";
+import { styles, themeColors, extendedStyles, summaryColors, A4_PAGE_SIZE } from "./ReportStyles";
 
 interface Finding {
     id: string;
@@ -83,7 +83,7 @@ export const AnalysisReportPdf: React.FC<{
     return (
         <Document>
             {/* Cover Page */}
-            <Page size="A4" wrap={false} style={[extendedStyles.coverPage, isAr ? styles.pageAr : {}]}>
+            <Page size={A4_PAGE_SIZE} wrap={false} style={[extendedStyles.coverPage, isAr ? styles.pageAr : {}]}>
                 {coverImageDataUrl ? (
                     <Image src={coverImageDataUrl} style={extendedStyles.coverBackground} />
                 ) : (
