@@ -85,6 +85,7 @@ export const ClientsReportPdf: React.FC<ClientsReportPdfProps> = ({
   lang = "en",
   dateFormat,
   coverImageDataUrl,
+  logoUrl,
   generatedAt,
 }) => {
   const isAr = lang === "ar";
