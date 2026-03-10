@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { pdf } from '@react-pdf/renderer';
 
 import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
@@ -14,6 +15,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
 import { cn } from '@/utils/cn';
 import toast from 'react-hot-toast';
+import { AnalysisReportPdf } from '@/components/reports/AnalysisReportPdf';
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
@@ -59,6 +61,7 @@ export function Results() {
   const [expandedArticles, setExpandedArticles] = useState<Record<string, boolean>>({});
   const [reviewing, setReviewing] = useState(false);
   const [updateScriptStatus, setUpdateScriptStatus] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
@@ -450,6 +453,96 @@ export function Results() {
     }
   };
 
+  const buildPdfFindings = () => {
+    if (hasRealFindings) {
+      return findings.map((f) => ({
+        id: f.id,
+        articleId: f.articleId,
+        titleAr: f.titleAr,
+        severity: f.severity,
+        confidence: f.confidence ?? 0,
+        evidenceSnippet: f.evidenceSnippet,
+        source: f.source,
+        startLineChunk: f.startLineChunk ?? undefined,
+        endLineChunk: f.endLineChunk ?? undefined,
+        reviewStatus: f.reviewStatus,
+        reviewReason: f.reviewReason ?? undefined,
+        reviewedAt: f.reviewedAt ?? undefined,
+      }));
+    }
+
+    return summary.findings_by_article.flatMap((art, idxBase) =>
+      art.top_findings.map((f, idx) => ({
+        id: `summary-${art.article_id}-${idxBase}-${idx}`,
+        articleId: art.article_id,
+        titleAr: f.title_ar,
+        severity: f.severity,
+        confidence: f.confidence ?? 0,
+        evidenceSnippet: f.evidence_snippet,
+        source: 'ai',
+      }))
+    );
+  };
+
+  function buildPdfFileName(): string {
+    const rawTitle = (report?.scriptTitle ?? '').trim();
+    const safeTitle = (rawTitle || (isAr ? 'تقرير' : 'report'))
+      .replace(/[\\/:*?"<>|]/g, ' ')
+      .replace(/\s+/g, '_')
+      .slice(0, 80);
+    const datePart = new Intl.DateTimeFormat('en-CA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date()).replaceAll('/', '-');
+    return `raawi_report_${safeTitle}_${datePart}.pdf`;
+  }
+
+  const handleDownloadPdf = async () => {
+    if (!report) return;
+    setIsDownloadingPdf(true);
+    try {
+      const pdfFindings = buildPdfFindings();
+      const doc = (
+        <AnalysisReportPdf
+          data={{
+            jobId: report.jobId,
+            scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
+            clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
+            createdAt: report.createdAt,
+            findings: pdfFindings,
+            lang: isAr ? 'ar' : 'en',
+          }}
+          dateFormat={dateFormat}
+          branding={{
+            logoUrl: '/loginlogo.png',
+            footerLogoUrl: '/footer.png',
+            orgNameAr: settings?.branding?.orgNameAr,
+            orgNameEn: settings?.branding?.orgNameEn,
+            footerNoteAr: settings?.branding?.footerNoteAr,
+            footerNoteEn: settings?.branding?.footerNoteEn,
+          }}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = buildPdfFileName();
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+      toast.success(isAr ? 'تم تنزيل PDF' : 'PDF downloaded');
+    } catch (err) {
+      console.error('[Results] Direct PDF download failed, fallback to print', err);
+      toast.error(isAr ? 'تعذر تنزيل PDF مباشرة، سيتم فتح وضع الطباعة.' : 'Direct PDF download failed, opening print mode.');
+      await generateHtmlPrint();
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   // const pdfFindings = ... (unused)
 
   // PDF export now handled client-side with PDFDownloadLink (see render below)
@@ -664,9 +757,13 @@ export function Results() {
           </div>
         </div>
         <div className="flex items-center gap-3 print:hidden">
-          <Button variant="outline" onClick={generateHtmlPrint} className="h-10 px-4 flex gap-2">
+          <Button variant="outline" onClick={handleDownloadPdf} className="h-10 px-4 flex gap-2" disabled={isDownloadingPdf}>
+            {isDownloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+            {isDownloadingPdf ? (lang === 'ar' ? 'جاري تجهيز PDF...' : 'Preparing PDF...') : (lang === 'ar' ? 'تنزيل PDF' : 'Download PDF')}
+          </Button>
+          <Button variant="ghost" onClick={generateHtmlPrint} className="h-10 px-4 flex gap-2">
             <FileDown className="w-4 h-4" />
-            {lang === 'ar' ? 'تصدير PDF' : 'Export PDF'}
+            {lang === 'ar' ? 'طباعة' : 'Print'}
           </Button>
         </div>
       </div>
