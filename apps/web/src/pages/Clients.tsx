@@ -77,11 +77,24 @@ export function Clients() {
       const isAr = lang === 'ar';
       const origin = window.location.origin;
       let coverImageDataUrl: string | null = null;
+      let logoDataUrl: string | null = null;
       try {
-        const res = await fetch(`${origin}/cover.jpg`);
-        if (res.ok) {
-          const blob = await res.blob();
+        const [coverRes, logoRes] = await Promise.all([
+          fetch(`${origin}/cover.jpg`),
+          fetch(`${origin}/dashboardlogo.png`),
+        ]);
+        if (coverRes.ok) {
+          const blob = await coverRes.blob();
           coverImageDataUrl = await new Promise<string>((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(r.result as string);
+            r.onerror = reject;
+            r.readAsDataURL(blob);
+          });
+        }
+        if (logoRes.ok) {
+          const blob = await logoRes.blob();
+          logoDataUrl = await new Promise<string>((resolve, reject) => {
             const r = new FileReader();
             r.onload = () => resolve(r.result as string);
             r.onerror = reject;
@@ -116,6 +129,7 @@ export function Clients() {
           lang={isAr ? 'ar' : 'en'}
           dateFormat={settings?.platform?.dateFormat}
           coverImageDataUrl={coverImageDataUrl}
+          logoUrl={logoDataUrl}
           generatedAt={new Date().toISOString()}
         />
       );

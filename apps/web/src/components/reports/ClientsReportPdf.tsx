@@ -1,8 +1,53 @@
 import React from "react";
-import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import { formatDate } from "@/utils/dateFormat";
 import { ReportLayout } from "./ReportLayout";
 import { styles, extendedStyles, summaryColors } from "./ReportStyles";
+
+function sanitizeForPdf(s: string, maxLen = 40): string {
+  if (!s || typeof s !== "string") return "";
+  const stripped = s.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+  return stripped.length > maxLen ? stripped.slice(0, maxLen) + "…" : stripped;
+}
+
+const clientTableStyles = StyleSheet.create({
+  table: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderStyle: "solid",
+    marginBottom: 12,
+  },
+  row: {
+    flexDirection: "row",
+    minHeight: 36,
+    alignItems: "flex-start",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  rowHeader: {
+    backgroundColor: "#F3F4F6",
+    minHeight: 28,
+    alignItems: "center",
+  },
+  rowEven: { backgroundColor: "#F9FAFB" },
+  cell: {
+    paddingHorizontal: 6,
+    paddingVertical: 5,
+    justifyContent: "center",
+    borderRightWidth: 1,
+    borderRightColor: "#E5E7EB",
+  },
+  cellText: { fontSize: 8, lineHeight: 1.35 },
+  cellLast: { borderRightWidth: 0 },
+  cellW1: { width: "20%" },
+  cellW2: { width: "16%" },
+  cellW3: { width: "20%" },
+  cellW4: { width: "14%" },
+  cellW5: { width: "10%" },
+  cellW6: { width: "20%" },
+  cellHeader: { fontWeight: "bold", color: "#111827", fontSize: 9 },
+});
 
 export type CoverImageDataUrl = string | null | undefined;
 
@@ -26,6 +71,8 @@ export interface ClientsReportPdfProps {
   lang?: "ar" | "en";
   dateFormat?: string;
   coverImageDataUrl?: CoverImageDataUrl;
+  /** Logo for content page header (data URL or absolute URL). */
+  logoUrl?: string | null;
   generatedAt: string;
 }
 
@@ -78,13 +125,20 @@ export const ClientsReportPdf: React.FC<ClientsReportPdfProps> = ({
       };
 
   const headerCellStyle = [
-    styles.tableCellHeader,
+    clientTableStyles.cellHeader,
     isAr ? styles.rtlText : {},
-    { color: "#111827", fontSize: 10 },
     isAr ? { fontFamily: "Cairo" } : {},
   ];
 
-  const colStyle = { flex: 1, minWidth: 0, borderStyle: "solid" as const, borderWidth: 1, borderLeftWidth: 0, borderTopWidth: 0, borderColor: "#E5E7EB", paddingHorizontal: 4, paddingVertical: 4, justifyContent: "center" as const };
+  const formatDateShort = (iso: string): string => {
+    if (!iso) return "—";
+    try {
+      const d = new Date(iso);
+      return isNaN(d.getTime()) ? iso.slice(0, 10) : formatDate(d, { lang, format: dateFormat });
+    } catch {
+      return String(iso).slice(0, 10);
+    }
+  };
 
   return (
     <Document>
@@ -113,7 +167,7 @@ export const ClientsReportPdf: React.FC<ClientsReportPdfProps> = ({
         </View>
       </Page>
 
-      <ReportLayout title={labels.reportTitle} lang={lang} dateFormat={dateFormat} showTitleBlock={true}>
+      <ReportLayout title={labels.reportTitle} lang={lang} dateFormat={dateFormat} logoUrl={logoUrl ?? undefined} showTitleBlock={true}>
         <Text style={[styles.sectionTitle, isAr ? styles.rtlText : {}]}>
           {labels.executiveSummary}
         </Text>
@@ -139,24 +193,24 @@ export const ClientsReportPdf: React.FC<ClientsReportPdfProps> = ({
         <Text style={[styles.sectionTitle, isAr ? styles.rtlText : {}, { marginTop: 16 }]}>
           {labels.clientsDetails}
         </Text>
-        <View style={[styles.table, { marginBottom: 12, flexDirection: "column" }]}>
-          <View style={[styles.tableRow, styles.tableRowHeader, { display: "flex", flexDirection: "row" }]}>
-            <View style={[colStyle, { width: "22%" }]}>
+        <View style={clientTableStyles.table}>
+          <View style={[clientTableStyles.row, clientTableStyles.rowHeader]}>
+            <View style={[clientTableStyles.cell, clientTableStyles.cellW1]}>
               <Text style={headerCellStyle}>{labels.clientName}</Text>
             </View>
-            <View style={[colStyle, { width: "18%" }]}>
+            <View style={[clientTableStyles.cell, clientTableStyles.cellW2]}>
               <Text style={headerCellStyle}>{labels.representative}</Text>
             </View>
-            <View style={[colStyle, { width: "22%" }]}>
+            <View style={[clientTableStyles.cell, clientTableStyles.cellW3]}>
               <Text style={headerCellStyle}>{labels.contact}</Text>
             </View>
-            <View style={[colStyle, { width: "14%" }]}>
+            <View style={[clientTableStyles.cell, clientTableStyles.cellW4]}>
               <Text style={headerCellStyle}>{labels.registrationDate}</Text>
             </View>
-            <View style={[colStyle, { width: "8%" }]}>
+            <View style={[clientTableStyles.cell, clientTableStyles.cellW5]}>
               <Text style={headerCellStyle}>{labels.scriptsCount}</Text>
             </View>
-            <View style={[colStyle, { width: "16%" }]}>
+            <View style={[clientTableStyles.cell, clientTableStyles.cellW6, clientTableStyles.cellLast]}>
               <Text style={headerCellStyle}>{labels.status}</Text>
             </View>
           </View>
@@ -164,34 +218,47 @@ export const ClientsReportPdf: React.FC<ClientsReportPdfProps> = ({
             <View
               key={idx}
               style={[
-                styles.tableRow,
-                { display: "flex", flexDirection: "row" },
-                idx % 2 === 1 ? styles.tableRowEven : {},
+                clientTableStyles.row,
+                idx % 2 === 1 ? clientTableStyles.rowEven : {},
               ]}
             >
-              <View style={[colStyle, { width: "22%" }]}>
-                <Text style={[styles.tableCell, { fontSize: 8 }, isAr ? styles.rtlText : {}]}>{row.name}</Text>
+              <View style={[clientTableStyles.cell, clientTableStyles.cellW1]}>
+                <Text style={[clientTableStyles.cellText, isAr ? styles.rtlText : {}]} wrap>
+                  {sanitizeForPdf(row.name, 28)}
+                </Text>
                 {row.nameSecondary ? (
-                  <Text style={[styles.textXs, isAr ? styles.rtlText : {}]}>{row.nameSecondary}</Text>
+                  <Text style={[clientTableStyles.cellText, styles.textXs, isAr ? styles.rtlText : {}]} wrap>
+                    {sanitizeForPdf(row.nameSecondary, 28)}
+                  </Text>
                 ) : null}
               </View>
-              <View style={[colStyle, { width: "18%" }]}>
-                <Text style={[styles.tableCell, { fontSize: 8 }, isAr ? styles.rtlText : {}]}>{row.representative}</Text>
+              <View style={[clientTableStyles.cell, clientTableStyles.cellW2]}>
+                <Text style={[clientTableStyles.cellText, isAr ? styles.rtlText : {}]} wrap>
+                  {sanitizeForPdf(row.representative, 24)}
+                </Text>
               </View>
-              <View style={[colStyle, { width: "22%" }]}>
-                <Text style={[styles.tableCell, { fontSize: 8 }, isAr ? styles.rtlText : {}]}>{row.email}</Text>
-                <Text style={[styles.textXs, isAr ? styles.rtlText : {}]}>{row.phone}</Text>
+              <View style={[clientTableStyles.cell, clientTableStyles.cellW3]}>
+                <Text style={[clientTableStyles.cellText, isAr ? styles.rtlText : {}]} wrap>
+                  {sanitizeForPdf(row.email, 26)}
+                </Text>
+                <Text style={[clientTableStyles.cellText, styles.textXs, isAr ? styles.rtlText : {}]} wrap>
+                  {sanitizeForPdf(row.phone, 20)}
+                </Text>
               </View>
-              <View style={[colStyle, { width: "14%" }]}>
-                <Text style={[styles.tableCell, { fontSize: 8 }, isAr ? styles.rtlText : {}]}>{row.registrationDate}</Text>
+              <View style={[clientTableStyles.cell, clientTableStyles.cellW4]}>
+                <Text style={[clientTableStyles.cellText, isAr ? styles.rtlText : {}]}>
+                  {formatDateShort(row.registrationDate)}
+                </Text>
               </View>
-              <View style={[colStyle, { width: "8%" }]}>
-                <Text style={[styles.tableCell, { fontSize: 8, textAlign: "center" }, isAr ? styles.rtlText : {}]}>
+              <View style={[clientTableStyles.cell, clientTableStyles.cellW5]}>
+                <Text style={[clientTableStyles.cellText, { textAlign: "center" }, isAr ? styles.rtlText : {}]}>
                   {String(row.scriptsCount ?? 0)}
                 </Text>
               </View>
-              <View style={[colStyle, { width: "16%" }]}>
-                <Text style={[styles.tableCell, { fontSize: 8 }, isAr ? styles.rtlText : {}]}>{row.status}</Text>
+              <View style={[clientTableStyles.cell, clientTableStyles.cellW6, clientTableStyles.cellLast]}>
+                <Text style={[clientTableStyles.cellText, isAr ? styles.rtlText : {}]}>
+                  {sanitizeForPdf(row.status, 12)}
+                </Text>
               </View>
             </View>
           ))}
