@@ -50,16 +50,18 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
           {coverImageDataUrl ? (
             <Image
               src={coverImageDataUrl}
-              style={{ position: "absolute", top: 0, left: 0, width: A4_WIDTH, height: A4_HEIGHT, objectFit: "cover" }}
+              style={{ position: "absolute", top: -2, left: -2, width: A4_WIDTH + 4, height: A4_HEIGHT + 4, objectFit: "cover" }}
             />
           ) : null}
-          <View style={{ position: "absolute", left: 36, right: 36, bottom: 64 }}>
-            <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير التحليل" : "Analysis Report"}</Text>
-            <Text style={[s.coverText, rtl]}>{data.scriptTitle}</Text>
-            <Text style={[s.coverText, rtl]}>{isAr ? `العميل: ${data.clientName}` : `Client: ${data.clientName}`}</Text>
-            <Text style={[s.coverText, rtl]}>
-              {dateFormat ? formatDate(new Date(data.createdAt), { lang: isAr ? "ar" : "en", format: dateFormat }) : formatDateLong(new Date(data.createdAt), { lang: isAr ? "ar" : "en" })}
-            </Text>
+          <View style={{ position: "absolute", left: 44, right: 44, bottom: 92 }}>
+            <View style={s.coverMetaBlock}>
+              <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير التحليل" : "Analysis Report"}</Text>
+              <Text style={[s.coverText, rtl]}>{data.scriptTitle}</Text>
+              <Text style={[s.coverText, rtl]}>{isAr ? `العميل: ${data.clientName}` : `Client: ${data.clientName}`}</Text>
+              <Text style={[s.coverText, rtl]}>
+                {dateFormat ? formatDate(new Date(data.createdAt), { lang: isAr ? "ar" : "en", format: dateFormat }) : formatDateLong(new Date(data.createdAt), { lang: isAr ? "ar" : "en" })}
+              </Text>
+            </View>
           </View>
         </View>
       </Page>

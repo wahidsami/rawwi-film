@@ -27,7 +27,13 @@ export const analysisStyles = StyleSheet.create({
   findingMeta: { fontSize: 8, color: "#6B7280", marginBottom: 3 },
   findingBody: { fontSize: 9, lineHeight: 1.4 },
   rtl: { textAlign: "right" },
-  cover: { backgroundColor: "#1e3a5f", padding: 36, justifyContent: "flex-end" },
+  cover: { backgroundColor: "transparent", padding: 0, justifyContent: "flex-end" },
   coverTitle: { color: "#FFFFFF", fontSize: 24, fontWeight: "bold", marginBottom: 8 },
   coverText: { color: "#FFFFFF", fontSize: 11, marginBottom: 4 },
+  coverMetaBlock: {
+    backgroundColor: "rgba(0,0,0,0.22)",
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
 });
