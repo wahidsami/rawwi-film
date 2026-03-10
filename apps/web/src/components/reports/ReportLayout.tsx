@@ -12,6 +12,7 @@ interface ReportLayoutProps {
   logoUrl?: string;
   footerNoteAr?: string;
   footerNoteEn?: string;
+  showTitleBlock?: boolean;
 }
 
 export const ReportLayout: React.FC<ReportLayoutProps> = ({
@@ -23,6 +24,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
   logoUrl,
   footerNoteAr,
   footerNoteEn,
+  showTitleBlock = true,
 }) => {
   const isAr = lang === "ar";
   const dateStr = dateFormat
@@ -49,27 +51,28 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
         </View>
       </View>
 
-      {/* Title */}
-      <View style={{ marginBottom: 20 }}>
-        <Text
-          style={[
-            { fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 5 },
-            isAr ? styles.pageAr : {},
-          ]}
-        >
-          {title}
-        </Text>
-        {clientName && (
+      {showTitleBlock && (
+        <View style={{ marginBottom: 20 }}>
           <Text
             style={[
-              { fontSize: 12, textAlign: "center", color: "#6B7280" },
+              { fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 5 },
               isAr ? styles.pageAr : {},
             ]}
           >
-            {isAr ? `العميل: ${clientName}` : `Client: ${clientName}`}
+            {title}
           </Text>
-        )}
-      </View>
+          {clientName && (
+            <Text
+              style={[
+                { fontSize: 12, textAlign: "center", color: "#6B7280" },
+                isAr ? styles.pageAr : {},
+              ]}
+            >
+              {isAr ? `العميل: ${clientName}` : `Client: ${clientName}`}
+            </Text>
+          )}
+        </View>
+      )}
 
       {children}
 
