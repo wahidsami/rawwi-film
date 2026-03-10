@@ -50,9 +50,7 @@ export const AnalysisReportPdf: React.FC<{
     const { scriptTitle, clientName, findings, lang = "en" } = data;
     const isAr = lang === "ar";
     const formatOpts = { lang, format: dateFormat };
-    const coverLogo = branding?.logoUrl || "/loginlogo.png";
-    const coverFooterImg = branding?.footerLogoUrl || branding?.logoUrl || "/footer.png";
-    const poweredByText = isAr ? (branding?.orgNameAr || "Raawi Film") : (branding?.orgNameEn || "Raawi Film");
+    const coverBackground = "/cover.jpg";
     const showDecisionBadge = branding?.showDecisionBadge !== false;
 
     // Group findings by severity for summary
@@ -81,31 +79,22 @@ export const AnalysisReportPdf: React.FC<{
     return (
         <Document>
             {/* Cover Page */}
-            <Page size="A4" style={[styles.page, extendedStyles.coverPage]}>
-                <View style={{ alignItems: "center", width: "100%" }}>
-                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                    <Image src={coverLogo} style={extendedStyles.coverLogo} />
-                </View>
-
-                <View style={[extendedStyles.coverTitleContainer, { flex: 1, justifyContent: 'center' }]}>
-                    <Text style={extendedStyles.coverTitle}>
+            <Page size="A4" style={[styles.page, isAr ? styles.pageAr : {}, extendedStyles.coverPage]}>
+                {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                <Image src={coverBackground} style={extendedStyles.coverBackground} />
+                <View style={extendedStyles.coverOverlayMeta}>
+                    <Text style={[extendedStyles.coverMetaTitle, isAr ? styles.rtlText : {}]}>
                         {isAr ? "تقرير التحليل" : "Analysis Report"}
                     </Text>
-                    <Text style={[extendedStyles.coverSubtitle, { fontSize: 24, marginTop: 15, fontWeight: "bold", color: "#111827", textAlign: 'center' }]}>
+                    <Text style={[extendedStyles.coverMetaValue, isAr ? styles.rtlText : {}]}>
                         {scriptTitle}
                     </Text>
-                    <Text style={[extendedStyles.coverSubtitle, { marginTop: 15, fontSize: 14 }]}>
+                    <Text style={[extendedStyles.coverMetaText, isAr ? styles.rtlText : {}]}>
                         {isAr ? "العميل: " : "Client: "} {clientName}
                     </Text>
-                    <Text style={[extendedStyles.coverSubtitle, { marginTop: 30, fontSize: 12, color: '#9CA3AF' }]}>
+                    <Text style={[extendedStyles.coverMetaText, isAr ? styles.rtlText : {}]}>
                         {dateFormat ? formatDate(new Date(data.createdAt), formatOpts) : formatDateLong(new Date(data.createdAt), { lang })}
                     </Text>
-                </View>
-
-                <View style={{ alignItems: "center", width: "100%" }}>
-                    <Text style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 10 }}>{isAr ? "مدعوم من" : "Powered by"} {poweredByText}</Text>
-                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                    <Image src={coverFooterImg} style={extendedStyles.coverFooterImage} />
                 </View>
             </Page>
 
@@ -183,7 +172,7 @@ export const AnalysisReportPdf: React.FC<{
                                     {/* Header: Title + Severity */}
                                     <View style={styles.cardHeader}>
                                         <View style={[styles.badge, getSeverityColor(finding.severity)]}>
-                                            <Text>{finding.severity}</Text>
+                                            <Text style={styles.badgeText}>{finding.severity}</Text>
                                         </View>
                                         <Text style={styles.cardTitle}>{finding.titleAr || "—"}</Text>
                                     </View>

@@ -22,6 +22,8 @@ Font.register({
 export const styles = StyleSheet.create({
   page: {
     padding: 40,
+    paddingTop: 88,
+    paddingBottom: 68,
     backgroundColor: "#FFFFFF",
     fontFamily: "Roboto",
     fontSize: 10,
@@ -45,7 +47,6 @@ export const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     marginBottom: 15,
     padding: 12,
-    wrap: false, // Prevent page break inside card
   },
   cardHeader: {
     display: "flex",
@@ -95,8 +96,6 @@ export const styles = StyleSheet.create({
     color: "#374151",
     textAlign: "right", // Arabic alignment
     fontFamily: "Cairo",
-    wordBreak: "break-word",
-    overflowWrap: "anywhere",
   },
   cardFooter: {
     display: "flex",
@@ -144,10 +143,14 @@ export const styles = StyleSheet.create({
     color: "#6B7280",
   },
   headerContainer: {
+    position: "absolute",
+    top: 30,
+    left: 40,
+    right: 40,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 0,
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
@@ -219,6 +222,8 @@ export const styles = StyleSheet.create({
     textAlign: "left",
   },
   badge: {
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 12, // Pill shape
@@ -227,6 +232,13 @@ export const styles = StyleSheet.create({
     color: "#FFFFFF",
     textAlign: "center",
     minWidth: 50, // Ensure minimum width for badges
+  },
+  badgeText: {
+    color: "#FFFFFF",
+    textAlign: "center",
+    fontSize: 8,
+    lineHeight: 1.2,
+    fontWeight: "bold",
   },
   badgeCritical: { backgroundColor: "#EF4444" },
   badgeHigh: { backgroundColor: "#F97316" },
@@ -283,28 +295,43 @@ export const extendedStyles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 100,
-    paddingBottom: 60,
+    padding: 0,
   },
-  coverLogo: {
-    width: 200,
-    marginBottom: 40,
+  coverBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
   },
-  coverTitleContainer: {
+  coverOverlayMeta: {
+    position: "absolute",
+    top: 500,
+    left: 60,
+    right: 60,
     alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
   },
-  coverTitle: {
-    fontSize: 32,
+  coverMetaTitle: {
+    fontSize: 18,
     fontWeight: "bold",
     color: "#111827",
-    marginBottom: 10,
+    marginBottom: 6,
   },
-  coverSubtitle: {
+  coverMetaValue: {
     fontSize: 16,
-    color: "#6B7280",
+    color: "#111827",
+    marginBottom: 4,
+    fontWeight: "bold",
   },
-  coverFooterImage: {
-    width: 150,
+  coverMetaText: {
+    fontSize: 11,
+    color: "#374151",
+    marginBottom: 3,
   },
 
   // Summary Section
