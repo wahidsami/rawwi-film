@@ -22,7 +22,7 @@ async function toDataUrl(url: string): Promise<string | null> {
 
 export async function downloadQuickAnalysisPdf(params: {
   scriptTitle: string;
-  clientName: string;
+  clientName?: string;
   createdAt: string;
   findings?: AnalysisFinding[] | null;
   findingsByArticle?: Array<{ article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }> }> | null;
@@ -37,7 +37,6 @@ export async function downloadQuickAnalysisPdf(params: {
   const findings = mapQuickAnalysisFindingsForPdf(params.findings, params.findingsByArticle);
   const doc = React.createElement(QuickAnalysisPdf, {
     scriptTitle: params.scriptTitle,
-    clientName: params.clientName,
     createdAt: params.createdAt,
     findings,
     lang: params.lang,

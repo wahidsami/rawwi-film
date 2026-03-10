@@ -104,6 +104,11 @@ export function ScriptWorkspace() {
   const [scriptByIdLoading, setScriptByIdLoading] = useState(true);
   const script = scriptFromList ?? scriptFetched ?? undefined;
   const scriptFindings = findings.filter(f => f.scriptId === id);
+  const isQuickContext = useMemo(() => {
+    const fromQuery = new URLSearchParams(location.search).get('quick') === '1';
+    return fromQuery || Boolean(script?.isQuickAnalysis);
+  }, [location.search, script?.isQuickAnalysis]);
+  const reportQuickQuery = isQuickContext ? '&quick=1' : '';
 
   // When route id changes (e.g. Open Workspace from Quick Analysis), reset so we show loading
   // instead of flashing the previous script or the error screen.
@@ -1486,7 +1491,7 @@ export function ScriptWorkspace() {
           <Button 
             size="sm" 
             className="flex gap-2"
-            onClick={() => navigate(analysisJobId ? `/report/${analysisJobId}?by=job` : `/report/${script.id}?by=script`)}
+            onClick={() => navigate(analysisJobId ? `/report/${analysisJobId}?by=job${reportQuickQuery}` : `/report/${script.id}?by=script${reportQuickQuery}`)}
           >
             <FileText className="w-4 h-4" />
             {lang === 'ar' ? 'توليد التقرير' : 'Generate Report'}
@@ -1929,7 +1934,7 @@ export function ScriptWorkspace() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-1 pt-1 border-t border-border/50 flex-wrap">
-                        <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2" onClick={() => navigate(`/report/${(r as any).jobId ?? r.id}?by=job`)}>
+                        <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2" onClick={() => navigate(`/report/${(r as any).jobId ?? r.id}?by=job${reportQuickQuery}`)}>
                           <FileText className="w-3 h-3 mr-1" />
                           {lang === 'ar' ? 'عرض' : 'View'}
                         </Button>
@@ -2168,7 +2173,7 @@ export function ScriptWorkspace() {
           {/* Action buttons */}
           <div className="flex items-center justify-between pt-2">
             {isSuccessfulJobStatus(analysisJob?.status) && (
-              <Button size="sm" onClick={() => { setAnalysisModalOpen(false); const rid = reportIdWhenJobCompleted ?? analysisJobId; navigate(rid ? (reportIdWhenJobCompleted ? `/report/${rid}?by=id` : `/report/${rid}?by=job`) : '/reports'); }}>
+              <Button size="sm" onClick={() => { setAnalysisModalOpen(false); const rid = reportIdWhenJobCompleted ?? analysisJobId; navigate(rid ? (reportIdWhenJobCompleted ? `/report/${rid}?by=id${reportQuickQuery}` : `/report/${rid}?by=job${reportQuickQuery}`) : '/reports'); }}>
                 <FileText className="w-4 h-4 mr-1" />
                 {lang === 'ar' ? 'عرض التقرير' : 'View Report'}
               </Button>

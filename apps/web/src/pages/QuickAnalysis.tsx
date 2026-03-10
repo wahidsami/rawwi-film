@@ -152,7 +152,7 @@ export function QuickAnalysis() {
       pushScript(scriptForStore);
       toast.success(isAr ? 'تم تجهيز النص. ابدأ التحليل من مساحة العمل.' : 'Script prepared. Start analysis from workspace.');
       await loadHistory();
-      navigate(`/workspace/${quickScript.id}`);
+      navigate(`/workspace/${quickScript.id}?quick=1`);
     } catch (err: any) {
       toast.error(err?.message ?? (isAr ? 'فشل التحليل السريع' : 'Quick analysis failed'));
     } finally {
@@ -228,7 +228,7 @@ export function QuickAnalysis() {
                         ? `${latestReport.findingsCount ?? 0} ${isAr ? 'ملاحظة' : 'findings'}`
                         : (isAr ? 'بدون تقرير' : 'No report')}
                     </Badge>
-                    <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate(`/workspace/${script.id}`)}>
+                    <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate(`/workspace/${script.id}?quick=1`)}>
                       <PlayCircle className="w-3.5 h-3.5" />
                       {isAr ? 'فتح مساحة العمل' : 'Open Workspace'}
                     </Button>
@@ -246,7 +246,7 @@ export function QuickAnalysis() {
                       <Button
                         size="sm"
                         className="gap-1.5"
-                        onClick={() => navigate(`/report/${latestReport.id}?by=id`)}
+                        onClick={() => navigate(`/report/${latestReport.id}?by=id&quick=1`)}
                       >
                         <FileText className="w-3.5 h-3.5" />
                         {isAr ? 'التقرير' : 'Report'}

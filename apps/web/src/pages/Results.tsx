@@ -53,6 +53,7 @@ export function Results() {
   const { settings } = useSettingsStore();
   const dateFormat = settings?.platform?.dateFormat;
   const isAr = lang === 'ar';
+  const quickFromQuery = searchParams.get('quick') === '1';
   
   const [report, setReport] = useState<AnalysisReport | null>(null);
   const [findings, setFindings] = useState<AnalysisFinding[]>([]);
@@ -63,7 +64,7 @@ export function Results() {
   const [reviewing, setReviewing] = useState(false);
   const [updateScriptStatus, setUpdateScriptStatus] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
-  const [isQuickAnalysisReport, setIsQuickAnalysisReport] = useState(false);
+  const [isQuickAnalysisReport, setIsQuickAnalysisReport] = useState(quickFromQuery);
 
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
@@ -120,7 +121,9 @@ export function Results() {
         }
         if (!cancelled) {
           setReport(r);
-          if (r.scriptId) {
+          if (quickFromQuery) {
+            setIsQuickAnalysisReport(true);
+          } else if (r.scriptId) {
             try {
               const script = await scriptsApi.getScript(r.scriptId);
               if (!cancelled) setIsQuickAnalysisReport(Boolean(script?.isQuickAnalysis));
@@ -142,7 +145,7 @@ export function Results() {
     })();
 
     return () => { cancelled = true; };
-  }, [paramId, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [paramId, searchParams, quickFromQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Finding-level review
   const handleFindingReview = async () => {
@@ -480,7 +483,10 @@ export function Results() {
         dateFormat,
       };
       if (isQuickAnalysisReport) {
-        await downloadQuickAnalysisPdf(basePayload);
+        await downloadQuickAnalysisPdf({
+          ...basePayload,
+          clientName: undefined,
+        });
       } else {
         await downloadAnalysisPdf(basePayload);
       }

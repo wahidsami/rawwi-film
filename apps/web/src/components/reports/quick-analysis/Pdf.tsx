@@ -10,14 +10,13 @@ const A4_HEIGHT = 841.89;
 
 export const QuickAnalysisPdf: React.FC<{
   scriptTitle: string;
-  clientName: string;
   createdAt: string;
   findings: QuickAnalysisPdfFinding[];
   lang: "ar" | "en";
   dateFormat?: string;
   logoUrl?: string;
   coverImageDataUrl?: string | null;
-}> = ({ scriptTitle, clientName, createdAt, findings, lang, dateFormat, logoUrl, coverImageDataUrl }) => {
+}> = ({ scriptTitle, createdAt, findings, lang, dateFormat, logoUrl, coverImageDataUrl }) => {
   const isAr = lang === "ar";
   const rtl = isAr ? s.rtl : {};
   const safeFindings = (findings || []).filter(Boolean).map((f, idx) => ({
@@ -58,7 +57,6 @@ export const QuickAnalysisPdf: React.FC<{
             <View style={s.coverMetaBlock}>
               <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير التحليل السريع" : "Quick Analysis Report"}</Text>
               <Text style={[s.coverText, rtl]}>{scriptTitle}</Text>
-              <Text style={[s.coverText, rtl]}>{isAr ? `العميل: ${clientName}` : `Client: ${clientName}`}</Text>
               <Text style={[s.coverText, rtl]}>
                 {dateFormat ? formatDate(new Date(createdAt), { lang, format: dateFormat }) : formatDateLong(new Date(createdAt), { lang })}
               </Text>
