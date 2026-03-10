@@ -677,7 +677,7 @@ export function ScriptWorkspace() {
       const sourceFileType = file.type || (ext === 'txt' ? 'text/plain' : ext === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 
       const version = await scriptsApi.createVersion(script.id, {
-        source_file_name: file.name,
+        source_file_name: file.name.normalize('NFC'),
         source_file_type: sourceFileType,
         source_file_size: file.size,
         source_file_path: storagePath,

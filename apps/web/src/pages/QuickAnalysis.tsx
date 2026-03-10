@@ -105,8 +105,9 @@ export function QuickAnalysis() {
 
     setUploading(true);
     try {
+      const normalizedName = file.name.normalize('NFC');
       const quickScript = await scriptsApi.createQuickScript({
-        title: fileTitle(file.name),
+        title: fileTitle(normalizedName),
         type: 'Film',
         status: 'draft',
       });
@@ -124,7 +125,7 @@ export function QuickAnalysis() {
             : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 
       const version = await scriptsApi.createVersion(quickScript.id, {
-        source_file_name: file.name,
+        source_file_name: normalizedName,
         source_file_type: sourceFileType,
         source_file_size: file.size,
         source_file_path: storagePath,

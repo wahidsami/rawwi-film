@@ -93,8 +93,10 @@ Deno.serve(async (req: Request) => {
 
     // Create storage path: {companyId}/{scriptId}/{timestamp}_{filename}
     const timestamp = Date.now();
+    // Normalize to NFC so Arabic and other Unicode render consistently (BUG-09)
+    const normalizedFileName = typeof file.name === "string" && file.name ? file.name.normalize("NFC") : file.name;
     // Allow letters from any language, numbers, spaces, dots, dashes, underscores, and the Arabic comma (،)
-    const sanitizedFilename = file.name.replace(/[^\p{L}\p{N}\s._\-،]/gu, '_');
+    const sanitizedFilename = normalizedFileName.replace(/[^\p{L}\p{N}\s._\-،]/gu, '_');
     const storagePath = companyId
         ? `${companyId}/${scriptId}/${timestamp}_${sanitizedFilename}`
         : `${scriptId}/${timestamp}_${sanitizedFilename}`;
@@ -133,7 +135,7 @@ Deno.serve(async (req: Request) => {
             success: true,
             fileUrl,
             path: storagePath,
-            fileName: file.name,
+            fileName: normalizedFileName,
             fileSize: file.size,
             versionId: null,
             versionNumber: null,
@@ -160,7 +162,7 @@ Deno.serve(async (req: Request) => {
         .insert({
             script_id: scriptId,
             version_number: nextVersion,
-            source_file_name: file.name,
+            source_file_name: normalizedFileName,
             source_file_type: sourceFileType,
             source_file_size: file.size,
             source_file_path: storagePath,
@@ -208,7 +210,7 @@ Deno.serve(async (req: Request) => {
         success: true,
         fileUrl,
         path: storagePath,
-        fileName: file.name,
+        fileName: normalizedFileName,
         fileSize: file.size,
         versionId: version.id,
         versionNumber: version.version_number,

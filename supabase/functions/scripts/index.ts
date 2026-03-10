@@ -554,7 +554,7 @@ Deno.serve(async (req: Request) => {
     const insert = {
       client_id: clientId,
       company_id: clientId,
-      title: String(title).trim(),
+      title: String(title).trim().normalize("NFC"),
       type: normalizeType(type),
       status: normalizeStatus(status),
       synopsis: typeof body.synopsis === "string" ? body.synopsis.trim() || null : null,
@@ -625,10 +625,12 @@ Deno.serve(async (req: Request) => {
     const storagePath = typeof body.source_file_path === "string" ? body.source_file_path.trim() || null : null;
     const storageUrl = typeof body.source_file_url === "string" ? body.source_file_url.trim() || null : null;
     const pathOrUrl = storagePath ?? storageUrl;
+    const rawSourceFileName = typeof body.source_file_name === "string" ? body.source_file_name.trim() || null : null;
+    const sourceFileNameNfc = rawSourceFileName ? rawSourceFileName.normalize("NFC") : null;
     const versionInsert = {
       script_id: sid,
       version_number: nextVersion,
-      source_file_name: typeof body.source_file_name === "string" ? body.source_file_name.trim() || null : null,
+      source_file_name: sourceFileNameNfc,
       source_file_type: typeof body.source_file_type === "string" ? body.source_file_type.trim() || null : null,
       source_file_size: typeof body.source_file_size === "number" ? body.source_file_size : null,
       source_file_path: pathOrUrl,

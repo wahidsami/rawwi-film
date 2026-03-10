@@ -54,7 +54,7 @@ export function jsonResponse(
 ): Response {
   const { origin, ...restInit } = init;
   const headers = {
-    "Content-Type": "application/json",
+    "Content-Type": "application/json; charset=utf-8",
     ...corsHeaders(origin),
     ...(restInit.headers as Record<string, string>),
   };
