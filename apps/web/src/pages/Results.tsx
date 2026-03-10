@@ -513,7 +513,36 @@ export function Results() {
           margin: 10,
           filename: buildPdfFileName(),
           image: { type: 'jpeg', quality: 0.95 },
-          html2canvas: { scale: 2, useCORS: true, logging: false },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            onclone: (doc: Document) => {
+              const style = doc.createElement('style');
+              style.textContent = `
+                .pdf-generating, .pdf-generating * {
+                  color: #111827 !important;
+                  border-color: #d1d5db !important;
+                  box-shadow: none !important;
+                  text-shadow: none !important;
+                }
+                .pdf-generating .bg-surface,
+                .pdf-generating [class*="bg-surface"],
+                .pdf-generating [class*="bg-background"] {
+                  background-color: #ffffff !important;
+                }
+                .pdf-generating .text-text-muted,
+                .pdf-generating [class*="text-text-muted"] {
+                  color: #6b7280 !important;
+                }
+                .pdf-generating .no-pdf {
+                  display: none !important;
+                }
+              `;
+              doc.head.appendChild(style);
+            },
+          },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         })
         .from(el)
@@ -729,7 +758,24 @@ export function Results() {
 
   return (
     <div ref={reportContentRef} className="flex flex-col min-h-full w-full pb-20">
-      <style>{`.pdf-generating .no-pdf { display: none !important; }`}</style>
+      <style>{`
+        .pdf-generating .no-pdf { display: none !important; }
+        .pdf-generating, .pdf-generating * {
+          color: #111827 !important;
+          border-color: #d1d5db !important;
+          box-shadow: none !important;
+          text-shadow: none !important;
+        }
+        .pdf-generating .bg-surface,
+        .pdf-generating [class*="bg-surface"],
+        .pdf-generating [class*="bg-background"] {
+          background-color: #ffffff !important;
+        }
+        .pdf-generating .text-text-muted,
+        .pdf-generating [class*="text-text-muted"] {
+          color: #6b7280 !important;
+        }
+      `}</style>
       {/* Header */}
       <div className="flex items-center justify-between mb-8 print:mb-4">
         <div className="flex items-center gap-4">
