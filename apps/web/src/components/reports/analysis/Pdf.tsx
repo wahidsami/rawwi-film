@@ -95,7 +95,18 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
         </View>
 
         <Text style={[s.sectionTitle, rtl]}>{isAr ? "تفاصيل القضايا" : "Findings Details"}</Text>
-        {Object.entries(groups).map(([articleId, list]) => (
+        {Object.keys(groups).length === 0 ? (
+          <View style={s.emptyState}>
+            <Text style={[s.emptyStateTitle, rtl]}>
+              {isAr ? "لا توجد مخالفات" : "No Violations Found"}
+            </Text>
+            <Text style={[s.emptyStateText, rtl]}>
+              {isAr
+                ? "هذا النص لا يحتوي على مخالفات ضد مواد GCAM وفق نتائج التحليل الحالية."
+                : "This script has no violations against GCAM articles based on the current analysis results."}
+            </Text>
+          </View>
+        ) : Object.entries(groups).map(([articleId, list]) => (
           <View key={articleId} style={s.articleWrap}>
             <Text style={[s.articleHeader, rtl]}>
               {isAr
