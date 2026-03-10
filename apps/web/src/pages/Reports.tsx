@@ -88,6 +88,16 @@ function Reports() {
     return matchSearch && matchCompany && matchDecision && matchUser;
   });
 
+  const totalFiltered = filteredReports.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const start = (currentPage - 1) * pageSize;
+  const paginatedReports = filteredReports.slice(start, start + pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, companyId, decision, userFilter]);
+
   const handleOpen = (report: ReportListItem) => {
     const path = `/report/${report.jobId ?? report.id}?by=${report.jobId ? 'job' : 'id'}`;
     const mode = settings?.platform?.reportMode ?? 'both';
