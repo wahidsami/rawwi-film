@@ -44,7 +44,6 @@ export function Audit() {
     eventType: '',
     targetType: '',
     resultStatus: '',
-    q: '',
   });
 
   const load = useCallback(async () => {
@@ -100,7 +99,6 @@ export function Audit() {
         eventType: filters.eventType || undefined,
         targetType: filters.targetType || undefined,
         resultStatus: filters.resultStatus || undefined,
-        q: filters.q || undefined,
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -354,15 +352,6 @@ export function Audit() {
                 <option value="failure">failure</option>
               </select>
             </div>
-            <Input
-              label={t('searchKeyword')}
-              placeholder={t('searchKeyword')}
-              value={filters.q ?? ''}
-              onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
-            />
-          </div>
-          <div className="flex justify-end">
-            <Button onClick={() => setPage(1)}>{t('applyFilters')}</Button>
           </div>
         </CardContent>
       </Card>
