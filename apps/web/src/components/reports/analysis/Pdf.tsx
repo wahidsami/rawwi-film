@@ -1,6 +1,7 @@
 import React from "react";
 import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 import { formatDate, formatDateLong } from "@/utils/dateFormat";
+import { getPolicyArticle } from "@/data/policyMap";
 import { analysisStyles as s } from "./styles";
 import type { AnalysisPdfFinding } from "./mapper";
 const A4_WIDTH = 595.28;
@@ -43,6 +44,21 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
     return acc;
   }, {});
 
+  const sourceLabel = (source?: string) => {
+    if (source === "manual") return isAr ? "يدوي" : "Manual";
+    if (source === "lexicon_mandatory" || source === "glossary") return isAr ? "معجم" : "Glossary";
+    return isAr ? "تحليل آلي" : "AI Analysis";
+  };
+
+  const severityBadgeStyle = (severity?: string) => {
+    const sKey = (severity || "info").toLowerCase();
+    if (sKey === "critical") return s.chipSeverityCritical;
+    if (sKey === "high") return s.chipSeverityHigh;
+    if (sKey === "medium") return s.chipSeverityMedium;
+    if (sKey === "low") return s.chipSeverityLow;
+    return s.chipInfo;
+  };
+
   return (
     <Document>
       <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
@@ -81,14 +97,33 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
         <Text style={[s.sectionTitle, rtl]}>{isAr ? "تفاصيل القضايا" : "Findings Details"}</Text>
         {Object.entries(groups).map(([articleId, list]) => (
           <View key={articleId} style={s.articleWrap}>
-            <Text style={[s.articleHeader, rtl]}>{isAr ? `مادة ${articleId}` : `Article ${articleId}`}</Text>
+            <Text style={[s.articleHeader, rtl]}>
+              {isAr
+                ? `مادة ${articleId}: ${getPolicyArticle(Number(articleId))?.title_ar ?? ""}`
+                : `Article ${articleId}${getPolicyArticle(Number(articleId))?.title_ar ? ` - ${getPolicyArticle(Number(articleId))?.title_ar}` : ""}`}
+            </Text>
             {list.map((f, idx) => (
               <View key={`${f.id}-${idx}`} style={s.finding}>
                 <Text style={[s.findingTitle, rtl]}>{f.titleAr || "—"}</Text>
-                <Text style={[s.findingMeta, rtl]}>
-                  {(f.severity || "info").toUpperCase()} | {isAr ? "ثقة" : "Conf"} {Math.round((f.confidence || 0) * 100)}%
+                <Text style={[s.findingSnippet, rtl]}>
+                  {isAr ? "النص المخالف: " : "Violation text: "}
+                  "{f.evidenceSnippet || "—"}"
                 </Text>
-                <Text style={[s.findingBody, rtl]}>"{f.evidenceSnippet || ""}"</Text>
+                <View style={[s.findingChipsRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+                  <Text style={[s.chip, s.chipInfo]}>{sourceLabel(f.source)}</Text>
+                  <Text style={[s.chip, severityBadgeStyle(f.severity)]}>{(f.severity || "info").toUpperCase()}</Text>
+                  <Text style={[s.chip, s.chipInfo]}>
+                    {isAr ? "الثقة" : "Confidence"} {Math.round((f.confidence || 0) * 100)}%
+                  </Text>
+                </View>
+                <Text style={[s.findingMeta, rtl]}>
+                  {f.startLineChunk != null
+                    ? (isAr
+                      ? `السطر ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`
+                      : `Line ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`)
+                    : ""}
+                </Text>
+                <Text style={[s.findingBody, rtl]}>{isAr ? "الوصف: " : "Description: "}{f.titleAr || "—"}</Text>
               </View>
             ))}
           </View>
