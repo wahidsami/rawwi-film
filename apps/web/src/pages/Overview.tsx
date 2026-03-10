@@ -5,7 +5,7 @@ import { activityService, Activity } from '../services/activityService';
 import { useAuthStore } from '../store/authStore';
 import { useDataStore } from '../store/dataStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate, formatDateTime } from '@/utils/dateFormat';
+import { formatDate } from '@/utils/dateFormat';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { RecentDecisionsWidget } from '../components/RecentDecisionsWidget';
@@ -25,11 +25,13 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  TrendingUp
+  TrendingUp,
+  Loader2,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import toast from 'react-hot-toast';
-import { escapeHtmlSafe } from '@/utils/escapeHtml';
+import { pdf } from '@react-pdf/renderer';
+import { StatusReportPdf } from '@/components/reports/StatusReportPdf';
 
 export function Overview() {
   const { t, lang } = useLangStore();
@@ -70,131 +72,46 @@ export function Overview() {
     if (!stats) return;
     setExportingReport(true);
     try {
-      // 1. Fetch Template
-      const response = await fetch('/templates/dashboard-report-template.html');
-      const template = await response.text();
-
-      const isAr = lang === 'ar';
-      const baseUrl = window.location.origin;
-
-      // Images
-      const loginLogo = `${baseUrl}/loginlogo.png`;
-      const footerImg = `${baseUrl}/footer.png`;
-      const dashLogo = `${baseUrl}/loginlogo.png`;
-
-      // 2. Prepare Data
-      const totalScripts = Object.values(stats.scriptsByStatus).reduce((a, b) => a + b, 0) || 1;
-      const totalFindings = Object.values(stats.findingsBySeverity).reduce((a, b) => a + b, 0) || 1;
-
-      const pDraft = Math.round(((stats.scriptsByStatus.draft ?? 0) / totalScripts) * 100);
-      const pAssigned = Math.round(((stats.scriptsByStatus.assigned ?? 0) / totalScripts) * 100);
-      const pReview = Math.round(((stats.scriptsByStatus.review_required ?? 0) / totalScripts) * 100);
-      const pCompleted = Math.round(((stats.scriptsByStatus.completed ?? 0) / totalScripts) * 100);
-
-      const pCritical = Math.round(((stats.findingsBySeverity.critical ?? 0) / totalFindings) * 100);
-      const pHigh = Math.round(((stats.findingsBySeverity.high ?? 0) / totalFindings) * 100);
-      const pMedium = Math.round(((stats.findingsBySeverity.medium ?? 0) / totalFindings) * 100);
-      const pLow = Math.round(((stats.findingsBySeverity.low ?? 0) / totalFindings) * 100);
-
-      // 3. Replacements
-      let html = template;
-      const replacements: Record<string, string> = {
-        '{{lang}}': isAr ? 'ar' : 'en',
-        '{{dir}}': isAr ? 'rtl' : 'ltr',
-        '{{formattedDate}}': formatDate(new Date(), { lang: isAr ? 'ar' : 'en', format: settings?.platform?.dateFormat }),
-        '{{generationTimestamp}}': formatDateTime(new Date(), { lang: isAr ? 'ar' : 'en' }),
-        '{{loginLogoBase64}}': loginLogo,
-        '{{footerImageBase64}}': footerImg,
-        '{{dashboardLogoBase64}}': dashLogo,
-
-        // Stats Values
-        '{{stats.pendingTasks}}': String(stats.pendingTasks),
-        '{{stats.scriptsInReview}}': String(stats.scriptsInReview),
-        '{{stats.reportsThisMonth}}': String(stats.reportsThisMonth),
-        '{{stats.criticalFindings}}': String(stats.highCriticalFindings),
-
-        // Script Status
-        '{{stats.draft}}': String(stats.scriptsByStatus.draft ?? 0),
-        '{{stats.assigned}}': String(stats.scriptsByStatus.assigned ?? 0),
-        '{{stats.review}}': String(stats.scriptsByStatus.review_required ?? 0),
-        '{{stats.completed}}': String(stats.scriptsByStatus.completed ?? 0),
-        '{{stats.percentDraft}}': String(pDraft),
-        '{{stats.percentAssigned}}': String(pAssigned),
-        '{{stats.percentReview}}': String(pReview),
-        '{{stats.percentCompleted}}': String(pCompleted),
-
-        // Findings Severity
-        '{{stats.critical}}': String(stats.findingsBySeverity.critical ?? 0),
-        '{{stats.high}}': String(stats.findingsBySeverity.high ?? 0),
-        '{{stats.medium}}': String(stats.findingsBySeverity.medium ?? 0),
-        '{{stats.low}}': String(stats.findingsBySeverity.low ?? 0),
-        '{{stats.percentCritical}}': String(pCritical),
-        '{{stats.percentHigh}}': String(pHigh),
-        '{{stats.percentMedium}}': String(pMedium),
-        '{{stats.percentLow}}': String(pLow),
-
-        // Labels
-        '{{labels.reportTitle}}': isAr ? 'تقرير حالة النظام' : 'System Status Report',
-        '{{labels.subtitle}}': isAr ? 'لوحة القيادة التنفيذية' : 'Executive Dashboard',
-        '{{labels.generatedOn}}': isAr ? 'تاريخ التقرير' : 'Generated On',
-        '{{labels.systemOverview}}': isAr ? 'نظرة عامة على أداء النظام والأنشطة الأخيرة' : 'System performance overview and recent activities',
-        '{{labels.executiveSummary}}': isAr ? 'الملخص التنفيذي' : 'Executive Summary',
-        '{{labels.pendingTasks}}': isAr ? 'مهام معلقة' : 'Pending Tasks',
-        '{{labels.inReview}}': isAr ? 'نصوص قيد المراجعة' : 'Scripts in Review',
-        '{{labels.reportsMonth}}': isAr ? 'تقارير هذا الشهر' : 'Reports This Month',
-        '{{labels.criticalFindings}}': isAr ? 'ملاحظات حرجة' : 'Critical/High Findings',
-
-        '{{labels.scriptStatus}}': isAr ? 'توزيع حالات النصوص' : 'Script Status Distribution',
-        '{{labels.findingsSeverity}}': isAr ? 'تحليل المخاطر (الملاحظات)' : 'Risk Analysis (Findings)',
-        '{{labels.recentActivity}}': isAr ? 'الأنشطة الأخيرة' : 'Recent Activity',
-
-        '{{labels.statusDraft}}': isAr ? 'مسودة' : 'Draft',
-        '{{labels.statusAssigned}}': isAr ? 'معين' : 'Assigned',
-        '{{labels.statusReview}}': isAr ? 'مراجعة' : 'Review',
-        '{{labels.statusCompleted}}': isAr ? 'مكتمل' : 'Completed',
-
-        '{{labels.severityCritical}}': isAr ? 'حرج' : 'Critical',
-        '{{labels.severityHigh}}': isAr ? 'عالي' : 'High',
-        '{{labels.severityMedium}}': isAr ? 'متوسط' : 'Medium',
-        '{{labels.severityLow}}': isAr ? 'منخفض' : 'Low',
-      };
-
-      Object.entries(replacements).forEach(([key, val]) => {
-        html = html.split(key).join(val);
-      });
-
-      // 4. Activity Rows
-      const rowsHtml = activities.slice(0, 15).map(act => `
-        <div class="activity-item">
-            <div class="activity-icon"></div>
-            <div class="activity-content">
-                <div class="activity-action">${escapeHtmlSafe(act.action)}</div>
-                <div class="activity-meta">
-                    <span style="font-weight: 600;">${escapeHtmlSafe(act.actor)}</span> • ${escapeHtmlSafe(act.time)}
-                </div>
-            </div>
-        </div>
-      `).join('');
-
-      const loopRegex = /{{#each activities}}([\s\S]*?){{\/each}}/m;
-      html = html.replace(loopRegex, rowsHtml);
-
-      // 5. Open Window
-      const win = window.open('', '_blank');
-      if (!win) {
-        toast.error(isAr ? 'تم حظر النافذة المنبثقة' : 'Popup blocked');
-        return;
+      const origin = window.location.origin;
+      let coverImageDataUrl: string | null = null;
+      try {
+        const res = await fetch(`${origin}/cover.jpg`);
+        if (res.ok) {
+          const blob = await res.blob();
+          coverImageDataUrl = await new Promise<string>((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(r.result as string);
+            r.onerror = reject;
+            r.readAsDataURL(blob);
+          });
+        }
+      } catch (_) {
+        // fallback: no cover image
       }
 
-      setTimeout(() => {
-        win.document.write(html);
-        win.document.close();
-        setTimeout(() => win.print(), 500);
-      }, 100);
-
+      const doc = (
+        <StatusReportPdf
+          stats={stats}
+          activities={activities}
+          lang={lang === 'ar' ? 'ar' : 'en'}
+          dateFormat={settings?.platform?.dateFormat}
+          coverImageDataUrl={coverImageDataUrl}
+          generatedAt={new Date().toISOString()}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `status_report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success(lang === 'ar' ? 'تم تنزيل التقرير' : 'Report downloaded');
     } catch (err: unknown) {
       console.error(err);
-      toast.error('Export failed');
+      toast.error(err instanceof Error ? err.message : 'Export failed');
     } finally {
       setExportingReport(false);
     }
@@ -260,8 +177,10 @@ export function Overview() {
           disabled={exportingReport}
           className="gap-2"
         >
-          <FileBarChart className="w-4 h-4" />
-          {lang === 'ar' ? 'تقرير الحالة' : 'Status Report'}
+          {exportingReport ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileBarChart className="w-4 h-4" />}
+          {exportingReport
+            ? (lang === 'ar' ? 'جاري تجهيز PDF...' : 'Preparing PDF...')
+            : (lang === 'ar' ? 'تقرير الحالة' : 'Status Report')}
         </Button>
       </div>
 
