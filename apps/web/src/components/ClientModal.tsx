@@ -119,15 +119,23 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
     }
   };
 
-  const handleSave = async () => {
+  const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!formData.nameAr.trim()) newErrors.nameAr = lang === 'ar' ? 'الاسم مطلوب' : 'Arabic name is required';
-    if (!formData.nameEn.trim()) newErrors.nameEn = lang === 'ar' ? 'الاسم مطلوب' : 'English name is required';
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
+    if (!formData.nameAr.trim()) newErrors.nameAr = lang === 'ar' ? 'الاسم بالعربية مطلوب' : 'Arabic name is required';
+    if (!formData.nameEn.trim()) newErrors.nameEn = lang === 'ar' ? 'الاسم بالإنجليزية مطلوب' : 'English name is required';
+    if (!formData.repName.trim()) newErrors.repName = lang === 'ar' ? 'اسم الممثل مطلوب' : 'Representative name is required';
+    if (!formData.phone.trim()) newErrors.phone = lang === 'ar' ? 'الجوال مطلوب' : 'Mobile is required';
+    if (!formData.email.trim()) {
+      newErrors.email = lang === 'ar' ? 'البريد الإلكتروني مطلوب' : 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      newErrors.email = lang === 'ar' ? 'أدخل بريداً إلكترونياً صالحاً' : 'Enter a valid email address';
     }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validateForm()) return;
 
     setIsSaving(true);
 
@@ -136,9 +144,9 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
         await updateCompany(existingCompany.companyId, {
           nameAr: formData.nameAr,
           nameEn: formData.nameEn,
-          representativeName: `${formData.repName} (${formData.repTitle})`,
-          email: formData.email,
-          phone: formData.phone,
+          representativeName: formData.repTitle.trim() ? `${formData.repName} (${formData.repTitle})` : formData.repName,
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
         });
         if (logoFile) {
           const updated = await companiesApi.uploadCompanyLogo(existingCompany.companyId, logoFile);
@@ -147,13 +155,13 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
       } else {
         const newCompany: Company = {
           companyId: '',
-          nameAr: formData.nameAr,
-          nameEn: formData.nameEn,
-          representativeName: `${formData.repName} (${formData.repTitle})`,
-          representativeTitle: formData.repTitle || null,
-          email: formData.email,
-          phone: formData.phone,
-          mobile: formData.phone,
+          nameAr: formData.nameAr.trim(),
+          nameEn: formData.nameEn.trim(),
+          representativeName: formData.repTitle.trim() ? `${formData.repName} (${formData.repTitle})` : formData.repName.trim(),
+          representativeTitle: formData.repTitle.trim() || null,
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          mobile: formData.phone.trim(),
           createdAt: new Date().toISOString().split('T')[0],
           scriptsCount: 0,
         };
@@ -223,22 +231,23 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
         <Input
           label={lang === 'ar' ? 'الاسم بالعربية *' : 'Arabic Name *'}
           value={formData.nameAr}
-          onChange={e => setFormData({ ...formData, nameAr: e.target.value })}
+          onChange={e => { setFormData({ ...formData, nameAr: e.target.value }); setErrors(prev => ({ ...prev, nameAr: '' })); }}
           error={errors.nameAr}
           dir="rtl"
         />
         <Input
           label={lang === 'ar' ? 'الاسم بالانجليزية *' : 'English Name *'}
           value={formData.nameEn}
-          onChange={e => setFormData({ ...formData, nameEn: e.target.value })}
+          onChange={e => { setFormData({ ...formData, nameEn: e.target.value }); setErrors(prev => ({ ...prev, nameEn: '' })); }}
           error={errors.nameEn}
           dir="ltr"
         />
         <div className="grid grid-cols-2 gap-4">
           <Input
-            label={lang === 'ar' ? 'اسم الممثل' : 'Rep Name'}
+            label={lang === 'ar' ? 'اسم الممثل *' : 'Rep Name *'}
             value={formData.repName}
-            onChange={e => setFormData({ ...formData, repName: e.target.value })}
+            onChange={e => { setFormData({ ...formData, repName: e.target.value }); setErrors(prev => ({ ...prev, repName: '' })); }}
+            error={errors.repName}
           />
           <Input
             label={lang === 'ar' ? 'المسمى الوظيفي' : 'Rep Title'}
@@ -247,16 +256,18 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
           />
         </div>
         <Input
-          label={lang === 'ar' ? 'الجوال' : 'Mobile'}
+          label={lang === 'ar' ? 'الجوال *' : 'Mobile *'}
           value={formData.phone}
-          onChange={e => setFormData({ ...formData, phone: e.target.value })}
+          onChange={e => { setFormData({ ...formData, phone: e.target.value }); setErrors(prev => ({ ...prev, phone: '' })); }}
+          error={errors.phone}
           dir="ltr"
         />
         <Input
-          label={lang === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+          label={lang === 'ar' ? 'البريد الإلكتروني *' : 'Email *'}
           type="email"
           value={formData.email}
-          onChange={e => setFormData({ ...formData, email: e.target.value })}
+          onChange={e => { setFormData({ ...formData, email: e.target.value }); setErrors(prev => ({ ...prev, email: '' })); }}
+          error={errors.email}
           dir="ltr"
         />
         <div className="flex justify-end gap-3 pt-4 border-t border-border mt-6">
