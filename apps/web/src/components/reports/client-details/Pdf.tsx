@@ -3,6 +3,8 @@ import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 import { formatDate, formatDateTime } from "@/utils/dateFormat";
 import { clientDetailsStyles as s } from "./styles";
 import type { ClientDetailsScriptRow } from "./mapper";
+const A4_WIDTH = 595.28;
+const A4_HEIGHT = 841.89;
 
 function clean(v: unknown, max = 40): string {
   const t = String(v ?? "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
@@ -33,11 +35,20 @@ export const ClientDetailsSectionPdf: React.FC<ClientDetailsSectionPdfProps> = (
   const rtl = isAr ? s.rtl : {};
   return (
     <Document>
-      <Page size="A4" style={[s.cover, isAr ? s.pageAr : {}]}>
-        {p.coverImageDataUrl ? <Image src={p.coverImageDataUrl} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} /> : null}
-        <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير العميل التفصيلي" : "Client Detailed Report"}</Text>
-        <Text style={[s.coverText, rtl]}>{p.client.name}</Text>
-        <Text style={[s.coverText, rtl]}>{formatDate(new Date(), { lang: p.lang, format: p.dateFormat })}</Text>
+      <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
+        <View style={{ width: A4_WIDTH, height: A4_HEIGHT, position: "relative" }}>
+          {p.coverImageDataUrl ? (
+            <Image
+              src={p.coverImageDataUrl}
+              style={{ position: "absolute", top: 0, left: 0, width: A4_WIDTH, height: A4_HEIGHT, objectFit: "cover" }}
+            />
+          ) : null}
+          <View style={{ position: "absolute", left: 36, right: 36, bottom: 64 }}>
+            <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير العميل التفصيلي" : "Client Detailed Report"}</Text>
+            <Text style={[s.coverText, rtl]}>{p.client.name}</Text>
+            <Text style={[s.coverText, rtl]}>{formatDate(new Date(), { lang: p.lang, format: p.dateFormat })}</Text>
+          </View>
+        </View>
       </Page>
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
         {p.dashboardLogoUrl ? <Image src={p.dashboardLogoUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 8 }} /> : null}

@@ -3,6 +3,8 @@ import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 import { formatDate } from "@/utils/dateFormat";
 import { statusStyles as s } from "./styles";
 import type { StatusPdfData } from "./mapper";
+const A4_WIDTH = 595.28;
+const A4_HEIGHT = 841.89;
 
 export interface StatusSectionPdfProps {
   data: StatusPdfData;
@@ -29,14 +31,21 @@ export const StatusSectionPdf: React.FC<StatusSectionPdfProps> = ({
 
   return (
     <Document>
-      <Page size="A4" style={[s.cover, isAr ? s.pageAr : {}]}>
-        {coverImageDataUrl ? (
-          <Image src={coverImageDataUrl} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-        ) : null}
-        <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير حالة النظام" : "System Status Report"}</Text>
-        <Text style={[s.coverText, rtl]}>
-          {formatDate(new Date(generatedAt), { lang, format: dateFormat })}
-        </Text>
+      <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
+        <View style={{ width: A4_WIDTH, height: A4_HEIGHT, position: "relative" }}>
+          {coverImageDataUrl ? (
+            <Image
+              src={coverImageDataUrl}
+              style={{ position: "absolute", top: 0, left: 0, width: A4_WIDTH, height: A4_HEIGHT, objectFit: "cover" }}
+            />
+          ) : null}
+          <View style={{ position: "absolute", left: 36, right: 36, bottom: 64 }}>
+            <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير حالة النظام" : "System Status Report"}</Text>
+            <Text style={[s.coverText, rtl]}>
+              {formatDate(new Date(generatedAt), { lang, format: dateFormat })}
+            </Text>
+          </View>
+        </View>
       </Page>
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
         {logoUrl ? <Image src={logoUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 10 }} /> : null}

@@ -3,6 +3,8 @@ import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 import { formatDate } from "@/utils/dateFormat";
 import { clientsStyles as s } from "./styles";
 import type { ClientPdfRow } from "./mapper";
+const A4_WIDTH = 595.28;
+const A4_HEIGHT = 841.89;
 
 function safeText(v: unknown, max = 34): string {
   const t = String(v ?? "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
@@ -28,12 +30,19 @@ export const ClientsSectionPdf: React.FC<ClientsSectionPdfProps> = (props) => {
   const dateStr = formatDate(new Date(props.generatedAt), { lang: props.lang, format: props.dateFormat });
   return (
     <Document>
-      <Page size="A4" style={[s.cover, isAr ? s.pageAr : {}]}>
-        {props.coverImageDataUrl ? (
-          <Image src={props.coverImageDataUrl} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-        ) : null}
-        <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير محفظة العملاء" : "Clients Portfolio Report"}</Text>
-        <Text style={[s.coverText, rtl]}>{dateStr}</Text>
+      <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
+        <View style={{ width: A4_WIDTH, height: A4_HEIGHT, position: "relative" }}>
+          {props.coverImageDataUrl ? (
+            <Image
+              src={props.coverImageDataUrl}
+              style={{ position: "absolute", top: 0, left: 0, width: A4_WIDTH, height: A4_HEIGHT, objectFit: "cover" }}
+            />
+          ) : null}
+          <View style={{ position: "absolute", left: 36, right: 36, bottom: 64 }}>
+            <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير محفظة العملاء" : "Clients Portfolio Report"}</Text>
+            <Text style={[s.coverText, rtl]}>{dateStr}</Text>
+          </View>
+        </View>
       </Page>
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
         {props.logoUrl ? <Image src={props.logoUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 10 }} /> : null}

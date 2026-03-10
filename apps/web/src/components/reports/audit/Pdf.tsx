@@ -1,8 +1,10 @@
 import React from "react";
-import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 import { formatDate, formatDateTime } from "@/utils/dateFormat";
 import { auditStyles as s } from "./styles";
 import type { AuditPdfRow } from "./mapper";
+const A4_WIDTH = 595.28;
+const A4_HEIGHT = 841.89;
 
 function clean(v: unknown, max = 52): string {
   const t = String(v ?? "").replace(/\s+/g, " ").trim();
@@ -15,11 +17,28 @@ export const AuditSectionPdf: React.FC<{
   lang: "ar" | "en";
   dateFormat?: string;
   generatedAt: string;
+  coverImageDataUrl?: string | null;
 }> = (p) => {
   const isAr = p.lang === "ar";
   const rtl = isAr ? s.rtl : {};
   return (
     <Document>
+      <Page size="A4" wrap={false} style={[{ backgroundColor: "#1e3a5f", padding: 36 }, isAr ? s.pageAr : {}]}>
+        <View style={{ width: A4_WIDTH, height: A4_HEIGHT, position: "relative" }}>
+          {p.coverImageDataUrl ? (
+            <Image
+              src={p.coverImageDataUrl}
+              style={{ position: "absolute", top: 0, left: 0, width: A4_WIDTH, height: A4_HEIGHT, objectFit: "cover" }}
+            />
+          ) : null}
+          <View style={{ position: "absolute", left: 36, right: 36, bottom: 64 }}>
+            <Text style={[{ color: "#FFF", fontSize: 22, fontWeight: "bold", marginBottom: 8 }, rtl]}>{isAr ? "سجل التدقيق" : "Audit Log Report"}</Text>
+            <Text style={[{ color: "#FFF", fontSize: 11, marginBottom: 3 }, rtl]}>
+              {formatDate(new Date(p.generatedAt), { lang: p.lang, format: p.dateFormat })}
+            </Text>
+          </View>
+        </View>
+      </Page>
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
         <Text style={[s.title, rtl]}>{isAr ? "سجل التدقيق" : "Audit Log Report"}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? "تقرير أحداث النظام" : "System events report"}</Text>
