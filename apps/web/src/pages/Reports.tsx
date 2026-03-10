@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import {
-  FileText, Search, FileDown, Eye, Calendar, Building2, User, RefreshCw, XCircle, CheckCircle, AlertTriangle, Loader2
+  FileText, Search, FileDown, Eye, Calendar, Building2, User, RefreshCw, XCircle, CheckCircle, AlertTriangle, Loader2, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 function Reports() {
@@ -39,6 +39,8 @@ function Reports() {
   const [companyId, setCompanyId] = useState('all');
   const [decision, setDecision] = useState('all');
   const [userFilter, setUserFilter] = useState('all');
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetchInitialData();
@@ -75,14 +77,6 @@ function Reports() {
       setUsersList(active.map((u) => ({ id: u.id, name: u.name || u.email || 'Unknown' })).sort((a, b) => a.name.localeCompare(b.name)));
     }).catch(() => setUsersList([]));
   }, [canManageUsers]);
-
-  const handleResetFilters = useCallback(() => {
-    setSearch('');
-    setCompanyId('all');
-    setDecision('all');
-    setUserFilter('all');
-    setFilterKey((k) => k + 1);
-  }, []);
 
   const filteredReports = reports.filter(r => {
     const matchSearch = (r.scriptTitle ?? '').toLowerCase().includes(search.toLowerCase()) ||
@@ -357,7 +351,7 @@ function Reports() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredReports.map(report => (
+                {paginatedReports.map(report => (
                   <tr key={report.id} className="bg-surface hover:bg-background/50 transition-colors cursor-pointer" onClick={() => handleOpen(report)}>
                     <td className="px-6 py-4 font-mono text-xs text-text-muted">{report.id?.substring(0, 8)}</td>
                     <td className="px-6 py-4">
@@ -405,6 +399,53 @@ function Reports() {
             </table>
           )}
         </div>
+        {!loading && !error && filteredReports.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-border bg-background">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-text-muted">{lang === 'ar' ? 'عرض' : 'Show'}</span>
+              <Select
+                value={String(pageSize)}
+                onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                options={[
+                  { label: '10', value: '10' },
+                  { label: '30', value: '30' },
+                  { label: '50', value: '50' },
+                  { label: '100', value: '100' },
+                ]}
+              />
+              <span className="text-sm text-text-muted">{lang === 'ar' ? 'في الصفحة' : 'per page'}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-text-muted">
+              <span>
+                {lang === 'ar'
+                  ? `${start + 1}–${Math.min(start + pageSize, totalFiltered)} من ${totalFiltered}`
+                  : `${start + 1}–${Math.min(start + pageSize, totalFiltered)} of ${totalFiltered}`}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  aria-label={lang === 'ar' ? 'السابق' : 'Previous'}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  aria-label={lang === 'ar' ? 'التالي' : 'Next'}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );
