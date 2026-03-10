@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import toast from 'react-hot-toast';
 import { useLangStore } from '@/store/langStore';
+import { useAuthStore } from '@/store/authStore';
 import { auditService, AuditEventRow, AuditListParams } from '@/services/auditService';
 import { usersApi } from '@/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -25,6 +26,7 @@ const TARGET_TYPES = ['script', 'task', 'report', 'glossary', 'client'];
 export function Audit() {
   const { t, lang } = useLangStore();
   const { settings } = useSettingsStore();
+  const hasPermission = useAuthStore((s) => s.hasPermission);
   const [data, setData] = useState<AuditEventRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -67,8 +69,12 @@ export function Audit() {
     load();
   }, [load]);
 
-  // Fetch users list for filter dropdown (use existing users API; auth.admin is server-only)
+  // Fetch users list for filter dropdown only when user can manage users (avoid 403 for Regulators)
   useEffect(() => {
+    if (!hasPermission('manage_users')) {
+      setUsers([]);
+      return;
+    }
     let cancelled = false;
     usersApi.getUsers()
       .then((list) => {
@@ -82,7 +88,7 @@ export function Audit() {
         if (!cancelled) console.error('Failed to fetch users:', err);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [hasPermission]);
 
   const handleExportCsv = async () => {
     setExporting(true);

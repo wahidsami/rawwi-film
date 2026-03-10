@@ -24,7 +24,7 @@ import {
 function Reports() {
   const { t, lang } = useLangStore();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, hasPermission } = useAuthStore();
   const { companies, fetchInitialData } = useDataStore();
   const { settings } = useSettingsStore();
 
@@ -65,15 +65,16 @@ function Reports() {
   }, [loadReports]);
 
   const isAdmin = user?.role === 'Admin' || user?.role === 'Super Admin';
+  const canManageUsers = hasPermission('manage_users');
 
-  // Load full user list for admin filter dropdown (so all users appear, not only report creators)
+  // Load full user list only when user can manage users (avoid 403 for Regulators)
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canManageUsers) return;
     usersApi.getUsers().then((list) => {
       const active = list.filter((u) => u.status === 'active');
       setUsersList(active.map((u) => ({ id: u.id, name: u.name || u.email || 'Unknown' })).sort((a, b) => a.name.localeCompare(b.name)));
     }).catch(() => setUsersList([]));
-  }, [isAdmin]);
+  }, [canManageUsers]);
 
   const handleResetFilters = useCallback(() => {
     setSearch('');
