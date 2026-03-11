@@ -269,7 +269,9 @@ export function Results() {
   const fallbackSummaryCount = canonicalSummaryFindings.length > 0
     ? canonicalSummaryFindings.length
     : summary.findings_by_article.reduce((acc, a) => acc + (a.top_findings?.length ?? 0), 0);
-  const displayViolationsCount = hasRealFindings ? displayViolations.length : fallbackSummaryCount;
+  const displayViolationsCount = canonicalSummaryFindings.length > 0
+    ? canonicalSummaryFindings.length
+    : (hasRealFindings ? displayViolations.length : fallbackSummaryCount);
 
   // Read persisted totals from report payload (updated by backend after each review).
   // These already exclude approved findings.
@@ -1074,10 +1076,10 @@ export function Results() {
                   : 'No violations were detected in this script under the current analysis policy.'}
               </p>
             </div>
-          ) : hasRealFindings
-            ? renderFindingsFromReal(displayViolations)
-            : canonicalSummaryFindings.length > 0
-              ? renderFindingsFromCanonicalSummary()
+          ) : canonicalSummaryFindings.length > 0
+            ? renderFindingsFromCanonicalSummary()
+            : hasRealFindings
+              ? renderFindingsFromReal(displayViolations)
               : renderFindingsFromSummary()}
 
           {/* Approved section */}

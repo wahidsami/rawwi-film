@@ -22,6 +22,8 @@ export type SummaryJson = {
   totals: {
     findings_count: number;
     severity_counts: { low: number; medium: number; high: number; critical: number };
+    /** Number of unique incidents (canonical findings). Use for main report count. */
+    unique_incidents_count?: number;
   };
   checklist_articles: Array<{
     article_id: number;
@@ -94,6 +96,53 @@ export type SummaryJson = {
   };
 };
 
+const COMPLIANCE_NEUTRAL_HINTS = ["محايد", "سياق درامي", "ليس تحريضي", "ليس تمجيد", "متوافق إجمالاً", "درامي نفسي"];
+
+function scriptSuggestsNeutralContext(scriptSummary: SummaryJson["script_summary"]): boolean {
+  if (!scriptSummary?.compliance_posture_ar && !scriptSummary?.narrative_stance_ar) return false;
+  const text = [scriptSummary.compliance_posture_ar ?? "", scriptSummary.narrative_stance_ar ?? ""].join(" ");
+  return COMPLIANCE_NEUTRAL_HINTS.some((hint) => text.includes(hint));
+}
+
+/**
+ * When script summary indicates neutral/dramatic context (not inciting), downgrade
+ * violation -> needs_review for non-critical canonical findings to align summary and rulings.
+ */
+function applySummaryContextToRulings(summary: SummaryJson): void {
+  if (!scriptSuggestsNeutralContext(summary.script_summary)) return;
+  const canon = summary.canonical_findings;
+  if (!canon?.length) return;
+  const byId = new Map(canon.map((f) => [f.canonical_finding_id, f]));
+  let changed = 0;
+  for (const f of canon) {
+    if (f.final_ruling === "violation" && f.severity !== "critical") {
+      (f as { final_ruling?: string }).final_ruling = "needs_review";
+      changed++;
+    }
+  }
+  if (changed > 0 && summary.context_metrics) {
+    const violationCount = canon.filter((x) => x.final_ruling === "violation").length;
+    const needsReviewCount = canon.filter((x) => x.final_ruling === "needs_review").length;
+    const contextOkCount = canon.filter((x) => x.final_ruling === "context_ok").length;
+    summary.context_metrics.violation_count = violationCount;
+    summary.context_metrics.needs_review_count = needsReviewCount;
+    summary.context_metrics.context_ok_count = contextOkCount;
+  }
+  if (changed > 0 && summary.findings_by_article) {
+    for (const art of summary.findings_by_article) {
+      for (const top of art.top_findings ?? []) {
+        const loc = top.location as Record<string, unknown> | undefined;
+        const v3 = loc?.v3 as Record<string, unknown> | undefined;
+        const cid = v3?.canonical_finding_id as string | undefined;
+        const c = cid ? byId.get(cid) : undefined;
+        if (c && v3 && v3.final_ruling !== c.final_ruling) {
+          v3.final_ruling = c.final_ruling ?? null;
+        }
+      }
+    }
+  }
+}
+
 type DbFinding = {
   source?: string;
   article_id: number;
@@ -129,7 +178,9 @@ function primaryScoreForDb(f: DbFinding): number[] {
 }
 
 function choosePrimaryFromDb(list: DbFinding[]): DbFinding {
-  return [...list].sort((a, b) => {
+  const specific = list.filter((f) => !BROAD_ARTICLES.has(f.article_id));
+  const candidateList = specific.length > 0 ? specific : list;
+  return [...candidateList].sort((a, b) => {
     const sa = primaryScoreForDb(a);
     const sb = primaryScoreForDb(b);
     for (let i = 0; i < sa.length; i++) {
@@ -176,122 +227,11 @@ export function buildSummaryJson(
   const generated_at = new Date().toISOString();
   const filtered = findings.filter((f) => f.article_id !== OUT_OF_SCOPE_ARTICLE_ID);
   const deduped = dedupeFindings(filtered);
-
-  const severity_counts = { low: 0, medium: 0, high: 0, critical: 0 };
-  for (const f of deduped) {
-    if (SEVERITIES.includes(f.severity as (typeof SEVERITIES)[number])) {
-      severity_counts[f.severity as keyof typeof severity_counts]++;
-    }
-  }
-
   const policyArticles = getPolicyArticles();
-  const byArticle = new Map<
-    number,
-    { title_ar: string; findings: DbFinding[]; counts: Record<string, number>; atoms: Set<string> }
-  >();
-  for (const art of policyArticles) {
-    if (art.articleId === OUT_OF_SCOPE_ARTICLE_ID) continue;
-    byArticle.set(art.articleId, {
-      title_ar: art.title_ar,
-      findings: [],
-      counts: { low: 0, medium: 0, high: 0, critical: 0 },
-      atoms: new Set(),
-    });
-  }
-  for (const f of deduped) {
-    const entry = byArticle.get(f.article_id);
-    if (entry) {
-      entry.findings.push(f);
-      if (SEVERITIES.includes(f.severity as (typeof SEVERITIES)[number])) {
-        entry.counts[f.severity as keyof typeof entry.counts]++;
-      }
-      const normAtom = normalizeAtomId(f.atom_id, f.article_id);
-      if (normAtom) entry.atoms.add(normAtom);
-    }
-  }
-
-  const checklist_articles = policyArticles
-    .filter((a) => a.articleId !== OUT_OF_SCOPE_ARTICLE_ID)
-    .map((art) => {
-      const entry = byArticle.get(art.articleId)!;
-      const total = entry.findings.length;
-      const hasCritical = entry.counts.critical > 0;
-      const hasHigh = entry.counts.high > 0;
-      const hasMedium = entry.counts.medium > 0;
-      const hasLow = entry.counts.low > 0;
-      let status: "ok" | "not_scanned" | "warning" | "fail" = "ok";
-      if (total === 0) status = "ok";
-      else if (hasCritical || hasHigh) status = "fail";
-      else if (hasMedium || hasLow) status = "warning";
-      return {
-        article_id: art.articleId,
-        title_ar: entry.title_ar,
-        status,
-        counts: entry.counts,
-        triggered_atoms: [...entry.atoms],
-      };
-    });
 
   const severityOrder = (s: string) => (SEVERITIES.indexOf(s as (typeof SEVERITIES)[number]) + 1) || 0;
-  const findings_by_article = policyArticles
-    .filter((a) => a.articleId !== OUT_OF_SCOPE_ARTICLE_ID)
-    .map((art) => {
-      const entry = byArticle.get(art.articleId)!;
-      return { art, entry };
-    })
-    .filter(({ entry }) => entry.findings.length > 0)
-    .map(({ art, entry }) => {
-      const sorted = entry.findings
-        .sort(
-          (a, b) =>
-            atomIdNumeric(normalizeAtomId(a.atom_id, a.article_id)) - atomIdNumeric(normalizeAtomId(b.atom_id, b.article_id)) ||
-            (a.start_offset_global ?? 0) - (b.start_offset_global ?? 0) ||
-            severityOrder(b.severity) - severityOrder(a.severity) ||
-            (b.confidence ?? 0) - (a.confidence ?? 0)
-        )
-        .slice(0, 10)
-        .map((f) => {
-          const normAtom = normalizeAtomId(f.atom_id, f.article_id) || null;
-          const titleAr = getPolicyAtomTitle(f.article_id, normAtom) ?? f.title_ar;
-          const locationObj = ((f.location as Record<string, unknown>) ?? {}) as Record<string, unknown>;
-          const v3 = ((locationObj.v3 as Record<string, unknown> | undefined) ?? {}) as Record<string, unknown>;
-          return {
-            atom_id: normAtom,
-            title_ar: titleAr,
-            severity: f.severity,
-            confidence: f.confidence ?? 0,
-            evidence_snippet: f.evidence_snippet,
-            location: (f.location as Record<string, unknown>) ?? {},
-            start_offset_global: f.start_offset_global,
-            end_offset_global: f.end_offset_global,
-            start_line_chunk: f.start_line_chunk,
-            end_line_chunk: f.end_line_chunk,
-            depiction_type: (v3.depiction_type as string | undefined) ?? undefined,
-            speaker_role: (v3.speaker_role as string | undefined) ?? undefined,
-            context_confidence: (v3.context_confidence as number | undefined) ?? null,
-            lexical_confidence: (v3.lexical_confidence as number | undefined) ?? null,
-            policy_confidence: (v3.policy_confidence as number | undefined) ?? null,
-            rationale: (v3.rationale_ar as string | undefined) ?? null,
-            final_ruling: (v3.final_ruling as string | undefined) ?? null,
-            narrative_consequence: (v3.narrative_consequence as string | undefined) ?? null,
-            pillar_id: (v3.pillar_id as string | undefined) ?? null,
-            secondary_pillar_ids: (v3.secondary_pillar_ids as string[] | undefined) ?? [],
-            primary_article_id: (v3.primary_article_id as number | undefined) ?? null,
-            related_article_ids: (v3.related_article_ids as number[] | undefined) ?? [],
-            canonical_finding_id: (v3.canonical_finding_id as string | undefined) ?? null,
-            policy_links: (v3.policy_links as Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }> | undefined) ?? [],
-          };
-        });
-      return {
-        article_id: art.articleId,
-        title_ar: entry.title_ar,
-        counts: entry.counts,
-        triggered_atoms: [...entry.atoms],
-        top_findings: sorted,
-      };
-    });
 
-  // Build canonical findings from overlap clusters: one row per incident.
+  // Build canonical findings from overlap clusters first (single source of truth).
   const canonicalMap = new Map<string, {
     canonical_finding_id: string;
     title_ar: string;
@@ -344,6 +284,105 @@ export function buildSummaryJson(
     severityOrder(b.severity) - severityOrder(a.severity) || (b.confidence - a.confidence)
   );
 
+  // Severity counts from canonical (unique incidents).
+  const severity_counts = { low: 0, medium: 0, high: 0, critical: 0 };
+  for (const f of canonical_findings) {
+    if (SEVERITIES.includes(f.severity as (typeof SEVERITIES)[number])) {
+      severity_counts[f.severity as keyof typeof severity_counts]++;
+    }
+  }
+
+  // findings_by_article: each canonical finding appears once under its primary article only.
+  const canonicalByPrimary = new Map<number, typeof canonical_findings>();
+  for (const f of canonical_findings) {
+    const aid = f.primary_article_id ?? 0;
+    if (aid === 0 || aid === OUT_OF_SCOPE_ARTICLE_ID) continue;
+    if (!canonicalByPrimary.has(aid)) canonicalByPrimary.set(aid, []);
+    canonicalByPrimary.get(aid)!.push(f);
+  }
+
+  const findings_by_article = policyArticles
+    .filter((a) => a.articleId !== OUT_OF_SCOPE_ARTICLE_ID)
+    .map((art) => {
+      const list = canonicalByPrimary.get(art.articleId) ?? [];
+      const counts = { low: 0, medium: 0, high: 0, critical: 0 };
+      for (const f of list) {
+        if (SEVERITIES.includes(f.severity as (typeof SEVERITIES)[number])) {
+          counts[f.severity as keyof typeof counts]++;
+        }
+      }
+      const sorted = [...list].sort(
+        (a, b) =>
+          severityOrder(b.severity) - severityOrder(a.severity) ||
+          (b.confidence - a.confidence)
+      );
+      const top_findings = sorted.slice(0, 10).map((f) => ({
+        atom_id: null as string | null,
+        title_ar: f.title_ar,
+        severity: f.severity,
+        confidence: f.confidence,
+        evidence_snippet: f.evidence_snippet,
+        location: {
+          v3: {
+            primary_article_id: f.primary_article_id,
+            related_article_ids: f.related_article_ids,
+            canonical_finding_id: f.canonical_finding_id,
+            pillar_id: f.pillar_id,
+            rationale: f.rationale,
+            final_ruling: f.final_ruling,
+            policy_links: f.policy_links,
+          },
+        } as Record<string, unknown>,
+        start_offset_global: f.start_offset_global,
+        end_offset_global: f.end_offset_global,
+        start_line_chunk: f.start_line_chunk,
+        end_line_chunk: f.end_line_chunk,
+        rationale: f.rationale ?? null,
+        final_ruling: f.final_ruling ?? null,
+        pillar_id: f.pillar_id ?? null,
+        primary_article_id: f.primary_article_id ?? null,
+        related_article_ids: f.related_article_ids ?? [],
+        canonical_finding_id: f.canonical_finding_id,
+        policy_links: f.policy_links ?? [],
+      }));
+      return {
+        article_id: art.articleId,
+        title_ar: art.title_ar,
+        counts,
+        triggered_atoms: [] as string[],
+        top_findings,
+      };
+    })
+    .filter((entry) => entry.top_findings.length > 0);
+
+  const checklist_articles = policyArticles
+    .filter((a) => a.articleId !== OUT_OF_SCOPE_ARTICLE_ID)
+    .map((art) => {
+      const list = canonicalByPrimary.get(art.articleId) ?? [];
+      const counts = { low: 0, medium: 0, high: 0, critical: 0 };
+      for (const f of list) {
+        if (SEVERITIES.includes(f.severity as (typeof SEVERITIES)[number])) {
+          counts[f.severity as keyof typeof counts]++;
+        }
+      }
+      const total = list.length;
+      const hasCritical = counts.critical > 0;
+      const hasHigh = counts.high > 0;
+      const hasMedium = counts.medium > 0;
+      const hasLow = counts.low > 0;
+      let status: "ok" | "not_scanned" | "warning" | "fail" = "ok";
+      if (total === 0) status = "ok";
+      else if (hasCritical || hasHigh) status = "fail";
+      else if (hasMedium || hasLow) status = "warning";
+      return {
+        article_id: art.articleId,
+        title_ar: art.title_ar,
+        status,
+        counts,
+        triggered_atoms: [] as string[],
+      };
+    });
+
   const context_ok_count = canonical_findings.filter((f) => f.final_ruling === "context_ok").length;
   const needs_review_count = canonical_findings.filter((f) => f.final_ruling === "needs_review").length;
   const violation_count = canonical_findings.filter((f) => f.final_ruling === "violation").length;
@@ -355,8 +394,9 @@ export function buildSummaryJson(
     client_name: clientName,
     script_title: scriptTitle,
     totals: {
-      findings_count: deduped.length,
+      findings_count: canonical_findings.length,
       severity_counts,
+      unique_incidents_count: canonical_findings.length,
     },
     context_metrics: {
       context_ok_count,
@@ -531,6 +571,7 @@ export async function runAggregation(jobId: string): Promise<void> {
     const scriptSummary = await generateScriptSummary(fullScriptText, scriptTitle);
     if (scriptSummary) summary.script_summary = scriptSummary;
   }
+  applySummaryContextToRulings(summary);
 
   const reportHtml = buildReportHtml(summary);
 

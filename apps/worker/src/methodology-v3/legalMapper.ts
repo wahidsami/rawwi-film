@@ -41,7 +41,9 @@ function primaryScore(f: HybridFindingLike): number[] {
 }
 
 function choosePrimary(list: HybridFindingLike[]): HybridFindingLike {
-  return [...list].sort((a, b) => {
+  const specific = list.filter((f) => !BROAD_ARTICLES.has(f.article_id));
+  const candidateList = specific.length > 0 ? specific : list;
+  return [...candidateList].sort((a, b) => {
     const sa = primaryScore(a);
     const sb = primaryScore(b);
     for (let i = 0; i < sa.length; i++) {

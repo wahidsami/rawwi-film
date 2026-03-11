@@ -49,6 +49,25 @@ export function mapAnalysisFindingsForPdf(
   findingsByArticle: SummaryArticle[] | null | undefined,
   canonicalFindings?: CanonicalSummaryFinding[] | null
 ): AnalysisPdfFinding[] {
+  const canon = (canonicalFindings || [])
+    .filter(Boolean)
+    .map((f, idx) => ({
+      id: f.canonical_finding_id ?? `canonical-${idx}`,
+      articleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
+      titleAr: f.title_ar ?? "—",
+      severity: f.severity ?? "info",
+      confidence: f.confidence ?? 0,
+      evidenceSnippet: f.evidence_snippet ?? "",
+      source: "ai",
+      primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
+      relatedArticleIds: f.related_article_ids ?? [],
+      rationale: f.rationale ?? null,
+      pillarId: f.pillar_id ?? null,
+      startLineChunk: f.start_line_chunk ?? undefined,
+      endLineChunk: f.end_line_chunk ?? undefined,
+    }));
+  if (canon.length > 0) return canon;
+
   const real = (findings || [])
     .filter((f): f is AnalysisFinding => !!f)
     .map((f, idx) => {
@@ -91,25 +110,6 @@ export function mapAnalysisFindingsForPdf(
     }
     return [...deduped.values()];
   }
-
-  const canon = (canonicalFindings || [])
-    .filter(Boolean)
-    .map((f, idx) => ({
-      id: f.canonical_finding_id ?? `canonical-${idx}`,
-      articleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
-      titleAr: f.title_ar ?? "—",
-      severity: f.severity ?? "info",
-      confidence: f.confidence ?? 0,
-      evidenceSnippet: f.evidence_snippet ?? "",
-      source: "ai",
-      primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
-      relatedArticleIds: f.related_article_ids ?? [],
-      rationale: f.rationale ?? null,
-      pillarId: f.pillar_id ?? null,
-      startLineChunk: f.start_line_chunk ?? undefined,
-      endLineChunk: f.end_line_chunk ?? undefined,
-    }));
-  if (canon.length > 0) return canon;
 
   const byArticle = findingsByArticle || [];
   return byArticle.flatMap((art, aIdx) => {
