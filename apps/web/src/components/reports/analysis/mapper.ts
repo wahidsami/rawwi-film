@@ -18,7 +18,10 @@ type CanonicalSummaryFinding = {
   evidence_snippet: string;
   severity: string;
   confidence: number;
+  rationale?: string | null;
+  pillar_id?: string | null;
   primary_article_id?: number | null;
+  related_article_ids?: number[];
   start_line_chunk?: number | null;
   end_line_chunk?: number | null;
 };
@@ -31,6 +34,10 @@ export type AnalysisPdfFinding = {
   confidence: number;
   evidenceSnippet: string;
   source?: string;
+  primaryArticleId?: number;
+  relatedArticleIds?: number[];
+  rationale?: string | null;
+  pillarId?: string | null;
   startLineChunk?: number;
   endLineChunk?: number;
   reviewStatus?: string;
@@ -44,8 +51,10 @@ export function mapAnalysisFindingsForPdf(
 ): AnalysisPdfFinding[] {
   const real = (findings || [])
     .filter((f): f is AnalysisFinding => !!f)
-    .map((f, idx) => ({
-      id: ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined)?.canonical_finding_id as string
+    .map((f, idx) => {
+      const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+      return {
+      id: (v3.canonical_finding_id as string | undefined)
         ?? f.id
         ?? `finding-${idx}`,
       articleId: Number.isFinite(f.articleId) ? f.articleId : 0,
@@ -54,11 +63,16 @@ export function mapAnalysisFindingsForPdf(
       confidence: f.confidence ?? 0,
       evidenceSnippet: f.evidenceSnippet ?? "",
       source: f.source,
+      primaryArticleId: Number(v3.primary_article_id),
+      relatedArticleIds: (v3.related_article_ids as number[] | undefined) ?? [],
+      rationale: (v3.rationale_ar as string | undefined) ?? null,
+      pillarId: (v3.pillar_id as string | undefined) ?? null,
       startLineChunk: f.startLineChunk ?? undefined,
       endLineChunk: f.endLineChunk ?? undefined,
       reviewStatus: f.reviewStatus ?? undefined,
       reviewedAt: f.reviewedAt ?? undefined,
-    }));
+      };
+    });
 
   if (real.length > 0) {
     const deduped = new Map<string, AnalysisPdfFinding>();
@@ -88,6 +102,10 @@ export function mapAnalysisFindingsForPdf(
       confidence: f.confidence ?? 0,
       evidenceSnippet: f.evidence_snippet ?? "",
       source: "ai",
+      primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
+      relatedArticleIds: f.related_article_ids ?? [],
+      rationale: f.rationale ?? null,
+      pillarId: f.pillar_id ?? null,
       startLineChunk: f.start_line_chunk ?? undefined,
       endLineChunk: f.end_line_chunk ?? undefined,
     }));

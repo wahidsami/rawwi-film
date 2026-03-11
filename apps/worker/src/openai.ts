@@ -2,17 +2,22 @@ import OpenAI from "openai";
 import { config } from "./config.js";
 import type { GCAMArticle } from "./gcam.js";
 import {
+  auditorAssessmentSchema,
+  auditorOutputSchema,
   extractJsonFromText,
   judgeFindingSchema,
   judgeOutputSchema,
+  parseAuditorOutput,
   parseJudgeOutput,
   parseRouterOutput,
+  type AuditorAssessment,
+  type AuditorOutput,
   type JudgeFinding,
   type JudgeOutput,
   type RouterOutput,
 } from "./schemas.js";
 import { logger } from "./logger.js";
-import { ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG } from "./aiConstants.js";
+import { AUDITOR_SYSTEM_MSG, ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG } from "./aiConstants.js";
 
 const openai = new OpenAI({ apiKey: config.OPENAI_API_KEY });
 
@@ -187,4 +192,60 @@ export async function parseJudgeWithRepair(
     }
   }
   return { findings: [] };
+}
+
+export async function callAuditorRaw(
+  canonicalPayload: string,
+  fullText: string,
+  model: string,
+  auditorSystemPrompt?: string
+): Promise<string> {
+  const clippedPayload = canonicalPayload.slice(0, 45_000);
+  const clippedText = fullText.slice(0, 35_000);
+  const resp = await openai.chat.completions.create({
+    model,
+    messages: [
+      { role: "system", content: auditorSystemPrompt || AUDITOR_SYSTEM_MSG },
+      {
+        role: "user",
+        content: `المرشحات القانونية canonical:\n${clippedPayload}\n\nمقتطف النص الكامل:\n${clippedText}\n\nأرجع JSON فقط.`,
+      },
+    ],
+    response_format: { type: "json_object" },
+    max_tokens: 4096,
+    temperature: 0,
+    seed: 12345,
+  }, { timeout: config.JUDGE_TIMEOUT_MS });
+  return resp.choices[0]?.message?.content ?? '{"assessments":[]}';
+}
+
+export async function parseAuditorWithRepair(
+  raw: string,
+  model: string
+): Promise<AuditorOutput> {
+  let content = raw;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return parseAuditorOutput(content);
+    } catch (e) {
+      logger.warn("Auditor parse/validation failed, attempting repair", { attempt, error: String(e) });
+      try {
+        const json = extractJsonFromText(content);
+        const parsed = JSON.parse(json) as { assessments?: unknown[] };
+        const rows = Array.isArray(parsed.assessments) ? parsed.assessments : [];
+        if (rows.length > 0) {
+          const salvaged: AuditorAssessment[] = [];
+          for (const row of rows) {
+            const one = auditorAssessmentSchema.safeParse(row);
+            if (one.success) salvaged.push(one.data);
+          }
+          if (salvaged.length > 0) return { assessments: salvaged };
+        }
+      } catch {
+        // ignore and try repair
+      }
+      content = await callRepairJson(model, content, "Auditor assessments JSON");
+    }
+  }
+  return { assessments: [] };
 }

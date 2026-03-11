@@ -527,7 +527,7 @@ export async function processChunkJudge(
   // 1b) Idempotency Check & Config Setup
   // Build logicVersion dynamically so cache invalidates automatically when prompts/passes change.
   const passSignature = DETECTION_PASSES.map((p) => `${p.name}:${p.model ?? "default"}`).join("|");
-  const logicVersion = `engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}`;
+  const logicVersion = `engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|deepAuditor:${config.ANALYSIS_DEEP_AUDITOR}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}`;
   const jobConfig = (job.config_snapshot as any) || {};
   const forceFresh = jobConfig.force_fresh === true;
   const routerModel = jobConfig.router_model || config.OPENAI_ROUTER_MODEL;
@@ -720,7 +720,7 @@ export async function processChunkJudge(
   let persistedFindings: FindingWithGlobal[] = baselineFindings;
   let hybridMetrics: Record<string, unknown> | null = null;
   if (config.ANALYSIS_ENGINE === "hybrid") {
-    const hybrid = runHybridContextPipeline({
+    const hybrid = await runHybridContextPipeline({
       findings: baselineFindings,
       fullText: normalizedText,
     });
@@ -815,6 +815,12 @@ export async function processChunkJudge(
             final_ruling: f.final_ruling ?? null,
             narrative_consequence: f.narrative_consequence ?? "unknown",
             detection_pass: f.detection_pass ?? null,
+            policy_links: f.policy_links ?? [],
+            primary_article_id: (f as { primary_article_id?: number }).primary_article_id ?? f.article_id,
+            related_article_ids: (f as { related_article_ids?: number[] }).related_article_ids ?? [],
+            canonical_finding_id: (f as { canonical_finding_id?: string }).canonical_finding_id ?? null,
+            pillar_id: (f as { pillar_id?: string }).pillar_id ?? null,
+            secondary_pillar_ids: (f as { secondary_pillar_ids?: string[] }).secondary_pillar_ids ?? [],
           },
         },
         evidence_hash: h,

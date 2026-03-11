@@ -32,7 +32,10 @@ export interface DownloadAnalysisPdfParams {
     evidence_snippet: string;
     severity: string;
     confidence: number;
+    rationale?: string | null;
+    pillar_id?: string | null;
     primary_article_id?: number | null;
+    related_article_ids?: number[];
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
   }> | null;

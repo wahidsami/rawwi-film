@@ -50,8 +50,12 @@ type CanonicalSummaryFinding = {
   evidence_snippet: string;
   severity: string;
   confidence: number;
+  final_ruling?: string | null;
+  rationale?: string | null;
+  pillar_id?: string | null;
   primary_article_id?: number | null;
   related_article_ids?: number[];
+  policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
   start_line_chunk?: number | null;
   end_line_chunk?: number | null;
 };
@@ -550,6 +554,13 @@ export function Results() {
         s === 'medium' ? 'bg-warning/10 text-warning border-warning/20' :
           'bg-info/10 text-info border-info/20';
 
+  const articleLabel = (articleId: number) => {
+    const meta = policyArticles.find((a) => a.id === articleId);
+    return lang === 'ar'
+      ? `مادة ${articleId}${meta?.titleAr ? `: ${meta.titleAr}` : ''}`
+      : `Article ${articleId}${meta?.titleEn ? `: ${meta.titleEn}` : ''}`;
+  };
+
   // Group findings by article for rendering
   function groupByArticle(list: AnalysisFinding[]) {
     const map = new Map<number, AnalysisFinding[]>();
@@ -576,6 +587,12 @@ export function Results() {
 
   function renderFindingCard(f: AnalysisFinding) {
     const isApproved = f.reviewStatus === 'approved';
+    const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+    const primaryArticleId = Number(v3.primary_article_id);
+    const primaryArticle = Number.isFinite(primaryArticleId) ? primaryArticleId : f.articleId;
+    const relatedArticles = ((v3.related_article_ids as number[] | undefined) ?? []).filter((id) => id !== primaryArticle);
+    const rationale = (v3.rationale_ar as string | undefined) ?? null;
+    const pillarId = (v3.pillar_id as string | undefined) ?? null;
     return (
       <div key={f.id} className={cn("border rounded-lg p-4", isApproved ? "bg-success/5 border-success/20" : "bg-surface border-border")}>
         <div className="flex items-center justify-between mb-2">
@@ -591,6 +608,17 @@ export function Results() {
         </div>
         <div className={cn("p-3 rounded-md border text-sm text-text-main italic", isApproved ? "bg-success/5 border-success/10" : "bg-background/50 border-border/50")} dir="rtl">
           "{f.evidenceSnippet}"
+        </div>
+        <div className="mt-2 text-xs text-text-muted space-y-1">
+          <div>{lang === 'ar' ? 'المادة الأساسية:' : 'Primary article:'} <span className="text-text-main">{articleLabel(primaryArticle)}</span></div>
+          {relatedArticles.length > 0 && (
+            <div>
+              {lang === 'ar' ? 'مواد مرتبطة:' : 'Related articles:'}{" "}
+              <span className="text-text-main">{relatedArticles.map(articleLabel).join(lang === 'ar' ? '، ' : ', ')}</span>
+            </div>
+          )}
+          {pillarId && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{pillarId}</span></div>}
+          {rationale && <div>{lang === 'ar' ? 'تعليل المدقق:' : 'Auditor rationale:'} <span className="text-text-main">{rationale}</span></div>}
         </div>
         {f.startLineChunk != null && (
           <div className="text-[10px] text-text-muted mt-1 text-end">
@@ -737,6 +765,20 @@ export function Results() {
                             </div>
                           </div>
                           <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">"{f.evidence_snippet}"</div>
+                          <div className="mt-2 text-xs text-text-muted space-y-1">
+                            <div>{lang === 'ar' ? 'النوع:' : 'Type:'} <span className="text-text-main">{t('findingSourceAi')}</span></div>
+                            <div>{lang === 'ar' ? 'المادة الأساسية:' : 'Primary article:'} <span className="text-text-main">{articleLabel(articleId)}</span></div>
+                            {((f.related_article_ids ?? []).filter((id) => id !== articleId).length > 0) && (
+                              <div>
+                                {lang === 'ar' ? 'مواد مرتبطة:' : 'Related articles:'}{" "}
+                                <span className="text-text-main">
+                                  {(f.related_article_ids ?? []).filter((id) => id !== articleId).map(articleLabel).join(lang === 'ar' ? '، ' : ', ')}
+                                </span>
+                              </div>
+                            )}
+                            {f.pillar_id && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{f.pillar_id}</span></div>}
+                            {f.rationale && <div>{lang === 'ar' ? 'تعليل المدقق:' : 'Auditor rationale:'} <span className="text-text-main">{f.rationale}</span></div>}
+                          </div>
                         </div>
                       ))}
                     </div>

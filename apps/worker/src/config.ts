@@ -7,6 +7,7 @@ export const config = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "",
   OPENAI_ROUTER_MODEL: process.env.OPENAI_ROUTER_MODEL ?? "gpt-4.1-mini",
   OPENAI_JUDGE_MODEL: process.env.OPENAI_JUDGE_MODEL ?? "gpt-4.1",
+  OPENAI_AUDITOR_MODEL: process.env.OPENAI_AUDITOR_MODEL ?? "gpt-4.1",
   JUDGE_TIMEOUT_MS: parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10),
   POLL_INTERVAL_MS: parseInt(process.env.POLL_INTERVAL_MS ?? "2000", 10),
   LEXICON_REFRESH_MS: 2 * 60 * 1000,
@@ -33,4 +34,9 @@ export const config = {
    * Persist evaluation comparison rows for hybrid rollout KPIs.
    */
   ANALYSIS_EVAL_LOG: (process.env.ANALYSIS_EVAL_LOG ?? "true").toLowerCase() !== "false",
+  /**
+   * Enable deep GPT auditor pass for canonical findings.
+   * Runs inside hybrid flow; safe default enabled.
+   */
+  ANALYSIS_DEEP_AUDITOR: (process.env.ANALYSIS_DEEP_AUDITOR ?? "true").toLowerCase() !== "false",
 } as const;

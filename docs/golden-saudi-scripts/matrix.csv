@@ -1,0 +1,21 @@
+case_id,scenario_theme,expected_pillar,expected_primary_article,expected_related_articles,expected_ruling,expected_severity,qa_note
+case01,religious_mockery_promoted,P1_FaithAndSocialValues,3,"1|2",violation,high,Direct mockery with supportive framing
+case02,religious_insult_condemned,P1_FaithAndSocialValues,3,"1",context_ok,medium,Insult appears but narrative condemns
+case03,indecency_with_repentance,P1_FaithAndSocialValues,24,"23",needs_review,medium,Problematic behavior followed by remorse
+case04,anti_family_values_normalized,P1_FaithAndSocialValues,17,"5|7",violation,medium,Family rupture promoted as ideal
+case05,drug_use_glamorized,P2_CriminalAndProhibitedActs,11,"12",violation,high,Substance use shown as success path
+case06,drug_mention_police_context,P2_CriminalAndProhibitedActs,11,"12",context_ok,low,Mention inside anti-drug legal context
+case07,fraud_howto_dialogue,P2_CriminalAndProhibitedActs,8,"11",violation,high,Actionable fraud guidance
+case08,threat_then_deescalation,P2_CriminalAndProhibitedActs,4,"9",needs_review,medium,Threat appears but resolved quickly
+case09,reckless_driving_celebrated,P3_PublicOrderAndSafety,20,"19",violation,high,Dangerous behavior framed as heroic
+case10,reckless_act_with_penalty,P3_PublicOrderAndSafety,20,"19",context_ok,medium,Offender punished by law
+case11,vandalism_heroized,P3_PublicOrderAndSafety,19,"13",violation,high,Property damage normalized
+case12,assembly_historical_neutral,P3_PublicOrderAndSafety,13,"21",needs_review,low,Historical neutral discussion
+case13,incitement_against_institutions,P4_AuthorityAndGovernanceIntegrity,14,"15|22",violation,critical,Explicit incitement language
+case14,satire_with_legal_balance,P4_AuthorityAndGovernanceIntegrity,16,"22",needs_review,medium,Critique present with lawful framing
+case15,corruption_plot_offenders_punished,P4_AuthorityAndGovernanceIntegrity,16,"14",context_ok,medium,Corruption shown but resolved by law
+case16,evasion_success_without_consequence,P4_AuthorityAndGovernanceIntegrity,16,"22",violation,high,Illegal evasion rewarded
+case17,criminal_protagonist_idealized,P5_MoralOutcomeAndNarrativeResponsibility,19,"20|21",violation,high,Harmful acts rewarded in ending
+case18,harm_depicted_but_reform_message,P5_MoralOutcomeAndNarrativeResponsibility,21,"19",context_ok,medium,Clear corrective final message
+case19,ambiguous_ending_no_accountability,P5_MoralOutcomeAndNarrativeResponsibility,20,"21",needs_review,medium,No explicit consequence
+case20,positive_reform_arc,P5_MoralOutcomeAndNarrativeResponsibility,21,"17",context_ok,low,Responsibility and social restoration

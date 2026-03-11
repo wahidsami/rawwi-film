@@ -20,6 +20,12 @@ export type HybridFindingLike = {
   rationale_ar?: string | null;
   final_ruling?: "violation" | "needs_review" | "context_ok" | null;
   narrative_consequence?: "punished" | "rewarded" | "neutralized" | "unresolved" | "unknown";
+  policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
+  primary_article_id?: number;
+  related_article_ids?: number[];
+  canonical_finding_id?: string;
+  pillar_id?: string;
+  secondary_pillar_ids?: string[];
 };
 
 const CONDEMNATION_HINTS = ["ممنوع", "غير مقبول", "تنديد", "عوقب", "عقوبة", "ندم", "اعتذر", "رفض", "رفضت"];

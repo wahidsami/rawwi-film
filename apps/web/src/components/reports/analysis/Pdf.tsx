@@ -44,7 +44,7 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
     }));
 
   const groups = safeFindings.reduce<Record<number, AnalysisPdfFinding[]>>((acc, f) => {
-    const key = Number.isFinite(f.articleId) ? f.articleId : 0;
+    const key = Number.isFinite(f.primaryArticleId) ? (f.primaryArticleId as number) : (Number.isFinite(f.articleId) ? f.articleId : 0);
     if (!acc[key]) acc[key] = [];
     acc[key].push(f);
     return acc;
@@ -146,6 +146,28 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                       : `Line ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`)
                     : ""}
                 </Text>
+                <Text style={[s.findingMeta, rtl]}>
+                  {isAr ? "المادة الأساسية: " : "Primary article: "}
+                  {f.primaryArticleId ?? f.articleId}
+                </Text>
+                {(f.relatedArticleIds ?? []).filter((id) => id !== (f.primaryArticleId ?? f.articleId)).length > 0 && (
+                  <Text style={[s.findingMeta, rtl]}>
+                    {isAr ? "مواد مرتبطة: " : "Related articles: "}
+                    {(f.relatedArticleIds ?? []).filter((id) => id !== (f.primaryArticleId ?? f.articleId)).join(isAr ? "، " : ", ")}
+                  </Text>
+                )}
+                {f.pillarId ? (
+                  <Text style={[s.findingMeta, rtl]}>
+                    {isAr ? "المحور: " : "Pillar: "}
+                    {f.pillarId}
+                  </Text>
+                ) : null}
+                {f.rationale ? (
+                  <Text style={[s.findingBody, rtl]}>
+                    {isAr ? "تعليل المدقق: " : "Auditor rationale: "}
+                    {f.rationale}
+                  </Text>
+                ) : null}
                 <Text style={[s.findingBody, rtl]}>{isAr ? "الوصف: " : "Description: "}{f.titleAr || "—"}</Text>
               </View>
             ))}

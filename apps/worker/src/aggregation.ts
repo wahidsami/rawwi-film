@@ -53,8 +53,30 @@ export type SummaryJson = {
       rationale?: string | null;
       final_ruling?: string | null;
       narrative_consequence?: string | null;
+      pillar_id?: string | null;
+      secondary_pillar_ids?: string[];
+      primary_article_id?: number | null;
+      related_article_ids?: number[];
+      canonical_finding_id?: string | null;
       policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
     }>;
+  }>;
+  canonical_findings?: Array<{
+    canonical_finding_id: string;
+    title_ar: string;
+    evidence_snippet: string;
+    severity: string;
+    confidence: number;
+    final_ruling?: string | null;
+    rationale?: string | null;
+    pillar_id?: string | null;
+    primary_article_id?: number | null;
+    related_article_ids?: number[];
+    policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
+    start_offset_global?: number | null;
+    end_offset_global?: number | null;
+    start_line_chunk?: number | null;
+    end_line_chunk?: number | null;
   }>;
   context_metrics?: {
     context_ok_count: number;
@@ -216,6 +238,11 @@ export function buildSummaryJson(
             rationale: (v3.rationale_ar as string | undefined) ?? null,
             final_ruling: (v3.final_ruling as string | undefined) ?? null,
             narrative_consequence: (v3.narrative_consequence as string | undefined) ?? null,
+            pillar_id: (v3.pillar_id as string | undefined) ?? null,
+            secondary_pillar_ids: (v3.secondary_pillar_ids as string[] | undefined) ?? [],
+            primary_article_id: (v3.primary_article_id as number | undefined) ?? null,
+            related_article_ids: (v3.related_article_ids as number[] | undefined) ?? [],
+            canonical_finding_id: (v3.canonical_finding_id as string | undefined) ?? null,
             policy_links: (v3.policy_links as Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }> | undefined) ?? [],
           };
         });
@@ -228,10 +255,90 @@ export function buildSummaryJson(
       };
     });
 
-  const allTop = findings_by_article.flatMap((a) => a.top_findings);
-  const context_ok_count = allTop.filter((f) => f.final_ruling === "context_ok").length;
-  const needs_review_count = allTop.filter((f) => f.final_ruling === "needs_review").length;
-  const violation_count = allTop.filter((f) => f.final_ruling === "violation").length;
+  const canonicalMap = new Map<string, {
+    canonical_finding_id: string;
+    title_ar: string;
+    evidence_snippet: string;
+    severity: string;
+    confidence: number;
+    final_ruling?: string | null;
+    rationale?: string | null;
+    pillar_id?: string | null;
+    primary_article_id?: number | null;
+    related_article_ids?: number[];
+    policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
+    start_offset_global?: number | null;
+    end_offset_global?: number | null;
+    start_line_chunk?: number | null;
+    end_line_chunk?: number | null;
+  }>();
+
+  // Canonical findings are built from deduped raw findings (not article buckets)
+  // so each canonical issue appears once regardless of article overlap.
+  for (const f of deduped) {
+    const locationObj = ((f.location as Record<string, unknown>) ?? {}) as Record<string, unknown>;
+    const v3 = ((locationObj.v3 as Record<string, unknown> | undefined) ?? {}) as Record<string, unknown>;
+    const primaryArticle = (v3.primary_article_id as number | undefined) ?? f.article_id;
+    const relatedArticles = ((v3.related_article_ids as number[] | undefined) ?? []).filter((id) => id !== primaryArticle);
+    const cId =
+      (v3.canonical_finding_id as string | undefined) ??
+      `LEGACY-${primaryArticle}-${(f.start_offset_global ?? 0)}-${(f.end_offset_global ?? 0)}-${(f.evidence_snippet || "").slice(0, 24)}`;
+    const policyLinks =
+      (v3.policy_links as Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }> | undefined) ??
+      [{ article_id: primaryArticle, role: "primary" }, ...relatedArticles.map((id) => ({ article_id: id, role: "related" as const }))];
+    const next = {
+      canonical_finding_id: cId,
+      title_ar: f.title_ar,
+      evidence_snippet: f.evidence_snippet,
+      severity: f.severity,
+      confidence: f.confidence ?? 0,
+      final_ruling: (v3.final_ruling as string | undefined) ?? null,
+      rationale: (v3.rationale_ar as string | undefined) ?? null,
+      pillar_id: (v3.pillar_id as string | undefined) ?? null,
+      primary_article_id: primaryArticle,
+      related_article_ids: relatedArticles,
+      policy_links: policyLinks,
+      start_offset_global: f.start_offset_global ?? null,
+      end_offset_global: f.end_offset_global ?? null,
+      start_line_chunk: f.start_line_chunk ?? null,
+      end_line_chunk: f.end_line_chunk ?? null,
+    };
+    const existing = canonicalMap.get(cId);
+    if (!existing) {
+      canonicalMap.set(cId, next);
+      continue;
+    }
+    const chooseNext =
+      severityOrder(next.severity) > severityOrder(existing.severity) ||
+      (severityOrder(next.severity) === severityOrder(existing.severity) && next.confidence > existing.confidence);
+    const mergedLinks = [
+      ...(existing.policy_links ?? []),
+      ...(next.policy_links ?? []),
+    ].reduce<Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>>((acc, cur) => {
+      if (!acc.some((x) => x.article_id === cur.article_id && (x.role ?? null) === (cur.role ?? null))) acc.push(cur);
+      return acc;
+    }, []);
+    const mergedRelated = [...new Set([...(existing.related_article_ids ?? []), ...(next.related_article_ids ?? [])])];
+    const chosen = chooseNext ? next : existing;
+    const chosenPrimary = chosen.primary_article_id ?? primaryArticle;
+    canonicalMap.set(cId, {
+      ...chosen,
+      primary_article_id: chosenPrimary,
+      policy_links: [
+        { article_id: chosenPrimary, role: "primary" },
+        ...mergedLinks.filter((l) => l.article_id !== chosenPrimary),
+      ],
+      related_article_ids: mergedRelated.filter((id) => id !== chosenPrimary),
+    });
+  }
+
+  const canonical_findings = [...canonicalMap.values()].sort((a, b) =>
+    severityOrder(b.severity) - severityOrder(a.severity) || (b.confidence - a.confidence)
+  );
+
+  const context_ok_count = canonical_findings.filter((f) => f.final_ruling === "context_ok").length;
+  const needs_review_count = canonical_findings.filter((f) => f.final_ruling === "needs_review").length;
+  const violation_count = canonical_findings.filter((f) => f.final_ruling === "violation").length;
 
   return {
     job_id: jobId,
@@ -250,6 +357,7 @@ export function buildSummaryJson(
     },
     checklist_articles,
     findings_by_article,
+    canonical_findings,
   };
 }
 

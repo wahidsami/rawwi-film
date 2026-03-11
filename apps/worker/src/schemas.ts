@@ -71,6 +71,36 @@ export const judgeOutputSchema = z.object({
 export type JudgeFinding = z.infer<typeof judgeFindingSchema>;
 export type JudgeOutput = z.infer<typeof judgeOutputSchema>;
 
+const auditorRulingSchema = z.enum(["violation", "needs_review", "context_ok"]);
+const confidenceSchema = z.preprocess(toNullableNumber, z.number().min(0).max(1).nullable().optional())
+  .transform((v) => (typeof v === "number" ? Math.max(0, Math.min(1, v)) : null));
+
+export const auditorAssessmentSchema = z.object({
+  canonical_finding_id: z.string().min(1),
+  title_ar: z.string().optional().nullable().transform((v) => v ?? "مخالفة محتوى"),
+  final_ruling: auditorRulingSchema,
+  rationale_ar: z.string().optional().nullable().transform((v) => v ?? "يتطلب تقييم مراجع مختص."),
+  pillar_id: z.string().optional().nullable().transform((v) => v ?? null),
+  primary_article_id: z.preprocess(toNullableNumber, z.number().int().min(1).max(25).nullable().optional())
+    .transform((v) => (typeof v === "number" ? v : null)),
+  related_article_ids: z.array(z.preprocess(toNullableNumber, z.number().int().min(1).max(25))).optional().default([]),
+  confidence: z.preprocess(toNullableNumber, z.number().min(0).max(1))
+    .transform((v) => (typeof v === "number" ? Math.max(0, Math.min(1, v)) : 0.7)),
+  confidence_breakdown: z.object({
+    lexical: confidenceSchema,
+    context: confidenceSchema,
+    policy: confidenceSchema,
+  }).optional().default({ lexical: null, context: null, policy: null }),
+  severity: z.enum(["low", "medium", "high", "critical"]).optional().nullable().transform((v) => v ?? null),
+});
+
+export const auditorOutputSchema = z.object({
+  assessments: z.array(auditorAssessmentSchema),
+});
+
+export type AuditorAssessment = z.infer<typeof auditorAssessmentSchema>;
+export type AuditorOutput = z.infer<typeof auditorOutputSchema>;
+
 export function extractJsonFromText(raw: string): string {
   const first = raw.indexOf("{");
   const last = raw.lastIndexOf("}");
@@ -88,4 +118,10 @@ export function parseJudgeOutput(raw: string): JudgeOutput {
   const json = extractJsonFromText(raw);
   const parsed = JSON.parse(json) as unknown;
   return judgeOutputSchema.parse(parsed);
+}
+
+export function parseAuditorOutput(raw: string): AuditorOutput {
+  const json = extractJsonFromText(raw);
+  const parsed = JSON.parse(json) as unknown;
+  return auditorOutputSchema.parse(parsed);
 }
