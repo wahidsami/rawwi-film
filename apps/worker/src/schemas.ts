@@ -30,6 +30,10 @@ const locationSchema = z.object({
   end_line: z.preprocess(toNullableNumber, z.number().nullable()),
 });
 
+const depictionTypeSchema = z.enum(["mention", "depiction", "endorsement", "condemnation", "unknown"]);
+const speakerRoleSchema = z.enum(["narrator", "hero", "villain", "supporting", "unknown"]);
+const narrativeConsequenceSchema = z.enum(["punished", "rewarded", "neutralized", "unresolved", "unknown"]);
+
 export const judgeFindingSchema = z.object({
   article_id: z.preprocess(toNullableNumber, z.number().int().min(1).max(25)),
   atom_id: z.string().optional().nullable(),
@@ -41,6 +45,19 @@ export const judgeFindingSchema = z.object({
   confidence: z.preprocess(toNullableNumber, z.number().min(0).max(1).nullable())
     .transform((v) => (typeof v === "number" ? Math.max(0, Math.min(1, v)) : 0.7)),
   is_interpretive: z.boolean().nullable().optional().transform((v) => v ?? false),
+  depiction_type: depictionTypeSchema.optional().nullable().transform((v) => v ?? "unknown"),
+  speaker_role: speakerRoleSchema.optional().nullable().transform((v) => v ?? "unknown"),
+  narrative_consequence: narrativeConsequenceSchema.optional().nullable().transform((v) => v ?? "unknown"),
+  context_window_id: z.string().optional().nullable().transform((v) => v ?? null),
+  context_confidence: z.preprocess(toNullableNumber, z.number().min(0).max(1).optional().nullable())
+    .transform((v) => (typeof v === "number" ? Math.max(0, Math.min(1, v)) : null)),
+  lexical_confidence: z.preprocess(toNullableNumber, z.number().min(0).max(1).optional().nullable())
+    .transform((v) => (typeof v === "number" ? Math.max(0, Math.min(1, v)) : null)),
+  policy_confidence: z.preprocess(toNullableNumber, z.number().min(0).max(1).optional().nullable())
+    .transform((v) => (typeof v === "number" ? Math.max(0, Math.min(1, v)) : null)),
+  rationale_ar: z.string().optional().nullable().transform((v) => v ?? null),
+  final_ruling: z.enum(["violation", "needs_review", "context_ok"]).optional().nullable().transform((v) => v ?? null),
+  detection_pass: z.string().optional().nullable().transform((v) => v ?? null),
   evidence_snippet: z.string().nullable().transform((v) => v ?? ""),
   location: locationSchema
     .nullable()

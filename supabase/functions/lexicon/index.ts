@@ -9,6 +9,7 @@ import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
+import { validateArticleAtomLink } from "../_shared/policyValidation.ts";
 
 const SEVERITIES = ["low", "medium", "high", "critical"] as const;
 const TERM_TYPES = ["word", "phrase", "regex"] as const;
@@ -65,6 +66,27 @@ function normalizeSeverity(s: unknown): string {
   if (typeof s !== "string") return "medium";
   const lower = s.trim().toLowerCase();
   return SEVERITIES.includes(lower as (typeof SEVERITIES)[number]) ? lower : "medium";
+}
+
+async function upsertLexiconPolicyLink(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  lexiconId: string,
+  articleId: number,
+  atomId: string | null
+) {
+  await supabase
+    .from("lexicon_term_policy_links")
+    .upsert(
+      {
+        lexicon_id: lexiconId,
+        article_id: articleId,
+        atom_concept_id: null,
+        map_id: null,
+        rationale_ar: atomId ? `Lexicon linked to ${atomId}` : "Lexicon linked at article-level",
+        is_active: true,
+      },
+      { onConflict: "lexicon_id,article_id,atom_concept_id" }
+    );
 }
 
 Deno.serve(async (req: Request) => {
@@ -150,11 +172,17 @@ Deno.serve(async (req: Request) => {
       ? (body.enforcement_mode as string)
       : "soft_signal";
     const gcam_article_id = typeof body.gcam_article_id === "number" ? body.gcam_article_id : parseInt(String(body.gcam_article_id ?? "1"), 10) || 1;
-    const gcam_atom_id = typeof body.gcam_atom_id === "string" ? body.gcam_atom_id : (body.gcam_atom_id != null ? String(body.gcam_atom_id) : null);
+    const gcam_atom_id_raw = typeof body.gcam_atom_id === "string" ? body.gcam_atom_id : (body.gcam_atom_id != null ? String(body.gcam_atom_id) : null);
     const gcam_article_title_ar = typeof body.gcam_article_title_ar === "string" ? body.gcam_article_title_ar : null;
     const description = typeof body.description === "string" ? body.description : null;
     const example_usage = typeof body.example_usage === "string" ? body.example_usage : null;
 
+    const atomValidation = await validateArticleAtomLink(
+      supabase as unknown as { from: (table: string) => { select: (cols: string) => any } },
+      gcam_article_id,
+      gcam_atom_id_raw
+    );
+    if (!atomValidation.ok) return json({ error: atomValidation.reason ?? "Invalid atom/article mapping" }, 400);
     const row = {
       term,
       normalized_term,
@@ -163,7 +191,7 @@ Deno.serve(async (req: Request) => {
       severity_floor,
       enforcement_mode,
       gcam_article_id,
-      gcam_atom_id,
+      gcam_atom_id: atomValidation.normalizedAtomId,
       gcam_article_title_ar,
       description,
       example_usage,
@@ -205,6 +233,7 @@ Deno.serve(async (req: Request) => {
         return json({ error: updateErr.message }, 500);
       }
       const ins = updated as { id: string; term: string };
+      await upsertLexiconPolicyLink(supabase, ins.id, row.gcam_article_id, row.gcam_atom_id);
       logAuditCanonical(supabase, {
         event_type: "LEXICON_TERM_ADDED",
         actor_user_id: userId,
@@ -229,6 +258,7 @@ Deno.serve(async (req: Request) => {
       return json({ error: error.message }, 500);
     }
     const ins = inserted as { id: string; term: string };
+    await upsertLexiconPolicyLink(supabase, ins.id, row.gcam_article_id, row.gcam_atom_id);
     logAuditCanonical(supabase, {
       event_type: "LEXICON_TERM_ADDED",
       actor_user_id: userId,
@@ -285,6 +315,26 @@ Deno.serve(async (req: Request) => {
       return json(toCamel((existing as Record<string, unknown>) ?? {}));
     }
 
+    const nextArticleId = (updates.gcam_article_id as number | undefined) ?? undefined;
+    const nextAtomId = updates.gcam_atom_id as string | null | undefined;
+    if (nextArticleId != null || nextAtomId !== undefined) {
+      const { data: current } = await supabase
+        .from("slang_lexicon")
+        .select("gcam_article_id, gcam_atom_id")
+        .eq("id", id)
+        .maybeSingle();
+      const currentArticle = Number((current as { gcam_article_id?: number } | null)?.gcam_article_id ?? 1);
+      const candidateArticle = nextArticleId ?? currentArticle;
+      const candidateAtom = nextAtomId !== undefined ? nextAtomId : ((current as { gcam_atom_id?: string | null } | null)?.gcam_atom_id ?? null);
+      const atomValidation = await validateArticleAtomLink(
+        supabase as unknown as { from: (table: string) => { select: (cols: string) => any } },
+        candidateArticle,
+        candidateAtom
+      );
+      if (!atomValidation.ok) return json({ error: atomValidation.reason ?? "Invalid atom/article mapping" }, 400);
+      updates.gcam_atom_id = atomValidation.normalizedAtomId;
+    }
+
     const { data: updated, error } = await supabase
       .from("slang_lexicon")
       .update(updates)
@@ -299,6 +349,12 @@ Deno.serve(async (req: Request) => {
     }
     if (!updated) return json({ error: "Term not found" }, 404);
     const u = updated as { id: string; term: string; is_active?: boolean };
+    await upsertLexiconPolicyLink(
+      supabase,
+      u.id,
+      Number((updated as { gcam_article_id?: number }).gcam_article_id ?? 1),
+      ((updated as { gcam_atom_id?: string | null }).gcam_atom_id ?? null)
+    );
     const eventType = updates.is_active === false ? "LEXICON_TERM_DELETED" : "LEXICON_TERM_UPDATED";
     logAuditCanonical(supabase, {
       event_type: eventType,

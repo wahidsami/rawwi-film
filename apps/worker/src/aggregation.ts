@@ -45,8 +45,22 @@ export type SummaryJson = {
       start_line_chunk?: number | null;
       end_line_chunk?: number | null;
       is_interpretive?: boolean;
+      depiction_type?: string;
+      speaker_role?: string;
+      context_confidence?: number | null;
+      lexical_confidence?: number | null;
+      policy_confidence?: number | null;
+      rationale?: string | null;
+      final_ruling?: string | null;
+      narrative_consequence?: string | null;
+      policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
     }>;
   }>;
+  context_metrics?: {
+    context_ok_count: number;
+    needs_review_count: number;
+    violation_count: number;
+  };
 };
 
 type DbFinding = {
@@ -181,6 +195,8 @@ export function buildSummaryJson(
         .map((f) => {
           const normAtom = normalizeAtomId(f.atom_id, f.article_id) || null;
           const titleAr = getPolicyAtomTitle(f.article_id, normAtom) ?? f.title_ar;
+          const locationObj = ((f.location as Record<string, unknown>) ?? {}) as Record<string, unknown>;
+          const v3 = ((locationObj.v3 as Record<string, unknown> | undefined) ?? {}) as Record<string, unknown>;
           return {
             atom_id: normAtom,
             title_ar: titleAr,
@@ -192,6 +208,15 @@ export function buildSummaryJson(
             end_offset_global: f.end_offset_global,
             start_line_chunk: f.start_line_chunk,
             end_line_chunk: f.end_line_chunk,
+            depiction_type: (v3.depiction_type as string | undefined) ?? undefined,
+            speaker_role: (v3.speaker_role as string | undefined) ?? undefined,
+            context_confidence: (v3.context_confidence as number | undefined) ?? null,
+            lexical_confidence: (v3.lexical_confidence as number | undefined) ?? null,
+            policy_confidence: (v3.policy_confidence as number | undefined) ?? null,
+            rationale: (v3.rationale_ar as string | undefined) ?? null,
+            final_ruling: (v3.final_ruling as string | undefined) ?? null,
+            narrative_consequence: (v3.narrative_consequence as string | undefined) ?? null,
+            policy_links: (v3.policy_links as Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }> | undefined) ?? [],
           };
         });
       return {
@@ -203,6 +228,11 @@ export function buildSummaryJson(
       };
     });
 
+  const allTop = findings_by_article.flatMap((a) => a.top_findings);
+  const context_ok_count = allTop.filter((f) => f.final_ruling === "context_ok").length;
+  const needs_review_count = allTop.filter((f) => f.final_ruling === "needs_review").length;
+  const violation_count = allTop.filter((f) => f.final_ruling === "violation").length;
+
   return {
     job_id: jobId,
     script_id: scriptId,
@@ -212,6 +242,11 @@ export function buildSummaryJson(
     totals: {
       findings_count: deduped.length,
       severity_counts,
+    },
+    context_metrics: {
+      context_ok_count,
+      needs_review_count,
+      violation_count,
     },
     checklist_articles,
     findings_by_article,

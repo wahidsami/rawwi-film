@@ -17,4 +17,20 @@ export const config = {
   /** Bypass router and judge against all 25 articles. Set WORKER_HIGH_RECALL=true in .env */
   HIGH_RECALL: (process.env.WORKER_HIGH_RECALL ?? "").toLowerCase() === "true",
   DETERMINISTIC_MODE: (process.env.DETERMINISTIC_MODE ?? "").toLowerCase() === "true",
+  /**
+   * Analysis engine:
+   * - v2: existing detector-only behavior
+   * - hybrid: detector + context arbiter + policy reasoner
+   */
+  ANALYSIS_ENGINE: ((process.env.ANALYSIS_ENGINE ?? "v2").toLowerCase() === "hybrid" ? "hybrid" : "v2") as "v2" | "hybrid",
+  /**
+   * Hybrid run mode:
+   * - enforce: hybrid output is persisted
+   * - shadow: run hybrid for evaluation, persist baseline v2 output
+   */
+  ANALYSIS_HYBRID_MODE: ((process.env.ANALYSIS_HYBRID_MODE ?? "shadow").toLowerCase() === "enforce" ? "enforce" : "shadow") as "shadow" | "enforce",
+  /**
+   * Persist evaluation comparison rows for hybrid rollout KPIs.
+   */
+  ANALYSIS_EVAL_LOG: (process.env.ANALYSIS_EVAL_LOG ?? "true").toLowerCase() !== "false",
 } as const;

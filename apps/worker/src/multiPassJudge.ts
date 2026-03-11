@@ -472,15 +472,28 @@ async function runSinglePass(
 
     // Parse findings
     const { findings } = await parseJudgeWithRepair(raw, model);
+    const tagged = findings.map((f) => ({
+      ...f,
+      detection_pass: pass.name,
+      depiction_type: f.depiction_type ?? "unknown",
+      speaker_role: f.speaker_role ?? "unknown",
+      context_window_id: f.context_window_id ?? null,
+      context_confidence: f.context_confidence ?? null,
+      lexical_confidence: f.lexical_confidence ?? null,
+      policy_confidence: f.policy_confidence ?? null,
+      rationale_ar: f.rationale_ar ?? null,
+      final_ruling: f.final_ruling ?? null,
+      narrative_consequence: f.narrative_consequence ?? "unknown",
+    }));
     
     const duration = Date.now() - startTime;
     logger.info(`Pass ${pass.name} completed`, { 
-      findingsCount: findings.length, 
+      findingsCount: tagged.length, 
       duration,
       model 
     });
 
-    return { passName: pass.name, findings, duration };
+    return { passName: pass.name, findings: tagged, duration };
     
   } catch (error) {
     const duration = Date.now() - startTime;

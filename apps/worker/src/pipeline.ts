@@ -13,8 +13,11 @@ import type { JudgeFinding } from "./schemas.js";
 import { getScriptStandardRouterList } from "./gcam.js";
 import { ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG, injectLexiconIntoPrompts, PROMPT_VERSIONS } from "./aiConstants.js";
 import { runMultiPassDetection, DETECTION_PASSES, type LexiconTerm } from "./multiPassJudge.js";
+import { runHybridContextPipeline } from "./methodology-v3/index.js";
+import { upsertFindingPolicyLinks } from "./policyLinks.js";
 
 export type FindingWithGlobal = JudgeFinding & {
+  source?: "ai" | "lexicon_mandatory" | "manual";
   start_offset_global: number;
   end_offset_global: number;
 };
@@ -159,6 +162,27 @@ function severityRank(s: string): number {
   return r[s] ?? 0;
 }
 
+function computeContradictionMetrics(findings: FindingWithGlobal[]): {
+  contradictionGroups: number;
+  severeDisagreementGroups: number;
+} {
+  const byEvidence = new Map<string, Set<string>>();
+  for (const f of findings) {
+    const key = `${f.article_id}|${f.start_offset_global}|${f.end_offset_global}|${(f.evidence_snippet || "").slice(0, 80)}`;
+    if (!byEvidence.has(key)) byEvidence.set(key, new Set());
+    byEvidence.get(key)!.add(f.severity);
+  }
+  let contradictionGroups = 0;
+  let severeDisagreementGroups = 0;
+  for (const sevSet of byEvidence.values()) {
+    if (sevSet.size > 1) {
+      contradictionGroups++;
+      if (sevSet.has("critical") && (sevSet.has("low") || sevSet.has("medium"))) severeDisagreementGroups++;
+    }
+  }
+  return { contradictionGroups, severeDisagreementGroups };
+}
+
 /**
  * Dedupe by evidence_hash; keep one per hash (prefer higher severity, then confidence, then non-interpretive).
  */
@@ -292,6 +316,7 @@ export async function processChunkJudge(
   if (isDev) logger.info("Lexicon cache health check", { chunkId: chunk.id, lexiconCount, cacheStatus: "checked" });
 
   const { mandatoryFindings } = analyzeLexiconMatches(chunkText, supabase);
+  const deferredLexiconCandidates: FindingWithGlobal[] = [];
   for (const m of mandatoryFindings) {
     const hash = lexiconEvidenceHash(jobId, m.articleId, m.term.term, m.line_start);
     const startGlobal = chunkStart + m.match.startIndex;
@@ -351,18 +376,58 @@ export async function processChunkJudge(
       location,
       evidence_hash: hash,
     };
-    const { data: lexData, error: lexErr } = await supabase
-      .from("analysis_findings")
-      .upsert(lexRow, { onConflict: "job_id,evidence_hash", ignoreDuplicates: true })
-      .select("id");
-    logger.info("Lexicon finding upsert result", {
-      jobId, chunkId: chunk.id, hash,
-      inserted: lexData?.length ?? 0,
-      error: lexErr ?? null,
-      rowKeys: Object.keys(lexRow),
-    });
-    if (lexErr) {
-      logger.error("Lexicon finding upsert FAILED", { jobId, chunkId: chunk.id, error: lexErr });
+    if (config.ANALYSIS_ENGINE === "hybrid") {
+      deferredLexiconCandidates.push({
+        source: "lexicon_mandatory",
+        article_id: lexRow.article_id,
+        atom_id: lexRow.atom_id,
+        title_ar: lexRow.title_ar,
+        description_ar: lexRow.description_ar,
+        severity: lexRow.severity,
+        confidence: 1,
+        is_interpretive: false,
+        evidence_snippet: lexRow.evidence_snippet,
+        location: {
+          ...location,
+          context_window_id: `ctx-${startGlobal}-${endGlobal}`,
+          detection_pass: "glossary",
+        },
+        depiction_type: "mention",
+        speaker_role: "unknown",
+        context_window_id: `ctx-${startGlobal}-${endGlobal}`,
+        context_confidence: 0.6,
+        lexical_confidence: 1,
+        policy_confidence: null,
+        rationale_ar: "إشارة معجمية أولية تحتاج تحقق سياقي.",
+        final_ruling: null,
+        narrative_consequence: "unknown",
+        detection_pass: "glossary",
+        start_offset_global: startGlobal,
+        end_offset_global: endGlobal,
+      });
+    } else {
+      const { data: lexData, error: lexErr } = await supabase
+        .from("analysis_findings")
+        .upsert(lexRow, { onConflict: "job_id,evidence_hash", ignoreDuplicates: true })
+        .select("id,article_id,atom_id,confidence");
+      logger.info("Lexicon finding upsert result", {
+        jobId, chunkId: chunk.id, hash,
+        inserted: lexData?.length ?? 0,
+        error: lexErr ?? null,
+        rowKeys: Object.keys(lexRow),
+      });
+      if (lexErr) {
+        logger.error("Lexicon finding upsert FAILED", { jobId, chunkId: chunk.id, error: lexErr });
+      } else {
+        await upsertFindingPolicyLinks(
+          (lexData ?? []).map((r) => ({
+            id: (r as { id: string }).id,
+            article_id: (r as { article_id: number }).article_id,
+            atom_id: (r as { atom_id: string | null }).atom_id,
+            confidence: (r as { confidence?: number | null }).confidence ?? 1,
+          }))
+        );
+      }
     }
   }
 
@@ -403,14 +468,53 @@ export async function processChunkJudge(
           evidence_hash: hash,
         };
 
-        const { data: fbData, error: fbErr } = await supabase
-          .from("analysis_findings")
-          .upsert(fallbackRow, { onConflict: "job_id,evidence_hash", ignoreDuplicates: true })
-          .select("id");
-        if (fbErr) {
-          logger.error("Hard fallback insult upsert FAILED", { jobId, chunkId: chunk.id, term: rule.term, error: fbErr });
+        if (config.ANALYSIS_ENGINE === "hybrid") {
+          deferredLexiconCandidates.push({
+            source: "lexicon_mandatory",
+            article_id: fallbackRow.article_id,
+            atom_id: fallbackRow.atom_id,
+            title_ar: fallbackRow.title_ar,
+            description_ar: fallbackRow.description_ar,
+            severity: fallbackRow.severity,
+            confidence: 1,
+            is_interpretive: false,
+            evidence_snippet: fallbackRow.evidence_snippet,
+            location: {
+              ...fallbackRow.location,
+              context_window_id: `ctx-${startGlobal}-${endGlobal}`,
+              detection_pass: "hard_fallback_insults",
+            },
+            depiction_type: "mention",
+            speaker_role: "unknown",
+            context_window_id: `ctx-${startGlobal}-${endGlobal}`,
+            context_confidence: 0.65,
+            lexical_confidence: 1,
+            policy_confidence: null,
+            rationale_ar: "مطابقة إساءة مباشرة من fallback الحتمي.",
+            final_ruling: null,
+            narrative_consequence: "unknown",
+            detection_pass: "hard_fallback_insults",
+            start_offset_global: startGlobal,
+            end_offset_global: endGlobal,
+          });
         } else {
-          hardFallbackInserted += fbData?.length ?? 0;
+          const { data: fbData, error: fbErr } = await supabase
+            .from("analysis_findings")
+            .upsert(fallbackRow, { onConflict: "job_id,evidence_hash", ignoreDuplicates: true })
+            .select("id,article_id,atom_id,confidence");
+          if (fbErr) {
+            logger.error("Hard fallback insult upsert FAILED", { jobId, chunkId: chunk.id, term: rule.term, error: fbErr });
+          } else {
+            hardFallbackInserted += fbData?.length ?? 0;
+            await upsertFindingPolicyLinks(
+              (fbData ?? []).map((r) => ({
+                id: (r as { id: string }).id,
+                article_id: (r as { article_id: number }).article_id,
+                atom_id: (r as { atom_id: string | null }).atom_id,
+                confidence: (r as { confidence?: number | null }).confidence ?? 1,
+              }))
+            );
+          }
         }
       }
       idx = chunkText.indexOf(rule.term, idx + rule.term.length);
@@ -423,7 +527,7 @@ export async function processChunkJudge(
   // 1b) Idempotency Check & Config Setup
   // Build logicVersion dynamically so cache invalidates automatically when prompts/passes change.
   const passSignature = DETECTION_PASSES.map((p) => `${p.name}:${p.model ?? "default"}`).join("|");
-  const logicVersion = `v2-strict|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}`;
+  const logicVersion = `engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}`;
   const jobConfig = (job.config_snapshot as any) || {};
   const forceFresh = jobConfig.force_fresh === true;
   const routerModel = jobConfig.router_model || config.OPENAI_ROUTER_MODEL;
@@ -610,9 +714,54 @@ export async function processChunkJudge(
     }
   }
 
-  // 6) Insert AI findings (batch upsert with logging). Derive excerpt from canonical when available.
-  if (allFindings.length > 0) {
-      const rows = allFindings.map((f) => {
+  // 6) Hybrid context arbitration and instrumentation hooks.
+  const baselineFindings = [...allFindings, ...deferredLexiconCandidates];
+  const baselineMetrics = computeContradictionMetrics(baselineFindings);
+  let persistedFindings: FindingWithGlobal[] = baselineFindings;
+  let hybridMetrics: Record<string, unknown> | null = null;
+  if (config.ANALYSIS_ENGINE === "hybrid") {
+    const hybrid = runHybridContextPipeline({
+      findings: baselineFindings,
+      fullText: normalizedText,
+    });
+    hybridMetrics = hybrid.metrics;
+    if (config.ANALYSIS_HYBRID_MODE === "enforce") {
+      persistedFindings = hybrid.findings as FindingWithGlobal[];
+    } else {
+      persistedFindings = baselineFindings;
+    }
+    if (config.ANALYSIS_EVAL_LOG) {
+      const evalPayload = {
+        job_id: jobId,
+        chunk_id: chunk.id,
+        run_key: runKey,
+        engine: config.ANALYSIS_ENGINE,
+        mode: config.ANALYSIS_HYBRID_MODE,
+        baseline_count: baselineFindings.length,
+        hybrid_count: hybrid.findings.length,
+        baseline_contradictions: baselineMetrics.contradictionGroups,
+        baseline_severe_disagreements: baselineMetrics.severeDisagreementGroups,
+        hybrid_context_ok: hybrid.metrics.contextOkCount,
+        hybrid_needs_review: hybrid.metrics.needsReviewCount,
+        hybrid_violation: hybrid.metrics.violationCount,
+      };
+      await supabase.from("analysis_engine_evaluations").insert(evalPayload);
+    }
+  }
+  logger.info("Analysis contradiction metrics", {
+    jobId,
+    chunkId: chunk.id,
+    runKey,
+    baselineMetrics,
+    hybridMetrics,
+    persistedCount: persistedFindings.length,
+    engine: config.ANALYSIS_ENGINE,
+    hybridMode: config.ANALYSIS_HYBRID_MODE,
+  });
+
+  // 7) Insert findings (batch upsert with logging). Derive excerpt from canonical when available.
+  if (persistedFindings.length > 0) {
+      const rows = persistedFindings.map((f) => {
       const start = f.start_offset_global ?? 0;
       const end = f.end_offset_global ?? start;
         const hasSaneGlobalOffsets =
@@ -640,7 +789,7 @@ export async function processChunkJudge(
         job_id: jobId,
         script_id: scriptId,
         version_id: versionId,
-        source: "ai" as const,
+        source: f.source ?? "ai",
         article_id: f.article_id,
         atom_id: f.atom_id ?? null,
         severity: f.severity,
@@ -652,7 +801,22 @@ export async function processChunkJudge(
         end_offset_global: f.end_offset_global,
         start_line_chunk: f.location?.start_line ?? null,
         end_line_chunk: f.location?.end_line ?? null,
-        location: { ...f.location, run_key: runKey },
+        location: {
+          ...f.location,
+          run_key: runKey,
+          v3: {
+            depiction_type: f.depiction_type ?? "unknown",
+            speaker_role: f.speaker_role ?? "unknown",
+            context_window_id: f.context_window_id ?? null,
+            context_confidence: f.context_confidence ?? null,
+            lexical_confidence: f.lexical_confidence ?? null,
+            policy_confidence: f.policy_confidence ?? null,
+            rationale_ar: f.rationale_ar ?? null,
+            final_ruling: f.final_ruling ?? null,
+            narrative_consequence: f.narrative_consequence ?? "unknown",
+            detection_pass: f.detection_pass ?? null,
+          },
+        },
         evidence_hash: h,
       };
     });
@@ -663,7 +827,7 @@ export async function processChunkJudge(
     const { data, error } = await supabase
       .from("analysis_findings")
       .upsert(rows, { onConflict: "job_id,evidence_hash", ignoreDuplicates: true })
-      .select("id");
+      .select("id,article_id,atom_id,confidence");
 
     logger.info("AI findings upsert result", {
       jobId, chunkId: chunk.id,
@@ -681,6 +845,15 @@ export async function processChunkJudge(
         errorHint: error.hint,
         errorCode: error.code,
       });
+    } else {
+      await upsertFindingPolicyLinks(
+        (data ?? []).map((r) => ({
+          id: (r as { id: string }).id,
+          article_id: (r as { article_id: number }).article_id,
+          atom_id: (r as { atom_id: string | null }).atom_id,
+          confidence: (r as { confidence?: number | null }).confidence ?? 0,
+        }))
+      );
     }
   } else {
     logger.info("No AI findings to insert for chunk", { jobId, chunkId: chunk.id, runKey });
@@ -691,6 +864,6 @@ export async function processChunkJudge(
   logger.info("Chunk processed", {
     chunkId: chunk.id,
     runKey,
-    findings: allFindings.length + mandatoryFindings.length,
+    findings: persistedFindings.length,
   });
 }

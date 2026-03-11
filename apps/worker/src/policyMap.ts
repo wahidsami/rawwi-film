@@ -134,3 +134,13 @@ export function getScannableArticleIds(): number[] {
 
 export const ADMIN_ONLY_ARTICLE_ID = 25;
 export const OUT_OF_SCOPE_ARTICLE_ID = 26;
+
+/**
+ * Hybrid V3 helper: derive stable concept code from article+atom.
+ * This is additive and keeps legacy article/atom fields unchanged.
+ */
+export function derivePolicyConceptCode(articleId: number, atomId: string | null | undefined): string {
+  const norm = normalizeAtomId(atomId ?? null, articleId);
+  if (!norm) return `ART${articleId}_GENERIC`;
+  return `ART${articleId}_ATOM_${norm.replace(/[^\d-]/g, "")}`;
+}

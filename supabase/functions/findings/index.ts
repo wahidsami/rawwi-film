@@ -10,6 +10,7 @@ import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { isUserAdmin } from "../_shared/roleCheck.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
+import { validateArticleAtomLink } from "../_shared/policyValidation.ts";
 
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
@@ -336,6 +337,10 @@ Deno.serve(async (req: Request) => {
       if (articleId == null || typeof articleId !== "number") {
         return json({ error: "articleId required" }, 400);
       }
+      const atomValidation = await validateArticleAtomLink(supabase as unknown as { from: (table: string) => { select: (cols: string) => any } }, articleId, atomId);
+      if (!atomValidation.ok) {
+        return json({ error: atomValidation.reason ?? "Invalid atom/article mapping" }, 400);
+      }
       const severityOk = severity && ["low", "medium", "high", "critical"].includes(severity.toLowerCase());
       if (!severityOk) {
         return json({ error: "severity must be low, medium, high, or critical" }, 400);
@@ -390,7 +395,7 @@ Deno.serve(async (req: Request) => {
         source: "manual",
         created_by: uid,
         article_id: articleId,
-        atom_id: atomId,
+        atom_id: atomValidation.normalizedAtomId,
         severity: severity!.toLowerCase(),
         confidence: 1,
         title_ar: titleAr,
@@ -411,6 +416,57 @@ Deno.serve(async (req: Request) => {
       if (insertErr) {
         console.error("[findings] manual insert error:", insertErr.message);
         return json({ error: insertErr.message }, 500);
+      }
+      const insertedRow = inserted as { id: string; article_id: number; atom_id: string | null; confidence?: number | null };
+      // Dual-write adapter: populate policy link table if mapping tables are available.
+      const conceptCode = insertedRow.atom_id ? `ART${insertedRow.article_id}_ATOM_${insertedRow.atom_id.replace(/[^\d-]/g, "")}` : `ART${insertedRow.article_id}_GENERIC`;
+      const { data: concept } = await supabase
+        .from("policy_atom_concepts")
+        .upsert(
+          {
+            code: conceptCode,
+            title_ar: `مفهوم ${conceptCode}`,
+            description_ar: "Auto-generated from manual finding",
+            status: "active",
+            version: 1,
+          },
+          { onConflict: "code" }
+        )
+        .select("id")
+        .single();
+      const { data: map } = await supabase
+        .from("policy_article_atom_map")
+        .upsert(
+          {
+            article_id: insertedRow.article_id,
+            atom_concept_id: (concept as { id: string } | null)?.id,
+            local_atom_code: insertedRow.atom_id ? insertedRow.atom_id.split("-")[1] ?? null : null,
+            rationale_ar: "Auto-mapped from manual finding",
+            overlap_type: "primary",
+            priority: 1,
+            source: "manual",
+            is_active: true,
+          },
+          { onConflict: "article_id,atom_concept_id,is_active" }
+        )
+        .select("id")
+        .single();
+      if (concept?.id) {
+        await supabase
+          .from("analysis_finding_policy_links")
+          .upsert(
+            {
+              finding_id: insertedRow.id,
+              article_id: insertedRow.article_id,
+              atom_concept_id: concept.id,
+              map_id: (map as { id?: string } | null)?.id ?? null,
+              link_role: "primary",
+              confidence: insertedRow.confidence ?? 1,
+              rationale_ar: "Manual finding auto-linked",
+              created_by_model: "manual",
+            },
+            { onConflict: "finding_id,article_id,atom_concept_id" }
+          );
       }
 
       await recomputeReportAggregates(supabase, jobId, uid, "user");
