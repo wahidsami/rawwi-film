@@ -824,6 +824,7 @@ export async function processChunkJudge(
           },
         },
         evidence_hash: h,
+        rationale_ar: f.rationale_ar ?? null,
       };
     });
 

@@ -157,6 +157,7 @@ type DbFinding = {
   start_line_chunk: number | null;
   end_line_chunk: number | null;
   location: unknown;
+  rationale_ar?: string | null;
 };
 
 const SEVERITIES = ["low", "medium", "high", "critical"] as const;
@@ -268,7 +269,9 @@ export function buildSummaryJson(
       severity: primary.severity,
       confidence: primary.confidence ?? 0,
       final_ruling: (v3.final_ruling as string | undefined) ?? null,
-      rationale: (v3.rationale_ar as string | undefined) ?? null,
+      rationale: (primary.rationale_ar != null && primary.rationale_ar !== "")
+        ? primary.rationale_ar
+        : (v3.rationale_ar as string | undefined) ?? null,
       pillar_id: (v3.pillar_id as string | undefined) ?? null,
       primary_article_id: primary.article_id,
       related_article_ids: relatedArticleIds,
@@ -531,7 +534,7 @@ export async function runAggregation(jobId: string): Promise<void> {
   const { data: findings, error: findingsErr } = await supabase
     .from("analysis_findings")
     .select(
-      "source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_line_chunk, end_line_chunk, location"
+      "source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_line_chunk, end_line_chunk, location, rationale_ar"
     )
     .eq("job_id", jobId);
 
