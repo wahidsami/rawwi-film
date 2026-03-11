@@ -17,7 +17,7 @@ import {
   type RouterOutput,
 } from "./schemas.js";
 import { logger } from "./logger.js";
-import { AUDITOR_SYSTEM_MSG, ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG } from "./aiConstants.js";
+import { AUDITOR_SYSTEM_MSG, RATIONALE_ONLY_SYSTEM_MSG, ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG } from "./aiConstants.js";
 
 const openai = new OpenAI({ apiKey: config.OPENAI_API_KEY });
 
@@ -217,6 +217,58 @@ export async function callAuditorRaw(
     seed: 12345,
   }, { timeout: config.JUDGE_TIMEOUT_MS });
   return resp.choices[0]?.message?.content ?? '{"assessments":[]}';
+}
+
+export type RationaleOnlyItem = {
+  canonical_finding_id: string;
+  evidence_snippet: string;
+  final_ruling: string;
+  primary_article_id: number;
+};
+
+export type RationaleOnlyResult = {
+  canonical_finding_id: string;
+  rationale_ar: string;
+};
+
+/**
+ * Second pass: generate only rationale_ar for findings that have default/empty rationale.
+ * Single focused task so the model reliably fills the field.
+ */
+export async function callRationaleOnly(
+  items: RationaleOnlyItem[],
+  model: string
+): Promise<RationaleOnlyResult[]> {
+  if (items.length === 0) return [];
+  const payload = items
+    .map(
+      (r, i) =>
+        `${i + 1}. canonical_finding_id: ${r.canonical_finding_id}\n   evidence_snippet: "${(r.evidence_snippet || "").slice(0, 500)}"\n   final_ruling: ${r.final_ruling}\n   primary_article_id: ${r.primary_article_id}`
+    )
+    .join("\n\n");
+  const resp = await openai.chat.completions.create({
+    model,
+    messages: [
+      { role: "system", content: RATIONALE_ONLY_SYSTEM_MSG },
+      { role: "user", content: `اكتب rationale_ar لكل عنصر:\n\n${payload}\n\nأرجع JSON فقط بالشكل: { "rationales": [ { "canonical_finding_id": "...", "rationale_ar": "..." } ] }` },
+    ],
+    response_format: { type: "json_object" },
+    max_tokens: 2048,
+    temperature: 0,
+    seed: 12345,
+  }, { timeout: config.JUDGE_TIMEOUT_MS });
+  const raw = resp.choices[0]?.message?.content ?? "{}";
+  try {
+    const json = extractJsonFromText(raw);
+    const parsed = JSON.parse(json) as { rationales?: Array<{ canonical_finding_id?: string; rationale_ar?: string }> };
+    const list = Array.isArray(parsed.rationales) ? parsed.rationales : [];
+    return list
+      .filter((r) => r?.canonical_finding_id && typeof r.rationale_ar === "string" && r.rationale_ar.trim() !== "")
+      .map((r) => ({ canonical_finding_id: String(r.canonical_finding_id), rationale_ar: String(r.rationale_ar).trim() }));
+  } catch {
+    logger.warn("Rationale-only parse failed", { rawSlice: raw.slice(0, 200) });
+    return [];
+  }
 }
 
 export async function parseAuditorWithRepair(

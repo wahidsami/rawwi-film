@@ -1,8 +1,11 @@
 import { config } from "../config.js";
-import { callAuditorRaw, parseAuditorWithRepair } from "../openai.js";
+import { callAuditorRaw, callRationaleOnly, parseAuditorWithRepair } from "../openai.js";
 import { logger } from "../logger.js";
 import type { AuditorAssessment } from "../schemas.js";
+import type { HybridFindingLike } from "./contextArbiter.js";
+
 const AUDITOR_RATIONALE_DEFAULT = "يتطلب تقييم مراجع مختص.";
+const RATIONALE_ONLY_BATCH_SIZE = 6;
 
 type CanonicalCandidate = {
   canonical_finding_id: string;
@@ -109,22 +112,23 @@ export async function runDeepAuditorPass(args: {
     withNonDefaultRationale: withRationale.length,
   });
 
-  return findings.map((f) => {
+  const merged = findings.map((f) => {
     const cId = f.canonical_finding_id ?? `LEGACY-${f.article_id}-${f.start_offset_global ?? 0}-${f.end_offset_global ?? 0}`;
     const a = byId.get(cId);
     if (!a) return f;
     const primaryArticle = a.primary_article_id ?? f.primary_article_id ?? f.article_id;
     const related = normalizeRelated(a.related_article_ids ?? [], primaryArticle);
+    const rationale = (a.rationale_ar && a.rationale_ar.trim() !== "")
+      ? a.rationale_ar
+      : (f.rationale_ar && f.rationale_ar.trim() !== "")
+        ? f.rationale_ar
+        : AUDITOR_RATIONALE_DEFAULT;
     return {
       ...f,
       canonical_finding_id: cId,
       title_ar: a.title_ar ?? f.title_ar,
       final_ruling: a.final_ruling ?? f.final_ruling ?? "needs_review",
-      rationale_ar: (a.rationale_ar && a.rationale_ar.trim() !== "")
-        ? a.rationale_ar
-        : (f.rationale_ar && f.rationale_ar.trim() !== "")
-          ? f.rationale_ar
-          : AUDITOR_RATIONALE_DEFAULT,
+      rationale_ar: rationale,
       pillar_id: a.pillar_id ?? f.pillar_id,
       primary_article_id: primaryArticle,
       related_article_ids: related,
@@ -139,4 +143,43 @@ export async function runDeepAuditorPass(args: {
       ],
     };
   });
+
+  const needRationale = new Map<string, { evidence_snippet: string; final_ruling: string; primary_article_id: number }>();
+  for (const m of merged) {
+    const id = m.canonical_finding_id ?? "";
+    if (!id || needRationale.has(id)) continue;
+    if (m.rationale_ar !== AUDITOR_RATIONALE_DEFAULT && m.rationale_ar != null && m.rationale_ar.trim() !== "") continue;
+    needRationale.set(id, {
+      evidence_snippet: m.evidence_snippet || "",
+      final_ruling: m.final_ruling ?? "violation",
+      primary_article_id: m.primary_article_id ?? m.article_id,
+    });
+  }
+  const rationaleItems = [...needRationale.entries()].map(([canonical_finding_id, v]) => ({
+    canonical_finding_id,
+    ...v,
+  }));
+
+  if (rationaleItems.length > 0) {
+    const model = config.OPENAI_AUDITOR_MODEL;
+    const generatedByCId = new Map<string, string>();
+    for (let i = 0; i < rationaleItems.length; i += RATIONALE_ONLY_BATCH_SIZE) {
+      const batch = rationaleItems.slice(i, i + RATIONALE_ONLY_BATCH_SIZE);
+      const results = await callRationaleOnly(batch, model);
+      for (const r of results) {
+        if (r.rationale_ar && r.rationale_ar.trim() !== "") generatedByCId.set(r.canonical_finding_id, r.rationale_ar.trim());
+      }
+    }
+    logger.info("Rationale-only pass", { requested: rationaleItems.length, generated: generatedByCId.size });
+    if (generatedByCId.size > 0) {
+      return merged.map((m) => {
+        const id = m.canonical_finding_id ?? "";
+        const gen = id ? generatedByCId.get(id) : undefined;
+        if (!gen) return m;
+        return { ...m, rationale_ar: gen };
+      });
+    }
+  }
+
+  return merged;
 }
