@@ -1,5 +1,6 @@
 import { config } from "../config.js";
 import { callAuditorRaw, parseAuditorWithRepair } from "../openai.js";
+import { logger } from "../logger.js";
 import type { AuditorAssessment } from "../schemas.js";
 const AUDITOR_RATIONALE_DEFAULT = "يتطلب تقييم مراجع مختص.";
 
@@ -99,6 +100,14 @@ export async function runDeepAuditorPass(args: {
     dedupedAssessments.push(applyGuardrails(a));
   }
   const byId = new Map(dedupedAssessments.map((a) => [a.canonical_finding_id, a]));
+
+  const withRationale = dedupedAssessments.filter(
+    (a) => a.rationale_ar != null && a.rationale_ar.trim() !== "" && a.rationale_ar !== AUDITOR_RATIONALE_DEFAULT
+  );
+  logger.info("Auditor assessments rationale stats", {
+    total: dedupedAssessments.length,
+    withNonDefaultRationale: withRationale.length,
+  });
 
   return findings.map((f) => {
     const cId = f.canonical_finding_id ?? `LEGACY-${f.article_id}-${f.start_offset_global ?? 0}-${f.end_offset_global ?? 0}`;

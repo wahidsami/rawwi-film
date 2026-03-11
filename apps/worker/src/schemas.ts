@@ -125,6 +125,12 @@ export function parseJudgeOutput(raw: string): JudgeOutput {
 
 export function parseAuditorOutput(raw: string): AuditorOutput {
   const json = extractJsonFromText(raw);
-  const parsed = JSON.parse(json) as unknown;
+  const parsed = JSON.parse(json) as { assessments?: Array<Record<string, unknown>> };
+  const list = Array.isArray(parsed.assessments) ? parsed.assessments : [];
+  for (const row of list) {
+    if ((row.rationale_ar == null || String(row.rationale_ar).trim() === "") && typeof row.rationale === "string" && row.rationale.trim() !== "") {
+      row.rationale_ar = row.rationale;
+    }
+  }
   return auditorOutputSchema.parse(parsed);
 }

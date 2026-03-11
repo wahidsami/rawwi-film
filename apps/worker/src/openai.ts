@@ -208,11 +208,11 @@ export async function callAuditorRaw(
       { role: "system", content: auditorSystemPrompt || AUDITOR_SYSTEM_MSG },
       {
         role: "user",
-        content: `المرشحات القانونية canonical:\n${clippedPayload}\n\nمقتطف النص الكامل:\n${clippedText}\n\nأرجع JSON فقط. يجب أن يحتوي كل assessment على rationale_ar (جملة أو جملتان بالعربية تشرح: أين يظهر المقتطف في النص، ماذا يعني في السياق، ولماذا اعتُبرت مخالفة أو تحتاج مراجعة).`,
+        content: `المرشحات القانونية canonical:\n${clippedPayload}\n\nمقتطف النص الكامل:\n${clippedText}\n\nأرجع JSON فقط. كل assessment يجب أن يحتوي حقل rationale_ar مملوءاً (جملة أو جملتان بالعربية: أين في النص، ماذا يعني في السياق، ولماذا اعتُبرت مخالفة أو تحتاج مراجعة). مثال: "المقتطف من مشهد حلم يصف ضحية طعن؛ السياق درامي ولا يروّج للعنف لكن الوصف يتجاوز ضوابط مادة 9."`,
       },
     ],
     response_format: { type: "json_object" },
-    max_tokens: 4096,
+    max_tokens: 8192,
     temperature: 0,
     seed: 12345,
   }, { timeout: config.JUDGE_TIMEOUT_MS });
@@ -231,8 +231,13 @@ export async function parseAuditorWithRepair(
       logger.warn("Auditor parse/validation failed, attempting repair", { attempt, error: String(e) });
       try {
         const json = extractJsonFromText(content);
-        const parsed = JSON.parse(json) as { assessments?: unknown[] };
+        const parsed = JSON.parse(json) as { assessments?: Array<Record<string, unknown>> };
         const rows = Array.isArray(parsed.assessments) ? parsed.assessments : [];
+        for (const row of rows) {
+          if ((row.rationale_ar == null || String(row.rationale_ar).trim() === "") && typeof row.rationale === "string" && row.rationale.trim() !== "") {
+            row.rationale_ar = row.rationale;
+          }
+        }
         if (rows.length > 0) {
           const salvaged: AuditorAssessment[] = [];
           for (const row of rows) {
