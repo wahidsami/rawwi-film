@@ -162,6 +162,7 @@ type DbFinding = {
 
 const SEVERITIES = ["low", "medium", "high", "critical"] as const;
 const SEVERITY_ORDER: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 };
+const RATIONALE_FALLBACK = "يتطلب تقييم مراجع مختص.";
 
 const BROAD_ARTICLES = new Set([4, 5]);
 
@@ -269,9 +270,11 @@ export function buildSummaryJson(
       severity: primary.severity,
       confidence: primary.confidence ?? 0,
       final_ruling: (v3.final_ruling as string | undefined) ?? null,
-      rationale: (primary.rationale_ar != null && primary.rationale_ar !== "")
+      rationale: (primary.rationale_ar != null && primary.rationale_ar.trim() !== "")
         ? primary.rationale_ar
-        : (v3.rationale_ar as string | undefined) ?? null,
+        : ((v3.rationale_ar as string | undefined) != null && (v3.rationale_ar as string).trim() !== "")
+          ? (v3.rationale_ar as string)
+          : RATIONALE_FALLBACK,
       pillar_id: (v3.pillar_id as string | undefined) ?? null,
       primary_article_id: primary.article_id,
       related_article_ids: relatedArticleIds,
@@ -340,7 +343,7 @@ export function buildSummaryJson(
         end_offset_global: f.end_offset_global,
         start_line_chunk: f.start_line_chunk,
         end_line_chunk: f.end_line_chunk,
-        rationale: f.rationale ?? null,
+        rationale: f.rationale ?? RATIONALE_FALLBACK,
         final_ruling: f.final_ruling ?? null,
         pillar_id: f.pillar_id ?? null,
         primary_article_id: f.primary_article_id ?? null,

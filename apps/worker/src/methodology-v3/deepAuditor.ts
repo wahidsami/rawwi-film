@@ -1,7 +1,7 @@
 import { config } from "../config.js";
 import { callAuditorRaw, parseAuditorWithRepair } from "../openai.js";
 import type { AuditorAssessment } from "../schemas.js";
-import type { HybridFindingLike } from "./contextArbiter.js";
+const AUDITOR_RATIONALE_DEFAULT = "يتطلب تقييم مراجع مختص.";
 
 type CanonicalCandidate = {
   canonical_finding_id: string;
@@ -111,7 +111,11 @@ export async function runDeepAuditorPass(args: {
       canonical_finding_id: cId,
       title_ar: a.title_ar ?? f.title_ar,
       final_ruling: a.final_ruling ?? f.final_ruling ?? "needs_review",
-      rationale_ar: a.rationale_ar ?? f.rationale_ar ?? null,
+      rationale_ar: (a.rationale_ar && a.rationale_ar.trim() !== "")
+        ? a.rationale_ar
+        : (f.rationale_ar && f.rationale_ar.trim() !== "")
+          ? f.rationale_ar
+          : AUDITOR_RATIONALE_DEFAULT,
       pillar_id: a.pillar_id ?? f.pillar_id,
       primary_article_id: primaryArticle,
       related_article_ids: related,

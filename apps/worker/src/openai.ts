@@ -208,7 +208,7 @@ export async function callAuditorRaw(
       { role: "system", content: auditorSystemPrompt || AUDITOR_SYSTEM_MSG },
       {
         role: "user",
-        content: `المرشحات القانونية canonical:\n${clippedPayload}\n\nمقتطف النص الكامل:\n${clippedText}\n\nأرجع JSON فقط.`,
+        content: `المرشحات القانونية canonical:\n${clippedPayload}\n\nمقتطف النص الكامل:\n${clippedText}\n\nأرجع JSON فقط. يجب أن يحتوي كل assessment على rationale_ar (جملة أو جملتان بالعربية تشرح: أين يظهر المقتطف في النص، ماذا يعني في السياق، ولماذا اعتُبرت مخالفة أو تحتاج مراجعة).`,
       },
     ],
     response_format: { type: "json_object" },
