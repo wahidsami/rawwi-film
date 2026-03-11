@@ -80,6 +80,9 @@ export const auditorAssessmentSchema = z.object({
   title_ar: z.string().optional().nullable().transform((v) => v ?? "مخالفة محتوى"),
   final_ruling: auditorRulingSchema,
   rationale_ar: z.string().optional().nullable().transform((v) => v ?? "يتطلب تقييم مراجع مختص."),
+  rationale_quality_tags: z.array(z.string()).optional().default([]),
+  ruling_certainty_band: z.enum(["high", "medium", "low"]).optional().nullable().transform((v) => v ?? null),
+  contradiction_flag: z.boolean().optional().nullable().transform((v) => v ?? false),
   pillar_id: z.string().optional().nullable().transform((v) => v ?? null),
   primary_article_id: z.preprocess(toNullableNumber, z.number().int().min(1).max(25).nullable().optional())
     .transform((v) => (typeof v === "number" ? v : null)),

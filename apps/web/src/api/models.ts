@@ -285,6 +285,13 @@ export interface Report {
       needs_review_count: number;
       violation_count: number;
     };
+    script_summary?: {
+      synopsis_ar: string;
+      key_risky_events_ar?: string;
+      narrative_stance_ar?: string;
+      compliance_posture_ar?: string;
+      confidence: number;
+    };
   };
   reportHtml: string;
   findingsCount: number;

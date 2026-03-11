@@ -39,6 +39,13 @@ export interface DownloadAnalysisPdfParams {
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
   }> | null;
+  scriptSummary?: {
+    synopsis_ar: string;
+    key_risky_events_ar?: string;
+    narrative_stance_ar?: string;
+    compliance_posture_ar?: string;
+    confidence: number;
+  } | null;
   lang: "ar" | "en";
   dateFormat?: string;
 }
@@ -56,6 +63,7 @@ export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Pr
       clientName: params.clientName,
       createdAt: params.createdAt,
       findings,
+      scriptSummary: params.scriptSummary ?? undefined,
       lang: params.lang,
     },
     dateFormat: params.dateFormat,

@@ -60,9 +60,9 @@ order by 2 desc;
 
 ## Execution Steps
 1. Keep worker on `ANALYSIS_ENGINE=hybrid`, `ANALYSIS_HYBRID_MODE=shadow`.
-2. Run all 20 cases (combined + per-case).
-3. Fill `results-template.csv` with actual outputs.
-4. Classify each mismatch using the classes above.
+2. Run all 20 cases (combined + per-case) and fill `results-template.csv` with actual outputs (`actual_ruling`, `actual_primary_article`, `duplicate_canonical_cards`, etc.).
+3. Run the gate checker: `node docs/golden-saudi-scripts/check-gate.mjs`. It compares actuals to `matrix.csv` and reports pass/fail for duplicate=0, primary accuracy ≥90%, ruling accuracy ≥85%.
+4. Classify each mismatch using the mismatch classes above; record in `mismatch_class` and `auditor_notes`.
 5. Tune prompts/rules for top 2 mismatch classes only.
 6. Re-run and compare against thresholds.
-7. Move to `enforce` only after two consecutive passes.
+7. Move to `enforce` only after **two consecutive** gate passes and reviewer sign-off for rationale acceptance (≥80%).

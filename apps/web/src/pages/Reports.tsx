@@ -131,6 +131,7 @@ function Reports() {
         findings,
         findingsByArticle: fullReport.summaryJson?.findings_by_article,
         canonicalFindings: fullReport.summaryJson?.canonical_findings,
+        scriptSummary: fullReport.summaryJson?.script_summary ?? undefined,
         lang: isAr ? 'ar' : 'en',
         dateFormat: settings?.platform?.dateFormat,
       });

@@ -7,12 +7,21 @@ import type { AnalysisPdfFinding } from "./mapper";
 const A4_WIDTH = 595.28;
 const A4_HEIGHT = 841.89;
 
+export interface ScriptSummaryForPdf {
+  synopsis_ar: string;
+  key_risky_events_ar?: string;
+  narrative_stance_ar?: string;
+  compliance_posture_ar?: string;
+  confidence: number;
+}
+
 export interface AnalysisSectionPdfData {
   jobId?: string;
   scriptTitle: string;
   clientName: string;
   createdAt: string;
   findings: AnalysisPdfFinding[];
+  scriptSummary?: ScriptSummaryForPdf | null;
   lang?: "ar" | "en";
 }
 
@@ -105,6 +114,23 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
           <View style={s.stat}><Text style={s.statValue}>{sevCount.medium || 0}</Text><Text style={s.statLabel}>{isAr ? "متوسطة" : "Medium"}</Text></View>
           <View style={s.stat}><Text style={s.statValue}>{sevCount.low || 0}</Text><Text style={s.statLabel}>{isAr ? "منخفضة" : "Low"}</Text></View>
         </View>
+
+        {data.scriptSummary && (
+          <View style={{ marginBottom: 14 }}>
+            <Text style={[s.sectionTitle, rtl]}>{isAr ? "فهم النص (ملخص الذكاء الاصطناعي)" : "Script understanding (AI summary)"}</Text>
+            <Text style={[s.findingBody, rtl]}>{data.scriptSummary.synopsis_ar}</Text>
+            {data.scriptSummary.key_risky_events_ar ? (
+              <Text style={[s.findingMeta, rtl]}>{isAr ? "أهم المشاهد الحساسة: " : "Key risky events: "}{data.scriptSummary.key_risky_events_ar}</Text>
+            ) : null}
+            {data.scriptSummary.narrative_stance_ar ? (
+              <Text style={[s.findingMeta, rtl]}>{isAr ? "موقف السرد: " : "Narrative stance: "}{data.scriptSummary.narrative_stance_ar}</Text>
+            ) : null}
+            {data.scriptSummary.compliance_posture_ar ? (
+              <Text style={[s.findingMeta, rtl]}>{isAr ? "انطباع الامتثال: " : "Compliance posture: "}{data.scriptSummary.compliance_posture_ar}</Text>
+            ) : null}
+            <Text style={[s.findingMeta, rtl]}>{isAr ? "ثقة الملخص: " : "Summary confidence: "}{Math.round((data.scriptSummary.confidence ?? 0) * 100)}%</Text>
+          </View>
+        )}
 
         <Text style={[s.sectionTitle, rtl]}>{isAr ? "تفاصيل القضايا" : "Findings Details"}</Text>
         {Object.keys(groups).length === 0 ? (

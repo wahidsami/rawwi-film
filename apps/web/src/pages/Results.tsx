@@ -528,6 +528,7 @@ export function Results() {
         findings: (findings || []).filter((f): f is AnalysisFinding => Boolean(f)),
         findingsByArticle: summary?.findings_by_article,
         canonicalFindings: summary?.canonical_findings,
+        scriptSummary: summary?.script_summary ?? undefined,
         lang: (isAr ? 'ar' : 'en') as const,
         dateFormat,
       };
@@ -866,6 +867,38 @@ export function Results() {
           </Button>
         </div>
       </div>
+
+      {/* AI script summary */}
+      {summary.script_summary && (
+        <div className="rounded-2xl border border-border bg-surface/50 p-6 mb-8" dir="rtl">
+          <h2 className="text-lg font-bold text-text-main mb-3">
+            {lang === "ar" ? "فهم النص (ملخص الذكاء الاصطناعي)" : "Script understanding (AI summary)"}
+          </h2>
+          <p className="text-text-main text-sm leading-relaxed mb-3">{summary.script_summary.synopsis_ar}</p>
+          {summary.script_summary.key_risky_events_ar && (
+            <p className="text-text-muted text-sm mb-2">
+              <span className="font-semibold text-text-main">{lang === "ar" ? "أهم المشاهد الحساسة: " : "Key risky events: "}</span>
+              {summary.script_summary.key_risky_events_ar}
+            </p>
+          )}
+          {summary.script_summary.narrative_stance_ar && (
+            <p className="text-text-muted text-sm mb-2">
+              <span className="font-semibold text-text-main">{lang === "ar" ? "موقف السرد: " : "Narrative stance: "}</span>
+              {summary.script_summary.narrative_stance_ar}
+            </p>
+          )}
+          {summary.script_summary.compliance_posture_ar && (
+            <p className="text-text-muted text-sm mb-2">
+              <span className="font-semibold text-text-main">{lang === "ar" ? "انطباع الامتثال: " : "Compliance posture: "}</span>
+              {summary.script_summary.compliance_posture_ar}
+            </p>
+          )}
+          <p className="text-[11px] text-text-muted">
+            {lang === "ar" ? "ثقة الملخص: " : "Summary confidence: "}
+            {Math.round((summary.script_summary.confidence ?? 0) * 100)}%
+          </p>
+        </div>
+      )}
 
       {/* Report-level review bar */}
       {report.reviewStatus && (
