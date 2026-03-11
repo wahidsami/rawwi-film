@@ -130,6 +130,7 @@ function Reports() {
         createdAt: fullReport.createdAt,
         findings,
         findingsByArticle: fullReport.summaryJson?.findings_by_article,
+        canonicalFindings: fullReport.summaryJson?.canonical_findings,
         lang: isAr ? 'ar' : 'en',
         dateFormat: settings?.platform?.dateFormat,
       });

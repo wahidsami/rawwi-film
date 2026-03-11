@@ -26,13 +26,23 @@ export interface DownloadAnalysisPdfParams {
   createdAt: string;
   findings?: AnalysisFinding[] | null;
   findingsByArticle?: Array<{ article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }> }> | null;
+  canonicalFindings?: Array<{
+    canonical_finding_id: string;
+    title_ar: string;
+    evidence_snippet: string;
+    severity: string;
+    confidence: number;
+    primary_article_id?: number | null;
+    start_line_chunk?: number | null;
+    end_line_chunk?: number | null;
+  }> | null;
   lang: "ar" | "en";
   dateFormat?: string;
 }
 
 export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Promise<void> {
   const origin = window.location.origin;
-  const findings = mapAnalysisFindingsForPdf(params.findings, params.findingsByArticle);
+  const findings = mapAnalysisFindingsForPdf(params.findings, params.findingsByArticle, params.canonicalFindings);
   const [coverImageDataUrl, logoDataUrl] = await Promise.all([
     toDataUrl(`${origin}/cover.jpg`),
     toDataUrl(`${origin}/dashboardlogo.png`),

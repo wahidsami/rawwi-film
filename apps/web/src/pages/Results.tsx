@@ -44,6 +44,18 @@ function articleDomain(articleId: number): string {
   return getArticleDomainId(articleId);
 }
 
+type CanonicalSummaryFinding = {
+  canonical_finding_id: string;
+  title_ar: string;
+  evidence_snippet: string;
+  severity: string;
+  confidence: number;
+  primary_article_id?: number | null;
+  related_article_ids?: number[];
+  start_line_chunk?: number | null;
+  end_line_chunk?: number | null;
+};
+
 export function Results() {
   const { id: paramId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
@@ -217,11 +229,43 @@ export function Results() {
 
   const summary = report.summaryJson;
   const checklistMap = new Map(summary.checklist_articles.map(c => [c.article_id, c]));
+  const canonicalSummaryFindings: CanonicalSummaryFinding[] = (summary.canonical_findings || []).filter(Boolean);
 
   // Split real findings into violations vs approved for card rendering
   const hasRealFindings = findings.length > 0;
   const violations = hasRealFindings ? findings.filter(f => f.reviewStatus !== 'approved') : [];
   const approvedFindings = hasRealFindings ? findings.filter(f => f.reviewStatus === 'approved') : [];
+
+  function dedupeRealFindings(list: AnalysisFinding[]): AnalysisFinding[] {
+    const byCanonical = new Map<string, AnalysisFinding>();
+    for (const f of list) {
+      const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+      const canonicalId = (v3.canonical_finding_id as string | undefined) ?? f.id ?? `${f.articleId}-${f.evidenceSnippet?.slice(0, 80) ?? ''}`;
+      const primaryArticleId = Number(v3.primary_article_id);
+      const normalized: AnalysisFinding = {
+        ...f,
+        articleId: Number.isFinite(primaryArticleId) ? primaryArticleId : f.articleId,
+      };
+      const existing = byCanonical.get(canonicalId);
+      if (!existing) {
+        byCanonical.set(canonicalId, normalized);
+      } else {
+        const currentRank = existing.severity === 'critical' ? 4 : existing.severity === 'high' ? 3 : existing.severity === 'medium' ? 2 : 1;
+        const nextRank = normalized.severity === 'critical' ? 4 : normalized.severity === 'high' ? 3 : normalized.severity === 'medium' ? 2 : 1;
+        if (nextRank > currentRank || (nextRank === currentRank && (normalized.confidence ?? 0) > (existing.confidence ?? 0))) {
+          byCanonical.set(canonicalId, normalized);
+        }
+      }
+    }
+    return [...byCanonical.values()];
+  }
+
+  const displayViolations = hasRealFindings ? dedupeRealFindings(violations) : [];
+  const displayApprovedFindings = hasRealFindings ? dedupeRealFindings(approvedFindings) : [];
+  const fallbackSummaryCount = canonicalSummaryFindings.length > 0
+    ? canonicalSummaryFindings.length
+    : summary.findings_by_article.reduce((acc, a) => acc + (a.top_findings?.length ?? 0), 0);
+  const displayViolationsCount = hasRealFindings ? displayViolations.length : fallbackSummaryCount;
 
   // Read persisted totals from report payload (updated by backend after each review).
   // These already exclude approved findings.
@@ -479,6 +523,7 @@ export function Results() {
         createdAt: report.createdAt,
         findings: (findings || []).filter((f): f is AnalysisFinding => Boolean(f)),
         findingsByArticle: summary?.findings_by_article,
+        canonicalFindings: summary?.canonical_findings,
         lang: (isAr ? 'ar' : 'en') as const,
         dateFormat,
       };
@@ -637,6 +682,70 @@ export function Results() {
             })}
               </div>
             </div>
+      );
+    });
+  }
+
+  function renderFindingsFromCanonicalSummary() {
+    const byArticle = new Map<number, CanonicalSummaryFinding[]>();
+    for (const f of canonicalSummaryFindings) {
+      const articleId = Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0;
+      if (!byArticle.has(articleId)) byArticle.set(articleId, []);
+      byArticle.get(articleId)!.push(f);
+    }
+    const byDomain = new Map<string, { articleId: number; findings: CanonicalSummaryFinding[] }[]>();
+    for (const [articleId, list] of byArticle.entries()) {
+      const dom = articleDomain(articleId);
+      if (!byDomain.has(dom)) byDomain.set(dom, []);
+      byDomain.get(dom)!.push({ articleId, findings: list });
+    }
+    return domains.map(domain => {
+      const domainArts = byDomain.get(domain.id);
+      if (!domainArts || domainArts.length === 0) return null;
+      return (
+        <div key={domain.id} className="mb-8">
+          <h4 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
+            <span className="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center">{domain.id}</span>
+            {lang === 'ar' ? domain.titleAr : domain.titleEn}
+          </h4>
+          <div className="space-y-4 ps-4 lg:ps-10">
+            {domainArts.map(({ articleId, findings: artFindings }) => {
+              const artMeta = policyArticles.find(a => a.id === articleId);
+              const key = `${domain.id}-${articleId}`;
+              const isExpanded = expandedArticles[key] ?? true;
+              return (
+                <div key={articleId} className="border border-border rounded-xl bg-surface/50 overflow-hidden">
+                  <button onClick={() => toggleArticle(key)} className="w-full flex items-center justify-between p-4 bg-surface hover:bg-background transition-colors border-b border-border">
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-text-main">{lang === 'ar' ? `مادة ${articleId}` : `Article ${articleId}`}</span>
+                      <span className="text-text-muted text-sm truncate max-w-xs">{lang === 'ar' ? artMeta?.titleAr : artMeta?.titleEn}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="outline">{artFindings.length}</Badge>
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+                    </div>
+                  </button>
+                  {isExpanded && (
+                    <div className="p-4 space-y-3">
+                      {artFindings.map((f, idx) => (
+                        <div key={`${f.canonical_finding_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold text-text-main text-sm">{f.title_ar}</span>
+                            <div className="flex items-center gap-2">
+                              <Badge className={cn("text-[10px] border", sevColor(f.severity))}>{f.severity}</Badge>
+                              <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
+                            </div>
+                          </div>
+                          <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">"{f.evidence_snippet}"</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       );
     });
   }
@@ -877,10 +986,10 @@ export function Results() {
           <h3 className="font-bold text-xl text-text-main border-b border-border pb-2 flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-primary" />
             {lang === 'ar' ? 'المخالفات' : 'Violations'}
-            <Badge variant="outline" className="ms-2">{displayTotal}</Badge>
+            <Badge variant="outline" className="ms-2">{displayViolationsCount}</Badge>
           </h3>
 
-          {(hasRealFindings ? violations.length === 0 : summary.findings_by_article.length === 0) ? (
+          {(hasRealFindings ? displayViolations.length === 0 : displayViolationsCount === 0) ? (
             <div className="text-center py-16 bg-surface border-2 border-dashed border-border rounded-2xl">
               <CheckCircle className="w-12 h-12 text-success mx-auto mb-4 opacity-50" />
               <h4 className="text-lg font-bold text-text-main">{lang === 'ar' ? 'النص سليم' : 'Script Is Compliant'}</h4>
@@ -890,17 +999,21 @@ export function Results() {
                   : 'No violations were detected in this script under the current analysis policy.'}
               </p>
             </div>
-          ) : hasRealFindings ? renderFindingsFromReal(violations) : renderFindingsFromSummary()}
+          ) : hasRealFindings
+            ? renderFindingsFromReal(displayViolations)
+            : canonicalSummaryFindings.length > 0
+              ? renderFindingsFromCanonicalSummary()
+              : renderFindingsFromSummary()}
 
           {/* Approved section */}
-          {hasRealFindings && approvedFindings.length > 0 && (
+          {hasRealFindings && displayApprovedFindings.length > 0 && (
             <>
               <h3 className="font-bold text-xl text-text-main border-b border-success/30 pb-2 flex items-center gap-2 mt-12">
                 <Shield className="w-5 h-5 text-success" />
                 {lang === 'ar' ? 'معتمد كآمن' : 'Approved as Safe'}
-                <Badge className="ms-2 text-[10px] bg-success/10 text-success border-success/20 border">{approvedFindings.length}</Badge>
+                <Badge className="ms-2 text-[10px] bg-success/10 text-success border-success/20 border">{displayApprovedFindings.length}</Badge>
               </h3>
-              {renderFindingsFromReal(approvedFindings)}
+              {renderFindingsFromReal(displayApprovedFindings)}
             </>
           )}
         </div>

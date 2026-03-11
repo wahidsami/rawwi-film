@@ -263,6 +263,28 @@ export interface Report {
         is_interpretive?: boolean;
       }>;
     }>;
+    canonical_findings?: Array<{
+      canonical_finding_id: string;
+      title_ar: string;
+      evidence_snippet: string;
+      severity: string;
+      confidence: number;
+      final_ruling?: string | null;
+      rationale?: string | null;
+      pillar_id?: string | null;
+      primary_article_id?: number | null;
+      related_article_ids?: number[];
+      policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
+      start_offset_global?: number | null;
+      end_offset_global?: number | null;
+      start_line_chunk?: number | null;
+      end_line_chunk?: number | null;
+    }>;
+    context_metrics?: {
+      context_ok_count: number;
+      needs_review_count: number;
+      violation_count: number;
+    };
   };
   reportHtml: string;
   findingsCount: number;
