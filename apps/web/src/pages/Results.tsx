@@ -621,7 +621,7 @@ export function Results() {
             </div>
           )}
           {pillarId && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{pillarId}</span></div>}
-          {rationale && <div>{lang === 'ar' ? 'تعليل المدقق:' : 'Auditor rationale:'} <span className="text-text-main">{rationale}</span></div>}
+          <div>{lang === 'ar' ? 'لماذا اعتُبرت مخالفة:' : 'Why considered a violation:'} <span className="text-text-main">{rationale ?? '—'}</span></div>
         </div>
         {f.startLineChunk != null && (
           <div className="text-[10px] text-text-muted mt-1 text-end">
@@ -780,7 +780,7 @@ export function Results() {
                               </div>
                             )}
                             {f.pillar_id && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{f.pillar_id}</span></div>}
-                            {f.rationale && <div>{lang === 'ar' ? 'تعليل المدقق:' : 'Auditor rationale:'} <span className="text-text-main">{f.rationale}</span></div>}
+                            <div>{lang === 'ar' ? 'لماذا اعتُبرت مخالفة:' : 'Why considered a violation:'} <span className="text-text-main">{f.rationale ?? '—'}</span></div>
                           </div>
                         </div>
                       ))}

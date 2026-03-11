@@ -188,12 +188,10 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                     {f.pillarId}
                   </Text>
                 ) : null}
-                {f.rationale ? (
-                  <Text style={[s.findingBody, rtl]}>
-                    {isAr ? "تعليل المدقق: " : "Auditor rationale: "}
-                    {f.rationale}
-                  </Text>
-                ) : null}
+                <Text style={[s.findingBody, rtl]}>
+                  {isAr ? "لماذا اعتُبرت مخالفة: " : "Why considered a violation: "}
+                  {f.rationale || "—"}
+                </Text>
                 <Text style={[s.findingBody, rtl]}>{isAr ? "الوصف: " : "Description: "}{f.titleAr || "—"}</Text>
               </View>
             ))}
