@@ -226,8 +226,10 @@ export const RATIONALE_ONLY_SYSTEM_MSG = `مهمتك الوحيدة: لكل عن
 ٢) ماذا يعني في السياق السردي
 ٣) لماذا اعتُبر مخالفة أو تحتاج مراجعة وربطها بالمادة
 
-أرجع JSON فقط بالشكل: { "rationales": [ { "canonical_finding_id": "CF-...", "rationale_ar": "النص بالعربية" } ] }
-كل عنصر مُدخل يجب أن يكون له عنصر مُخرج بنفس canonical_finding_id و rationale_ar غير فارغ.`;
+أرجع JSON فقط بهذا الشكل بالضبط ولا شيء غيره:
+{"rationales":[{"canonical_finding_id":"CF-xxx","rationale_ar":"المقتطف من وصف مشهد عنف؛ السياق درامي لكن الوصف يتجاوز ضوابط مادة 9."}]}
+
+كل عنصر مُدخل يجب أن يكون له عنصر مُخرج بنفس canonical_finding_id وقيمة rationale_ar عربية غير فارغة.`;
 
 /**
  * Build lexicon terms string for injection into prompts.

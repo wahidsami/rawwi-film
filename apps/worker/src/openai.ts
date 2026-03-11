@@ -250,23 +250,34 @@ export async function callRationaleOnly(
     model,
     messages: [
       { role: "system", content: RATIONALE_ONLY_SYSTEM_MSG },
-      { role: "user", content: `اكتب rationale_ar لكل عنصر:\n\n${payload}\n\nأرجع JSON فقط بالشكل: { "rationales": [ { "canonical_finding_id": "...", "rationale_ar": "..." } ] }` },
+      { role: "user", content: `اكتب rationale_ar لكل عنصر بالعربية (جملة أو جملتان). أرجع JSON فقط: {"rationales":[{"canonical_finding_id":"...","rationale_ar":"..."}]}\n\nالعناصر:\n\n${payload}` },
     ],
     response_format: { type: "json_object" },
-    max_tokens: 2048,
+    max_tokens: 3072,
     temperature: 0,
     seed: 12345,
   }, { timeout: config.JUDGE_TIMEOUT_MS });
   const raw = resp.choices[0]?.message?.content ?? "{}";
   try {
     const json = extractJsonFromText(raw);
-    const parsed = JSON.parse(json) as { rationales?: Array<{ canonical_finding_id?: string; rationale_ar?: string }> };
-    const list = Array.isArray(parsed.rationales) ? parsed.rationales : [];
+    const parsed = JSON.parse(json) as {
+      rationales?: Array<{ canonical_finding_id?: string; rationale_ar?: string; rationale?: string }>;
+      items?: Array<{ canonical_finding_id?: string; rationale_ar?: string; rationale?: string }>;
+    };
+    const list = Array.isArray(parsed.rationales)
+      ? parsed.rationales
+      : Array.isArray(parsed.items)
+        ? parsed.items
+        : [];
     return list
-      .filter((r) => r?.canonical_finding_id && typeof r.rationale_ar === "string" && r.rationale_ar.trim() !== "")
-      .map((r) => ({ canonical_finding_id: String(r.canonical_finding_id), rationale_ar: String(r.rationale_ar).trim() }));
-  } catch {
-    logger.warn("Rationale-only parse failed", { rawSlice: raw.slice(0, 200) });
+      .filter((r) => r?.canonical_finding_id)
+      .map((r) => {
+        const text = (r.rationale_ar ?? r.rationale ?? "").trim();
+        return text !== "" ? { canonical_finding_id: String(r.canonical_finding_id), rationale_ar: text } : null;
+      })
+      .filter((x): x is RationaleOnlyResult => x != null);
+  } catch (e) {
+    logger.warn("Rationale-only parse failed", { rawSlice: raw.slice(0, 400), error: String(e) });
     return [];
   }
 }

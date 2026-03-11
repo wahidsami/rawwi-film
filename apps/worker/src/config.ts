@@ -8,6 +8,8 @@ export const config = {
   OPENAI_ROUTER_MODEL: process.env.OPENAI_ROUTER_MODEL ?? "gpt-4.1-mini",
   OPENAI_JUDGE_MODEL: process.env.OPENAI_JUDGE_MODEL ?? "gpt-4.1",
   OPENAI_AUDITOR_MODEL: process.env.OPENAI_AUDITOR_MODEL ?? "gpt-4.1",
+  /** Model for rationale-only second pass (why violation). Use gpt-4o for better Arabic reasoning. */
+  OPENAI_RATIONALE_MODEL: process.env.OPENAI_RATIONALE_MODEL ?? "gpt-4o",
   JUDGE_TIMEOUT_MS: parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10),
   POLL_INTERVAL_MS: parseInt(process.env.POLL_INTERVAL_MS ?? "2000", 10),
   LEXICON_REFRESH_MS: 2 * 60 * 1000,
