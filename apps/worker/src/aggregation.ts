@@ -434,6 +434,18 @@ const SEVERITIES = ["low", "medium", "high", "critical"] as const;
 const SEVERITY_ORDER: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 };
 const RATIONALE_FALLBACK = "يتطلب تقييم مراجع مختص.";
 
+/** Detect rationale that is only "المقتطف يخالف ضوابط المادة X" + excerpt (no real explanation). */
+function isSnippetOnlyRationale(rationale: string | null | undefined, evidenceSnippet: string | null | undefined): boolean {
+  if (!rationale || rationale.trim() === "") return false;
+  const r = rationale.trim();
+  if (!/المقتطف يخالف ضوابط/.test(r)) return false;
+  const hasGuillemets = /«/.test(r) && /»/.test(r);
+  const snippetLen = (evidenceSnippet || "").trim().length;
+  const afterPhrase = r.replace(/^.*?المقتطف يخالف ضوابط[^.]*\.?\s*/, "").trim();
+  const isMostlySnippet = snippetLen > 20 && afterPhrase.length <= snippetLen + 30;
+  return hasGuillemets && (r.length < 180 || isMostlySnippet);
+}
+
 const BROAD_ARTICLES = new Set([4, 5]);
 
 function primaryScoreForDb(f: DbFinding): number[] {
@@ -560,11 +572,13 @@ export function buildSummaryJson(
       severity: primary.severity,
       confidence: primary.confidence ?? 0,
       final_ruling: (v3.final_ruling as string | undefined) ?? null,
-      rationale: (primary.rationale_ar != null && primary.rationale_ar.trim() !== "")
-        ? primary.rationale_ar
-        : ((v3.rationale_ar as string | undefined) != null && (v3.rationale_ar as string).trim() !== "")
-          ? (v3.rationale_ar as string)
-          : RATIONALE_FALLBACK,
+      rationale: (() => {
+        const fromPrimary = (primary.rationale_ar != null && primary.rationale_ar.trim() !== "") ? primary.rationale_ar : null;
+        const fromV3 = ((v3.rationale_ar as string | undefined) != null && (v3.rationale_ar as string).trim() !== "") ? (v3.rationale_ar as string) : null;
+        const raw = fromPrimary ?? fromV3 ?? RATIONALE_FALLBACK;
+        if (isSnippetOnlyRationale(raw, primary.evidence_snippet)) return RATIONALE_FALLBACK;
+        return raw;
+      })(),
       pillar_id: (v3.pillar_id as string | undefined) ?? null,
       primary_article_id: primary.article_id,
       related_article_ids: relatedArticleIds,
