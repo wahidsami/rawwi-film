@@ -516,6 +516,7 @@ export function buildSummaryJson(
 
   const overlapRatio =
     analysisOptions?.mergeStrategy === "every_occurrence" ? OVERLAP_EVERY_OCCURRENCE : OVERLAP_SAME_LOCATION;
+  const oneCardPerOccurrence = analysisOptions?.mergeStrategy === "every_occurrence";
 
   // Build canonical findings from overlap clusters first (single source of truth).
   const canonicalMap = new Map<string, {
@@ -536,11 +537,16 @@ export function buildSummaryJson(
     end_line_chunk?: number | null;
   }>();
 
-  const clusters = clusterByOverlap(deduped, overlapRatio);
-  for (const list of clusters.values()) {
+  const clusters = oneCardPerOccurrence
+    ? new Map(deduped.map((f, i) => [i, [f]]))
+    : clusterByOverlap(deduped, overlapRatio);
+
+  for (const [clusterIndex, list] of clusters.entries()) {
     const primary = choosePrimaryFromDb(list);
     const relatedArticleIds = [...new Set(list.map((f) => f.article_id).filter((id) => id !== primary.article_id))];
-    const cId = `CF-${Buffer.from(clusterCanonicalKey(list)).toString("base64").replace(/=+$/g, "").slice(0, 20)}`;
+    const cId = oneCardPerOccurrence
+      ? `CF-every-${clusterIndex}-${primary.article_id}`
+      : `CF-${Buffer.from(clusterCanonicalKey(list)).toString("base64").replace(/=+$/g, "").slice(0, 20)}`;
     const locationObj = ((primary.location as Record<string, unknown>) ?? {}) as Record<string, unknown>;
     const v3 = ((locationObj.v3 as Record<string, unknown> | undefined) ?? {}) as Record<string, unknown>;
     const policyLinks: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }> = [
