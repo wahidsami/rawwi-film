@@ -696,13 +696,13 @@ export function buildReportHtml(summary: SummaryJson): string {
     (s.report_hints?.length ?? 0) > 0
       ? `
   <section>
-    <h2>تنبيهات / ملاحظات للمخرج</h2>
+    <h2>ملاحظات خاصة</h2>
     <p>هذه النقاط ليست مخالفات؛ يُنصح بمراعاتها عند التصوير (مثلاً ضوابط المظهر العام والقيم الإسلامية).</p>
     ${(s.report_hints ?? [])
       .map(
         (f) => `
     <div style="margin:1em 0; padding:0.5em; border:1px solid #7dd3fc; background:#f0f9ff;">
-      <strong>${f.title_ar}</strong> (تنبيه، ثقة: ${f.confidence})<br/>
+      <strong>ملاحظة</strong> (ثقة: ${f.confidence})<br/>
       <em>النص:</em> "${f.evidence_snippet}"<br/>
       <em>لماذا ليست مخالفة:</em> ${f.rationale ?? "—"}
     </div>`

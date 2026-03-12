@@ -1089,7 +1089,7 @@ export function Results() {
             <>
               <h3 className="font-bold text-xl text-text-main border-b border-info/40 pb-2 flex items-center gap-2 mt-12">
                 <Info className="w-5 h-5 text-info" />
-                {lang === 'ar' ? 'تنبيهات / ملاحظات للمخرج' : 'Hints for Director'}
+                {lang === 'ar' ? 'ملاحظات خاصة' : 'Special notes'}
                 <Badge variant="outline" className="ms-2 bg-info/10 text-info border-info/30">{reportHints.length}</Badge>
               </h3>
               <p className="text-text-muted text-sm mt-1 mb-4">
@@ -1101,9 +1101,9 @@ export function Results() {
                 {reportHints.map((f, idx) => (
                   <div key={`hint-${f.canonical_finding_id}-${idx}`} className="bg-info/5 border border-info/30 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-text-main text-sm">{f.title_ar}</span>
+                      <span className="font-semibold text-text-main text-sm">{lang === 'ar' ? 'ملاحظة' : 'Note'}</span>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px] bg-info/10 text-info border-info/30">{lang === 'ar' ? 'تنبيه' : 'Hint'}</Badge>
+                        <Badge variant="outline" className="text-[10px] bg-info/10 text-info border-info/30">{lang === 'ar' ? 'ملاحظة' : 'Note'}</Badge>
                         <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
                       </div>
                     </div>

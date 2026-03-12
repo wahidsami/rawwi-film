@@ -201,7 +201,7 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
 
         {((data.reportHints ?? []).length > 0) && (
           <View style={{ marginTop: 16 }}>
-            <Text style={[s.sectionTitle, rtl]}>{isAr ? "تنبيهات / ملاحظات للمخرج" : "Hints for Director"}</Text>
+            <Text style={[s.sectionTitle, rtl]}>{isAr ? "ملاحظات خاصة" : "Special notes"}</Text>
             <Text style={[s.findingMeta, rtl]}>
               {isAr
                 ? "هذه النقاط ليست مخالفات؛ يُنصح بمراعاتها عند التصوير (مثلاً ضوابط المظهر العام والقيم الإسلامية)."
@@ -209,13 +209,13 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
             </Text>
             {(data.reportHints ?? []).filter(Boolean).map((f, idx) => (
               <View key={`hint-${f.id ?? idx}`} style={[s.finding, { backgroundColor: "#f0f9ff", borderColor: "#7dd3fc", marginTop: 8 }]}>
-                <Text style={[s.findingTitle, rtl]}>{f.titleAr || "—"}</Text>
+                <Text style={[s.findingTitle, rtl]}>{isAr ? "ملاحظة" : "Note"}</Text>
                 <Text style={[s.findingSnippet, rtl]}>
                   {isAr ? "النص: " : "Text: "}
                   "{f.evidenceSnippet || "—"}"
                 </Text>
                 <View style={[s.findingChipsRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
-                  <Text style={[s.chip, s.chipInfo]}>{isAr ? "تنبيه" : "Hint"}</Text>
+                  <Text style={[s.chip, s.chipInfo]}>{isAr ? "ملاحظة" : "Note"}</Text>
                   <Text style={[s.chip, s.chipInfo]}>{isAr ? "الثقة" : "Conf"} {Math.round((f.confidence || 0) * 100)}%</Text>
                 </View>
                 {f.primaryArticleId ? (
