@@ -8,15 +8,29 @@ import type { QuickAnalysisPdfFinding } from "./mapper";
 const A4_WIDTH = 595.28;
 const A4_HEIGHT = 841.89;
 
+type QuickPdfHint = {
+  id: string;
+  articleId: number;
+  titleAr: string;
+  severity: string;
+  confidence: number;
+  evidenceSnippet: string;
+  source?: string;
+  primaryArticleId?: number;
+  relatedArticleIds?: number[];
+  rationale?: string | null;
+};
+
 export const QuickAnalysisPdf: React.FC<{
   scriptTitle: string;
   createdAt: string;
   findings: QuickAnalysisPdfFinding[];
+  reportHints?: QuickPdfHint[];
   lang: "ar" | "en";
   dateFormat?: string;
   logoUrl?: string;
   coverImageDataUrl?: string | null;
-}> = ({ scriptTitle, createdAt, findings, lang, dateFormat, logoUrl, coverImageDataUrl }) => {
+}> = ({ scriptTitle, createdAt, findings, reportHints = [], lang, dateFormat, logoUrl, coverImageDataUrl }) => {
   const isAr = lang === "ar";
   const rtl = isAr ? s.rtl : {};
   const safeFindings = (findings || []).filter(Boolean).map((f, idx) => ({
@@ -139,6 +153,38 @@ export const QuickAnalysisPdf: React.FC<{
             })}
           </View>
         ))}
+
+        {(reportHints?.length ?? 0) > 0 && (
+          <View style={{ marginTop: 16 }}>
+            <Text style={[s.sectionTitle, rtl]}>{isAr ? "ملاحظات خاصة" : "Special notes"}</Text>
+            <Text style={[s.findingMeta, rtl]}>
+              {isAr
+                ? "هذه النقاط ليست مخالفات؛ يُنصح بمراعاتها عند التصوير (مثلاً ضوابط المظهر العام والقيم الإسلامية)."
+                : "These are not violations; consider them when filming (e.g. modesty and Islamic guidelines)."}
+            </Text>
+            {(reportHints ?? []).filter(Boolean).map((f, idx) => (
+              <View key={`quick-hint-${f.id ?? idx}`} style={[s.finding, { backgroundColor: "#f0f9ff", borderColor: "#7dd3fc", marginTop: 8 }]}>
+                <Text style={[s.findingTitle, rtl]}>{isAr ? "ملاحظة" : "Note"}</Text>
+                <Text style={[s.findingSnippet, rtl]}>
+                  {isAr ? "النص: " : "Text: "}"{f.evidenceSnippet || "—"}"
+                </Text>
+                <View style={[s.findingChipsRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+                  <Text style={[s.chip, s.chipInfo]}>{isAr ? "ملاحظة" : "Note"}</Text>
+                  <Text style={[s.chip, s.chipInfo]}>{isAr ? "الثقة" : "Conf"} {Math.round((f.confidence || 0) * 100)}%</Text>
+                </View>
+                {f.primaryArticleId != null && (
+                  <Text style={[s.findingMeta, rtl]}>
+                    {isAr ? "المادة: " : "Article: "}{articleLabel(f.primaryArticleId)}
+                  </Text>
+                )}
+                <Text style={[s.findingRationaleLabel, rtl]}>
+                  {isAr ? "لماذا ليست مخالفة: " : "Why not a violation: "}
+                </Text>
+                <Text style={[s.findingRationaleText, rtl]}>{f.rationale ?? "—"}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </Page>
     </Document>
   );

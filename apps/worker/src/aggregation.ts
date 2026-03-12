@@ -726,6 +726,7 @@ export function buildSummaryJson(
     checklist_articles,
     findings_by_article,
     canonical_findings,
+    report_hints: [] as SummaryJson["report_hints"],
   };
 }
 

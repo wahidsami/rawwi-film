@@ -20,6 +20,17 @@ async function toDataUrl(url: string): Promise<string | null> {
   }
 }
 
+type ReportHintForQuickPdf = {
+  canonical_finding_id?: string;
+  title_ar?: string;
+  evidence_snippet?: string;
+  severity?: string;
+  confidence?: number;
+  rationale?: string | null;
+  primary_article_id?: number | null;
+  related_article_ids?: number[];
+};
+
 export async function downloadQuickAnalysisPdf(params: {
   scriptTitle: string;
   clientName?: string;
@@ -27,6 +38,7 @@ export async function downloadQuickAnalysisPdf(params: {
   findings?: AnalysisFinding[] | null;
   findingsByArticle?: Array<{ article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string; rationale?: string | null }> }> | null;
   canonicalFindings?: CanonicalFindingForQuickPdf[] | null;
+  reportHints?: ReportHintForQuickPdf[] | null;
   lang: "ar" | "en";
   dateFormat?: string;
 }): Promise<void> {
@@ -40,10 +52,23 @@ export async function downloadQuickAnalysisPdf(params: {
     params.findingsByArticle,
     params.canonicalFindings
   );
+  const reportHintsMapped = (params.reportHints ?? []).map((f, idx) => ({
+    id: f.canonical_finding_id ?? `hint-${idx}`,
+    articleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
+    titleAr: f.title_ar ?? "—",
+    severity: "info" as const,
+    confidence: f.confidence ?? 0,
+    evidenceSnippet: f.evidence_snippet ?? "",
+    source: "ai" as const,
+    primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : undefined,
+    relatedArticleIds: f.related_article_ids ?? [],
+    rationale: f.rationale ?? null,
+  }));
   const doc = React.createElement(QuickAnalysisPdf, {
     scriptTitle: params.scriptTitle,
     createdAt: params.createdAt,
     findings,
+    reportHints: reportHintsMapped,
     lang: params.lang,
     dateFormat: params.dateFormat,
     logoUrl: logoUrl ?? undefined,
