@@ -163,16 +163,20 @@ export async function runDeepAuditorPass(args: {
   if (rationaleItems.length > 0) {
     const model = config.OPENAI_RATIONALE_MODEL;
     const generatedByCId = new Map<string, string>();
-    for (let i = 0; i < rationaleItems.length; i += RATIONALE_ONLY_BATCH_SIZE) {
-      const batch = rationaleItems.slice(i, i + RATIONALE_ONLY_BATCH_SIZE);
-      const results = await callRationaleOnly(batch, model);
-      for (const r of results) {
-        if (r.rationale_ar && r.rationale_ar.trim() !== "") generatedByCId.set(r.canonical_finding_id, r.rationale_ar.trim());
+    try {
+      for (let i = 0; i < rationaleItems.length; i += RATIONALE_ONLY_BATCH_SIZE) {
+        const batch = rationaleItems.slice(i, i + RATIONALE_ONLY_BATCH_SIZE);
+        const results = await callRationaleOnly(batch, model);
+        for (const r of results) {
+          if (r.rationale_ar && r.rationale_ar.trim() !== "") generatedByCId.set(r.canonical_finding_id, r.rationale_ar.trim());
+        }
       }
-    }
-    logger.info("Rationale-only pass", { model, requested: rationaleItems.length, generated: generatedByCId.size });
-    if (generatedByCId.size === 0) {
-      logger.warn("Rationale-only pass returned no rationales; consider OPENAI_RATIONALE_MODEL=gpt-4o or check logs for parse errors");
+      logger.info("Rationale-only pass", { model, requested: rationaleItems.length, generated: generatedByCId.size });
+      if (generatedByCId.size === 0) {
+        logger.warn("Rationale-only pass returned no rationales; consider OPENAI_RATIONALE_MODEL=gpt-4o or check logs for parse errors");
+      }
+    } catch (err) {
+      logger.warn("Rationale-only pass failed, keeping default rationale", { model, error: String(err) });
     }
     if (generatedByCId.size > 0) {
       return merged.map((m) => {
