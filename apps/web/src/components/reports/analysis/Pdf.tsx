@@ -21,6 +21,7 @@ export interface AnalysisSectionPdfData {
   clientName: string;
   createdAt: string;
   findings: AnalysisPdfFinding[];
+  reportHints?: AnalysisPdfFinding[];
   scriptSummary?: ScriptSummaryForPdf | null;
   lang?: "ar" | "en";
 }
@@ -197,6 +198,40 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
             ))}
           </View>
         ))}
+
+        {((data.reportHints ?? []).length > 0) && (
+          <View style={{ marginTop: 16 }}>
+            <Text style={[s.sectionTitle, rtl]}>{isAr ? "تنبيهات / ملاحظات للمخرج" : "Hints for Director"}</Text>
+            <Text style={[s.findingMeta, rtl]}>
+              {isAr
+                ? "هذه النقاط ليست مخالفات؛ يُنصح بمراعاتها عند التصوير (مثلاً ضوابط المظهر العام والقيم الإسلامية)."
+                : "These are not violations; consider them when filming (e.g. modesty and Islamic guidelines)."}
+            </Text>
+            {(data.reportHints ?? []).filter(Boolean).map((f, idx) => (
+              <View key={`hint-${f.id ?? idx}`} style={[s.finding, { backgroundColor: "#f0f9ff", borderColor: "#7dd3fc", marginTop: 8 }]}>
+                <Text style={[s.findingTitle, rtl]}>{f.titleAr || "—"}</Text>
+                <Text style={[s.findingSnippet, rtl]}>
+                  {isAr ? "النص: " : "Text: "}
+                  "{f.evidenceSnippet || "—"}"
+                </Text>
+                <View style={[s.findingChipsRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+                  <Text style={[s.chip, s.chipInfo]}>{isAr ? "تنبيه" : "Hint"}</Text>
+                  <Text style={[s.chip, s.chipInfo]}>{isAr ? "الثقة" : "Conf"} {Math.round((f.confidence || 0) * 100)}%</Text>
+                </View>
+                {f.primaryArticleId ? (
+                  <Text style={[s.findingMeta, rtl]}>
+                    {isAr ? "المادة: " : "Article: "}
+                    {f.primaryArticleId}
+                  </Text>
+                ) : null}
+                <Text style={[s.findingBody, rtl]}>
+                  {isAr ? "لماذا ليست مخالفة: " : "Why not a violation: "}
+                  {f.rationale || "—"}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
       </Page>
     </Document>
   );

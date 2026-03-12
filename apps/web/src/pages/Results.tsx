@@ -20,7 +20,7 @@ import { downloadQuickAnalysisPdf } from '@/components/reports/quick-analysis/do
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
-  CheckCircle2, Shield, FileDown,
+  CheckCircle2, Shield, FileDown, Info,
 } from 'lucide-react';
 
 import { getPolicyArticles, getArticleDomainId, normalizeAtomId, atomIdNumeric } from '@/data/policyMap';
@@ -234,6 +234,7 @@ export function Results() {
   const summary = report.summaryJson;
   const checklistMap = new Map(summary.checklist_articles.map(c => [c.article_id, c]));
   const canonicalSummaryFindings: CanonicalSummaryFinding[] = (summary.canonical_findings || []).filter(Boolean);
+  const reportHints: CanonicalSummaryFinding[] = (summary.report_hints || []).filter(Boolean);
 
   // Split real findings into violations vs approved for card rendering
   const hasRealFindings = findings.length > 0;
@@ -530,6 +531,7 @@ export function Results() {
         findings: (findings || []).filter((f): f is AnalysisFinding => Boolean(f)),
         findingsByArticle: summary?.findings_by_article,
         canonicalFindings: summary?.canonical_findings,
+        reportHints: summary?.report_hints ?? undefined,
         scriptSummary: summary?.script_summary ?? undefined,
         lang: (isAr ? 'ar' : 'en') as const,
         dateFormat,
@@ -1081,6 +1083,42 @@ export function Results() {
             : hasRealFindings
               ? renderFindingsFromReal(displayViolations)
               : renderFindingsFromSummary()}
+
+          {/* Report hints: not violations but notes for director (e.g. Islamic rules when filming) */}
+          {reportHints.length > 0 && (
+            <>
+              <h3 className="font-bold text-xl text-text-main border-b border-info/40 pb-2 flex items-center gap-2 mt-12">
+                <Info className="w-5 h-5 text-info" />
+                {lang === 'ar' ? 'تنبيهات / ملاحظات للمخرج' : 'Hints for Director'}
+                <Badge variant="outline" className="ms-2 bg-info/10 text-info border-info/30">{reportHints.length}</Badge>
+              </h3>
+              <p className="text-text-muted text-sm mt-1 mb-4">
+                {lang === 'ar'
+                  ? 'هذه النقاط ليست مخالفات؛ يُنصح بمراعاتها عند التصوير (مثلاً ضوابط المظهر العام والقيم الإسلامية).'
+                  : 'These are not violations; consider them when filming (e.g. modesty and Islamic guidelines).'}
+              </p>
+              <div className="space-y-4">
+                {reportHints.map((f, idx) => (
+                  <div key={`hint-${f.canonical_finding_id}-${idx}`} className="bg-info/5 border border-info/30 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-text-main text-sm">{f.title_ar}</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-[10px] bg-info/10 text-info border-info/30">{lang === 'ar' ? 'تنبيه' : 'Hint'}</Badge>
+                        <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
+                      </div>
+                    </div>
+                    <div className="bg-background/50 p-3 rounded-md border border-info/20 text-sm text-text-main italic" dir="rtl">"{f.evidence_snippet}"</div>
+                    <div className="mt-2 text-xs text-text-muted space-y-1">
+                      {f.primary_article_id && (
+                        <div>{lang === 'ar' ? 'المادة:' : 'Article:'} <span className="text-text-main">{articleLabel(f.primary_article_id)}</span></div>
+                      )}
+                      <div>{lang === 'ar' ? 'لماذا ليست مخالفة:' : 'Why not a violation:'} <span className="text-text-main">{f.rationale ?? '—'}</span></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
           {/* Approved section */}
           {hasRealFindings && displayApprovedFindings.length > 0 && (

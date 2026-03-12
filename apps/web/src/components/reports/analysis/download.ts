@@ -39,6 +39,19 @@ export interface DownloadAnalysisPdfParams {
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
   }> | null;
+  reportHints?: Array<{
+    canonical_finding_id: string;
+    title_ar: string;
+    evidence_snippet: string;
+    severity: string;
+    confidence: number;
+    rationale?: string | null;
+    pillar_id?: string | null;
+    primary_article_id?: number | null;
+    related_article_ids?: number[];
+    start_line_chunk?: number | null;
+    end_line_chunk?: number | null;
+  }> | null;
   scriptSummary?: {
     synopsis_ar: string;
     key_risky_events_ar?: string;
@@ -53,6 +66,21 @@ export interface DownloadAnalysisPdfParams {
 export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Promise<void> {
   const origin = window.location.origin;
   const findings = mapAnalysisFindingsForPdf(params.findings, params.findingsByArticle, params.canonicalFindings);
+  const reportHintsMapped = (params.reportHints || []).map((f, idx) => ({
+    id: f.canonical_finding_id ?? `hint-${idx}`,
+    articleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
+    titleAr: f.title_ar ?? "—",
+    severity: "info" as const,
+    confidence: f.confidence ?? 0,
+    evidenceSnippet: f.evidence_snippet ?? "",
+    source: "ai" as const,
+    primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
+    relatedArticleIds: f.related_article_ids ?? [],
+    rationale: f.rationale ?? null,
+    pillarId: f.pillar_id ?? null,
+    startLineChunk: f.start_line_chunk ?? undefined,
+    endLineChunk: f.end_line_chunk ?? undefined,
+  }));
   const [coverImageDataUrl, logoDataUrl] = await Promise.all([
     toDataUrl(`${origin}/cover.jpg`),
     toDataUrl(`${origin}/dashboardlogo.png`),
@@ -63,6 +91,7 @@ export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Pr
       clientName: params.clientName,
       createdAt: params.createdAt,
       findings,
+      reportHints: reportHintsMapped,
       scriptSummary: params.scriptSummary ?? undefined,
       lang: params.lang,
     },

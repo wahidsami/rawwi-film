@@ -94,7 +94,25 @@ export type SummaryJson = {
     compliance_posture_ar?: string;
     confidence: number;
   };
-};
+  /** Findings where rationale says "not a violation" — show as تنبيهات/ملاحظات للمخرج. */
+  report_hints?: Array<{
+    canonical_finding_id: string;
+    title_ar: string;
+    evidence_snippet: string;
+    severity: string;
+    confidence: number;
+    final_ruling?: string | null;
+    rationale?: string | null;
+    pillar_id?: string | null;
+    primary_article_id?: number | null;
+    related_article_ids?: number[];
+    policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
+    start_offset_global?: number | null;
+    end_offset_global?: number | null;
+    start_line_chunk?: number | null;
+    end_line_chunk?: number | null;
+  }>;
+}
 
 const COMPLIANCE_NEUTRAL_HINTS = ["محايد", "سياق درامي", "ليس تحريضي", "ليس تمجيد", "متوافق إجمالاً", "درامي نفسي"];
 
@@ -141,6 +159,233 @@ function applySummaryContextToRulings(summary: SummaryJson): void {
       }
     }
   }
+}
+
+/** Phrases in rationale that mean "not a violation" / acceptable context — move to report_hints. */
+const RATIONALE_SAYS_NOT_VIOLATION = [
+  // Explicit "not a violation"
+  "لا يعد مخالفة",
+  "لا توجد مخالفة",
+  "لا يعتبر مخالفة",
+  "لا تُعد مخالفة",
+  "لا تعتبر مخالفة",
+  "ليس مخالفة",
+  "لا يشكل مخالفة",
+  "لا توجد مخالفة واضحة",
+  "لا يصل إلى حد المخالفة",
+  "لا يرقى إلى مخالفة",
+  "لا يُصنف كمخالفة",
+  "لا يمكن اعتباره مخالفة",
+  "لا يشكل انتهاكاً",
+  "لا يشكل تجاوزاً",
+  "لا يعد تجاوزاً",
+  // Context acceptable / within bounds
+  "السياق مقبول",
+  "يعتبر السياق مقبولاً",
+  "والسياق مقبولاً",
+  "السياق طبيعي ولا يتجاوز",
+  "السياق طبيعي",
+  "ضمن السياق المقبول",
+  "سياق مقبول",
+  "مقبول في السياق",
+  "متوافق مع الضوابط",
+  "ضمن الضوابط",
+  "لا يتعارض مع الضوابط",
+  "لا خرق للضوابط",
+  "لا انتهاك واضح",
+  // Does not exceed / breach
+  "لا يتجاوز ضوابط",
+  "لا يخرق",
+  "لا يخرق ضوابط",
+  "لا يتجاوز الضوابط",
+  "غير متجاوز للضوابط",
+  // Positive handling / treatment
+  "معالجة إيجابية",
+  "معالجة إيجابية للسياق",
+  "يعزز القيم",
+  "رفض السلوك",
+  // Innocent / no inappropriate content
+  "بريء",
+  "براءة",
+  "رومانسي بريء",
+  "غموض رومانسي بريء",
+  "دون أي إيحاء",
+  "لا إيحاءات جنسية",
+  "لا يتضمن أي إيحاء",
+  "لا يتضمن إيحاءات",
+  "لا تجاوزات أخلاقية",
+  "دون مشهد غير لائق",
+  "لا يوجد مشهد غير لائق",
+  "لا وصف جنسي",
+  "دون وصف جنسي",
+  "لا يشكل محتوى غير لائق",
+  // "لا يتضمن أي" — use specific follow-ups to avoid false positives; keep only safe combo
+  "لا يتضمن أي إيحاءات",
+  "لا يتضمن أي تجاوز",
+  "ولا يعد",
+  // Dramatic / narrative / medical context (not endorsement)
+  "سياق درامي فقط",
+  "جزء من السياق الدرامي",
+  "في إطار درامي",
+  "في سياق مرضي",
+  "في إطار علاجي",
+  "جزء من هذيان",
+  "هذيان المريض",
+  "لا يعكس تحريضاً",
+  "ليس تحريضاً",
+  "ليس تمجيداً للعنف",
+  "لا يروج للعنف",
+  "لا يشكل تحريضاً",
+  "لا يروّج للعنف",
+  "يعكس كابوساً",
+  "يعكس ذكرى",
+  "ضمن إطار العمل الدرامي",
+  "عنصر تشويق",
+  "تشويق أو غموض رومانسي بريء",
+];
+
+function rationaleSaysNotViolation(rationale: string | null | undefined): boolean {
+  if (!rationale || rationale.trim() === "") return false;
+  const r = rationale.trim();
+  return RATIONALE_SAYS_NOT_VIOLATION.some((phrase) => r.includes(phrase));
+}
+
+type CanonicalFindingItem = NonNullable<SummaryJson["canonical_findings"]>[number];
+
+/**
+ * Final gate: if the "why violation" rationale actually says it's NOT a violation,
+ * move that finding to report_hints so it appears as تنبيهات/ملاحظات للمخرج, not in violations count.
+ */
+function applyReportGate(summary: SummaryJson): void {
+  const canon = summary.canonical_findings;
+  if (!canon?.length) return;
+
+  const violations: CanonicalFindingItem[] = [];
+  const hints: CanonicalFindingItem[] = [];
+
+  for (const f of canon) {
+    if (rationaleSaysNotViolation(f.rationale)) {
+      hints.push(f);
+    } else {
+      violations.push(f);
+    }
+  }
+
+  if (hints.length === 0) return;
+
+  summary.canonical_findings = violations;
+  summary.report_hints = hints;
+
+  const policyArticles = getPolicyArticles();
+  const severityOrder = (s: string) => (SEVERITIES.indexOf(s as (typeof SEVERITIES)[number]) + 1) || 0;
+
+  const severity_counts = { low: 0, medium: 0, high: 0, critical: 0 };
+  for (const f of violations) {
+    if (SEVERITIES.includes(f.severity as (typeof SEVERITIES)[number])) {
+      severity_counts[f.severity as keyof typeof severity_counts]++;
+    }
+  }
+
+  const canonicalByPrimary = new Map<number, CanonicalFindingItem[]>();
+  for (const f of violations) {
+    const aid = f.primary_article_id ?? 0;
+    if (aid === 0 || aid === OUT_OF_SCOPE_ARTICLE_ID) continue;
+    if (!canonicalByPrimary.has(aid)) canonicalByPrimary.set(aid, []);
+    canonicalByPrimary.get(aid)!.push(f);
+  }
+
+  summary.findings_by_article = policyArticles
+    .filter((a) => a.articleId !== OUT_OF_SCOPE_ARTICLE_ID)
+    .map((art) => {
+      const list = canonicalByPrimary.get(art.articleId) ?? [];
+      const counts = { low: 0, medium: 0, high: 0, critical: 0 };
+      for (const f of list) {
+        if (SEVERITIES.includes(f.severity as (typeof SEVERITIES)[number])) {
+          counts[f.severity as keyof typeof counts]++;
+        }
+      }
+      const sorted = [...list].sort(
+        (a, b) =>
+          severityOrder(b.severity) - severityOrder(a.severity) || (b.confidence - a.confidence)
+      );
+      const top_findings = sorted.slice(0, 10).map((f) => ({
+        atom_id: null as string | null,
+        title_ar: f.title_ar,
+        severity: f.severity,
+        confidence: f.confidence,
+        evidence_snippet: f.evidence_snippet,
+        location: {
+          v3: {
+            primary_article_id: f.primary_article_id,
+            related_article_ids: f.related_article_ids,
+            canonical_finding_id: f.canonical_finding_id,
+            pillar_id: f.pillar_id,
+            rationale: f.rationale,
+            final_ruling: f.final_ruling,
+            policy_links: f.policy_links,
+          },
+        } as Record<string, unknown>,
+        start_offset_global: f.start_offset_global,
+        end_offset_global: f.end_offset_global,
+        start_line_chunk: f.start_line_chunk,
+        end_line_chunk: f.end_line_chunk,
+        rationale: f.rationale ?? RATIONALE_FALLBACK,
+        final_ruling: f.final_ruling ?? null,
+        pillar_id: f.pillar_id ?? null,
+        primary_article_id: f.primary_article_id ?? null,
+        related_article_ids: f.related_article_ids ?? [],
+        canonical_finding_id: f.canonical_finding_id,
+        policy_links: f.policy_links ?? [],
+      }));
+      return {
+        article_id: art.articleId,
+        title_ar: art.title_ar,
+        counts,
+        triggered_atoms: [] as string[],
+        top_findings,
+      };
+    })
+    .filter((entry) => entry.top_findings.length > 0);
+
+  summary.checklist_articles = policyArticles
+    .filter((a) => a.articleId !== OUT_OF_SCOPE_ARTICLE_ID)
+    .map((art) => {
+      const list = canonicalByPrimary.get(art.articleId) ?? [];
+      const counts = { low: 0, medium: 0, high: 0, critical: 0 };
+      for (const f of list) {
+        if (SEVERITIES.includes(f.severity as (typeof SEVERITIES)[number])) {
+          counts[f.severity as keyof typeof counts]++;
+        }
+      }
+      const total = list.length;
+      const hasCritical = counts.critical > 0;
+      const hasHigh = counts.high > 0;
+      const hasMedium = counts.medium > 0;
+      const hasLow = counts.low > 0;
+      let status: "ok" | "not_scanned" | "warning" | "fail" = "ok";
+      if (total === 0) status = "ok";
+      else if (hasCritical || hasHigh) status = "fail";
+      else if (hasMedium || hasLow) status = "warning";
+      return {
+        article_id: art.articleId,
+        title_ar: art.title_ar,
+        status,
+        counts,
+        triggered_atoms: [] as string[],
+      };
+    });
+
+  summary.totals.findings_count = violations.length;
+  summary.totals.unique_incidents_count = violations.length;
+  summary.totals.severity_counts = severity_counts;
+
+  if (summary.context_metrics) {
+    summary.context_metrics.violation_count = violations.filter((x) => x.final_ruling === "violation").length;
+    summary.context_metrics.needs_review_count = violations.filter((x) => x.final_ruling === "needs_review").length;
+    summary.context_metrics.context_ok_count = violations.filter((x) => x.final_ruling === "context_ok").length;
+  }
+
+  logger.info("Report gate applied", { movedToHints: hints.length, violationsCount: violations.length });
 }
 
 type DbFinding = {
@@ -447,6 +692,25 @@ export function buildReportHtml(summary: SummaryJson): string {
     }
   }
 
+  const hintsHtml =
+    (s.report_hints?.length ?? 0) > 0
+      ? `
+  <section>
+    <h2>تنبيهات / ملاحظات للمخرج</h2>
+    <p>هذه النقاط ليست مخالفات؛ يُنصح بمراعاتها عند التصوير (مثلاً ضوابط المظهر العام والقيم الإسلامية).</p>
+    ${(s.report_hints ?? [])
+      .map(
+        (f) => `
+    <div style="margin:1em 0; padding:0.5em; border:1px solid #7dd3fc; background:#f0f9ff;">
+      <strong>${f.title_ar}</strong> (تنبيه، ثقة: ${f.confidence})<br/>
+      <em>النص:</em> "${f.evidence_snippet}"<br/>
+      <em>لماذا ليست مخالفة:</em> ${f.rationale ?? "—"}
+    </div>`
+      )
+      .join("")}
+  </section>`
+      : "";
+
   return `<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head><meta charset="utf-8"/><title>تقرير التحليل</title></head>
@@ -474,6 +738,7 @@ export function buildReportHtml(summary: SummaryJson): string {
     <h2>٤ النتائج التفصيلية</h2>
     ${detailsHtml}
   </section>
+  ${hintsHtml}
 </body>
 </html>`;
 }
@@ -578,6 +843,7 @@ export async function runAggregation(jobId: string): Promise<void> {
     if (scriptSummary) summary.script_summary = scriptSummary;
   }
   applySummaryContextToRulings(summary);
+  applyReportGate(summary);
 
   const reportHtml = buildReportHtml(summary);
 

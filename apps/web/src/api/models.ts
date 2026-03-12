@@ -292,6 +292,23 @@ export interface Report {
       compliance_posture_ar?: string;
       confidence: number;
     };
+    /** Findings where rationale says "not a violation" — show as تنبيهات/ملاحظات للمخرج. */
+    report_hints?: Array<{
+      canonical_finding_id: string;
+      title_ar: string;
+      evidence_snippet: string;
+      severity: string;
+      confidence: number;
+      final_ruling?: string | null;
+      rationale?: string | null;
+      pillar_id?: string | null;
+      primary_article_id?: number | null;
+      related_article_ids?: number[];
+      start_offset_global?: number | null;
+      end_offset_global?: number | null;
+      start_line_chunk?: number | null;
+      end_line_chunk?: number | null;
+    }>;
   };
   reportHtml: string;
   findingsCount: number;
