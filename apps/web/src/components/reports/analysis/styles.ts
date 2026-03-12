@@ -44,6 +44,8 @@ export const analysisStyles = StyleSheet.create({
   chipInfo: { backgroundColor: "#F3F4F6", borderColor: "#D1D5DB", color: "#374151" },
   findingMeta: { fontSize: 8, color: "#6B7280", marginBottom: 3 },
   findingBody: { fontSize: 9, lineHeight: 1.4 },
+  findingRationaleLabel: { fontSize: 9, fontWeight: "bold", marginTop: 6, marginBottom: 2, color: "#111827" },
+  findingRationaleText: { fontSize: 9, lineHeight: 1.45, color: "#374151" },
   rtl: { textAlign: "right" },
   cover: { backgroundColor: "transparent", padding: 0, justifyContent: "flex-end" },
   coverTitle: { color: "#FFFFFF", fontSize: 24, fontWeight: "bold", marginBottom: 8 },

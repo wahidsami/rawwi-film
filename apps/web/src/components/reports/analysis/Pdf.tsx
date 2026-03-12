@@ -89,6 +89,12 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
     return s.chipInfo;
   };
 
+  const articleLabel = (articleId: number) => {
+    const art = getPolicyArticle(articleId);
+    if (!art) return isAr ? `مادة ${articleId}` : `Article ${articleId}`;
+    return isAr ? `مادة ${articleId}: ${art.title_ar}` : `Article ${articleId}: ${art.title_ar}`;
+  };
+
   return (
     <Document>
       <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
@@ -160,50 +166,56 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                 ? `مادة ${articleId}: ${getPolicyArticle(Number(articleId))?.title_ar ?? ""}`
                 : `Article ${articleId}${getPolicyArticle(Number(articleId))?.title_ar ? ` - ${getPolicyArticle(Number(articleId))?.title_ar}` : ""}`}
             </Text>
-            {list.filter(Boolean).map((f, idx) => (
-              <View key={`${f?.id ?? `finding-${idx}`}-${idx}`} style={s.finding}>
-                <Text style={[s.findingTitle, rtl]}>{f.titleAr || "—"}</Text>
-                <Text style={[s.findingSnippet, rtl]}>
-                  {isAr ? "النص المخالف: " : "Violation text: "}
-                  "{f.evidenceSnippet || "—"}"
-                </Text>
-                <View style={[s.findingChipsRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
-                  <Text style={[s.chip, s.chipInfo]}>{sourceLabel(f.source)}</Text>
-                  <Text style={[s.chip, severityBadgeStyle(f.severity)]}>{(f.severity || "info").toUpperCase()}</Text>
-                  <Text style={[s.chip, s.chipInfo]}>
-                    {isAr ? "الثقة" : "Confidence"} {Math.round((f.confidence || 0) * 100)}%
+            {list.filter(Boolean).map((f, idx) => {
+              const primaryId = f.primaryArticleId ?? f.articleId;
+              const relatedIds = (f.relatedArticleIds ?? []).filter((id) => id !== primaryId);
+              return (
+                <View key={`${f?.id ?? `finding-${idx}`}-${idx}`} style={s.finding}>
+                  <Text style={[s.findingTitle, rtl]}>{f.titleAr || "—"}</Text>
+                  <Text style={[s.findingSnippet, rtl]}>
+                    {isAr ? "النص المخالف: " : "Violation text: "}
+                    "{f.evidenceSnippet || "—"}"
                   </Text>
+                  <View style={[s.findingChipsRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+                    <Text style={[s.chip, s.chipInfo]}>{sourceLabel(f.source)}</Text>
+                    <Text style={[s.chip, severityBadgeStyle(f.severity)]}>{(f.severity || "info").toUpperCase()}</Text>
+                    <Text style={[s.chip, s.chipInfo]}>
+                      {isAr ? "الثقة" : "Confidence"} {Math.round((f.confidence || 0) * 100)}%
+                    </Text>
+                  </View>
+                  <Text style={[s.findingMeta, rtl]}>
+                    {isAr ? "النوع: " : "Type: "}{sourceLabel(f.source)}
+                  </Text>
+                  {f.startLineChunk != null && (
+                    <Text style={[s.findingMeta, rtl]}>
+                      {isAr
+                        ? `السطر ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`
+                        : `Line ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`}
+                    </Text>
+                  )}
+                  <Text style={[s.findingMeta, rtl]}>
+                    {isAr ? "المادة الأساسية: " : "Primary article: "}
+                    {articleLabel(primaryId)}
+                  </Text>
+                  {relatedIds.length > 0 && (
+                    <Text style={[s.findingMeta, rtl]}>
+                      {isAr ? "مواد مرتبطة: " : "Related articles: "}
+                      {relatedIds.map(articleLabel).join(isAr ? "، " : ", ")}
+                    </Text>
+                  )}
+                  {f.pillarId ? (
+                    <Text style={[s.findingMeta, rtl]}>
+                      {isAr ? "المحور: " : "Pillar: "}
+                      {f.pillarId}
+                    </Text>
+                  ) : null}
+                  <Text style={[s.findingRationaleLabel, rtl]}>
+                    {isAr ? "لماذا اعتُبرت مخالفة:" : "Why considered a violation:"}
+                  </Text>
+                  <Text style={[s.findingRationaleText, rtl]}>{f.rationale || "—"}</Text>
                 </View>
-                <Text style={[s.findingMeta, rtl]}>
-                  {f.startLineChunk != null
-                    ? (isAr
-                      ? `السطر ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`
-                      : `Line ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`)
-                    : ""}
-                </Text>
-                <Text style={[s.findingMeta, rtl]}>
-                  {isAr ? "المادة الأساسية: " : "Primary article: "}
-                  {f.primaryArticleId ?? f.articleId}
-                </Text>
-                {(f.relatedArticleIds ?? []).filter((id) => id !== (f.primaryArticleId ?? f.articleId)).length > 0 && (
-                  <Text style={[s.findingMeta, rtl]}>
-                    {isAr ? "مواد مرتبطة: " : "Related articles: "}
-                    {(f.relatedArticleIds ?? []).filter((id) => id !== (f.primaryArticleId ?? f.articleId)).join(isAr ? "، " : ", ")}
-                  </Text>
-                )}
-                {f.pillarId ? (
-                  <Text style={[s.findingMeta, rtl]}>
-                    {isAr ? "المحور: " : "Pillar: "}
-                    {f.pillarId}
-                  </Text>
-                ) : null}
-                <Text style={[s.findingBody, rtl]}>
-                  {isAr ? "لماذا اعتُبرت مخالفة: " : "Why considered a violation: "}
-                  {f.rationale || "—"}
-                </Text>
-                <Text style={[s.findingBody, rtl]}>{isAr ? "الوصف: " : "Description: "}{f.titleAr || "—"}</Text>
-              </View>
-            ))}
+              );
+            })}
           </View>
         ))}
 
