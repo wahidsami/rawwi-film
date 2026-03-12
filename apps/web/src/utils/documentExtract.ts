@@ -11,12 +11,22 @@ import * as pdfjsLib from 'pdfjs-dist';
 
 let pdfWorkerInitialized = false;
 
+/** Base URL for the app (e.g. '' or '/app/'). */
+const base = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
+
 async function initPdfWorker() {
   if (pdfWorkerInitialized) return;
-  // Vite: dynamic import with ?url so the worker is copied and URL is valid
-  const workerUrl = await import(
-    /* @vite-ignore */ 'pdfjs-dist/build/pdf.worker.mjs?url'
-  ).then((m) => (m as { default: string }).default);
+  let workerUrl: string;
+  if (import.meta.env.DEV) {
+    // Dev: use dynamic import so Vite serves the worker from node_modules.
+    workerUrl = await import(/* @vite-ignore */ 'pdfjs-dist/build/pdf.worker.mjs?url').then(
+      (m) => (m as { default: string }).default
+    );
+  } else {
+    // Production: use fixed path. The Vite plugin copies pdf.worker.mjs to dist so it's always available
+    // (avoids "Failed to fetch dynamically imported module" when the hashed asset URL is missing or blocked).
+    workerUrl = `${base}pdf.worker.mjs`;
+  }
   pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
   pdfWorkerInitialized = true;
 }
