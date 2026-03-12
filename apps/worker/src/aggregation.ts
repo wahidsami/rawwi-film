@@ -576,9 +576,32 @@ export function buildSummaryJson(
     });
   }
 
-  const canonical_findings = [...canonicalMap.values()].sort((a, b) =>
+  let canonical_findings = [...canonicalMap.values()].sort((a, b) =>
     severityOrder(b.severity) - severityOrder(a.severity) || (b.confidence - a.confidence)
   );
+
+  // In "one card per occurrence" mode, the auditor often assigned one rationale to many findings (same cluster).
+  // Replace duplicated rationales with a short snippet- and article-specific line so each card matches its evidence.
+  if (oneCardPerOccurrence && canonical_findings.length > 1) {
+    const rationaleCount = new Map<string, number>();
+    for (const f of canonical_findings) {
+      const r = (f.rationale ?? "").trim();
+      rationaleCount.set(r, (rationaleCount.get(r) ?? 0) + 1);
+    }
+    const duplicatedRationales = new Set([...rationaleCount.entries()].filter(([, n]) => n > 2).map(([r]) => r));
+    if (duplicatedRationales.size > 0) {
+      const snippetLen = 60;
+      canonical_findings = canonical_findings.map((f) => {
+        const r = (f.rationale ?? "").trim();
+        if (!duplicatedRationales.has(r)) return f;
+        const snippet = (f.evidence_snippet ?? "").trim();
+        const clipped = snippet.length <= snippetLen ? snippet : snippet.slice(0, snippetLen) + "…";
+        const articleId = f.primary_article_id ?? 0;
+        const fallback = `المقتطف يخالف ضوابط المادة ${articleId}. «${clipped}»`;
+        return { ...f, rationale: fallback };
+      });
+    }
+  }
 
   // Severity counts from canonical (unique incidents).
   const severity_counts = { low: 0, medium: 0, high: 0, critical: 0 };
