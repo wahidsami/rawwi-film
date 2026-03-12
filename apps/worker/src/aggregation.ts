@@ -489,12 +489,23 @@ function dedupeFindings(findings: DbFinding[]): DbFinding[] {
   return Array.from(byKey.values());
 }
 
+/** Options controlling how findings are grouped into canonical report cards. */
+export type AnalysisSummaryOptions = {
+  mergeStrategy?: "same_location_only" | "every_occurrence";
+};
+
+/** Overlap ratio for "same location": only merge findings that refer to nearly the same span (one card per location, multiple articles). */
+const OVERLAP_SAME_LOCATION = 0.85;
+/** Overlap ratio for "every occurrence": only merge when spans are effectively identical (one card per finding in practice). */
+const OVERLAP_EVERY_OCCURRENCE = 1;
+
 export function buildSummaryJson(
   jobId: string,
   scriptId: string,
   findings: DbFinding[],
   clientName?: string,
-  scriptTitle?: string
+  scriptTitle?: string,
+  analysisOptions?: AnalysisSummaryOptions | null
 ): SummaryJson {
   const generated_at = new Date().toISOString();
   const filtered = findings.filter((f) => f.article_id !== OUT_OF_SCOPE_ARTICLE_ID);
@@ -502,6 +513,9 @@ export function buildSummaryJson(
   const policyArticles = getPolicyArticles();
 
   const severityOrder = (s: string) => (SEVERITIES.indexOf(s as (typeof SEVERITIES)[number]) + 1) || 0;
+
+  const overlapRatio =
+    analysisOptions?.mergeStrategy === "every_occurrence" ? OVERLAP_EVERY_OCCURRENCE : OVERLAP_SAME_LOCATION;
 
   // Build canonical findings from overlap clusters first (single source of truth).
   const canonicalMap = new Map<string, {
@@ -522,7 +536,7 @@ export function buildSummaryJson(
     end_line_chunk?: number | null;
   }>();
 
-  const clusters = clusterByOverlap(deduped, 0.4);
+  const clusters = clusterByOverlap(deduped, overlapRatio);
   for (const list of clusters.values()) {
     const primary = choosePrimaryFromDb(list);
     const relatedArticleIds = [...new Set(list.map((f) => f.article_id).filter((id) => id !== primary.article_id))];
@@ -800,6 +814,7 @@ export async function runAggregation(jobId: string): Promise<void> {
       script_id, 
       version_id, 
       created_by,
+      config_snapshot,
       scripts (
         title,
         clients (
@@ -881,7 +896,8 @@ export async function runAggregation(jobId: string): Promise<void> {
     // ignore
   }
 
-  const summary = buildSummaryJson(jobId, job.script_id, list, clientName, scriptTitle);
+  const analysisOptions = (job as { config_snapshot?: { analysisOptions?: { mergeStrategy?: string } } }).config_snapshot?.analysisOptions;
+  const summary = buildSummaryJson(jobId, job.script_id, list, clientName, scriptTitle, analysisOptions);
   if (fullScriptText.trim()) {
     const scriptSummary = await generateScriptSummary(fullScriptText, scriptTitle);
     if (scriptSummary) summary.script_summary = scriptSummary;

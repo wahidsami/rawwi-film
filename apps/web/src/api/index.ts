@@ -111,8 +111,18 @@ export const scriptsApi = {
       ...(options?.contentHtml !== undefined && { contentHtml: options.contentHtml }),
     }),
   /** Queue analysis for a version (creates new analysis_jobs + chunks). POST /tasks */
-  createTask: (versionId: string, options?: { forceFresh?: boolean }): Promise<{ jobId: string }> =>
-    httpClient.post('/tasks', { versionId, ...(options?.forceFresh ? { forceFresh: true } : {}) }),
+  createTask: (
+    versionId: string,
+    options?: {
+      forceFresh?: boolean;
+      analysisOptions?: { mergeStrategy?: 'same_location_only' | 'every_occurrence' };
+    }
+  ): Promise<{ jobId: string }> =>
+    httpClient.post('/tasks', {
+      versionId,
+      ...(options?.forceFresh ? { forceFresh: true } : {}),
+      ...(options?.analysisOptions ? { analysisOptions: options.analysisOptions } : {}),
+    }),
   /** Get editor content and sections for a version. GET /scripts/editor?scriptId=...&versionId=... */
   getEditor: (scriptId: string, versionId: string): Promise<EditorContentResponse> =>
     httpClient.get(`/scripts/editor?scriptId=${encodeURIComponent(scriptId)}&versionId=${encodeURIComponent(versionId)}`),

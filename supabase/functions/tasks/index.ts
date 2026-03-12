@@ -243,6 +243,9 @@ Deno.serve(async (req: Request) => {
 
   const versionId = body?.versionId;
   const forceFresh = body?.forceFresh === true;
+  const analysisOptions = body?.analysisOptions && typeof body.analysisOptions === "object"
+    ? { mergeStrategy: body.analysisOptions.mergeStrategy === "every_occurrence" ? "every_occurrence" : "same_location_only" }
+    : undefined;
   if (!versionId || typeof versionId !== "string" || !versionId.trim()) {
     return json({ error: "versionId is required" }, 400);
   }
@@ -363,6 +366,7 @@ Deno.serve(async (req: Request) => {
         judge_prompt_version: PROMPT_VERSIONS.judge,
         judge_prompt_hash: await sha256Hash(JUDGE_SYSTEM_MSG),
         schema_version: PROMPT_VERSIONS.schema,
+        ...(analysisOptions ? { analysisOptions } : {}),
       },
     })
     .select("id")
