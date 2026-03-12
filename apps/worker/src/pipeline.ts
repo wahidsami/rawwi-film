@@ -527,7 +527,8 @@ export async function processChunkJudge(
   // 1b) Idempotency Check & Config Setup
   // Build logicVersion dynamically so cache invalidates automatically when prompts/passes change.
   const passSignature = DETECTION_PASSES.map((p) => `${p.name}:${p.model ?? "default"}`).join("|");
-  const logicVersion = `engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|deepAuditor:${config.ANALYSIS_DEEP_AUDITOR}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}`;
+  const rationaleModel = config.OPENAI_RATIONALE_MODEL;
+  const logicVersion = `engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|deepAuditor:${config.ANALYSIS_DEEP_AUDITOR}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}`;
   const jobConfig = (job.config_snapshot as any) || {};
   const forceFresh = jobConfig.force_fresh === true;
   const routerModel = jobConfig.router_model || config.OPENAI_ROUTER_MODEL;
@@ -728,7 +729,8 @@ export async function processChunkJudge(
     if (config.ANALYSIS_HYBRID_MODE === "enforce") {
       persistedFindings = hybrid.findings as FindingWithGlobal[];
     } else {
-      persistedFindings = baselineFindings;
+      // Shadow: persist hybrid so the report shows auditor rationale and primary article; eval log still compares baseline vs hybrid.
+      persistedFindings = hybrid.findings as FindingWithGlobal[];
     }
     if (config.ANALYSIS_EVAL_LOG) {
       const evalPayload = {
