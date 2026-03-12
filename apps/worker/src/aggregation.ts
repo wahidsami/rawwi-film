@@ -12,6 +12,7 @@ import {
 } from "./policyMap.js";
 import { clusterByOverlap, clusterCanonicalKey } from "./methodology-v3/canonicalClustering.js";
 import { generateScriptSummary } from "./scriptSummary.js";
+import { callRevisitSpotter } from "./openai.js";
 
 export type SummaryJson = {
   job_id: string;
@@ -111,6 +112,13 @@ export type SummaryJson = {
     end_offset_global?: number | null;
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
+  }>;
+  /** Separate light pass: words/phrases from glossary that appeared in the script — for "كلمات/عبارات للمراجعة" only. Does not affect violations. */
+  words_to_revisit?: Array<{
+    term: string;
+    snippet: string;
+    start_offset: number;
+    end_offset: number;
   }>;
 }
 
@@ -728,6 +736,24 @@ export function buildReportHtml(summary: SummaryJson): string {
   </section>`
       : "";
 
+  const revisitHtml =
+    (s.words_to_revisit?.length ?? 0) > 0
+      ? `
+  <section>
+    <h2>كلمات / عبارات للمراجعة</h2>
+    <p>ظهور الكلمات أو العبارات التالية في النص (للمراجعة عند التصوير — لا تُحسب مخالفات).</p>
+    ${(s.words_to_revisit ?? [])
+      .map(
+        (m) => `
+    <div style="margin:0.5em 0; padding:0.5em; border:1px solid #e5e7eb; background:#f9fafb;">
+      <strong>${m.term}</strong><br/>
+      <em>مقتطف:</em> "${m.snippet}"
+    </div>`
+      )
+      .join("")}
+  </section>`
+      : "";
+
   return `<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head><meta charset="utf-8"/><title>تقرير التحليل</title></head>
@@ -756,6 +782,7 @@ export function buildReportHtml(summary: SummaryJson): string {
     ${detailsHtml}
   </section>
   ${hintsHtml}
+  ${revisitHtml}
 </body>
 </html>`;
 }
@@ -858,6 +885,20 @@ export async function runAggregation(jobId: string): Promise<void> {
   if (fullScriptText.trim()) {
     const scriptSummary = await generateScriptSummary(fullScriptText, scriptTitle);
     if (scriptSummary) summary.script_summary = scriptSummary;
+    // Separate light pass: words to revisit (glossary terms that appear in script). Does not affect violations.
+    try {
+      const { data: lexiconRows } = await supabase
+        .from("slang_lexicon")
+        .select("term")
+        .eq("is_active", true);
+      const terms = (lexiconRows ?? []).map((r: { term?: string }) => (r.term ?? "").trim()).filter(Boolean);
+      if (terms.length > 0) {
+        const mentions = await callRevisitSpotter(fullScriptText, terms);
+        if (mentions.length > 0) summary.words_to_revisit = mentions;
+      }
+    } catch (e) {
+      logger.warn("Revisit pass skipped or failed", { jobId, error: String(e) });
+    }
   }
   applySummaryContextToRulings(summary);
   applyReportGate(summary);

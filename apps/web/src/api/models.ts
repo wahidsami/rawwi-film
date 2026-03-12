@@ -309,6 +309,13 @@ export interface Report {
       start_line_chunk?: number | null;
       end_line_chunk?: number | null;
     }>;
+    /** Words/phrases from glossary that appeared in script — for "كلمات/عبارات للمراجعة" only. */
+    words_to_revisit?: Array<{
+      term: string;
+      snippet: string;
+      start_offset: number;
+      end_offset: number;
+    }>;
   };
   reportHtml: string;
   findingsCount: number;

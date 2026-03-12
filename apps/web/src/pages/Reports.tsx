@@ -132,6 +132,7 @@ function Reports() {
         findingsByArticle: fullReport.summaryJson?.findings_by_article,
         canonicalFindings: fullReport.summaryJson?.canonical_findings,
         reportHints: fullReport.summaryJson?.report_hints ?? undefined,
+        wordsToRevisit: fullReport.summaryJson?.words_to_revisit ?? undefined,
         scriptSummary: fullReport.summaryJson?.script_summary ?? undefined,
         lang: isAr ? 'ar' : 'en',
         dateFormat: settings?.platform?.dateFormat,

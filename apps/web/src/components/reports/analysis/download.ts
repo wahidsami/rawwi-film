@@ -59,6 +59,7 @@ export interface DownloadAnalysisPdfParams {
     compliance_posture_ar?: string;
     confidence: number;
   } | null;
+  wordsToRevisit?: Array<{ term: string; snippet: string; start_offset: number; end_offset: number }> | null;
   lang: "ar" | "en";
   dateFormat?: string;
 }
@@ -93,6 +94,7 @@ export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Pr
       findings,
       reportHints: reportHintsMapped,
       scriptSummary: params.scriptSummary ?? undefined,
+      wordsToRevisit: params.wordsToRevisit ?? undefined,
       lang: params.lang,
     },
     dateFormat: params.dateFormat,

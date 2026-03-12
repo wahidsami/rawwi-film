@@ -20,7 +20,7 @@ import { downloadQuickAnalysisPdf } from '@/components/reports/quick-analysis/do
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
-  CheckCircle2, Shield, FileDown, Info,
+  CheckCircle2, Shield, FileDown, Info, FileSearch,
 } from 'lucide-react';
 
 import { getPolicyArticles, getArticleDomainId, normalizeAtomId, atomIdNumeric } from '@/data/policyMap';
@@ -235,6 +235,7 @@ export function Results() {
   const checklistMap = new Map(summary.checklist_articles.map(c => [c.article_id, c]));
   const canonicalSummaryFindings: CanonicalSummaryFinding[] = (summary.canonical_findings || []).filter(Boolean);
   const reportHints: CanonicalSummaryFinding[] = (summary.report_hints || []).filter(Boolean);
+  const wordsToRevisit = (summary.words_to_revisit || []).filter(Boolean);
 
   // Split real findings into violations vs approved for card rendering
   const hasRealFindings = findings.length > 0;
@@ -538,6 +539,7 @@ export function Results() {
         findingsByArticle: summary?.findings_by_article,
         canonicalFindings: summary?.canonical_findings,
         reportHints: summary?.report_hints ?? undefined,
+        wordsToRevisit: summary?.words_to_revisit ?? undefined,
         scriptSummary: summary?.script_summary ?? undefined,
         lang: (isAr ? 'ar' : 'en') as const,
         dateFormat,
@@ -1120,6 +1122,30 @@ export function Results() {
                       )}
                       <div>{lang === 'ar' ? 'لماذا ليست مخالفة:' : 'Why not a violation:'} <span className="text-text-main">{f.rationale ?? '—'}</span></div>
                     </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Words/sentences to revisit (separate light pass — glossary terms that appeared; not violations) */}
+          {wordsToRevisit.length > 0 && (
+            <>
+              <h3 className="font-bold text-xl text-text-main border-b border-border pb-2 flex items-center gap-2 mt-12">
+                <FileSearch className="w-5 h-5 text-muted-foreground" />
+                {lang === 'ar' ? 'كلمات / عبارات للمراجعة' : 'Words / phrases to revisit'}
+                <Badge variant="outline" className="ms-2">{wordsToRevisit.length}</Badge>
+              </h3>
+              <p className="text-text-muted text-sm mt-1 mb-4">
+                {lang === 'ar'
+                  ? 'ظهور الكلمات أو العبارات التالية في النص (للمراجعة عند التصوير — لا تُحسب مخالفات).'
+                  : 'The following words or phrases appear in the script (for review when filming — not counted as violations).'}
+              </p>
+              <div className="space-y-3">
+                {wordsToRevisit.map((m, idx) => (
+                  <div key={`revisit-${idx}-${m.term}-${m.start_offset}`} className="bg-muted/30 border border-border rounded-lg p-3">
+                    <span className="font-medium text-text-main">{m.term}</span>
+                    <p className="text-sm text-text-muted mt-1 italic" dir="rtl">"{m.snippet}"</p>
                   </div>
                 ))}
               </div>

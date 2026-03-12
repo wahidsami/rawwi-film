@@ -15,6 +15,13 @@ export interface ScriptSummaryForPdf {
   confidence: number;
 }
 
+export interface RevisitMentionPdf {
+  term: string;
+  snippet: string;
+  start_offset: number;
+  end_offset: number;
+}
+
 export interface AnalysisSectionPdfData {
   jobId?: string;
   scriptTitle: string;
@@ -23,6 +30,7 @@ export interface AnalysisSectionPdfData {
   findings: AnalysisPdfFinding[];
   reportHints?: AnalysisPdfFinding[];
   scriptSummary?: ScriptSummaryForPdf | null;
+  wordsToRevisit?: RevisitMentionPdf[];
   lang?: "ar" | "en";
 }
 
@@ -228,6 +236,23 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                   {isAr ? "لماذا ليست مخالفة: " : "Why not a violation: "}
                   {f.rationale || "—"}
                 </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {((data.wordsToRevisit ?? []).length > 0) && (
+          <View style={{ marginTop: 16 }}>
+            <Text style={[s.sectionTitle, rtl]}>{isAr ? "كلمات / عبارات للمراجعة" : "Words / phrases to revisit"}</Text>
+            <Text style={[s.findingMeta, rtl]}>
+              {isAr
+                ? "ظهور الكلمات أو العبارات التالية في النص (للمراجعة عند التصوير — لا تُحسب مخالفات)."
+                : "The following words or phrases appear in the script (for review when filming — not counted as violations)."}
+            </Text>
+            {(data.wordsToRevisit ?? []).filter(Boolean).map((m, idx) => (
+              <View key={`revisit-${idx}-${m.term}`} style={[s.finding, { backgroundColor: "#f9fafb", borderColor: "#e5e7eb", marginTop: 6 }]}>
+                <Text style={[s.findingTitle, rtl]}>{m.term}</Text>
+                <Text style={[s.findingSnippet, rtl]}>"{m.snippet || "—"}"</Text>
               </View>
             ))}
           </View>

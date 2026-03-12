@@ -317,3 +317,58 @@ export async function parseAuditorWithRepair(
   }
   return { assessments: [] };
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// REVISIT PASS (Option B: separate light pass — words/sentences to revisit)
+// Does not affect violations or ملاحظات. Output goes only to report section "كلمات/عبارات للمراجعة".
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export type RevisitMention = {
+  term: string;
+  snippet: string;
+  start_offset: number;
+  end_offset: number;
+};
+
+const REVISIT_SPOTTER_SYSTEM = `أنت مكتشف كلمات وعبارات فقط. مهمتك: ابحث في النص عن كل ظهور للكلمات/العبارات المعطاة في القائمة.
+لا تحكم على المحتوى (لا تقل مخالفة أو لا). فقط سجّل كل موضع تظهر فيه إحدى الكلمات أو العبارات.
+أرجع JSON فقط بالشكل: { "mentions": [ { "term": "الكلمة أو العبارة كما في القائمة", "snippet": "مقتطف قصير من النص حول الموضع (حد أقصى 100 حرف)", "start_offset": رقم_بداية_الحرف, "end_offset": رقم_نهاية_الحرف } ] }
+استخدم أرقام الموضع (offset) من بداية النص (أول حرف = 0).`;
+
+/** Runs a single lightweight LLM pass to list every occurrence of given terms in the text. Used only for "words to revisit" report section. */
+export async function callRevisitSpotter(
+  textSlice: string,
+  terms: string[],
+  model: string = "gpt-4.1-mini"
+): Promise<RevisitMention[]> {
+  if (!config.OPENAI_API_KEY || terms.length === 0 || !textSlice.trim()) return [];
+  const termsList = terms.slice(0, 80).map((t) => `"${t}"`).join("، ");
+  const userContent = `القائمة: ${termsList}\n\n---\nالنص:\n${textSlice.slice(0, 28_000)}\n\nأرجع JSON فقط: { "mentions": [ ... ] }`;
+
+  try {
+    const resp = await openai.chat.completions.create({
+      model,
+      messages: [
+        { role: "system", content: REVISIT_SPOTTER_SYSTEM },
+        { role: "user", content: userContent },
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 2048,
+      temperature: 0,
+    });
+    const raw = resp.choices[0]?.message?.content ?? "{}";
+    const parsed = JSON.parse(raw) as { mentions?: Array<{ term?: string; snippet?: string; start_offset?: number; end_offset?: number }> };
+    const list = Array.isArray(parsed.mentions) ? parsed.mentions : [];
+    return list
+      .filter((m) => m?.term != null && String(m.term).trim() !== "")
+      .map((m) => ({
+        term: String(m.term).trim(),
+        snippet: String(m.snippet ?? "").trim().slice(0, 200),
+        start_offset: Number(m.start_offset) >= 0 ? Number(m.start_offset) : 0,
+        end_offset: Number(m.end_offset) > 0 ? Number(m.end_offset) : Number(m.start_offset) + 1,
+      }));
+  } catch (e) {
+    logger.warn("Revisit spotter pass failed", { error: String(e), termsCount: terms.length });
+    return [];
+  }
+}
