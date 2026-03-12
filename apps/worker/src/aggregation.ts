@@ -244,9 +244,26 @@ const RATIONALE_SAYS_NOT_VIOLATION = [
   "تشويق أو غموض رومانسي بريء",
 ];
 
+/** If the rationale clearly states it *is* a violation, do not move to hints even if it also mentions dramatic context. */
+const RATIONALE_SAYS_VIOLATION = [
+  "تخالف ضوابط",
+  "تخالف المادة",
+  "مخالفة ل",
+  "ينتهك",
+  "يخالف ضوابط",
+  "يخالف المادة",
+  "تعد مخالفة",
+  "تعد مخالفة ل",
+  "يعد مخالفة ل",
+  "تستدعي تصنيف",
+  "يتجاوز ضوابط المادة",
+  "خالف المادة",
+];
+
 function rationaleSaysNotViolation(rationale: string | null | undefined): boolean {
   if (!rationale || rationale.trim() === "") return false;
   const r = rationale.trim();
+  if (RATIONALE_SAYS_VIOLATION.some((phrase) => r.includes(phrase))) return false;
   return RATIONALE_SAYS_NOT_VIOLATION.some((phrase) => r.includes(phrase));
 }
 

@@ -274,10 +274,16 @@ export function Results() {
     ? canonicalSummaryFindings.length
     : (hasRealFindings ? displayViolations.length : fallbackSummaryCount);
 
-  // Read persisted totals from report payload (updated by backend after each review).
-  // These already exclude approved findings.
-  const displayTotal = report.findingsCount ?? summary.totals.findings_count;
-  const displaySc = report.severityCounts ?? summary.totals.severity_counts;
+  // Stats must match the violations list we render. Derive from canonical_findings so cards and list are always in sync.
+  const displayTotal = canonicalSummaryFindings.length;
+  const displaySc = (() => {
+    const base = { low: 0, medium: 0, high: 0, critical: 0 };
+    for (const f of canonicalSummaryFindings) {
+      const s = (f.severity ?? "").toLowerCase();
+      if (s in base) (base as Record<string, number>)[s]++;
+    }
+    return base;
+  })();
   const displayApproved = report.approvedCount ?? 0;
 
   const decision: 'PASS' | 'REJECT' | 'REVIEW_REQUIRED' =
