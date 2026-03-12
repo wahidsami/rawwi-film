@@ -52,7 +52,9 @@ export async function downloadQuickAnalysisPdf(params: {
     params.findingsByArticle,
     params.canonicalFindings
   );
-  const reportHintsMapped = (params.reportHints ?? []).map((f, idx) => ({
+  // Normalize so ملاحظات خاصة section always receives an array (never undefined)
+  const hintsSource = Array.isArray(params.reportHints) ? params.reportHints : [];
+  const reportHintsMapped = hintsSource.map((f, idx) => ({
     id: f.canonical_finding_id ?? `hint-${idx}`,
     articleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
     titleAr: f.title_ar ?? "—",

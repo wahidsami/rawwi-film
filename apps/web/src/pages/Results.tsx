@@ -548,6 +548,8 @@ export function Results() {
         await downloadQuickAnalysisPdf({
           ...basePayload,
           clientName: undefined,
+          // Use same ملاحظات خاصة data as UI so quick-analysis PDF always includes the section when visible
+          reportHints: reportHints.length > 0 ? reportHints : (summary?.report_hints ?? undefined),
         });
       } else {
         await downloadAnalysisPdf(basePayload);
