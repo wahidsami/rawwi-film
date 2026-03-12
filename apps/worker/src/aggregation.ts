@@ -250,6 +250,13 @@ const RATIONALE_SAYS_NOT_VIOLATION = [
   "ضمن إطار العمل الدرامي",
   "عنصر تشويق",
   "تشويق أو غموض رومانسي بريء",
+  "يخدم السياق الدرامي",
+  "يخدم السرد",
+  "لأغراض الدراما",
+  "لأغراض السرد",
+  "قد لا يعد مخالفة",
+  "لا يبدو مخالفة",
+  "قد لا يعتبر مخالفة",
 ];
 
 /** If the rationale clearly states it *is* a violation, do not move to hints even if it also mentions dramatic context. */
@@ -278,8 +285,9 @@ function rationaleSaysNotViolation(rationale: string | null | undefined): boolea
 type CanonicalFindingItem = NonNullable<SummaryJson["canonical_findings"]>[number];
 
 /**
- * Final gate: if the "why violation" rationale actually says it's NOT a violation,
- * move that finding to report_hints so it appears as تنبيهات/ملاحظات للمخرج, not in violations count.
+ * Final gate: if the AI decided this is NOT a violation (context_ok or rationale says so),
+ * move that finding to report_hints so it appears only in ملاحظات خاصة, not in violations.
+ * Rule: one place only — either violations OR notes, never both.
  */
 function applyReportGate(summary: SummaryJson): void {
   const canon = summary.canonical_findings;
@@ -289,7 +297,9 @@ function applyReportGate(summary: SummaryJson): void {
   const hints: CanonicalFindingItem[] = [];
 
   for (const f of canon) {
-    if (rationaleSaysNotViolation(f.rationale)) {
+    const isContextOk = (f.final_ruling ?? "").toLowerCase() === "context_ok";
+    const rationaleSaysNot = rationaleSaysNotViolation(f.rationale);
+    if (isContextOk || rationaleSaysNot) {
       hints.push(f);
     } else {
       violations.push(f);
