@@ -52,4 +52,6 @@ export const quickAnalysisStyles = StyleSheet.create({
   chipSeverityLow: { backgroundColor: "#DBEAFE", borderColor: "#93C5FD", color: "#1E40AF" },
   chipInfo: { backgroundColor: "#F3F4F6", borderColor: "#D1D5DB", color: "#374151" },
   findingMeta: { fontSize: 8, color: "#6B7280", marginBottom: 3 },
+  findingRationaleLabel: { fontSize: 9, fontWeight: "bold", marginTop: 6, marginBottom: 2, color: "#111827" },
+  findingRationaleText: { fontSize: 9, lineHeight: 1.45, color: "#374151" },
 });

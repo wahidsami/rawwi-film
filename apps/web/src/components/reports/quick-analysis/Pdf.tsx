@@ -38,7 +38,12 @@ export const QuickAnalysisPdf: React.FC<{
     acc[k] = (acc[k] || 0) + 1;
     return acc;
   }, {});
-  const sourceLabel = (source?: string) => source === "manual" ? (isAr ? "يدوي" : "Manual") : source === "lexicon_mandatory" ? (isAr ? "معجم" : "Glossary") : (isAr ? "تحليل آلي" : "AI Analysis");
+  const sourceLabel = (source?: string) => source === "manual" ? (isAr ? "يدوي" : "Manual") : source === "lexicon_mandatory" || source === "glossary" ? (isAr ? "معجم" : "Glossary") : (isAr ? "تحليل آلي" : "AI Analysis");
+  const articleLabel = (articleId: number) => {
+    const art = getPolicyArticle(articleId);
+    if (!art) return isAr ? `مادة ${articleId}` : `Article ${articleId}`;
+    return isAr ? `مادة ${articleId}: ${art.title_ar}` : `Article ${articleId}: ${art.title_ar}`;
+  };
   const sevStyle = (sev?: string) => {
     const k = (sev || "info").toLowerCase();
     if (k === "critical") return s.chipSeverityCritical;
@@ -88,24 +93,50 @@ export const QuickAnalysisPdf: React.FC<{
             <Text style={[s.articleHeader, rtl]}>
               {isAr ? `مادة ${articleId}: ${getPolicyArticle(Number(articleId))?.title_ar ?? ""}` : `Article ${articleId}${getPolicyArticle(Number(articleId))?.title_ar ? ` - ${getPolicyArticle(Number(articleId))?.title_ar}` : ""}`}
             </Text>
-            {list.filter(Boolean).map((f, idx) => (
-              <View key={`${f?.id ?? `quick-finding-${idx}`}-${idx}`} style={s.finding}>
-                <Text style={[s.findingTitle, rtl]}>{f.titleAr || "—"}</Text>
-                <Text style={[s.findingSnippet, rtl]}>{isAr ? "النص المخالف: " : "Violation text: "}"{f.evidenceSnippet || "—"}"</Text>
-                <View style={[s.findingChipsRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
-                  <Text style={[s.chip, s.chipInfo]}>{sourceLabel(f.source)}</Text>
-                  <Text style={[s.chip, sevStyle(f.severity)]}>{(f.severity || "info").toUpperCase()}</Text>
-                  <Text style={[s.chip, s.chipInfo]}>{isAr ? "الثقة" : "Confidence"} {Math.round((f.confidence || 0) * 100)}%</Text>
+            {list.filter(Boolean).map((f, idx) => {
+              const primaryId = f.primaryArticleId ?? f.articleId;
+              const relatedIds = (f.relatedArticleIds ?? []).filter((id) => id !== primaryId);
+              return (
+                <View key={`${f?.id ?? `quick-finding-${idx}`}-${idx}`} style={s.finding}>
+                  <Text style={[s.findingTitle, rtl]}>{f.titleAr || "—"}</Text>
+                  <Text style={[s.findingSnippet, rtl]}>{isAr ? "النص المخالف: " : "Violation text: "}"{f.evidenceSnippet || "—"}"</Text>
+                  <View style={[s.findingChipsRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+                    <Text style={[s.chip, s.chipInfo]}>{sourceLabel(f.source)}</Text>
+                    <Text style={[s.chip, sevStyle(f.severity)]}>{(f.severity || "info").toUpperCase()}</Text>
+                    <Text style={[s.chip, s.chipInfo]}>{isAr ? "الثقة" : "Confidence"} {Math.round((f.confidence || 0) * 100)}%</Text>
+                  </View>
+                  <Text style={[s.findingMeta, rtl]}>
+                    {isAr ? "النوع: " : "Type: "}{sourceLabel(f.source)}
+                  </Text>
+                  {f.startLineChunk != null && (
+                    <Text style={[s.findingMeta, rtl]}>
+                      {isAr
+                        ? `السطر ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`
+                        : `Line ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`}
+                    </Text>
+                  )}
+                  {Number.isFinite(primaryId) && (
+                    <Text style={[s.findingMeta, rtl]}>
+                      {isAr ? "المادة الأساسية: " : "Primary article: "}{articleLabel(primaryId)}
+                    </Text>
+                  )}
+                  {relatedIds.length > 0 && (
+                    <Text style={[s.findingMeta, rtl]}>
+                      {isAr ? "مواد مرتبطة: " : "Related articles: "}{relatedIds.map(articleLabel).join(isAr ? "، " : ", ")}
+                    </Text>
+                  )}
+                  {f.pillarId && (
+                    <Text style={[s.findingMeta, rtl]}>
+                      {isAr ? "المحور: " : "Pillar: "}{f.pillarId}
+                    </Text>
+                  )}
+                  <Text style={[s.findingRationaleLabel, rtl]}>
+                    {isAr ? "لماذا اعتُبرت مخالفة:" : "Why considered a violation:"}
+                  </Text>
+                  <Text style={[s.findingRationaleText, rtl]}>{f.rationale ?? (isAr ? "—" : "—")}</Text>
                 </View>
-                <Text style={[s.findingMeta, rtl]}>
-                  {f.startLineChunk != null
-                    ? (isAr
-                      ? `السطر ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`
-                      : `Line ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`)
-                    : ""}
-                </Text>
-              </View>
-            ))}
+              );
+            })}
           </View>
         ))}
       </Page>

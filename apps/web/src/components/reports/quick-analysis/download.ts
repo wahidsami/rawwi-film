@@ -1,7 +1,7 @@
 import React from "react";
 import { pdf } from "@react-pdf/renderer";
 import type { AnalysisFinding } from "@/api";
-import { mapQuickAnalysisFindingsForPdf } from "./mapper";
+import { mapQuickAnalysisFindingsForPdf, type CanonicalFindingForQuickPdf } from "./mapper";
 import { QuickAnalysisPdf } from "./Pdf";
 
 async function toDataUrl(url: string): Promise<string | null> {
@@ -25,7 +25,8 @@ export async function downloadQuickAnalysisPdf(params: {
   clientName?: string;
   createdAt: string;
   findings?: AnalysisFinding[] | null;
-  findingsByArticle?: Array<{ article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }> }> | null;
+  findingsByArticle?: Array<{ article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string; rationale?: string | null }> }> | null;
+  canonicalFindings?: CanonicalFindingForQuickPdf[] | null;
   lang: "ar" | "en";
   dateFormat?: string;
 }): Promise<void> {
@@ -34,7 +35,11 @@ export async function downloadQuickAnalysisPdf(params: {
     toDataUrl(`${origin}/cover.jpg`),
     toDataUrl(`${origin}/dashboardlogo.png`),
   ]);
-  const findings = mapQuickAnalysisFindingsForPdf(params.findings, params.findingsByArticle);
+  const findings = mapQuickAnalysisFindingsForPdf(
+    params.findings,
+    params.findingsByArticle,
+    params.canonicalFindings
+  );
   const doc = React.createElement(QuickAnalysisPdf, {
     scriptTitle: params.scriptTitle,
     createdAt: params.createdAt,
