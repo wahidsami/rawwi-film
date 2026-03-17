@@ -66,6 +66,134 @@
     font-family: var(--font-arabic) !important;
   }
 
+  /* A4-style script sheet (workspace page mode + formatted scroll view) */
+  .workspace-a4-stage {
+    --script-sheet-font-size: 1.0625rem;
+    --script-sheet-line-height: 1.72;
+    --script-sheet-para-gap: 0.35em;
+    background: linear-gradient(165deg, #e4e9f0 0%, #d8dfe8 45%, #eef1f6 100%);
+    border-radius: var(--radius);
+  }
+  .workspace-a4-stage--fluid {
+    background: linear-gradient(165deg, #f0f3f8 0%, #e8ecf4 100%);
+    padding: 1.25rem 0.5rem;
+  }
+  .workspace-a4-zoom-inner {
+    width: 210mm;
+    max-width: 100%;
+  }
+  .workspace-a4-sheet {
+    width: 210mm;
+    max-width: 100%;
+    min-height: 297mm;
+    box-sizing: border-box;
+    background: #fff;
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 12px 40px rgba(15, 23, 42, 0.1);
+    border-radius: 2px;
+    padding: 22mm 20mm;
+    margin: 0 auto;
+  }
+  .workspace-a4-sheet--scroll {
+    min-height: min(297mm, 72vh);
+    width: min(210mm, 100%);
+  }
+  .workspace-a4-sheet .script-import-body {
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    background: transparent !important;
+    font-size: var(--script-sheet-font-size) !important;
+    line-height: var(--script-sheet-line-height) !important;
+  }
+  .workspace-a4-sheet .script-import-body p,
+  .workspace-a4-sheet .script-import-body .pdf-line {
+    margin-bottom: var(--script-sheet-para-gap);
+  }
+  @media (max-width: 768px) {
+    .workspace-a4-sheet {
+      min-height: auto;
+      padding: 1rem 1.1rem;
+    }
+    .workspace-a4-zoom-inner {
+      width: 100%;
+    }
+  }
+
+  /* DOCX / screenplay-style paragraph classes (Mammoth styleMap) */
+  .script-import-body .script-docx-title {
+    font-size: 1.35em;
+    font-weight: 700;
+    margin: 0 0 0.5em;
+    text-align: center;
+  }
+  .script-import-body .script-docx-subtitle {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin: 0 0 1em;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .script-import-body .script-heading-1 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1em 0 0.4em;
+  }
+  .script-import-body .script-heading-2,
+  .script-import-body .script-heading-3 {
+    font-size: 1.08em;
+    font-weight: 600;
+    margin: 0.85em 0 0.35em;
+  }
+  .script-import-body .script-scene-heading {
+    font-weight: 700;
+    margin-top: 1.15em;
+    margin-bottom: 0.45em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.98em;
+  }
+  .script-import-body .script-action {
+    margin-bottom: 0.5em;
+  }
+  .script-import-body .script-character {
+    text-align: center;
+    font-weight: 600;
+    margin-top: 0.9em;
+    margin-bottom: 0.12em;
+  }
+  .script-import-body .script-dialogue {
+    margin-inline: 18%;
+    margin-bottom: 0.3em;
+  }
+  .script-import-body .script-parenthetical {
+    margin-inline: 24%;
+    font-style: italic;
+    margin-bottom: 0.2em;
+    font-size: 0.96em;
+  }
+  .script-import-body .script-transition {
+    text-align: end;
+    font-weight: 600;
+    margin-top: 0.65em;
+    margin-bottom: 0.35em;
+  }
+  html[dir="rtl"] .script-import-body .script-transition {
+    text-align: start;
+  }
+  .script-import-body .script-general {
+    margin-bottom: 0.4em;
+  }
+  .script-import-body .pdf-line {
+    margin: 0 0 0.15em;
+  }
+  .script-import-body .pdf-page-body .pdf-line:last-child {
+    margin-bottom: 0;
+  }
+
   @media print {
     @page {
       margin: 20mm 15mm;

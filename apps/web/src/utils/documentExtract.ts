@@ -10,8 +10,13 @@ const mammoth = (mammothModule as { default?: typeof mammothModule }).default ??
 
 import * as pdfjsLib from 'pdfjs-dist';
 import JSZip from 'jszip';
+import { DOCX_SCRIPT_STYLE_MAP } from './mammothDocxStyles';
 
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+
+function mammothHtmlOptions(arrayBuffer: ArrayBuffer) {
+  return { arrayBuffer, styleMap: DOCX_SCRIPT_STYLE_MAP };
+}
 
 let pdfWorkerInitialized = false;
 
@@ -47,7 +52,7 @@ export async function extractTextFromDocx(file: File): Promise<string> {
  */
 export async function extractHtmlFromDocx(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
-  const result = await mammoth.convertToHtml({ arrayBuffer });
+  const result = await mammoth.convertToHtml(mammothHtmlOptions(arrayBuffer));
   return (result.value ?? '').trim();
 }
 
@@ -58,7 +63,7 @@ export async function extractDocx(file: File): Promise<{ plain: string; html: st
   const arrayBuffer = await file.arrayBuffer();
   const [plainResult, htmlResult] = await Promise.all([
     mammoth.extractRawText({ arrayBuffer }),
-    mammoth.convertToHtml({ arrayBuffer }),
+    mammoth.convertToHtml(mammothHtmlOptions(arrayBuffer)),
   ]);
   return {
     plain: (plainResult.value ?? '').trim(),
@@ -401,7 +406,7 @@ export async function extractDocxWithPages(file: File): Promise<{
   const arrayBuffer = await file.arrayBuffer();
   const [plainResult, htmlResult] = await Promise.all([
     mammoth.extractRawText({ arrayBuffer }),
-    mammoth.convertToHtml({ arrayBuffer }),
+    mammoth.convertToHtml(mammothHtmlOptions(arrayBuffer)),
   ]);
   const plain = (plainResult.value ?? '').trim();
   const html = (htmlResult.value ?? '').trim();
@@ -491,7 +496,57 @@ export function splitDocxIntoPages(html: string, plain: string): Array<{ pageNum
 
 const PAGE_SEPARATOR = '\n\n';
 
-type TextItem = { str?: string; transform?: number[] };
+type TextItem = { str?: string; transform?: number[]; fontName?: string; hasEOL?: boolean };
+
+function escapeHtmlForPdf(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function isBoldPdfFont(name?: string): boolean {
+  if (!name || typeof name !== 'string') return false;
+  return /bold|black|heavy|semibold|demibold|demi/i.test(name);
+}
+
+/**
+ * Build minimal HTML per PDF page: one <p class="pdf-line"> per line; <strong> when font name suggests bold.
+ */
+function pageItemsToHtml(items: TextItem[]): string {
+  if (!items.length) return '';
+  const hasTransform = items.some((it) => Array.isArray(it.transform) && it.transform.length >= 6);
+  if (!hasTransform) {
+    const t = items.map((it) => it.str ?? '').join(' ').trim();
+    return t ? `<div class="pdf-page-body script-import-body"><p class="pdf-line">${escapeHtmlForPdf(t)}</p></div>` : '';
+  }
+  type LinePart = { str: string; bold: boolean };
+  const lines: LinePart[][] = [];
+  let lastY: number | null = null;
+  let lineParts: LinePart[] = [];
+  for (const it of items) {
+    const str = it.str ?? '';
+    const y = Array.isArray(it.transform) && it.transform.length >= 6 ? it.transform[5]! : null;
+    if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) {
+      if (lineParts.length) lines.push(lineParts);
+      lineParts = [];
+    }
+    lastY = y;
+    if (str) lineParts.push({ str, bold: isBoldPdfFont(it.fontName) });
+  }
+  if (lineParts.length) lines.push(lineParts);
+  const paras = lines.map((parts) => {
+    const inner = parts
+      .map((p) => {
+        const e = escapeHtmlForPdf(p.str);
+        return p.bold ? `<strong>${e}</strong>` : e;
+      })
+      .join(' ');
+    return `<p class="pdf-line">${inner}</p>`;
+  });
+  return `<div class="pdf-page-body script-import-body">${paras.join('')}</div>`;
+}
 
 /**
  * Build page text from getTextContent items, preserving line breaks when transform (y position) is available.
@@ -526,17 +581,21 @@ function pageItemsToText(items: TextItem[]): string {
  * Uses PDF.js getTextContent; preserves line structure when item positions are available.
  * Use this when sending pages to the backend for page-based storage.
  */
-export async function extractTextFromPdfPerPage(file: File): Promise<Array<{ pageNumber: number; text: string }>> {
+export async function extractTextFromPdfPerPage(
+  file: File
+): Promise<Array<{ pageNumber: number; text: string; html: string }>> {
   await initPdfWorker();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const numPages = pdf.numPages;
-  const pages: Array<{ pageNumber: number; text: string }> = [];
+  const pages: Array<{ pageNumber: number; text: string; html: string }> = [];
   for (let i = 1; i <= numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    const pageText = pageItemsToText((content.items || []) as TextItem[]);
-    pages.push({ pageNumber: i, text: pageText });
+    const raw = (content.items || []) as TextItem[];
+    const pageText = pageItemsToText(raw);
+    const pageHtml = pageItemsToHtml(raw);
+    pages.push({ pageNumber: i, text: pageText, html: pageHtml });
   }
   return pages;
 }

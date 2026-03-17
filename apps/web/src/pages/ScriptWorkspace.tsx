@@ -811,7 +811,14 @@ export function ScriptWorkspace() {
             setUploadStatus('failed');
             return;
           }
-          const res = await scriptsApi.extractText(version.id, undefined, { enqueueAnalysis: false, pages });
+          const res = await scriptsApi.extractText(version.id, undefined, {
+            enqueueAnalysis: false,
+            pages: pages.map((p) => ({
+              pageNumber: p.pageNumber,
+              text: p.text,
+              html: p.html?.trim() ? p.html : null,
+            })),
+          });
           const joined = pages.map((p) => p.text).join('\n\n');
           textToShow = (res as { extracted_text?: string })?.extracted_text ?? joined;
         } catch (pdfErr: any) {
@@ -1677,62 +1684,76 @@ export function ScriptWorkspace() {
                   </div>
                 )}
                 {isPageMode && currentPageData ? (
-                  <div
-                    ref={editorRef}
-                    className={cn(
-                      'script-import-body bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words text-right select-text',
-                      currentPageData.contentHtml ? '[&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm' : 'whitespace-pre-wrap'
-                    )}
-                    style={{ fontFamily: "'Cairo', sans-serif", transform: `scale(${zoomLevel})`, transformOrigin: 'top right' }}
-                    dir="rtl"
-                    lang={lang === 'ar' ? 'ar' : undefined}
-                    onMouseDown={handleMouseDown}
-                    onContextMenu={handleContextMenu}
-                    onMouseUp={handleMouseUp}
-                    onTouchEnd={() => handleMouseUp()}
-                    tabIndex={0}
-                    role="region"
-                    aria-label={lang === 'ar' ? 'محتوى الصفحة' : 'Page content'}
-                  >
-                    {currentPageData.contentHtml ? (
-                      <div dangerouslySetInnerHTML={{ __html: sanitizeFormattedHtml(currentPageData.contentHtml) }} />
-                    ) : pageFindingSegments ? (
-                      pageFindingSegments.map((seg) => {
-                        const key = `page-seg-${seg.start}-${seg.end}-${seg.finding?.id ?? 'none'}`;
-                        const text = (currentPageData.content ?? '').slice(seg.start, seg.end);
-                        return (
-                          <span key={key}>
-                            {seg.finding ? (
-                              <span
-                                data-finding-id={seg.finding.id}
-                                className={cn(
-                                  'cursor-pointer border-b-2 transition-colors',
-                                  seg.finding.reviewStatus === 'approved'
-                                    ? 'bg-success/20 border-success/50 hover:bg-success/30'
-                                    : 'bg-error/20 border-error/50 hover:bg-error/30'
-                                )}
-                                onClick={() => {
-                                  setSelectedFindingId(seg.finding!.id);
-                                  setSidebarTab('findings');
-                                }}
-                              >
-                                {text}
-                              </span>
-                            ) : (
-                              <span>{text}</span>
-                            )}
-                          </span>
-                        );
-                      })
-                    ) : (
-                      currentPageData.content ?? ''
-                    )}
+                  <div className="workspace-a4-stage flex justify-center py-6 px-2 overflow-x-auto">
+                    <div
+                      className="workspace-a4-zoom-inner"
+                      style={{
+                        transform: `scale(${zoomLevel})`,
+                        transformOrigin: 'top center',
+                      }}
+                    >
+                      <article className="workspace-a4-sheet">
+                        <div
+                          ref={editorRef}
+                          className={cn(
+                            'script-import-body text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words text-right select-text',
+                            currentPageData.contentHtml ? '[&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm' : 'whitespace-pre-wrap'
+                          )}
+                          style={{ fontFamily: "'Cairo', sans-serif" }}
+                          dir="rtl"
+                          lang={lang === 'ar' ? 'ar' : undefined}
+                          onMouseDown={handleMouseDown}
+                          onContextMenu={handleContextMenu}
+                          onMouseUp={handleMouseUp}
+                          onTouchEnd={() => handleMouseUp()}
+                          tabIndex={0}
+                          role="region"
+                          aria-label={lang === 'ar' ? 'محتوى الصفحة' : 'Page content'}
+                        >
+                          {currentPageData.contentHtml ? (
+                            <div dangerouslySetInnerHTML={{ __html: sanitizeFormattedHtml(currentPageData.contentHtml) }} />
+                          ) : pageFindingSegments ? (
+                            pageFindingSegments.map((seg) => {
+                              const key = `page-seg-${seg.start}-${seg.end}-${seg.finding?.id ?? 'none'}`;
+                              const text = (currentPageData.content ?? '').slice(seg.start, seg.end);
+                              return (
+                                <span key={key}>
+                                  {seg.finding ? (
+                                    <span
+                                      data-finding-id={seg.finding.id}
+                                      className={cn(
+                                        'cursor-pointer border-b-2 transition-colors',
+                                        seg.finding.reviewStatus === 'approved'
+                                          ? 'bg-success/20 border-success/50 hover:bg-success/30'
+                                          : 'bg-error/20 border-error/50 hover:bg-error/30'
+                                      )}
+                                      onClick={() => {
+                                        setSelectedFindingId(seg.finding!.id);
+                                        setSidebarTab('findings');
+                                      }}
+                                    >
+                                      {text}
+                                    </span>
+                                  ) : (
+                                    <span>{text}</span>
+                                  )}
+                                </span>
+                              );
+                            })
+                          ) : (
+                            currentPageData.content ?? ''
+                          )}
+                        </div>
+                      </article>
+                    </div>
                   </div>
                 ) : editorData?.contentHtml ? (
+                  <div className="workspace-a4-stage workspace-a4-stage--fluid">
+                    <div className="workspace-a4-sheet workspace-a4-sheet--scroll">
                   <div
                     key="editor-with-html"
               ref={editorRef}
-                    className="script-import-body bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main break-words text-right select-text [&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm"
+                    className="script-import-body min-h-[480px] text-text-main break-words text-right select-text [&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm"
                     style={{ fontFamily: "'Cairo', sans-serif" }}
                     dir="rtl"
                     lang={lang === 'ar' ? 'ar' : undefined}
@@ -1769,11 +1790,15 @@ export function ScriptWorkspace() {
               role="region"
                     aria-label={lang === 'ar' ? 'محتوى النص' : 'Script content'}
                   />
+                    </div>
+                  </div>
                 ) : (
+                  <div className="workspace-a4-stage workspace-a4-stage--fluid">
+                    <div className="workspace-a4-sheet workspace-a4-sheet--scroll">
                   <div
                     key="editor-fallback"
                     ref={editorRef}
-                    className="script-import-body bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words whitespace-pre-wrap text-right select-text"
+                    className="script-import-body min-h-[480px] text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words whitespace-pre-wrap text-right select-text"
                     style={{ fontFamily: "'Cairo', sans-serif" }}
                     dir="rtl"
                     lang={lang === 'ar' ? 'ar' : undefined}
@@ -1826,6 +1851,8 @@ export function ScriptWorkspace() {
                     ) : (
                       <span dangerouslySetInnerHTML={{ __html: viewerHtml }} />
                     )}
+                  </div>
+                    </div>
                   </div>
                 )}
                 {tooltipFinding && (

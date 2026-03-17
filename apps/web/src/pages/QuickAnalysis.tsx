@@ -153,7 +153,14 @@ export function QuickAnalysis() {
         const pages = await extractTextFromPdfPerPage(file);
         const hasText = pages.some((p) => p.text?.trim());
         if (!hasText) throw new Error(isAr ? 'لم يتم العثور على نص داخل PDF' : 'No text found in PDF');
-        await scriptsApi.extractText(version.id, undefined, { enqueueAnalysis: false, pages });
+        await scriptsApi.extractText(version.id, undefined, {
+          enqueueAnalysis: false,
+          pages: pages.map((p) => ({
+            pageNumber: p.pageNumber,
+            text: p.text,
+            html: p.html?.trim() ? p.html : null,
+          })),
+        });
       }
 
       await scriptsApi.updateScript(quickScript.id, { currentVersionId: version.id });
