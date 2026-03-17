@@ -81,7 +81,7 @@ Details: **`docs/OFFSETS_AND_PAGES.md`**.
 
 **Viewer page on cards:** Report/workspace finding cards prefer **page derived from `start_offset_global` + `script_pages`** (same rule as highlights). Results page loads editor pages to label findings. **Page-local offsets** (`start_offset_page` / `end_offset_page`) on `analysis_findings` tighten highlights on the extracted page text when present (worker fills on new analyses).
 
-**DOCX without Word page breaks:** If the file has **no** OOXML page breaks, pages may split on **scene headings** (`المشهد …`, `INT.`, `EXT.`, etc.) before falling back to size-based chunks. Prefer inserting **page breaks in Word** for exact pagination. On upload, a **console warning** logs if joined page text does not match full plain (slice bug signal).
+**DOCX without Word page breaks:** Scene headings (`المشهد …`, `INT.`, …) group content; any single “page” **longer than ~2600 characters** is further split at paragraph/newline boundaries into **~1680-character** slices so workspace sheets are closer to a printed page. For **exact** Word pagination, insert **page breaks** in Word. On upload, a **console warning** logs if joined page text ≠ full plain.
 
 **PDF originals:** For PDF imports, the editor response may include **`sourcePdfSignedUrl`** (short-lived). The workspace offers **Original PDF** vs **Extracted text**; highlights apply only on extracted text.
 

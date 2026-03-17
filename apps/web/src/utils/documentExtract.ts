@@ -140,6 +140,83 @@ export async function getDocxPageTextsFromOoxml(arrayBuffer: ArrayBuffer): Promi
 /** Approximate chars per "page" when splitting DOCX with no explicit page breaks (lower = more pages). */
 const CHARS_PER_VIRTUAL_PAGE = 1200;
 
+/**
+ * Heuristic DOCX pages (scene / char split) can be one long "المشهد" block — longer than a printed Word page.
+ * Subdivide at paragraph/newline boundaries into ~print-sized slices (no Word page breaks in file).
+ */
+const MAX_DOCX_HEURISTIC_PAGE_CHARS = 2600;
+const TARGET_PRINT_LIKE_DOCX_CHUNK = 1680;
+
+/** Contiguous slices of plain; lengths sum to original (for HTML index alignment). */
+function slicePlainIntoPrintLikeChunks(plain: string, maxLen: number): string[] {
+  if (plain.length <= maxLen) return [plain];
+  const slices: string[] = [];
+  let i = 0;
+  while (i < plain.length) {
+    let j = Math.min(i + maxLen, plain.length);
+    if (j < plain.length) {
+      const pb = plain.lastIndexOf('\n\n', j);
+      if (pb >= i + Math.floor(maxLen * 0.32)) j = pb + 2;
+      else {
+        const nl = plain.lastIndexOf('\n', j);
+        if (nl >= i + Math.floor(maxLen * 0.38)) j = nl + 1;
+      }
+    }
+    slices.push(plain.slice(i, j));
+    i = j;
+  }
+  return slices;
+}
+
+function subdivideOversizedDocxPages(
+  pages: Array<{ pageNumber: number; text: string; html: string }>
+): Array<{ pageNumber: number; text: string; html: string }> {
+  const flat: Array<{ text: string; html: string }> = [];
+  for (const p of pages) {
+    const t = p.text ?? '';
+    if (t.length <= MAX_DOCX_HEURISTIC_PAGE_CHARS) {
+      flat.push({ text: t.trim(), html: p.html });
+      continue;
+    }
+    const rawSlices = slicePlainIntoPrintLikeChunks(t, TARGET_PRINT_LIKE_DOCX_CHUNK);
+    const targets: number[] = [];
+    let acc = 0;
+    for (let k = 0; k < rawSlices.length - 1; k++) {
+      acc += rawSlices[k]!.length;
+      targets.push(acc);
+    }
+    const th = (p.html ?? '').trim();
+    if (rawSlices.length <= 1 || !th) {
+      flat.push({ text: t.trim(), html: p.html });
+      continue;
+    }
+    const idx = findHtmlIndicesByTextLength(th, targets);
+    if (idx.length < targets.length) {
+      for (const raw of rawSlices) {
+        const te = raw.trim();
+        if (te) flat.push({ text: te, html: escapeHtmlMinimal(te) });
+      }
+      continue;
+    }
+    const htmlParts: string[] = [];
+    let start = 0;
+    for (const cut of idx) {
+      htmlParts.push(th.slice(start, cut).trim());
+      start = cut;
+    }
+    htmlParts.push(th.slice(start).trim());
+    for (let u = 0; u < rawSlices.length; u++) {
+      const te = rawSlices[u]!.trim();
+      if (!te) continue;
+      flat.push({
+        text: te,
+        html: (htmlParts[u] ?? '').trim() || escapeHtmlMinimal(te),
+      });
+    }
+  }
+  return flat.map((p, n) => ({ pageNumber: n + 1, text: p.text, html: p.html }));
+}
+
 /** Find safe split positions in HTML (after closing tags) near target indices */
 function findSafeSplitPositions(html: string, numSplits: number): number[] {
   if (numSplits <= 0) return [];
@@ -435,10 +512,10 @@ export async function extractDocxWithPages(file: File): Promise<{
 
   const scenePages = trySplitDocxPagesBySceneHeadings(plain, html);
   if (scenePages.length > 1) {
-    return { plain, html, pages: scenePages };
+    return { plain, html, pages: subdivideOversizedDocxPages(scenePages) };
   }
   const pages = splitDocxIntoPages(html, plain);
-  return { plain, html, pages };
+  return { plain, html, pages: subdivideOversizedDocxPages(pages) };
 }
 
 /**
