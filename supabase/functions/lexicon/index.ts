@@ -391,10 +391,20 @@ Deno.serve(async (req: Request) => {
       return json({ error: "term is required" }, 400);
     }
     const term = termRaw.trim();
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    // Project-wide Edge secrets (Dashboard: Project Settings → Edge Functions → Secrets)
+    const apiKey =
+      Deno.env.get("OPENAI_API_KEY")?.trim() ||
+      Deno.env.get("OPENAI_KEY")?.trim() ||
+      Deno.env.get("GPT_API_KEY")?.trim();
     if (!apiKey) {
-      console.warn("[lexicon] OPENAI_API_KEY not set");
-      return json({ error: "Conjugation service not configured" }, 503);
+      console.warn("[lexicon] No OpenAI key: set OPENAI_API_KEY in Supabase Edge secrets (not in web .env)");
+      return json(
+        {
+          error: "Conjugation service not configured",
+          hint: "Supabase Dashboard → Project Settings → Edge Functions → Secrets → add OPENAI_API_KEY. Or: supabase secrets set OPENAI_API_KEY=sk-...",
+        },
+        503
+      );
     }
     const systemMsg = `You are a linguist. Given an Arabic word (verb or noun), output a JSON array of common conjugations, derived forms, or variants that might appear in text (e.g. for ضرب: يضرب، تضرب، ضربا، مضروب، اضرب، نضرب). Include the original word. Output only a JSON array of strings, no other text. Example: ["ضرب","يضرب","تضرب","ضربا","مضروب"]`;
     const userMsg = `List Arabic conjugations/forms for this word (output JSON array only): ${term}`;

@@ -4,7 +4,7 @@ import { useLangStore } from '@/store/langStore';
 import { useDataStore, LexiconTerm } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
 import { getPolicyArticles } from '@/data/policyMap';
-import { getCanonicalAtomOptions } from '@/data/canonicalAtomGcamMap';
+import { getCanonicalAtomOptions, inferCanonicalAtomFromGcam } from '@/data/canonicalAtomGcamMap';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -445,10 +445,23 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
     if (isOpen) {
       const existingTerm = termId ? lexiconTerms.find(t => t.id === termId) : null;
       if (existingTerm) {
+        const inferred = inferCanonicalAtomFromGcam(
+          existingTerm.gcam_article_id,
+          existingTerm.gcam_atom_id ?? null
+        );
+        const opt = inferred ? getCanonicalAtomOptions().find((o) => o.id === inferred) : null;
         setFormData({
           ...existingTerm,
           term_variants: existingTerm.term_variants ?? [],
-          canonical_atom: '',
+          canonical_atom: inferred || '',
+          ...(opt
+            ? {
+                gcam_article_id: opt.articleId,
+                gcam_atom_id: opt.atomId ?? '',
+                gcam_article_title_ar:
+                  getPolicyArticles().find((a) => a.articleId === opt.articleId)?.title_ar ?? existingTerm.gcam_article_title_ar,
+              }
+            : {}),
         });
       } else {
         setFormData(defaultForm);
@@ -475,8 +488,8 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
       if (msg.includes('503') || msg.includes('not configured') || msg.includes('Conjugation service')) {
         setError(
           lang === 'ar'
-            ? 'توليد التصريفات غير مفعّل. أضف OPENAI_API_KEY في Supabase (Edge Functions → lexicon → Secrets) لتفعيله، أو أضف التصريفات يدوياً.'
-            : 'Generate conjugations is not configured. Add OPENAI_API_KEY in Supabase (Edge Functions → lexicon → Secrets) to enable it, or add variants manually.'
+            ? 'توليد التصريفات غير مفعّل. في Supabase: الإعدادات → Edge Functions → Secrets → أضف OPENAI_API_KEY (مفتاح OpenAI). المفتاح في إعدادات المشروع وليس في ملف الويب. أو أضف التصريفات يدوياً.'
+            : 'Generate conjugations needs OPENAI_API_KEY in Supabase: Project Settings → Edge Functions → Secrets (project secrets, not your web app .env). Or add variants manually.'
         );
       } else {
         setError(lang === 'ar' ? 'فشل توليد التصريفات' : 'Failed to generate conjugations');
@@ -494,6 +507,10 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
     setError('');
     if (!formData.term?.trim()) {
       setError(lang === 'ar' ? 'المصطلح مطلوب' : 'Term is required');
+      return;
+    }
+    if (!formData.canonical_atom?.trim()) {
+      setError(lang === 'ar' ? 'اختر نوع المخالفة (إطار الذرات)' : 'Select a violation type (canonical atom)');
       return;
     }
 
@@ -558,7 +575,7 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
         {/* Canonical atom: when selected, Article + Atom + Title are set automatically and shown read-only */}
         <div>
           <label className="block text-sm font-medium text-text-main mb-1">
-            {lang === 'ar' ? 'نوع المخالفة (إطار الذرات)' : 'Canonical atom'}
+            {lang === 'ar' ? 'نوع المخالفة (إطار الذرات) *' : 'Violation type (canonical atom) *'}
           </label>
           <Select
             value={formData.canonical_atom ?? ''}
@@ -591,7 +608,7 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
           />
           {formData.canonical_atom ? (
             <div className="mt-2 p-3 rounded-md bg-muted/50 border border-border text-sm text-text-main">
-              {lang === 'ar' ? 'المادة والذرة (تلقائي):' : 'Article & atom (auto):'}{' '}
+              {lang === 'ar' ? 'المادة والذرة المرتبطة:' : 'Linked article & atom:'}{' '}
               <span dir="rtl" className="font-medium">
                 {lang === 'ar' ? `م ${formData.gcam_article_id}` : `Art ${formData.gcam_article_id}`}
                 {formData.gcam_article_title_ar ? ` — ${formData.gcam_article_title_ar}` : ''}
@@ -600,7 +617,7 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
             </div>
           ) : (
             <p className="text-xs text-text-muted mt-0.5">
-              {lang === 'ar' ? 'اختر نوع المخالفة لملء المادة والذرة تلقائياً.' : 'Select a type to set Article and Atom automatically.'}
+              {lang === 'ar' ? 'مطلوب. يحدد المادة والذرة تلقائياً.' : 'Required. Sets article and atom automatically.'}
             </p>
           )}
         </div>
@@ -703,59 +720,6 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
                 : 'e.g. ضرب → يضرب، تضرب. Analysis will match any of these forms in the script.'}
             </p>
           </div>
-        )}
-
-        {/* Article / Atom / Title: only shown when no canonical atom selected (manual selection) */}
-        {!formData.canonical_atom && (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <Select
-                label={t('gcamArticleId')}
-                value={formData.gcam_article_id?.toString()}
-                onChange={e => {
-                  const articleId = parseInt(e.target.value) || 1;
-                  const article = getPolicyArticles().find(a => a.articleId === articleId);
-                  setFormData({
-                    ...formData,
-                    gcam_article_id: articleId,
-                    gcam_article_title_ar: article?.title_ar || '',
-                    gcam_atom_id: ''
-                  });
-                }}
-                options={getPolicyArticles().map(a => ({
-                  label: `${lang === 'ar' ? 'مادة' : 'Art'} ${a.articleId} - ${lang === 'ar' ? a.title_ar : ((a as { title_en?: string }).title_en ?? `Art ${a.articleId}`)}`,
-                  value: String(a.articleId)
-                }))}
-                className="w-full"
-              />
-              {(() => {
-                const selectedArticle = getPolicyArticles().find(a => a.articleId === (formData.gcam_article_id || 1));
-                const atoms = selectedArticle?.atoms || [];
-                if (atoms.length > 0) {
-                  return (
-                    <Select
-                      label={t('gcamAtomId')}
-                      value={formData.gcam_atom_id || ''}
-                      onChange={e => setFormData({ ...formData, gcam_atom_id: e.target.value })}
-                      options={[
-                        { label: lang === 'ar' ? 'الكل (لا تحديد)' : 'All (None)', value: '' },
-                        ...atoms.map(atom => ({
-                          label: `${atom.atomId} - ${lang === 'ar' ? atom.title_ar : ((atom as { title_en?: string }).title_en ?? atom.atomId)}`,
-                          value: atom.atomId
-                        }))
-                      ]}
-                    />
-                  );
-                }
-                return null;
-              })()}
-            </div>
-            <Input
-              label={t('gcamArticleTitle')}
-              value={formData.gcam_article_title_ar || ''}
-              onChange={e => setFormData({ ...formData, gcam_article_title_ar: e.target.value })}
-            />
-          </>
         )}
 
         <Textarea

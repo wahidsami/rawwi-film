@@ -78,6 +78,16 @@ const LABELS: Record<CanonicalAtomId, { ar: string; en: string }> = {
   APPEARANCE: { ar: 'مظهر', en: 'Appearance' },
 };
 
+/** Infer canonical atom from stored GCAM article/atom (for edit form). */
+export function inferCanonicalAtomFromGcam(articleId: number, atomId: string | null | undefined): CanonicalAtomId | '' {
+  const opts = getCanonicalAtomOptions();
+  const tAtom = (atomId ?? '').trim();
+  const exact = opts.find((o) => o.articleId === articleId && (o.atomId ?? '').trim() === tAtom);
+  if (exact) return exact.id;
+  const byArticle = opts.find((o) => o.articleId === articleId);
+  return byArticle?.id ?? '';
+}
+
 /** Options for the Canonical atom dropdown with resolved articleId and atomId. */
 export function getCanonicalAtomOptions(): CanonicalAtomOption[] {
   const articles = getPolicyArticles();
