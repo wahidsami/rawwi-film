@@ -110,6 +110,70 @@ function tightenHighlightRangeToEvidence(
   return { start: lo, end: hi };
 }
 
+/** Finding-card text → search in plain (like Ctrl+F); highlight only that span. */
+function normalizeEvidenceForSearch(raw: string): string {
+  let s = (raw ?? '').trim();
+  s = s.replace(/^[\s"'""«»„]+|[\s"'""«»„]+$/gu, '').trim();
+  return s;
+}
+
+function locateSpanByEvidenceSearch(
+  plain: string,
+  f: Pick<AnalysisFinding, 'evidenceSnippet' | 'startOffsetGlobal' | 'endOffsetGlobal'>,
+  opts?: { sliceGlobalStart?: number; pageSlice?: boolean }
+): { start: number; end: number } | null {
+  if (!plain) return null;
+  let ev = normalizeEvidenceForSearch(f.evidenceSnippet ?? '');
+  if (ev.length < 2) return null;
+
+  const sliceStart = opts?.sliceGlobalStart ?? 0;
+  const pageSlice = opts?.pageSlice === true;
+  const hintG = f.startOffsetGlobal ?? -1;
+  const hintL = hintG >= 0 ? hintG - sliceStart : Number.NaN;
+  const L = plain.length;
+
+  const gather = (needle: string) => {
+    let m = findTextOccurrences(plain, needle, { minConfidence: 1.0 });
+    if (m.length === 0) m = findTextOccurrences(plain, needle, { minConfidence: 0.85 });
+    return m;
+  };
+
+  const pick = (matches: { start: number; end: number }[]) => {
+    if (matches.length === 0) return null;
+    if (matches.length === 1) return { start: matches[0].start, end: matches[0].end };
+    const hintOk = hintG > 0 && (!pageSlice || (hintL >= -120 && hintL <= L + 120));
+    if (hintOk) {
+      const h = pageSlice ? Math.max(0, Math.min(hintL, L)) : Math.min(hintG, L);
+      const best = findBestMatch(matches as Parameters<typeof findBestMatch>[0], h);
+      return best ? { start: best.start, end: best.end } : null;
+    }
+    const best = findBestMatch(matches as Parameters<typeof findBestMatch>[0], L * 0.42);
+    return best ? { start: best.start, end: best.end } : { start: matches[0].start, end: matches[0].end };
+  };
+
+  let matches = gather(ev);
+  let hit = pick(matches);
+  if (hit) return hit;
+
+  if (ev.length > 14) {
+    for (let n = Math.min(ev.length, 72); n >= 10; n--) {
+      const sub = ev.slice(-n);
+      const m = gather(sub);
+      if (m.length === 1) return { start: m[0].start, end: m[0].end };
+      const p = pick(m);
+      if (p) return p;
+    }
+  }
+
+  const collapsed = ev.replace(/\s+/g, ' ');
+  if (collapsed !== ev) {
+    hit = pick(gather(collapsed));
+    if (hit) return hit;
+  }
+
+  return null;
+}
+
 function safeUploadFileName(fileName: string): string {
   const trimmed = fileName.trim();
   const dotIdx = trimmed.lastIndexOf('.');
@@ -1545,13 +1609,20 @@ export function ScriptWorkspace() {
       let appliedCount = 0;
       const domRaw = idx.segments.map((s) => s.text).join('');
       for (const f of sorted) {
-        let loc = locateOpts
-          ? locateFindingInContent(domRaw, f, locateOpts)
-          : locateFindingInContent(domRaw, f);
-        if (!loc && currentPageData?.content) {
+        let loc: { start: number; end: number } | null =
+          locateSpanByEvidenceSearch(domRaw, f, locateOpts) ??
+          (currentPageData?.content
+            ? locateSpanByEvidenceSearch(currentPageData.content, f, locateOpts)
+            : null);
+        if (!loc) {
           loc = locateOpts
-            ? locateFindingInContent(currentPageData.content, f, locateOpts)
-            : locateFindingInContent(currentPageData.content, f);
+            ? locateFindingInContent(domRaw, f, locateOpts)
+            : locateFindingInContent(domRaw, f);
+          if (!loc && currentPageData?.content) {
+            loc = locateOpts
+              ? locateFindingInContent(currentPageData.content, f, locateOpts)
+              : locateFindingInContent(currentPageData.content, f);
+          }
         }
         let rawStart: number;
         let rawEnd: number;
@@ -1563,7 +1634,7 @@ export function ScriptWorkspace() {
           rawEnd = f.endOffsetGlobal ?? -1;
           if (rawStart < 0 || rawEnd <= rawStart) continue;
         }
-        const evSnip = (f.evidenceSnippet ?? '').trim();
+        const evSnip = normalizeEvidenceForSearch(f.evidenceSnippet ?? '');
         if (evSnip.length >= 4 && rawEnd > rawStart) {
           const t = tightenHighlightRangeToEvidence(domRaw, rawStart, rawEnd, evSnip);
           rawStart = t.start;
@@ -1668,10 +1739,16 @@ export function ScriptWorkspace() {
         setHighlightExpectedCount(reportFindings.length);
         resolved = reportFindings
           .map((f) => {
+            const span =
+              locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts) ??
+              locateSpanByEvidenceSearch(domRaw, f, pageSliceOpts);
+            if (span) return { ...f, startOffsetGlobal: span.start, endOffsetGlobal: span.end };
             const loc =
               locateFindingInContent(pagePlain, f, pageSliceOpts) ??
               locateFindingInContent(domRaw, f, pageSliceOpts);
-            return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
+            if (!loc) return null;
+            const t = tightenHighlightRangeToEvidence(pagePlain, loc.start, loc.end, f.evidenceSnippet ?? '');
+            return { ...f, startOffsetGlobal: t.start, endOffsetGlobal: t.end };
           })
           .filter(Boolean) as AnalysisFinding[];
       } else {
@@ -1689,19 +1766,19 @@ export function ScriptWorkspace() {
         setHighlightExpectedCount(onPage.length);
         resolved = onPage
           .map((f) => {
+            const span =
+              locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts) ??
+              locateSpanByEvidenceSearch(domRaw, f, pageSliceOpts);
+            if (span) return { ...f, startOffsetGlobal: span.start, endOffsetGlobal: span.end };
             const loc =
               locateFindingInContent(domRaw, f, pageSliceOpts) ??
               locateFindingInContent(pagePlain, f, pageSliceOpts);
-            return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
+            if (!loc) return null;
+            const t = tightenHighlightRangeToEvidence(pagePlain, loc.start, loc.end, f.evidenceSnippet ?? '');
+            return { ...f, startOffsetGlobal: t.start, endOffsetGlobal: t.end };
           })
           .filter(Boolean) as AnalysisFinding[];
       }
-      resolved = resolved.map((f) => {
-        const s = f.startOffsetGlobal ?? 0;
-        const e = f.endOffsetGlobal ?? s;
-        const t = tightenHighlightRangeToEvidence(pagePlain, s, e, f.evidenceSnippet ?? '');
-        return { ...f, startOffsetGlobal: t.start, endOffsetGlobal: t.end };
-      });
       setHighlightLocatableCount(resolved.length);
       if (IS_DEV) {
         console.log(
@@ -1735,16 +1812,14 @@ export function ScriptWorkspace() {
     setHighlightExpectedCount(reportFindings.length);
     const validFindings = reportFindings
       .map((f) => {
+        const span = locateSpanByEvidenceSearch(domRaw, f);
+        if (span) return { ...f, startOffsetGlobal: span.start, endOffsetGlobal: span.end };
         const loc = locateFindingInContent(domRaw, f);
-        return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
-      })
-      .filter(Boolean)
-      .map((f) => {
-        const s = f.startOffsetGlobal ?? 0;
-        const e = f.endOffsetGlobal ?? s;
-        const t = tightenHighlightRangeToEvidence(domRaw, s, e, f.evidenceSnippet ?? '');
+        if (!loc) return null;
+        const t = tightenHighlightRangeToEvidence(domRaw, loc.start, loc.end, f.evidenceSnippet ?? '');
         return { ...f, startOffsetGlobal: t.start, endOffsetGlobal: t.end };
-      }) as AnalysisFinding[];
+      })
+      .filter(Boolean) as AnalysisFinding[];
     setHighlightLocatableCount(validFindings.length);
     if (IS_DEV) {
       console.log(`[ScriptWorkspace] Full-doc highlights: ${validFindings.length}/${reportFindings.length}`);
