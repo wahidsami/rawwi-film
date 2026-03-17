@@ -7,7 +7,7 @@
 import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
-import { getCorrelationId } from "../_shared/utils.ts";
+import { getCorrelationId, normalizeText } from "../_shared/utils.ts";
 import { canOverrideOwnScriptDecision, isRegulatorOnly, isSuperAdminOrAdmin, isUserAdmin } from "../_shared/roleCheck.ts";
 
 function pathAfter(base: string, url: string): string {
@@ -439,7 +439,8 @@ Deno.serve(async (req: Request) => {
         contentHtml: row.content_html ?? null,
         startOffsetGlobal,
       };
-      startOffsetGlobal += row.content.length + PAGE_SEP_LEN;
+      const normalizedLen = normalizeText(row.content).length;
+      startOffsetGlobal += normalizedLen + PAGE_SEP_LEN;
       return out;
     });
     const response: Record<string, unknown> = { content, contentHash, contentHtml, sections };

@@ -224,12 +224,16 @@ Deno.serve(async (req: Request) => {
       console.warn(`[extract] correlationId=${correlationId} script_pages delete failed:`, delErr.message);
     }
 
-    const pageRows = sorted.map((p, i) => ({
-      version_id: versionId,
-      page_number: p.pageNumber ?? i + 1,
-      content: normalizedParts[i] ?? "",
-      content_html: p.html != null && typeof p.html === "string" ? norm(String(p.html)) || null : null,
-    }));
+    // Store raw page text in script_pages for display (preserves line breaks). script_text.content stays normalized for analysis.
+    const pageRows = sorted.map((p, i) => {
+      const raw = String(p.text ?? "").trim().replace(/\0/g, "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+      return {
+        version_id: versionId,
+        page_number: p.pageNumber ?? i + 1,
+        content: raw || (normalizedParts[i] ?? ""),
+        content_html: p.html != null && typeof p.html === "string" ? norm(String(p.html)) || null : null,
+      };
+    });
     const { error: insErr } = await supabase.from("script_pages").insert(pageRows);
     if (insErr) {
       console.warn(`[extract] correlationId=${correlationId} script_pages insert failed:`, insErr.message);

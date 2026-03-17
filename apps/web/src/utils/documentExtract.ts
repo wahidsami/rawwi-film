@@ -64,9 +64,39 @@ export async function extractDocx(file: File): Promise<{ plain: string; html: st
 
 const PAGE_SEPARATOR = '\n\n';
 
+type TextItem = { str?: string; transform?: number[] };
+
+/**
+ * Build page text from getTextContent items, preserving line breaks when transform (y position) is available.
+ */
+function pageItemsToText(items: TextItem[]): string {
+  if (!items.length) return "";
+  const hasTransform = items.some((it) => Array.isArray(it.transform) && it.transform.length >= 6);
+  if (!hasTransform) {
+    return items.map((it) => it.str ?? "").join(" ").trim();
+  }
+  const lines: string[] = [];
+  let lastY: number | null = null;
+  let lineParts: string[] = [];
+  for (const it of items as TextItem[]) {
+    const str = it.str ?? "";
+    const y = Array.isArray(it.transform) && it.transform.length >= 6 ? it.transform[5] : null;
+    if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) {
+      if (lineParts.length) {
+        lines.push(lineParts.join(" ").trim());
+        lineParts = [];
+      }
+    }
+    lastY = y;
+    if (str) lineParts.push(str);
+  }
+  if (lineParts.length) lines.push(lineParts.join(" ").trim());
+  return lines.join("\n").trim();
+}
+
 /**
  * Extract text per page from a PDF file (browser).
- * Uses PDF.js getTextContent; no text layer (scanned PDFs) returns empty string per page.
+ * Uses PDF.js getTextContent; preserves line structure when item positions are available.
  * Use this when sending pages to the backend for page-based storage.
  */
 export async function extractTextFromPdfPerPage(file: File): Promise<Array<{ pageNumber: number; text: string }>> {
@@ -78,10 +108,7 @@ export async function extractTextFromPdfPerPage(file: File): Promise<Array<{ pag
   for (let i = 1; i <= numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    const pageText = (content.items as { str?: string }[])
-      .map((item) => item.str ?? '')
-      .join(' ')
-      .trim();
+    const pageText = pageItemsToText((content.items || []) as TextItem[]);
     pages.push({ pageNumber: i, text: pageText });
   }
   return pages;

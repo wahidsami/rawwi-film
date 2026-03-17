@@ -8,7 +8,7 @@ import { useDataStore } from '@/store/dataStore';
 import { scriptsApi, reportsApi } from '@/api';
 import type { Script } from '@/api/models';
 import type { ReportListItem } from '@/api/models';
-import { extractDocx, extractTextFromPdf } from '@/utils/documentExtract';
+import { extractDocx, extractTextFromPdfPerPage } from '@/utils/documentExtract';
 import { formatDate, formatTime } from '@/utils/dateFormat';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -143,9 +143,10 @@ export function QuickAnalysis() {
         if (!plain?.trim()) throw new Error(isAr ? 'لم يتم العثور على نص داخل DOCX' : 'No text found in DOCX');
         await scriptsApi.extractText(version.id, plain, { enqueueAnalysis: false, contentHtml: html?.trim() || null });
       } else {
-        const text = await extractTextFromPdf(file);
-        if (!text?.trim()) throw new Error(isAr ? 'لم يتم العثور على نص داخل PDF' : 'No text found in PDF');
-        await scriptsApi.extractText(version.id, text, { enqueueAnalysis: false });
+        const pages = await extractTextFromPdfPerPage(file);
+        const hasText = pages.some((p) => p.text?.trim());
+        if (!hasText) throw new Error(isAr ? 'لم يتم العثور على نص داخل PDF' : 'No text found in PDF');
+        await scriptsApi.extractText(version.id, undefined, { enqueueAnalysis: false, pages });
       }
 
       await scriptsApi.updateScript(quickScript.id, { currentVersionId: version.id });
