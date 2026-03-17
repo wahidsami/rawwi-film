@@ -470,8 +470,17 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
       const existing = formData.term_variants ?? [];
       const combined = [...new Set([...existing, ...variants])].filter((v) => v.trim() && v !== raw);
       setFormData({ ...formData, term_variants: combined });
-    } catch (e) {
-      setError(lang === 'ar' ? 'فشل توليد التصريفات' : 'Failed to generate conjugations');
+    } catch (e: unknown) {
+      const msg = (e as { message?: string })?.message ?? String(e);
+      if (msg.includes('503') || msg.includes('not configured') || msg.includes('Conjugation service')) {
+        setError(
+          lang === 'ar'
+            ? 'توليد التصريفات غير مفعّل. أضف OPENAI_API_KEY في Supabase (Edge Functions → lexicon → Secrets) لتفعيله، أو أضف التصريفات يدوياً.'
+            : 'Generate conjugations is not configured. Add OPENAI_API_KEY in Supabase (Edge Functions → lexicon → Secrets) to enable it, or add variants manually.'
+        );
+      } else {
+        setError(lang === 'ar' ? 'فشل توليد التصريفات' : 'Failed to generate conjugations');
+      }
     } finally {
       setGeneratingConjugations(false);
     }
@@ -546,17 +555,17 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
             : 'Arabic normalization is not applied (أ/إ/آ, ى/ي, ة/ه, diacritics, kashida). Terms must match script text exactly.'}
         </p>
 
-        {/* Optional: set Article + Atom from Canonical atom */}
+        {/* Canonical atom: when selected, Article + Atom + Title are set automatically and shown read-only */}
         <div>
           <label className="block text-sm font-medium text-text-main mb-1">
-            {lang === 'ar' ? 'نوع المخالفة (إطار الذرات)' : 'Canonical atom (optional)'}
+            {lang === 'ar' ? 'نوع المخالفة (إطار الذرات)' : 'Canonical atom'}
           </label>
           <Select
             value={formData.canonical_atom ?? ''}
             onChange={(e) => {
               const val = e.target.value;
               if (!val) {
-                setFormData({ ...formData, canonical_atom: undefined });
+                setFormData({ ...formData, canonical_atom: '', gcam_article_id: 1, gcam_atom_id: '', gcam_article_title_ar: '' });
                 return;
               }
               const opt = getCanonicalAtomOptions().find((o) => o.id === val);
@@ -572,7 +581,7 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
               }
             }}
             options={[
-              { label: lang === 'ar' ? '— لا تحديد —' : '— None —', value: '' },
+              { label: lang === 'ar' ? '— اختر نوع المخالفة —' : '— Select violation type —', value: '' },
               ...getCanonicalAtomOptions().map((o) => ({
                 label: lang === 'ar' ? `${o.labelAr} (م ${o.articleId})` : `${o.labelEn} (Art ${o.articleId})`,
                 value: o.id,
@@ -580,9 +589,20 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
             ]}
             className="w-full"
           />
-          <p className="text-xs text-text-muted mt-0.5">
-            {lang === 'ar' ? 'اختياري: يملأ المادة والذرة تلقائياً.' : 'Optional: fills Article and Atom automatically.'}
-          </p>
+          {formData.canonical_atom ? (
+            <div className="mt-2 p-3 rounded-md bg-muted/50 border border-border text-sm text-text-main">
+              {lang === 'ar' ? 'المادة والذرة (تلقائي):' : 'Article & atom (auto):'}{' '}
+              <span dir="rtl" className="font-medium">
+                {lang === 'ar' ? `م ${formData.gcam_article_id}` : `Art ${formData.gcam_article_id}`}
+                {formData.gcam_article_title_ar ? ` — ${formData.gcam_article_title_ar}` : ''}
+                {formData.gcam_atom_id ? ` (${formData.gcam_atom_id})` : ''}
+              </span>
+            </div>
+          ) : (
+            <p className="text-xs text-text-muted mt-0.5">
+              {lang === 'ar' ? 'اختر نوع المخالفة لملء المادة والذرة تلقائياً.' : 'Select a type to set Article and Atom automatically.'}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -685,56 +705,58 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
-          <Select
-            label={t('gcamArticleId')}
-            value={formData.gcam_article_id?.toString()}
-            onChange={e => {
-              const articleId = parseInt(e.target.value) || 1;
-              const article = getPolicyArticles().find(a => a.articleId === articleId);
-              setFormData({
-                ...formData,
-                gcam_article_id: articleId,
-                gcam_article_title_ar: article?.title_ar || '',
-                gcam_atom_id: '' // Reset atom on article change
-              });
-            }}
-            options={getPolicyArticles().map(a => ({
-              label: `${lang === 'ar' ? 'مادة' : 'Art'} ${a.articleId} - ${lang === 'ar' ? a.title_ar : ((a as { title_en?: string }).title_en ?? `Art ${a.articleId}`)}`,
-              value: String(a.articleId)
-            }))}
-            className="w-full"
-          />
-
-          {/* Show Atom dropdown only if the selected article has atoms */}
-          {(() => {
-            const selectedArticle = getPolicyArticles().find(a => a.articleId === (formData.gcam_article_id || 1));
-            const atoms = selectedArticle?.atoms || [];
-
-            if (atoms.length > 0) {
-              return (
-                <Select
-                  label={t('gcamAtomId')}
-                  value={formData.gcam_atom_id || ''}
-                  onChange={e => setFormData({ ...formData, gcam_atom_id: e.target.value })}
-                  options={[
-                    { label: lang === 'ar' ? 'الكل (لا تحديد)' : 'All (None)', value: '' },
-                    ...atoms.map(atom => ({
-                      label: `${atom.atomId} - ${lang === 'ar' ? atom.title_ar : ((atom as { title_en?: string }).title_en ?? atom.atomId)}`,
-                      value: atom.atomId
-                    }))
-                  ]}
-                />
-              );
-            }
-            return null;
-          })()}
-        </div>
-        <Input
-          label={t('gcamArticleTitle')}
-          value={formData.gcam_article_title_ar || ''}
-          onChange={e => setFormData({ ...formData, gcam_article_title_ar: e.target.value })}
-        />
+        {/* Article / Atom / Title: only shown when no canonical atom selected (manual selection) */}
+        {!formData.canonical_atom && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <Select
+                label={t('gcamArticleId')}
+                value={formData.gcam_article_id?.toString()}
+                onChange={e => {
+                  const articleId = parseInt(e.target.value) || 1;
+                  const article = getPolicyArticles().find(a => a.articleId === articleId);
+                  setFormData({
+                    ...formData,
+                    gcam_article_id: articleId,
+                    gcam_article_title_ar: article?.title_ar || '',
+                    gcam_atom_id: ''
+                  });
+                }}
+                options={getPolicyArticles().map(a => ({
+                  label: `${lang === 'ar' ? 'مادة' : 'Art'} ${a.articleId} - ${lang === 'ar' ? a.title_ar : ((a as { title_en?: string }).title_en ?? `Art ${a.articleId}`)}`,
+                  value: String(a.articleId)
+                }))}
+                className="w-full"
+              />
+              {(() => {
+                const selectedArticle = getPolicyArticles().find(a => a.articleId === (formData.gcam_article_id || 1));
+                const atoms = selectedArticle?.atoms || [];
+                if (atoms.length > 0) {
+                  return (
+                    <Select
+                      label={t('gcamAtomId')}
+                      value={formData.gcam_atom_id || ''}
+                      onChange={e => setFormData({ ...formData, gcam_atom_id: e.target.value })}
+                      options={[
+                        { label: lang === 'ar' ? 'الكل (لا تحديد)' : 'All (None)', value: '' },
+                        ...atoms.map(atom => ({
+                          label: `${atom.atomId} - ${lang === 'ar' ? atom.title_ar : ((atom as { title_en?: string }).title_en ?? atom.atomId)}`,
+                          value: atom.atomId
+                        }))
+                      ]}
+                    />
+                  );
+                }
+                return null;
+              })()}
+            </div>
+            <Input
+              label={t('gcamArticleTitle')}
+              value={formData.gcam_article_title_ar || ''}
+              onChange={e => setFormData({ ...formData, gcam_article_title_ar: e.target.value })}
+            />
+          </>
+        )}
 
         <Textarea
           label={t('description')}
