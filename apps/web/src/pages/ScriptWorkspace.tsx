@@ -117,26 +117,73 @@ function normalizeEvidenceForSearch(raw: string): string {
   return s;
 }
 
+/** Dialogue after colon / last line first — avoids highlighting the speaker line with the line below. */
+function orderedEvidenceNeedles(raw: string): string[] {
+  const ev = normalizeEvidenceForSearch(raw);
+  const needles: string[] = [];
+  const seen = new Set<string>();
+  const add = (s: string) => {
+    const t = normalizeEvidenceForSearch(s);
+    if (t.length >= 3 && !seen.has(t)) {
+      seen.add(t);
+      needles.push(t);
+    }
+  };
+
+  const tailAfterColon = (s: string) => {
+    const idx = Math.max(s.lastIndexOf(':'), s.lastIndexOf('：'));
+    if (idx < 0 || idx >= s.length - 2) return '';
+    return normalizeEvidenceForSearch(s.slice(idx + 1));
+  };
+
+  const lines = (raw ?? '')
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  if (lines.length > 1) {
+    for (let i = lines.length - 1; i >= 0; i--) add(lines[i]);
+  }
+
+  const tail = tailAfterColon(raw ?? '');
+  if (tail.length >= 4) add(tail);
+  if (lines.length === 1) {
+    const t1 = tailAfterColon(lines[0]);
+    if (t1.length >= 4) add(t1);
+  }
+
+  add(ev);
+
+  return needles;
+}
+
+function gatherExactOccurrences(plain: string, needle: string): { start: number; end: number }[] {
+  const out: { start: number; end: number }[] = [];
+  if (!needle || !plain) return out;
+  let pos = 0;
+  while (pos <= plain.length) {
+    const i = plain.indexOf(needle, pos);
+    if (i < 0) break;
+    out.push({ start: i, end: i + needle.length });
+    pos = i + 1;
+  }
+  return out;
+}
+
 function locateSpanByEvidenceSearch(
   plain: string,
   f: Pick<AnalysisFinding, 'evidenceSnippet' | 'startOffsetGlobal' | 'endOffsetGlobal'>,
   opts?: { sliceGlobalStart?: number; pageSlice?: boolean }
 ): { start: number; end: number } | null {
   if (!plain) return null;
-  let ev = normalizeEvidenceForSearch(f.evidenceSnippet ?? '');
-  if (ev.length < 2) return null;
+  const needles = orderedEvidenceNeedles(f.evidenceSnippet ?? '');
+  if (needles.length === 0) return null;
 
   const sliceStart = opts?.sliceGlobalStart ?? 0;
   const pageSlice = opts?.pageSlice === true;
   const hintG = f.startOffsetGlobal ?? -1;
   const hintL = hintG >= 0 ? hintG - sliceStart : Number.NaN;
   const L = plain.length;
-
-  const gather = (needle: string) => {
-    let m = findTextOccurrences(plain, needle, { minConfidence: 1.0 });
-    if (m.length === 0) m = findTextOccurrences(plain, needle, { minConfidence: 0.85 });
-    return m;
-  };
 
   const pick = (matches: { start: number; end: number }[]) => {
     if (matches.length === 0) return null;
@@ -151,14 +198,26 @@ function locateSpanByEvidenceSearch(
     return best ? { start: best.start, end: best.end } : { start: matches[0].start, end: matches[0].end };
   };
 
-  let matches = gather(ev);
-  let hit = pick(matches);
-  if (hit) return hit;
+  for (const needle of needles) {
+    let matches = gatherExactOccurrences(plain, needle);
+    if (matches.length === 0) {
+      matches = findTextOccurrences(plain, needle, { minConfidence: 1.0 });
+    }
+    if (matches.length === 0) {
+      matches = findTextOccurrences(plain, needle, { minConfidence: 0.85 });
+    }
+    const hit = pick(matches);
+    if (!hit) continue;
+    const spanLen = hit.end - hit.start;
+    if (spanLen <= needle.length + 10) return hit;
+  }
 
-  if (ev.length > 14) {
+  const ev = needles[needles.length - 1] ?? '';
+  if (ev.length > 12) {
     for (let n = Math.min(ev.length, 72); n >= 10; n--) {
       const sub = ev.slice(-n);
-      const m = gather(sub);
+      let m = gatherExactOccurrences(plain, sub);
+      if (m.length === 0) m = findTextOccurrences(plain, sub, { minConfidence: 0.85 });
       if (m.length === 1) return { start: m[0].start, end: m[0].end };
       const p = pick(m);
       if (p) return p;
@@ -167,7 +226,9 @@ function locateSpanByEvidenceSearch(
 
   const collapsed = ev.replace(/\s+/g, ' ');
   if (collapsed !== ev) {
-    hit = pick(gather(collapsed));
+    let m = gatherExactOccurrences(plain, collapsed);
+    if (m.length === 0) m = findTextOccurrences(plain, collapsed, { minConfidence: 0.85 });
+    const hit = pick(m);
     if (hit) return hit;
   }
 
