@@ -13,6 +13,7 @@ import type { JudgeFinding } from "./schemas.js";
 import { getScriptStandardRouterList } from "./gcam.js";
 import { ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG, injectLexiconIntoPrompts, PROMPT_VERSIONS } from "./aiConstants.js";
 import { runMultiPassDetection, DETECTION_PASSES, type LexiconTerm } from "./multiPassJudge.js";
+import { normalizeMisusedGlossaryPassTitle } from "./findingTitleNormalize.js";
 import { runHybridContextPipeline } from "./methodology-v3/index.js";
 import { upsertFindingPolicyLinks } from "./policyLinks.js";
 import { calculateSeverity } from "./severityRulebook.js";
@@ -841,6 +842,13 @@ export async function processChunkJudge(
         // Prefer model-provided evidence text for report readability.
         // Use canonical slice only when model snippet is missing.
         const excerpt = modelSnippet.length > 0 ? modelSnippet : canonicalSnippet;
+        const title_ar = normalizeMisusedGlossaryPassTitle({
+          titleAr: f.title_ar,
+          rationaleAr: f.rationale_ar ?? null,
+          detectionPass: (f as { detection_pass?: string }).detection_pass ?? null,
+          evidenceSnippet: excerpt,
+          articleId: f.article_id,
+        });
       const h = evidenceHash(
         f.article_id,
         f.atom_id ?? null,
@@ -857,7 +865,7 @@ export async function processChunkJudge(
         atom_id: f.atom_id ?? null,
         severity: f.severity,
         confidence: f.confidence,
-        title_ar: f.title_ar,
+        title_ar,
         description_ar: f.description_ar ?? "",
         evidence_snippet: excerpt,
         start_offset_global: f.start_offset_global,

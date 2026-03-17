@@ -1,4 +1,5 @@
 import { config } from "../config.js";
+import { normalizeMisusedGlossaryPassTitle } from "../findingTitleNormalize.js";
 import { callAuditorRaw, callRationaleOnly, parseAuditorWithRepair } from "../openai.js";
 import { logger } from "../logger.js";
 import type { AuditorAssessment } from "../schemas.js";
@@ -123,10 +124,18 @@ export async function runDeepAuditorPass(args: {
       : (f.rationale_ar && f.rationale_ar.trim() !== "")
         ? f.rationale_ar
         : AUDITOR_RATIONALE_DEFAULT;
+    const mergedTitle = a.title_ar ?? f.title_ar;
+    const title_ar = normalizeMisusedGlossaryPassTitle({
+      titleAr: mergedTitle,
+      rationaleAr: rationale,
+      detectionPass: (f as { detection_pass?: string }).detection_pass ?? null,
+      evidenceSnippet: f.evidence_snippet ?? "",
+      articleId: primaryArticle,
+    });
     return {
       ...f,
       canonical_finding_id: cId,
-      title_ar: a.title_ar ?? f.title_ar,
+      title_ar,
       final_ruling: a.final_ruling ?? f.final_ruling ?? "needs_review",
       rationale_ar: rationale,
       pillar_id: a.pillar_id ?? f.pillar_id,
@@ -183,7 +192,14 @@ export async function runDeepAuditorPass(args: {
         const id = m.canonical_finding_id ?? "";
         const gen = id ? generatedByCId.get(id) : undefined;
         if (!gen) return m;
-        return { ...m, rationale_ar: gen };
+        const title_ar = normalizeMisusedGlossaryPassTitle({
+          titleAr: m.title_ar,
+          rationaleAr: gen,
+          detectionPass: (m as { detection_pass?: string }).detection_pass ?? null,
+          evidenceSnippet: m.evidence_snippet ?? "",
+          articleId: m.primary_article_id ?? m.article_id,
+        });
+        return { ...m, rationale_ar: gen, title_ar };
       });
     }
   }
