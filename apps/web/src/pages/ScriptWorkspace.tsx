@@ -10,7 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
-import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download } from 'lucide-react';
+import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getPolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
@@ -51,7 +51,7 @@ import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textM
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
 import type { AnalysisJob, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
-import { extractDocx, extractTextFromPdf } from '@/utils/documentExtract';
+import { extractDocx, extractTextFromPdfPerPage } from '@/utils/documentExtract';
 import { sanitizeFormattedHtml } from '@/utils/sanitizeHtml';
 import {
   buildDomTextIndex,
@@ -538,6 +538,13 @@ export function ScriptWorkspace() {
   const [editorLoading, setEditorLoading] = useState(false);
   const [editorError, setEditorError] = useState<string | null>(null);
 
+  // Page-based view (when editorData.pages exists)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const totalPages = editorData?.pages?.length ?? 0;
+  const isPageMode = totalPages > 0;
+  const safeCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+
   const loadEditor = useCallback(async () => {
     if (!script?.id || !script?.currentVersionId) {
       setEditorData(null);
@@ -559,6 +566,13 @@ export function ScriptWorkspace() {
   useEffect(() => {
     loadEditor();
   }, [loadEditor]);
+
+  // When editor data gets pages, reset to page 1 if current is out of range
+  useEffect(() => {
+    if (totalPages > 0 && (currentPage < 1 || currentPage > totalPages)) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
 
   // After import, refetch editor so new content/sections appear
   useEffect(() => {
@@ -755,14 +769,16 @@ export function ScriptWorkspace() {
         }
       } else if (ext === 'pdf') {
         try {
-          const extracted = await extractTextFromPdf(file);
-          if (!extracted || !extracted.trim()) {
+          const pages = await extractTextFromPdfPerPage(file);
+          const hasText = pages.some((p) => p.text && p.text.trim());
+          if (!hasText) {
             toast.error(lang === 'ar' ? 'لم يتم العثور على نص (قد يكون الملف ممسوحاً ضوئياً).' : 'No text found (file may be scanned/image-only).');
             setUploadStatus('failed');
             return;
           }
-          const res = await scriptsApi.extractText(version.id, extracted, { enqueueAnalysis: false });
-          textToShow = (res as { extracted_text?: string })?.extracted_text ?? extracted;
+          const res = await scriptsApi.extractText(version.id, undefined, { enqueueAnalysis: false, pages });
+          const joined = pages.map((p) => p.text).join('\n\n');
+          textToShow = (res as { extracted_text?: string })?.extracted_text ?? joined;
         } catch (pdfErr: any) {
           toast.error(lang === 'ar' ? 'فشل استخراج PDF' : pdfErr?.message ?? 'Failed to extract PDF');
           throw pdfErr;
@@ -1249,6 +1265,36 @@ export function ScriptWorkspace() {
     [canonicalContentForHighlights, reportFindings, buildFindingSegments]
   );
 
+  // Page-mode: current page data and findings scoped to this page (for toolbar + page view)
+  const currentPageData = isPageMode && editorData?.pages?.[safeCurrentPage - 1] ? editorData.pages[safeCurrentPage - 1] : null;
+  const pageStart = currentPageData?.startOffsetGlobal ?? 0;
+  const pageEnd = currentPageData ? pageStart + (currentPageData.content?.length ?? 0) : 0;
+  const findingsOnPageWithLocalOffsets = useMemo(() => {
+    if (!currentPageData || !reportFindings.length) return [];
+    const list = reportFindings.filter(
+      (f) =>
+        f.startOffsetGlobal != null &&
+        f.endOffsetGlobal != null &&
+        f.endOffsetGlobal > pageStart &&
+        f.startOffsetGlobal < pageEnd
+    );
+    const len = currentPageData.content?.length ?? 0;
+    return list.map((f) => ({
+      ...f,
+      startOffsetGlobal: Math.max(0, (f.startOffsetGlobal ?? 0) - pageStart),
+      endOffsetGlobal: Math.min(len, (f.endOffsetGlobal ?? 0) - pageStart),
+    })) as AnalysisFinding[];
+  }, [currentPageData, pageStart, pageEnd, reportFindings]);
+  const pageFindingSegments = useMemo(
+    () =>
+      isPageMode && currentPageData?.content && findingsOnPageWithLocalOffsets.length > 0
+        ? buildFindingSegments(currentPageData.content, findingsOnPageWithLocalOffsets)
+        : currentPageData?.content
+          ? buildFindingSegments(currentPageData.content, [])
+          : null,
+    [isPageMode, currentPageData?.content, findingsOnPageWithLocalOffsets, buildFindingSegments]
+  );
+
   // Apply finding highlights in formatted HTML by wrapping DOM ranges (no innerHTML replace).
   // Skip if job was run against different canonical text (hash mismatch) or different version.
   const versionMismatch =
@@ -1535,12 +1581,106 @@ export function ScriptWorkspace() {
                       : 'Script text changed since this analysis. Re-run Smart Analysis to highlight findings.'}
                   </div>
                 )}
-                {editorData?.contentHtml ? (
+                {isPageMode && (
+                  <div className="mb-3 flex flex-wrap items-center gap-3 py-2 px-4 bg-surface border border-border rounded-xl">
+                    <span className="text-sm text-text-muted font-medium">
+                      {lang === 'ar' ? 'صفحة' : 'Page'} {safeCurrentPage} / {totalPages}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={safeCurrentPage <= 1}
+                        className="p-1.5 rounded-md border border-border bg-surface hover:bg-surface-hover disabled:opacity-40 disabled:pointer-events-none"
+                        aria-label={lang === 'ar' ? 'السابق' : 'Previous page'}
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={safeCurrentPage >= totalPages}
+                        className="p-1.5 rounded-md border border-border bg-surface hover:bg-surface-hover disabled:opacity-40 disabled:pointer-events-none"
+                        aria-label={lang === 'ar' ? 'التالي' : 'Next page'}
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="h-4 w-px bg-border" />
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel((z) => Math.max(0.5, z - 0.1))}
+                        className="p-1.5 rounded-md border border-border bg-surface hover:bg-surface-hover"
+                        aria-label={lang === 'ar' ? 'تصغير' : 'Zoom out'}
+                      >
+                        <ZoomOut className="w-5 h-5" />
+                      </button>
+                      <span className="text-sm text-text-muted min-w-[3rem] text-center">{Math.round(zoomLevel * 100)}%</span>
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel((z) => Math.min(2, z + 0.1))}
+                        className="p-1.5 rounded-md border border-border bg-surface hover:bg-surface-hover"
+                        aria-label={lang === 'ar' ? 'تكبير' : 'Zoom in'}
+                      >
+                        <ZoomIn className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {isPageMode && currentPageData ? (
+                  <div
+                    ref={editorRef}
+                    className="bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words whitespace-pre-wrap text-right select-text"
+                    style={{ fontFamily: "'Amiri', 'Noto Naskh Arabic', serif", transform: `scale(${zoomLevel})`, transformOrigin: 'top right' }}
+                    dir="rtl"
+                    lang={lang === 'ar' ? 'ar' : undefined}
+                    onMouseDown={handleMouseDown}
+                    onContextMenu={handleContextMenu}
+                    onMouseUp={handleMouseUp}
+                    onTouchEnd={() => handleMouseUp()}
+                    tabIndex={0}
+                    role="region"
+                    aria-label={lang === 'ar' ? 'محتوى الصفحة' : 'Page content'}
+                  >
+                    {pageFindingSegments
+                      ? pageFindingSegments.map((seg) => {
+                          const key = `page-seg-${seg.start}-${seg.end}-${seg.finding?.id ?? 'none'}`;
+                          const text = (currentPageData.content ?? '').slice(seg.start, seg.end);
+                          return (
+                            <span key={key}>
+                              {seg.finding ? (
+                                <span
+                                  data-finding-id={seg.finding.id}
+                                  className={cn(
+                                    'cursor-pointer border-b-2 transition-colors',
+                                    seg.finding.reviewStatus === 'approved'
+                                      ? 'bg-success/20 border-success/50 hover:bg-success/30'
+                                      : 'bg-error/20 border-error/50 hover:bg-error/30'
+                                  )}
+                                  onClick={() => {
+                                    setSelectedFindingId(seg.finding!.id);
+                                    setSidebarTab('findings');
+                                  }}
+                                >
+                                  {text}
+                                </span>
+                              ) : (
+                                <span>{text}</span>
+                              )}
+                            </span>
+                          );
+                        })
+                      : (currentPageData.content ?? '')}
+                  </div>
+                ) : editorData?.contentHtml ? (
                   <div
                     key="editor-with-html"
               ref={editorRef}
                     className="bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main break-words text-right select-text [&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm"
+                    style={{ fontFamily: "'Amiri', 'Noto Naskh Arabic', serif" }}
                     dir="rtl"
+                    lang={lang === 'ar' ? 'ar' : undefined}
                     onMouseDown={handleMouseDown}
               onContextMenu={handleContextMenu}
               onMouseUp={handleMouseUp}
@@ -1579,7 +1719,9 @@ export function ScriptWorkspace() {
                     key="editor-fallback"
                     ref={editorRef}
                     className="bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words whitespace-pre-wrap text-right select-text"
+                    style={{ fontFamily: "'Amiri', 'Noto Naskh Arabic', serif" }}
                     dir="rtl"
+                    lang={lang === 'ar' ? 'ar' : undefined}
                     onMouseDown={handleMouseDown}
                     onContextMenu={handleContextMenu}
                     onMouseUp={handleMouseUp}

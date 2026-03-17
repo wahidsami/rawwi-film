@@ -62,23 +62,36 @@ export async function extractDocx(file: File): Promise<{ plain: string; html: st
   };
 }
 
+const PAGE_SEPARATOR = '\n\n';
+
 /**
- * Extract plain text from a PDF file (browser).
- * Uses PDF.js getTextContent; no text layer (scanned PDFs) returns empty string.
+ * Extract text per page from a PDF file (browser).
+ * Uses PDF.js getTextContent; no text layer (scanned PDFs) returns empty string per page.
+ * Use this when sending pages to the backend for page-based storage.
  */
-export async function extractTextFromPdf(file: File): Promise<string> {
+export async function extractTextFromPdfPerPage(file: File): Promise<Array<{ pageNumber: number; text: string }>> {
   await initPdfWorker();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const numPages = pdf.numPages;
-  const parts: string[] = [];
+  const pages: Array<{ pageNumber: number; text: string }> = [];
   for (let i = 1; i <= numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
     const pageText = (content.items as { str?: string }[])
       .map((item) => item.str ?? '')
-      .join(' ');
-    parts.push(pageText.trim());
+      .join(' ')
+      .trim();
+    pages.push({ pageNumber: i, text: pageText });
   }
-  return parts.join('\n\n').trim();
+  return pages;
+}
+
+/**
+ * Extract plain text from a PDF file (browser) as a single string.
+ * Joins per-page text with PAGE_SEPARATOR. For page-based import use extractTextFromPdfPerPage instead.
+ */
+export async function extractTextFromPdf(file: File): Promise<string> {
+  const pages = await extractTextFromPdfPerPage(file);
+  return pages.map((p) => p.text).join(PAGE_SEPARATOR).trim();
 }

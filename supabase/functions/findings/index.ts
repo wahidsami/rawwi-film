@@ -18,7 +18,7 @@ function pathAfter(base: string, url: string): string {
   return (match?.[1] ?? "").replace(/^\/+/, "").trim();
 }
 
-const FINDING_COLS = "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_line_chunk, end_line_chunk, location, evidence_hash, created_at";
+const FINDING_COLS = "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, created_at";
 
 async function selectFindings(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -58,6 +58,7 @@ function camelFinding(r: Record<string, unknown>, createdBy: string | null = nul
     startLineChunk: r.start_line_chunk ?? null,
     endLineChunk: r.end_line_chunk ?? null,
     location: r.location ?? {},
+    pageNumber: r.page_number ?? null,
     createdAt: r.created_at,
     reviewStatus: r.review_status ?? "violation",
     reviewReason: r.review_reason ?? null,
@@ -388,6 +389,25 @@ Deno.serve(async (req: Request) => {
       const titleAr = "ملاحظة يدوية";
       const descriptionAr = manualComment || evidenceSnippet;
 
+      let pageNumber: number | null = null;
+      const { data: pageRows } = await supabase
+        .from("script_pages")
+        .select("page_number, content")
+        .eq("version_id", versionId)
+        .order("page_number", { ascending: true });
+      if (pageRows != null && pageRows.length > 0) {
+        const PAGE_SEP_LEN = 2;
+        let start = 0;
+        for (const row of pageRows as { page_number: number; content: string }[]) {
+          const end = start + (row.content?.length ?? 0);
+          if (startOffsetGlobal >= start && startOffsetGlobal < end + PAGE_SEP_LEN) {
+            pageNumber = row.page_number;
+            break;
+          }
+          start = end + PAGE_SEP_LEN;
+        }
+      }
+
       const insertPayload: Record<string, unknown> = {
         job_id: jobId,
         script_id: scriptId,
@@ -406,11 +426,12 @@ Deno.serve(async (req: Request) => {
         evidence_hash: evidenceHash,
         manual_comment: manualComment || null,
       };
+      if (pageNumber != null) insertPayload.page_number = pageNumber;
 
       const { data: inserted, error: insertErr } = await supabase
         .from("analysis_findings")
         .insert(insertPayload)
-        .select("id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, created_at, review_status, created_by, manual_comment")
+        .select("id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, page_number, created_at, review_status, created_by, manual_comment")
         .single();
 
       if (insertErr) {

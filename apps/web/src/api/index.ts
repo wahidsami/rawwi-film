@@ -103,9 +103,16 @@ export const scriptsApi = {
   /** Delete a script by id. */
   deleteScript: (id: string): Promise<{ ok: boolean }> => httpClient.delete(`/scripts/${encodeURIComponent(id)}`),
   uploadFile: (file: File): Promise<any> => httpClient.post('/upload', { fileName: file.name }),
-  extractText: (versionId: string, text?: string, options?: { enqueueAnalysis?: boolean; contentHtml?: string | null }): Promise<any> => {
+  extractText: (
+    versionId: string,
+    text?: string,
+    options?: {
+      enqueueAnalysis?: boolean;
+      contentHtml?: string | null;
+      pages?: Array<{ pageNumber: number; text: string; html?: string | null }>;
+    }
+  ): Promise<any> => {
     // PDFs (especially Arabic) can produce text that breaks JSON: backslash + u that isn't \uXXXX.
-    // Normalize Unicode (NFC). Replace \ with the 6-char sequence \u005C so JSON has valid escape and server gets one \.
     const safe = (s: string) => (s ?? "").normalize("NFC").replace(/\\/g, "\\u005C");
     const body: Record<string, unknown> = {
       versionId,
@@ -113,6 +120,13 @@ export const scriptsApi = {
     };
     if (text !== undefined && text !== null) body.text = safe(String(text));
     if (options?.contentHtml !== undefined && options?.contentHtml !== null) body.contentHtml = safe(String(options.contentHtml));
+    if (options?.pages != null && options.pages.length > 0) {
+      body.pages = options.pages.map((p) => ({
+        pageNumber: p.pageNumber,
+        text: safe(p.text),
+        ...(p.html != null && p.html !== "" && { html: safe(p.html) }),
+      }));
+    }
     return httpClient.post('/extract', body);
   },
   /** Queue analysis for a version (creates new analysis_jobs + chunks). POST /tasks */
@@ -148,6 +162,13 @@ export interface EditorSectionResponse {
   meta: Record<string, unknown>;
 }
 
+export interface EditorPageResponse {
+  pageNumber: number;
+  content: string;
+  contentHtml?: string | null;
+  startOffsetGlobal: number;
+}
+
 export interface EditorContentResponse {
   content: string;
   /** Hash of content (script_text.content_hash) for offset-canonical checks. */
@@ -155,6 +176,8 @@ export interface EditorContentResponse {
   /** Optional HTML from DOCX for formatted view; offsets refer to content. */
   contentHtml?: string | null;
   sections: EditorSectionResponse[];
+  /** When present, script is stored per-page; use for page-based workspace view. */
+  pages?: EditorPageResponse[];
 }
 
 export type GetTasksParams = { scriptId?: string; versionId?: string; limit?: number };
@@ -194,6 +217,7 @@ export interface AnalysisFinding {
   endOffsetGlobal: number | null;
   startLineChunk: number | null;
   endLineChunk: number | null;
+  pageNumber?: number | null;
   location: Record<string, unknown>;
   createdAt: string;
   reviewStatus: 'violation' | 'approved';

@@ -24,6 +24,7 @@ type CanonicalSummaryFinding = {
   related_article_ids?: number[];
   start_line_chunk?: number | null;
   end_line_chunk?: number | null;
+  page_number?: number | null;
 };
 
 export type AnalysisPdfFinding = {
@@ -40,6 +41,7 @@ export type AnalysisPdfFinding = {
   pillarId?: string | null;
   startLineChunk?: number;
   endLineChunk?: number;
+  pageNumber?: number | null;
   reviewStatus?: string;
   reviewedAt?: string;
 };
@@ -65,6 +67,7 @@ export function mapAnalysisFindingsForPdf(
       pillarId: f.pillar_id ?? null,
       startLineChunk: f.start_line_chunk ?? undefined,
       endLineChunk: f.end_line_chunk ?? undefined,
+      pageNumber: f.page_number ?? undefined,
     }));
   if (canon.length > 0) return canon;
 
@@ -88,6 +91,7 @@ export function mapAnalysisFindingsForPdf(
       pillarId: (v3.pillar_id as string | undefined) ?? null,
       startLineChunk: f.startLineChunk ?? undefined,
       endLineChunk: f.endLineChunk ?? undefined,
+      pageNumber: f.pageNumber ?? undefined,
       reviewStatus: f.reviewStatus ?? undefined,
       reviewedAt: f.reviewedAt ?? undefined,
       };

@@ -186,6 +186,11 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                   <Text style={[s.findingMeta, rtl]}>
                     {isAr ? "النوع: " : "Type: "}{sourceLabel(f.source)}
                   </Text>
+                  {(f.pageNumber != null && f.pageNumber > 0) && (
+                    <Text style={[s.findingMeta, rtl]}>
+                      {isAr ? `صفحة ${f.pageNumber}` : `Page ${f.pageNumber}`}
+                    </Text>
+                  )}
                   {f.startLineChunk != null && (
                     <Text style={[s.findingMeta, rtl]}>
                       {isAr

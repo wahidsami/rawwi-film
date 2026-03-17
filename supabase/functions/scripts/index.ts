@@ -414,6 +414,11 @@ Deno.serve(async (req: Request) => {
       console.error(`[scripts] correlationId=${correlationId} script_sections error=`, sectionErr.message);
       return json({ error: sectionErr.message }, 500);
     }
+    const { data: pageRows } = await supabase
+      .from("script_pages")
+      .select("page_number, content, content_html")
+      .eq("version_id", versionId)
+      .order("page_number", { ascending: true });
     const content = textRow != null ? (textRow as { content: string }).content : "";
     const contentHash = textRow != null ? (textRow as { content_hash?: string | null }).content_hash ?? null : null;
     const contentHtml = textRow != null ? (textRow as { content_html?: string | null }).content_html ?? null : null;
@@ -425,7 +430,21 @@ Deno.serve(async (req: Request) => {
       endOffset: r.end_offset,
       meta: r.meta ?? {},
     }));
-    return json({ content, contentHash, contentHtml, sections });
+    const PAGE_SEP_LEN = 2;
+    let startOffsetGlobal = 0;
+    const pages = (pageRows ?? []).map((row: { page_number: number; content: string; content_html?: string | null }) => {
+      const out = {
+        pageNumber: row.page_number,
+        content: row.content,
+        contentHtml: row.content_html ?? null,
+        startOffsetGlobal,
+      };
+      startOffsetGlobal += row.content.length + PAGE_SEP_LEN;
+      return out;
+    });
+    const response: Record<string, unknown> = { content, contentHash, contentHtml, sections };
+    if (pages.length > 0) response.pages = pages;
+    return json(response);
   }
 
   // GET /scripts/highlight-preference?scriptId=xxx → { jobId: string | null }

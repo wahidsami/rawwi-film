@@ -130,14 +130,19 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
-  let body: { versionId?: string; text?: string; contentHtml?: string | null; enqueueAnalysis?: boolean };
+  type Body = {
+    versionId?: string;
+    text?: string;
+    contentHtml?: string | null;
+    enqueueAnalysis?: boolean;
+    pages?: Array<{ pageNumber?: number; text?: string; html?: string | null }>;
+  };
+  let body: Body;
   try {
     const raw = await req.text();
     // PDF/extracted text can contain \u not followed by 4 hex digits (e.g. literal backslash-u).
-    // JSON.parse treats \u as start of Unicode escape and throws "unsupported Unicode escape sequence".
-    // Escape any lone \u that isn't a valid \uXXXX so parse succeeds.
     const safeRaw = raw.replace(/\\(?=u(?![0-9a-fA-F]{4}))/g, "\\\\");
-    body = JSON.parse(safeRaw) as typeof body;
+    body = JSON.parse(safeRaw) as Body;
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Invalid JSON body";
     return json({ error: msg }, 400);
@@ -147,6 +152,8 @@ Deno.serve(async (req: Request) => {
   // Normalize Unicode (NFC) so Arabic and other script from PDFs is consistent and safe for storage.
   const norm = (s: string) => (s ?? "").trim().normalize("NFC");
   const contentHtml = body.contentHtml != null && typeof body.contentHtml === "string" ? norm(body.contentHtml) || null : null;
+  const pagesInput = Array.isArray(body.pages) ? body.pages : undefined;
+  const hasPages = pagesInput != null && pagesInput.length > 0;
 
   const versionId = body?.versionId;
   if (!versionId || typeof versionId !== "string") {
@@ -181,6 +188,87 @@ Deno.serve(async (req: Request) => {
 
   if (v.extraction_status === "done" && v.extracted_text) {
     return json(toFrontendVersion(v));
+  }
+
+  const PAGE_SEP = "\n\n";
+
+  if (hasPages) {
+    // Page-based import: store script_pages and set script_text.content = concatenation (fixed separator).
+    const sorted = [...pagesInput].sort((a, b) => (a.pageNumber ?? 0) - (b.pageNumber ?? 0));
+    const normalizedParts = sorted.map((p) => normalizeText(String(p.text ?? "")));
+    const normalizedContent = normalizedParts.join(PAGE_SEP);
+    const sanitized = normalizedContent.replace(/\0/g, "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+    const contentHash = await sha256Hash(sanitized);
+    const extractedTextHash = await sha256Hash(sanitized);
+
+    await supabase
+      .from("script_versions")
+      .update({ extraction_status: "extracting" })
+      .eq("id", versionId);
+
+    const { error: updateErr } = await supabase
+      .from("script_versions")
+      .update({
+        extracted_text: sanitized,
+        extracted_text_hash: extractedTextHash,
+        extraction_status: "done",
+      })
+      .eq("id", versionId);
+
+    if (updateErr) {
+      return json({ error: updateErr.message }, 500);
+    }
+
+    const { error: delErr } = await supabase.from("script_pages").delete().eq("version_id", versionId);
+    if (delErr) {
+      console.warn(`[extract] correlationId=${correlationId} script_pages delete failed:`, delErr.message);
+    }
+
+    const pageRows = sorted.map((p, i) => ({
+      version_id: versionId,
+      page_number: p.pageNumber ?? i + 1,
+      content: normalizedParts[i] ?? "",
+      content_html: p.html != null && typeof p.html === "string" ? norm(String(p.html)) || null : null,
+    }));
+    const { error: insErr } = await supabase.from("script_pages").insert(pageRows);
+    if (insErr) {
+      console.warn(`[extract] correlationId=${correlationId} script_pages insert failed:`, insErr.message);
+    }
+
+    const editorSave = await saveScriptEditorContent(
+      supabase,
+      versionId,
+      v.script_id,
+      sanitized,
+      contentHash,
+      null
+    );
+    if (editorSave.error) {
+      console.warn(`[extract] correlationId=${correlationId} script_text/sections save failed:`, editorSave.error);
+    }
+
+    if (enqueueAnalysis) {
+      const ingest = await runIngest(
+        supabase,
+        versionId,
+        v.script_id,
+        sanitized,
+        contentHash,
+        auth.userId,
+        correlationId
+      );
+      if ("error" in ingest) {
+        return json({ error: ingest.error }, 500);
+      }
+    }
+
+    const { data: updated } = await supabase
+      .from("script_versions")
+      .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extracted_text_hash, created_at")
+      .eq("id", versionId)
+      .single();
+
+    return json(toFrontendVersion((updated ?? v) as ScriptVersionRow));
   }
 
   let extractedText: string;

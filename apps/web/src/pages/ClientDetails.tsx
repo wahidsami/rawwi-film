@@ -244,15 +244,15 @@ export function ClientDetails() {
         return;
       }
 
-      // 2. If assigning with document, upload and extract text
+      // 2. If assigning with document, upload and extract text. On failure, remove the script so no empty card is created.
       if (isAssigning && uploadFile) {
         toast.loading(lang === 'ar' ? 'جاري رفع المستند...' : 'Uploading document...', { id: 'upload-toast' });
+        let uploadAndExtractOk = false;
         try {
           if (import.meta.env.DEV) console.log('🔍 DEBUG: Starting document upload for script', saved.id, 'file:', uploadFile.name);
           const uploadResult = await uploadScriptDocument(saved.id, uploadFile);
           if (import.meta.env.DEV) console.log('🔍 DEBUG: Upload result =', uploadResult);
 
-          // Extract text client-side
           if (uploadResult.versionId) {
             toast.loading(lang === 'ar' ? 'جاري استخراج النص...' : 'Extracting text...', { id: 'upload-toast' });
 
@@ -260,41 +260,50 @@ export function ClientDetails() {
             let extractedText = '';
             let contentHtml: string | null = null;
 
-            try {
-              if (ext === 'docx') {
-                const { extractDocx } = await import('@/utils/documentExtract');
-                const { plain, html } = await extractDocx(uploadFile);
-                extractedText = plain || '';
-                contentHtml = html && html.trim() ? html.trim() : null;
-              } else if (ext === 'pdf') {
-                const { extractTextFromPdf } = await import('@/utils/documentExtract');
-                extractedText = await extractTextFromPdf(uploadFile);
-              } else if (ext === 'txt') {
-                extractedText = await uploadFile.text();
-              }
-
-              if (!extractedText || !extractedText.trim()) {
-                throw new Error('No text found in document');
-              }
-
-              // Send extracted text to server
-              const { scriptsApi } = await import('@/api');
-              await scriptsApi.extractText(uploadResult.versionId, extractedText, {
-                enqueueAnalysis: false,
-                contentHtml,
-              });
-
-              toast.success(lang === 'ar' ? 'تم رفع وتحميل المستند بنجاح' : 'Document uploaded and loaded successfully', { id: 'upload-toast' });
-            } catch (extractErr) {
-              if (import.meta.env.DEV) console.error('🔍 DEBUG: Extraction error =', extractErr);
-              toast.error(lang === 'ar' ? 'تم رفع الملف لكن فشل استخراج النص' : 'File uploaded but text extraction failed', { id: 'upload-toast' });
+            if (ext === 'docx') {
+              const { extractDocx } = await import('@/utils/documentExtract');
+              const { plain, html } = await extractDocx(uploadFile);
+              extractedText = plain || '';
+              contentHtml = html && html.trim() ? html.trim() : null;
+            } else if (ext === 'pdf') {
+              const { extractTextFromPdf } = await import('@/utils/documentExtract');
+              extractedText = await extractTextFromPdf(uploadFile);
+            } else if (ext === 'txt') {
+              extractedText = await uploadFile.text();
             }
+
+            if (!extractedText || !extractedText.trim()) {
+              throw new Error(lang === 'ar' ? 'لم يتم العثور على نص في المستند' : 'No text found in document');
+            }
+
+            const { scriptsApi } = await import('@/api');
+            await scriptsApi.extractText(uploadResult.versionId, extractedText, {
+              enqueueAnalysis: false,
+              contentHtml,
+            });
+
+            uploadAndExtractOk = true;
+            toast.success(lang === 'ar' ? 'تم رفع وتحميل المستند بنجاح' : 'Document uploaded and loaded successfully', { id: 'upload-toast' });
           } else {
+            uploadAndExtractOk = true;
             toast.success(lang === 'ar' ? 'تم رفع المستند بنجاح' : 'Document uploaded successfully', { id: 'upload-toast' });
           }
         } catch (err) {
-          if (import.meta.env.DEV) console.error('🔍 DEBUG: Upload error =', err);
-          toast.error(lang === 'ar' ? 'فشل رفع المستند' : 'Failed to upload document', { id: 'upload-toast' });
+          if (import.meta.env.DEV) console.error('🔍 DEBUG: Upload/extract error =', err);
+          try {
+            await (await import('@/api')).scriptsApi.deleteScript(saved.id);
+          } catch (_) {}
+          toast.error(lang === 'ar' ? 'فشل الرفع أو استخراج النص — لم يتم إنشاء النص' : 'Upload or extraction failed — script was not created', { id: 'upload-toast' });
+          setIsSaving(false);
+          return;
+        }
+
+        if (!uploadAndExtractOk) {
+          try {
+            await (await import('@/api')).scriptsApi.deleteScript(saved.id);
+          } catch (_) {}
+          setIsSaving(false);
+          return;
         }
       }
 

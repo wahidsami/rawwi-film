@@ -106,9 +106,10 @@ export function QuickAnalysis() {
     }
 
     setUploading(true);
+    let quickScript: { id: string; title: string; type: string; status: string } | null = null;
     try {
       const normalizedName = file.name.normalize('NFC');
-      const quickScript = await scriptsApi.createQuickScript({
+      quickScript = await scriptsApi.createQuickScript({
         title: fileTitle(normalizedName),
         type: 'Film',
         status: 'draft',
@@ -154,6 +155,12 @@ export function QuickAnalysis() {
       await loadHistory();
       navigate(`/workspace/${quickScript.id}?quick=1`);
     } catch (err: any) {
+      if (quickScript?.id) {
+        try {
+          await scriptsApi.deleteScript(quickScript.id);
+        } catch (_) {}
+        await loadHistory();
+      }
       toast.error(err?.message ?? (isAr ? 'فشل التحليل السريع' : 'Quick analysis failed'));
     } finally {
       setUploading(false);
