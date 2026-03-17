@@ -132,9 +132,15 @@ Deno.serve(async (req: Request) => {
 
   let body: { versionId?: string; text?: string; contentHtml?: string | null; enqueueAnalysis?: boolean };
   try {
-    body = await req.json();
-  } catch {
-    return json({ error: "Invalid JSON body" }, 400);
+    const raw = await req.text();
+    // PDF/extracted text can contain \u not followed by 4 hex digits (e.g. literal backslash-u).
+    // JSON.parse treats \u as start of Unicode escape and throws "unsupported Unicode escape sequence".
+    // Escape any lone \u that isn't a valid \uXXXX so parse succeeds.
+    const safeRaw = raw.replace(/\\(?=u(?![0-9a-fA-F]{4}))/g, "\\\\");
+    body = JSON.parse(safeRaw) as typeof body;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Invalid JSON body";
+    return json({ error: msg }, 400);
   }
   // Only enqueue analysis when explicitly requested (e.g. "Start Smart Analysis"). Import must not trigger analysis.
   const enqueueAnalysis = body.enqueueAnalysis === true;
