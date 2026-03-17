@@ -363,6 +363,13 @@ export function ScriptWorkspace() {
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
   const [tooltipFinding, setTooltipFinding] = useState<AnalysisFinding | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [reportFindingReviewModal, setReportFindingReviewModal] = useState<{
+    findingId: string;
+    toStatus: 'approved' | 'violation';
+    titleAr: string;
+  } | null>(null);
+  const [reportFindingReviewReason, setReportFindingReviewReason] = useState('');
+  const [reportFindingReviewSaving, setReportFindingReviewSaving] = useState(false);
   const findingCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   /** So we only restore saved highlight once per script (not on every reportHistory change). */
   const restoredHighlightRef = useRef(false);
@@ -482,6 +489,49 @@ export function ScriptWorkspace() {
       // setReportFindingsLoading(false);
     }
   }, [id, lang]);
+
+  const handleReportFindingReviewSubmit = useCallback(async () => {
+    if (!reportFindingReviewModal) return;
+    const reason = reportFindingReviewReason.trim();
+    const requireReason = settings?.platform?.requireOverrideReason !== false;
+    if (requireReason && reason.length < 2) {
+      toast.error(lang === 'ar' ? 'يرجى إدخال سبب' : 'Please enter a reason');
+      return;
+    }
+    setReportFindingReviewSaving(true);
+    try {
+      await findingsApi.reviewFinding(reportFindingReviewModal.findingId, reportFindingReviewModal.toStatus, reason || '');
+      setReportFindings((prev) =>
+        prev.map((f) =>
+          f.id === reportFindingReviewModal.findingId
+            ? {
+                ...f,
+                reviewStatus: reportFindingReviewModal.toStatus,
+                reviewReason: reason,
+                reviewedAt: new Date().toISOString(),
+                reviewedBy: user?.id ?? null,
+              }
+            : f
+        )
+      );
+      toast.success(
+        reportFindingReviewModal.toStatus === 'approved'
+          ? lang === 'ar'
+            ? 'تم اعتماد الملاحظة كآمنة'
+            : 'Finding marked as safe'
+          : lang === 'ar'
+            ? 'تم إعادة الملاحظة كمخالفة'
+            : 'Finding reverted to violation'
+      );
+      setReportFindingReviewModal(null);
+      setReportFindingReviewReason('');
+      setHighlightRetryTick((n) => n + 1);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : lang === 'ar' ? 'فشل الحفظ' : 'Failed');
+    } finally {
+      setReportFindingReviewSaving(false);
+    }
+  }, [reportFindingReviewModal, reportFindingReviewReason, settings?.platform?.requireOverrideReason, lang, user?.id]);
 
   // Restore saved highlight preference when report list is ready (persists across logout/login)
   useEffect(() => {
@@ -2047,6 +2097,44 @@ export function ScriptWorkspace() {
                           "{f.evidenceSnippet}"
                         </p>
                       )}
+                      {f.source !== 'manual' && (
+                        <div className="flex flex-wrap gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
+                          {f.reviewStatus !== 'approved' ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-[10px] px-2 text-success border-success/30 hover:bg-success/10"
+                              onClick={() => {
+                                setReportFindingReviewModal({ findingId: f.id, toStatus: 'approved', titleAr: f.titleAr || f.descriptionAr || '' });
+                                setReportFindingReviewReason('');
+                              }}
+                            >
+                              <CheckCircle2 className="w-3 h-3 me-1" />
+                              {lang === 'ar' ? 'اعتماد كآمن' : 'Mark safe'}
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-[10px] px-2 text-error border-error/30 hover:bg-error/10"
+                              onClick={() => {
+                                setReportFindingReviewModal({ findingId: f.id, toStatus: 'violation', titleAr: f.titleAr || f.descriptionAr || '' });
+                                setReportFindingReviewReason('');
+                              }}
+                            >
+                              <ShieldAlert className="w-3 h-3 me-1" />
+                              {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert'}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                      {f.reviewStatus === 'approved' && f.reviewReason && (
+                        <p className="text-[10px] text-success mt-1.5" dir="rtl">
+                          {lang === 'ar' ? 'السبب:' : 'Reason:'} {f.reviewReason}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -2479,6 +2567,75 @@ export function ScriptWorkspace() {
               )}
             </div>
           )}
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!reportFindingReviewModal}
+        onClose={() => {
+          setReportFindingReviewModal(null);
+          setReportFindingReviewReason('');
+        }}
+        title={
+          reportFindingReviewModal?.toStatus === 'approved'
+            ? lang === 'ar'
+              ? 'اعتماد كآمن'
+              : 'Mark as safe'
+            : lang === 'ar'
+              ? 'إعادة كمخالفة'
+              : 'Revert to violation'
+        }
+        className="max-w-md"
+      >
+        <div className="space-y-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <div className="p-3 bg-background rounded-md border border-border text-sm text-text-main font-medium" dir="rtl">
+            {reportFindingReviewModal?.titleAr}
+          </div>
+          <Textarea
+            label={lang === 'ar' ? 'السبب (مطلوب)' : 'Reason (required)'}
+            value={reportFindingReviewReason}
+            onChange={(e) => setReportFindingReviewReason(e.target.value)}
+            placeholder={
+              reportFindingReviewModal?.toStatus === 'approved'
+                ? lang === 'ar'
+                  ? 'اشرح لماذا هذه الملاحظة آمنة…'
+                  : 'Explain why this finding is safe…'
+                : lang === 'ar'
+                  ? 'اشرح لماذا يجب إعادتها كمخالفة…'
+                  : 'Explain why this should be a violation again…'
+            }
+          />
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReportFindingReviewModal(null);
+                setReportFindingReviewReason('');
+              }}
+            >
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              variant={reportFindingReviewModal?.toStatus === 'approved' ? 'primary' : 'danger'}
+              onClick={() => void handleReportFindingReviewSubmit()}
+              disabled={
+                reportFindingReviewSaving ||
+                (settings?.platform?.requireOverrideReason !== false && !reportFindingReviewReason.trim())
+              }
+            >
+              {reportFindingReviewSaving
+                ? lang === 'ar'
+                  ? 'جاري الحفظ…'
+                  : 'Saving…'
+                : reportFindingReviewModal?.toStatus === 'approved'
+                  ? lang === 'ar'
+                    ? 'اعتماد'
+                    : 'Approve'
+                  : lang === 'ar'
+                    ? 'إعادة كمخالفة'
+                    : 'Revert'}
+            </Button>
+          </div>
         </div>
       </Modal>
 

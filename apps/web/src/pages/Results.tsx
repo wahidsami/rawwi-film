@@ -309,6 +309,27 @@ export function Results() {
   const toggleDomain = (d: string) => setExpandedDomains(prev => ({ ...prev, [d]: !prev[d] }));
   const toggleArticle = (key: string) => setExpandedArticles(prev => ({ ...prev, [key]: !prev[key] }));
 
+  /** Map summary canonical row → DB finding for review actions. */
+  function matchFindingForCanonical(cf: CanonicalSummaryFinding): AnalysisFinding | undefined {
+    const cid = cf.canonical_finding_id;
+    for (const f of findings) {
+      const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+      if (String(v3.canonical_finding_id ?? '') === cid) return f;
+    }
+    const art = cf.primary_article_id ?? 0;
+    const sn = (cf.evidence_snippet ?? '').replace(/\s+/g, ' ').trim();
+    if (sn.length < 6) return undefined;
+    const prefix = sn.slice(0, Math.min(80, sn.length));
+    for (const f of findings) {
+      const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+      const pa = Number.isFinite(Number(v3.primary_article_id)) ? Number(v3.primary_article_id) : f.articleId;
+      if (pa !== art) continue;
+      const es = (f.evidenceSnippet ?? '').replace(/\s+/g, ' ').trim();
+      if (es.includes(prefix) || (es.length >= 6 && sn.includes(es.slice(0, Math.min(80, es.length))))) return f;
+    }
+    return undefined;
+  }
+
 
 
   // Prepare findings for PDF: use real findings if available, otherwise fallback to summary
@@ -810,6 +831,58 @@ export function Results() {
                             {f.pillar_id && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{f.pillar_id}</span></div>}
                             <div>{lang === 'ar' ? 'لماذا اعتُبرت مخالفة:' : 'Why considered a violation:'} <span className="text-text-main">{f.rationale ?? '—'}</span></div>
                           </div>
+                          {(() => {
+                            const mf = matchFindingForCanonical(f);
+                            if (!mf) {
+                              return (
+                                <p className="text-[10px] text-text-muted mt-2 print:hidden">
+                                  {lang === 'ar'
+                                    ? 'إذا لم يظهر زر الاعتماد، حدّث الصفحة بعد اكتمال التحليل.'
+                                    : 'If no action appears, refresh the page after analysis finishes.'}
+                                </p>
+                              );
+                            }
+                            const isApproved = mf.reviewStatus === 'approved';
+                            return (
+                              <div className="mt-2 space-y-2 print:hidden">
+                                {isApproved && mf.reviewReason && (
+                                  <div className="p-2 bg-success/5 border border-success/10 rounded text-xs text-success">
+                                    <span className="font-semibold">{lang === 'ar' ? 'السبب:' : 'Reason:'}</span> {mf.reviewReason}
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2">
+                                  {!isApproved && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 text-[11px] gap-1 text-success border-success/30 hover:bg-success/10"
+                                      onClick={() => {
+                                        setReviewModal({ findingId: mf.id, toStatus: 'approved', titleAr: f.title_ar });
+                                        setReviewReason('');
+                                      }}
+                                    >
+                                      <CheckCircle2 className="w-3 h-3" />
+                                      {lang === 'ar' ? 'اعتماد كآمن' : 'Mark Safe'}
+                                    </Button>
+                                  )}
+                                  {isApproved && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 text-[11px] gap-1 text-error border-error/30 hover:bg-error/10"
+                                      onClick={() => {
+                                        setReviewModal({ findingId: mf.id, toStatus: 'violation', titleAr: f.title_ar });
+                                        setReviewReason('');
+                                      }}
+                                    >
+                                      <ShieldAlert className="w-3 h-3" />
+                                      {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert to Violation'}
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       ))}
                     </div>
@@ -1138,11 +1211,13 @@ export function Results() {
                   : 'No violations were detected in this script under the current analysis policy.'}
               </p>
             </div>
-          ) : canonicalSummaryFindings.length > 0
-            ? renderFindingsFromCanonicalSummary()
-            : hasRealFindings
-              ? renderFindingsFromReal(displayViolations)
-              : renderFindingsFromSummary()}
+          ) : hasRealFindings && displayViolations.length > 0
+            ? renderFindingsFromReal(displayViolations)
+            : canonicalSummaryFindings.length > 0
+              ? renderFindingsFromCanonicalSummary()
+              : hasRealFindings
+                ? renderFindingsFromReal(displayViolations)
+                : renderFindingsFromSummary()}
 
           {/* Report hints: not violations but notes for director (e.g. Islamic rules when filming) */}
           {reportHints.length > 0 && (
