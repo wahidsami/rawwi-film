@@ -60,6 +60,12 @@
     font-family: var(--font-arabic);
   }
 
+  /* Workspace imported script: Cairo for all nodes (overrides DOCX inline fonts). */
+  .script-import-body,
+  .script-import-body * {
+    font-family: var(--font-arabic) !important;
+  }
+
   @media print {
     @page {
       margin: 20mm 15mm;

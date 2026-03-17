@@ -1680,10 +1680,10 @@ export function ScriptWorkspace() {
                   <div
                     ref={editorRef}
                     className={cn(
-                      'bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words text-right select-text',
+                      'script-import-body bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words text-right select-text',
                       currentPageData.contentHtml ? '[&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm' : 'whitespace-pre-wrap'
                     )}
-                    style={{ fontFamily: "'Amiri', 'Noto Naskh Arabic', serif", transform: `scale(${zoomLevel})`, transformOrigin: 'top right' }}
+                    style={{ fontFamily: "'Cairo', sans-serif", transform: `scale(${zoomLevel})`, transformOrigin: 'top right' }}
                     dir="rtl"
                     lang={lang === 'ar' ? 'ar' : undefined}
                     onMouseDown={handleMouseDown}
@@ -1732,8 +1732,8 @@ export function ScriptWorkspace() {
                   <div
                     key="editor-with-html"
               ref={editorRef}
-                    className="bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main break-words text-right select-text [&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm"
-                    style={{ fontFamily: "'Amiri', 'Noto Naskh Arabic', serif" }}
+                    className="script-import-body bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main break-words text-right select-text [&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm"
+                    style={{ fontFamily: "'Cairo', sans-serif" }}
                     dir="rtl"
                     lang={lang === 'ar' ? 'ar' : undefined}
                     onMouseDown={handleMouseDown}
@@ -1773,8 +1773,8 @@ export function ScriptWorkspace() {
                   <div
                     key="editor-fallback"
                     ref={editorRef}
-                    className="bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words whitespace-pre-wrap text-right select-text"
-                    style={{ fontFamily: "'Amiri', 'Noto Naskh Arabic', serif" }}
+                    className="script-import-body bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words whitespace-pre-wrap text-right select-text"
+                    style={{ fontFamily: "'Cairo', sans-serif" }}
                     dir="rtl"
                     lang={lang === 'ar' ? 'ar' : undefined}
                     onMouseDown={handleMouseDown}
