@@ -1155,53 +1155,95 @@ export function ScriptWorkspace() {
 
   // const norm = (t: string) => normalizeText(t); // Use our new robust normalizer
 
-  /** 
-   * Locates the finding in the content using exact offsets first, then falling back to text search.
-   * Uses canonical normalization for offset check (matches backend/DOM). Falls back to substring
-   * search so more findings get highlighted even when evidence_snippet differs slightly.
+  /**
+   * Locates the finding in `content`. For paginated viewer text, pass pageSlice + sliceGlobalStart
+   * so global offsets map to local positions; otherwise every match is compared to huge global hints
+   * and hint 0 biases to the top of the page.
    */
-  const locateFindingInContent = useCallback((content: string, f: AnalysisFinding | Finding): { start: number; end: number; matched: boolean } | null => {
-    if (!content) return null;
+  const locateFindingInContent = useCallback(
+    (
+      content: string,
+      f: AnalysisFinding | Finding,
+      opts?: { sliceGlobalStart?: number; pageSlice?: boolean }
+    ): { start: number; end: number; matched: boolean } | null => {
+      if (!content) return null;
 
-    const evidence = (f.evidenceSnippet ?? '').trim();
-    const hint = f.startOffsetGlobal ?? 0;
-    const title = typeof (f as any).titleAr === 'string' ? (f as any).titleAr.trim() : '';
-    const description = typeof (f as any).descriptionAr === 'string' ? (f as any).descriptionAr.trim() : '';
+      const pageSlice = opts?.pageSlice === true;
+      const sliceStart = opts?.sliceGlobalStart ?? 0;
+      const L = content.length;
+      const evidence = (f.evidenceSnippet ?? '').trim();
+      const hintGlobal = f.startOffsetGlobal ?? -1;
+      const hintLocal = hintGlobal >= 0 ? hintGlobal - sliceStart : Number.NaN;
+      const title = typeof (f as any).titleAr === 'string' ? (f as any).titleAr.trim() : '';
+      const description = typeof (f as any).descriptionAr === 'string' ? (f as any).descriptionAr.trim() : '';
 
-    // 1. Try original offsets (use canonical normalization to match backend/DOM)
-    const s = f.startOffsetGlobal ?? -1;
-    const e = f.endOffsetGlobal ?? -1;
-    if (s >= 0 && e > s && e <= content.length) {
-      const slice = content.slice(s, e);
-      if (canonicalNormalize(slice) === canonicalNormalize(evidence)) {
-        return { start: s, end: e, matched: true };
+      const pickMatch = (matches: { start: number; end: number }[]): { start: number; end: number } | null => {
+        if (matches.length === 0) return null;
+        if (matches.length === 1) return matches[0];
+        const hintOk =
+          hintGlobal > 0 &&
+          (pageSlice
+            ? hintLocal >= -120 && hintLocal <= L + 120
+            : hintGlobal <= L + 200);
+        if (hintOk) {
+          const h = pageSlice ? Math.max(0, Math.min(hintLocal, L)) : Math.min(hintGlobal, L);
+          return findBestMatch(matches as Parameters<typeof findBestMatch>[0], h)!;
+        }
+        const evN = canonicalNormalize(evidence);
+        if (evN.length >= 3) {
+          const exact = matches.filter((m) => canonicalNormalize(content.slice(m.start, m.end)) === evN);
+          if (exact.length === 1) return exact[0];
+        }
+        return [...matches].sort((a, b) => b.end - b.start - (a.end - a.start))[0];
+      };
+
+      const s = f.startOffsetGlobal ?? -1;
+      const e = f.endOffsetGlobal ?? -1;
+      if (s >= 0 && e > s) {
+        const sLoc = pageSlice ? s - sliceStart : s;
+        const eLoc = pageSlice ? e - sliceStart : e;
+        if (pageSlice) {
+          if (sLoc >= 0 && eLoc <= L && eLoc > sLoc) {
+            const slice = content.slice(sLoc, eLoc);
+            if (canonicalNormalize(slice) === canonicalNormalize(evidence)) {
+              return { start: sLoc, end: eLoc, matched: true };
+            }
+            const ns = canonicalNormalize(slice);
+            const ne = canonicalNormalize(evidence);
+            const lenRatio = ne.length > 0 ? Math.min(ns.length, ne.length) / Math.max(ns.length, ne.length) : 0;
+            if (ns && ne && lenRatio >= 0.75 && (ns.includes(ne) || ne.includes(ns))) {
+              return { start: sLoc, end: eLoc, matched: true };
+            }
+          }
+        } else if (e <= L) {
+          const slice0 = content.slice(s, e);
+          if (canonicalNormalize(slice0) === canonicalNormalize(evidence)) {
+            return { start: s, end: e, matched: true };
+          }
+          const ns = canonicalNormalize(slice0);
+          const ne = canonicalNormalize(evidence);
+          const lenRatio = ne.length > 0 ? Math.min(ns.length, ne.length) / Math.max(ns.length, ne.length) : 0;
+          if (ns && ne && lenRatio >= 0.75 && (ns.includes(ne) || ne.includes(ns))) {
+            return { start: s, end: e, matched: true };
+          }
+        }
       }
-      // Guardrail: accept offsets only when lengths are reasonably close.
-      const ns = canonicalNormalize(slice);
-      const ne = canonicalNormalize(evidence);
-      const lenRatio = ne.length > 0 ? Math.min(ns.length, ne.length) / Math.max(ns.length, ne.length) : 0;
-      if (ns && ne && lenRatio >= 0.75 && (ns.includes(ne) || ne.includes(ns))) {
-        return { start: s, end: e, matched: true };
-      }
-    }
 
-    // 2. Prefer exact quoted tokens from finding title/description/evidence (e.g. "نصاب").
-    const quotedCandidates = [
+    // 2. Quoted tokens — prefer evidence quotes first (more specific than generic title quotes)
+    const quotedFromEv = extractQuotedTokens(evidence);
+    const quotedRest = [
       ...extractQuotedTokens(title),
       ...extractQuotedTokens(description),
-      ...extractQuotedTokens(evidence),
     ];
-    const uniqueQuoted = Array.from(new Set(quotedCandidates.map((t) => canonicalNormalize(t))))
-      .filter((t) => t.length >= 2);
+    const quotedCandidates = [...quotedFromEv, ...quotedRest];
+    const uniqueQuoted = Array.from(new Set(quotedCandidates.map((t) => canonicalNormalize(t)))).filter((t) => t.length >= 2);
     for (const q of uniqueQuoted) {
       const matches = findTextOccurrences(content, q, { minConfidence: 1.0 });
-      if (matches.length > 0) {
-        const best = findBestMatch(matches, hint);
-        if (best) return { start: best.start, end: best.end, matched: true };
-      }
+      const best = pickMatch(matches);
+      if (best) return { start: best.start, end: best.end, matched: true };
     }
 
-    // 3. Fallback: exact text search with concise candidates first
+    // 3. Evidence before long description/title (reduces wrong-line matches)
     const baseCandidates = [
       (f as any).excerpt,
       evidence,
@@ -1217,18 +1259,14 @@ export function ScriptWorkspace() {
         candidates.push(t);
       }
     }
-    // Prefer shorter precise snippets over long sentences.
     candidates.sort((a, b) => a.length - b.length);
 
     for (const textToFind of candidates) {
       const matches = findTextOccurrences(content, textToFind, { minConfidence: 1.0 });
-      if (matches.length > 0) {
-        const best = findBestMatch(matches, hint);
-        if (best) return { start: best.start, end: best.end, matched: true };
-      }
+      const best = pickMatch(matches);
+      if (best) return { start: best.start, end: best.end, matched: true };
     }
 
-    // 4. Last-resort substring fallback (strict and longer parts only).
     const minLen = 4;
     if (evidence.length >= minLen) {
       const subs: string[] = [];
@@ -1237,15 +1275,15 @@ export function ScriptWorkspace() {
       for (const sub of subs) {
         if (sub.length < 8) continue;
         const matches = findTextOccurrences(content, sub, { minConfidence: 0.9 });
-        if (matches.length > 0) {
-          const best = findBestMatch(matches, hint);
-          if (best) return { start: best.start, end: best.end, matched: true };
-        }
+        const best = pickMatch(matches);
+        if (best) return { start: best.start, end: best.end, matched: true };
       }
     }
 
     return null;
-  }, [extractQuotedTokens]);
+    },
+    [extractQuotedTokens]
+  );
 
 
   const buildFindingSegments = useCallback((content: string, findings: AnalysisFinding[]): Segment[] => {
@@ -1412,7 +1450,10 @@ export function ScriptWorkspace() {
             endOffsetGlobal: Math.min(pageLen, f.endOffsetGlobal - pageStart),
           } as AnalysisFinding;
         }
-        const loc = locateFindingInContent(currentPageData.content ?? '', f);
+        const loc = locateFindingInContent(currentPageData.content ?? '', f, {
+          pageSlice: true,
+          sliceGlobalStart: pageStart,
+        });
         if (!loc) return null;
         return { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } as AnalysisFinding;
       })
@@ -1443,7 +1484,12 @@ export function ScriptWorkspace() {
   /** Only block highlights when viewing a different script version than the job. */
   const blockHighlightsCompletely = versionMismatch;
   const applyHighlightMarks = useCallback(
-    (container: HTMLElement, idx: DomTextIndex, findingsList: AnalysisFinding[]) => {
+    (
+      container: HTMLElement,
+      idx: DomTextIndex,
+      findingsList: AnalysisFinding[],
+      locateOpts?: { pageSlice?: boolean; sliceGlobalStart?: number }
+    ) => {
       unwrapFindingMarks(container);
       const sorted = [...findingsList].sort((a, b) => {
         const sa = a.startOffsetGlobal ?? 0;
@@ -1455,9 +1501,13 @@ export function ScriptWorkspace() {
       let appliedCount = 0;
       const domRaw = idx.segments.map((s) => s.text).join('');
       for (const f of sorted) {
-        let loc = locateFindingInContent(domRaw, f);
+        let loc = locateOpts
+          ? locateFindingInContent(domRaw, f, locateOpts)
+          : locateFindingInContent(domRaw, f);
         if (!loc && currentPageData?.content) {
-          loc = locateFindingInContent(currentPageData.content, f);
+          loc = locateOpts
+            ? locateFindingInContent(currentPageData.content, f, locateOpts)
+            : locateFindingInContent(currentPageData.content, f);
         }
         let rawStart: number;
         let rawEnd: number;
@@ -1555,6 +1605,10 @@ export function ScriptWorkspace() {
 
     if (inPageMode && currentPageData?.contentHtml) {
       const domRaw = domTextIndex.segments.map((s) => s.text).join('');
+      const pageSliceOpts = {
+        pageSlice: true as const,
+        sliceGlobalStart: currentPageData.startOffsetGlobal ?? 0,
+      };
       let onPage: AnalysisFinding[];
       let resolved: AnalysisFinding[];
 
@@ -1564,7 +1618,9 @@ export function ScriptWorkspace() {
         setHighlightExpectedCount(reportFindings.length);
         resolved = reportFindings
           .map((f) => {
-            const loc = locateFindingInContent(pagePlain, f) ?? locateFindingInContent(domRaw, f);
+            const loc =
+              locateFindingInContent(pagePlain, f, pageSliceOpts) ??
+              locateFindingInContent(domRaw, f, pageSliceOpts);
             return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
           })
           .filter(Boolean) as AnalysisFinding[];
@@ -1583,7 +1639,9 @@ export function ScriptWorkspace() {
         setHighlightExpectedCount(onPage.length);
         resolved = onPage
           .map((f) => {
-            const loc = locateFindingInContent(domRaw, f) ?? locateFindingInContent(pagePlain, f);
+            const loc =
+              locateFindingInContent(domRaw, f, pageSliceOpts) ??
+              locateFindingInContent(pagePlain, f, pageSliceOpts);
             return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
           })
           .filter(Boolean) as AnalysisFinding[];
@@ -1594,7 +1652,10 @@ export function ScriptWorkspace() {
           `[ScriptWorkspace] Page ${safeCurrentPage} highlights: ${resolved.length}/${onPage.length} locatable`
         );
       }
-      const applied = applyHighlightMarks(container, domTextIndex, resolved);
+      const applied = applyHighlightMarks(container, domTextIndex, resolved, {
+        pageSlice: true,
+        sliceGlobalStart: 0,
+      });
       setHighlightRenderedCount(applied);
       return;
     }
