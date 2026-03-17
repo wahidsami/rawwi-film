@@ -161,9 +161,6 @@ export function ScriptWorkspace() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisJobId, setAnalysisJobId] = useState<string | null>(null);
   const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
-  const [analysisOptionsModalOpen, setAnalysisOptionsModalOpen] = useState(false);
-  /** Analysis options: mergeStrategy. Default same_location_only = one card per location, multiple articles on card. */
-  const [analysisMergeStrategy, setAnalysisMergeStrategy] = useState<'same_location_only' | 'every_occurrence'>('same_location_only');
   /** When job completes, we fetch the report id so "View Report" can use by=id. */
   const [reportIdWhenJobCompleted, setReportIdWhenJobCompleted] = useState<string | null>(null);
   const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
@@ -667,18 +664,11 @@ export function ScriptWorkspace() {
       toast.error(lang === 'ar' ? 'ارفع ملف نص أولاً لتفعيل التحليل.' : 'Upload a script file first to run analysis.');
       return;
     }
-    setAnalysisOptionsModalOpen(true);
-  };
-
-  const handleStartAnalysisWithOptions = async () => {
-    if (!script?.currentVersionId) return;
-    setAnalysisOptionsModalOpen(false);
-    console.log('[ScriptWorkspace] Analyze with options, versionId:', script.currentVersionId, 'mergeStrategy:', analysisMergeStrategy);
     setIsAnalyzing(true);
     try {
       const { jobId } = await scriptsApi.createTask(script.currentVersionId, {
         forceFresh: true,
-        analysisOptions: { mergeStrategy: analysisMergeStrategy },
+        analysisOptions: { mergeStrategy: 'same_location_only' },
       });
       setAnalysisJobId(jobId);
       setAnalysisJob(null);
@@ -2326,84 +2316,6 @@ export function ScriptWorkspace() {
             <Button variant="outline" onClick={() => setIsViolationModalOpen(false)}>{lang === 'ar' ? 'إلغاء' : 'Cancel'}</Button>
             <Button variant="danger" onClick={saveManualFinding} disabled={manualSaving || !formData.reportId || reportHistory.length === 0}>
               {manualSaving ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : (lang === 'ar' ? 'حفظ الملاحظة' : 'Save Finding')}
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Analysis Options Modal — shown before starting analysis */}
-      <Modal
-        isOpen={analysisOptionsModalOpen}
-        onClose={() => setAnalysisOptionsModalOpen(false)}
-        title={lang === 'ar' ? 'خيارات التحليل' : 'Analysis Options'}
-        className="max-w-md"
-      >
-        <div className="space-y-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-          <p className="text-sm text-text-muted">
-            {lang === 'ar'
-              ? 'اختر كيف تريد تجميع النتائج في التقرير:'
-              : 'Choose how findings are grouped in the report:'}
-          </p>
-          <div className="space-y-2">
-            <label
-              className={cn(
-                'flex gap-3 p-3 rounded-lg border cursor-pointer transition-colors',
-                analysisMergeStrategy === 'same_location_only'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-border/80'
-              )}
-            >
-              <input
-                type="radio"
-                name="mergeStrategy"
-                checked={analysisMergeStrategy === 'same_location_only'}
-                onChange={() => setAnalysisMergeStrategy('same_location_only')}
-                className="mt-0.5"
-              />
-              <div>
-                <span className="font-medium text-text-main">
-                  {lang === 'ar' ? 'بطاقة واحدة لكل موقع (موصى به)' : 'One card per location (recommended)'}
-                </span>
-                <p className="text-xs text-text-muted mt-0.5">
-                  {lang === 'ar'
-                    ? 'نفس المقطع الذي يخالف عدة مواد يظهر في بطاقة واحدة مع ذكر المواد والبنود.'
-                    : 'Same text span that violates multiple articles appears in one card with all articles/atoms listed.'}
-                </p>
-              </div>
-            </label>
-            <label
-              className={cn(
-                'flex gap-3 p-3 rounded-lg border cursor-pointer transition-colors',
-                analysisMergeStrategy === 'every_occurrence'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-border/80'
-              )}
-            >
-              <input
-                type="radio"
-                name="mergeStrategy"
-                checked={analysisMergeStrategy === 'every_occurrence'}
-                onChange={() => setAnalysisMergeStrategy('every_occurrence')}
-                className="mt-0.5"
-              />
-              <div>
-                <span className="font-medium text-text-main">
-                  {lang === 'ar' ? 'بطاقة لكل ظهور' : 'One card per occurrence'}
-                </span>
-                <p className="text-xs text-text-muted mt-0.5">
-                  {lang === 'ar'
-                    ? 'كل لفظ أو عبارة في موقع مختلف تظهر في بطاقة منفصلة (مثلاً كلمة في مشهد ١ وأخرى في مشهد ٥).'
-                    : 'Each occurrence in a different place gets its own card (e.g. same word in scene 1 and scene 5).'}
-                </p>
-              </div>
-            </label>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => setAnalysisOptionsModalOpen(false)}>
-              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
-            </Button>
-            <Button size="sm" onClick={handleStartAnalysisWithOptions} disabled={isAnalyzing}>
-              {isAnalyzing ? (lang === 'ar' ? 'جاري البدء…' : 'Starting…') : (lang === 'ar' ? 'بدء التحليل' : 'Start analysis')}
             </Button>
           </div>
         </div>
