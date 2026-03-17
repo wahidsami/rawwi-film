@@ -75,6 +75,10 @@ When **multiple** DOCX pages are sent, each page can carry **`content_html`** fo
 
 Details: **`docs/OFFSETS_AND_PAGES.md`**.
 
+**Viewer page for highlights (UI):** The workspace recomputes which **viewer page** a finding belongs to from **`start_offset_global`** and the same page-boundary rule as storage: cumulative `page.content.length + 2` between pages. Highlights on page *N* only include findings whose **offset falls in that page’s global range**, not only `finding.page_number` from the DB (which can disagree after DOCX heuristics, etc.). If offsets are missing, it falls back to DB `page_number` or text visible on the current page.
+
+**Evidence-first highlight:** For each finding, the app first looks for an **exact** `evidence_snippet` (ordered needles, dialogue tail first) **inside the global offset window** `[start,end]` in canonical `script_text.content`, preferring the **last** match in that window—then maps that span to the current page. That tightens highlights to the quoted line instead of a wide speaker+dialogue block. Wider search is only used if the window match does not land on the visible page.
+
 **Important:** The **card** may show **“صفحة 1”** from the **analysis pipeline** (offset → page). The **workspace** also shows **“page 1 / N”** from **stored slices**. Those align when:
 
 - PDF: same page index.  

@@ -249,6 +249,82 @@ function locateSpanByEvidenceSearch(
   return null;
 }
 
+const VIEWER_PAGE_SEP_LEN = 2;
+
+/** 1-based page number in viewer where global offset falls (canonical = page0+\\n\\n+page1+…). */
+function viewerPageNumberFromStartOffset(
+  pages: Array<{ pageNumber: number; content: string }>,
+  offset: number | null | undefined
+): number | null {
+  if (offset == null || !Number.isFinite(offset) || offset < 0 || !pages.length) return null;
+  const sorted = [...pages].sort((a, b) => a.pageNumber - b.pageNumber);
+  let start = 0;
+  for (const p of sorted) {
+    const len = (p.content ?? '').length;
+    if (offset >= start && offset < start + len + VIEWER_PAGE_SEP_LEN) return p.pageNumber;
+    start += len + VIEWER_PAGE_SEP_LEN;
+  }
+  return sorted[sorted.length - 1]?.pageNumber ?? null;
+}
+
+function globalStartOfViewerPage(
+  pagesSorted: Array<{ content: string }>,
+  pageZeroBasedIndex: number
+): number {
+  let g = 0;
+  for (let i = 0; i < pageZeroBasedIndex; i++) {
+    g += (pagesSorted[i]?.content ?? '').length + VIEWER_PAGE_SEP_LEN;
+  }
+  return g;
+}
+
+/**
+ * 1) Exact evidence inside [start_offset,end_offset] in canonical (prefer last hit in window).
+ * 2) Map to local coords on current page if window overlap lies on this page.
+ * 3) Else existing page-level search.
+ */
+function locateHighlightOnCurrentPage(
+  canonical: string,
+  pagePlain: string,
+  pagesSorted: Array<{ pageNumber: number; content: string }>,
+  viewerPageNumber: number,
+  f: AnalysisFinding,
+  pageSliceOpts: { pageSlice: true; sliceGlobalStart: number }
+): { start: number; end: number } | null {
+  const idx = pagesSorted.findIndex((p) => p.pageNumber === viewerPageNumber);
+  if (idx < 0) return locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts);
+  const g0 = globalStartOfViewerPage(pagesSorted, idx);
+  const g1 = g0 + pagePlain.length;
+
+  const s = f.startOffsetGlobal ?? -1;
+  const e = f.endOffsetGlobal ?? -1;
+  if (s >= 0 && e > s && canonical.length > 0) {
+    const lo = Math.max(0, s);
+    const hi = Math.min(canonical.length, e);
+    const win = canonical.slice(lo, hi);
+    const needles = orderedEvidenceNeedles(f.evidenceSnippet ?? '');
+    for (const needle of needles) {
+      if (needle.length < 4) continue;
+      let last = -1;
+      for (let i = win.length - needle.length; i >= 0; i--) {
+        if (win.slice(i, i + needle.length) === needle) {
+          last = i;
+          break;
+        }
+      }
+      if (last >= 0) {
+        const gAbs = lo + last;
+        const gAbsEnd = gAbs + needle.length;
+        if (gAbs >= g0 && gAbsEnd <= g1) {
+          return { start: gAbs - g0, end: gAbsEnd - g0 };
+        }
+      }
+    }
+  }
+
+  return locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts);
+}
+
 function safeUploadFileName(fileName: string): string {
   const trimmed = fileName.trim();
   const dotIdx = trimmed.lastIndexOf('.');
@@ -1801,10 +1877,15 @@ export function ScriptWorkspace() {
 
     if (inPageMode && currentPageData?.contentHtml) {
       const domRaw = domTextIndex.segments.map((s) => s.text).join('');
+      const pagesSorted = [...(editorData.pages ?? [])].sort((a, b) => a.pageNumber - b.pageNumber);
+      const pageIdxSorted = pagesSorted.findIndex((p) => p.pageNumber === safeCurrentPage);
+      const sliceStartRaw =
+        pageIdxSorted >= 0 ? globalStartOfViewerPage(pagesSorted, pageIdxSorted) : (currentPageData.startOffsetGlobal ?? 0);
       const pageSliceOpts = {
         pageSlice: true as const,
-        sliceGlobalStart: currentPageData.startOffsetGlobal ?? 0,
+        sliceGlobalStart: sliceStartRaw,
       };
+      const canonical = editorData?.content?.trim() ? editorData.content : '';
       let onPage: AnalysisFinding[];
       let resolved: AnalysisFinding[];
 
@@ -1827,28 +1908,29 @@ export function ScriptWorkspace() {
           })
           .filter(Boolean) as AnalysisFinding[];
       } else {
-        const ps = currentPageData.startOffsetGlobal ?? 0;
-        const pe = ps + (pagePlain.length || 1);
         onPage = reportFindings.filter((f) => {
+          const vpn = viewerPageNumberFromStartOffset(pagesSorted, f.startOffsetGlobal);
+          if (vpn != null) return vpn === safeCurrentPage;
           if (f.pageNumber != null && f.pageNumber === safeCurrentPage) return true;
-          if (
-            f.startOffsetGlobal != null &&
-            f.endOffsetGlobal != null &&
-            f.endOffsetGlobal > ps &&
-            f.startOffsetGlobal < pe
-          )
-            return true;
           return (
             !!locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts) ||
-            !!locateSpanByEvidenceSearch(domRaw, f, pageSliceOpts) ||
-            !!locateFindingInContent(pagePlain, f, pageSliceOpts) ||
-            !!locateFindingInContent(domRaw, f, pageSliceOpts)
+            !!locateSpanByEvidenceSearch(domRaw, f, pageSliceOpts)
           );
         });
         setHighlightExpectedCount(onPage.length);
         resolved = onPage
           .map((f) => {
             const span =
+              (canonical.length > 0 && pagePlain.length > 0 && pagesSorted.length > 0
+                ? locateHighlightOnCurrentPage(
+                    canonical,
+                    pagePlain,
+                    pagesSorted,
+                    safeCurrentPage,
+                    f,
+                    pageSliceOpts
+                  )
+                : null) ??
               locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts) ??
               locateSpanByEvidenceSearch(domRaw, f, pageSliceOpts);
             if (span) return { ...f, startOffsetGlobal: span.start, endOffsetGlobal: span.end };
@@ -1914,6 +1996,7 @@ export function ScriptWorkspace() {
     reportFindings,
     blockHighlightsCompletely,
     scriptHashMismatch,
+    editorData?.content,
     editorData?.contentHtml,
     editorData?.pages,
     currentPageData?.contentHtml,
