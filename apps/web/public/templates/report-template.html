@@ -452,6 +452,9 @@
                 {{#if this.lines}}
                 <span class="meta-chip">{{../labels.lines}}: {{this.lines}}</span>
                 {{/if}}
+                {{#if this.pageNum}}
+                <span class="meta-chip">{{../labels.page}}: {{this.pageNum}}</span>
+                {{/if}}
             </div>
 
             <div class="evidence-box">"{{this.evidence}}"</div>

@@ -17,6 +17,7 @@ import { runHybridContextPipeline } from "./methodology-v3/index.js";
 import { upsertFindingPolicyLinks } from "./policyLinks.js";
 import { calculateSeverity } from "./severityRulebook.js";
 import { getPrimaryGcamForCanonicalAtom, getPrimaryCanonicalAtomForGcam } from "./canonicalAtomMapping.js";
+import { offsetToPageNumber, type ScriptPageRow } from "./offsetToPage.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
@@ -282,6 +283,15 @@ export async function processChunkJudge(
     ALWAYS_CHECK_ARTICLES_ids: [...ALWAYS_CHECK_ARTICLES],
   });
 
+  const { data: scriptPageRows } = await supabase
+    .from("script_pages")
+    .select("page_number, content")
+    .eq("version_id", versionId)
+    .order("page_number", { ascending: true });
+  const pageRows: ScriptPageRow[] = (scriptPageRows ?? []) as ScriptPageRow[];
+  const pageNumAt = (off: number) =>
+    pageRows.length > 0 ? offsetToPageNumber(off, pageRows) : null;
+
   // 0) Fetch lexicon terms for prompt injection (include variants, description, example for AI context)
   const { data: lexiconTerms } = await supabase
     .from("slang_lexicon")
@@ -378,6 +388,7 @@ export async function processChunkJudge(
       location,
       evidence_hash: hash,
       canonical_atom: getPrimaryCanonicalAtomForGcam(m.articleId, m.atomId) ?? null,
+      page_number: pageNumAt(startGlobal),
     };
     if (config.ANALYSIS_ENGINE === "hybrid") {
       deferredLexiconCandidates.push({
@@ -470,6 +481,7 @@ export async function processChunkJudge(
           end_line_chunk: line,
           location: {},
           evidence_hash: hash,
+          page_number: pageNumAt(startGlobal),
         };
 
         if (config.ANALYSIS_ENGINE === "hybrid") {
@@ -881,6 +893,7 @@ export async function processChunkJudge(
         context_impact: f.context_impact ?? null,
         legal_sensitivity: f.legal_sensitivity ?? null,
         audience_risk: f.audience_risk ?? null,
+        page_number: pageNumAt(f.start_offset_global ?? 0),
       };
     });
 

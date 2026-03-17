@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
 import { useDataStore, Finding, type Script } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
@@ -544,6 +544,14 @@ export function ScriptWorkspace() {
   const totalPages = editorData?.pages?.length ?? 0;
   const isPageMode = totalPages > 0;
   const safeCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const p = searchParams.get('page');
+    if (!isPageMode || !p || !totalPages) return;
+    const n = parseInt(p, 10);
+    if (Number.isFinite(n) && n >= 1 && n <= totalPages) setCurrentPage(n);
+  }, [searchParams, isPageMode, totalPages]);
 
   const loadEditor = useCallback(async () => {
     if (!script?.id || !script?.currentVersionId) {
@@ -589,18 +597,23 @@ export function ScriptWorkspace() {
   // }, []);
 
   useEffect(() => {
-    if (location.hash && editorRef.current) {
-      setTimeout(() => {
-        const hashId = location.hash.replace('#', '');
-        const el = document.getElementById(hashId);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          el.classList.add('bg-primary/30', 'animate-pulse');
-          setTimeout(() => el.classList.remove('bg-primary/30', 'animate-pulse'), 3000);
-        }
-      }, 500);
-    }
-  }, [location.hash, scriptFindings]);
+    if (!location.hash) return;
+    const hashId = location.hash.replace('#', '');
+    const findingUuid = hashId.startsWith('highlight-') ? hashId.slice('highlight-'.length) : '';
+    const delay = isPageMode && findingUuid ? 600 : 500;
+    const t = window.setTimeout(() => {
+      let el: Element | null = document.getElementById(hashId);
+      if (!el && findingUuid && editorRef.current) {
+        el = editorRef.current.querySelector(`[data-finding-id="${findingUuid}"]`);
+      }
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('bg-primary/30', 'animate-pulse');
+        setTimeout(() => el.classList.remove('bg-primary/30', 'animate-pulse'), 3000);
+      }
+    }, delay);
+    return () => window.clearTimeout(t);
+  }, [location.hash, scriptFindings, isPageMode, safeCurrentPage]);
 
   // Build DOM text index when HTML content changes (for DOCX formatted view)
   useEffect(() => {
@@ -690,6 +703,18 @@ export function ScriptWorkspace() {
   const doneChunks = chunkStatuses.filter((c) => c.status === 'done').length;
   const activeChunk = chunkStatuses.find((c) => c.status === 'judging') ?? null;
   const activeChunkNumber = activeChunk ? activeChunk.chunkIndex + 1 : null;
+  const activeChunkPageLabel =
+    activeChunk != null &&
+    (activeChunk.pageNumberMin != null || activeChunk.pageNumberMax != null)
+      ? activeChunk.pageNumberMin === activeChunk.pageNumberMax ||
+          activeChunk.pageNumberMax == null
+        ? lang === 'ar'
+          ? `صفحة ${activeChunk.pageNumberMin ?? activeChunk.pageNumberMax}`
+          : `Page ${activeChunk.pageNumberMin ?? activeChunk.pageNumberMax}`
+        : lang === 'ar'
+          ? `صفحات ${activeChunk.pageNumberMin}–${activeChunk.pageNumberMax}`
+          : `Pages ${activeChunk.pageNumberMin}–${activeChunk.pageNumberMax}`
+      : null;
 
   const canReplaceFile = user?.role === 'Super Admin' || user?.role === 'Admin';
   const hasVersionForAnalysis = Boolean(script?.currentVersionId);
@@ -1475,7 +1500,20 @@ export function ScriptWorkspace() {
   const handleFindingCardClick = (f: AnalysisFinding) => {
     if (IS_DEV) console.log(`[ScriptWorkspace] Card clicked for ${f.id}`);
     setSelectedFindingId(f.id);
-    // Scroll to finding in viewer
+    if (isPageMode && f.pageNumber != null && f.pageNumber >= 1 && f.pageNumber <= totalPages) {
+      setCurrentPage(f.pageNumber);
+    }
+    if (f.pageNumber != null && f.pageNumber >= 1) {
+      setSearchParams(
+        (prev) => {
+          const n = new URLSearchParams(prev);
+          n.set('page', String(f.pageNumber));
+          return n;
+        },
+        { replace: true }
+      );
+    }
+    const delay = isPageMode && f.pageNumber != null ? 320 : 100;
     setTimeout(() => {
       const el = editorRef.current?.querySelector(`[data-finding-id="${f.id}"]`);
       if (IS_DEV) console.log(`[ScriptWorkspace] Scroll target found?`, !!el);
@@ -1486,7 +1524,7 @@ export function ScriptWorkspace() {
       } else if (IS_DEV) {
         console.warn(`[ScriptWorkspace] Target element [data-finding-id="${f.id}"] not found in editor.`);
       }
-    }, 100);
+    }, delay);
   };
 
   return (
@@ -1969,7 +2007,14 @@ export function ScriptWorkspace() {
                       onClick={() => handleFindingCardClick(f)}
                     >
                       <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
-                        <span className="text-[10px] font-mono text-text-muted">Art {formatAtomDisplay(f.articleId, f.atomId)}</span>
+                        <span className="text-[10px] font-mono text-text-muted">
+                          Art {formatAtomDisplay(f.articleId, f.atomId)}
+                          {f.pageNumber != null && f.pageNumber > 0 && (
+                            <span className="ms-2 text-primary font-semibold">
+                              {lang === 'ar' ? `صفحة ${f.pageNumber}` : `p.${f.pageNumber}`}
+                            </span>
+                          )}
+                        </span>
                         <div className="flex items-center gap-1">
                           {f.source === 'manual' ? (
                             <Badge variant="outline" className="text-[10px]">{lang === 'ar' ? 'يدوي' : 'Manual'}</Badge>
@@ -2391,8 +2436,8 @@ export function ScriptWorkspace() {
                   <span>
                     {activeChunkNumber != null && totalChunksTracked > 0
                       ? (lang === 'ar'
-                        ? `جاري فحص الجزء ${activeChunkNumber} من ${totalChunksTracked}`
-                        : `Processing chunk ${activeChunkNumber} of ${totalChunksTracked}`)
+                        ? `${activeChunkPageLabel ? `${activeChunkPageLabel} · ` : ''}جاري فحص الجزء ${activeChunkNumber} من ${totalChunksTracked}`
+                        : `${activeChunkPageLabel ? `${activeChunkPageLabel} · ` : ''}Processing chunk ${activeChunkNumber} of ${totalChunksTracked}`)
                       : (lang === 'ar' ? 'جاري الفحص' : 'Processing')}
                   </span>
                 </div>
@@ -2466,8 +2511,13 @@ export function ScriptWorkspace() {
                   {chunkStatuses.length > 0 ? (
                     <div className="space-y-0.5">
                       {chunkStatuses.map(c => (
-                        <div key={c.chunkIndex} className="flex items-center gap-2">
+                        <div key={c.chunkIndex} className="flex items-center gap-2 flex-wrap">
                           <span className="w-6 text-right text-text-muted">{c.chunkIndex}</span>
+                          {(c.pageNumberMin != null || c.pageNumberMax != null) && (
+                            <span className="text-[10px] text-text-muted">
+                              P{c.pageNumberMin}{c.pageNumberMax != null && c.pageNumberMax !== c.pageNumberMin ? `–${c.pageNumberMax}` : ''}
+                            </span>
+                          )}
                           <span className={cn(
                             "px-1.5 py-0.5 rounded text-[10px]",
                             c.status === 'done' ? 'bg-success/10 text-success' :

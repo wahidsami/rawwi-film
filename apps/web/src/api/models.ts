@@ -116,6 +116,8 @@ export interface ChunkStatus {
   chunkIndex: number;
   status: string;
   lastError: string | null;
+  pageNumberMin?: number | null;
+  pageNumberMax?: number | null;
 }
 
 export interface Finding {
@@ -128,6 +130,8 @@ export interface Finding {
   endOffsetGlobal?: number;
   anchorHash?: string;
   location?: { page?: number; scene?: number; lineChunk?: string };
+  /** Script page (1-based) when script_pages exist */
+  pageNumber?: number | null;
   articleId: string;
   subAtomId?: string;
   domainId?: 'A' | 'B' | 'C' | 'D' | 'E';

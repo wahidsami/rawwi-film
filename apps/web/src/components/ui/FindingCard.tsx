@@ -47,13 +47,16 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick }: Findin
   const SevIcon = severityConfig[finding.severity].icon;
 
   const getLocationString = () => {
-    if (!finding.location) return t('unknownLocation');
+    const page =
+      finding.pageNumber != null && Number.isFinite(Number(finding.pageNumber))
+        ? Number(finding.pageNumber)
+        : finding.location?.page;
+    if (!finding.location && page == null) return t('unknownLocation');
     const parts = [];
-    const page = finding.location.page;
-    const scene = finding.location.scene;
+    const scene = finding.location?.scene;
     if (page != null && Number.isFinite(Number(page))) parts.push(`${t('page')} ${page}`);
     if (scene != null && Number.isFinite(Number(scene))) parts.push(`${t('scene')} ${scene}`);
-    if (finding.location.lineChunk) parts.push(finding.location.lineChunk);
+    if (finding.location?.lineChunk) parts.push(finding.location.lineChunk);
     return parts.length > 0 ? parts.join(' • ') : t('unknownLocation');
   };
 
@@ -170,7 +173,10 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick }: Findin
               <span className="font-medium">{getLocationString()}</span>
             </div>
             <button 
-              onClick={() => navigate(`/workspace/${finding.scriptId}#highlight-${finding.id}`)}
+              onClick={() => {
+                const p = finding.pageNumber != null && finding.pageNumber > 0 ? `?page=${finding.pageNumber}` : '';
+                navigate(`/workspace/${finding.scriptId}${p}#highlight-${finding.id}`);
+              }}
               className="flex items-center gap-1 hover:text-primary transition-colors font-medium print:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 rounded-md px-1"
               aria-label={lang === 'ar' ? 'الذهاب للموقع' : 'Jump to location'}
             >

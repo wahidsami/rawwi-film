@@ -13,10 +13,11 @@ declare const Deno: any;
 import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
-import { getCorrelationId, sha256Hash, normalizeText, chunkText, htmlToText } from "../_shared/utils.ts";
+import { getCorrelationId, sha256Hash, normalizeText, chunkText, chunkTextByScriptPages, htmlToText } from "../_shared/utils.ts";
 import { saveScriptEditorContent } from "../_shared/scriptEditor.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
 import { isUserAdmin } from "../_shared/roleCheck.ts";
+import { offsetRangeToPageMinMax, type ScriptPageRow } from "../_shared/offsetToPage.ts";
 
 
 import {
@@ -104,7 +105,7 @@ Deno.serve(async (req: Request) => {
       }
       const { data: chunkRows, error: chunkErr } = await supabase
         .from("analysis_chunks")
-        .select("chunk_index, status, last_error")
+        .select("chunk_index, status, last_error, page_number_min, page_number_max")
         .eq("job_id", jobId)
         .order("chunk_index", { ascending: true });
       if (chunkErr) {
@@ -116,6 +117,8 @@ Deno.serve(async (req: Request) => {
           chunkIndex: c.chunk_index,
           status: c.status,
           lastError: c.last_error ?? null,
+          pageNumberMin: c.page_number_min ?? null,
+          pageNumberMax: c.page_number_max ?? null,
         }))
       );
     }
@@ -342,7 +345,20 @@ Deno.serve(async (req: Request) => {
   }
 
   const canonical_length = normalized.length;
-  const chunks = chunkText(normalized, 12_000, 800);
+
+  const { data: scriptPageRows } = await supabase
+    .from("script_pages")
+    .select("page_number, content")
+    .eq("version_id", versionId.trim())
+    .order("page_number", { ascending: true });
+  const pageRows: ScriptPageRow[] = (scriptPageRows ?? []) as ScriptPageRow[];
+
+  const usePageChunks =
+    (Deno.env.get("ANALYSIS_CHUNK_BY_PAGE") ?? "").toLowerCase() === "true" &&
+    pageRows.length > 0;
+  const chunks = usePageChunks
+    ? chunkTextByScriptPages(normalized, pageRows, 12_000)
+    : chunkText(normalized, 12_000, 800);
   const progress_total = chunks.length + 1;
 
   const { data: job, error: jobErr } = await supabase
@@ -401,16 +417,21 @@ Deno.serve(async (req: Request) => {
     correlation_id: correlationId,
   }).catch((e) => console.warn("[tasks] audit log:", e));
 
-  const chunkRows = chunks.map((c, i) => ({
-    job_id: job.id,
-    chunk_index: i,
-    text: c.text,
-    start_offset: c.start_offset,
-    end_offset: c.end_offset,
-    start_line: c.start_line,
-    end_line: c.end_line,
-    status: "pending",
-  }));
+  const chunkRows = chunks.map((c, i) => {
+    const span = offsetRangeToPageMinMax(c.start_offset, c.end_offset, pageRows);
+    return {
+      job_id: job.id,
+      chunk_index: i,
+      text: c.text,
+      start_offset: c.start_offset,
+      end_offset: c.end_offset,
+      start_line: c.start_line,
+      end_line: c.end_line,
+      status: "pending",
+      page_number_min: span.pageNumberMin,
+      page_number_max: span.pageNumberMax,
+    };
+  });
 
   const { error: chunksErr } = await supabase.from("analysis_chunks").insert(chunkRows);
   if (chunksErr) {

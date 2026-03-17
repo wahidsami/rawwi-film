@@ -389,24 +389,16 @@ Deno.serve(async (req: Request) => {
       const titleAr = "ملاحظة يدوية";
       const descriptionAr = manualComment || evidenceSnippet;
 
-      let pageNumber: number | null = null;
       const { data: pageRows } = await supabase
         .from("script_pages")
         .select("page_number, content")
         .eq("version_id", versionId)
         .order("page_number", { ascending: true });
-      if (pageRows != null && pageRows.length > 0) {
-        const PAGE_SEP_LEN = 2;
-        let start = 0;
-        for (const row of pageRows as { page_number: number; content: string }[]) {
-          const end = start + (row.content?.length ?? 0);
-          if (startOffsetGlobal >= start && startOffsetGlobal < end + PAGE_SEP_LEN) {
-            pageNumber = row.page_number;
-            break;
-          }
-          start = end + PAGE_SEP_LEN;
-        }
-      }
+      const { offsetToPageNumber } = await import("../_shared/offsetToPage.ts");
+      const pageNumber =
+        pageRows != null && pageRows.length > 0
+          ? offsetToPageNumber(startOffsetGlobal, pageRows as { page_number: number; content: string }[])
+          : null;
 
       const insertPayload: Record<string, unknown> = {
         job_id: jobId,

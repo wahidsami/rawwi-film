@@ -44,6 +44,13 @@ function articleDomain(articleId: number): string {
   return getArticleDomainId(articleId);
 }
 
+function formatAtomDisplayR(articleId: number, atomId: string | null): string {
+  if (!atomId?.trim()) return String(articleId);
+  const a = atomId.trim();
+  if (/^\d+-\d+$/.test(a)) return a;
+  return a.includes('.') ? a : `${articleId}.${a}`;
+}
+
 type CanonicalSummaryFinding = {
   canonical_finding_id: string;
   title_ar: string;
@@ -81,6 +88,7 @@ export function Results() {
   const [updateScriptStatus, setUpdateScriptStatus] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isQuickAnalysisReport, setIsQuickAnalysisReport] = useState(quickFromQuery);
+  const [groupFindingsByAtom, setGroupFindingsByAtom] = useState(false);
 
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
@@ -387,6 +395,7 @@ export function Results() {
             confidence: Math.round((f.confidence ?? 0) * 100),
             source: findingSourceLabel(f.source ?? 'ai'),
             lines: f.startLineChunk ? `${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ''}` : '',
+            pageNum: f.pageNumber != null && f.pageNumber > 0 ? f.pageNumber : null,
             evidence: f.evidenceSnippet,
             reviewStatus: f.reviewStatus,
             reviewStatusLabel: f.reviewStatus === 'approved' ? (isAr ? 'تم الاعتماد (آمن)' : 'Approved (Safe)') : (isAr ? 'مخالفة' : 'Violation'),
@@ -435,6 +444,7 @@ export function Results() {
         '{{labels.confidence}}': isAr ? 'ثقة' : 'Conf',
         '{{labels.source}}': isAr ? 'المصدر' : 'Source',
         '{{labels.lines}}': isAr ? 'الأسطر' : 'Lines',
+        '{{labels.page}}': isAr ? 'الصفحة' : 'Page',
         '{{labels.status}}': isAr ? 'الحالة' : 'Status',
       };
 
@@ -480,6 +490,7 @@ export function Results() {
                     <span class="meta-chip">${replacements['{{labels.confidence}}']}: ${f.confidence}%</span>
                     <span class="meta-chip">${replacements['{{labels.source}}']}: ${escapeHtmlSafe(f.source)}</span>
                     ${f.lines ? `<span class="meta-chip">${replacements['{{labels.lines}}']}: ${escapeHtmlSafe(f.lines)}</span>` : ''}
+                    ${f.pageNum != null ? `<span class="meta-chip">${replacements['{{labels.page}}']}: ${f.pageNum}</span>` : ''}
                 </div>
                 <div class="evidence-box">"${escapeHtmlSafe(f.evidence)}"</div>
                 ${f.reviewStatus ? `
@@ -621,6 +632,11 @@ export function Results() {
             <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
           </div>
         </div>
+        {f.pageNumber != null && f.pageNumber > 0 && (
+          <div className="text-[10px] text-primary font-medium mb-1">
+            {lang === 'ar' ? `صفحة ${f.pageNumber}` : `Page ${f.pageNumber}`}
+          </div>
+        )}
         <div className={cn("p-3 rounded-md border text-sm text-text-main italic", isApproved ? "bg-success/5 border-success/10" : "bg-background/50 border-border/50")} dir="rtl">
           "{f.evidenceSnippet}"
         </div>
@@ -847,7 +863,30 @@ export function Results() {
                   </button>
                   {isExpanded && (
                     <div className="p-4 space-y-3">
-                      {artFindings.map(f => renderFindingCard(f))}
+                      {groupFindingsByAtom ? (
+                        (() => {
+                          const byAtom = new Map<string, AnalysisFinding[]>();
+                          for (const f of artFindings) {
+                            const k = f.atomId?.trim() || '—';
+                            if (!byAtom.has(k)) byAtom.set(k, []);
+                            byAtom.get(k)!.push(f);
+                          }
+                          const entries = Array.from(byAtom.entries()).sort(([a], [b]) =>
+                            atomIdNumeric(normalizeAtomId(a === '—' ? null : a, articleId)) -
+                            atomIdNumeric(normalizeAtomId(b === '—' ? null : b, articleId))
+                          );
+                          return entries.map(([atomKey, fl]) => (
+                            <div key={atomKey} className="border border-border/60 rounded-lg p-3 bg-background/30">
+                              <div className="text-xs font-semibold text-text-muted mb-2">
+                                {lang === 'ar' ? 'ذرة' : 'Atom'} {formatAtomDisplayR(articleId, atomKey === '—' ? null : atomKey)}
+                              </div>
+                              <div className="space-y-3">{fl.map((f) => renderFindingCard(f))}</div>
+                            </div>
+                          ));
+                        })()
+                      ) : (
+                        artFindings.map((f) => renderFindingCard(f))
+                      )}
                   </div>
                   )}
                 </div>
@@ -874,7 +913,18 @@ export function Results() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 print:hidden">
+        <div className="flex items-center gap-3 print:hidden flex-wrap">
+          {hasRealFindings && (
+            <label className="flex items-center gap-2 text-sm text-text-muted cursor-pointer">
+              <input
+                type="checkbox"
+                checked={groupFindingsByAtom}
+                onChange={(e) => setGroupFindingsByAtom(e.target.checked)}
+                className="rounded border-border"
+              />
+              {lang === 'ar' ? 'تجميع حسب الذرة' : 'Group by atom'}
+            </label>
+          )}
           <Button variant="outline" onClick={handleDownloadPdf} className="h-10 px-4 flex gap-2" disabled={isDownloadingPdf}>
             {isDownloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
             {isDownloadingPdf ? (lang === 'ar' ? 'جاري تجهيز PDF...' : 'Preparing PDF...') : (lang === 'ar' ? 'تنزيل PDF' : 'Download PDF')}

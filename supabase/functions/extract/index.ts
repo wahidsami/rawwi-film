@@ -11,6 +11,7 @@ import {
   sha256Hash,
   normalizeText,
   chunkText,
+  chunkTextByScriptPages,
   htmlToText,
 } from "../_shared/utils.ts";
 import { saveScriptEditorContent } from "../_shared/scriptEditor.ts";
@@ -21,6 +22,7 @@ import {
   ROUTER_SYSTEM_MSG,
   JUDGE_SYSTEM_MSG
 } from "../_shared/aiConstants.ts";
+import { offsetRangeToPageMinMax, type ScriptPageRow } from "../_shared/offsetToPage.ts";
 
 const BUCKET = "uploads";
 
@@ -63,7 +65,18 @@ async function runIngest(
   userId: string,
   correlationId: string
 ): Promise<{ jobId: string } | { error: string }> {
-  const chunks = chunkText(normalized);
+  const { data: spForChunk } = await supabase
+    .from("script_pages")
+    .select("page_number, content")
+    .eq("version_id", versionId)
+    .order("page_number", { ascending: true });
+  const pr = (spForChunk ?? []) as ScriptPageRow[];
+  // @ts-ignore Deno.env
+  const usePageChunks =
+    typeof Deno !== "undefined" &&
+    (Deno.env.get("ANALYSIS_CHUNK_BY_PAGE") ?? "").toLowerCase() === "true" &&
+    pr.length > 0;
+  const chunks = usePageChunks ? chunkTextByScriptPages(normalized, pr, 12_000) : chunkText(normalized);
   const progressTotal = chunks.length + 1;
   const progressPercent = 0;
 
@@ -96,16 +109,23 @@ async function runIngest(
     return { error: jobErr?.message || "Failed to create analysis job" };
   }
 
-  const chunkRows = chunks.map((c, i) => ({
-    job_id: job.id,
-    chunk_index: i,
-    text: c.text,
-    start_offset: c.start_offset,
-    end_offset: c.end_offset,
-    start_line: c.start_line,
-    end_line: c.end_line,
-    status: "pending",
-  }));
+  const pageRows: ScriptPageRow[] = pr;
+
+  const chunkRows = chunks.map((c, i) => {
+    const span = offsetRangeToPageMinMax(c.start_offset, c.end_offset, pageRows);
+    return {
+      job_id: job.id,
+      chunk_index: i,
+      text: c.text,
+      start_offset: c.start_offset,
+      end_offset: c.end_offset,
+      start_line: c.start_line,
+      end_line: c.end_line,
+      status: "pending",
+      page_number_min: span.pageNumberMin,
+      page_number_max: span.pageNumberMax,
+    };
+  });
 
   const { error: chunksErr } = await supabase.from("analysis_chunks").insert(chunkRows);
   if (chunksErr) {

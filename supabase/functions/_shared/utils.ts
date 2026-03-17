@@ -135,6 +135,69 @@ export function chunkText(
   return chunks;
 }
 
+const PAGE_JOIN = "\n\n";
+
+/**
+ * Merge consecutive script pages into chunks up to maxChunkSize (page boundaries preserved).
+ * Used when ANALYSIS_CHUNK_BY_PAGE=true. Falls back to chunkText if cumulative layout mismatches normalized.
+ */
+export function chunkTextByScriptPages(
+  normalized: string,
+  pageRows: { page_number: number; content: string }[],
+  maxChunkSize: number = DEFAULT_CHUNK_SIZE
+): Chunk[] {
+  const sorted = [...pageRows].sort((a, b) => a.page_number - b.page_number);
+  if (sorted.length === 0) return chunkText(normalized, maxChunkSize, DEFAULT_OVERLAP);
+
+  let cum = 0;
+  const ranges: { start: number; end: number }[] = [];
+  for (const r of sorted) {
+    const L = (r.content ?? "").length;
+    ranges.push({ start: cum, end: cum + L });
+    cum += L + PAGE_JOIN.length;
+  }
+  if (cum !== normalized.length) {
+    return chunkText(normalized, maxChunkSize, DEFAULT_OVERLAP);
+  }
+
+  const lines = normalized.split("\n");
+  const lineStarts: number[] = [0];
+  let pos = 0;
+  for (let i = 0; i < lines.length - 1; i++) {
+    pos += lines[i].length + 1;
+    lineStarts.push(pos);
+  }
+
+  const chunks: Chunk[] = [];
+  let i = 0;
+  while (i < ranges.length) {
+    const startOff = ranges[i]!.start;
+    let j = i;
+    let size = 0;
+    while (j < ranges.length) {
+      const pageLen = ranges[j]!.end - ranges[j]!.start;
+      const add = pageLen + (j > i ? PAGE_JOIN.length : 0);
+      if (size + add > maxChunkSize && size > 0) break;
+      size += add;
+      j++;
+      if (size >= maxChunkSize) break;
+    }
+    const endOff = ranges[j - 1]!.end;
+    const text = normalized.slice(startOff, endOff);
+    const startLine = lineNumberAt(lineStarts, startOff);
+    const endLine = lineNumberAt(lineStarts, Math.max(startOff, endOff - 1));
+    chunks.push({
+      text,
+      start_offset: startOff,
+      end_offset: endOff,
+      start_line: startLine,
+      end_line: endLine,
+    });
+    i = j;
+  }
+  return chunks;
+}
+
 function lineNumberAt(lineStarts: number[], offset: number): number {
   for (let i = lineStarts.length - 1; i >= 0; i--) {
     if (offset >= lineStarts[i]) return i + 1;
