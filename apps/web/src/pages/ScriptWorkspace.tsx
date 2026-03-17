@@ -1411,11 +1411,14 @@ export function ScriptWorkspace() {
     selectedReportForHighlights?.versionId != null &&
     script?.currentVersionId != null &&
     selectedReportForHighlights.versionId !== script.currentVersionId;
-  const canonicalHashMismatch =
-    versionMismatch ||
-    (selectedJobCanonicalHash != null &&
-      editorData?.contentHash != null &&
-      selectedJobCanonicalHash !== editorData.contentHash);
+  /** Same script version but editor text hash ≠ job hash (edits after analysis). Still try evidence-based highlights. */
+  const scriptHashMismatch =
+    !versionMismatch &&
+    selectedJobCanonicalHash != null &&
+    editorData?.contentHash != null &&
+    selectedJobCanonicalHash !== editorData.contentHash;
+  /** Only block highlights when viewing a different script version than the job. */
+  const blockHighlightsCompletely = versionMismatch;
   const applyHighlightMarks = useCallback(
     (container: HTMLElement, idx: DomTextIndex, findingsList: AnalysisFinding[]) => {
       unwrapFindingMarks(container);
@@ -1429,16 +1432,19 @@ export function ScriptWorkspace() {
       let appliedCount = 0;
       const domRaw = idx.segments.map((s) => s.text).join('');
       for (const f of sorted) {
-        let rawStart = f.startOffsetGlobal ?? -1;
-        let rawEnd = f.endOffsetGlobal ?? -1;
-        if (rawStart < 0 || rawEnd <= rawStart) continue;
         let loc = locateFindingInContent(domRaw, f);
         if (!loc && currentPageData?.content) {
           loc = locateFindingInContent(currentPageData.content, f);
         }
+        let rawStart: number;
+        let rawEnd: number;
         if (loc) {
           rawStart = loc.start;
           rawEnd = loc.end;
+        } else {
+          rawStart = f.startOffsetGlobal ?? -1;
+          rawEnd = f.endOffsetGlobal ?? -1;
+          if (rawStart < 0 || rawEnd <= rawStart) continue;
         }
         const maxRaw = Math.max(0, idx.rawToNorm.length - 1);
         rawStart = Math.max(0, Math.min(rawStart, maxRaw));
@@ -1505,7 +1511,7 @@ export function ScriptWorkspace() {
   );
 
   useEffect(() => {
-    if (canonicalHashMismatch) {
+    if (blockHighlightsCompletely) {
       setHighlightExpectedCount(reportFindings.length);
       setHighlightLocatableCount(0);
       setHighlightRenderedCount(0);
@@ -1525,25 +1531,40 @@ export function ScriptWorkspace() {
     lastHighlightGuardLogFindingsRef.current = null;
 
     if (inPageMode && currentPageData?.contentHtml) {
-      const onPage = reportFindings.filter((f) => {
-        if (f.pageNumber != null && f.pageNumber === safeCurrentPage) return true;
-        const ps = currentPageData.startOffsetGlobal ?? 0;
-        const pe = ps + (pagePlain.length || 1);
-        return (
-          f.startOffsetGlobal != null &&
-          f.endOffsetGlobal != null &&
-          f.endOffsetGlobal > ps &&
-          f.startOffsetGlobal < pe
-        );
-      });
-      setHighlightExpectedCount(onPage.length);
-      const resolved = onPage
-        .map((f) => {
-          const domRaw = domTextIndex.segments.map((s) => s.text).join('');
-          const loc = locateFindingInContent(domRaw, f) ?? locateFindingInContent(pagePlain, f);
-          return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
-        })
-        .filter(Boolean) as AnalysisFinding[];
+      const domRaw = domTextIndex.segments.map((s) => s.text).join('');
+      let onPage: AnalysisFinding[];
+      let resolved: AnalysisFinding[];
+
+      if (scriptHashMismatch) {
+        /** Offsets/page slices are unreliable — try every finding against this page's text only. */
+        onPage = reportFindings;
+        setHighlightExpectedCount(reportFindings.length);
+        resolved = reportFindings
+          .map((f) => {
+            const loc = locateFindingInContent(pagePlain, f) ?? locateFindingInContent(domRaw, f);
+            return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
+          })
+          .filter(Boolean) as AnalysisFinding[];
+      } else {
+        onPage = reportFindings.filter((f) => {
+          if (f.pageNumber != null && f.pageNumber === safeCurrentPage) return true;
+          const ps = currentPageData.startOffsetGlobal ?? 0;
+          const pe = ps + (pagePlain.length || 1);
+          return (
+            f.startOffsetGlobal != null &&
+            f.endOffsetGlobal != null &&
+            f.endOffsetGlobal > ps &&
+            f.startOffsetGlobal < pe
+          );
+        });
+        setHighlightExpectedCount(onPage.length);
+        resolved = onPage
+          .map((f) => {
+            const loc = locateFindingInContent(domRaw, f) ?? locateFindingInContent(pagePlain, f);
+            return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
+          })
+          .filter(Boolean) as AnalysisFinding[];
+      }
       setHighlightLocatableCount(resolved.length);
       if (IS_DEV) {
         console.log(
@@ -1588,7 +1609,8 @@ export function ScriptWorkspace() {
     domTextIndex,
     canonicalContentForHighlights,
     reportFindings,
-    canonicalHashMismatch,
+    blockHighlightsCompletely,
+    scriptHashMismatch,
     editorData?.contentHtml,
     editorData?.pages,
     currentPageData?.contentHtml,
@@ -1603,7 +1625,7 @@ export function ScriptWorkspace() {
 
   /** After page switch + highlight paint, scroll to the selected finding (click handler's setTimeout often ran too early). */
   useEffect(() => {
-    if (!selectedFindingId || canonicalHashMismatch) return;
+    if (!selectedFindingId || blockHighlightsCompletely) return;
     let cancelled = false;
     let attempts = 0;
     const maxAttempts = 50;
@@ -1631,7 +1653,7 @@ export function ScriptWorkspace() {
       cancelled = true;
       window.clearTimeout(t0);
     };
-  }, [selectedFindingId, safeCurrentPage, highlightRenderedCount, highlightRetryTick, canonicalHashMismatch]);
+  }, [selectedFindingId, safeCurrentPage, highlightRenderedCount, highlightRetryTick, blockHighlightsCompletely]);
 
   if (showLoading) {
     return (
@@ -1797,11 +1819,18 @@ export function ScriptWorkspace() {
             )}
             {hasEditorContent && (
               <>
-                {canonicalHashMismatch && selectedReportForHighlights && reportFindings.length > 0 && (
+                {versionMismatch && selectedReportForHighlights && reportFindings.length > 0 && (
                   <div className="mb-3 px-4 py-3 rounded-lg bg-warning/15 border border-warning/40 text-sm text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                     {lang === 'ar'
-                      ? 'تم تغيير نص السيناريو بعد هذا التحليل. أعد تشغيل التحليل الذكي لتمييز الملاحظات.'
-                      : 'Script text changed since this analysis. Re-run Smart Analysis to highlight findings.'}
+                      ? 'هذا التقرير لنسخة أخرى من السيناريو. لا يمكن تمييز الملاحظات في النص الحالي — افتح النسخة الصحيحة أو أعد التحليل.'
+                      : 'This report is for a different script version. Highlights are disabled — open the matching version or re-run analysis.'}
+                  </div>
+                )}
+                {scriptHashMismatch && selectedReportForHighlights && reportFindings.length > 0 && (
+                  <div className="mb-3 px-4 py-3 rounded-lg bg-primary/10 border border-primary/25 text-sm text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                    {lang === 'ar'
+                      ? 'النص تغيّر قليلاً عن نسخة التحليل. يُعرض تمييز تقريبي حسب المقتطفات؛ لأدق نتيجة أعد تشغيل التحليل الذكي.'
+                      : 'Text may differ from the analyzed version. Highlights are best-effort from snippets; re-run Smart Analysis for full accuracy.'}
                   </div>
                 )}
                 {isPageMode && (
@@ -2158,7 +2187,7 @@ export function ScriptWorkspace() {
               )}
               {reportFindings.length > 0 && (
                 <div className="space-y-2 mb-4">
-                  {!canonicalHashMismatch && highlightRenderedCount < highlightExpectedCount && (
+                  {!blockHighlightsCompletely && highlightRenderedCount < highlightExpectedCount && (
                     <div className="rounded-md border border-warning/40 bg-warning/10 p-2.5 text-[11px] text-text-main">
                       <p>
                         {lang === 'ar'
