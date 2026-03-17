@@ -51,7 +51,7 @@ import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textM
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
 import type { AnalysisJob, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
-import { extractDocx, extractTextFromPdfPerPage, splitDocxIntoPages } from '@/utils/documentExtract';
+import { extractDocxWithPages, extractTextFromPdfPerPage } from '@/utils/documentExtract';
 import { sanitizeFormattedHtml } from '@/utils/sanitizeHtml';
 import {
   buildDomTextIndex,
@@ -746,8 +746,8 @@ export function ScriptWorkspace() {
       } else if (ext === 'docx') {
         try {
           console.log('[ScriptWorkspace] Extracting DOCX...');
-          const { plain, html } = await extractDocx(file);
-          console.log('[ScriptWorkspace] DOCX Extracted:', { plainLength: plain?.length, htmlLength: html?.length });
+          const { plain, html, pages: docxPages } = await extractDocxWithPages(file);
+          console.log('[ScriptWorkspace] DOCX Extracted:', { plainLength: plain?.length, htmlLength: html?.length, pagesCount: docxPages.length });
 
           if (!plain || !plain.trim()) {
             console.warn('[ScriptWorkspace] No text found in DOCX');
@@ -755,7 +755,6 @@ export function ScriptWorkspace() {
             setUploadStatus('failed');
             return;
           }
-          const docxPages = splitDocxIntoPages(html ?? '', plain);
           if (docxPages.length > 1) {
             const res = await scriptsApi.extractText(version.id, undefined, {
               enqueueAnalysis: false,

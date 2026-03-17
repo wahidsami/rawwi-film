@@ -8,7 +8,7 @@ import { useDataStore } from '@/store/dataStore';
 import { scriptsApi, reportsApi } from '@/api';
 import type { Script } from '@/api/models';
 import type { ReportListItem } from '@/api/models';
-import { extractDocx, extractTextFromPdfPerPage, splitDocxIntoPages } from '@/utils/documentExtract';
+import { extractDocxWithPages, extractTextFromPdfPerPage } from '@/utils/documentExtract';
 import { formatDate, formatTime } from '@/utils/dateFormat';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -139,9 +139,8 @@ export function QuickAnalysis() {
         const text = await file.text();
         await scriptsApi.extractText(version.id, text, { enqueueAnalysis: false });
       } else if (ext === 'docx') {
-        const { plain, html } = await extractDocx(file);
+        const { plain, html, pages: docxPages } = await extractDocxWithPages(file);
         if (!plain?.trim()) throw new Error(isAr ? 'لم يتم العثور على نص داخل DOCX' : 'No text found in DOCX');
-        const docxPages = splitDocxIntoPages(html ?? '', plain);
         if (docxPages.length > 1) {
           await scriptsApi.extractText(version.id, undefined, {
             enqueueAnalysis: false,

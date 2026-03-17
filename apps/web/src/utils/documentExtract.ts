@@ -1,6 +1,7 @@
 /**
  * Client-side text extraction for DOCX and PDF.
  * Used so we never hit the 501 branch on the extract endpoint.
+ * DOCX: when the file contains Word page breaks, workspace pages match the original document exactly.
  */
 
 // CJS package: namespace import for Vite compatibility
@@ -8,6 +9,9 @@ import * as mammothModule from 'mammoth';
 const mammoth = (mammothModule as { default?: typeof mammothModule }).default ?? mammothModule;
 
 import * as pdfjsLib from 'pdfjs-dist';
+import JSZip from 'jszip';
+
+const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
 let pdfWorkerInitialized = false;
 
@@ -62,6 +66,67 @@ export async function extractDocx(file: File): Promise<{ plain: string; html: st
   };
 }
 
+/**
+ * Extract text per page from DOCX using OOXML (Word page breaks).
+ * Returns array of text strings, one per page, or null if parsing fails or no page breaks found.
+ * When non-null and length > 1, workspace pages will match the original document exactly.
+ */
+export async function getDocxPageTextsFromOoxml(arrayBuffer: ArrayBuffer): Promise<string[] | null> {
+  try {
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    const docXml = await zip.file('word/document.xml')?.async('string');
+    if (!docXml) return null;
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(docXml, 'application/xml');
+    const body = doc.getElementsByTagNameNS(W_NS, 'body')[0];
+    if (!body) return null;
+
+    const pageTexts: string[] = [];
+    let current: string[] = [];
+
+    function walk(node: Node): void {
+      if (node.nodeType === Node.TEXT_NODE) {
+        current.push(node.textContent ?? '');
+        return;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+      const el = node as Element;
+      const local = el.localName;
+      const ns = el.namespaceURI;
+      if (ns === W_NS) {
+        if (local === 't') {
+          current.push(el.textContent ?? '');
+          return;
+        }
+        if (local === 'br') {
+          const type = el.getAttributeNS(W_NS, 'type') ?? el.getAttribute('type');
+          if (type === 'page') {
+            pageTexts.push(current.join('').replace(/\s+/g, ' ').trim());
+            current = [];
+          }
+          return;
+        }
+        if (local === 'lastRenderedPageBreak') {
+          pageTexts.push(current.join('').replace(/\s+/g, ' ').trim());
+          current = [];
+          return;
+        }
+      }
+      for (let i = 0; i < node.childNodes.length; i++) walk(node.childNodes[i]!);
+    }
+
+    walk(body);
+    const last = current.join('').replace(/\s+/g, ' ').trim();
+    if (last) pageTexts.push(last);
+
+    if (pageTexts.length <= 1) return null;
+    return pageTexts;
+  } catch {
+    return null;
+  }
+}
+
 /** Approximate chars per "page" when splitting DOCX with no explicit page breaks (lower = more pages). */
 const CHARS_PER_VIRTUAL_PAGE = 1200;
 
@@ -95,9 +160,77 @@ function findSafeSplitPositions(html: string, numSplits: number): number[] {
 }
 
 /**
+ * Split full HTML into segments proportionally to text lengths (for assigning HTML to each real page).
+ * Uses safe tag boundaries so we don't cut inside a tag.
+ */
+function splitHtmlByTextLengths(html: string, textLengths: number[]): string[] {
+  if (textLengths.length === 0) return [];
+  const total = textLengths.reduce((a, b) => a + b, 0);
+  if (total === 0) return textLengths.map(() => '');
+  const safeEnd = /<\/(?:p|div|section|article|h[1-6])>\s*/gi;
+  const indices: number[] = [];
+  let mm: RegExpExecArray | null;
+  while ((mm = safeEnd.exec(html)) !== null) indices.push(mm.index + mm[0].length);
+  let cum = 0;
+  const splitTargets: number[] = [];
+  for (let i = 0; i < textLengths.length - 1; i++) {
+    cum += textLengths[i]!;
+    splitTargets.push(Math.round((html.length * cum) / total));
+  }
+  const splitPositions = splitTargets.map((target) => {
+    const closest = indices.reduce((best, pos) =>
+      Math.abs(pos - target) < Math.abs(best - target) ? pos : best
+    , target);
+    return closest;
+  });
+  const parts: string[] = [];
+  let start = 0;
+  for (let i = 0; i < textLengths.length; i++) {
+    const end = i < splitPositions.length ? splitPositions[i]! : html.length;
+    parts.push(html.slice(start, end).trim());
+    start = end;
+  }
+  return parts;
+}
+
+/**
+ * Extract DOCX and return pages. When the document contains Word page breaks, pages match the original.
+ * Otherwise falls back to form-feed or virtual page split.
+ */
+export async function extractDocxWithPages(file: File): Promise<{
+  plain: string;
+  html: string;
+  pages: Array<{ pageNumber: number; text: string; html: string }>;
+}> {
+  const arrayBuffer = await file.arrayBuffer();
+  const [plainResult, htmlResult] = await Promise.all([
+    mammoth.extractRawText({ arrayBuffer }),
+    mammoth.convertToHtml({ arrayBuffer }),
+  ]);
+  const plain = (plainResult.value ?? '').trim();
+  const html = (htmlResult.value ?? '').trim();
+
+  const realPageTexts = await getDocxPageTextsFromOoxml(arrayBuffer);
+  if (realPageTexts != null && realPageTexts.length > 1) {
+    const textLengths = realPageTexts.map((t) => t.length);
+    const htmlParts = splitHtmlByTextLengths(html, textLengths);
+    const pages = realPageTexts.map((text, i) => ({
+      pageNumber: i + 1,
+      text,
+      html: htmlParts[i] ?? '',
+    }));
+    return { plain, html, pages };
+  }
+
+  const pages = splitDocxIntoPages(html, plain);
+  return { plain, html, pages };
+}
+
+/**
  * Split DOCX into pages for page-based storage and viewer.
  * Uses form-feed in plain text when present; otherwise virtual pages by size.
  * Splits HTML at safe tag boundaries so each page has both text and html.
+ * For real Word page breaks, use extractDocxWithPages() instead.
  */
 export function splitDocxIntoPages(html: string, plain: string): Array<{ pageNumber: number; text: string; html: string }> {
   const trimmedHtml = html.trim();
