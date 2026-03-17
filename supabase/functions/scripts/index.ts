@@ -443,7 +443,25 @@ Deno.serve(async (req: Request) => {
       startOffsetGlobal += normalizedLen + PAGE_SEP_LEN;
       return out;
     });
-    const response: Record<string, unknown> = { content, contentHash, contentHtml, sections };
+    const { data: verMeta } = await supabase
+      .from("script_versions")
+      .select("source_file_type, source_file_path")
+      .eq("id", versionId)
+      .maybeSingle();
+    const vm = verMeta as { source_file_type?: string | null; source_file_path?: string | null } | null;
+    let sourcePdfSignedUrl: string | null = null;
+    if (vm?.source_file_path && String(vm.source_file_type ?? "").toLowerCase().includes("pdf")) {
+      const { data: su } = await supabase.storage.from("scripts").createSignedUrl(vm.source_file_path.trim(), 3600);
+      sourcePdfSignedUrl = su?.signedUrl ?? null;
+    }
+
+    const response: Record<string, unknown> = {
+      content,
+      contentHash,
+      contentHtml,
+      sections,
+      sourcePdfSignedUrl,
+    };
     if (pages.length > 0) response.pages = pages;
     return json(response);
   }

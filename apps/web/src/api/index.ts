@@ -178,6 +178,8 @@ export interface EditorContentResponse {
   sections: EditorSectionResponse[];
   /** When present, script is stored per-page; use for page-based workspace view. */
   pages?: EditorPageResponse[];
+  /** Time-limited URL to original PDF (page N matches viewer page N). */
+  sourcePdfSignedUrl?: string | null;
 }
 
 export type GetTasksParams = { scriptId?: string; versionId?: string; limit?: number };
@@ -218,6 +220,9 @@ export interface AnalysisFinding {
   startLineChunk: number | null;
   endLineChunk: number | null;
   pageNumber?: number | null;
+  /** Offsets within script_pages.content for page_number (when set). */
+  startOffsetPage?: number | null;
+  endOffsetPage?: number | null;
   location: Record<string, unknown>;
   createdAt: string;
   reviewStatus: 'violation' | 'approved';

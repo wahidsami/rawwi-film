@@ -433,8 +433,52 @@ export async function extractDocxWithPages(file: File): Promise<{
     return { plain, html, pages };
   }
 
+  const scenePages = trySplitDocxPagesBySceneHeadings(plain, html);
+  if (scenePages.length > 1) {
+    return { plain, html, pages: scenePages };
+  }
   const pages = splitDocxIntoPages(html, plain);
   return { plain, html, pages };
+}
+
+/**
+ * When Word has no page breaks, split on scene headings (Arabic المشهد / English INT./EXT.)
+ * so workspace "pages" align with story beats instead of arbitrary char chunks.
+ */
+export function trySplitDocxPagesBySceneHeadings(
+  plain: string,
+  html: string
+): Array<{ pageNumber: number; text: string; html: string }> {
+  const re =
+    /(?=^(?:[^\S\r\n]*)(?:المشهد\s*[\d\u0660-\u0669]+|INT\.|EXT\.|I\/E\.|INT\/EXT|\.INT|\.EXT)\b)/gim;
+  const raw = plain.split(re);
+  const parts = raw.map((s) => s.trim()).filter((s) => s.length > 0);
+  if (parts.length < 2) return [];
+  if (parts.some((p) => p.length < 8)) return [];
+
+  const targets: number[] = [];
+  let acc = 0;
+  for (let i = 0; i < parts.length - 1; i++) {
+    acc += parts[i]!.length;
+    targets.push(acc);
+  }
+  const indices = findHtmlIndicesByTextLength(html.trim(), targets);
+  if (indices.length < targets.length) return [];
+
+  const trimmedHtml = html.trim();
+  const htmlParts: string[] = [];
+  let start = 0;
+  for (let i = 0; i < indices.length; i++) {
+    htmlParts.push(trimmedHtml.slice(start, indices[i]!).trim());
+    start = indices[i]!;
+  }
+  htmlParts.push(trimmedHtml.slice(start).trim());
+
+  return parts.map((text, i) => ({
+    pageNumber: i + 1,
+    text,
+    html: (htmlParts[i] ?? '').trim() || escapeHtmlMinimal(text),
+  }));
 }
 
 /**
@@ -521,21 +565,29 @@ function pageItemsToHtml(items: TextItem[]): string {
     const t = items.map((it) => it.str ?? '').join(' ').trim();
     return t ? `<div class="pdf-page-body script-import-body"><p class="pdf-line">${escapeHtmlForPdf(t)}</p></div>` : '';
   }
-  type LinePart = { str: string; bold: boolean };
+  type LinePart = { str: string; bold: boolean; x: number };
   const lines: LinePart[][] = [];
   let lastY: number | null = null;
   let lineParts: LinePart[] = [];
   for (const it of items) {
     const str = it.str ?? '';
-    const y = Array.isArray(it.transform) && it.transform.length >= 6 ? it.transform[5]! : null;
+    const tr = Array.isArray(it.transform) && it.transform.length >= 6 ? it.transform : null;
+    const y = tr ? tr[5]! : null;
+    const x = tr ? tr[4]! : 0;
     if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) {
-      if (lineParts.length) lines.push(lineParts);
+      if (lineParts.length) {
+        lineParts.sort((a, b) => b.x - a.x);
+        lines.push(lineParts);
+      }
       lineParts = [];
     }
     lastY = y;
-    if (str) lineParts.push({ str, bold: isBoldPdfFont(it.fontName) });
+    if (str) lineParts.push({ str, bold: isBoldPdfFont(it.fontName), x });
   }
-  if (lineParts.length) lines.push(lineParts);
+  if (lineParts.length) {
+    lineParts.sort((a, b) => b.x - a.x);
+    lines.push(lineParts);
+  }
   const paras = lines.map((parts) => {
     const inner = parts
       .map((p) => {
@@ -559,20 +611,25 @@ function pageItemsToText(items: TextItem[]): string {
   }
   const lines: string[] = [];
   let lastY: number | null = null;
-  let lineParts: string[] = [];
+  const lineBuf: { str: string; x: number }[] = [];
+  const flushLine = () => {
+    if (!lineBuf.length) return;
+    lineBuf.sort((a, b) => b.x - a.x);
+    lines.push(lineBuf.map((p) => p.str).join(" ").trim());
+    lineBuf.length = 0;
+  };
   for (const it of items as TextItem[]) {
     const str = it.str ?? "";
-    const y = Array.isArray(it.transform) && it.transform.length >= 6 ? it.transform[5] : null;
+    const tr = Array.isArray(it.transform) && it.transform.length >= 6 ? it.transform : null;
+    const y = tr ? tr[5]! : null;
+    const x = tr ? tr[4]! : 0;
     if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) {
-      if (lineParts.length) {
-        lines.push(lineParts.join(" ").trim());
-        lineParts = [];
-      }
+      flushLine();
     }
     lastY = y;
-    if (str) lineParts.push(str);
+    if (str) lineBuf.push({ str, x });
   }
-  if (lineParts.length) lines.push(lineParts.join(" ").trim());
+  flushLine();
   return lines.join("\n").trim();
 }
 

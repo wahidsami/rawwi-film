@@ -8,11 +8,14 @@ import { Badge } from './Badge';
 import { Button } from './Button';
 import { cn } from '@/utils/cn';
 import { ShieldAlert, AlertTriangle, AlertCircle, Edit2, RotateCcw, MapPin, EyeOff, CheckCircle, ExternalLink } from 'lucide-react';
+import { displayPageForFinding } from '@/utils/viewerPageFromOffset';
 
 interface FindingCardProps {
   finding: Finding;
   onOverrideClick?: (finding: Finding) => void;
   onRestoreClick?: (finding: Finding) => void;
+  /** When set with finding.startOffsetGlobal, page label matches workspace viewer. */
+  scriptViewerPages?: Array<{ pageNumber: number; content: string }> | null;
 }
 
 const severityConfig: Record<string, { icon: any, color: string, bg: string, strip: string }> = {
@@ -22,7 +25,7 @@ const severityConfig: Record<string, { icon: any, color: string, bg: string, str
   Low: { icon: AlertCircle, color: 'text-info', bg: 'bg-info-50', strip: 'bg-info' },
 };
 
-export function FindingCard({ finding, onOverrideClick, onRestoreClick }: FindingCardProps) {
+export function FindingCard({ finding, onOverrideClick, onRestoreClick, scriptViewerPages }: FindingCardProps) {
   const { lang, t } = useLangStore();
   const { user } = useAuthStore();
   const { settings } = useSettingsStore();
@@ -46,11 +49,14 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick }: Findin
 
   const SevIcon = severityConfig[finding.severity].icon;
 
+  const displayPage = displayPageForFinding(
+    finding.startOffsetGlobal,
+    scriptViewerPages ?? null,
+    finding.pageNumber != null && Number.isFinite(Number(finding.pageNumber)) ? Number(finding.pageNumber) : null
+  );
+
   const getLocationString = () => {
-    const page =
-      finding.pageNumber != null && Number.isFinite(Number(finding.pageNumber))
-        ? Number(finding.pageNumber)
-        : finding.location?.page;
+    const page = displayPage ?? finding.location?.page;
     if (!finding.location && page == null) return t('unknownLocation');
     const parts = [];
     const scene = finding.location?.scene;
@@ -174,7 +180,8 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick }: Findin
             </div>
             <button 
               onClick={() => {
-                const p = finding.pageNumber != null && finding.pageNumber > 0 ? `?page=${finding.pageNumber}` : '';
+                const pg = displayPage ?? (finding.pageNumber != null && finding.pageNumber > 0 ? finding.pageNumber : null);
+                const p = pg != null ? `?page=${pg}` : '';
                 navigate(`/workspace/${finding.scriptId}${p}#highlight-${finding.id}`);
               }}
               className="flex items-center gap-1 hover:text-primary transition-colors font-medium print:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 rounded-md px-1"

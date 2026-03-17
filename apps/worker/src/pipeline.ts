@@ -18,7 +18,7 @@ import { runHybridContextPipeline } from "./methodology-v3/index.js";
 import { upsertFindingPolicyLinks } from "./policyLinks.js";
 import { calculateSeverity } from "./severityRulebook.js";
 import { getPrimaryGcamForCanonicalAtom, getPrimaryCanonicalAtomForGcam } from "./canonicalAtomMapping.js";
-import { offsetToPageNumber, type ScriptPageRow } from "./offsetToPage.js";
+import { offsetToPageNumber, computePageLocalSpan, type ScriptPageRow } from "./offsetToPage.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
@@ -390,6 +390,13 @@ export async function processChunkJudge(
       evidence_hash: hash,
       canonical_atom: getPrimaryCanonicalAtomForGcam(m.articleId, m.atomId) ?? null,
       page_number: pageNumAt(startGlobal),
+      ...(() => {
+        const pl = computePageLocalSpan(startGlobal, endGlobal, pageRows);
+        return {
+          start_offset_page: pl.start_offset_page,
+          end_offset_page: pl.end_offset_page,
+        };
+      })(),
     };
     if (config.ANALYSIS_ENGINE === "hybrid") {
       deferredLexiconCandidates.push({
@@ -483,6 +490,13 @@ export async function processChunkJudge(
           location: {},
           evidence_hash: hash,
           page_number: pageNumAt(startGlobal),
+          ...(() => {
+            const pl = computePageLocalSpan(startGlobal, endGlobal, pageRows);
+            return {
+              start_offset_page: pl.start_offset_page,
+              end_offset_page: pl.end_offset_page,
+            };
+          })(),
         };
 
         if (config.ANALYSIS_ENGINE === "hybrid") {
@@ -902,6 +916,15 @@ export async function processChunkJudge(
         legal_sensitivity: f.legal_sensitivity ?? null,
         audience_risk: f.audience_risk ?? null,
         page_number: pageNumAt(f.start_offset_global ?? 0),
+        ...(() => {
+          const s = f.start_offset_global ?? 0;
+          const e = f.end_offset_global ?? s;
+          const pl = computePageLocalSpan(s, e, pageRows);
+          return {
+            start_offset_page: pl.start_offset_page,
+            end_offset_page: pl.end_offset_page,
+          };
+        })(),
       };
     });
 

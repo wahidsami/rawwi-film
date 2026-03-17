@@ -11,7 +11,8 @@
     "test:aggregation": "tsx src/aggregation.test.ts",
     "test:atom-enforcement": "tsx src/pipeline.atom-enforcement.test.ts",
     "test:audit": "tsx src/audit.test.ts",
-    "test": "tsx src/aggregation.test.ts && tsx src/pipeline.atom-enforcement.test.ts && tsx src/audit.test.ts"
+    "test:offset-page": "tsx src/offsetToPage.test.ts",
+    "test": "tsx src/aggregation.test.ts && tsx src/pipeline.atom-enforcement.test.ts && tsx src/audit.test.ts && tsx src/offsetToPage.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

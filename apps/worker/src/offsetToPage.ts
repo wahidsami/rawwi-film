@@ -25,6 +25,37 @@ export function offsetToPageNumber(
   return null;
 }
 
+/** Global index where page `pageNumber` content starts in canonical join. */
+export function globalOffsetForPageStart(pageNumber: number, pageRows: ScriptPageRow[]): number | null {
+  const sorted = [...pageRows].sort((a, b) => a.page_number - b.page_number);
+  let g = 0;
+  for (const row of sorted) {
+    if (row.page_number === pageNumber) return g;
+    g += (row.content?.length ?? 0) + SCRIPT_PAGE_SEP_LEN;
+  }
+  return null;
+}
+
+export function computePageLocalSpan(
+  startG: number,
+  endG: number,
+  pageRows: ScriptPageRow[]
+): { start_offset_page: number | null; end_offset_page: number | null } {
+  if (pageRows.length === 0 || endG <= startG) {
+    return { start_offset_page: null, end_offset_page: null };
+  }
+  const pn = offsetToPageNumber(startG, pageRows);
+  if (pn == null) return { start_offset_page: null, end_offset_page: null };
+  const g0 = globalOffsetForPageStart(pn, pageRows);
+  if (g0 == null) return { start_offset_page: null, end_offset_page: null };
+  const row = pageRows.find((r) => r.page_number === pn);
+  const plen = row?.content?.length ?? 0;
+  const ls = Math.max(0, startG - g0);
+  const le = Math.min(plen, endG - g0);
+  if (le <= ls) return { start_offset_page: null, end_offset_page: null };
+  return { start_offset_page: ls, end_offset_page: le };
+}
+
 export function offsetRangeToPageMinMax(
   startOffset: number,
   endOffsetExclusive: number,

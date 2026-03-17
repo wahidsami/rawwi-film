@@ -18,7 +18,8 @@ function pathAfter(base: string, url: string): string {
   return (match?.[1] ?? "").replace(/^\/+/, "").trim();
 }
 
-const FINDING_COLS = "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, created_at";
+const FINDING_COLS =
+  "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, created_at";
 
 async function selectFindings(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -59,6 +60,8 @@ function camelFinding(r: Record<string, unknown>, createdBy: string | null = nul
     endLineChunk: r.end_line_chunk ?? null,
     location: r.location ?? {},
     pageNumber: r.page_number ?? null,
+    startOffsetPage: r.start_offset_page ?? null,
+    endOffsetPage: r.end_offset_page ?? null,
     createdAt: r.created_at,
     reviewStatus: r.review_status ?? "violation",
     reviewReason: r.review_reason ?? null,
@@ -394,11 +397,11 @@ Deno.serve(async (req: Request) => {
         .select("page_number, content")
         .eq("version_id", versionId)
         .order("page_number", { ascending: true });
-      const { offsetToPageNumber } = await import("../_shared/offsetToPage.ts");
-      const pageNumber =
-        pageRows != null && pageRows.length > 0
-          ? offsetToPageNumber(startOffsetGlobal, pageRows as { page_number: number; content: string }[])
-          : null;
+      const { offsetToPageNumber, computePageLocalSpan } = await import("../_shared/offsetToPage.ts");
+      const pr = (pageRows ?? []) as { page_number: number; content: string }[];
+      const pageNumber = pr.length > 0 ? offsetToPageNumber(startOffsetGlobal, pr) : null;
+      const pageLocal =
+        pr.length > 0 ? computePageLocalSpan(startOffsetGlobal, endOffsetGlobal, pr) : { start_offset_page: null, end_offset_page: null };
 
       const insertPayload: Record<string, unknown> = {
         job_id: jobId,
@@ -419,11 +422,13 @@ Deno.serve(async (req: Request) => {
         manual_comment: manualComment || null,
       };
       if (pageNumber != null) insertPayload.page_number = pageNumber;
+      if (pageLocal.start_offset_page != null) insertPayload.start_offset_page = pageLocal.start_offset_page;
+      if (pageLocal.end_offset_page != null) insertPayload.end_offset_page = pageLocal.end_offset_page;
 
       const { data: inserted, error: insertErr } = await supabase
         .from("analysis_findings")
         .insert(insertPayload)
-        .select("id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, page_number, created_at, review_status, created_by, manual_comment")
+        .select("id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, page_number, created_at, review_status, created_by, manual_comment")
         .single();
 
       if (insertErr) {

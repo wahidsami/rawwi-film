@@ -53,6 +53,7 @@ import type { EditorContentResponse, EditorSectionResponse } from '@/api';
 import type { AnalysisJob, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
 import { extractDocxWithPages, extractTextFromPdfPerPage } from '@/utils/documentExtract';
 import { sanitizeFormattedHtml } from '@/utils/sanitizeHtml';
+import { PdfOriginalViewer } from '@/components/script/PdfOriginalViewer';
 import {
   buildDomTextIndex,
   rangeFromNormalizedOffsets,
@@ -60,6 +61,12 @@ import {
   unwrapFindingMarks,
   type DomTextIndex,
 } from '@/utils/domTextIndex';
+import {
+  VIEWER_PAGE_SEP_LEN,
+  viewerPageNumberFromStartOffset,
+  globalStartOfViewerPage,
+  displayPageForFinding,
+} from '@/utils/viewerPageFromOffset';
 
 import toast from 'react-hot-toast';
 
@@ -247,35 +254,6 @@ function locateSpanByEvidenceSearch(
   }
 
   return null;
-}
-
-const VIEWER_PAGE_SEP_LEN = 2;
-
-/** 1-based page number in viewer where global offset falls (canonical = page0+\\n\\n+page1+…). */
-function viewerPageNumberFromStartOffset(
-  pages: Array<{ pageNumber: number; content: string }>,
-  offset: number | null | undefined
-): number | null {
-  if (offset == null || !Number.isFinite(offset) || offset < 0 || !pages.length) return null;
-  const sorted = [...pages].sort((a, b) => a.pageNumber - b.pageNumber);
-  let start = 0;
-  for (const p of sorted) {
-    const len = (p.content ?? '').length;
-    if (offset >= start && offset < start + len + VIEWER_PAGE_SEP_LEN) return p.pageNumber;
-    start += len + VIEWER_PAGE_SEP_LEN;
-  }
-  return sorted[sorted.length - 1]?.pageNumber ?? null;
-}
-
-function globalStartOfViewerPage(
-  pagesSorted: Array<{ content: string }>,
-  pageZeroBasedIndex: number
-): number {
-  let g = 0;
-  for (let i = 0; i < pageZeroBasedIndex; i++) {
-    g += (pagesSorted[i]?.content ?? '').length + VIEWER_PAGE_SEP_LEN;
-  }
-  return g;
 }
 
 /**
@@ -847,6 +825,8 @@ export function ScriptWorkspace() {
   // Page-based view (when editorData.pages exists)
   const [currentPage, setCurrentPage] = useState(1);
   const [zoomLevel, setZoomLevel] = useState(1);
+  /** Original PDF canvas vs extracted HTML (PDF imports only). */
+  const [workspaceViewMode, setWorkspaceViewMode] = useState<'text' | 'pdf'>('text');
   const totalPages = editorData?.pages?.length ?? 0;
   const isPageMode = totalPages > 0;
   const safeCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
@@ -858,6 +838,10 @@ export function ScriptWorkspace() {
     const n = parseInt(p, 10);
     if (Number.isFinite(n) && n >= 1 && n <= totalPages) setCurrentPage(n);
   }, [searchParams, isPageMode, totalPages]);
+
+  useEffect(() => {
+    if (!editorData?.sourcePdfSignedUrl) setWorkspaceViewMode('text');
+  }, [editorData?.sourcePdfSignedUrl]);
 
   const loadEditor = useCallback(async () => {
     if (!script?.id || !script?.currentVersionId) {
@@ -1118,6 +1102,14 @@ export function ScriptWorkspace() {
             toast.error(lang === 'ar' ? 'لم يتم العثور على نص في الملف' : 'No text found in document');
             setUploadStatus('failed');
             return;
+          }
+          const joinedPages = docxPages.map((p) => p.text).join('\n\n');
+          const norm = (s: string) => s.replace(/\r\n/g, '\n').trim();
+          if (norm(plain) !== norm(joinedPages)) {
+            console.warn('[ScriptWorkspace] DOCX page slices vs full plain mismatch', {
+              plainLen: plain.length,
+              joinedLen: joinedPages.length,
+            });
           }
           if (docxPages.length > 1) {
             const res = await scriptsApi.extractText(version.id, undefined, {
@@ -1688,10 +1680,20 @@ export function ScriptWorkspace() {
   const currentPageData = isPageMode && editorData?.pages?.[safeCurrentPage - 1] ? editorData.pages[safeCurrentPage - 1] : null;
   const pageStart = currentPageData?.startOffsetGlobal ?? 0;
   const pageEnd = currentPageData ? pageStart + (currentPageData.content?.length ?? 0) : 0;
+  const pagesSortedForViewer = useMemo(
+    () => [...(editorData?.pages ?? [])].sort((a, b) => a.pageNumber - b.pageNumber),
+    [editorData?.pages]
+  );
+
   const findingsOnPageWithLocalOffsets = useMemo(() => {
     if (!currentPageData || !reportFindings.length) return [];
     const pageLen = currentPageData.content?.length ?? 0;
     const list = reportFindings.filter((f) => {
+      const vpn = viewerPageNumberFromStartOffset(
+        pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' })),
+        f.startOffsetGlobal
+      );
+      if (vpn != null) return vpn === safeCurrentPage;
       if (f.pageNumber != null && f.pageNumber === safeCurrentPage) return true;
       return (
         f.startOffsetGlobal != null &&
@@ -1717,7 +1719,7 @@ export function ScriptWorkspace() {
         return { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } as AnalysisFinding;
       })
       .filter(Boolean) as AnalysisFinding[];
-  }, [currentPageData, pageStart, pageEnd, reportFindings, safeCurrentPage, locateFindingInContent]);
+  }, [currentPageData, pageStart, pageEnd, reportFindings, safeCurrentPage, locateFindingInContent, pagesSortedForViewer]);
   const pageFindingSegments = useMemo(
     () =>
       isPageMode && currentPageData?.content && findingsOnPageWithLocalOffsets.length > 0
@@ -1862,6 +1864,12 @@ export function ScriptWorkspace() {
       setHighlightRenderedCount(0);
       return;
     }
+    if (workspaceViewMode === 'pdf') {
+      setHighlightExpectedCount(0);
+      setHighlightLocatableCount(0);
+      setHighlightRenderedCount(0);
+      return;
+    }
     const container = editorRef.current;
     const inPageMode = (editorData?.pages?.length ?? 0) > 0;
     const pagePlain = currentPageData?.content ?? '';
@@ -1920,6 +1928,20 @@ export function ScriptWorkspace() {
         setHighlightExpectedCount(onPage.length);
         resolved = onPage
           .map((f) => {
+            const vpnF = viewerPageNumberFromStartOffset(pagesSorted, f.startOffsetGlobal);
+            const sp = f.startOffsetPage ?? null;
+            const ep = f.endOffsetPage ?? null;
+            if (
+              vpnF === safeCurrentPage &&
+              sp != null &&
+              ep != null &&
+              ep > sp &&
+              sp >= 0 &&
+              ep <= pagePlain.length + 2
+            ) {
+              const t = tightenHighlightRangeToEvidence(pagePlain, sp, Math.min(ep, pagePlain.length), f.evidenceSnippet ?? '');
+              return { ...f, startOffsetGlobal: t.start, endOffsetGlobal: t.end };
+            }
             const span =
               (canonical.length > 0 && pagePlain.length > 0 && pagesSorted.length > 0
                 ? locateHighlightOnCurrentPage(
@@ -2007,6 +2029,7 @@ export function ScriptWorkspace() {
     highlightRetryTick,
     applyHighlightMarks,
     findingsOnPageWithLocalOffsets.length,
+    workspaceViewMode,
   ]);
 
   /** After page switch + highlight paint, scroll to the selected finding (click handler's setTimeout often ran too early). */
@@ -2071,14 +2094,23 @@ export function ScriptWorkspace() {
   const handleFindingCardClick = (f: AnalysisFinding) => {
     if (IS_DEV) console.log(`[ScriptWorkspace] Card clicked for ${f.id}`);
     setSelectedFindingId(f.id);
-    if (isPageMode && f.pageNumber != null && f.pageNumber >= 1 && f.pageNumber <= totalPages) {
-      setCurrentPage(f.pageNumber);
+    const pagesForVpn = (editorData?.pages ?? []).map((p) => ({
+      pageNumber: p.pageNumber,
+      content: p.content ?? '',
+    }));
+    const vpn =
+      pagesForVpn.length > 0
+        ? viewerPageNumberFromStartOffset([...pagesForVpn].sort((a, b) => a.pageNumber - b.pageNumber), f.startOffsetGlobal)
+        : null;
+    const targetPage = vpn ?? f.pageNumber ?? null;
+    if (isPageMode && targetPage != null && targetPage >= 1 && targetPage <= totalPages) {
+      setCurrentPage(targetPage);
     }
-    if (f.pageNumber != null && f.pageNumber >= 1) {
+    if (targetPage != null && targetPage >= 1) {
       setSearchParams(
         (prev) => {
           const n = new URLSearchParams(prev);
-          n.set('page', String(f.pageNumber));
+          n.set('page', String(targetPage));
           return n;
         },
         { replace: true }
@@ -2264,10 +2296,51 @@ export function ScriptWorkspace() {
                         <ZoomIn className="w-5 h-5" />
                       </button>
                     </div>
+                    {editorData?.sourcePdfSignedUrl && (
+                      <>
+                        <div className="h-4 w-px bg-border" />
+                        <div className="flex rounded-lg border border-border overflow-hidden text-xs">
+                          <button
+                            type="button"
+                            className={cn(
+                              'px-3 py-1.5 font-medium',
+                              workspaceViewMode === 'text' ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-surface-hover'
+                            )}
+                            onClick={() => setWorkspaceViewMode('text')}
+                          >
+                            {lang === 'ar' ? 'النص المستخرج' : 'Extracted text'}
+                          </button>
+                          <button
+                            type="button"
+                            className={cn(
+                              'px-3 py-1.5 font-medium',
+                              workspaceViewMode === 'pdf' ? 'bg-primary text-primary-foreground' : 'bg-surface hover:bg-surface-hover'
+                            )}
+                            onClick={() => setWorkspaceViewMode('pdf')}
+                          >
+                            {lang === 'ar' ? 'PDF الأصلي' : 'Original PDF'}
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
                 {isPageMode && currentPageData ? (
                   <div className="workspace-a4-stage flex justify-center py-6 px-2 overflow-x-auto">
+                    {workspaceViewMode === 'pdf' && editorData?.sourcePdfSignedUrl ? (
+                      <div className="w-full max-w-4xl">
+                        <p className="text-[11px] text-text-muted mb-2 text-center" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                          {lang === 'ar'
+                            ? 'عرض بصري يطابق الملف الأصلي. التمييز والتحليل يعملان على النص المستخرج.'
+                            : 'Visual match to source file. Highlights and analysis use extracted text.'}
+                        </p>
+                        <PdfOriginalViewer
+                          signedUrl={editorData.sourcePdfSignedUrl}
+                          pageNumber={safeCurrentPage}
+                          scale={Math.max(0.6, zoomLevel * 1.15)}
+                        />
+                      </div>
+                    ) : (
                     <div
                       className="workspace-a4-zoom-inner"
                       style={{
@@ -2338,6 +2411,7 @@ export function ScriptWorkspace() {
                         </div>
                       </article>
                     </div>
+                    )}
                   </div>
                 ) : editorData?.contentHtml ? (
                   <div className="workspace-a4-stage workspace-a4-stage--fluid">
@@ -2628,11 +2702,18 @@ export function ScriptWorkspace() {
                       <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
                         <span className="text-[10px] font-mono text-text-muted">
                           Art {formatAtomDisplay(f.articleId, f.atomId)}
-                          {f.pageNumber != null && f.pageNumber > 0 && (
-                            <span className="ms-2 text-primary font-semibold">
-                              {lang === 'ar' ? `صفحة ${f.pageNumber}` : `p.${f.pageNumber}`}
-                            </span>
-                          )}
+                          {(() => {
+                            const dp = displayPageForFinding(
+                              f.startOffsetGlobal,
+                              pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' })),
+                              f.pageNumber ?? null
+                            );
+                            return dp != null ? (
+                              <span className="ms-2 text-primary font-semibold">
+                                {lang === 'ar' ? `صفحة ${dp}` : `p.${dp}`}
+                              </span>
+                            ) : null;
+                          })()}
                         </span>
                         <div className="flex items-center gap-1">
                           {f.source === 'manual' ? (

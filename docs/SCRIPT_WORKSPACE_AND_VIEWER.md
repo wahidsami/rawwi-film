@@ -79,6 +79,14 @@ Details: **`docs/OFFSETS_AND_PAGES.md`**.
 
 **Evidence-first highlight:** For each finding, the app first looks for an **exact** `evidence_snippet` (ordered needles, dialogue tail first) **inside the global offset window** `[start,end]` in canonical `script_text.content`, preferring the **last** match in that window—then maps that span to the current page. That tightens highlights to the quoted line instead of a wide speaker+dialogue block. Wider search is only used if the window match does not land on the visible page.
 
+**Viewer page on cards:** Report/workspace finding cards prefer **page derived from `start_offset_global` + `script_pages`** (same rule as highlights). Results page loads editor pages to label findings. **Page-local offsets** (`start_offset_page` / `end_offset_page`) on `analysis_findings` tighten highlights on the extracted page text when present (worker fills on new analyses).
+
+**DOCX without Word page breaks:** If the file has **no** OOXML page breaks, pages may split on **scene headings** (`المشهد …`, `INT.`, `EXT.`, etc.) before falling back to size-based chunks. Prefer inserting **page breaks in Word** for exact pagination. On upload, a **console warning** logs if joined page text does not match full plain (slice bug signal).
+
+**PDF originals:** For PDF imports, the editor response may include **`sourcePdfSignedUrl`** (short-lived). The workspace offers **Original PDF** vs **Extracted text**; highlights apply only on extracted text.
+
+**Chunk-by-page analysis:** Set Edge env **`ANALYSIS_CHUNK_BY_PAGE=true`** so analysis chunks follow script pages (see [OFFSETS_AND_PAGES.md](./OFFSETS_AND_PAGES.md)).
+
 **Important:** The **card** may show **“صفحة 1”** from the **analysis pipeline** (offset → page). The **workspace** also shows **“page 1 / N”** from **stored slices**. Those align when:
 
 - PDF: same page index.  

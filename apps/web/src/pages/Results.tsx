@@ -34,6 +34,7 @@ import {
   getSemanticCategoriesForChecklist,
   type SemanticCategoryId,
 } from '@/data/semanticCategories';
+import { displayPageForFinding } from '@/utils/viewerPageFromOffset';
 
 const policyArticles = getPolicyArticles().map((a) => ({
   id: a.articleId,
@@ -116,6 +117,8 @@ export function Results() {
   const [groupFindingsByAtom, setGroupFindingsByAtom] = useState(false);
   /** false = deduped list (default); true = every DB row (duplicates visible). */
   const [showAllFindingRows, setShowAllFindingRows] = useState(false);
+  /** script_pages slices for viewer-accurate page labels (same model as workspace). */
+  const [reportViewerPages, setReportViewerPages] = useState<Array<{ pageNumber: number; content: string }> | null>(null);
 
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
@@ -172,6 +175,22 @@ export function Results() {
         }
         if (!cancelled) {
           setReport(r);
+          setReportViewerPages(null);
+          if (r.scriptId && r.versionId) {
+            scriptsApi
+              .getEditor(r.scriptId, r.versionId)
+              .then((ed) => {
+                if (cancelled) return;
+                if (ed.pages && ed.pages.length > 0) {
+                  setReportViewerPages(
+                    ed.pages.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
+                  );
+                }
+              })
+              .catch(() => {
+                if (!cancelled) setReportViewerPages(null);
+              });
+          }
           if (quickFromQuery) {
             setIsQuickAnalysisReport(true);
           } else if (r.scriptId) {
@@ -681,6 +700,7 @@ export function Results() {
     const relatedArticles = ((v3.related_article_ids as number[] | undefined) ?? []).filter((id) => id !== primaryArticle);
     const rationale = (v3.rationale_ar as string | undefined) ?? null;
     const pillarId = (v3.pillar_id as string | undefined) ?? null;
+    const displayPage = displayPageForFinding(f.startOffsetGlobal, reportViewerPages, f.pageNumber ?? null);
     return (
       <div key={f.id} className={cn("border rounded-lg p-4", isApproved ? "bg-success/5 border-success/20" : "bg-surface border-border")}>
         <div className="flex items-center justify-between mb-2">
@@ -694,9 +714,9 @@ export function Results() {
             <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
           </div>
         </div>
-        {f.pageNumber != null && f.pageNumber > 0 && (
+        {displayPage != null && displayPage > 0 && (
           <div className="text-[10px] text-primary font-medium mb-1">
-            {lang === 'ar' ? `صفحة ${f.pageNumber}` : `Page ${f.pageNumber}`}
+            {lang === 'ar' ? `صفحة ${displayPage}` : `Page ${displayPage}`}
           </div>
         )}
         <div className={cn("p-3 rounded-md border text-sm text-text-main italic", isApproved ? "bg-success/5 border-success/10" : "bg-background/50 border-border/50")} dir="rtl">
