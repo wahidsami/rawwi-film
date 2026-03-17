@@ -15,6 +15,8 @@ import { ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG, injectLexiconIntoPrompts, PROMPT_V
 import { runMultiPassDetection, DETECTION_PASSES, type LexiconTerm } from "./multiPassJudge.js";
 import { runHybridContextPipeline } from "./methodology-v3/index.js";
 import { upsertFindingPolicyLinks } from "./policyLinks.js";
+import { calculateSeverity } from "./severityRulebook.js";
+import { getPrimaryGcamForCanonicalAtom, getPrimaryCanonicalAtomForGcam } from "./canonicalAtomMapping.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
@@ -375,6 +377,7 @@ export async function processChunkJudge(
       end_line_chunk: m.line_end,
       location,
       evidence_hash: hash,
+      canonical_atom: getPrimaryCanonicalAtomForGcam(m.articleId, m.atomId) ?? null,
     };
     if (config.ANALYSIS_ENGINE === "hybrid") {
       deferredLexiconCandidates.push({
@@ -463,6 +466,7 @@ export async function processChunkJudge(
           start_offset_global: startGlobal,
           end_offset_global: endGlobal,
           start_line_chunk: line,
+          canonical_atom: getPrimaryCanonicalAtomForGcam(rule.articleId, rule.atomId) ?? null,
           end_line_chunk: line,
           location: {},
           evidence_hash: hash,
@@ -761,9 +765,54 @@ export async function processChunkJudge(
     hybridMode: config.ANALYSIS_HYBRID_MODE,
   });
 
-  // 7) Insert findings (batch upsert with logging). Derive excerpt from canonical when available.
-  if (persistedFindings.length > 0) {
-      const rows = persistedFindings.map((f) => {
+  // 7) Resolve article_id/atom_id from canonical_atom when missing; compute severity from factors when present.
+  const resolvedFindings = persistedFindings.map((f) => {
+    let article_id = f.article_id;
+    let atom_id = f.atom_id ?? null;
+    let severity = f.severity ?? null;
+    const canonical_atoms = (f as { canonical_atoms?: string[] | null }).canonical_atoms;
+    let canonical_atom = (f as { canonical_atom?: string | null }).canonical_atom ?? null;
+    if (Array.isArray(canonical_atoms) && canonical_atoms.length > 0) {
+      canonical_atom = canonical_atoms[0];
+    }
+    const intensity = (f as { intensity?: number | null }).intensity ?? null;
+    const context_impact = (f as { context_impact?: number | null }).context_impact ?? null;
+    const legal_sensitivity = (f as { legal_sensitivity?: number | null }).legal_sensitivity ?? null;
+    const audience_risk = (f as { audience_risk?: number | null }).audience_risk ?? null;
+    if (article_id === 0 && canonical_atom) {
+      const gcam = getPrimaryGcamForCanonicalAtom(canonical_atom);
+      if (gcam) {
+        article_id = gcam.article_id;
+        atom_id = atom_id ?? gcam.atom_id;
+      }
+    }
+    if (article_id === 0) article_id = 5;
+    if (severity == null && canonical_atom && (intensity != null || context_impact != null || legal_sensitivity != null || audience_risk != null)) {
+      severity = calculateSeverity({
+        canonical_atom,
+        intensity: intensity ?? 1,
+        context_impact: context_impact ?? 1,
+        legal_sensitivity: legal_sensitivity ?? undefined,
+        audience_risk: audience_risk ?? undefined,
+      });
+    }
+    if (severity == null) severity = "medium";
+    return {
+      ...f,
+      article_id,
+      atom_id,
+      severity,
+      canonical_atom,
+      intensity,
+      context_impact,
+      legal_sensitivity,
+      audience_risk,
+    };
+  });
+
+  // 8) Insert findings (batch upsert with logging). Derive excerpt from canonical when available.
+  if (resolvedFindings.length > 0) {
+      const rows = resolvedFindings.map((f) => {
       const start = f.start_offset_global ?? 0;
       const end = f.end_offset_global ?? start;
         const hasSaneGlobalOffsets =
@@ -827,6 +876,11 @@ export async function processChunkJudge(
         },
         evidence_hash: h,
         rationale_ar: f.rationale_ar ?? null,
+        canonical_atom: f.canonical_atom ?? null,
+        intensity: f.intensity ?? null,
+        context_impact: f.context_impact ?? null,
+        legal_sensitivity: f.legal_sensitivity ?? null,
+        audience_risk: f.audience_risk ?? null,
       };
     });
 

@@ -22,7 +22,8 @@ import { AUDITOR_SYSTEM_MSG, RATIONALE_ONLY_SYSTEM_MSG, ROUTER_SYSTEM_MSG, JUDGE
 const openai = new OpenAI({ apiKey: config.OPENAI_API_KEY });
 
 const REPAIR_SYSTEM = `You fix broken JSON. Return only valid JSON, no markdown, no explanation.
-Expected shape: { "findings": [ { "article_id", "atom_id", "severity", "confidence", "title_ar", "description_ar", "evidence_snippet", "location": { "start_offset", "end_offset", "start_line", "end_line" }, "is_interpretive" } ] }`;
+Expected shape: { "findings": [ { "article_id", "atom_id", "canonical_atom", "intensity", "context_impact", "legal_sensitivity", "audience_risk", "confidence", "title_ar", "description_ar", "evidence_snippet", "location": { "start_offset", "end_offset", "start_line", "end_line" }, "is_interpretive" } ] }
+Each of intensity, context_impact, legal_sensitivity, audience_risk must be 1-4. Do NOT include "severity" (computed by backend).`;
 
 function buildRouterArticlesPayload(articleList: GCAMArticle[]): string {
   return articleList.map((a) => `المادة ${a.id}: ${a.title_ar}`).join("\n");
@@ -98,7 +99,7 @@ export async function callJudgeRaw(
 ): Promise<string> {
   const payload = buildJudgeArticlesPayload(selectedArticles);
   const textSlice = chunkText.slice(0, 30_000);
-  const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nقواعد تنسيق إلزامية:\n- article_id مطلوب ويجب أن يكون رقماً صحيحاً بين 1 و 25.\n- location.start_offset و location.end_offset يجب أن يكونا أرقاماً (لا تُرجع null).\n- severity يجب أن تكون إحدى القيم: low | medium | high | critical.\n- confidence يجب أن تكون رقماً بين 0 و 1.\n- evidence_snippet يجب أن تكون نصاً غير null.\nأرجع JSON بمصفوفة findings فقط.`;
+  const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nقواعد تنسيق إلزامية:\n- article_id (اختياري): رقماً صحيحاً بين 1 و 25. إن لم تُحدده استخدم canonical_atom.\n- canonical_atom مطلوب: واحدة من INSULT, VIOLENCE, SEXUAL, SUBSTANCES, DISCRIMINATION, CHILD_SAFETY, WOMEN, MISINFORMATION, PUBLIC_ORDER, EXTREMISM, INTERNATIONAL, ECONOMIC, PRIVACY, APPEARANCE.\n- intensity, context_impact, legal_sensitivity, audience_risk مطلوبة وكل واحدة رقماً بين 1 و 4.\n- لا تُرجع severity — تُحسب في الخلفية.\n- location.start_offset و location.end_offset يجب أن يكونا أرقاماً (لا تُرجع null).\n- confidence رقماً بين 0 و 1.\n- evidence_snippet نصاً غير null.\nأرجع JSON بمصفوفة findings فقط.`;
 
   const resp = await openai.chat.completions.create({
     model: jobConfig.judge_model,

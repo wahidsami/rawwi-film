@@ -34,13 +34,24 @@ const depictionTypeSchema = z.enum(["mention", "depiction", "endorsement", "cond
 const speakerRoleSchema = z.enum(["narrator", "hero", "villain", "supporting", "unknown"]);
 const narrativeConsequenceSchema = z.enum(["punished", "rewarded", "neutralized", "unresolved", "unknown"]);
 
+const factor1to4 = z.preprocess(
+  (v) => (v != null ? Math.max(1, Math.min(4, Number(v) || 1)) : undefined),
+  z.number().int().min(1).max(4).optional().nullable()
+);
+
 export const judgeFindingSchema = z.object({
-  article_id: z.preprocess(toNullableNumber, z.number().int().min(1).max(25)),
+  article_id: z.preprocess(toNullableNumber, z.number().int().min(1).max(25).optional().nullable()).transform((v) => (typeof v === "number" ? v : 0)),
   atom_id: z.string().optional().nullable(),
+  canonical_atom: z.string().optional().nullable(),
+  canonical_atoms: z.array(z.string()).optional().nullable(),
+  intensity: factor1to4,
+  context_impact: factor1to4,
+  legal_sensitivity: factor1to4,
+  audience_risk: factor1to4,
   title_ar: z.string().optional().nullable().transform((v) => v ?? "مخالفة محتوى"),
   description_ar: z.string().optional().nullable().transform((v) => v ?? ""),
-  // OpenAI may emit null; default to medium instead of dropping the whole finding.
-  severity: z.enum(["low", "medium", "high", "critical"]).nullable().transform((v) => v ?? "medium"),
+  // Backend computes severity from factors when canonical_atom + factors present; legacy AI may still send severity.
+  severity: z.enum(["low", "medium", "high", "critical"]).optional().nullable().transform((v) => v ?? null),
   // OpenAI may emit null; default to a conservative confidence instead of dropping.
   confidence: z.preprocess(toNullableNumber, z.number().min(0).max(1).nullable())
     .transform((v) => (typeof v === "number" ? Math.max(0, Math.min(1, v)) : 0.7)),

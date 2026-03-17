@@ -16,6 +16,7 @@ import type { GCAMArticle } from "./gcam.js";
 import type { JudgeFinding } from "./schemas.js";
 import { callJudgeRaw, parseJudgeWithRepair } from "./openai.js";
 import { logger } from "./logger.js";
+import { getFrameworkPromptSection } from "./canonicalAtomFramework.js";
 
 export interface LexiconTerm {
   term: string;
@@ -57,8 +58,11 @@ function buildGlossaryPrompt(articles: GCAMArticle[], lexiconTerms: LexiconTerm[
     .join('\n');
   
   const articlePayload = buildArticlePayload(articles);
+  const frameworkBlock = getFrameworkPromptSection("INSULT");
 
   return `${MAX_DETECTION_NOTE}
+
+${frameworkBlock}
 
 أنت كاشف ألفاظ محظورة من المعجم.
 
@@ -77,15 +81,19 @@ ${articlePayload}
 
 استثناء وحيد: عناوين المشاهد البحتة (مثل: "المشهد 5") والمدد الزمنية البحتة (مثل: "20 دقيقة").
 
-أرجع JSON:
+أرجع JSON (لا تُرجع severity — تُحسب في الخلفية؛ استخدم canonical_atom والعوامل الأربعة 1–4):
 {
   "findings": [
     {
       "article_id": 5,
-      "atom_id": "5-1",
+      "atom_id": "5-2",
+      "canonical_atom": "INSULT",
+      "intensity": 3,
+      "context_impact": 2,
+      "legal_sensitivity": 2,
+      "audience_risk": 1,
       "title_ar": "لفظ محظور من المعجم",
       "description_ar": "وجود لفظ 'نصاب' في النص",
-      "severity": "high",
       "confidence": 1.0,
       "is_interpretive": false,
       "evidence_snippet": "أنت مجرد نصاب",
@@ -103,8 +111,11 @@ const MAX_DETECTION_NOTE = `⚠️ وضع الكشف الأقصى: مهمتك ك
 
 function buildInsultsPrompt(articles: GCAMArticle[]): string {
   const articlePayload = buildArticlePayload(articles);
+  const frameworkBlock = getFrameworkPromptSection("INSULT");
 
   return `${MAX_DETECTION_NOTE}
+
+${frameworkBlock}
 
 أنت كاشف ألفاظ مسيئة وشتائم.
 
@@ -140,8 +151,11 @@ ${articlePayload}
 
 function buildViolencePrompt(articles: GCAMArticle[]): string {
   const articlePayload = buildArticlePayload(articles);
+  const frameworkBlock = getFrameworkPromptSection("VIOLENCE");
 
   return `${MAX_DETECTION_NOTE}
+
+${frameworkBlock}
 
 أنت كاشف عنف وتهديدات.
 
@@ -170,8 +184,11 @@ ${articlePayload}
 
 function buildSexualContentPrompt(articles: GCAMArticle[]): string {
   const articlePayload = buildArticlePayload(articles);
+  const frameworkBlock = getFrameworkPromptSection("SEXUAL");
 
   return `${MAX_DETECTION_NOTE}
+
+${frameworkBlock}
 
 أنت كاشف محتوى جنسي.
 
@@ -199,8 +216,11 @@ ${articlePayload}
 
 function buildDrugsPrompt(articles: GCAMArticle[]): string {
   const articlePayload = buildArticlePayload(articles);
+  const frameworkBlock = getFrameworkPromptSection("SUBSTANCES");
 
   return `${MAX_DETECTION_NOTE}
+
+${frameworkBlock}
 
 أنت كاشف مخدرات وكحول.
 
@@ -228,8 +248,11 @@ ${articlePayload}
 
 function buildDiscriminationPrompt(articles: GCAMArticle[]): string {
   const articlePayload = buildArticlePayload(articles);
+  const frameworkBlock = getFrameworkPromptSection("DISCRIMINATION");
 
   return `${MAX_DETECTION_NOTE}
+
+${frameworkBlock}
 
 أنت كاشف تمييز وتحريض.
 
@@ -257,8 +280,11 @@ ${articlePayload}
 
 function buildNationalSecurityPrompt(articles: GCAMArticle[]): string {
   const articlePayload = buildArticlePayload(articles);
+  const frameworkBlock = getFrameworkPromptSection("PUBLIC_ORDER");
 
   return `${MAX_DETECTION_NOTE}
+
+${frameworkBlock}
 
 أنت كاشف محتوى يمس الأمن الوطني أو ثوابت الحكم.
 
@@ -286,8 +312,11 @@ ${articlePayload}
 
 function buildExtremismPrompt(articles: GCAMArticle[]): string {
   const articlePayload = buildArticlePayload(articles);
+  const frameworkBlock = getFrameworkPromptSection("EXTREMISM");
 
   return `${MAX_DETECTION_NOTE}
+
+${frameworkBlock}
 
 أنت كاشف تطرف وجماعات محظورة.
 
@@ -315,8 +344,11 @@ ${articlePayload}
 
 function buildMisinformationPrompt(articles: GCAMArticle[]): string {
   const articlePayload = buildArticlePayload(articles);
+  const frameworkBlock = getFrameworkPromptSection("MISINFORMATION");
 
   return `${MAX_DETECTION_NOTE}
+
+${frameworkBlock}
 
 أنت كاشف معلومات مضللة وشائعات وتحريض.
 
@@ -344,8 +376,11 @@ ${articlePayload}
 
 function buildInternationalPrompt(articles: GCAMArticle[]): string {
   const articlePayload = buildArticlePayload(articles);
+  const frameworkBlock = getFrameworkPromptSection("INTERNATIONAL");
 
   return `${MAX_DETECTION_NOTE}
+
+${frameworkBlock}
 
 أنت كاشف محتوى يمس العلاقات الدولية.
 

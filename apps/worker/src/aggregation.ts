@@ -82,6 +82,23 @@ export type SummaryJson = {
     end_offset_global?: number | null;
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
+    canonical_atom?: string | null;
+    intensity?: number | null;
+    context_impact?: number | null;
+    legal_sensitivity?: number | null;
+    audience_risk?: number | null;
+  }>;
+  /** Findings grouped by canonical atom (e.g. VIOLENCE, INSULT) for auditor overview. */
+  findings_by_canonical_atom?: Array<{
+    canonical_atom: string;
+    count: number;
+    severity_counts: { low: number; medium: number; high: number; critical: number };
+    top_findings: Array<{
+      canonical_finding_id: string;
+      title_ar: string;
+      severity: string;
+      evidence_snippet: string;
+    }>;
   }>;
   context_metrics?: {
     context_ok_count: number;
@@ -414,6 +431,34 @@ function applyReportGate(summary: SummaryJson): void {
   summary.totals.unique_incidents_count = violations.length;
   summary.totals.severity_counts = severity_counts;
 
+  const byCanonicalAtom = new Map<string, CanonicalFindingItem[]>();
+  for (const f of violations) {
+    const atom = (f as { canonical_atom?: string | null }).canonical_atom ?? "UNKNOWN";
+    if (!byCanonicalAtom.has(atom)) byCanonicalAtom.set(atom, []);
+    byCanonicalAtom.get(atom)!.push(f);
+  }
+  summary.findings_by_canonical_atom = [...byCanonicalAtom.entries()]
+    .map(([canonical_atom, list]) => {
+      const counts = { low: 0, medium: 0, high: 0, critical: 0 };
+      for (const f of list) {
+        if (SEVERITIES.includes(f.severity as (typeof SEVERITIES)[number])) {
+          counts[f.severity as keyof typeof counts]++;
+        }
+      }
+      const sorted = [...list].sort(
+        (a, b) =>
+          severityOrder(b.severity) - severityOrder(a.severity) || (b.confidence - a.confidence)
+      );
+      const top_findings = sorted.slice(0, 5).map((f) => ({
+        canonical_finding_id: f.canonical_finding_id,
+        title_ar: f.title_ar,
+        severity: f.severity,
+        evidence_snippet: f.evidence_snippet,
+      }));
+      return { canonical_atom, count: list.length, severity_counts: counts, top_findings };
+    })
+    .sort((a, b) => b.count - a.count);
+
   if (summary.context_metrics) {
     summary.context_metrics.violation_count = violations.filter((x) => x.final_ruling === "violation").length;
     summary.context_metrics.needs_review_count = violations.filter((x) => x.final_ruling === "needs_review").length;
@@ -438,6 +483,11 @@ type DbFinding = {
   end_line_chunk: number | null;
   location: unknown;
   rationale_ar?: string | null;
+  canonical_atom?: string | null;
+  intensity?: number | null;
+  context_impact?: number | null;
+  legal_sensitivity?: number | null;
+  audience_risk?: number | null;
 };
 
 const SEVERITIES = ["low", "medium", "high", "critical"] as const;
@@ -557,6 +607,11 @@ export function buildSummaryJson(
     end_offset_global?: number | null;
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
+    canonical_atom?: string | null;
+    intensity?: number | null;
+    context_impact?: number | null;
+    legal_sensitivity?: number | null;
+    audience_risk?: number | null;
   }>();
 
   const clusters = oneCardPerOccurrence
@@ -597,6 +652,11 @@ export function buildSummaryJson(
       end_offset_global: primary.end_offset_global ?? null,
       start_line_chunk: primary.start_line_chunk ?? null,
       end_line_chunk: primary.end_line_chunk ?? null,
+      canonical_atom: primary.canonical_atom ?? null,
+      intensity: primary.intensity ?? null,
+      context_impact: primary.context_impact ?? null,
+      legal_sensitivity: primary.legal_sensitivity ?? null,
+      audience_risk: primary.audience_risk ?? null,
     });
   }
 
@@ -707,6 +767,35 @@ export function buildSummaryJson(
   const needs_review_count = canonical_findings.filter((f) => f.final_ruling === "needs_review").length;
   const violation_count = canonical_findings.filter((f) => f.final_ruling === "violation").length;
 
+  // findings_by_canonical_atom: group by canonical_atom for auditor overview.
+  const byCanonicalAtom = new Map<string, typeof canonical_findings>();
+  for (const f of canonical_findings) {
+    const atom = (f as { canonical_atom?: string | null }).canonical_atom ?? "UNKNOWN";
+    if (!byCanonicalAtom.has(atom)) byCanonicalAtom.set(atom, []);
+    byCanonicalAtom.get(atom)!.push(f);
+  }
+  const findings_by_canonical_atom: SummaryJson["findings_by_canonical_atom"] = [...byCanonicalAtom.entries()]
+    .map(([canonical_atom, list]) => {
+      const counts = { low: 0, medium: 0, high: 0, critical: 0 };
+      for (const f of list) {
+        if (SEVERITIES.includes(f.severity as (typeof SEVERITIES)[number])) {
+          counts[f.severity as keyof typeof counts]++;
+        }
+      }
+      const sorted = [...list].sort(
+        (a, b) =>
+          severityOrder(b.severity) - severityOrder(a.severity) || (b.confidence - a.confidence)
+      );
+      const top_findings = sorted.slice(0, 5).map((f) => ({
+        canonical_finding_id: f.canonical_finding_id,
+        title_ar: f.title_ar,
+        severity: f.severity,
+        evidence_snippet: f.evidence_snippet,
+      }));
+      return { canonical_atom, count: list.length, severity_counts: counts, top_findings };
+    })
+    .sort((a, b) => b.count - a.count);
+
   return {
     job_id: jobId,
     script_id: scriptId,
@@ -726,6 +815,7 @@ export function buildSummaryJson(
     checklist_articles,
     findings_by_article,
     canonical_findings,
+    findings_by_canonical_atom,
     report_hints: [] as SummaryJson["report_hints"],
   };
 }
@@ -749,6 +839,23 @@ export function buildReportHtml(summary: SummaryJson): string {
         `<tr><td>${c.article_id}</td><td>${c.title_ar}</td><td>${c.status}</td><td>${c.counts.low}</td><td>${c.counts.medium}</td><td>${c.counts.high}</td><td>${c.counts.critical}</td></tr>`
     )
     .join("");
+
+  const canonicalAtomSummaryHtml =
+    (s.findings_by_canonical_atom?.length ?? 0) > 0
+      ? `
+  <section>
+    <h2>ملخص حسب نوع المخالفة (Canonical Atom)</h2>
+    <p>عدد الحوادث حسب التصنيف الموحد:</p>
+    <ul>
+    ${(s.findings_by_canonical_atom ?? [])
+      .map(
+        (a) =>
+          `<li><strong>${a.canonical_atom}</strong>: ${a.count} (منخفضة: ${a.severity_counts.low}, متوسطة: ${a.severity_counts.medium}, عالية: ${a.severity_counts.high}, حرجة: ${a.severity_counts.critical})</li>`
+      )
+      .join("")}
+    </ul>
+  </section>`
+      : "";
 
   let detailsHtml = "";
   for (const art of s.findings_by_article) {
@@ -822,6 +929,7 @@ export function buildReportHtml(summary: SummaryJson): string {
       <tbody>${checklistRows}</tbody>
     </table>
   </section>
+  ${canonicalAtomSummaryHtml}
   <section>
     <h2>٤ النتائج التفصيلية</h2>
     ${detailsHtml}
@@ -892,7 +1000,7 @@ export async function runAggregation(jobId: string): Promise<void> {
   const { data: findings, error: findingsErr } = await supabase
     .from("analysis_findings")
     .select(
-      "source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_line_chunk, end_line_chunk, location, rationale_ar"
+      "source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_line_chunk, end_line_chunk, location, rationale_ar, canonical_atom, intensity, context_impact, legal_sensitivity, audience_risk"
     )
     .eq("job_id", jobId);
 
