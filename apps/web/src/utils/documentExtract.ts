@@ -62,8 +62,8 @@ export async function extractDocx(file: File): Promise<{ plain: string; html: st
   };
 }
 
-/** Approximate chars per "page" when splitting DOCX with no explicit page breaks */
-const CHARS_PER_VIRTUAL_PAGE = 3200;
+/** Approximate chars per "page" when splitting DOCX with no explicit page breaks (lower = more pages). */
+const CHARS_PER_VIRTUAL_PAGE = 1200;
 
 /** Find safe split positions in HTML (after closing tags) near target indices */
 function findSafeSplitPositions(html: string, numSplits: number): number[] {
