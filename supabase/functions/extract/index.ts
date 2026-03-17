@@ -144,7 +144,9 @@ Deno.serve(async (req: Request) => {
   }
   // Only enqueue analysis when explicitly requested (e.g. "Start Smart Analysis"). Import must not trigger analysis.
   const enqueueAnalysis = body.enqueueAnalysis === true;
-  const contentHtml = body.contentHtml != null && typeof body.contentHtml === "string" ? body.contentHtml.trim() || null : null;
+  // Normalize Unicode (NFC) so Arabic and other script from PDFs is consistent and safe for storage.
+  const norm = (s: string) => (s ?? "").trim().normalize("NFC");
+  const contentHtml = body.contentHtml != null && typeof body.contentHtml === "string" ? norm(body.contentHtml) || null : null;
 
   const versionId = body?.versionId;
   if (!versionId || typeof versionId !== "string") {
@@ -184,7 +186,7 @@ Deno.serve(async (req: Request) => {
   let extractedText: string;
 
   if (body.text != null && typeof body.text === "string") {
-    extractedText = body.text.trim();
+    extractedText = norm(body.text);
   } else {
     const objectPath = v.source_file_path;
     if (!objectPath) {
@@ -217,6 +219,9 @@ Deno.serve(async (req: Request) => {
       extractedText = await blob.text();
     }
   }
+
+  // Sanitize for storage: NFC and remove null bytes / C0 controls that can break JSON or DB.
+  extractedText = norm(extractedText).replace(/\0/g, "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
 
   await supabase
     .from("script_versions")

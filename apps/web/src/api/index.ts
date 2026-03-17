@@ -103,13 +103,18 @@ export const scriptsApi = {
   /** Delete a script by id. */
   deleteScript: (id: string): Promise<{ ok: boolean }> => httpClient.delete(`/scripts/${encodeURIComponent(id)}`),
   uploadFile: (file: File): Promise<any> => httpClient.post('/upload', { fileName: file.name }),
-  extractText: (versionId: string, text?: string, options?: { enqueueAnalysis?: boolean; contentHtml?: string | null }): Promise<any> =>
-    httpClient.post('/extract', {
+  extractText: (versionId: string, text?: string, options?: { enqueueAnalysis?: boolean; contentHtml?: string | null }): Promise<any> => {
+    // PDFs (especially Arabic) can produce text that breaks JSON: backslash + u that isn't \uXXXX.
+    // Normalize Unicode (NFC). Replace \ with the 6-char sequence \u005C so JSON has valid escape and server gets one \.
+    const safe = (s: string) => (s ?? "").normalize("NFC").replace(/\\/g, "\\u005C");
+    const body: Record<string, unknown> = {
       versionId,
-      text,
       ...(options?.enqueueAnalysis !== undefined && { enqueueAnalysis: options.enqueueAnalysis }),
-      ...(options?.contentHtml !== undefined && { contentHtml: options.contentHtml }),
-    }),
+    };
+    if (text !== undefined && text !== null) body.text = safe(String(text));
+    if (options?.contentHtml !== undefined && options?.contentHtml !== null) body.contentHtml = safe(String(options.contentHtml));
+    return httpClient.post('/extract', body);
+  },
   /** Queue analysis for a version (creates new analysis_jobs + chunks). POST /tasks */
   createTask: (
     versionId: string,
