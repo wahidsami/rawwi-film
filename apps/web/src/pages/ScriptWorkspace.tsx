@@ -1601,6 +1601,38 @@ export function ScriptWorkspace() {
     findingsOnPageWithLocalOffsets.length,
   ]);
 
+  /** After page switch + highlight paint, scroll to the selected finding (click handler's setTimeout often ran too early). */
+  useEffect(() => {
+    if (!selectedFindingId || canonicalHashMismatch) return;
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 50;
+
+    const tryScroll = () => {
+      if (cancelled || !editorRef.current) return;
+      const sel = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(selectedFindingId) : selectedFindingId.replace(/["\\]/g, '');
+      const el = editorRef.current.querySelector(`[data-finding-id="${sel}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('finding-flash');
+        window.setTimeout(() => {
+          el.classList.remove('finding-flash');
+        }, 2000);
+        return;
+      }
+      attempts += 1;
+      if (attempts < maxAttempts) {
+        window.setTimeout(tryScroll, 100);
+      }
+    };
+
+    const t0 = window.setTimeout(tryScroll, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t0);
+    };
+  }, [selectedFindingId, safeCurrentPage, highlightRenderedCount, highlightRetryTick, canonicalHashMismatch]);
+
   if (showLoading) {
     return (
       <div className="p-8 text-center">
@@ -1643,19 +1675,31 @@ export function ScriptWorkspace() {
         },
         { replace: true }
       );
-    }
-    const delay = isPageMode && f.pageNumber != null ? 320 : 100;
-    setTimeout(() => {
-      const el = editorRef.current?.querySelector(`[data-finding-id="${f.id}"]`);
-      if (IS_DEV) console.log(`[ScriptWorkspace] Scroll target found?`, !!el);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.classList.add('finding-flash');
-        setTimeout(() => el.classList.remove('finding-flash'), 2000);
-      } else if (IS_DEV) {
-        console.warn(`[ScriptWorkspace] Target element [data-finding-id="${f.id}"] not found in editor.`);
+    } else if (
+      isPageMode &&
+      f.startOffsetGlobal != null &&
+      f.endOffsetGlobal != null &&
+      (editorData?.pages?.length ?? 0) > 0
+    ) {
+      const pages = editorData!.pages!;
+      const start = f.startOffsetGlobal;
+      for (let i = 0; i < pages.length; i++) {
+        const ps = pages[i].startOffsetGlobal ?? 0;
+        const pe = ps + (pages[i].content?.length ?? 0);
+        if (start >= ps && start < pe) {
+          setCurrentPage(i + 1);
+          setSearchParams(
+            (prev) => {
+              const n = new URLSearchParams(prev);
+              n.set('page', String(i + 1));
+              return n;
+            },
+            { replace: true }
+          );
+          break;
+        }
       }
-    }, delay);
+    }
   };
 
   return (
