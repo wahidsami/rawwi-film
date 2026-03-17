@@ -206,22 +206,6 @@ function locateSpanByEvidenceSearch(
     return best ? { start: best.start, end: best.end } : { start: matches[0].start, end: matches[0].end };
   };
 
-  let bestExact: { start: number; end: number } | null = null;
-  let bestExactLen = Infinity;
-  for (const needle of needles) {
-    if (needle.length < 8) continue;
-    const exact = gatherExactOccurrences(plain, needle);
-    if (!exact.length) continue;
-    const hit = pick(exact);
-    if (!hit) continue;
-    const span = hit.end - hit.start;
-    if (span < bestExactLen) {
-      bestExactLen = span;
-      bestExact = hit;
-    }
-  }
-  if (bestExact) return bestExact;
-
   for (const needle of needles) {
     let matches = gatherExactOccurrences(plain, needle);
     if (matches.length === 0) {
@@ -256,39 +240,12 @@ function locateSpanByEvidenceSearch(
     if (hit) return hit;
   }
 
-  return null;
-}
-
-/** Viewer page index (0-based) where this finding's evidence actually appears in page slices. */
-function findViewerPageIndexForFinding(
-  pages: { content?: string | null; startOffsetGlobal: number }[],
-  f: AnalysisFinding
-): number | null {
-  if (!pages.length) return null;
-  const optsFor = (i: number) =>
-    ({ pageSlice: true as const, sliceGlobalStart: pages[i]?.startOffsetGlobal ?? 0 });
-
-  const evidenceOnPage = (i: number) => {
-    const plain = pages[i]?.content ?? '';
-    if (!plain) return false;
-    return locateSpanByEvidenceSearch(plain, f, optsFor(i)) != null;
-  };
-
-  const dbPg = (f.pageNumber ?? 0) - 1;
-  if (dbPg >= 0 && dbPg < pages.length && evidenceOnPage(dbPg)) return dbPg;
-
-  for (let i = 0; i < pages.length; i++) {
-    if (i === dbPg) continue;
-    if (evidenceOnPage(i)) return i;
+  for (const needle of needles) {
+    const m = findTextOccurrences(plain, needle, { minConfidence: 0.85 });
+    const hit = pick(m);
+    if (hit) return hit;
   }
 
-  for (let i = 0; i < pages.length; i++) {
-    const ps = pages[i].startOffsetGlobal ?? 0;
-    const pe = ps + (pages[i].content?.length ?? 0);
-    const s = f.startOffsetGlobal ?? -1;
-    const e = f.endOffsetGlobal ?? -1;
-    if (s >= 0 && e > s && e > ps && s < pe) return i;
-  }
   return null;
 }
 
@@ -1870,9 +1827,24 @@ export function ScriptWorkspace() {
           })
           .filter(Boolean) as AnalysisFinding[];
       } else {
-        const pages = editorData.pages ?? [];
-        const targetIdx = safeCurrentPage - 1;
-        onPage = reportFindings.filter((f) => findViewerPageIndexForFinding(pages, f) === targetIdx);
+        const ps = currentPageData.startOffsetGlobal ?? 0;
+        const pe = ps + (pagePlain.length || 1);
+        onPage = reportFindings.filter((f) => {
+          if (f.pageNumber != null && f.pageNumber === safeCurrentPage) return true;
+          if (
+            f.startOffsetGlobal != null &&
+            f.endOffsetGlobal != null &&
+            f.endOffsetGlobal > ps &&
+            f.startOffsetGlobal < pe
+          )
+            return true;
+          return (
+            !!locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts) ||
+            !!locateSpanByEvidenceSearch(domRaw, f, pageSliceOpts) ||
+            !!locateFindingInContent(pagePlain, f, pageSliceOpts) ||
+            !!locateFindingInContent(domRaw, f, pageSliceOpts)
+          );
+        });
         setHighlightExpectedCount(onPage.length);
         resolved = onPage
           .map((f) => {
