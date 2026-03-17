@@ -23,7 +23,14 @@ import {
   CheckCircle2, Shield, FileDown, Info, FileSearch,
 } from 'lucide-react';
 
-import { getPolicyArticles, getArticleDomainId, normalizeAtomId, atomIdNumeric } from '@/data/policyMap';
+import {
+  getPolicyArticles,
+  getArticleDomainId,
+  normalizeAtomId,
+  atomIdNumeric,
+  getPolicyAtomsFlat,
+  countPolicyAtoms,
+} from '@/data/policyMap';
 
 const policyArticles = getPolicyArticles().map((a) => ({
   id: a.articleId,
@@ -61,6 +68,7 @@ type CanonicalSummaryFinding = {
   rationale?: string | null;
   pillar_id?: string | null;
   primary_article_id?: number | null;
+  primary_policy_atom_id?: string | null;
   related_article_ids?: number[];
   policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
   start_line_chunk?: number | null;
@@ -240,7 +248,6 @@ export function Results() {
   }
 
   const summary = report.summaryJson;
-  const checklistMap = new Map(summary.checklist_articles.map(c => [c.article_id, c]));
   const canonicalSummaryFindings: CanonicalSummaryFinding[] = (summary.canonical_findings || []).filter(Boolean);
   const reportHints: CanonicalSummaryFinding[] = (summary.report_hints || []).filter(Boolean);
   const wordsToRevisit = (summary.words_to_revisit || []).filter(Boolean);
@@ -249,6 +256,30 @@ export function Results() {
   const hasRealFindings = findings.length > 0;
   const violations = hasRealFindings ? findings.filter(f => f.reviewStatus !== 'approved') : [];
   const approvedFindings = hasRealFindings ? findings.filter(f => f.reviewStatus === 'approved') : [];
+
+  const policyAtomsFlat = getPolicyAtomsFlat();
+  const policyAtomTotal = countPolicyAtoms();
+  const atomViolationCounts = (() => {
+    const m = new Map<string, number>();
+    const add = (k: string) => {
+      m.set(k, (m.get(k) ?? 0) + 1);
+    };
+    if (hasRealFindings) {
+      for (const f of findings) {
+        if (f.reviewStatus === 'approved') continue;
+        const k = normalizeAtomId(f.atomId, f.articleId);
+        if (k) add(k);
+        else if (f.articleId) add(`__article_${f.articleId}`);
+      }
+      return m;
+    }
+    for (const cf of canonicalSummaryFindings) {
+      const pk = cf.primary_policy_atom_id?.trim();
+      if (pk) add(pk);
+      else if (cf.primary_article_id != null) add(`__article_${cf.primary_article_id}`);
+    }
+    return m;
+  })();
 
   function dedupeRealFindings(list: AnalysisFinding[]): AnalysisFinding[] {
     const byCanonical = new Map<string, AnalysisFinding>();
@@ -1141,46 +1172,98 @@ export function Results() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Checklist */}
         <div className="lg:col-span-4 space-y-4">
-          <h3 className="font-bold text-lg text-text-main border-b border-border pb-2">
-            {lang === 'ar' ? 'قائمة التحقق' : 'Compliance Checklist'}
-          </h3>
+          <div className="border-b border-border pb-2">
+            <h3 className="font-bold text-lg text-text-main">
+              {lang === 'ar' ? 'قائمة التحقق (البنود الفرعية)' : 'Compliance checklist (atoms)'}
+            </h3>
+            <p className="text-xs text-text-muted mt-1">
+              {lang === 'ar'
+                ? `${policyAtomTotal} بنداً فرعياً في خريطة السياسة (مادة–بند مثل 4-1).`
+                : `${policyAtomTotal} policy atoms (e.g. 4-1) in the map.`}
+            </p>
+          </div>
           <div className="space-y-3">
-            {domains.map(domain => {
-              const domainArticles = policyArticles.filter(a => a.domainId === domain.id);
-              const domainFindingsCount = domainArticles.reduce((sum, a) => {
-                const cl = checklistMap.get(a.id);
-                return sum + (cl ? (cl.counts.low ?? 0) + (cl.counts.medium ?? 0) + (cl.counts.high ?? 0) + (cl.counts.critical ?? 0) : 0);
-              }, 0);
+            {domains.map((domain) => {
+              const atomsInDomain = policyAtomsFlat.filter((a) => a.domainId === domain.id);
+              const articleBucketKeys = [...atomViolationCounts.keys()].filter((k) => {
+                if (!k.startsWith('__article_')) return false;
+                const aid = parseInt(k.replace('__article_', ''), 10);
+                return !Number.isNaN(aid) && getArticleDomainId(aid) === domain.id;
+              });
+              const domainFindingsCount =
+                atomsInDomain.reduce((sum, a) => sum + (atomViolationCounts.get(a.atomId) ?? 0), 0) +
+                articleBucketKeys.reduce((sum, k) => sum + (atomViolationCounts.get(k) ?? 0), 0);
               const isExpanded = expandedDomains[domain.id];
               return (
                 <div key={domain.id} className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
-                  <button onClick={() => toggleDomain(domain.id)} className="w-full flex items-center justify-between p-4 hover:bg-background transition-colors text-start">
+                  <button
+                    type="button"
+                    onClick={() => toggleDomain(domain.id)}
+                    className="w-full flex items-center justify-between p-4 hover:bg-background transition-colors text-start"
+                  >
                     <div className="flex items-center gap-3">
-                      {domainFindingsCount > 0 ? <XCircle className="w-5 h-5 text-error" /> : <CheckCircle className="w-5 h-5 text-success" />}
-                      <span className="font-semibold text-text-main text-sm">{lang === 'ar' ? domain.titleAr : domain.titleEn}</span>
+                      {domainFindingsCount > 0 ? (
+                        <XCircle className="w-5 h-5 text-error shrink-0" />
+                      ) : (
+                        <CheckCircle className="w-5 h-5 text-success shrink-0" />
+                      )}
+                      <span className="font-semibold text-text-main text-sm">
+                        {lang === 'ar' ? domain.titleAr : domain.titleEn}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      {domainFindingsCount > 0 && <Badge variant="error" className="text-xs">{domainFindingsCount}</Badge>}
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+                    <div className="flex items-center gap-3 shrink-0">
+                      {domainFindingsCount > 0 && (
+                        <Badge variant="error" className="text-xs">
+                          {domainFindingsCount}
+                        </Badge>
+                      )}
+                      {isExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-text-muted" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-text-muted" />
+                      )}
                     </div>
                   </button>
                   {isExpanded && (
-                    <div className="bg-background border-t border-border p-3 space-y-1">
-                      {domainArticles.map(article => {
-                        const cl = checklistMap.get(article.id);
-                        const total = cl ? (cl.counts.low ?? 0) + (cl.counts.medium ?? 0) + (cl.counts.high ?? 0) + (cl.counts.critical ?? 0) : 0;
+                    <div className="bg-background border-t border-border p-2 max-h-[min(70vh,28rem)] overflow-y-auto space-y-0.5">
+                      {atomsInDomain.map((atom) => {
+                        const n = atomViolationCounts.get(atom.atomId) ?? 0;
                         return (
-                          <div key={article.id} className="flex justify-between items-center py-2 px-3 rounded-md hover:bg-surface text-sm">
-                            <span className="text-text-main font-medium">
-                                {lang === 'ar' ? `مادة ${article.id}: ${article.titleAr}` : `Art ${article.id}: ${article.titleEn}`}
-                              </span>
-                            {cl?.status === 'not_scanned' ? (
-                              <Badge variant="outline" className="text-[10px] text-text-muted bg-background min-w-[70px] justify-center">{lang === 'ar' ? 'غير مفحوصة' : 'Not Scanned'}</Badge>
-                            ) : total > 0 ? (
-                              <Badge variant="error" className="h-5 px-1.5 min-w-[24px] justify-center">{total}</Badge>
+                          <div
+                            key={atom.atomId}
+                            className="flex justify-between items-start gap-2 py-1.5 px-2 rounded-md hover:bg-surface text-xs"
+                          >
+                            <span className="text-text-main text-start leading-snug" dir="rtl">
+                              <span className="font-mono text-[10px] text-text-muted whitespace-nowrap">{atom.atomId}</span>{' '}
+                              {atom.titleAr}
+                            </span>
+                            {n > 0 ? (
+                              <Badge variant="error" className="h-5 px-1.5 shrink-0">
+                                {n}
+                              </Badge>
                             ) : (
-                              <CheckCircle className="w-4 h-4 text-success/60" />
+                              <CheckCircle className="w-3.5 h-3.5 text-success/60 shrink-0 mt-0.5" />
                             )}
+                          </div>
+                        );
+                      })}
+                      {articleBucketKeys.map((k) => {
+                        const aid = parseInt(k.replace('__article_', ''), 10);
+                        const n = atomViolationCounts.get(k) ?? 0;
+                        const art = policyArticles.find((x) => x.id === aid);
+                        return (
+                          <div
+                            key={k}
+                            className="flex justify-between items-center gap-2 py-2 px-2 rounded-md bg-warning/5 border border-warning/20 text-xs"
+                          >
+                            <span className="text-text-main leading-snug" dir="rtl">
+                              {lang === 'ar'
+                                ? `مادة ${aid}${art?.titleAr ? ` — ${art.titleAr}` : ''} (بند غير محدد في البيانات)`
+                                : `Art ${aid}${art?.titleEn ? ` — ${art.titleEn}` : ''} (unspecified atom)`}
+                            </span>
+                            <Badge variant="error" className="h-5 px-1.5 shrink-0">
+                              {n}
+                            </Badge>
                           </div>
                         );
                       })}

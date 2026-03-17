@@ -285,6 +285,8 @@ export interface Report {
       end_offset_global?: number | null;
       start_line_chunk?: number | null;
       end_line_chunk?: number | null;
+      /** PolicyMap key e.g. 4-1 when primary DB finding had atom_id. */
+      primary_policy_atom_id?: string | null;
     }>;
     context_metrics?: {
       context_ok_count: number;

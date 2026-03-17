@@ -73,3 +73,30 @@ export function getArticleDomainId(articleId: number): string {
 
 export const ADMIN_ONLY_ARTICLE_ID = 25;
 export const OUT_OF_SCOPE_ARTICLE_ID = 26;
+
+/** Every PolicyMap atom with domain (A–E) for checklists. Excludes out-of-scope article 26. */
+export function getPolicyAtomsFlat(): Array<{
+  atomId: string;
+  articleId: number;
+  titleAr: string;
+  domainId: string;
+}> {
+  const out: Array<{ atomId: string; articleId: number; titleAr: string; domainId: string }> = [];
+  for (const a of getPolicyArticles()) {
+    if (a.articleId === OUT_OF_SCOPE_ARTICLE_ID) continue;
+    const domainId = getArticleDomainId(a.articleId);
+    for (const atom of a.atoms ?? []) {
+      out.push({
+        atomId: atom.atomId,
+        articleId: a.articleId,
+        titleAr: atom.title_ar,
+        domainId,
+      });
+    }
+  }
+  return out;
+}
+
+export function countPolicyAtoms(): number {
+  return getPolicyAtomsFlat().length;
+}

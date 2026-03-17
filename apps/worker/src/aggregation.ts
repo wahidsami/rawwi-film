@@ -83,6 +83,8 @@ export type SummaryJson = {
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
     page_number?: number | null;
+    /** PolicyMap atom key e.g. 4-1; checklist UI. */
+    primary_policy_atom_id?: string | null;
     canonical_atom?: string | null;
     intensity?: number | null;
     context_impact?: number | null;
@@ -655,6 +657,10 @@ export function buildSummaryJson(
       start_line_chunk: primary.start_line_chunk ?? null,
       end_line_chunk: primary.end_line_chunk ?? null,
       page_number: primary.page_number ?? null,
+      primary_policy_atom_id: (() => {
+        const n = normalizeAtomId(primary.atom_id, primary.article_id);
+        return n && String(n).trim() !== "" ? String(n) : null;
+      })(),
       canonical_atom: primary.canonical_atom ?? null,
       intensity: primary.intensity ?? null,
       context_impact: primary.context_impact ?? null,
