@@ -662,34 +662,51 @@ export function ScriptWorkspace() {
     return () => window.clearTimeout(t);
   }, [location.hash, scriptFindings, isPageMode, safeCurrentPage]);
 
-  // Build DOM text index when HTML content changes (for DOCX formatted view)
+  // Build DOM text index: full script HTML (scroll mode) OR current page container (page mode).
+  // Page mode must not use full-document innerHTML — ref holds per-page HTML only.
   useEffect(() => {
-    if (!editorData?.contentHtml) {
-      if (domTextIndex) setDomTextIndex(null);
-      return;
+    const pageData = editorData?.pages?.[safeCurrentPage - 1];
+    const inPageMode = (editorData?.pages?.length ?? 0) > 0;
+
+    if (inPageMode) {
+      const timer = setTimeout(() => {
+        if (!editorRef.current || (!pageData?.contentHtml && !(pageData?.content?.length))) {
+          setDomTextIndex(null);
+          return;
+        }
+        const idx = buildDomTextIndex(editorRef.current);
+        setDomTextIndex(idx);
+        if (IS_DEV && idx) {
+          console.log('[ScriptWorkspace] Page DOM text index len:', idx.normalizedText.length, 'page', safeCurrentPage);
+        }
+      }, 160);
+      return () => clearTimeout(timer);
     }
 
-    // Defer to ensure DOM has updated with new innerHTML
+    if (!editorData?.contentHtml) {
+      setDomTextIndex(null);
+      return;
+    }
     const timer = setTimeout(() => {
       if (editorRef.current) {
         const idx = buildDomTextIndex(editorRef.current);
         setDomTextIndex(idx);
-        if (IS_DEV && idx) console.log('[ScriptWorkspace] Built DOM text index, length:', idx.normalizedText.length);
+        if (IS_DEV && idx) console.log('[ScriptWorkspace] Full-doc DOM text index len:', idx.normalizedText.length);
       }
     }, 100);
     return () => clearTimeout(timer);
-  }, [editorData?.contentHtml]);
+  }, [editorData?.contentHtml, editorData?.pages, safeCurrentPage]);
 
-  // Set innerHTML manually ONCE when content changes to prevent dangerouslySetInnerHTML from wiping highlights
+  // Inject full-document HTML only in scroll mode (page mode uses React per-page content).
   useLayoutEffect(() => {
+    if ((editorData?.pages?.length ?? 0) > 0) return;
     if (!editorRef.current || !editorData?.contentHtml) return;
     const newHtml = sanitizeFormattedHtml(editorData.contentHtml);
-    // Only update innerHTML if content actually changed
     if (editorRef.current.innerHTML !== newHtml) {
       editorRef.current.innerHTML = newHtml;
-      if (IS_DEV) console.log('[ScriptWorkspace] innerHTML updated manually');
+      if (IS_DEV) console.log('[ScriptWorkspace] innerHTML updated (scroll mode)');
     }
-  }, [editorData?.contentHtml]);
+  }, [editorData?.contentHtml, editorData?.pages?.length]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -1353,20 +1370,31 @@ export function ScriptWorkspace() {
   const pageEnd = currentPageData ? pageStart + (currentPageData.content?.length ?? 0) : 0;
   const findingsOnPageWithLocalOffsets = useMemo(() => {
     if (!currentPageData || !reportFindings.length) return [];
-    const list = reportFindings.filter(
-      (f) =>
+    const pageLen = currentPageData.content?.length ?? 0;
+    const list = reportFindings.filter((f) => {
+      if (f.pageNumber != null && f.pageNumber === safeCurrentPage) return true;
+      return (
         f.startOffsetGlobal != null &&
         f.endOffsetGlobal != null &&
         f.endOffsetGlobal > pageStart &&
         f.startOffsetGlobal < pageEnd
-    );
-    const len = currentPageData.content?.length ?? 0;
-    return list.map((f) => ({
-      ...f,
-      startOffsetGlobal: Math.max(0, (f.startOffsetGlobal ?? 0) - pageStart),
-      endOffsetGlobal: Math.min(len, (f.endOffsetGlobal ?? 0) - pageStart),
-    })) as AnalysisFinding[];
-  }, [currentPageData, pageStart, pageEnd, reportFindings]);
+      );
+    });
+    return list
+      .map((f) => {
+        if (f.startOffsetGlobal != null && f.endOffsetGlobal != null && f.endOffsetGlobal > pageStart && f.startOffsetGlobal < pageEnd) {
+          return {
+            ...f,
+            startOffsetGlobal: Math.max(0, f.startOffsetGlobal - pageStart),
+            endOffsetGlobal: Math.min(pageLen, f.endOffsetGlobal - pageStart),
+          } as AnalysisFinding;
+        }
+        const loc = locateFindingInContent(currentPageData.content ?? '', f);
+        if (!loc) return null;
+        return { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } as AnalysisFinding;
+      })
+      .filter(Boolean) as AnalysisFinding[];
+  }, [currentPageData, pageStart, pageEnd, reportFindings, safeCurrentPage, locateFindingInContent]);
   const pageFindingSegments = useMemo(
     () =>
       isPageMode && currentPageData?.content && findingsOnPageWithLocalOffsets.length > 0
@@ -1388,109 +1416,74 @@ export function ScriptWorkspace() {
     (selectedJobCanonicalHash != null &&
       editorData?.contentHash != null &&
       selectedJobCanonicalHash !== editorData.contentHash);
-  useEffect(() => {
-    const container = editorRef.current;
-    if (!container || !domTextIndex || !canonicalContentForHighlights || !editorData?.contentHtml) {
-      setHighlightExpectedCount(reportFindings.length);
-      setHighlightLocatableCount(0);
-      setHighlightRenderedCount(0);
-      return;
-    }
-
-    lastHighlightGuardLogFindingsRef.current = null;
-    const canonical = domTextIndex ? domTextIndex.normalizedText : canonicalContentForHighlights;
-    setHighlightExpectedCount(reportFindings.length);
-
-    // Use LOCATOR to find valid ranges
-    const validFindings = reportFindings.map(f => {
-      const loc = locateFindingInContent(canonical, f);
-      if (!loc && IS_DEV) console.log(`[ScriptWorkspace] Failed to locate finding ${f.id} ("${f.evidenceSnippet?.slice(0, 20)}...") in text of len ${canonical.length}`);
-      return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
-    }).filter((f) => f !== null) as AnalysisFinding[];
-    setHighlightLocatableCount(validFindings.length);
-
-    if (IS_DEV) console.log(`[ScriptWorkspace] Valid findings for highlights: ${validFindings.length}/${reportFindings.length}`);
-
-    unwrapFindingMarks(container);
-
-    // Group findings by section (not currently used but maybe useful later, or remove)
-    // const grouped = reportFindings...
-
-
-    const sorted = [...validFindings].sort((a, b) => {
-      const sa = a.startOffsetGlobal ?? 0;
-      const sb = b.startOffsetGlobal ?? 0;
-      if (sa !== sb) return sa - sb;
-      return (b.endOffsetGlobal ?? 0) - (a.endOffsetGlobal ?? 0);
-    });
-
-    let lastEnd = -1;
-    let appliedCount = 0;
-    // ... loop to apply ranges
-    for (const f of sorted) {
-      const start = f.startOffsetGlobal!;
-      const end = f.endOffsetGlobal!;
-      if (start < lastEnd) continue; // Skip overlaps for DOM highlights?
-
-      lastEnd = Math.max(lastEnd, end);
-      const range = rangeFromNormalizedOffsets(domTextIndex, start, end);
-      if (!range) continue;
-
-      const el = document.createElement('span');
-      el.setAttribute('data-finding-id', f.id);
-      el.className = 'ap-highlight cursor-pointer';
-      // ... styles
-      el.style.backgroundColor = 'rgba(255, 0, 0, 0.20)';
-      el.style.outline = '2px solid rgba(255, 0, 0, 0.60)';
-      el.style.borderRadius = '4px';
-
-      try {
-        const range = rangeFromNormalizedOffsets(domTextIndex, start, end);
-        if (!range) {
-          if (IS_DEV) console.warn(`[ScriptWorkspace] No range for highlight ${f.id} at ${start}-${end}`);
-          continue;
+  const applyHighlightMarks = useCallback(
+    (container: HTMLElement, idx: DomTextIndex, findingsList: AnalysisFinding[]) => {
+      unwrapFindingMarks(container);
+      const sorted = [...findingsList].sort((a, b) => {
+        const sa = a.startOffsetGlobal ?? 0;
+        const sb = b.startOffsetGlobal ?? 0;
+        if (sa !== sb) return sa - sb;
+        return (b.endOffsetGlobal ?? 0) - (a.endOffsetGlobal ?? 0);
+      });
+      let lastEnd = -1;
+      let appliedCount = 0;
+      const domRaw = idx.segments.map((s) => s.text).join('');
+      for (const f of sorted) {
+        let rawStart = f.startOffsetGlobal ?? -1;
+        let rawEnd = f.endOffsetGlobal ?? -1;
+        if (rawStart < 0 || rawEnd <= rawStart) continue;
+        let loc = locateFindingInContent(domRaw, f);
+        if (!loc && currentPageData?.content) {
+          loc = locateFindingInContent(currentPageData.content, f);
         }
+        if (loc) {
+          rawStart = loc.start;
+          rawEnd = loc.end;
+        }
+        const maxRaw = Math.max(0, idx.rawToNorm.length - 1);
+        rawStart = Math.max(0, Math.min(rawStart, maxRaw));
+        rawEnd = Math.max(rawStart + 1, Math.min(rawEnd, maxRaw + 1));
+        const startNorm = idx.getNormalizedIndexFromRawOffset(rawStart);
+        const endNorm = idx.getNormalizedIndexFromRawOffset(rawEnd);
+        if (startNorm >= endNorm) continue;
+        if (startNorm < lastEnd) continue;
+        lastEnd = Math.max(lastEnd, endNorm);
+        const range = rangeFromNormalizedOffsets(idx, startNorm, endNorm);
+        if (!range) continue;
 
         const el = document.createElement('span');
         el.setAttribute('data-finding-id', f.id);
         el.className = 'ap-highlight cursor-pointer';
-        // Make highlights very visible for debugging/verification
-        el.style.backgroundColor = f.severity === 'critical' ? 'rgba(255, 0, 0, 0.4)' :
-          f.severity === 'high' ? 'rgba(255, 0, 0, 0.3)' :
-            'rgba(255, 165, 0, 0.3)'; // Increased opacity
-        f.severity === 'high' ? 'rgba(255, 0, 0, 0.3)' :
-          'rgba(255, 165, 0, 0.3)'; // Increased opacity
-        el.style.borderBottom = f.severity === 'critical' ? '2px solid red' :
-          f.severity === 'high' ? '2px solid rgba(255, 0, 0, 0.8)' :
-            '2px solid orange';
+        el.style.backgroundColor =
+          f.severity === 'critical'
+            ? 'rgba(255, 0, 0, 0.35)'
+            : f.severity === 'high'
+              ? 'rgba(255, 0, 0, 0.28)'
+              : 'rgba(255, 165, 0, 0.28)';
+        el.style.borderBottom =
+          f.severity === 'critical'
+            ? '2px solid red'
+            : f.severity === 'high'
+              ? '2px solid rgba(255, 0, 0, 0.8)'
+              : '2px solid orange';
         el.style.borderRadius = '2px';
         el.style.transition = 'background-color 0.2s';
-
-        // Add hover effect
-        el.onmouseenter = () => { el.style.backgroundColor = 'rgba(255, 255, 0, 0.5)'; };
+        const baseBg = el.style.backgroundColor;
+        el.onmouseenter = () => {
+          el.style.backgroundColor = 'rgba(255, 255, 0, 0.45)';
+        };
         el.onmouseleave = () => {
-          el.style.backgroundColor = f.severity === 'critical' ? 'rgba(255, 0, 0, 0.4)' :
-            f.severity === 'high' ? 'rgba(255, 0, 0, 0.3)' :
-              'rgba(255, 165, 0, 0.3)';
+          el.style.backgroundColor = baseBg;
         };
 
-
         try {
-          // Instead of surroundContents (fails on cross-element ranges), 
-          // manually insert opening and closing tags
           const clonedRange = range.cloneRange();
-
-          // Insert closing span at end
-          clonedRange.collapse(false); // Move to end
+          clonedRange.collapse(false);
           const closeTag = document.createElement('span');
           closeTag.style.display = 'none';
           clonedRange.insertNode(closeTag);
-
-          // Insert opening span at start
-          range.collapse(true); // Move to start
+          range.collapse(true);
           range.insertNode(el);
-
-          // Extend el to wrap content until closeTag
           const parentEl = el.parentNode;
           if (parentEl) {
             let node = el.nextSibling;
@@ -1499,23 +1492,114 @@ export function ScriptWorkspace() {
               el.appendChild(node);
               node = next;
             }
-            if (closeTag && closeTag.parentNode) {
-              closeTag.parentNode.removeChild(closeTag);
-            }
+            closeTag.parentNode?.removeChild(closeTag);
           }
-
           appliedCount++;
         } catch (err) {
           if (IS_DEV) console.error(`[ScriptWorkspace] insertNode failed for ${f.id}:`, err);
         }
-      } catch (err) {
-        if (IS_DEV) console.error(`[ScriptWorkspace] Failed to apply highlight ${f.id}:`, err);
       }
-    }
-    if (IS_DEV) console.log(`[ScriptWorkspace] Applied ${appliedCount} DOM marks.`);
-    setHighlightRenderedCount(appliedCount);
+      return appliedCount;
+    },
+    [locateFindingInContent, currentPageData?.content]
+  );
 
-  }, [domTextIndex, canonicalContentForHighlights, reportFindings, canonicalHashMismatch, editorData?.contentHtml, locateFindingInContent, highlightRetryTick]);
+  useEffect(() => {
+    if (canonicalHashMismatch) {
+      setHighlightExpectedCount(reportFindings.length);
+      setHighlightLocatableCount(0);
+      setHighlightRenderedCount(0);
+      return;
+    }
+    const container = editorRef.current;
+    const inPageMode = (editorData?.pages?.length ?? 0) > 0;
+    const pagePlain = currentPageData?.content ?? '';
+
+    if (!container || !domTextIndex || !canonicalContentForHighlights) {
+      setHighlightExpectedCount(reportFindings.length);
+      setHighlightLocatableCount(0);
+      setHighlightRenderedCount(0);
+      return;
+    }
+
+    lastHighlightGuardLogFindingsRef.current = null;
+
+    if (inPageMode && currentPageData?.contentHtml) {
+      const onPage = reportFindings.filter((f) => {
+        if (f.pageNumber != null && f.pageNumber === safeCurrentPage) return true;
+        const ps = currentPageData.startOffsetGlobal ?? 0;
+        const pe = ps + (pagePlain.length || 1);
+        return (
+          f.startOffsetGlobal != null &&
+          f.endOffsetGlobal != null &&
+          f.endOffsetGlobal > ps &&
+          f.startOffsetGlobal < pe
+        );
+      });
+      setHighlightExpectedCount(onPage.length);
+      const resolved = onPage
+        .map((f) => {
+          const domRaw = domTextIndex.segments.map((s) => s.text).join('');
+          const loc = locateFindingInContent(domRaw, f) ?? locateFindingInContent(pagePlain, f);
+          return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
+        })
+        .filter(Boolean) as AnalysisFinding[];
+      setHighlightLocatableCount(resolved.length);
+      if (IS_DEV) {
+        console.log(
+          `[ScriptWorkspace] Page ${safeCurrentPage} highlights: ${resolved.length}/${onPage.length} locatable`
+        );
+      }
+      const applied = applyHighlightMarks(container, domTextIndex, resolved);
+      setHighlightRenderedCount(applied);
+      return;
+    }
+
+    if (inPageMode && !currentPageData?.contentHtml) {
+      const n = findingsOnPageWithLocalOffsets.length;
+      setHighlightExpectedCount(n);
+      setHighlightLocatableCount(n);
+      setHighlightRenderedCount(0);
+      return;
+    }
+
+    if (!inPageMode && !editorData?.contentHtml) {
+      setHighlightExpectedCount(reportFindings.length);
+      setHighlightLocatableCount(0);
+      setHighlightRenderedCount(0);
+      return;
+    }
+
+    const domRaw = domTextIndex.segments.map((s) => s.text).join('');
+    setHighlightExpectedCount(reportFindings.length);
+    const validFindings = reportFindings
+      .map((f) => {
+        const loc = locateFindingInContent(domRaw, f);
+        return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
+      })
+      .filter(Boolean) as AnalysisFinding[];
+    setHighlightLocatableCount(validFindings.length);
+    if (IS_DEV) {
+      console.log(`[ScriptWorkspace] Full-doc highlights: ${validFindings.length}/${reportFindings.length}`);
+    }
+    const applied = applyHighlightMarks(container, domTextIndex, validFindings);
+    setHighlightRenderedCount(applied);
+  }, [
+    domTextIndex,
+    canonicalContentForHighlights,
+    reportFindings,
+    canonicalHashMismatch,
+    editorData?.contentHtml,
+    editorData?.pages,
+    currentPageData?.contentHtml,
+    currentPageData?.content,
+    currentPageData?.startOffsetGlobal,
+    safeCurrentPage,
+    locateFindingInContent,
+    highlightRetryTick,
+    applyHighlightMarks,
+    findingsOnPageWithLocalOffsets.length,
+  ]);
 
   if (showLoading) {
     return (
