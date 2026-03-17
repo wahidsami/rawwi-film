@@ -129,6 +129,11 @@ export const QuickAnalysisPdf: React.FC<{
                         : `Line ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`}
                     </Text>
                   )}
+                  {(f.pageNumber != null && f.pageNumber > 0) && (
+                    <Text style={[s.findingMeta, rtl]}>
+                      {isAr ? `صفحة ${f.pageNumber}` : `Page ${f.pageNumber}`}
+                    </Text>
+                  )}
                   {Number.isFinite(primaryId) && (
                     <Text style={[s.findingMeta, rtl]}>
                       {isAr ? "المادة الأساسية: " : "Primary article: "}{articleLabel(primaryId)}

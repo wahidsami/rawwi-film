@@ -25,6 +25,7 @@ export type CanonicalFindingForQuickPdf = {
   related_article_ids?: number[];
   start_line_chunk?: number | null;
   end_line_chunk?: number | null;
+  page_number?: number | null;
 };
 
 export type QuickAnalysisPdfFinding = {
@@ -41,6 +42,7 @@ export type QuickAnalysisPdfFinding = {
   primaryArticleId?: number;
   relatedArticleIds?: number[];
   pillarId?: string | null;
+  pageNumber?: number | null;
 };
 
 export function mapQuickAnalysisFindingsForPdf(
@@ -64,6 +66,7 @@ export function mapQuickAnalysisFindingsForPdf(
       primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : undefined,
       relatedArticleIds: f.related_article_ids ?? [],
       pillarId: f.pillar_id ?? undefined,
+      pageNumber: f.page_number ?? undefined,
     }));
   if (canon.length > 0) return canon;
 
@@ -85,6 +88,7 @@ export function mapQuickAnalysisFindingsForPdf(
         primaryArticleId: Number(v3.primary_article_id),
         relatedArticleIds: (v3.related_article_ids as number[] | undefined) ?? [],
         pillarId: (v3.pillar_id as string | undefined) ?? undefined,
+        pageNumber: f.pageNumber ?? undefined,
       };
     });
   if (real.length > 0) return real;

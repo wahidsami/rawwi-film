@@ -82,6 +82,7 @@ export type SummaryJson = {
     end_offset_global?: number | null;
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
+    page_number?: number | null;
     canonical_atom?: string | null;
     intensity?: number | null;
     context_impact?: number | null;
@@ -481,6 +482,7 @@ type DbFinding = {
   end_offset_global: number | null;
   start_line_chunk: number | null;
   end_line_chunk: number | null;
+  page_number?: number | null;
   location: unknown;
   rationale_ar?: string | null;
   canonical_atom?: string | null;
@@ -652,6 +654,7 @@ export function buildSummaryJson(
       end_offset_global: primary.end_offset_global ?? null,
       start_line_chunk: primary.start_line_chunk ?? null,
       end_line_chunk: primary.end_line_chunk ?? null,
+      page_number: primary.page_number ?? null,
       canonical_atom: primary.canonical_atom ?? null,
       intensity: primary.intensity ?? null,
       context_impact: primary.context_impact ?? null,
@@ -1000,7 +1003,7 @@ export async function runAggregation(jobId: string): Promise<void> {
   const { data: findings, error: findingsErr } = await supabase
     .from("analysis_findings")
     .select(
-      "source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_line_chunk, end_line_chunk, location, rationale_ar, canonical_atom, intensity, context_impact, legal_sensitivity, audience_risk"
+      "source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_line_chunk, end_line_chunk, page_number, location, rationale_ar, canonical_atom, intensity, context_impact, legal_sensitivity, audience_risk"
     )
     .eq("job_id", jobId);
 
