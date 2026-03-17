@@ -669,6 +669,11 @@ export function ScriptWorkspace() {
     const inPageMode = (editorData?.pages?.length ?? 0) > 0;
 
     if (inPageMode) {
+      // Per-page HTML: index is built in useLayoutEffect right after innerHTML (avoids React
+      // wiping highlights and avoids re-indexing DOM that already contains highlight spans).
+      if (pageData?.contentHtml?.trim()) {
+        return;
+      }
       const timer = setTimeout(() => {
         if (!editorRef.current || (!pageData?.contentHtml && !(pageData?.content?.length))) {
           setDomTextIndex(null);
@@ -707,6 +712,24 @@ export function ScriptWorkspace() {
       if (IS_DEV) console.log('[ScriptWorkspace] innerHTML updated (scroll mode)');
     }
   }, [editorData?.contentHtml, editorData?.pages?.length]);
+
+  /**
+   * Page mode + formatted HTML: set innerHTML on the viewer div imperatively.
+   * A child with dangerouslySetInnerHTML is re-applied on every React re-render (sidebar,
+   * highlight counts, selection), wiping highlight spans from applyHighlightMarks.
+   */
+  const pageHtmlForLayout = editorData?.pages?.[safeCurrentPage - 1]?.contentHtml;
+  useLayoutEffect(() => {
+    if ((editorData?.pages?.length ?? 0) === 0) return;
+    const el = editorRef.current;
+    if (!pageHtmlForLayout?.trim() || !el) return;
+    const html = sanitizeFormattedHtml(pageHtmlForLayout);
+    if (el.innerHTML !== html) {
+      el.innerHTML = html;
+      const idx = buildDomTextIndex(el);
+      setDomTextIndex(idx ?? null);
+    }
+  }, [editorData?.pages?.length, safeCurrentPage, pageHtmlForLayout]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -1903,13 +1926,22 @@ export function ScriptWorkspace() {
                           onContextMenu={handleContextMenu}
                           onMouseUp={handleMouseUp}
                           onTouchEnd={() => handleMouseUp()}
+                          onClick={(e) => {
+                            if (!currentPageData.contentHtml) return;
+                            const mark = (e.target as HTMLElement).closest?.('[data-finding-id]');
+                            if (mark) {
+                              const id = mark.getAttribute('data-finding-id');
+                              if (id) {
+                                setSelectedFindingId(id);
+                                setSidebarTab('findings');
+                              }
+                            }
+                          }}
                           tabIndex={0}
                           role="region"
                           aria-label={lang === 'ar' ? 'محتوى الصفحة' : 'Page content'}
                         >
-                          {currentPageData.contentHtml ? (
-                            <div dangerouslySetInnerHTML={{ __html: sanitizeFormattedHtml(currentPageData.contentHtml) }} />
-                          ) : pageFindingSegments ? (
+                          {currentPageData.contentHtml ? null : pageFindingSegments ? (
                             pageFindingSegments.map((seg) => {
                               const key = `page-seg-${seg.start}-${seg.end}-${seg.finding?.id ?? 'none'}`;
                               const text = (currentPageData.content ?? '').slice(seg.start, seg.end);
