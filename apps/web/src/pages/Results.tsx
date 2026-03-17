@@ -11,6 +11,7 @@ import type { ReviewStatus } from '@/api/models';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { Switch } from '@/components/ui/Switch';
 import { Textarea } from '@/components/ui/Textarea';
 import { cn } from '@/utils/cn';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
@@ -66,6 +67,32 @@ type CanonicalSummaryFinding = {
   source?: 'ai' | 'lexicon_mandatory' | 'manual';
 };
 
+/** One card per logical violation (same canonical_finding_id → strongest severity/confidence). */
+function dedupeRealFindings(list: AnalysisFinding[]): AnalysisFinding[] {
+  const byCanonical = new Map<string, AnalysisFinding>();
+  for (const f of list) {
+    const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+    const canonicalId =
+      (v3.canonical_finding_id as string | undefined) ?? f.id ?? `${f.articleId}-${f.evidenceSnippet?.slice(0, 80) ?? ''}`;
+    const primaryArticleId = Number(v3.primary_article_id);
+    const normalized: AnalysisFinding = {
+      ...f,
+      articleId: Number.isFinite(primaryArticleId) ? primaryArticleId : f.articleId,
+    };
+    const existing = byCanonical.get(canonicalId);
+    if (!existing) {
+      byCanonical.set(canonicalId, normalized);
+    } else {
+      const currentRank = existing.severity === 'critical' ? 4 : existing.severity === 'high' ? 3 : existing.severity === 'medium' ? 2 : 1;
+      const nextRank = normalized.severity === 'critical' ? 4 : normalized.severity === 'high' ? 3 : normalized.severity === 'medium' ? 2 : 1;
+      if (nextRank > currentRank || (nextRank === currentRank && (normalized.confidence ?? 0) > (existing.confidence ?? 0))) {
+        byCanonical.set(canonicalId, normalized);
+      }
+    }
+  }
+  return [...byCanonical.values()];
+}
+
 export function Results() {
   const { id: paramId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
@@ -87,6 +114,8 @@ export function Results() {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isQuickAnalysisReport, setIsQuickAnalysisReport] = useState(quickFromQuery);
   const [groupFindingsByAtom, setGroupFindingsByAtom] = useState(false);
+  /** false = deduped list (default); true = every DB row (duplicates visible). */
+  const [showAllFindingRows, setShowAllFindingRows] = useState(false);
 
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
@@ -246,6 +275,8 @@ export function Results() {
   const hasRealFindings = findings.length > 0;
   const violations = hasRealFindings ? findings.filter(f => f.reviewStatus !== 'approved') : [];
   const approvedFindings = hasRealFindings ? findings.filter(f => f.reviewStatus === 'approved') : [];
+  const violationsDeduped = hasRealFindings ? dedupeRealFindings(violations) : [];
+  const approvedFindingsDeduped = hasRealFindings ? dedupeRealFindings(approvedFindings) : [];
 
   const semanticCategoriesOrdered = getSemanticCategoriesForChecklist();
   const categoryViolationCounts = (() => {
@@ -254,8 +285,8 @@ export function Results() {
       m.set(id, (m.get(id) ?? 0) + 1);
     };
     if (hasRealFindings) {
-      for (const f of findings) {
-        if (f.reviewStatus === 'approved') continue;
+      const rows = showAllFindingRows ? violations : violationsDeduped;
+      for (const f of rows) {
         const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
         add(
           getPrimarySemanticCategory(
@@ -274,38 +305,21 @@ export function Results() {
     return m;
   })();
 
-  function dedupeRealFindings(list: AnalysisFinding[]): AnalysisFinding[] {
-    const byCanonical = new Map<string, AnalysisFinding>();
-    for (const f of list) {
-      const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
-      const canonicalId = (v3.canonical_finding_id as string | undefined) ?? f.id ?? `${f.articleId}-${f.evidenceSnippet?.slice(0, 80) ?? ''}`;
-      const primaryArticleId = Number(v3.primary_article_id);
-      const normalized: AnalysisFinding = {
-        ...f,
-        articleId: Number.isFinite(primaryArticleId) ? primaryArticleId : f.articleId,
-      };
-      const existing = byCanonical.get(canonicalId);
-      if (!existing) {
-        byCanonical.set(canonicalId, normalized);
-      } else {
-        const currentRank = existing.severity === 'critical' ? 4 : existing.severity === 'high' ? 3 : existing.severity === 'medium' ? 2 : 1;
-        const nextRank = normalized.severity === 'critical' ? 4 : normalized.severity === 'high' ? 3 : normalized.severity === 'medium' ? 2 : 1;
-        if (nextRank > currentRank || (nextRank === currentRank && (normalized.confidence ?? 0) > (existing.confidence ?? 0))) {
-          byCanonical.set(canonicalId, normalized);
-        }
-      }
-    }
-    return [...byCanonical.values()];
-  }
-
-  const displayViolations = hasRealFindings ? dedupeRealFindings(violations) : [];
-  const displayApprovedFindings = hasRealFindings ? dedupeRealFindings(approvedFindings) : [];
+  const violationsUniqueCount = violationsDeduped.length;
+  const displayViolations = hasRealFindings ? (showAllFindingRows ? violations : violationsDeduped) : [];
+  const displayApprovedFindings = hasRealFindings
+    ? showAllFindingRows
+      ? approvedFindings
+      : approvedFindingsDeduped
+    : [];
   const fallbackSummaryCount = canonicalSummaryFindings.length > 0
     ? canonicalSummaryFindings.length
     : summary.findings_by_article.reduce((acc, a) => acc + (a.top_findings?.length ?? 0), 0);
-  const displayViolationsCount = canonicalSummaryFindings.length > 0
-    ? canonicalSummaryFindings.length
-    : (hasRealFindings ? displayViolations.length : fallbackSummaryCount);
+  const displayViolationsCount = hasRealFindings
+    ? displayViolations.length
+    : canonicalSummaryFindings.length > 0
+      ? canonicalSummaryFindings.length
+      : fallbackSummaryCount;
 
   // Stats must match the violations list we render. Derive from canonical_findings so cards and list are always in sync.
   const displayTotal = canonicalSummaryFindings.length;
@@ -413,8 +427,11 @@ export function Results() {
         }) as unknown as AnalysisFinding
       );
 
+      const rawVio = findings.filter((f) => f.reviewStatus !== 'approved');
       const findingList: AnalysisFinding[] = hasRealFindings
-        ? findings.filter((f) => f.reviewStatus !== 'approved')
+        ? showAllFindingRows
+          ? rawVio
+          : dedupeRealFindings(rawVio)
         : canonicalForPrint.length > 0
           ? canonicalForPrint
           : summary.findings_by_article.flatMap((art) =>
@@ -1016,6 +1033,40 @@ export function Results() {
           </div>
         </div>
         <div className="flex items-center gap-3 print:hidden flex-wrap">
+          {hasRealFindings && violations.length > 0 && (
+            <div className="flex flex-col gap-0.5 items-end sm:items-center sm:flex-row sm:gap-2 border border-border/60 rounded-lg px-3 py-2 bg-surface/50">
+              <div
+                className="flex items-center gap-2 cursor-pointer select-none"
+                onClick={() => setShowAllFindingRows((v) => !v)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setShowAllFindingRows((v) => !v);
+                  }
+                }}
+              >
+                <span onClick={(e) => e.stopPropagation()}>
+                  <Switch
+                    checked={showAllFindingRows}
+                    onCheckedChange={setShowAllFindingRows}
+                    aria-label={lang === 'ar' ? 'كل السجلات بما فيها التكرار' : 'All rows including duplicates'}
+                  />
+                </span>
+                <span className="text-sm text-text-main whitespace-nowrap">
+                  {lang === 'ar' ? 'كل السجلات (بما فيها التكرار)' : 'All rows (incl. duplicates)'}
+                </span>
+              </div>
+              {violations.length !== violationsUniqueCount && (
+                <span className="text-[10px] text-text-muted max-w-[14rem] sm:max-w-none text-end sm:text-start">
+                  {lang === 'ar'
+                    ? `${violationsUniqueCount} فريدة من ${violations.length} سجل`
+                    : `${violationsUniqueCount} unique · ${violations.length} rows`}
+                </span>
+              )}
+            </div>
+          )}
           {hasRealFindings && (
             <label className="flex items-center gap-2 text-sm text-text-muted cursor-pointer">
               <input
