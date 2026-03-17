@@ -66,6 +66,50 @@ import toast from 'react-hot-toast';
 /// <reference types="vite/client" />
 const IS_DEV = (import.meta as any).env?.DEV ?? false;
 
+/**
+ * Stored offsets often span a whole dialogue block (character line + sentence).
+ * Shrink to the evidence snippet when it appears inside that span so highlights
+ * match the finding card text.
+ */
+function tightenHighlightRangeToEvidence(
+  plain: string,
+  start: number,
+  end: number,
+  evidence: string
+): { start: number; end: number } {
+  const ev = evidence.trim();
+  if (ev.length < 4 || !plain || end <= start || start >= plain.length) {
+    return { start, end };
+  }
+  const lo = Math.max(0, start);
+  const hi = Math.min(plain.length, end);
+  const inner = plain.slice(lo, hi);
+
+  const pickIn = (slice: string, base: number, hintMid: number) => {
+    for (const conf of [1.0, 0.88] as const) {
+      const matches = findTextOccurrences(slice, ev, { minConfidence: conf });
+      if (matches.length === 0) continue;
+      const hint = hintMid - base;
+      const best =
+        matches.length === 1 ? matches[0] : findBestMatch(matches, Math.max(0, Math.min(hint, slice.length))) ?? matches[0];
+      return { start: base + best.start, end: base + best.end };
+    }
+    return null;
+  };
+
+  const mid = (lo + hi) / 2;
+  const innerHit = pickIn(inner, lo, mid);
+  if (innerHit) return innerHit;
+
+  const pad = Math.min(220, Math.max(ev.length + 40, 80));
+  const lo2 = Math.max(0, lo - pad);
+  const hi2 = Math.min(plain.length, hi + pad);
+  const outerHit = pickIn(plain.slice(lo2, hi2), lo2, mid);
+  if (outerHit && outerHit.end - outerHit.start < hi - lo - 6) return outerHit;
+
+  return { start: lo, end: hi };
+}
+
 function safeUploadFileName(fileName: string): string {
   const trimmed = fileName.trim();
   const dotIdx = trimmed.lastIndexOf('.');
@@ -1519,6 +1563,12 @@ export function ScriptWorkspace() {
           rawEnd = f.endOffsetGlobal ?? -1;
           if (rawStart < 0 || rawEnd <= rawStart) continue;
         }
+        const evSnip = (f.evidenceSnippet ?? '').trim();
+        if (evSnip.length >= 4 && rawEnd > rawStart) {
+          const t = tightenHighlightRangeToEvidence(domRaw, rawStart, rawEnd, evSnip);
+          rawStart = t.start;
+          rawEnd = t.end;
+        }
         const maxRaw = Math.max(0, idx.rawToNorm.length - 1);
         rawStart = Math.max(0, Math.min(rawStart, maxRaw));
         rawEnd = Math.max(rawStart + 1, Math.min(rawEnd, maxRaw + 1));
@@ -1646,6 +1696,12 @@ export function ScriptWorkspace() {
           })
           .filter(Boolean) as AnalysisFinding[];
       }
+      resolved = resolved.map((f) => {
+        const s = f.startOffsetGlobal ?? 0;
+        const e = f.endOffsetGlobal ?? s;
+        const t = tightenHighlightRangeToEvidence(pagePlain, s, e, f.evidenceSnippet ?? '');
+        return { ...f, startOffsetGlobal: t.start, endOffsetGlobal: t.end };
+      });
       setHighlightLocatableCount(resolved.length);
       if (IS_DEV) {
         console.log(
@@ -1682,7 +1738,13 @@ export function ScriptWorkspace() {
         const loc = locateFindingInContent(domRaw, f);
         return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
       })
-      .filter(Boolean) as AnalysisFinding[];
+      .filter(Boolean)
+      .map((f) => {
+        const s = f.startOffsetGlobal ?? 0;
+        const e = f.endOffsetGlobal ?? s;
+        const t = tightenHighlightRangeToEvidence(domRaw, s, e, f.evidenceSnippet ?? '');
+        return { ...f, startOffsetGlobal: t.start, endOffsetGlobal: t.end };
+      }) as AnalysisFinding[];
     setHighlightLocatableCount(validFindings.length);
     if (IS_DEV) {
       console.log(`[ScriptWorkspace] Full-doc highlights: ${validFindings.length}/${reportFindings.length}`);
