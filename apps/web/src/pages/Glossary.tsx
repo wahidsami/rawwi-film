@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useLangStore } from '@/store/langStore';
 import { useDataStore, LexiconTerm } from '@/store/dataStore';
@@ -19,11 +19,18 @@ import { formatDate } from '@/utils/dateFormat';
 import { lexiconApi } from '@/api';
 import type { LexiconHistoryEntry } from '@/api/models';
 import { downloadGlossaryPdf } from '@/components/reports/glossary/download';
+import {
+  exportGlossaryToCsv,
+  parseGlossaryCsv,
+  glossaryCsvTemplate,
+} from '@/utils/glossaryCsv';
 
 export function Glossary() {
   const { t, lang } = useLangStore();
   const { settings } = useSettingsStore();
-  const { lexiconTerms, deactivateLexiconTerm } = useDataStore();
+  const { lexiconTerms, deactivateLexiconTerm, fetchInitialData } = useDataStore();
+  const csvInputRef = useRef<HTMLInputElement>(null);
+  const [csvBusy, setCsvBusy] = useState(false);
   const { user } = useAuthStore();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -111,6 +118,88 @@ export function Glossary() {
     setHistoryTermId(id);
   };
 
+  const handleExportCsv = () => {
+    const csv = '\uFEFF' + exportGlossaryToCsv(filteredTerms);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `glossary_export_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(lang === 'ar' ? 'تم تنزيل CSV' : 'CSV downloaded');
+  };
+
+  const handleDownloadTemplateCsv = () => {
+    const blob = new Blob([glossaryCsvTemplate()], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'glossary_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(lang === 'ar' ? 'تم تنزيل القالب' : 'Template downloaded');
+  };
+
+  const handleImportCsvFile = async (file: File) => {
+    setCsvBusy(true);
+    try {
+      const text = await file.text();
+      const { rows, errors } = parseGlossaryCsv(text);
+      if (errors.length && rows.length === 0) {
+        toast.error(errors.join(' '));
+        return;
+      }
+      if (errors.length) {
+        toast.error(
+          lang === 'ar' ? `تحذير: ${errors.slice(0, 3).join(' ')}` : `Skipped rows: ${errors.slice(0, 3).join(' ')}`,
+        );
+      }
+      let added = 0;
+      let dup = 0;
+      let fail = 0;
+      for (const row of rows) {
+        try {
+          await lexiconApi.addTerm({
+            id: 'csv',
+            term: row.term,
+            normalized_term: row.term.toLowerCase(),
+            term_type: row.term_type,
+            category: row.category,
+            severity_floor: row.severity_floor,
+            enforcement_mode: row.enforcement_mode,
+            gcam_article_id: row.gcam_article_id,
+            gcam_atom_id: row.gcam_atom_id || undefined,
+            gcam_article_title_ar: row.gcam_article_title_ar,
+            description: row.description || undefined,
+            example_usage: row.example_usage || undefined,
+            term_variants: row.term_variants.length ? row.term_variants : undefined,
+            created_by: '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            is_active: true,
+          } as LexiconTerm);
+          added++;
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (msg.includes('409') || msg.includes('duplicate') || msg.includes('exists')) dup++;
+          else fail++;
+        }
+      }
+      await fetchInitialData();
+      toast.success(
+        lang === 'ar'
+          ? `استورد: ${added} | مكرر: ${dup}${fail ? ` | فشل: ${fail}` : ''}`
+          : `Imported: ${added} | Duplicates skipped: ${dup}${fail ? ` | Failed: ${fail}` : ''}`,
+      );
+    } catch {
+      toast.error(lang === 'ar' ? 'فشل قراءة الملف' : 'Failed to read file');
+    } finally {
+      setCsvBusy(false);
+      if (csvInputRef.current) csvInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -118,13 +207,31 @@ export function Glossary() {
         <div className="flex items-center gap-3">
           {settings?.features?.enableLexiconCsv !== false && (
             <>
-              <Button variant="outline" className="flex items-center gap-2">
+              <input
+                ref={csvInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void handleImportCsvFile(f);
+                }}
+              />
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                disabled={csvBusy}
+                onClick={() => csvInputRef.current?.click()}
+              >
                 <FileUp className="w-4 h-4" />
                 <span className="hidden sm:inline">{t('importCsv')}</span>
               </Button>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2" onClick={handleExportCsv} disabled={csvBusy}>
                 <FileDown className="w-4 h-4" />
                 <span className="hidden sm:inline">{t('exportCsv')}</span>
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs" onClick={handleDownloadTemplateCsv} type="button">
+                {lang === 'ar' ? 'قالب CSV' : 'CSV template'}
               </Button>
             </>
           )}
