@@ -204,6 +204,124 @@ function findHtmlIndicesByTextLength(html: string, textLengthTargets: number[]):
   return positions;
 }
 
+function firstNonEmptyLine(s: string): string {
+  for (const line of s.split(/\r?\n/)) {
+    const t = line.trim();
+    if (t) return t;
+  }
+  return '';
+}
+
+/**
+ * Stronger boundary: first line + start of second line (reduces false indexOf inside same page).
+ */
+function pageStartSearchNeedle(nextPageText: string): string {
+  const lines = nextPageText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length >= 2) return `${lines[0]}\n${lines[1]!.slice(0, Math.min(40, lines[1].length))}`;
+  return lines[0] ?? nextPageText.slice(0, 80).trim();
+}
+
+/** Visible text from HTML in document order; off[i] = HTML index of i-th visible char. */
+function visiblePlainFromHtml(html: string): { s: string; off: number[] } {
+  const off: number[] = [];
+  let s = '';
+  let i = 0;
+  while (i < html.length) {
+    if (html[i] === '<') {
+      const close = html.indexOf('>', i);
+      i = close === -1 ? html.length : close + 1;
+      continue;
+    }
+    if (html[i] === '&') {
+      const semi = html.indexOf(';', i);
+      const entity = semi !== -1 ? html.slice(i, semi + 1) : '';
+      let ch = '\u00a0';
+      if (entity === '&nbsp;' || entity === '&#160;') ch = ' ';
+      else if (entity === '&amp;') ch = '&';
+      else if (entity === '&lt;') ch = '<';
+      else if (entity === '&gt;') ch = '>';
+      else if (entity === '&quot;') ch = '"';
+      else if (semi !== -1 && /^&#\d+;$/.test(entity)) ch = String.fromCharCode(parseInt(entity.slice(2, -1), 10));
+      else if (semi !== -1) ch = ' ';
+      off.push(i);
+      s += ch;
+      i = semi !== -1 ? semi + 1 : i + 1;
+      continue;
+    }
+    off.push(i);
+    s += html[i]!;
+    i += 1;
+  }
+  return { s, off };
+}
+
+/**
+ * Split HTML using first line of each page (OOXML) as anchor in mammoth's visible HTML text.
+ * Workspace page text stays OOXML-accurate (first/last lines match Word); HTML matches that region.
+ */
+function splitHtmlByVisibleLineAnchors(html: string, pageTexts: string[]): string[] {
+  const { s, off } = visiblePlainFromHtml(html);
+  if (!s.length || !off.length) return pageTexts.map((t) => escapeHtmlMinimal(t));
+  const n = pageTexts.length;
+  const parts: string[] = [];
+  let charCursor = 0;
+
+  for (let i = 0; i < n; i++) {
+    const fl = firstNonEmptyLine(pageTexts[i]!);
+    let startChar = i === 0 ? 0 : charCursor;
+    if (fl) {
+      let ix = s.indexOf(fl, Math.max(0, startChar - 100));
+      if (ix < 0) ix = s.indexOf(fl.replace(/\s+/g, ' ').trim(), Math.max(0, startChar - 100));
+      if (ix >= 0 && (i === 0 || ix <= startChar + 600)) startChar = ix;
+    }
+
+    let endChar: number;
+    if (i < n - 1) {
+      const needle = pageStartSearchNeedle(pageTexts[i + 1]!);
+      const nfl = firstNonEmptyLine(pageTexts[i + 1]!);
+      const searchFrom = startChar + Math.max(3, Math.min(400, (pageTexts[i]!.length >> 2) | 0));
+      endChar = needle.length >= 6 ? s.indexOf(needle, searchFrom) : -1;
+      if (endChar < 0 && nfl) endChar = s.indexOf(nfl, searchFrom);
+      if (endChar < 0 && nfl) endChar = s.indexOf(nfl, startChar + 1);
+      if (endChar < 0 || endChar <= startChar) {
+        endChar = Math.min(s.length, startChar + Math.max(pageTexts[i]!.length, 80));
+      }
+    } else {
+      endChar = s.length;
+    }
+
+    const h0 =
+      startChar >= off.length ? html.length : (off[startChar] ?? 0);
+    const h1 = endChar < off.length ? off[endChar]! : html.length;
+    let slice = html.slice(h0, h1).trim();
+    const safe = /<\/(?:p|div|section|article|h[1-6])>\s*/gi;
+    let extended = h1;
+    let m: RegExpExecArray | null;
+    while ((m = safe.exec(html)) !== null) {
+      const pos = m.index + m[0].length;
+      if (pos > h1 && pos < h1 + 1200) {
+        extended = pos;
+        break;
+      }
+    }
+    if (extended > h1) slice = html.slice(h0, extended).trim();
+
+    parts.push(slice);
+    charCursor = endChar;
+  }
+  return parts;
+}
+
+function escapeHtmlMinimal(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .split('\n')
+    .map((line) => `<p dir="rtl">${line || '\u00a0'}</p>`)
+    .join('');
+}
+
 /**
  * Split HTML at boundaries that match page text lengths, so each segment's content matches one page.
  * Uses safe tag boundaries (e.g. after </p>) so we don't cut inside a tag.
@@ -290,13 +408,22 @@ export async function extractDocxWithPages(file: File): Promise<{
 
   const realPageTexts = await getDocxPageTextsFromOoxml(arrayBuffer);
   if (realPageTexts != null && realPageTexts.length > 1) {
-    let htmlParts = splitHtmlByContentBoundaries(html, realPageTexts);
-    const contentBasedOk = htmlParts.length === realPageTexts.length && htmlParts.every((p, i) => p.length > 0 || (realPageTexts[i]?.length ?? 0) === 0);
-    if (!contentBasedOk) htmlParts = splitHtmlByTextLengths(html, realPageTexts.map((t) => t.length));
+    let htmlParts = splitHtmlByVisibleLineAnchors(html, realPageTexts);
+    const anchorWeak =
+      htmlParts.filter((p) => p.length > 15).length < Math.ceil(realPageTexts.length / 2);
+    if (anchorWeak) {
+      htmlParts = splitHtmlByContentBoundaries(html, realPageTexts);
+      const contentBasedOk =
+        htmlParts.length === realPageTexts.length &&
+        htmlParts.every((p, j) => p.length > 0 || (realPageTexts[j]?.length ?? 0) === 0);
+      if (!contentBasedOk) htmlParts = splitHtmlByTextLengths(html, realPageTexts.map((t) => t.length));
+    }
+
     const pages = realPageTexts.map((text, i) => ({
       pageNumber: i + 1,
+      /** OOXML: first/last non-empty lines match the original Word page. */
       text,
-      html: htmlParts[i] ?? '',
+      html: (htmlParts[i] ?? '').trim() || escapeHtmlMinimal(text),
     }));
     return { plain, html, pages };
   }
