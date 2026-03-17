@@ -102,14 +102,19 @@ export async function getDocxPageTextsFromOoxml(arrayBuffer: ArrayBuffer): Promi
         if (local === 'br') {
           const type = el.getAttributeNS(W_NS, 'type') ?? el.getAttribute('type');
           if (type === 'page') {
-            pageTexts.push(current.join('').replace(/\s+/g, ' ').trim());
+            pageTexts.push(current.join('').trim());
             current = [];
           }
           return;
         }
         if (local === 'lastRenderedPageBreak') {
-          pageTexts.push(current.join('').replace(/\s+/g, ' ').trim());
+          pageTexts.push(current.join('').trim());
           current = [];
+          return;
+        }
+        if (local === 'p') {
+          for (let i = 0; i < node.childNodes.length; i++) walk(node.childNodes[i]!);
+          current.push('\n');
           return;
         }
       }
@@ -117,7 +122,7 @@ export async function getDocxPageTextsFromOoxml(arrayBuffer: ArrayBuffer): Promi
     }
 
     walk(body);
-    const last = current.join('').replace(/\s+/g, ' ').trim();
+    const last = current.join('').trim();
     if (last) pageTexts.push(last);
 
     if (pageTexts.length <= 1) return null;
@@ -160,8 +165,81 @@ function findSafeSplitPositions(html: string, numSplits: number): number[] {
 }
 
 /**
- * Split full HTML into segments proportionally to text lengths (for assigning HTML to each real page).
- * Uses safe tag boundaries so we don't cut inside a tag.
+ * Find HTML indices where cumulative visible text length reaches the given targets.
+ * Counts only text outside tags so we can split HTML to match exact page content.
+ */
+function findHtmlIndicesByTextLength(html: string, textLengthTargets: number[]): number[] {
+  const positions: number[] = [];
+  let textCount = 0;
+  let targetIdx = 0;
+  let i = 0;
+  while (i < html.length && targetIdx < textLengthTargets.length) {
+    if (html[i] === '<') {
+      const close = html.indexOf('>', i);
+      i = close === -1 ? html.length : close + 1;
+      continue;
+    }
+    if (html[i] === '&') {
+      const semi = html.indexOf(';', i);
+      if (semi !== -1) {
+        textCount += 1;
+        i = semi + 1;
+      } else {
+        textCount += 1;
+        i += 1;
+      }
+      if (textCount >= textLengthTargets[targetIdx]!) {
+        positions.push(i);
+        targetIdx += 1;
+      }
+      continue;
+    }
+    textCount += 1;
+    i += 1;
+    if (textCount >= textLengthTargets[targetIdx]!) {
+      positions.push(i);
+      targetIdx += 1;
+    }
+  }
+  return positions;
+}
+
+/**
+ * Split HTML at boundaries that match page text lengths, so each segment's content matches one page.
+ * Uses safe tag boundaries (e.g. after </p>) so we don't cut inside a tag.
+ */
+function splitHtmlByContentBoundaries(html: string, pageTexts: string[]): string[] {
+  if (pageTexts.length === 0) return [];
+  if (pageTexts.length === 1) return [html.trim()];
+  const safeEnd = /<\/(?:p|div|section|article|h[1-6])>\s*/gi;
+  const safeIndices: number[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = safeEnd.exec(html)) !== null) safeIndices.push(m.index + m[0].length);
+  let cum = 0;
+  const targets: number[] = [];
+  for (let i = 0; i < pageTexts.length - 1; i++) {
+    cum += pageTexts[i]!.length;
+    targets.push(cum);
+  }
+  const rawPositions = findHtmlIndicesByTextLength(html, targets);
+  const splitPositions = rawPositions.map((pos) => {
+    const best = safeIndices.reduce((best, s) =>
+      s >= pos - 200 && s <= pos + 500 && (best === -1 || Math.abs(s - pos) < Math.abs(best - pos)) ? s : best
+    , -1);
+    return best >= 0 ? best : Math.min(pos, html.length);
+  });
+  const parts: string[] = [];
+  let start = 0;
+  for (let i = 0; i < pageTexts.length; i++) {
+    const end = i < splitPositions.length ? splitPositions[i]! : html.length;
+    parts.push(html.slice(start, end).trim());
+    start = end;
+  }
+  return parts;
+}
+
+/**
+ * Split full HTML into segments proportionally to text lengths (fallback when content-based split fails).
  */
 function splitHtmlByTextLengths(html: string, textLengths: number[]): string[] {
   if (textLengths.length === 0) return [];
@@ -212,8 +290,9 @@ export async function extractDocxWithPages(file: File): Promise<{
 
   const realPageTexts = await getDocxPageTextsFromOoxml(arrayBuffer);
   if (realPageTexts != null && realPageTexts.length > 1) {
-    const textLengths = realPageTexts.map((t) => t.length);
-    const htmlParts = splitHtmlByTextLengths(html, textLengths);
+    let htmlParts = splitHtmlByContentBoundaries(html, realPageTexts);
+    const contentBasedOk = htmlParts.length === realPageTexts.length && htmlParts.every((p, i) => p.length > 0 || (realPageTexts[i]?.length ?? 0) === 0);
+    if (!contentBasedOk) htmlParts = splitHtmlByTextLengths(html, realPageTexts.map((t) => t.length));
     const pages = realPageTexts.map((text, i) => ({
       pageNumber: i + 1,
       text,
