@@ -69,6 +69,28 @@ function normalizeSeverity(s: unknown): string {
   return SEVERITIES.includes(lower as (typeof SEVERITIES)[number]) ? lower : "medium";
 }
 
+/** If atom is not in policy_article_map (DB drift vs PolicyMap), save article-level only instead of 400. */
+async function resolveGcamAtomForLexicon(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  articleId: number,
+  atomIdRaw: string | null | undefined
+): Promise<string | null> {
+  const raw = typeof atomIdRaw === "string" ? atomIdRaw.trim() : atomIdRaw == null ? "" : String(atomIdRaw).trim();
+  const atomForValidation = raw.length > 0 ? raw : null;
+  const v = await validateArticleAtomLink(
+    supabase as unknown as { from: (table: string) => { select: (cols: string) => any } },
+    articleId,
+    atomForValidation
+  );
+  if (v.ok) return v.normalizedAtomId;
+  console.warn("[lexicon] Atom not in policy map; using article-level only", {
+    articleId,
+    atomId: atomForValidation,
+    reason: v.reason,
+  });
+  return null;
+}
+
 async function upsertLexiconPolicyLink(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   lexiconId: string,
@@ -173,6 +195,9 @@ Deno.serve(async (req: Request) => {
       ? (body.enforcement_mode as string)
       : "soft_signal";
     const gcam_article_id = typeof body.gcam_article_id === "number" ? body.gcam_article_id : parseInt(String(body.gcam_article_id ?? "1"), 10) || 1;
+    if (gcam_article_id < 1 || gcam_article_id > 26) {
+      return json({ error: "gcam_article_id must be between 1 and 26" }, 400);
+    }
     const gcam_atom_id_raw = typeof body.gcam_atom_id === "string" ? body.gcam_atom_id : (body.gcam_atom_id != null ? String(body.gcam_atom_id) : null);
     const gcam_article_title_ar = typeof body.gcam_article_title_ar === "string" ? body.gcam_article_title_ar : null;
     const description = typeof body.description === "string" ? body.description : null;
@@ -181,12 +206,7 @@ Deno.serve(async (req: Request) => {
       ? (body.term_variants as unknown[]).filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((s) => s.trim())
       : [];
 
-    const atomValidation = await validateArticleAtomLink(
-      supabase as unknown as { from: (table: string) => { select: (cols: string) => any } },
-      gcam_article_id,
-      gcam_atom_id_raw
-    );
-    if (!atomValidation.ok) return json({ error: atomValidation.reason ?? "Invalid atom/article mapping" }, 400);
+    const gcam_atom_id = await resolveGcamAtomForLexicon(supabase, gcam_article_id, gcam_atom_id_raw);
     const row = {
       term,
       normalized_term,
@@ -195,7 +215,7 @@ Deno.serve(async (req: Request) => {
       severity_floor,
       enforcement_mode,
       gcam_article_id,
-      gcam_atom_id: atomValidation.normalizedAtomId,
+      gcam_atom_id,
       gcam_article_title_ar,
       description,
       example_usage,
@@ -337,13 +357,7 @@ Deno.serve(async (req: Request) => {
       const currentArticle = Number((current as { gcam_article_id?: number } | null)?.gcam_article_id ?? 1);
       const candidateArticle = nextArticleId ?? currentArticle;
       const candidateAtom = nextAtomId !== undefined ? nextAtomId : ((current as { gcam_atom_id?: string | null } | null)?.gcam_atom_id ?? null);
-      const atomValidation = await validateArticleAtomLink(
-        supabase as unknown as { from: (table: string) => { select: (cols: string) => any } },
-        candidateArticle,
-        candidateAtom
-      );
-      if (!atomValidation.ok) return json({ error: atomValidation.reason ?? "Invalid atom/article mapping" }, 400);
-      updates.gcam_atom_id = atomValidation.normalizedAtomId;
+      updates.gcam_atom_id = await resolveGcamAtomForLexicon(supabase, candidateArticle, candidateAtom);
     }
 
     const { data: updated, error } = await supabase
