@@ -616,6 +616,8 @@ export function buildSummaryJson(
     context_impact?: number | null;
     legal_sensitivity?: number | null;
     audience_risk?: number | null;
+    /** DB source of primary row: lexicon_mandatory = true glossary insert; ai = model. */
+    source?: string;
   }>();
 
   const clusters = oneCardPerOccurrence
@@ -666,6 +668,12 @@ export function buildSummaryJson(
       context_impact: primary.context_impact ?? null,
       legal_sensitivity: primary.legal_sensitivity ?? null,
       audience_risk: primary.audience_risk ?? null,
+      source:
+        primary.source === "lexicon_mandatory"
+          ? "lexicon_mandatory"
+          : primary.source === "manual"
+            ? "manual"
+            : "ai",
     });
   }
 

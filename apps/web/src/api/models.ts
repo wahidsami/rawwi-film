@@ -287,6 +287,8 @@ export interface Report {
       end_line_chunk?: number | null;
       /** PolicyMap key e.g. 4-1 when primary DB finding had atom_id. */
       primary_policy_atom_id?: string | null;
+      /** Finding source for badge: lexicon_mandatory = glossary DB row */
+      source?: 'ai' | 'lexicon_mandatory' | 'manual';
     }>;
     context_metrics?: {
       context_ok_count: number;

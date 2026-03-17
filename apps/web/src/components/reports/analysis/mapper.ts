@@ -27,6 +27,7 @@ type CanonicalSummaryFinding = {
   end_line_chunk?: number | null;
   page_number?: number | null;
   primary_policy_atom_id?: string | null;
+  source?: string | null;
 };
 
 export type AnalysisPdfFinding = {
@@ -64,7 +65,12 @@ export function mapAnalysisFindingsForPdf(
       severity: f.severity ?? "info",
       confidence: f.confidence ?? 0,
       evidenceSnippet: f.evidence_snippet ?? "",
-      source: "ai",
+      source:
+        f.source === "lexicon_mandatory"
+          ? "lexicon_mandatory"
+          : f.source === "manual"
+            ? "manual"
+            : "ai",
       primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
       relatedArticleIds: f.related_article_ids ?? [],
       rationale: f.rationale ?? null,

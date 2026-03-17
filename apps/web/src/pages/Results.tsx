@@ -62,6 +62,8 @@ type CanonicalSummaryFinding = {
   policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
   start_line_chunk?: number | null;
   end_line_chunk?: number | null;
+  /** lexicon_mandatory only for true DB glossary rows; omit/ai otherwise */
+  source?: 'ai' | 'lexicon_mandatory' | 'manual';
 };
 
 export function Results() {
@@ -843,7 +845,12 @@ export function Results() {
                           </div>
                           <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">"{f.evidence_snippet}"</div>
                           <div className="mt-2 text-xs text-text-muted space-y-1">
-                            <div>{lang === 'ar' ? 'النوع:' : 'Type:'} <span className="text-text-main">{t('findingSourceAi')}</span></div>
+                            <div>
+                              {lang === 'ar' ? 'النوع:' : 'Type:'}{' '}
+                              <span className="text-text-main">
+                                {findingSourceLabel(f.source ?? 'ai')}
+                              </span>
+                            </div>
                             <div>{lang === 'ar' ? 'المادة الأساسية:' : 'Primary article:'} <span className="text-text-main">{articleLabel(articleId)}</span></div>
                             {((f.related_article_ids ?? []).filter((id) => id !== articleId).length > 0) && (
                               <div>

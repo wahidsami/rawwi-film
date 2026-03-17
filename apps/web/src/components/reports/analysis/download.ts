@@ -38,6 +38,7 @@ export interface DownloadAnalysisPdfParams {
     related_article_ids?: number[];
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
+    source?: string | null;
   }> | null;
   reportHints?: Array<{
     canonical_finding_id: string;
