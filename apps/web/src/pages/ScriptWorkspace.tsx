@@ -51,7 +51,7 @@ import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textM
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
 import type { AnalysisJob, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
-import { extractDocx, extractTextFromPdfPerPage } from '@/utils/documentExtract';
+import { extractDocx, extractTextFromPdfPerPage, splitDocxIntoPages } from '@/utils/documentExtract';
 import { sanitizeFormattedHtml } from '@/utils/sanitizeHtml';
 import {
   buildDomTextIndex,
@@ -755,13 +755,24 @@ export function ScriptWorkspace() {
             setUploadStatus('failed');
             return;
           }
-          console.log('[ScriptWorkspace] Sending to extractText API...');
-          const res = await scriptsApi.extractText(version.id, plain, {
-            enqueueAnalysis: false,
-            contentHtml: html && html.trim() ? html.trim() : null,
-          });
-          console.log('[ScriptWorkspace] extractText API response:', res);
-          textToShow = (res as { extracted_text?: string })?.extracted_text ?? plain;
+          const docxPages = splitDocxIntoPages(html ?? '', plain);
+          if (docxPages.length > 1) {
+            const res = await scriptsApi.extractText(version.id, undefined, {
+              enqueueAnalysis: false,
+              pages: docxPages.map((p) => ({
+                pageNumber: p.pageNumber,
+                text: p.text,
+                html: p.html || null,
+              })),
+            });
+            textToShow = (res as { extracted_text?: string })?.extracted_text ?? docxPages.map((p) => p.text).join('\n\n');
+          } else {
+            const res = await scriptsApi.extractText(version.id, plain, {
+              enqueueAnalysis: false,
+              contentHtml: html && html.trim() ? html.trim() : null,
+            });
+            textToShow = (res as { extracted_text?: string })?.extracted_text ?? plain;
+          }
         } catch (docxErr: any) {
           console.error('[ScriptWorkspace] DOCX Error:', docxErr);
           toast.error(lang === 'ar' ? 'فشل استخراج DOCX' : docxErr?.message ?? 'Failed to extract DOCX');
@@ -1631,7 +1642,10 @@ export function ScriptWorkspace() {
                 {isPageMode && currentPageData ? (
                   <div
                     ref={editorRef}
-                    className="bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words whitespace-pre-wrap text-right select-text"
+                    className={cn(
+                      'bg-surface border border-border rounded-xl shadow-sm p-6 lg:p-8 min-h-[600px] text-lg leading-relaxed text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words text-right select-text',
+                      currentPageData.contentHtml ? '[&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm' : 'whitespace-pre-wrap'
+                    )}
                     style={{ fontFamily: "'Amiri', 'Noto Naskh Arabic', serif", transform: `scale(${zoomLevel})`, transformOrigin: 'top right' }}
                     dir="rtl"
                     lang={lang === 'ar' ? 'ar' : undefined}
@@ -1643,35 +1657,39 @@ export function ScriptWorkspace() {
                     role="region"
                     aria-label={lang === 'ar' ? 'محتوى الصفحة' : 'Page content'}
                   >
-                    {pageFindingSegments
-                      ? pageFindingSegments.map((seg) => {
-                          const key = `page-seg-${seg.start}-${seg.end}-${seg.finding?.id ?? 'none'}`;
-                          const text = (currentPageData.content ?? '').slice(seg.start, seg.end);
-                          return (
-                            <span key={key}>
-                              {seg.finding ? (
-                                <span
-                                  data-finding-id={seg.finding.id}
-                                  className={cn(
-                                    'cursor-pointer border-b-2 transition-colors',
-                                    seg.finding.reviewStatus === 'approved'
-                                      ? 'bg-success/20 border-success/50 hover:bg-success/30'
-                                      : 'bg-error/20 border-error/50 hover:bg-error/30'
-                                  )}
-                                  onClick={() => {
-                                    setSelectedFindingId(seg.finding!.id);
-                                    setSidebarTab('findings');
-                                  }}
-                                >
-                                  {text}
-                                </span>
-                              ) : (
-                                <span>{text}</span>
-                              )}
-                            </span>
-                          );
-                        })
-                      : (currentPageData.content ?? '')}
+                    {currentPageData.contentHtml ? (
+                      <div dangerouslySetInnerHTML={{ __html: sanitizeFormattedHtml(currentPageData.contentHtml) }} />
+                    ) : pageFindingSegments ? (
+                      pageFindingSegments.map((seg) => {
+                        const key = `page-seg-${seg.start}-${seg.end}-${seg.finding?.id ?? 'none'}`;
+                        const text = (currentPageData.content ?? '').slice(seg.start, seg.end);
+                        return (
+                          <span key={key}>
+                            {seg.finding ? (
+                              <span
+                                data-finding-id={seg.finding.id}
+                                className={cn(
+                                  'cursor-pointer border-b-2 transition-colors',
+                                  seg.finding.reviewStatus === 'approved'
+                                    ? 'bg-success/20 border-success/50 hover:bg-success/30'
+                                    : 'bg-error/20 border-error/50 hover:bg-error/30'
+                                )}
+                                onClick={() => {
+                                  setSelectedFindingId(seg.finding!.id);
+                                  setSidebarTab('findings');
+                                }}
+                              >
+                                {text}
+                              </span>
+                            ) : (
+                              <span>{text}</span>
+                            )}
+                          </span>
+                        );
+                      })
+                    ) : (
+                      currentPageData.content ?? ''
+                    )}
                   </div>
                 ) : editorData?.contentHtml ? (
                   <div

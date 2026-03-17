@@ -62,6 +62,94 @@ export async function extractDocx(file: File): Promise<{ plain: string; html: st
   };
 }
 
+/** Approximate chars per "page" when splitting DOCX with no explicit page breaks */
+const CHARS_PER_VIRTUAL_PAGE = 3200;
+
+/** Find safe split positions in HTML (after closing tags) near target indices */
+function findSafeSplitPositions(html: string, numSplits: number): number[] {
+  if (numSplits <= 0) return [];
+  const len = html.length;
+  const positions: number[] = [];
+  const safeEnd = /<\/(?:p|div|section|article|h[1-6])>\s*/gi;
+  const indices: number[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = safeEnd.exec(html)) !== null) {
+    indices.push(m.index + m[0].length);
+  }
+  for (let i = 1; i <= numSplits; i++) {
+    const target = (len * i) / (numSplits + 1);
+    let best = len;
+    let bestDist = Infinity;
+    for (const pos of indices) {
+      if (pos >= target && pos < len - 10) {
+        const d = Math.abs(pos - target);
+        if (d < bestDist) {
+          bestDist = d;
+          best = pos;
+        }
+      }
+    }
+    if (best < len) positions.push(best);
+  }
+  return positions.sort((a, b) => a - b).filter((p, i, arr) => i === 0 || p > arr[i - 1] + 50);
+}
+
+/**
+ * Split DOCX into pages for page-based storage and viewer.
+ * Uses form-feed in plain text when present; otherwise virtual pages by size.
+ * Splits HTML at safe tag boundaries so each page has both text and html.
+ */
+export function splitDocxIntoPages(html: string, plain: string): Array<{ pageNumber: number; text: string; html: string }> {
+  const trimmedHtml = html.trim();
+  const trimmedPlain = plain.trim();
+  if (!trimmedHtml && !trimmedPlain) return [{ pageNumber: 1, text: '', html: '' }];
+
+  // Split plain by form-feed (Word page break) or by virtual page size
+  let textParts: string[];
+  if (/\f/.test(trimmedPlain)) {
+    textParts = trimmedPlain.split(/\f+/).map((s) => s.trim()).filter(Boolean);
+    if (textParts.length === 0) textParts = [trimmedPlain];
+  } else if (trimmedPlain.length > CHARS_PER_VIRTUAL_PAGE) {
+    const numPages = Math.max(1, Math.ceil(trimmedPlain.length / CHARS_PER_VIRTUAL_PAGE));
+    const chunkSize = Math.ceil(trimmedPlain.length / numPages);
+    textParts = [];
+    for (let i = 0; i < numPages; i++) {
+      const start = i * chunkSize;
+      const end = i === numPages - 1 ? trimmedPlain.length : start + chunkSize;
+      textParts.push(trimmedPlain.slice(start, end));
+    }
+  } else {
+    return [{ pageNumber: 1, text: trimmedPlain, html: trimmedHtml }];
+  }
+
+  if (textParts.length === 1) {
+    return [{ pageNumber: 1, text: textParts[0] ?? trimmedPlain, html: trimmedHtml }];
+  }
+
+  // Split HTML at safe boundaries to match number of text parts
+  let splitPositions = findSafeSplitPositions(trimmedHtml, textParts.length - 1);
+  while (splitPositions.length < textParts.length - 1) {
+    splitPositions = [...splitPositions, trimmedHtml.length];
+  }
+  splitPositions = splitPositions.slice(0, textParts.length - 1).sort((a, b) => a - b);
+  const htmlParts: string[] = [];
+  let start = 0;
+  for (let i = 0; i < textParts.length; i++) {
+    const end = i < splitPositions.length ? splitPositions[i]! : trimmedHtml.length;
+    htmlParts.push(trimmedHtml.slice(start, end).trim());
+    start = end;
+  }
+  if (start < trimmedHtml.length && htmlParts.length > 0) {
+    htmlParts[htmlParts.length - 1] += trimmedHtml.slice(start);
+  }
+
+  return textParts.map((text, i) => ({
+    pageNumber: i + 1,
+    text: text,
+    html: htmlParts[i] ?? '',
+  }));
+}
+
 const PAGE_SEPARATOR = '\n\n';
 
 type TextItem = { str?: string; transform?: number[] };
