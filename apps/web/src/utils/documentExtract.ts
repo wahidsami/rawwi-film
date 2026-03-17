@@ -11,9 +11,6 @@ import * as pdfjsLib from 'pdfjs-dist';
 
 let pdfWorkerInitialized = false;
 
-/** Base URL for the app (e.g. '' or '/app/'). */
-const base = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
-
 async function initPdfWorker() {
   if (pdfWorkerInitialized) return;
   let workerUrl: string;
@@ -23,9 +20,10 @@ async function initPdfWorker() {
       (m) => (m as { default: string }).default
     );
   } else {
-    // Production: use fixed path. The Vite plugin copies pdf.worker.mjs to dist so it's always available
-    // (avoids "Failed to fetch dynamically imported module" when the hashed asset URL is missing or blocked).
-    workerUrl = `${base}pdf.worker.mjs`;
+    // Production: use CDN so we never depend on your server (no Nginx, no MIME config).
+    // Same version as the installed pdfjs-dist; CDN serves correct MIME type for .mjs.
+    const version = (pdfjsLib as { version?: string }).version || "4.7.76";
+    workerUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.mjs`;
   }
   pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
   pdfWorkerInitialized = true;
