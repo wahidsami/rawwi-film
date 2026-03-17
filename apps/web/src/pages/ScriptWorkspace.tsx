@@ -146,6 +146,14 @@ function orderedEvidenceNeedles(raw: string): string[] {
   }
 
   const tail = tailAfterColon(raw ?? '');
+  if (tail.length >= 10) {
+    const frags = tail
+      .split(/[.!?؟。\n]+/)
+      .map((p) => normalizeEvidenceForSearch(p))
+      .filter((p) => p.length >= 10);
+    frags.sort((a, b) => a.length - b.length);
+    for (const frag of frags) add(frag);
+  }
   if (tail.length >= 4) add(tail);
   if (lines.length === 1) {
     const t1 = tailAfterColon(lines[0]);
@@ -198,6 +206,22 @@ function locateSpanByEvidenceSearch(
     return best ? { start: best.start, end: best.end } : { start: matches[0].start, end: matches[0].end };
   };
 
+  let bestExact: { start: number; end: number } | null = null;
+  let bestExactLen = Infinity;
+  for (const needle of needles) {
+    if (needle.length < 8) continue;
+    const exact = gatherExactOccurrences(plain, needle);
+    if (!exact.length) continue;
+    const hit = pick(exact);
+    if (!hit) continue;
+    const span = hit.end - hit.start;
+    if (span < bestExactLen) {
+      bestExactLen = span;
+      bestExact = hit;
+    }
+  }
+  if (bestExact) return bestExact;
+
   for (const needle of needles) {
     let matches = gatherExactOccurrences(plain, needle);
     if (matches.length === 0) {
@@ -232,6 +256,39 @@ function locateSpanByEvidenceSearch(
     if (hit) return hit;
   }
 
+  return null;
+}
+
+/** Viewer page index (0-based) where this finding's evidence actually appears in page slices. */
+function findViewerPageIndexForFinding(
+  pages: { content?: string | null; startOffsetGlobal: number }[],
+  f: AnalysisFinding
+): number | null {
+  if (!pages.length) return null;
+  const optsFor = (i: number) =>
+    ({ pageSlice: true as const, sliceGlobalStart: pages[i]?.startOffsetGlobal ?? 0 });
+
+  const evidenceOnPage = (i: number) => {
+    const plain = pages[i]?.content ?? '';
+    if (!plain) return false;
+    return locateSpanByEvidenceSearch(plain, f, optsFor(i)) != null;
+  };
+
+  const dbPg = (f.pageNumber ?? 0) - 1;
+  if (dbPg >= 0 && dbPg < pages.length && evidenceOnPage(dbPg)) return dbPg;
+
+  for (let i = 0; i < pages.length; i++) {
+    if (i === dbPg) continue;
+    if (evidenceOnPage(i)) return i;
+  }
+
+  for (let i = 0; i < pages.length; i++) {
+    const ps = pages[i].startOffsetGlobal ?? 0;
+    const pe = ps + (pages[i].content?.length ?? 0);
+    const s = f.startOffsetGlobal ?? -1;
+    const e = f.endOffsetGlobal ?? -1;
+    if (s >= 0 && e > s && e > ps && s < pe) return i;
+  }
   return null;
 }
 
@@ -1813,17 +1870,9 @@ export function ScriptWorkspace() {
           })
           .filter(Boolean) as AnalysisFinding[];
       } else {
-        onPage = reportFindings.filter((f) => {
-          if (f.pageNumber != null && f.pageNumber === safeCurrentPage) return true;
-          const ps = currentPageData.startOffsetGlobal ?? 0;
-          const pe = ps + (pagePlain.length || 1);
-          return (
-            f.startOffsetGlobal != null &&
-            f.endOffsetGlobal != null &&
-            f.endOffsetGlobal > ps &&
-            f.startOffsetGlobal < pe
-          );
-        });
+        const pages = editorData.pages ?? [];
+        const targetIdx = safeCurrentPage - 1;
+        onPage = reportFindings.filter((f) => findViewerPageIndexForFinding(pages, f) === targetIdx);
         setHighlightExpectedCount(onPage.length);
         resolved = onPage
           .map((f) => {
