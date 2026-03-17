@@ -2,6 +2,12 @@ import React from "react";
 import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 import { formatDate, formatDateLong } from "@/utils/dateFormat";
 import { getPolicyArticle } from "@/data/policyMap";
+import {
+  getPrimarySemanticCategory,
+  getSemanticCategoriesForChecklist,
+  categoryLabel,
+  type SemanticCategoryId,
+} from "@/data/semanticCategories";
 import { analysisStyles as s } from "./styles";
 import type { AnalysisPdfFinding } from "./mapper";
 const A4_WIDTH = 595.28;
@@ -61,12 +67,18 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
       evidenceSnippet: f.evidenceSnippet ?? "",
     }));
 
-  const groups = safeFindings.reduce<Record<number, AnalysisPdfFinding[]>>((acc, f) => {
-    const key = Number.isFinite(f.primaryArticleId) ? (f.primaryArticleId as number) : (Number.isFinite(f.articleId) ? f.articleId : 0);
+  const groups = safeFindings.reduce<Partial<Record<SemanticCategoryId, AnalysisPdfFinding[]>>>((acc, f) => {
+    const aid = Number.isFinite(f.primaryArticleId)
+      ? (f.primaryArticleId as number)
+      : Number.isFinite(f.articleId)
+        ? f.articleId
+        : 0;
+    const key = getPrimarySemanticCategory(aid, f.policyAtomId, f.policyAtomId);
     if (!acc[key]) acc[key] = [];
     acc[key].push(f);
     return acc;
   }, {});
+  const categoryOrder = getSemanticCategoriesForChecklist();
 
   const sevCount = safeFindings.reduce<Record<string, number>>((acc, f) => {
     const k = (f.severity || "info").toLowerCase();
@@ -159,12 +171,15 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                 : "This script has no violations against GCAM articles based on the current analysis results."}
             </Text>
           </View>
-        ) : Object.entries(groups).map(([articleId, list]) => (
-          <View key={articleId} style={s.articleWrap}>
+        ) : (
+          categoryOrder
+            .map((cat) => {
+              const list = groups[cat.id];
+              if (!list?.length) return null;
+              return (
+          <View key={cat.id} style={s.articleWrap}>
             <Text style={[s.articleHeader, rtl]}>
-              {isAr
-                ? `مادة ${articleId}: ${getPolicyArticle(Number(articleId))?.title_ar ?? ""}`
-                : `Article ${articleId}${getPolicyArticle(Number(articleId))?.title_ar ? ` - ${getPolicyArticle(Number(articleId))?.title_ar}` : ""}`}
+              {categoryLabel(cat.id, isAr ? "ar" : "en")}
             </Text>
             {list.filter(Boolean).map((f, idx) => {
               const primaryId = f.primaryArticleId ?? f.articleId;
@@ -222,7 +237,10 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
               );
             })}
           </View>
-        ))}
+        );
+            })
+            .filter(Boolean)
+        )}
 
         {((data.reportHints ?? []).length > 0) && (
           <View style={{ marginTop: 16 }}>

@@ -25,31 +25,20 @@ import {
 
 import {
   getPolicyArticles,
-  getArticleDomainId,
   normalizeAtomId,
   atomIdNumeric,
-  getPolicyAtomsFlat,
-  countPolicyAtoms,
 } from '@/data/policyMap';
+import {
+  getPrimarySemanticCategory,
+  getSemanticCategoriesForChecklist,
+  type SemanticCategoryId,
+} from '@/data/semanticCategories';
 
 const policyArticles = getPolicyArticles().map((a) => ({
   id: a.articleId,
-  domainId: getArticleDomainId(a.articleId),
   titleAr: a.title_ar,
   titleEn: `Article ${a.articleId}`,
 }));
-
-const domains = [
-  { id: 'A', titleAr: 'المحور أ: العقيدة والسيادة', titleEn: 'Domain A: Faith & Sovereignty' },
-  { id: 'B', titleAr: 'المحور ب: الحقوق والكرامة', titleEn: 'Domain B: Rights & Dignity' },
-  { id: 'C', titleAr: 'المحور ج: القيم والأخلاق', titleEn: 'Domain C: Values & Ethics' },
-  { id: 'D', titleAr: 'المحور د: المحظورات', titleEn: 'Domain D: Prohibitions' },
-  { id: 'E', titleAr: 'المحور هـ: متنوعات', titleEn: 'Domain E: Miscellaneous' },
-];
-
-function articleDomain(articleId: number): string {
-  return getArticleDomainId(articleId);
-}
 
 function formatAtomDisplayR(articleId: number, atomId: string | null): string {
   if (!atomId?.trim()) return String(articleId);
@@ -90,7 +79,6 @@ export function Results() {
   const [findings, setFindings] = useState<AnalysisFinding[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedDomains, setExpandedDomains] = useState<Record<string, boolean>>({ A: true });
   const [expandedArticles, setExpandedArticles] = useState<Record<string, boolean>>({});
   const [reviewing, setReviewing] = useState(false);
   const [updateScriptStatus, setUpdateScriptStatus] = useState(false);
@@ -257,26 +245,29 @@ export function Results() {
   const violations = hasRealFindings ? findings.filter(f => f.reviewStatus !== 'approved') : [];
   const approvedFindings = hasRealFindings ? findings.filter(f => f.reviewStatus === 'approved') : [];
 
-  const policyAtomsFlat = getPolicyAtomsFlat();
-  const policyAtomTotal = countPolicyAtoms();
-  const atomViolationCounts = (() => {
-    const m = new Map<string, number>();
-    const add = (k: string) => {
-      m.set(k, (m.get(k) ?? 0) + 1);
+  const semanticCategoriesOrdered = getSemanticCategoriesForChecklist();
+  const categoryViolationCounts = (() => {
+    const m = new Map<SemanticCategoryId, number>();
+    const add = (id: SemanticCategoryId) => {
+      m.set(id, (m.get(id) ?? 0) + 1);
     };
     if (hasRealFindings) {
       for (const f of findings) {
         if (f.reviewStatus === 'approved') continue;
-        const k = normalizeAtomId(f.atomId, f.articleId);
-        if (k) add(k);
-        else if (f.articleId) add(`__article_${f.articleId}`);
+        const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+        add(
+          getPrimarySemanticCategory(
+            f.articleId,
+            f.atomId,
+            v3.primary_policy_atom_id as string | undefined
+          )
+        );
       }
       return m;
     }
     for (const cf of canonicalSummaryFindings) {
-      const pk = cf.primary_policy_atom_id?.trim();
-      if (pk) add(pk);
-      else if (cf.primary_article_id != null) add(`__article_${cf.primary_article_id}`);
+      const aid = Number.isFinite(cf.primary_article_id) ? (cf.primary_article_id as number) : 0;
+      add(getPrimarySemanticCategory(aid, null, cf.primary_policy_atom_id));
     }
     return m;
   })();
@@ -337,7 +328,6 @@ export function Results() {
   };
   const DecisionIcon = decisionConfig[decision].icon;
 
-  const toggleDomain = (d: string) => setExpandedDomains(prev => ({ ...prev, [d]: !prev[d] }));
   const toggleArticle = (key: string) => setExpandedArticles(prev => ({ ...prev, [key]: !prev[key] }));
 
   /** Map summary canonical row → DB finding for review actions. */
@@ -407,55 +397,73 @@ export function Results() {
       const clientName = escapeHtmlSafe(clientNameRaw);
       const scriptTitle = escapeHtmlSafe(scriptTitleRaw);
 
-      // Findings Grouping
-
-      // Findings Grouping
-      const findingList = hasRealFindings ? findings : (
-        summary.findings_by_article.flatMap(art =>
-          art.top_findings.map((f, i) => ({
-            id: `sum-${i}`,
-            articleId: art.article_id,
-            titleAr: f.title_ar,
-            severity: f.severity,
-            confidence: f.confidence,
-            evidenceSnippet: f.evidence_snippet,
-            source: 'ai',
-            reviewStatus: undefined,
-          } as unknown as AnalysisFinding))
-        )
+      const canonicalForPrint = (canonicalSummaryFindings || []).map((cf, i) =>
+        ({
+          id: cf.canonical_finding_id ?? `c-${i}`,
+          articleId: Number.isFinite(cf.primary_article_id) ? (cf.primary_article_id as number) : 0,
+          atomId: cf.primary_policy_atom_id ?? undefined,
+          titleAr: cf.title_ar,
+          severity: cf.severity,
+          confidence: cf.confidence ?? 0,
+          evidenceSnippet: cf.evidence_snippet ?? '',
+          source: 'ai',
+          reviewStatus: undefined,
+        }) as unknown as AnalysisFinding
       );
 
-      // Group by Article
-      const groups: Record<number, AnalysisFinding[]> = {};
-      findingList.forEach(f => {
-        if (!groups[f.articleId]) groups[f.articleId] = [];
-        groups[f.articleId].push(f);
-      });
+      const findingList: AnalysisFinding[] = hasRealFindings
+        ? findings.filter((f) => f.reviewStatus !== 'approved')
+        : canonicalForPrint.length > 0
+          ? canonicalForPrint
+          : summary.findings_by_article.flatMap((art) =>
+              (art.top_findings ?? []).map((f, i) => ({
+                id: `sum-${i}`,
+                articleId: art.article_id,
+                titleAr: f.title_ar,
+                severity: f.severity,
+                confidence: f.confidence,
+                evidenceSnippet: f.evidence_snippet,
+                source: 'ai',
+                reviewStatus: undefined,
+              } as unknown as AnalysisFinding))
+            );
 
-      // HTML Group Data
-      const groupedFindingsHtml = Object.entries(groups).map(([artId, list]) => {
-        const artNum = Number(artId);
-        const artMeta = policyArticles.find(a => a.id === artNum);
+      const groupsByCat = new Map<SemanticCategoryId, AnalysisFinding[]>();
+      for (const f of findingList) {
+        const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+        const cat = getPrimarySemanticCategory(
+          f.articleId,
+          f.atomId,
+          v3.primary_policy_atom_id as string | undefined
+        );
+        if (!groupsByCat.has(cat)) groupsByCat.set(cat, []);
+        groupsByCat.get(cat)!.push(f);
+      }
 
-        return {
-          articleTitle: isAr ? ` المادة ${artNum}: ${artMeta?.titleAr ?? ''}` : `Article ${artNum}`,
-          count: list.length,
-          findings: list.map(f => ({
-            severity: f.severity.toLowerCase(),
-            severityLabel: f.severity,
-            title: isAr ? f.titleAr : f.titleAr, // Title is usually Ar only in data
-            confidence: Math.round((f.confidence ?? 0) * 100),
-            source: findingSourceLabel(f.source ?? 'ai'),
-            lines: f.startLineChunk ? `${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ''}` : '',
-            pageNum: f.pageNumber != null && f.pageNumber > 0 ? f.pageNumber : null,
-            evidence: f.evidenceSnippet,
-            reviewStatus: f.reviewStatus,
-            reviewStatusLabel: f.reviewStatus === 'approved' ? (isAr ? 'تم الاعتماد (آمن)' : 'Approved (Safe)') : (isAr ? 'مخالفة' : 'Violation'),
-            isSafe: f.reviewStatus === 'approved',
-            reviewedAt: f.reviewedAt ? formatDate(new Date(f.reviewedAt), { lang: isAr ? 'ar' : 'en', format: dateFormat }) : ''
-          }))
-        };
-      });
+      const groupedFindingsHtml = semanticCategoriesOrdered
+        .map((cat) => {
+          const list = groupsByCat.get(cat.id);
+          if (!list?.length) return null;
+          return {
+            articleTitle: isAr ? cat.titleAr : cat.titleEn,
+            count: list.length,
+            findings: list.map((f) => ({
+              severity: (f.severity ?? 'info').toLowerCase(),
+              severityLabel: f.severity,
+              title: isAr ? f.titleAr : f.titleAr,
+              confidence: Math.round((f.confidence ?? 0) * 100),
+              source: findingSourceLabel(f.source ?? 'ai'),
+              lines: f.startLineChunk ? `${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ''}` : '',
+              pageNum: f.pageNumber != null && f.pageNumber > 0 ? f.pageNumber : null,
+              evidence: f.evidenceSnippet,
+              reviewStatus: f.reviewStatus,
+              reviewStatusLabel: f.reviewStatus === 'approved' ? (isAr ? 'تم الاعتماد (آمن)' : 'Approved (Safe)') : (isAr ? 'مخالفة' : 'Violation'),
+              isSafe: f.reviewStatus === 'approved',
+              reviewedAt: f.reviewedAt ? formatDate(new Date(f.reviewedAt), { lang: isAr ? 'ar' : 'en', format: dateFormat }) : '',
+            })),
+          };
+        })
+        .filter((g): g is NonNullable<typeof g> => g != null);
 
       // 3. Replacements
       let html = template;
@@ -604,7 +612,7 @@ export function Results() {
         reportHints: summary?.report_hints ?? undefined,
         wordsToRevisit: summary?.words_to_revisit ?? undefined,
         scriptSummary: summary?.script_summary ?? undefined,
-        lang: (isAr ? 'ar' : 'en') as const,
+        lang: isAr ? ('ar' as const) : ('en' as const),
         dateFormat,
       };
       if (isQuickAnalysisReport) {
@@ -638,23 +646,6 @@ export function Results() {
       ? `مادة ${articleId}${meta?.titleAr ? `: ${meta.titleAr}` : ''}`
       : `Article ${articleId}${meta?.titleEn ? `: ${meta.titleEn}` : ''}`;
   };
-
-  // Group findings by article for rendering
-  function groupByArticle(list: AnalysisFinding[]) {
-    const map = new Map<number, AnalysisFinding[]>();
-    for (const f of list) {
-      if (!map.has(f.articleId)) map.set(f.articleId, []);
-      map.get(f.articleId)!.push(f);
-    }
-    for (const arr of map.values()) {
-      arr.sort(
-        (a, b) =>
-          atomIdNumeric(normalizeAtomId(a.atomId, a.articleId)) - atomIdNumeric(normalizeAtomId(b.atomId, b.articleId)) ||
-          (a.startOffsetGlobal ?? 0) - (b.startOffsetGlobal ?? 0)
-      );
-    }
-    return map;
-  }
 
   // Render a finding card
   function findingSourceLabel(source: string): string {
@@ -739,106 +730,109 @@ export function Results() {
 
   // Render a findings section (either from real findings or from summary)
   function renderFindingsFromSummary() {
-    const findingsByDomain = new Map<string, typeof summary.findings_by_article>();
+    type Art = (typeof summary.findings_by_article)[number];
+    type F = NonNullable<Art["top_findings"]>[number];
+    const rows: { art: Art; f: F; idx: number }[] = [];
     for (const art of summary.findings_by_article) {
-      const dom = articleDomain(art.article_id);
-      if (!findingsByDomain.has(dom)) findingsByDomain.set(dom, []);
-      findingsByDomain.get(dom)!.push(art);
+      (art.top_findings ?? []).forEach((f, idx) => rows.push({ art, f, idx }));
     }
-
-    return domains.map(domain => {
-      const domainArts = findingsByDomain.get(domain.id);
-      if (!domainArts || domainArts.length === 0) return null;
+    const byCat = new Map<SemanticCategoryId, typeof rows>();
+    for (const row of rows) {
+      const cat = getPrimarySemanticCategory(row.art.article_id, null, null);
+      if (!byCat.has(cat)) byCat.set(cat, []);
+      byCat.get(cat)!.push(row);
+    }
+    return semanticCategoriesOrdered.map((cat) => {
+      const list = byCat.get(cat.id);
+      if (!list?.length) return null;
+      const key = `sc-sum-${cat.id}`;
+      const isExpanded = expandedArticles[key] ?? true;
       return (
-        <div key={domain.id} className="mb-8">
-          <h4 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
-            <span className="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center">{domain.id}</span>
-            {lang === 'ar' ? domain.titleAr : domain.titleEn}
-          </h4>
-          <div className="space-y-4 ps-4 lg:ps-10">
-            {domainArts.map(art => {
-              const artMeta = policyArticles.find(a => a.id === art.article_id);
-              const key = `${domain.id}-${art.article_id}`;
-              const isExpanded = expandedArticles[key] ?? true;
-              return (
-                <div key={art.article_id} className="border border-border rounded-xl bg-surface/50 overflow-hidden">
-                  <button onClick={() => toggleArticle(key)} className="w-full flex items-center justify-between p-4 bg-surface hover:bg-background transition-colors border-b border-border">
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-text-main">{lang === 'ar' ? `مادة ${art.article_id}` : `Article ${art.article_id}`}</span>
-                      <span className="text-text-muted text-sm truncate max-w-xs">{lang === 'ar' ? (artMeta?.titleAr ?? art.title_ar) : (artMeta?.titleEn ?? art.title_ar)}</span>
-                </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline">{art.top_findings.length}</Badge>
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
-                </div>
-                  </button>
-                  {isExpanded && (
-                    <div className="p-4 space-y-3">
-                      {art.top_findings.map((f, idx) => (
-                        <div key={idx} className="bg-surface border border-border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-text-main text-sm">{f.title_ar}</span>
-                            <div className="flex items-center gap-2">
-                              <Badge className={cn("text-[10px] border", sevColor(f.severity))}>{f.severity}</Badge>
-                              <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round(f.confidence * 100)}%</span>
+        <div key={cat.id} className="mb-8">
+          <div className="border border-border rounded-xl bg-surface/50 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => toggleArticle(key)}
+              className="w-full flex items-center justify-between p-4 bg-surface hover:bg-background transition-colors border-b border-border"
+            >
+              <div className="flex items-center gap-3">
+                <span className="bg-primary/10 text-primary w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0">
+                  {semanticCategoriesOrdered.findIndex((c) => c.id === cat.id) + 1}
+                </span>
+                <span className="font-bold text-text-main text-start">{lang === "ar" ? cat.titleAr : cat.titleEn}</span>
               </div>
-            </div>
-                          <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">"{f.evidence_snippet}"</div>
-                </div>
-                      ))}
+              <div className="flex items-center gap-3 shrink-0">
+                <Badge variant="outline">{list.length}</Badge>
+                {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+              </div>
+            </button>
+            {isExpanded && (
+              <div className="p-4 space-y-3">
+                {list.map(({ art, f, idx }) => (
+                  <div key={`${art.article_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-text-main text-sm">{f.title_ar}</span>
+                      <div className="flex items-center gap-2">
+                        <Badge className={cn("text-[10px] border", sevColor(f.severity ?? ""))}>{f.severity}</Badge>
+                        <span className="text-[10px] text-text-muted">
+                          {lang === "ar" ? "ثقة" : "conf"} {Math.round((f.confidence ?? 0) * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">
+                      &quot;{f.evidence_snippet}&quot;
+                    </div>
+                    <div className="mt-2 text-xs text-text-muted">
+                      {lang === "ar" ? "المادة (مرجع قانوني): " : "Article (legal ref): "}
+                      <span className="text-text-main">{articleLabel(art.article_id)}</span>
+                    </div>
                   </div>
-                  )}
-                </div>
-              );
-            })}
+                ))}
               </div>
-            </div>
+            )}
+          </div>
+        </div>
       );
     });
   }
 
   function renderFindingsFromCanonicalSummary() {
-    const byArticle = new Map<number, CanonicalSummaryFinding[]>();
+    const byCat = new Map<SemanticCategoryId, CanonicalSummaryFinding[]>();
     for (const f of canonicalSummaryFindings) {
       const articleId = Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0;
-      if (!byArticle.has(articleId)) byArticle.set(articleId, []);
-      byArticle.get(articleId)!.push(f);
+      const cat = getPrimarySemanticCategory(articleId, null, f.primary_policy_atom_id);
+      if (!byCat.has(cat)) byCat.set(cat, []);
+      byCat.get(cat)!.push(f);
     }
-    const byDomain = new Map<string, { articleId: number; findings: CanonicalSummaryFinding[] }[]>();
-    for (const [articleId, list] of byArticle.entries()) {
-      const dom = articleDomain(articleId);
-      if (!byDomain.has(dom)) byDomain.set(dom, []);
-      byDomain.get(dom)!.push({ articleId, findings: list });
-    }
-    return domains.map(domain => {
-      const domainArts = byDomain.get(domain.id);
-      if (!domainArts || domainArts.length === 0) return null;
+    return semanticCategoriesOrdered.map((cat) => {
+      const artFindings = byCat.get(cat.id);
+      if (!artFindings?.length) return null;
+      const key = `sc-canon-${cat.id}`;
+      const isExpanded = expandedArticles[key] ?? true;
       return (
-        <div key={domain.id} className="mb-8">
-          <h4 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
-            <span className="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center">{domain.id}</span>
-            {lang === 'ar' ? domain.titleAr : domain.titleEn}
-          </h4>
-          <div className="space-y-4 ps-4 lg:ps-10">
-            {domainArts.map(({ articleId, findings: artFindings }) => {
-              const artMeta = policyArticles.find(a => a.id === articleId);
-              const key = `${domain.id}-${articleId}`;
-              const isExpanded = expandedArticles[key] ?? true;
-              return (
-                <div key={articleId} className="border border-border rounded-xl bg-surface/50 overflow-hidden">
-                  <button onClick={() => toggleArticle(key)} className="w-full flex items-center justify-between p-4 bg-surface hover:bg-background transition-colors border-b border-border">
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-text-main">{lang === 'ar' ? `مادة ${articleId}` : `Article ${articleId}`}</span>
-                      <span className="text-text-muted text-sm truncate max-w-xs">{lang === 'ar' ? artMeta?.titleAr : artMeta?.titleEn}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline">{artFindings.length}</Badge>
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
-                    </div>
-                  </button>
-                  {isExpanded && (
-                    <div className="p-4 space-y-3">
-                      {artFindings.map((f, idx) => (
+        <div key={cat.id} className="mb-8">
+          <div className="border border-border rounded-xl bg-surface/50 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => toggleArticle(key)}
+              className="w-full flex items-center justify-between p-4 bg-surface hover:bg-background transition-colors border-b border-border"
+            >
+              <div className="flex items-center gap-3">
+                <span className="bg-primary/10 text-primary w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0">
+                  {semanticCategoriesOrdered.findIndex((c) => c.id === cat.id) + 1}
+                </span>
+                <span className="font-bold text-text-main text-start">{lang === "ar" ? cat.titleAr : cat.titleEn}</span>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <Badge variant="outline">{artFindings.length}</Badge>
+                {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+              </div>
+            </button>
+            {isExpanded && (
+              <div className="p-4 space-y-3">
+                {artFindings.map((f, idx) => {
+                  const articleId = Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0;
+                  return (
                         <div key={`${f.canonical_finding_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold text-text-main text-sm">{f.title_ar}</span>
@@ -915,12 +909,10 @@ export function Results() {
                             );
                           })()}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       );
@@ -928,76 +920,75 @@ export function Results() {
   }
 
   function renderFindingsFromReal(list: AnalysisFinding[]) {
-    const byArticle = groupByArticle(list);
-    const policyOrder = policyArticles.map((a) => a.id);
-    const byDomain = new Map<string, { articleId: number; findings: AnalysisFinding[] }[]>();
-    for (const artId of policyOrder) {
-      const artFindings = byArticle.get(artId);
-      if (!artFindings?.length) continue;
-      const dom = articleDomain(artId);
-      if (!byDomain.has(dom)) byDomain.set(dom, []);
-      byDomain.get(dom)!.push({ articleId: artId, findings: artFindings });
+    const byCat = new Map<SemanticCategoryId, AnalysisFinding[]>();
+    for (const f of list) {
+      const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+      const cat = getPrimarySemanticCategory(
+        f.articleId,
+        f.atomId,
+        v3.primary_policy_atom_id as string | undefined
+      );
+      if (!byCat.has(cat)) byCat.set(cat, []);
+      byCat.get(cat)!.push(f);
     }
 
-    return domains.map(domain => {
-      const domainArts = byDomain.get(domain.id);
-      if (!domainArts || domainArts.length === 0) return null;
+    return semanticCategoriesOrdered.map((cat) => {
+      const artFindings = byCat.get(cat.id);
+      if (!artFindings?.length) return null;
+      const key = `sc-real-${cat.id}`;
+      const isExpanded = expandedArticles[key] ?? true;
       return (
-        <div key={domain.id} className="mb-8">
-          <h4 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
-            <span className="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center">{domain.id}</span>
-            {lang === 'ar' ? domain.titleAr : domain.titleEn}
-          </h4>
-          <div className="space-y-4 ps-4 lg:ps-10">
-            {domainArts.map(({ articleId, findings: artFindings }) => {
-              const artMeta = policyArticles.find(a => a.id === articleId);
-              const key = `${domain.id}-${articleId}`;
-              const isExpanded = expandedArticles[key] ?? true;
-              return (
-                <div key={articleId} className="border border-border rounded-xl bg-surface/50 overflow-hidden">
-                  <button onClick={() => toggleArticle(key)} className="w-full flex items-center justify-between p-4 bg-surface hover:bg-background transition-colors border-b border-border">
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-text-main">{lang === 'ar' ? `مادة ${articleId}` : `Article ${articleId}`}</span>
-                      <span className="text-text-muted text-sm truncate max-w-xs">{lang === 'ar' ? artMeta?.titleAr : artMeta?.titleEn}</span>
+        <div key={cat.id} className="mb-8">
+          <div className="border border-border rounded-xl bg-surface/50 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => toggleArticle(key)}
+              className="w-full flex items-center justify-between p-4 bg-surface hover:bg-background transition-colors border-b border-border"
+            >
+              <div className="flex items-center gap-3">
+                <span className="bg-primary/10 text-primary w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0">
+                  {semanticCategoriesOrdered.findIndex((c) => c.id === cat.id) + 1}
+                </span>
+                <span className="font-bold text-text-main text-start">{lang === "ar" ? cat.titleAr : cat.titleEn}</span>
               </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline">{artFindings.length}</Badge>
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
-                  </div>
-                  </button>
-                  {isExpanded && (
-                    <div className="p-4 space-y-3">
-                      {groupFindingsByAtom ? (
-                        (() => {
-                          const byAtom = new Map<string, AnalysisFinding[]>();
-                          for (const f of artFindings) {
-                            const k = f.atomId?.trim() || '—';
-                            if (!byAtom.has(k)) byAtom.set(k, []);
-                            byAtom.get(k)!.push(f);
-                          }
-                          const entries = Array.from(byAtom.entries()).sort(([a], [b]) =>
-                            atomIdNumeric(normalizeAtomId(a === '—' ? null : a, articleId)) -
-                            atomIdNumeric(normalizeAtomId(b === '—' ? null : b, articleId))
-                          );
-                          return entries.map(([atomKey, fl]) => (
-                            <div key={atomKey} className="border border-border/60 rounded-lg p-3 bg-background/30">
-                              <div className="text-xs font-semibold text-text-muted mb-2">
-                                {lang === 'ar' ? 'ذرة' : 'Atom'} {formatAtomDisplayR(articleId, atomKey === '—' ? null : atomKey)}
-                              </div>
-                              <div className="space-y-3">{fl.map((f) => renderFindingCard(f))}</div>
-                            </div>
-                          ));
-                        })()
-                      ) : (
-                        artFindings.map((f) => renderFindingCard(f))
-                      )}
-                  </div>
-                  )}
-                </div>
-              );
-            })}
-                  </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <Badge variant="outline">{artFindings.length}</Badge>
+                {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
               </div>
+            </button>
+            {isExpanded && (
+              <div className="p-4 space-y-3">
+                {groupFindingsByAtom ? (
+                  (() => {
+                    const byAtom = new Map<string, AnalysisFinding[]>();
+                    for (const f of artFindings) {
+                      const k = normalizeAtomId(f.atomId, f.articleId) || `a${f.articleId}`;
+                      if (!byAtom.has(k)) byAtom.set(k, []);
+                      byAtom.get(k)!.push(f);
+                    }
+                    const entries = Array.from(byAtom.entries()).sort(
+                      ([a], [b]) => atomIdNumeric(a) - atomIdNumeric(b)
+                    );
+                    return entries.map(([atomKey, fl]) => {
+                      const aid = fl[0]?.articleId ?? 0;
+                      return (
+                        <div key={atomKey} className="border border-border/60 rounded-lg p-3 bg-background/30">
+                          <div className="text-xs font-semibold text-text-muted mb-2">
+                            {lang === "ar" ? "مرجع السياسة: " : "Policy ref: "}
+                            {formatAtomDisplayR(aid, atomKey.startsWith("a") ? null : atomKey)}
+                          </div>
+                          <div className="space-y-3">{fl.map((f) => renderFindingCard(f))}</div>
+                        </div>
+                      );
+                    });
+                  })()
+                ) : (
+                  artFindings.map((f) => renderFindingCard(f))
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       );
     });
   }
@@ -1170,104 +1161,43 @@ export function Results() {
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Checklist */}
+        {/* Checklist: semantic categories (aligned with findings grouping) */}
         <div className="lg:col-span-4 space-y-4">
           <div className="border-b border-border pb-2">
             <h3 className="font-bold text-lg text-text-main">
-              {lang === 'ar' ? 'قائمة التحقق (البنود الفرعية)' : 'Compliance checklist (atoms)'}
+              {lang === 'ar' ? 'قائمة التحقق (المجالات الدلالية)' : 'Compliance checklist (semantic areas)'}
             </h3>
             <p className="text-xs text-text-muted mt-1">
               {lang === 'ar'
-                ? `${policyAtomTotal} بنداً فرعياً في خريطة السياسة (مادة–بند مثل 4-1).`
-                : `${policyAtomTotal} policy atoms (e.g. 4-1) in the map.`}
+                ? 'عدد المخالفات لكل مجال دلالي؛ المرجع القانوني (مادة/بند) يظهر في بطاقة كل مخالفة.'
+                : 'Violation count per semantic area; legal atom/article appears on each finding card.'}
             </p>
           </div>
-          <div className="space-y-3">
-            {domains.map((domain) => {
-              const atomsInDomain = policyAtomsFlat.filter((a) => a.domainId === domain.id);
-              const articleBucketKeys = [...atomViolationCounts.keys()].filter((k) => {
-                if (!k.startsWith('__article_')) return false;
-                const aid = parseInt(k.replace('__article_', ''), 10);
-                return !Number.isNaN(aid) && getArticleDomainId(aid) === domain.id;
-              });
-              const domainFindingsCount =
-                atomsInDomain.reduce((sum, a) => sum + (atomViolationCounts.get(a.atomId) ?? 0), 0) +
-                articleBucketKeys.reduce((sum, k) => sum + (atomViolationCounts.get(k) ?? 0), 0);
-              const isExpanded = expandedDomains[domain.id];
+          <div className="space-y-2 max-h-[min(75vh,32rem)] overflow-y-auto pe-1">
+            {semanticCategoriesOrdered.map((cat) => {
+              const n = categoryViolationCounts.get(cat.id) ?? 0;
+              if (cat.id === 'other' && n === 0) return null;
               return (
-                <div key={domain.id} className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
-                  <button
-                    type="button"
-                    onClick={() => toggleDomain(domain.id)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-background transition-colors text-start"
-                  >
-                    <div className="flex items-center gap-3">
-                      {domainFindingsCount > 0 ? (
-                        <XCircle className="w-5 h-5 text-error shrink-0" />
-                      ) : (
-                        <CheckCircle className="w-5 h-5 text-success shrink-0" />
-                      )}
-                      <span className="font-semibold text-text-main text-sm">
-                        {lang === 'ar' ? domain.titleAr : domain.titleEn}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {domainFindingsCount > 0 && (
-                        <Badge variant="error" className="text-xs">
-                          {domainFindingsCount}
-                        </Badge>
-                      )}
-                      {isExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-text-muted" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-text-muted" />
-                      )}
-                    </div>
-                  </button>
-                  {isExpanded && (
-                    <div className="bg-background border-t border-border p-2 max-h-[min(70vh,28rem)] overflow-y-auto space-y-0.5">
-                      {atomsInDomain.map((atom) => {
-                        const n = atomViolationCounts.get(atom.atomId) ?? 0;
-                        return (
-                          <div
-                            key={atom.atomId}
-                            className="flex justify-between items-start gap-2 py-1.5 px-2 rounded-md hover:bg-surface text-xs"
-                          >
-                            <span className="text-text-main text-start leading-snug" dir="rtl">
-                              <span className="font-mono text-[10px] text-text-muted whitespace-nowrap">{atom.atomId}</span>{' '}
-                              {atom.titleAr}
-                            </span>
-                            {n > 0 ? (
-                              <Badge variant="error" className="h-5 px-1.5 shrink-0">
-                                {n}
-                              </Badge>
-                            ) : (
-                              <CheckCircle className="w-3.5 h-3.5 text-success/60 shrink-0 mt-0.5" />
-                            )}
-                          </div>
-                        );
-                      })}
-                      {articleBucketKeys.map((k) => {
-                        const aid = parseInt(k.replace('__article_', ''), 10);
-                        const n = atomViolationCounts.get(k) ?? 0;
-                        const art = policyArticles.find((x) => x.id === aid);
-                        return (
-                          <div
-                            key={k}
-                            className="flex justify-between items-center gap-2 py-2 px-2 rounded-md bg-warning/5 border border-warning/20 text-xs"
-                          >
-                            <span className="text-text-main leading-snug" dir="rtl">
-                              {lang === 'ar'
-                                ? `مادة ${aid}${art?.titleAr ? ` — ${art.titleAr}` : ''} (بند غير محدد في البيانات)`
-                                : `Art ${aid}${art?.titleEn ? ` — ${art.titleEn}` : ''} (unspecified atom)`}
-                            </span>
-                            <Badge variant="error" className="h-5 px-1.5 shrink-0">
-                              {n}
-                            </Badge>
-                          </div>
-                        );
-                      })}
-                    </div>
+                <div
+                  key={cat.id}
+                  className="flex justify-between items-start gap-2 py-2.5 px-3 rounded-xl bg-surface border border-border shadow-sm"
+                >
+                  <div className="flex items-start gap-2 min-w-0">
+                    {n > 0 ? (
+                      <XCircle className="w-4 h-4 text-error shrink-0 mt-0.5" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 text-success/70 shrink-0 mt-0.5" />
+                    )}
+                    <span className="text-text-main text-sm leading-snug text-start" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                      {lang === 'ar' ? cat.titleAr : cat.titleEn}
+                    </span>
+                  </div>
+                  {n > 0 ? (
+                    <Badge variant="error" className="h-6 px-2 shrink-0 text-xs">
+                      {n}
+                    </Badge>
+                  ) : (
+                    <CheckCircle className="w-4 h-4 text-success/50 shrink-0" />
                   )}
                 </div>
               );

@@ -1,4 +1,5 @@
 import type { AnalysisFinding } from "@/api";
+import { normalizeAtomId } from "@/data/policyMap";
 
 type SummaryFinding = {
   title_ar?: string;
@@ -25,6 +26,7 @@ type CanonicalSummaryFinding = {
   start_line_chunk?: number | null;
   end_line_chunk?: number | null;
   page_number?: number | null;
+  primary_policy_atom_id?: string | null;
 };
 
 export type AnalysisPdfFinding = {
@@ -44,6 +46,8 @@ export type AnalysisPdfFinding = {
   pageNumber?: number | null;
   reviewStatus?: string;
   reviewedAt?: string;
+  /** Policy atom e.g. 4-1 for semantic grouping */
+  policyAtomId?: string;
 };
 
 export function mapAnalysisFindingsForPdf(
@@ -68,6 +72,7 @@ export function mapAnalysisFindingsForPdf(
       startLineChunk: f.start_line_chunk ?? undefined,
       endLineChunk: f.end_line_chunk ?? undefined,
       pageNumber: f.page_number ?? undefined,
+      policyAtomId: f.primary_policy_atom_id?.trim() || undefined,
     }));
   if (canon.length > 0) return canon;
 
@@ -94,6 +99,7 @@ export function mapAnalysisFindingsForPdf(
       pageNumber: f.pageNumber ?? undefined,
       reviewStatus: f.reviewStatus ?? undefined,
       reviewedAt: f.reviewedAt ?? undefined,
+      policyAtomId: normalizeAtomId(f.atomId, f.articleId) || undefined,
       };
     });
 
