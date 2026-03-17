@@ -240,13 +240,16 @@ export const RATIONALE_ONLY_SYSTEM_MSG = `مهمتك الوحيدة: لكل عن
 
 /**
  * Build lexicon terms string for injection into prompts.
- * Format: "- لفظ: نصاب | المادة: 5 | الشدة: high"
+ * Includes main term, variants (conjugations), and optional description/example for AI context.
  */
 export function buildLexiconTermsString(terms: Array<{
   term: string;
   gcam_article_id: number;
   severity_floor: string;
   gcam_article_title_ar?: string;
+  term_variants?: string[] | null;
+  description?: string | null;
+  example_usage?: string | null;
 }>): string {
   if (!terms || terms.length === 0) {
     return "لا توجد ألفاظ محظورة محددة حالياً. استخدم الحكم العام للمواد.";
@@ -254,7 +257,12 @@ export function buildLexiconTermsString(terms: Array<{
   return terms
     .map(t => {
       const title = t.gcam_article_title_ar ? ` (${t.gcam_article_title_ar})` : '';
-      return `- لفظ: "${t.term}" | المادة: ${t.gcam_article_id}${title} | الشدة: ${t.severity_floor}`;
+      const variants = (t.term_variants ?? []).filter(Boolean);
+      const variantsStr = variants.length > 0 ? ` | أشكال: ${variants.join('، ')}` : '';
+      let line = `- لفظ: "${t.term}"${variantsStr} | المادة: ${t.gcam_article_id}${title} | الشدة: ${t.severity_floor}`;
+      if (t.description?.trim()) line += `\n  وصف: ${t.description.trim()}`;
+      if (t.example_usage?.trim()) line += `\n  مثال: ${t.example_usage.trim()}`;
+      return line;
     })
     .join('\n');
 }
@@ -271,6 +279,9 @@ export function injectLexiconIntoPrompts(
     gcam_article_id: number;
     severity_floor: string;
     gcam_article_title_ar?: string;
+    term_variants?: string[] | null;
+    description?: string | null;
+    example_usage?: string | null;
   }>
 ): { router: string; judge: string } {
   const lexiconString = buildLexiconTermsString(lexiconTerms);

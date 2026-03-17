@@ -23,6 +23,7 @@ export interface LexiconTerm {
   gcam_article_id: number;
   severity_floor: string;
   gcam_article_title_ar?: string;
+  term_variants?: string[] | null;
 }
 
 export interface PassDefinition {
@@ -52,9 +53,14 @@ function buildArticlePayload(articles: GCAMArticle[]): string {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function buildGlossaryPrompt(articles: GCAMArticle[], lexiconTerms: LexiconTerm[]): string {
-  const lexiconList = lexiconTerms.map(t => `"${t.term}"`).join('، ');
+  const variantsList = (t: LexiconTerm) => [t.term, ...(t.term_variants ?? [])].filter(Boolean);
+  const lexiconList = lexiconTerms.map(t => variantsList(t).map(v => `"${v}"`).join('، ')).join(' ؛ ');
   const lexiconDetails = lexiconTerms
-    .map(t => `- "${t.term}" → المادة ${t.gcam_article_id} | الشدة: ${t.severity_floor}`)
+    .map(t => {
+      const vs = (t.term_variants ?? []).filter(Boolean);
+      const extra = vs.length > 0 ? ` (أشكال: ${vs.join('، ')})` : '';
+      return `- "${t.term}"${extra} → المادة ${t.gcam_article_id} | الشدة: ${t.severity_floor}`;
+    })
     .join('\n');
   
   const articlePayload = buildArticlePayload(articles);

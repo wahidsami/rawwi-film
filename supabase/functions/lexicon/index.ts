@@ -35,6 +35,7 @@ function toCamel(row: Record<string, unknown>): Record<string, unknown> {
     gcam_article_title_ar: "gcam_article_title_ar",
     description: "description",
     example_usage: "example_usage",
+    term_variants: "term_variants",
     is_active: "is_active",
     created_by: "created_by",
     created_at: "created_at",
@@ -176,6 +177,9 @@ Deno.serve(async (req: Request) => {
     const gcam_article_title_ar = typeof body.gcam_article_title_ar === "string" ? body.gcam_article_title_ar : null;
     const description = typeof body.description === "string" ? body.description : null;
     const example_usage = typeof body.example_usage === "string" ? body.example_usage : null;
+    const term_variants = Array.isArray(body.term_variants)
+      ? (body.term_variants as unknown[]).filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((s) => s.trim())
+      : [];
 
     const atomValidation = await validateArticleAtomLink(
       supabase as unknown as { from: (table: string) => { select: (cols: string) => any } },
@@ -195,6 +199,7 @@ Deno.serve(async (req: Request) => {
       gcam_article_title_ar,
       description,
       example_usage,
+      term_variants,
       is_active: true,
       created_by: userId,
     };
@@ -221,6 +226,7 @@ Deno.serve(async (req: Request) => {
           gcam_article_title_ar: row.gcam_article_title_ar,
           description: row.description,
           example_usage: row.example_usage,
+          term_variants: row.term_variants,
           is_active: true,
           last_changed_by: userId,
           last_change_reason: "Reactivated after previous deactivation",
@@ -303,6 +309,11 @@ Deno.serve(async (req: Request) => {
     if (body.gcam_article_title_ar !== undefined) updates.gcam_article_title_ar = body.gcam_article_title_ar == null ? null : String(body.gcam_article_title_ar);
     if (body.description !== undefined) updates.description = body.description == null ? null : String(body.description);
     if (body.example_usage !== undefined) updates.example_usage = body.example_usage == null ? null : String(body.example_usage);
+    if (body.term_variants !== undefined) {
+      updates.term_variants = Array.isArray(body.term_variants)
+        ? (body.term_variants as unknown[]).filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((s) => s.trim())
+        : [];
+    }
     if (typeof body.is_active === "boolean") updates.is_active = body.is_active;
 
     // Audit: set last_changed_by / last_change_reason if columns exist (migration 0023)
@@ -365,6 +376,59 @@ Deno.serve(async (req: Request) => {
       result_status: "success",
     }).catch((e) => console.warn("[lexicon] audit:", e));
     return json(toCamel((updated as Record<string, unknown>) ?? {}));
+  }
+
+  // POST /lexicon/generate-conjugations — AI-generated Arabic conjugations/forms for a term
+  if (method === "POST" && rest === "generate-conjugations") {
+    let body: { term?: string };
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+    const termRaw = body.term;
+    if (typeof termRaw !== "string" || !termRaw.trim()) {
+      return json({ error: "term is required" }, 400);
+    }
+    const term = termRaw.trim();
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) {
+      console.warn("[lexicon] OPENAI_API_KEY not set");
+      return json({ error: "Conjugation service not configured" }, 503);
+    }
+    const systemMsg = `You are a linguist. Given an Arabic word (verb or noun), output a JSON array of common conjugations, derived forms, or variants that might appear in text (e.g. for ضرب: يضرب، تضرب، ضربا، مضروب، اضرب، نضرب). Include the original word. Output only a JSON array of strings, no other text. Example: ["ضرب","يضرب","تضرب","ضربا","مضروب"]`;
+    const userMsg = `List Arabic conjugations/forms for this word (output JSON array only): ${term}`;
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{ role: "system", content: systemMsg }, { role: "user", content: userMsg }],
+          temperature: 0.2,
+          max_tokens: 500,
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[lexicon] OpenAI error:", res.status, errText);
+        return json({ error: "Conjugation service error" }, 502);
+      }
+      const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+      const content = data?.choices?.[0]?.message?.content?.trim();
+      if (!content) return json({ variants: [] });
+      const parsed = JSON.parse(content) as unknown;
+      const variants = Array.isArray(parsed)
+        ? (parsed as unknown[]).filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((s) => s.trim())
+        : [];
+      return json({ variants });
+    } catch (e) {
+      console.error("[lexicon] generate-conjugations error:", e);
+      return json({ error: "Failed to generate conjugations" }, 500);
+    }
   }
 
   return json({ error: "Not Found" }, 404);

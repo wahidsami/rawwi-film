@@ -268,6 +268,9 @@ export const lexiconApi = {
   deactivateTerm: (id: string, changedBy: string, reason?: string) =>
     httpClient.put(`/lexicon/terms/${id}`, { is_active: false, changed_by: changedBy, change_reason: reason }),
   getHistory: (id: string): Promise<LexiconHistoryEntry[]> => httpClient.get(`/lexicon/history/${id}`),
+  /** Generate Arabic conjugations/forms for a term (AI). Returns variants to store as term_variants. */
+  generateConjugations: (term: string): Promise<{ variants: string[] }> =>
+    httpClient.post('/lexicon/generate-conjugations', { term }),
 };
 
 export const reportsApi = {

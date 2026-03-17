@@ -4,6 +4,7 @@ import { useLangStore } from '@/store/langStore';
 import { useDataStore, LexiconTerm } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
 import { getPolicyArticles } from '@/data/policyMap';
+import { getCanonicalAtomOptions } from '@/data/canonicalAtomGcamMap';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -12,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
-import { Plus, Search, FileDown, FileUp, FileText, Edit2, Trash2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, FileDown, FileUp, FileText, Edit2, Trash2, AlertCircle, ChevronLeft, ChevronRight, Sparkles, X } from 'lucide-react';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate } from '@/utils/dateFormat';
 import { lexiconApi } from '@/api';
@@ -419,7 +420,8 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
   const { lexiconTerms, addLexiconTerm, updateLexiconTerm } = useDataStore();
   const { user } = useAuthStore();
 
-  const defaultForm: Partial<LexiconTerm> = {
+  type FormState = Partial<LexiconTerm> & { canonical_atom?: string };
+  const defaultForm: FormState = {
     term: '',
     term_type: 'word',
     category: 'profanity',
@@ -429,11 +431,13 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
     gcam_atom_id: '',
     gcam_article_title_ar: '',
     description: '',
-    example_usage: ''
+    example_usage: '',
+    term_variants: [],
+    canonical_atom: '',
   };
 
-  const [formData, setFormData] = useState<Partial<LexiconTerm>>(defaultForm);
-
+  const [formData, setFormData] = useState<FormState>(defaultForm);
+  const [generatingConjugations, setGeneratingConjugations] = useState(false);
   const [error, setError] = useState('');
 
   // Reset form when modal opens or termId/lexiconTerms change; derive existingTerm inside effect to avoid stale closure
@@ -441,13 +445,41 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
     if (isOpen) {
       const existingTerm = termId ? lexiconTerms.find(t => t.id === termId) : null;
       if (existingTerm) {
-        setFormData(existingTerm);
+        setFormData({
+          ...existingTerm,
+          term_variants: existingTerm.term_variants ?? [],
+          canonical_atom: '',
+        });
       } else {
         setFormData(defaultForm);
       }
       setError('');
     }
   }, [isOpen, termId, lexiconTerms]);
+
+  const handleGenerateConjugations = async () => {
+    const raw = formData.term?.trim();
+    if (!raw) {
+      setError(lang === 'ar' ? 'أدخل المصطلح أولاً' : 'Enter the term first');
+      return;
+    }
+    setError('');
+    setGeneratingConjugations(true);
+    try {
+      const { variants } = await lexiconApi.generateConjugations(raw);
+      const existing = formData.term_variants ?? [];
+      const combined = [...new Set([...existing, ...variants])].filter((v) => v.trim() && v !== raw);
+      setFormData({ ...formData, term_variants: combined });
+    } catch (e) {
+      setError(lang === 'ar' ? 'فشل توليد التصريفات' : 'Failed to generate conjugations');
+    } finally {
+      setGeneratingConjugations(false);
+    }
+  };
+
+  const removeVariant = (v: string) => {
+    setFormData({ ...formData, term_variants: (formData.term_variants ?? []).filter((x) => x !== v) });
+  };
 
   const handleSubmit = () => {
     setError('');
@@ -467,11 +499,16 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
       return;
     }
 
+    const { canonical_atom: _, ...rest } = formData;
+    const payload = { ...rest };
+    if (Array.isArray(payload.term_variants) && payload.term_variants.length === 0) {
+      delete (payload as Partial<LexiconTerm>).term_variants;
+    }
     if (termId) {
-      updateLexiconTerm(termId, formData, user?.name || 'System', 'Admin edit');
+      updateLexiconTerm(termId, payload, user?.name || 'System', 'Admin edit');
     } else {
       addLexiconTerm({
-        ...(formData as LexiconTerm),
+        ...(payload as LexiconTerm),
         id: `LEX-${Math.floor(Math.random() * 10000)}`,
         normalized_term: normalized,
         created_by: user?.name || 'System',
@@ -508,6 +545,45 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
             ? 'لا يُطبَّق تطبيع عربي (أ/إ/آ، ى/ي، ة/ه، التشكيل، الكشيدة). يجب أن يطابق المصطلح النص حرفياً.'
             : 'Arabic normalization is not applied (أ/إ/آ, ى/ي, ة/ه, diacritics, kashida). Terms must match script text exactly.'}
         </p>
+
+        {/* Optional: set Article + Atom from Canonical atom */}
+        <div>
+          <label className="block text-sm font-medium text-text-main mb-1">
+            {lang === 'ar' ? 'نوع المخالفة (إطار الذرات)' : 'Canonical atom (optional)'}
+          </label>
+          <Select
+            value={formData.canonical_atom ?? ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (!val) {
+                setFormData({ ...formData, canonical_atom: undefined });
+                return;
+              }
+              const opt = getCanonicalAtomOptions().find((o) => o.id === val);
+              if (opt) {
+                const article = getPolicyArticles().find((a) => a.articleId === opt.articleId);
+                setFormData({
+                  ...formData,
+                  canonical_atom: val,
+                  gcam_article_id: opt.articleId,
+                  gcam_atom_id: opt.atomId ?? '',
+                  gcam_article_title_ar: article?.title_ar ?? '',
+                });
+              }
+            }}
+            options={[
+              { label: lang === 'ar' ? '— لا تحديد —' : '— None —', value: '' },
+              ...getCanonicalAtomOptions().map((o) => ({
+                label: lang === 'ar' ? `${o.labelAr} (م ${o.articleId})` : `${o.labelEn} (Art ${o.articleId})`,
+                value: o.id,
+              })),
+            ]}
+            className="w-full"
+          />
+          <p className="text-xs text-text-muted mt-0.5">
+            {lang === 'ar' ? 'اختياري: يملأ المادة والذرة تلقائياً.' : 'Optional: fills Article and Atom automatically.'}
+          </p>
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Select
@@ -559,6 +635,55 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
           {formData.term_type === 'phrase' && (lang === 'ar' ? 'عبارة: مطابقة جزء من النص؛ غير حساسة لحالة الأحرف في اللاتينية.' : 'phrase: substring match; case-insensitive in Latin.')}
           {formData.term_type === 'regex' && (lang === 'ar' ? 'تعبير منتظم: نمط خام؛ أعلام gui (لا تحويل لحروف صغيرة).' : 'regex: raw pattern; flags gui (no lowercasing).')}
         </p>
+
+        {/* Variants / Conjugations: tags + Generate button */}
+        {formData.term_type !== 'regex' && (
+          <div>
+            <label className="block text-sm font-medium text-text-main mb-1">
+              {lang === 'ar' ? 'تصريفات / أشكال (اختياري)' : 'Variants / Conjugations (optional)'}
+            </label>
+            <div className="flex flex-wrap items-center gap-2 p-2 border border-border rounded-md bg-background min-h-[44px]">
+              {(formData.term_variants ?? []).map((v) => (
+                <span
+                  key={v}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-primary/15 text-primary text-sm"
+                >
+                  <span dir="auto">{v}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeVariant(v)}
+                    className="p-0.5 hover:bg-primary/30 rounded"
+                    aria-label={lang === 'ar' ? 'إزالة' : 'Remove'}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateConjugations}
+                disabled={generatingConjugations || !formData.term?.trim()}
+                className="flex items-center gap-1.5"
+              >
+                {generatingConjugations ? (
+                  <span className="animate-pulse">{lang === 'ar' ? 'جاري…' : 'Generating…'}</span>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    {lang === 'ar' ? 'توليد تصريفات' : 'Generate conjugations'}
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-text-muted mt-0.5">
+              {lang === 'ar'
+                ? 'مثال: ضرب → يضرب، تضرب، ضربا، مضروب. تُطابق التحليل النص لأي من هذه الأشكال.'
+                : 'e.g. ضرب → يضرب، تضرب. Analysis will match any of these forms in the script.'}
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <Select
@@ -616,13 +741,21 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
           value={formData.description || ''}
           onChange={e => setFormData({ ...formData, description: e.target.value })}
           rows={2}
+          placeholder={lang === 'ar' ? 'وصف اختياري للمصطلح (للمرجعية والتقارير)' : 'Optional description (for reference and reports)'}
         />
+        <p className="text-xs text-text-muted -mt-2">
+          {lang === 'ar' ? 'يُخزَّن للمرجعية ويمكن استخدامه في التقارير أو كسياق للتحليل.' : 'Stored for reference; can be shown in reports or used as context for analysis.'}
+        </p>
         <Textarea
           label={t('exampleUsage')}
           value={formData.example_usage || ''}
           onChange={e => setFormData({ ...formData, example_usage: e.target.value })}
           rows={2}
+          placeholder={lang === 'ar' ? 'مثال استخدام في جملة' : 'Example sentence using the term'}
         />
+        <p className="text-xs text-text-muted -mt-2">
+          {lang === 'ar' ? 'يساعد المحللين ويمكن أن يُقدَّم كسياق للذكاء الاصطناعي عند المطابقة.' : 'Helps analysts and can be provided as context to the AI when the term is matched.'}
+        </p>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-border mt-2">
           <Button variant="outline" onClick={onClose}>{t('cancel')}</Button>

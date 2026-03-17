@@ -282,10 +282,10 @@ export async function processChunkJudge(
     ALWAYS_CHECK_ARTICLES_ids: [...ALWAYS_CHECK_ARTICLES],
   });
 
-  // 0) Fetch lexicon terms for prompt injection
+  // 0) Fetch lexicon terms for prompt injection (include variants, description, example for AI context)
   const { data: lexiconTerms } = await supabase
     .from("slang_lexicon")
-    .select("term, gcam_article_id, severity_floor, gcam_article_title_ar")
+    .select("term, gcam_article_id, severity_floor, gcam_article_title_ar, term_variants, description, example_usage")
     .eq("is_active", true);
   
   const terms = lexiconTerms || [];

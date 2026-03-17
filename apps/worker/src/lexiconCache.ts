@@ -11,6 +11,8 @@ export type LexiconTerm = {
   gcam_article_id: number;
   gcam_atom_id: string | null;
   gcam_article_title_ar: string | null;
+  /** Conjugations/forms (e.g. يضرب، تضرب for ضرب). All are matched like the main term. */
+  term_variants?: string[] | null;
 };
 
 export type LexiconMatch = {
@@ -71,7 +73,7 @@ export class LexiconCache {
     try {
       const { data, error } = await this.supabase
         .from("slang_lexicon")
-        .select("id, term, term_type, severity_floor, enforcement_mode, gcam_article_id, gcam_atom_id, gcam_article_title_ar, updated_at")
+        .select("id, term, term_type, severity_floor, enforcement_mode, gcam_article_id, gcam_atom_id, gcam_article_title_ar, term_variants, updated_at")
         .eq("is_active", true)
         .order("term");
       if (error) {
@@ -100,35 +102,41 @@ export class LexiconCache {
 
   findMatches(text: string): LexiconMatch[] {
     const results: LexiconMatch[] = [];
+    const stringsToMatch = (t: typeof cache[0]) => [t.term, ...(t.term_variants ?? [])].filter((s) => s && s.trim().length > 0);
     for (const term of cache) {
       if (shouldSkipStandaloneWordTerm(term)) continue;
-      let re: RegExp;
-      if (term.term_type === "word") {
-        re = wordBoundaryRegex(term.term);
-      } else if (term.term_type === "phrase") {
-        const escaped = term.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        re = new RegExp(escaped, "giu");
-      } else {
+      if (term.term_type === "regex") {
         try {
-          re = new RegExp(term.term, "gui");
+          const re = new RegExp(term.term, "gui");
+          let m: RegExpExecArray | null;
+          re.lastIndex = 0;
+          while ((m = re.exec(text)) !== null) {
+            const startIndex = m.index;
+            const endIndex = m.index + (m[0]?.length ?? 0);
+            const { line, column } = getLineAndColumn(text, startIndex);
+            results.push({ term, matchedText: m[0] ?? "", startIndex, endIndex, line, column });
+          }
         } catch {
-          continue;
+          /* skip invalid regex */
         }
+        continue;
       }
-      let m: RegExpExecArray | null;
-      re.lastIndex = 0;
-      while ((m = re.exec(text)) !== null) {
-        const startIndex = m.index;
-        const endIndex = m.index + (m[0]?.length ?? 0);
-        const { line, column } = getLineAndColumn(text, startIndex);
-        results.push({
-          term,
-          matchedText: m[0] ?? "",
-          startIndex,
-          endIndex,
-          line,
-          column,
-        });
+      for (const str of stringsToMatch(term)) {
+        let re: RegExp;
+        if (term.term_type === "word") {
+          re = wordBoundaryRegex(str);
+        } else {
+          const escaped = str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          re = new RegExp(escaped, "giu");
+        }
+        let m: RegExpExecArray | null;
+        re.lastIndex = 0;
+        while ((m = re.exec(text)) !== null) {
+          const startIndex = m.index;
+          const endIndex = m.index + (m[0]?.length ?? 0);
+          const { line, column } = getLineAndColumn(text, startIndex);
+          results.push({ term, matchedText: m[0] ?? "", startIndex, endIndex, line, column });
+        }
       }
     }
     return results;

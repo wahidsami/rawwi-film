@@ -161,6 +161,8 @@ export interface LexiconTerm {
   gcam_article_title_ar?: string;
   description?: string;
   example_usage?: string;
+  /** Conjugations/forms (e.g. يضرب، تضرب for ضرب). All matched during analysis. */
+  term_variants?: string[];
   created_by: string;
   /** Display name of user who added the term (from API). */
   created_by_name?: string | null;
