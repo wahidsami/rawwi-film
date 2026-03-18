@@ -302,6 +302,54 @@ function locateHighlightOnCurrentPage(
   return locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts);
 }
 
+/**
+ * Map a global [start,end) span in workspacePlain (pages joined with \\n\\n) to viewer page + local offsets.
+ */
+function workspaceGlobalSpanToPageLocal(
+  globalStart: number,
+  globalEnd: number,
+  pages: Array<{ pageNumber: number; content: string }>
+): { pageNumber: number; localStart: number; localEnd: number } | null {
+  if (globalEnd <= globalStart || !pages.length) return null;
+  const sorted = [...pages].sort((a, b) => a.pageNumber - b.pageNumber);
+  const pn = viewerPageNumberFromStartOffset(sorted, globalStart);
+  if (pn == null) return null;
+  const idx = sorted.findIndex((p) => p.pageNumber === pn);
+  if (idx < 0) return null;
+  const g0 = globalStartOfViewerPage(sorted, idx);
+  const pageLen = (sorted[idx]?.content ?? '').length;
+  const ls = Math.max(0, Math.min(pageLen, globalStart - g0));
+  const le = Math.max(ls + 1, Math.min(pageLen, globalEnd - g0));
+  if (ls >= pageLen) return null;
+  return { pageNumber: pn, localStart: ls, localEnd: Math.min(pageLen, le) };
+}
+
+/** Ctrl+F the full workspace text (all pages), then map hit to viewer page. */
+function resolveFindingViaWorkspaceSearch(
+  f: AnalysisFinding,
+  workspacePlain: string,
+  pages: Array<{ pageNumber: number; content: string }>,
+  locateInFullDoc: (
+    content: string,
+    finding: AnalysisFinding,
+    opts?: { sliceGlobalStart?: number; pageSlice?: boolean }
+  ) => { start: number; end: number; matched: boolean } | null
+): { pageNumber: number; localStart: number; localEnd: number } | null {
+  if (!workspacePlain.trim() || !pages.length) return null;
+  let span = locateSpanByEvidenceSearch(workspacePlain, f);
+  if (!span) {
+    const loc = locateInFullDoc(workspacePlain, f);
+    if (loc) span = { start: loc.start, end: loc.end };
+  }
+  if (!span || span.end <= span.start) return null;
+  const ev = (f.evidenceSnippet ?? '').trim();
+  if (ev.length >= 4) {
+    const t = tightenHighlightRangeToEvidence(workspacePlain, span.start, span.end, ev);
+    span = { start: t.start, end: t.end };
+  }
+  return workspaceGlobalSpanToPageLocal(span.start, span.end, pages);
+}
+
 function safeUploadFileName(fileName: string): string {
   const trimmed = fileName.trim();
   const dotIdx = trimmed.lastIndexOf('.');
@@ -1637,41 +1685,92 @@ export function ScriptWorkspace() {
     [editorData?.pages]
   );
 
+  /** Full script as stored in workspace (page1 + \\n\\n + page2 + …) — same string search space as Ctrl+F across the doc. */
+  const workspacePlainFull = useMemo(() => {
+    if (!editorData?.pages?.length) {
+      const c = editorData?.content ?? '';
+      return c.trim() ? c : '';
+    }
+    return pagesSortedForViewer.map((p) => p.content ?? '').join('\n\n');
+  }, [editorData?.pages, editorData?.content, pagesSortedForViewer]);
+
+  /** Per-finding: where evidence actually appears in the workspace (page + local offsets). */
+  const findingWorkspaceResolve = useMemo(() => {
+    const map = new Map<string, { pageNumber: number; localStart: number; localEnd: number }>();
+    if (!workspacePlainFull.trim() || !reportFindings.length) return map;
+    const pages =
+      pagesSortedForViewer.length > 0
+        ? pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
+        : [{ pageNumber: 1, content: workspacePlainFull }];
+    for (const f of reportFindings) {
+      const hit = resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
+      if (hit) map.set(f.id, hit);
+    }
+    return map;
+  }, [workspacePlainFull, reportFindings, pagesSortedForViewer, locateFindingInContent]);
+
   const findingsOnPageWithLocalOffsets = useMemo(() => {
     if (!currentPageData || !reportFindings.length) return [];
     const pageLen = currentPageData.content?.length ?? 0;
-    const list = reportFindings.filter((f) => {
-      const vpn = viewerPageNumberFromStartOffset(
-        pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' })),
-        f.startOffsetGlobal
-      );
-      if (vpn != null) return vpn === safeCurrentPage;
-      if (f.pageNumber != null && f.pageNumber === safeCurrentPage) return true;
-      return (
-        f.startOffsetGlobal != null &&
-        f.endOffsetGlobal != null &&
-        f.endOffsetGlobal > pageStart &&
-        f.startOffsetGlobal < pageEnd
-      );
-    });
-    return list
+    const pagePlain = currentPageData.content ?? '';
+
+    return reportFindings
       .map((f) => {
-        if (f.startOffsetGlobal != null && f.endOffsetGlobal != null && f.endOffsetGlobal > pageStart && f.startOffsetGlobal < pageEnd) {
+        const hit = findingWorkspaceResolve.get(f.id);
+        if (hit && hit.pageNumber === safeCurrentPage) {
           return {
             ...f,
-            startOffsetGlobal: Math.max(0, f.startOffsetGlobal - pageStart),
-            endOffsetGlobal: Math.min(pageLen, f.endOffsetGlobal - pageStart),
+            startOffsetGlobal: Math.max(0, Math.min(pageLen, hit.localStart)),
+            endOffsetGlobal: Math.max(1, Math.min(pageLen, hit.localEnd)),
           } as AnalysisFinding;
         }
-        const loc = locateFindingInContent(currentPageData.content ?? '', f, {
-          pageSlice: true,
-          sliceGlobalStart: pageStart,
-        });
-        if (!loc) return null;
-        return { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } as AnalysisFinding;
+        const onPageOnly =
+          locateSpanByEvidenceSearch(pagePlain, f, {
+            pageSlice: true,
+            sliceGlobalStart: pageStart,
+          }) ??
+          locateFindingInContent(pagePlain, f, {
+            pageSlice: true,
+            sliceGlobalStart: pageStart,
+          });
+        if (onPageOnly) {
+          return {
+            ...f,
+            startOffsetGlobal: onPageOnly.start,
+            endOffsetGlobal: onPageOnly.end,
+          } as AnalysisFinding;
+        }
+        const vpn = viewerPageNumberFromStartOffset(
+          pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' })),
+          f.startOffsetGlobal
+        );
+        if (vpn === safeCurrentPage || (f.pageNumber != null && f.pageNumber === safeCurrentPage)) {
+          if (
+            f.startOffsetGlobal != null &&
+            f.endOffsetGlobal != null &&
+            f.endOffsetGlobal > pageStart &&
+            f.startOffsetGlobal < pageEnd
+          ) {
+            return {
+              ...f,
+              startOffsetGlobal: Math.max(0, f.startOffsetGlobal - pageStart),
+              endOffsetGlobal: Math.min(pageLen, f.endOffsetGlobal - pageStart),
+            } as AnalysisFinding;
+          }
+        }
+        return null;
       })
       .filter(Boolean) as AnalysisFinding[];
-  }, [currentPageData, pageStart, pageEnd, reportFindings, safeCurrentPage, locateFindingInContent, pagesSortedForViewer]);
+  }, [
+    currentPageData,
+    pageStart,
+    pageEnd,
+    reportFindings,
+    safeCurrentPage,
+    locateFindingInContent,
+    pagesSortedForViewer,
+    findingWorkspaceResolve,
+  ]);
   const pageFindingSegments = useMemo(
     () =>
       isPageMode && currentPageData?.content && findingsOnPageWithLocalOffsets.length > 0
@@ -1850,11 +1949,15 @@ export function ScriptWorkspace() {
       let resolved: AnalysisFinding[];
 
       if (scriptHashMismatch) {
-        /** Offsets/page slices are unreliable — try every finding against this page's text only. */
+        /** Offsets unreliable — workspace-wide search first, then this page. */
         onPage = reportFindings;
         setHighlightExpectedCount(reportFindings.length);
         resolved = reportFindings
           .map((f) => {
+            const ws = findingWorkspaceResolve.get(f.id);
+            if (ws && ws.pageNumber === safeCurrentPage) {
+              return { ...f, startOffsetGlobal: ws.localStart, endOffsetGlobal: ws.localEnd };
+            }
             const span =
               locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts) ??
               locateSpanByEvidenceSearch(domRaw, f, pageSliceOpts);
@@ -1869,6 +1972,8 @@ export function ScriptWorkspace() {
           .filter(Boolean) as AnalysisFinding[];
       } else {
         onPage = reportFindings.filter((f) => {
+          const ws = findingWorkspaceResolve.get(f.id);
+          if (ws && ws.pageNumber === safeCurrentPage) return true;
           const vpn = viewerPageNumberFromStartOffset(pagesSorted, f.startOffsetGlobal);
           if (vpn != null) return vpn === safeCurrentPage;
           if (f.pageNumber != null && f.pageNumber === safeCurrentPage) return true;
@@ -1880,6 +1985,10 @@ export function ScriptWorkspace() {
         setHighlightExpectedCount(onPage.length);
         resolved = onPage
           .map((f) => {
+            const ws = findingWorkspaceResolve.get(f.id);
+            if (ws && ws.pageNumber === safeCurrentPage) {
+              return { ...f, startOffsetGlobal: ws.localStart, endOffsetGlobal: ws.localEnd };
+            }
             const vpnF = viewerPageNumberFromStartOffset(pagesSorted, f.startOffsetGlobal);
             const sp = f.startOffsetPage ?? null;
             const ep = f.endOffsetPage ?? null;
@@ -1982,6 +2091,7 @@ export function ScriptWorkspace() {
     applyHighlightMarks,
     findingsOnPageWithLocalOffsets.length,
     workspaceViewMode,
+    findingWorkspaceResolve,
   ]);
 
   /** After page switch + highlight paint, scroll to the selected finding (click handler's setTimeout often ran too early). */
@@ -2046,6 +2156,7 @@ export function ScriptWorkspace() {
   const handleFindingCardClick = (f: AnalysisFinding) => {
     if (IS_DEV) console.log(`[ScriptWorkspace] Card clicked for ${f.id}`);
     setSelectedFindingId(f.id);
+    const wsHit = findingWorkspaceResolve.get(f.id);
     const pagesForVpn = (editorData?.pages ?? []).map((p) => ({
       pageNumber: p.pageNumber,
       content: p.content ?? '',
@@ -2054,7 +2165,7 @@ export function ScriptWorkspace() {
       pagesForVpn.length > 0
         ? viewerPageNumberFromStartOffset([...pagesForVpn].sort((a, b) => a.pageNumber - b.pageNumber), f.startOffsetGlobal)
         : null;
-    const targetPage = vpn ?? f.pageNumber ?? null;
+    const targetPage = wsHit?.pageNumber ?? vpn ?? f.pageNumber ?? null;
     if (isPageMode && targetPage != null && targetPage >= 1 && targetPage <= totalPages) {
       setCurrentPage(targetPage);
     }
@@ -2655,11 +2766,14 @@ export function ScriptWorkspace() {
                         <span className="text-[10px] font-mono text-text-muted">
                           Art {formatAtomDisplay(f.articleId, f.atomId)}
                           {(() => {
-                            const dp = displayPageForFinding(
-                              f.startOffsetGlobal,
-                              pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' })),
-                              f.pageNumber ?? null
-                            );
+                            const ws = findingWorkspaceResolve.get(f.id);
+                            const dp =
+                              ws?.pageNumber ??
+                              displayPageForFinding(
+                                f.startOffsetGlobal,
+                                pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' })),
+                                f.pageNumber ?? null
+                              );
                             return dp != null ? (
                               <span className="ms-2 text-primary font-semibold">
                                 {lang === 'ar' ? `صفحة ${dp}` : `p.${dp}`}
