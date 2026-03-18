@@ -185,26 +185,7 @@ Deno.serve(async (req: Request) => {
         .update({ current_version_id: version.id })
         .eq("id", scriptId);
 
-    // Trigger async extraction (fire-and-forget)
-    const extractUrl = `${req.url.replace('/raawi-script-upload', '/extract')}`;
-    console.log(`[raawi-script-upload] Triggering extraction at ${extractUrl}`);
-
-    fetch(extractUrl, {
-        method: 'POST',
-        headers: {
-            'Authorization': req.headers.get('Authorization') || '',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            versionId: version.id,
-            scriptId: scriptId,
-            storagePath: storagePath,
-            fileType: ext,
-        }),
-    }).catch(err => {
-        console.error("[raawi-script-upload] Failed to trigger extraction:", err);
-        // Don't fail the upload - extraction can be retried manually
-    });
+    // Extraction: client must POST /extract (versionId only for PDF/DOCX server extract, or text for TXT).
 
     return json({
         success: true,

@@ -27,18 +27,18 @@ If **`pages.length > 0`**, the UI switches to **page mode** (PDF-like viewer). O
 
 1. User picks a file (**TXT**, **DOCX**, or **PDF**).
 2. App uploads to storage and calls **`createVersion`** on the script (new `script_version` row).
-3. App extracts text **in the browser** (except TXT, which is read as text).
-4. App calls **`extractText`** on the Edge **`/extract`** (or equivalent) with either:
-   - a single string, or  
-   - a **`pages`** array: `{ pageNumber, text, html? }[]`.
+3. App calls **`POST /extract`**:
+   - **TXT:** body includes `text` (read in the browser).
+   - **PDF / DOCX:** body is `{ versionId }` only; **Edge** downloads the file from Storage and runs **authoritative extraction** (`_shared/serverExtract.ts`: PDF.js on the server, DOCX via OOXML + scene/heuristic paging). No client-side Mammoth/PDF.js for the canonical pipeline.
+4. Optional legacy path: **`pages`** array `{ pageNumber, text, html? }[]` still supported (e.g. imports).
 
 The extract function persists:
 
-- **`script_text`** — canonical plain text for analysis (and usually HTML for DOCX).
-- **`script_pages`** (when `pages` are sent) — one row per page: `content`, optional `content_html`.
-- Sections, etc., as implemented in `supabase/functions/extract/index.ts`.
+- **`script_text.content`** — exact concatenation of `script_pages.content` with **`\\n\\n`** between pages (same string used for analysis and plain viewer).
+- **`script_pages`** — `content`, optional `content_html`, **`start_offset_global` / `end_offset_global`** (when migration applied).
+- Sections, etc., in `supabase/functions/extract/index.ts`.
 
-Analysis jobs always run against the **canonical** string in **`script_text.content`** (normalized, with a fixed separator between pages — see §3).
+**Assign flow (`raawi-script-upload`):** after upload, the client must call **`/extract`** (auto fire-and-forget was removed to avoid races).
 
 ### 2.2 TXT
 
@@ -47,7 +47,7 @@ Analysis jobs always run against the **canonical** string in **`script_text.cont
 
 ### 2.3 PDF
 
-- **Client:** `extractTextFromPdfPerPage` (PDF.js) reads **each PDF page** and produces `{ pageNumber, text, html? }`.
+- **Server:** PDF.js per-page text (RTL line order same idea as former client extractor). **`content_html`** is null → workspace shows **plain** `content` with `whitespace-pre-wrap`.
 - **Server:** Pages are stored in **`script_pages`**.  
 - **`script_text.content`** is the concatenation of page texts joined by **`\\n\\n`** (two newlines). That separator is part of the **global offset** space used by findings.
 
@@ -55,12 +55,8 @@ Analysis jobs always run against the **canonical** string in **`script_text.cont
 
 ### 2.4 DOCX
 
-- **Client:** `extractDocxWithPages` uses Mammoth for **plain + HTML**.
-- **Page splits:**
-  - If the Word file has **explicit page breaks** (OOXML), the client splits into **real** pages → workspace pages match Word pages.
-  - If there are **no** page breaks (or only one virtual page), the client may send a **single** blob (no multi-page array) or split by **heuristic** (e.g. approximate character count per page) — see `documentExtract.ts` and `PLAN_SCRIPT_PAGES_AND_FORMATTING.md`.
-
-When **multiple** DOCX pages are sent, each page can carry **`content_html`** for a **formatted** viewer on that page.
+- **Server:** OOXML walk (`word/document.xml`) — Word page breaks / `lastRenderedPageBreak` → real pages; else **scene headings** (المشهد / INT./EXT.); else **virtual** chunks by size; long blocks subdivided (~print-sized slices). **`content_html`** is null → **plain** viewer (same string as analysis).
+- **`documentExtract.ts`** remains for local/tests; uploads no longer depend on Mammoth for canonical text.
 
 ---
 

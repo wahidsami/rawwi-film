@@ -23,6 +23,12 @@ import {
   JUDGE_SYSTEM_MSG
 } from "../_shared/aiConstants.ts";
 import { offsetRangeToPageMinMax, type ScriptPageRow } from "../_shared/offsetToPage.ts";
+import {
+  sanitizePageText,
+  computePageGlobalOffsets,
+  extractPdfPageTexts,
+  extractDocxPageTexts,
+} from "../_shared/serverExtract.ts";
 
 const BUCKET = "uploads";
 
@@ -136,6 +142,95 @@ async function runIngest(
   return { jobId: job.id };
 }
 
+const PAGE_JOIN = "\n\n";
+
+async function persistMultipageExtract(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  correlationId: string,
+  versionId: string,
+  scriptId: string,
+  pagesInput: Array<{ pageNumber?: number; text?: string; html?: string | null }>,
+  enqueueAnalysis: boolean,
+  userId: string,
+  v: ScriptVersionRow
+): Promise<{ error?: string }> {
+  const sorted = [...pagesInput].sort((a, b) => (a.pageNumber ?? 0) - (b.pageNumber ?? 0));
+  const pageContents = sorted.map((p) => sanitizePageText(String(p.text ?? "")));
+  const canonicalContent = pageContents.join(PAGE_JOIN);
+  const contentHash = await sha256Hash(canonicalContent);
+  const extractedTextHash = await sha256Hash(canonicalContent);
+
+  await supabase
+    .from("script_versions")
+    .update({ extraction_status: "extracting" })
+    .eq("id", versionId);
+
+  const { error: delErr } = await supabase.from("script_pages").delete().eq("version_id", versionId);
+  if (delErr) {
+    console.warn(`[extract] correlationId=${correlationId} script_pages delete failed:`, delErr.message);
+  }
+
+  const norm = (s: string) => (s ?? "").trim().normalize("NFC");
+  const offsets = computePageGlobalOffsets(pageContents);
+  const pageRows = sorted.map((p, i) => ({
+    version_id: versionId,
+    page_number: p.pageNumber ?? i + 1,
+    content: pageContents[i] ?? "",
+    content_html: p.html != null && typeof p.html === "string" ? norm(String(p.html)) || null : null,
+    start_offset_global: offsets[i]?.start_offset_global ?? 0,
+    end_offset_global: offsets[i]?.end_offset_global ?? 0,
+  }));
+
+  const { error: insErr } = await supabase.from("script_pages").insert(pageRows);
+  if (insErr) {
+    console.warn(`[extract] correlationId=${correlationId} script_pages insert failed:`, insErr.message);
+    await supabase.from("script_versions").update({ extraction_status: "failed" }).eq("id", versionId);
+    return { error: insErr.message };
+  }
+
+  const { error: updateErr } = await supabase
+    .from("script_versions")
+    .update({
+      extracted_text: canonicalContent,
+      extracted_text_hash: extractedTextHash,
+      extraction_status: "done",
+    })
+    .eq("id", versionId);
+
+  if (updateErr) {
+    return { error: updateErr.message };
+  }
+
+  const editorSave = await saveScriptEditorContent(
+    supabase,
+    versionId,
+    scriptId,
+    canonicalContent,
+    contentHash,
+    null
+  );
+  if (editorSave.error) {
+    console.warn(`[extract] correlationId=${correlationId} script_text save failed:`, editorSave.error);
+  }
+
+  if (enqueueAnalysis) {
+    const ingest = await runIngest(
+      supabase,
+      versionId,
+      scriptId,
+      canonicalContent,
+      contentHash,
+      userId,
+      correlationId
+    );
+    if ("error" in ingest) {
+      return { error: ingest.error };
+    }
+  }
+
+  return {};
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? undefined;
   const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
@@ -210,81 +305,19 @@ Deno.serve(async (req: Request) => {
     return json(toFrontendVersion(v));
   }
 
-  const PAGE_SEP = "\n\n";
-
   if (hasPages) {
-    // Page-based import: store script_pages and set script_text.content = concatenation (fixed separator).
-    const sorted = [...pagesInput].sort((a, b) => (a.pageNumber ?? 0) - (b.pageNumber ?? 0));
-    const normalizedParts = sorted.map((p) => normalizeText(String(p.text ?? "")));
-    const normalizedContent = normalizedParts.join(PAGE_SEP);
-    const sanitized = normalizedContent.replace(/\0/g, "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
-    const contentHash = await sha256Hash(sanitized);
-    const extractedTextHash = await sha256Hash(sanitized);
-
-    await supabase
-      .from("script_versions")
-      .update({ extraction_status: "extracting" })
-      .eq("id", versionId);
-
-    const { error: updateErr } = await supabase
-      .from("script_versions")
-      .update({
-        extracted_text: sanitized,
-        extracted_text_hash: extractedTextHash,
-        extraction_status: "done",
-      })
-      .eq("id", versionId);
-
-    if (updateErr) {
-      return json({ error: updateErr.message }, 500);
-    }
-
-    const { error: delErr } = await supabase.from("script_pages").delete().eq("version_id", versionId);
-    if (delErr) {
-      console.warn(`[extract] correlationId=${correlationId} script_pages delete failed:`, delErr.message);
-    }
-
-    // Store raw page text in script_pages for display (preserves line breaks). script_text.content stays normalized for analysis.
-    const pageRows = sorted.map((p, i) => {
-      const raw = String(p.text ?? "").trim().replace(/\0/g, "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
-      return {
-        version_id: versionId,
-        page_number: p.pageNumber ?? i + 1,
-        content: raw || (normalizedParts[i] ?? ""),
-        content_html: p.html != null && typeof p.html === "string" ? norm(String(p.html)) || null : null,
-      };
-    });
-    const { error: insErr } = await supabase.from("script_pages").insert(pageRows);
-    if (insErr) {
-      console.warn(`[extract] correlationId=${correlationId} script_pages insert failed:`, insErr.message);
-    }
-
-    const editorSave = await saveScriptEditorContent(
+    const sorted = [...pagesInput!].sort((a, b) => (a.pageNumber ?? 0) - (b.pageNumber ?? 0));
+    const pe = await persistMultipageExtract(
       supabase,
+      correlationId,
       versionId,
       v.script_id,
-      sanitized,
-      contentHash,
-      null
+      sorted,
+      enqueueAnalysis,
+      auth.userId,
+      v
     );
-    if (editorSave.error) {
-      console.warn(`[extract] correlationId=${correlationId} script_text/sections save failed:`, editorSave.error);
-    }
-
-    if (enqueueAnalysis) {
-      const ingest = await runIngest(
-        supabase,
-        versionId,
-        v.script_id,
-        sanitized,
-        contentHash,
-        auth.userId,
-        correlationId
-      );
-      if ("error" in ingest) {
-        return json({ error: ingest.error }, 500);
-      }
-    }
+    if (pe.error) return json({ error: pe.error }, 500);
 
     const { data: updated } = await supabase
       .from("script_versions")
@@ -317,16 +350,68 @@ Deno.serve(async (req: Request) => {
       return json({ error: downloadErr?.message || "Failed to download file" }, 500);
     }
     const ext = (v.source_file_name || "").toLowerCase().split(".").pop() || "";
+    if (ext === "pdf" || ext === "docx") {
+      try {
+        const ab = await blob.arrayBuffer();
+        const pageTexts =
+          ext === "pdf" ? await extractPdfPageTexts(ab) : await extractDocxPageTexts(ab);
+        if (!pageTexts.length || !pageTexts.some((t) => t.trim())) {
+          await supabase
+            .from("script_versions")
+            .update({ extraction_status: "failed" })
+            .eq("id", versionId);
+          return json(
+            {
+              error:
+                ext === "pdf"
+                  ? "No text in PDF (may be scanned/image-only)."
+                  : "No text extracted from DOCX.",
+            },
+            422
+          );
+        }
+        const pages = pageTexts.map((t, i) => ({
+          pageNumber: i + 1,
+          text: t,
+          html: null as string | null,
+        }));
+        const pe = await persistMultipageExtract(
+          supabase,
+          correlationId,
+          versionId,
+          v.script_id,
+          pages,
+          enqueueAnalysis,
+          auth.userId,
+          v
+        );
+        if (pe.error) {
+          await supabase
+            .from("script_versions")
+            .update({ extraction_status: "failed" })
+            .eq("id", versionId);
+          return json({ error: pe.error }, 500);
+        }
+        const { data: updated } = await supabase
+          .from("script_versions")
+          .select(
+            "id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extracted_text_hash, created_at"
+          )
+          .eq("id", versionId)
+          .single();
+        return json(toFrontendVersion((updated ?? v) as ScriptVersionRow));
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error(`[extract] correlationId=${correlationId} server extract failed:`, msg);
+        await supabase
+          .from("script_versions")
+          .update({ extraction_status: "failed" })
+          .eq("id", versionId);
+        return json({ error: `Extraction failed: ${msg}` }, 500);
+      }
+    }
     if (ext === "txt") {
       extractedText = await blob.text();
-    } else if (ext === "docx") {
-      return json({
-        error: "DOCX extraction not available in Edge; send extracted text in request body (text field)",
-      }, 501);
-    } else if (ext === "pdf") {
-      return json({
-        error: "PDF extraction not available in Edge runtime; use worker or send pre-extracted text",
-      }, 501);
     } else {
       extractedText = await blob.text();
     }

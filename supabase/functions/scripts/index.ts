@@ -416,7 +416,7 @@ Deno.serve(async (req: Request) => {
     }
     const { data: pageRows } = await supabase
       .from("script_pages")
-      .select("page_number, content, content_html")
+      .select("page_number, content, content_html, start_offset_global, end_offset_global")
       .eq("version_id", versionId)
       .order("page_number", { ascending: true });
     const content = textRow != null ? (textRow as { content: string }).content : "";
@@ -431,17 +431,31 @@ Deno.serve(async (req: Request) => {
       meta: r.meta ?? {},
     }));
     const PAGE_SEP_LEN = 2;
-    let startOffsetGlobal = 0;
-    const pages = (pageRows ?? []).map((row: { page_number: number; content: string; content_html?: string | null }) => {
-      const out = {
+    const pr = (pageRows ?? []) as Array<{
+      page_number: number;
+      content: string;
+      content_html?: string | null;
+      start_offset_global?: number | null;
+      end_offset_global?: number | null;
+    }>;
+    let derivedCursor = 0;
+    const pages = pr.map((row, i) => {
+      const len = (row.content ?? "").length;
+      const g0 =
+        row.start_offset_global != null && typeof row.start_offset_global === "number"
+          ? row.start_offset_global
+          : derivedCursor;
+      const endEx =
+        row.end_offset_global != null && typeof row.end_offset_global === "number"
+          ? row.end_offset_global
+          : g0 + len;
+      derivedCursor = endEx + (i < pr.length - 1 ? PAGE_SEP_LEN : 0);
+      return {
         pageNumber: row.page_number,
         content: row.content,
         contentHtml: row.content_html ?? null,
-        startOffsetGlobal,
+        startOffsetGlobal: g0,
       };
-      const normalizedLen = normalizeText(row.content).length;
-      startOffsetGlobal += normalizedLen + PAGE_SEP_LEN;
-      return out;
     });
     const { data: verMeta } = await supabase
       .from("script_versions")

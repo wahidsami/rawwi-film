@@ -257,30 +257,27 @@ export function ClientDetails() {
             toast.loading(lang === 'ar' ? 'جاري استخراج النص...' : 'Extracting text...', { id: 'upload-toast' });
 
             const ext = uploadFile.name.toLowerCase().split('.').pop() || '';
-            let extractedText = '';
-            let contentHtml: string | null = null;
-
-            if (ext === 'docx') {
-              const { extractDocx } = await import('@/utils/documentExtract');
-              const { plain, html } = await extractDocx(uploadFile);
-              extractedText = plain || '';
-              contentHtml = html && html.trim() ? html.trim() : null;
-            } else if (ext === 'pdf') {
-              const { extractTextFromPdf } = await import('@/utils/documentExtract');
-              extractedText = await extractTextFromPdf(uploadFile);
-            } else if (ext === 'txt') {
-              extractedText = await uploadFile.text();
-            }
-
-            if (!extractedText || !extractedText.trim()) {
-              throw new Error(lang === 'ar' ? 'لم يتم العثور على نص في المستند' : 'No text found in document');
-            }
-
             const { scriptsApi } = await import('@/api');
-            await scriptsApi.extractText(uploadResult.versionId, extractedText, {
-              enqueueAnalysis: false,
-              contentHtml,
-            });
+
+            if (ext === 'docx' || ext === 'pdf') {
+              const res = await scriptsApi.extractText(uploadResult.versionId, undefined, {
+                enqueueAnalysis: false,
+              });
+              if ((res as { error?: string }).error) {
+                throw new Error((res as { error: string }).error);
+              }
+              if (!(res as { extracted_text?: string }).extracted_text?.trim()) {
+                throw new Error(lang === 'ar' ? 'لم يتم العثور على نص في المستند' : 'No text found in document');
+              }
+            } else if (ext === 'txt') {
+              const extractedText = await uploadFile.text();
+              if (!extractedText?.trim()) {
+                throw new Error(lang === 'ar' ? 'لم يتم العثور على نص في المستند' : 'No text found in document');
+              }
+              await scriptsApi.extractText(uploadResult.versionId, extractedText, { enqueueAnalysis: false });
+            } else {
+              throw new Error(lang === 'ar' ? 'نوع الملف غير مدعوم' : 'Unsupported file type');
+            }
 
             uploadAndExtractOk = true;
             toast.success(lang === 'ar' ? 'تم رفع وتحميل المستند بنجاح' : 'Document uploaded and loaded successfully', { id: 'upload-toast' });

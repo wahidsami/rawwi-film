@@ -51,7 +51,6 @@ import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textM
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
 import type { AnalysisJob, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
-import { extractDocxWithPages, extractTextFromPdfPerPage } from '@/utils/documentExtract';
 import { sanitizeFormattedHtml } from '@/utils/sanitizeHtml';
 import { PdfOriginalViewer } from '@/components/script/PdfOriginalViewer';
 import {
@@ -1091,70 +1090,23 @@ export function ScriptWorkspace() {
         const fileText = await file.text();
         const res = await scriptsApi.extractText(version.id, fileText, { enqueueAnalysis: false });
         textToShow = (res as { extracted_text?: string })?.extracted_text ?? fileText;
-      } else if (ext === 'docx') {
+      } else if (ext === 'docx' || ext === 'pdf') {
         try {
-          console.log('[ScriptWorkspace] Extracting DOCX...');
-          const { plain, html, pages: docxPages } = await extractDocxWithPages(file);
-          console.log('[ScriptWorkspace] DOCX Extracted:', { plainLength: plain?.length, htmlLength: html?.length, pagesCount: docxPages.length });
-
-          if (!plain || !plain.trim()) {
-            console.warn('[ScriptWorkspace] No text found in DOCX');
-            toast.error(lang === 'ar' ? 'لم يتم العثور على نص في الملف' : 'No text found in document');
+          const res = await scriptsApi.extractText(version.id, undefined, { enqueueAnalysis: false });
+          const err = (res as { error?: string })?.error;
+          if (err) throw new Error(err);
+          textToShow = (res as { extracted_text?: string })?.extracted_text ?? '';
+          if (!textToShow.trim()) {
+            toast.error(
+              lang === 'ar' ? 'لم يتم العثور على نص في الملف' : 'No text found in document'
+            );
             setUploadStatus('failed');
             return;
           }
-          const joinedPages = docxPages.map((p) => p.text).join('\n\n');
-          const norm = (s: string) => s.replace(/\r\n/g, '\n').trim();
-          if (norm(plain) !== norm(joinedPages)) {
-            console.warn('[ScriptWorkspace] DOCX page slices vs full plain mismatch', {
-              plainLen: plain.length,
-              joinedLen: joinedPages.length,
-            });
-          }
-          if (docxPages.length > 1) {
-            const res = await scriptsApi.extractText(version.id, undefined, {
-              enqueueAnalysis: false,
-              pages: docxPages.map((p) => ({
-                pageNumber: p.pageNumber,
-                text: p.text,
-                html: p.html || null,
-              })),
-            });
-            textToShow = (res as { extracted_text?: string })?.extracted_text ?? docxPages.map((p) => p.text).join('\n\n');
-          } else {
-            const res = await scriptsApi.extractText(version.id, plain, {
-              enqueueAnalysis: false,
-              contentHtml: html && html.trim() ? html.trim() : null,
-            });
-            textToShow = (res as { extracted_text?: string })?.extracted_text ?? plain;
-          }
-        } catch (docxErr: any) {
-          console.error('[ScriptWorkspace] DOCX Error:', docxErr);
-          toast.error(lang === 'ar' ? 'فشل استخراج DOCX' : docxErr?.message ?? 'Failed to extract DOCX');
-          throw docxErr;
-        }
-      } else if (ext === 'pdf') {
-        try {
-          const pages = await extractTextFromPdfPerPage(file);
-          const hasText = pages.some((p) => p.text && p.text.trim());
-          if (!hasText) {
-            toast.error(lang === 'ar' ? 'لم يتم العثور على نص (قد يكون الملف ممسوحاً ضوئياً).' : 'No text found (file may be scanned/image-only).');
-            setUploadStatus('failed');
-            return;
-          }
-          const res = await scriptsApi.extractText(version.id, undefined, {
-            enqueueAnalysis: false,
-            pages: pages.map((p) => ({
-              pageNumber: p.pageNumber,
-              text: p.text,
-              html: p.html?.trim() ? p.html : null,
-            })),
-          });
-          const joined = pages.map((p) => p.text).join('\n\n');
-          textToShow = (res as { extracted_text?: string })?.extracted_text ?? joined;
-        } catch (pdfErr: any) {
-          toast.error(lang === 'ar' ? 'فشل استخراج PDF' : pdfErr?.message ?? 'Failed to extract PDF');
-          throw pdfErr;
+        } catch (docPdfErr: unknown) {
+          const msg = docPdfErr instanceof Error ? docPdfErr.message : String(docPdfErr);
+          toast.error(lang === 'ar' ? 'فشل استخراج الملف' : msg || 'Extraction failed');
+          throw docPdfErr;
         }
       } else {
         toast.error(lang === 'ar' ? 'نوع الملف غير مدعوم' : 'Unsupported file type');
