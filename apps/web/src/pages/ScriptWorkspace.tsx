@@ -10,7 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
-import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Search } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getPolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
@@ -350,6 +350,19 @@ function resolveFindingViaWorkspaceSearch(
   return workspaceGlobalSpanToPageLocal(span.start, span.end, pages);
 }
 
+/** Exact substring match (then NFC) for evidence in full workspace text. */
+function tryExactEvidenceSpan(fullText: string, evidence: string): { start: number; end: number } | null {
+  const ev = (evidence ?? '').trim();
+  if (ev.length < 2) return null;
+  let i = fullText.indexOf(ev);
+  if (i >= 0) return { start: i, end: i + ev.length };
+  const evN = ev.normalize('NFC');
+  const tN = fullText.normalize('NFC');
+  i = tN.indexOf(evN);
+  if (i >= 0) return { start: i, end: i + evN.length };
+  return null;
+}
+
 function safeUploadFileName(fileName: string): string {
   const trimmed = fileName.trim();
   const dotIdx = trimmed.lastIndexOf('.');
@@ -645,6 +658,12 @@ export function ScriptWorkspace() {
   const [highlightRetryTick, setHighlightRetryTick] = useState(0);
   // const [reportFindingsLoading, setReportFindingsLoading] = useState(false);
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
+  /** User clicked "Find in script" — only this finding is highlighted (exact/fuzzy search across pages). */
+  const [pinnedHighlight, setPinnedHighlight] = useState<{
+    findingId: string;
+    globalStart: number;
+    globalEnd: number;
+  } | null>(null);
   const [tooltipFinding, setTooltipFinding] = useState<AnalysisFinding | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [reportFindingReviewModal, setReportFindingReviewModal] = useState<{
@@ -742,6 +761,7 @@ export function ScriptWorkspace() {
     if (!jobId && !reportId) return;
     if (IS_DEV) console.log('[ScriptWorkspace] Highlight clicked:', { reportId, jobId });
     setSelectedReportForHighlights(report);
+    setPinnedHighlight(null);
     // setReportFindingsLoading(true);
     setSelectedFindingId(null);
     setHighlightExpectedCount(0);
@@ -1537,15 +1557,25 @@ export function ScriptWorkspace() {
   );
 
 
-  const buildFindingSegments = useCallback((content: string, findings: AnalysisFinding[]): Segment[] => {
+  const buildFindingSegments = useCallback(
+    (content: string, findings: AnalysisFinding[], opts?: { trustOffsets?: boolean }): Segment[] => {
     if (!content || findings.length === 0) return [{ start: 0, end: content.length, finding: null }];
 
-    // Map findings to their actual locations in CURRENT content
-    // This fixes the issue where offsets from server don't match current DOM/content state
-    const locatedFindings = findings.map(f => {
-      const loc = locateFindingInContent(content, f);
-      return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
-    }).filter(Boolean) as AnalysisFinding[];
+    const locatedFindings = opts?.trustOffsets
+      ? (findings
+          .map((f) => {
+            const s = f.startOffsetGlobal ?? -1;
+            const e = f.endOffsetGlobal ?? -1;
+            if (s < 0 || e <= s || s >= content.length) return null;
+            return { ...f, startOffsetGlobal: s, endOffsetGlobal: Math.min(e, content.length) };
+          })
+          .filter(Boolean) as AnalysisFinding[])
+      : (findings
+          .map((f) => {
+            const loc = locateFindingInContent(content, f);
+            return loc ? { ...f, startOffsetGlobal: loc.start, endOffsetGlobal: loc.end } : null;
+          })
+          .filter(Boolean) as AnalysisFinding[]);
 
     if (locatedFindings.length === 0) return [{ start: 0, end: content.length, finding: null }];
 
@@ -1595,7 +1625,9 @@ export function ScriptWorkspace() {
     if (start < len) segments.push({ start, end: len, finding: current });
 
     return segments;
-  }, [locateFindingInContent]);
+  },
+  [locateFindingInContent]
+);
 
   // Updated getHighlightedText to use locator
   const getHighlightedText = () => {
@@ -1668,13 +1700,6 @@ export function ScriptWorkspace() {
 
   const viewerHtml = insertSectionMarkers(getHighlightedText(), sections);
   // const sectionStarts = new Set(sections.map((s) => s.startOffset));
-  const findingSegments = useMemo(
-    () =>
-      reportFindings.length > 0 && canonicalContentForHighlights
-        ? buildFindingSegments(canonicalContentForHighlights, reportFindings)
-        : null,
-    [canonicalContentForHighlights, reportFindings, buildFindingSegments]
-  );
 
   // Page-mode: current page data and findings scoped to this page (for toolbar + page view)
   const currentPageData = isPageMode && editorData?.pages?.[safeCurrentPage - 1] ? editorData.pages[safeCurrentPage - 1] : null;
@@ -1709,76 +1734,109 @@ export function ScriptWorkspace() {
     return map;
   }, [workspacePlainFull, reportFindings, pagesSortedForViewer, locateFindingInContent]);
 
-  const findingsOnPageWithLocalOffsets = useMemo(() => {
-    if (!currentPageData || !reportFindings.length) return [];
-    const pageLen = currentPageData.content?.length ?? 0;
-    const pagePlain = currentPageData.content ?? '';
+  const highlightTargetsForPageView = useMemo((): AnalysisFinding[] => {
+    if (!pinnedHighlight || !reportFindings.length) return [];
+    const f = reportFindings.find((x) => x.id === pinnedHighlight.findingId);
+    if (!f) return [];
+    const pages = pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }));
+    if (!pages.length) return [];
+    const hit = workspaceGlobalSpanToPageLocal(pinnedHighlight.globalStart, pinnedHighlight.globalEnd, pages);
+    if (!hit || hit.pageNumber !== safeCurrentPage) return [];
+    return [{ ...f, startOffsetGlobal: hit.localStart, endOffsetGlobal: hit.localEnd }];
+  }, [pinnedHighlight, reportFindings, pagesSortedForViewer, safeCurrentPage]);
 
-    return reportFindings
-      .map((f) => {
-        const hit = findingWorkspaceResolve.get(f.id);
-        if (hit && hit.pageNumber === safeCurrentPage) {
-          return {
-            ...f,
-            startOffsetGlobal: Math.max(0, Math.min(pageLen, hit.localStart)),
-            endOffsetGlobal: Math.max(1, Math.min(pageLen, hit.localEnd)),
-          } as AnalysisFinding;
-        }
-        const onPageOnly =
-          locateSpanByEvidenceSearch(pagePlain, f, {
-            pageSlice: true,
-            sliceGlobalStart: pageStart,
-          }) ??
-          locateFindingInContent(pagePlain, f, {
-            pageSlice: true,
-            sliceGlobalStart: pageStart,
-          });
-        if (onPageOnly) {
-          return {
-            ...f,
-            startOffsetGlobal: onPageOnly.start,
-            endOffsetGlobal: onPageOnly.end,
-          } as AnalysisFinding;
-        }
-        const vpn = viewerPageNumberFromStartOffset(
-          pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' })),
-          f.startOffsetGlobal
-        );
-        if (vpn === safeCurrentPage || (f.pageNumber != null && f.pageNumber === safeCurrentPage)) {
-          if (
-            f.startOffsetGlobal != null &&
-            f.endOffsetGlobal != null &&
-            f.endOffsetGlobal > pageStart &&
-            f.startOffsetGlobal < pageEnd
-          ) {
-            return {
-              ...f,
-              startOffsetGlobal: Math.max(0, f.startOffsetGlobal - pageStart),
-              endOffsetGlobal: Math.min(pageLen, f.endOffsetGlobal - pageStart),
-            } as AnalysisFinding;
-          }
-        }
-        return null;
-      })
-      .filter(Boolean) as AnalysisFinding[];
-  }, [
-    currentPageData,
-    pageStart,
-    pageEnd,
-    reportFindings,
-    safeCurrentPage,
-    locateFindingInContent,
-    pagesSortedForViewer,
-    findingWorkspaceResolve,
-  ]);
+  const highlightTargetsForScrollView = useMemo((): AnalysisFinding[] => {
+    if (!pinnedHighlight || !reportFindings.length) return [];
+    if ((editorData?.pages?.length ?? 0) > 0) return [];
+    const f = reportFindings.find((x) => x.id === pinnedHighlight.findingId);
+    if (!f) return [];
+    return [{ ...f, startOffsetGlobal: pinnedHighlight.globalStart, endOffsetGlobal: pinnedHighlight.globalEnd }];
+  }, [pinnedHighlight, reportFindings, editorData?.pages?.length]);
+
+  const findingSegments = useMemo(
+    () =>
+      highlightTargetsForScrollView.length > 0 && canonicalContentForHighlights
+        ? buildFindingSegments(canonicalContentForHighlights, highlightTargetsForScrollView, { trustOffsets: true })
+        : null,
+    [canonicalContentForHighlights, highlightTargetsForScrollView, buildFindingSegments]
+  );
+
   const pageFindingSegments = useMemo(
     () =>
-      isPageMode && currentPageData?.content && findingsOnPageWithLocalOffsets.length > 0
-        ? buildFindingSegments(currentPageData.content, findingsOnPageWithLocalOffsets)
+      isPageMode && currentPageData?.content && highlightTargetsForPageView.length > 0
+        ? buildFindingSegments(currentPageData.content, highlightTargetsForPageView, { trustOffsets: true })
         : currentPageData?.content
-          ? buildFindingSegments(currentPageData.content, [])
+          ? buildFindingSegments(currentPageData.content, [], { trustOffsets: true })
           : null,
-    [isPageMode, currentPageData?.content, findingsOnPageWithLocalOffsets, buildFindingSegments]
+    [isPageMode, currentPageData?.content, highlightTargetsForPageView, buildFindingSegments]
+  );
+
+  const handlePinFindingInScript = useCallback(
+    (f: AnalysisFinding, e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      if (!workspacePlainFull.trim()) {
+        toast.error(lang === 'ar' ? 'لا يوجد نص محمّل' : 'No script text loaded');
+        return;
+      }
+      const pages = pagesSortedForViewer.length
+        ? pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
+        : [{ pageNumber: 1, content: workspacePlainFull }];
+      let gs: number;
+      let ge: number;
+      const exact = tryExactEvidenceSpan(workspacePlainFull, f.evidenceSnippet ?? '');
+      if (exact) {
+        gs = exact.start;
+        ge = exact.end;
+      } else {
+        let span = locateSpanByEvidenceSearch(workspacePlainFull, f);
+        if (!span) {
+          const loc = locateFindingInContent(workspacePlainFull, f);
+          if (!loc) {
+            toast.error(
+              lang === 'ar'
+                ? 'لم يُعثر على النص في المستند. جرّب اقتباساً أطول في حقل الدليل.'
+                : 'Could not find this text in the document. Try a longer evidence quote.'
+            );
+            return;
+          }
+          span = { start: loc.start, end: loc.end };
+        }
+        const ev = (f.evidenceSnippet ?? '').trim();
+        if (ev.length >= 4) {
+          const t = tightenHighlightRangeToEvidence(workspacePlainFull, span.start, span.end, ev);
+          gs = t.start;
+          ge = t.end;
+        } else {
+          gs = span.start;
+          ge = span.end;
+        }
+      }
+      if (ge <= gs) {
+        toast.error(lang === 'ar' ? 'مدى غير صالح' : 'Invalid match range');
+        return;
+      }
+      const hit = workspaceGlobalSpanToPageLocal(gs, ge, pages);
+      if (!hit) {
+        toast.error(lang === 'ar' ? 'تعذر تحديد الصفحة' : 'Could not map to a page');
+        return;
+      }
+      setPinnedHighlight({ findingId: f.id, globalStart: gs, globalEnd: ge });
+      setSelectedFindingId(f.id);
+      if (pagesSortedForViewer.length > 0 && hit.pageNumber >= 1 && hit.pageNumber <= pagesSortedForViewer.length) {
+        setCurrentPage(hit.pageNumber);
+        setSearchParams(
+          (prev) => {
+            const n = new URLSearchParams(prev);
+            n.set('page', String(hit.pageNumber));
+            return n;
+          },
+          { replace: true }
+        );
+      }
+      setHighlightRetryTick((n) => n + 1);
+      toast.success(lang === 'ar' ? 'تم العثور على النص وتمييزه' : 'Found and highlighted in script');
+    },
+    [workspacePlainFull, pagesSortedForViewer, locateFindingInContent, lang, setSearchParams, setCurrentPage]
   );
 
   // Apply finding highlights in formatted HTML by wrapping DOM ranges (no innerHTML replace).
@@ -1909,24 +1967,44 @@ export function ScriptWorkspace() {
   );
 
   useEffect(() => {
-    if (blockHighlightsCompletely) {
-      setHighlightExpectedCount(reportFindings.length);
-      setHighlightLocatableCount(0);
-      setHighlightRenderedCount(0);
-      return;
-    }
-    if (workspaceViewMode === 'pdf') {
+    const container = editorRef.current;
+    if (container) unwrapFindingMarks(container);
+
+    if (blockHighlightsCompletely || workspaceViewMode === 'pdf') {
       setHighlightExpectedCount(0);
       setHighlightLocatableCount(0);
       setHighlightRenderedCount(0);
       return;
     }
-    const container = editorRef.current;
+
+    if (!pinnedHighlight) {
+      setHighlightExpectedCount(0);
+      setHighlightLocatableCount(0);
+      setHighlightRenderedCount(0);
+      return;
+    }
+
     const inPageMode = (editorData?.pages?.length ?? 0) > 0;
     const pagePlain = currentPageData?.content ?? '';
 
+    if (inPageMode && !currentPageData?.contentHtml) {
+      const n = highlightTargetsForPageView.length;
+      setHighlightExpectedCount(n ? 1 : 0);
+      setHighlightLocatableCount(n);
+      setHighlightRenderedCount(n ? 1 : 0);
+      return;
+    }
+
+    if (!inPageMode && !editorData?.contentHtml) {
+      const n = highlightTargetsForScrollView.length;
+      setHighlightExpectedCount(n ? 1 : 0);
+      setHighlightLocatableCount(n);
+      setHighlightRenderedCount(n ? 1 : 0);
+      return;
+    }
+
     if (!container || !domTextIndex || !canonicalContentForHighlights) {
-      setHighlightExpectedCount(reportFindings.length);
+      setHighlightExpectedCount(1);
       setHighlightLocatableCount(0);
       setHighlightRenderedCount(0);
       return;
@@ -1935,103 +2013,14 @@ export function ScriptWorkspace() {
     lastHighlightGuardLogFindingsRef.current = null;
 
     if (inPageMode && currentPageData?.contentHtml) {
-      const domRaw = domTextIndex.segments.map((s) => s.text).join('');
-      const pagesSorted = [...(editorData.pages ?? [])].sort((a, b) => a.pageNumber - b.pageNumber);
-      const pageIdxSorted = pagesSorted.findIndex((p) => p.pageNumber === safeCurrentPage);
-      const sliceStartRaw =
-        pageIdxSorted >= 0 ? globalStartOfViewerPage(pagesSorted, pageIdxSorted) : (currentPageData.startOffsetGlobal ?? 0);
-      const pageSliceOpts = {
-        pageSlice: true as const,
-        sliceGlobalStart: sliceStartRaw,
-      };
-      const canonical = editorData?.content?.trim() ? editorData.content : '';
-      let onPage: AnalysisFinding[];
-      let resolved: AnalysisFinding[];
-
-      if (scriptHashMismatch) {
-        /** Offsets unreliable — workspace-wide search first, then this page. */
-        onPage = reportFindings;
-        setHighlightExpectedCount(reportFindings.length);
-        resolved = reportFindings
-          .map((f) => {
-            const ws = findingWorkspaceResolve.get(f.id);
-            if (ws && ws.pageNumber === safeCurrentPage) {
-              return { ...f, startOffsetGlobal: ws.localStart, endOffsetGlobal: ws.localEnd };
-            }
-            const span =
-              locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts) ??
-              locateSpanByEvidenceSearch(domRaw, f, pageSliceOpts);
-            if (span) return { ...f, startOffsetGlobal: span.start, endOffsetGlobal: span.end };
-            const loc =
-              locateFindingInContent(pagePlain, f, pageSliceOpts) ??
-              locateFindingInContent(domRaw, f, pageSliceOpts);
-            if (!loc) return null;
-            const t = tightenHighlightRangeToEvidence(pagePlain, loc.start, loc.end, f.evidenceSnippet ?? '');
-            return { ...f, startOffsetGlobal: t.start, endOffsetGlobal: t.end };
-          })
-          .filter(Boolean) as AnalysisFinding[];
-      } else {
-        onPage = reportFindings.filter((f) => {
-          const ws = findingWorkspaceResolve.get(f.id);
-          if (ws && ws.pageNumber === safeCurrentPage) return true;
-          const vpn = viewerPageNumberFromStartOffset(pagesSorted, f.startOffsetGlobal);
-          if (vpn != null) return vpn === safeCurrentPage;
-          if (f.pageNumber != null && f.pageNumber === safeCurrentPage) return true;
-          return (
-            !!locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts) ||
-            !!locateSpanByEvidenceSearch(domRaw, f, pageSliceOpts)
-          );
-        });
-        setHighlightExpectedCount(onPage.length);
-        resolved = onPage
-          .map((f) => {
-            const ws = findingWorkspaceResolve.get(f.id);
-            if (ws && ws.pageNumber === safeCurrentPage) {
-              return { ...f, startOffsetGlobal: ws.localStart, endOffsetGlobal: ws.localEnd };
-            }
-            const vpnF = viewerPageNumberFromStartOffset(pagesSorted, f.startOffsetGlobal);
-            const sp = f.startOffsetPage ?? null;
-            const ep = f.endOffsetPage ?? null;
-            if (
-              vpnF === safeCurrentPage &&
-              sp != null &&
-              ep != null &&
-              ep > sp &&
-              sp >= 0 &&
-              ep <= pagePlain.length + 2
-            ) {
-              const t = tightenHighlightRangeToEvidence(pagePlain, sp, Math.min(ep, pagePlain.length), f.evidenceSnippet ?? '');
-              return { ...f, startOffsetGlobal: t.start, endOffsetGlobal: t.end };
-            }
-            const span =
-              (canonical.length > 0 && pagePlain.length > 0 && pagesSorted.length > 0
-                ? locateHighlightOnCurrentPage(
-                    canonical,
-                    pagePlain,
-                    pagesSorted,
-                    safeCurrentPage,
-                    f,
-                    pageSliceOpts
-                  )
-                : null) ??
-              locateSpanByEvidenceSearch(pagePlain, f, pageSliceOpts) ??
-              locateSpanByEvidenceSearch(domRaw, f, pageSliceOpts);
-            if (span) return { ...f, startOffsetGlobal: span.start, endOffsetGlobal: span.end };
-            const loc =
-              locateFindingInContent(domRaw, f, pageSliceOpts) ??
-              locateFindingInContent(pagePlain, f, pageSliceOpts);
-            if (!loc) return null;
-            const t = tightenHighlightRangeToEvidence(pagePlain, loc.start, loc.end, f.evidenceSnippet ?? '');
-            return { ...f, startOffsetGlobal: t.start, endOffsetGlobal: t.end };
-          })
-          .filter(Boolean) as AnalysisFinding[];
+      const resolved = highlightTargetsForPageView;
+      setHighlightExpectedCount(resolved.length ? 1 : 0);
+      if (!resolved.length) {
+        setHighlightLocatableCount(0);
+        setHighlightRenderedCount(0);
+        return;
       }
-      setHighlightLocatableCount(resolved.length);
-      if (IS_DEV) {
-        console.log(
-          `[ScriptWorkspace] Page ${safeCurrentPage} highlights: ${resolved.length}/${onPage.length} locatable`
-        );
-      }
+      setHighlightLocatableCount(1);
       const applied = applyHighlightMarks(container, domTextIndex, resolved, {
         pageSlice: true,
         sliceGlobalStart: 0,
@@ -2040,58 +2029,31 @@ export function ScriptWorkspace() {
       return;
     }
 
-    if (inPageMode && !currentPageData?.contentHtml) {
-      const n = findingsOnPageWithLocalOffsets.length;
-      setHighlightExpectedCount(n);
-      setHighlightLocatableCount(n);
-      setHighlightRenderedCount(0);
-      return;
-    }
-
-    if (!inPageMode && !editorData?.contentHtml) {
-      setHighlightExpectedCount(reportFindings.length);
+    const resolved = highlightTargetsForScrollView;
+    setHighlightExpectedCount(resolved.length ? 1 : 0);
+    if (!resolved.length) {
       setHighlightLocatableCount(0);
       setHighlightRenderedCount(0);
       return;
     }
-
-    const domRaw = domTextIndex.segments.map((s) => s.text).join('');
-    setHighlightExpectedCount(reportFindings.length);
-    const validFindings = reportFindings
-      .map((f) => {
-        const span = locateSpanByEvidenceSearch(domRaw, f);
-        if (span) return { ...f, startOffsetGlobal: span.start, endOffsetGlobal: span.end };
-        const loc = locateFindingInContent(domRaw, f);
-        if (!loc) return null;
-        const t = tightenHighlightRangeToEvidence(domRaw, loc.start, loc.end, f.evidenceSnippet ?? '');
-        return { ...f, startOffsetGlobal: t.start, endOffsetGlobal: t.end };
-      })
-      .filter(Boolean) as AnalysisFinding[];
-    setHighlightLocatableCount(validFindings.length);
-    if (IS_DEV) {
-      console.log(`[ScriptWorkspace] Full-doc highlights: ${validFindings.length}/${reportFindings.length}`);
-    }
-    const applied = applyHighlightMarks(container, domTextIndex, validFindings);
+    setHighlightLocatableCount(1);
+    const applied = applyHighlightMarks(container, domTextIndex, resolved);
     setHighlightRenderedCount(applied);
   }, [
     domTextIndex,
     canonicalContentForHighlights,
-    reportFindings,
+    pinnedHighlight,
     blockHighlightsCompletely,
-    scriptHashMismatch,
-    editorData?.content,
     editorData?.contentHtml,
     editorData?.pages,
     currentPageData?.contentHtml,
     currentPageData?.content,
-    currentPageData?.startOffsetGlobal,
     safeCurrentPage,
-    locateFindingInContent,
     highlightRetryTick,
     applyHighlightMarks,
-    findingsOnPageWithLocalOffsets.length,
     workspaceViewMode,
-    findingWorkspaceResolve,
+    highlightTargetsForPageView,
+    highlightTargetsForScrollView,
   ]);
 
   /** After page switch + highlight paint, scroll to the selected finding (click handler's setTimeout often ran too early). */
@@ -2662,12 +2624,26 @@ export function ScriptWorkspace() {
           {/* ── Findings tab ── */}
           {sidebarTab === 'findings' && (
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/30">
-              <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/50">
+              <div className="flex flex-col gap-1.5 pb-2 mb-2 border-b border-border/50">
                 <span className="text-xs font-medium text-text-muted">
                   {selectedReportForHighlights
-                    ? (lang === 'ar' ? 'تمييز التقرير نشط' : 'Report highlights active')
-                    : (lang === 'ar' ? 'لا يوجد تمييز نشط' : 'No active highlights')}
+                    ? lang === 'ar'
+                      ? 'اضغط «بحث في النص» على أي ملاحظة للتمييز (نفس المساحة للتحليل السريع والعميل).'
+                      : 'Use «Find in script» on a card to search all pages and highlight that finding only. Same workspace for Quick Analysis and client scripts.'
+                    : lang === 'ar'
+                      ? 'اختر تقريراً لعرض الملاحظات.'
+                      : 'Select a report to view findings.'}
                 </span>
+                {selectedReportForHighlights && pinnedHighlight && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-[10px] self-start"
+                    onClick={() => setPinnedHighlight(null)}
+                  >
+                    {lang === 'ar' ? 'إلغاء التمييز في النص' : 'Clear highlight in script'}
+                  </Button>
+                )}
                 {selectedReportForHighlights && (
                   <Button
                     size="sm"
@@ -2677,6 +2653,7 @@ export function ScriptWorkspace() {
                       setSelectedReportForHighlights(null);
                       setReportFindings([]);
                       setSelectedFindingId(null);
+                      setPinnedHighlight(null);
                     }}
                   >
                     {lang === 'ar' ? 'إخفاء التمييز' : 'Hide Highlights'}
@@ -2719,12 +2696,15 @@ export function ScriptWorkspace() {
               )}
               {reportFindings.length > 0 && (
                 <div className="space-y-2 mb-4">
-                  {!blockHighlightsCompletely && highlightRenderedCount < highlightExpectedCount && (
+                  {!blockHighlightsCompletely &&
+                    pinnedHighlight &&
+                    highlightExpectedCount > 0 &&
+                    highlightRenderedCount < highlightExpectedCount && (
                     <div className="rounded-md border border-warning/40 bg-warning/10 p-2.5 text-[11px] text-text-main">
                       <p>
                         {lang === 'ar'
-                          ? `تنبيه تمييز: تم عرض ${highlightRenderedCount} من أصل ${highlightExpectedCount} ملاحظة في النص (${highlightLocatableCount} قابلة للتحديد).`
-                          : `Highlight check: ${highlightRenderedCount}/${highlightExpectedCount} findings are currently marked in text (${highlightLocatableCount} locatable).`}
+                          ? 'تعذر رسم التمييز في هذا العرض. جرّب وضع «النص المستخرج» أو صفحة بلا تنسيق HTML.'
+                          : 'Could not draw highlight in this view. Try extracted-text mode or a plain (non-HTML) page.'}
                       </p>
                       <div className="mt-2 flex gap-2">
                         <Button
@@ -2796,6 +2776,16 @@ export function ScriptWorkspace() {
                           "{f.evidenceSnippet}"
                         </p>
                       )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        className="h-8 text-[11px] w-full mt-2 gap-1.5 font-medium"
+                        onClick={(e) => handlePinFindingInScript(f, e)}
+                      >
+                        <Search className="w-3.5 h-3.5 shrink-0" />
+                        {lang === 'ar' ? 'بحث في النص وتمييز' : 'Find in script'}
+                      </Button>
                       {f.source !== 'manual' && (
                         <div className="flex flex-wrap gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
                           {f.reviewStatus !== 'approved' ? (
