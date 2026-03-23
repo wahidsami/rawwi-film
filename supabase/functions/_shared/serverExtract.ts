@@ -1,7 +1,12 @@
 /**
  * Authoritative script extraction on Edge (Deno).
  * Output pages must match what we store in script_pages.content and join for script_text.content.
+ *
+ * PDF.js: static import from unpkg (not esm.sh dynamic import). esm.sh shims pull /node/* deps that
+ * Supabase Edge fails to resolve ("Module not found").
  */
+import { getDocument, GlobalWorkerOptions } from "https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.mjs";
+
 const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const PAGE_SEP = "\n\n";
 const CHARS_PER_VIRTUAL_PAGE = 1200;
@@ -53,20 +58,24 @@ function pageItemsToText(items: TextItem[]): string {
 }
 
 const PDFJS_VER = "4.4.168";
+const PDFJS_ORIGIN = `https://unpkg.com/pdfjs-dist@${PDFJS_VER}`;
+
+let pdfWorkerSrcSet = false;
+
+function ensurePdfJsWorker(): void {
+  if (pdfWorkerSrcSet) return;
+  GlobalWorkerOptions.workerSrc = `${PDFJS_ORIGIN}/build/pdf.worker.mjs`;
+  pdfWorkerSrcSet = true;
+}
 
 export async function extractPdfPageTexts(arrayBuffer: ArrayBuffer): Promise<string[]> {
-  const pdfjs = await import(`https://esm.sh/pdfjs-dist@${PDFJS_VER}/build/pdf.mjs`) as {
-    getDocument: (p: Record<string, unknown>) => { promise: Promise<{ numPages: number; getPage: (n: number) => Promise<{ getTextContent: () => Promise<{ items: unknown[] }> }> }> };
-    GlobalWorkerOptions: { workerSrc: string };
-  };
-  pdfjs.GlobalWorkerOptions.workerSrc =
-    `https://esm.sh/pdfjs-dist@${PDFJS_VER}/build/pdf.worker.mjs`;
+  ensurePdfJsWorker();
   const data = new Uint8Array(arrayBuffer);
-  const loadingTask = pdfjs.getDocument({
+  const loadingTask = getDocument({
     data,
-    cMapUrl: `https://unpkg.com/pdfjs-dist@${PDFJS_VER}/cmaps/`,
+    cMapUrl: `${PDFJS_ORIGIN}/cmaps/`,
     cMapPacked: true,
-    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${PDFJS_VER}/standard_fonts/`,
+    standardFontDataUrl: `${PDFJS_ORIGIN}/standard_fonts/`,
   });
   const doc = await loadingTask.promise;
   const pages: string[] = [];
