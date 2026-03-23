@@ -10,7 +10,8 @@ import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { sanitizeUnicodeUploadFileName, getCorrelationId } from "../_shared/utils.ts";
 
-const BUCKET = "uploads";
+/** Must match extract + raawi-script-upload: script files live in `scripts`, not `uploads`. */
+const BUCKET = "scripts";
 const SIGNED_URL_EXPIRY_SEC = 60 * 5; // 5 minutes
 
 Deno.serve(async (req: Request) => {

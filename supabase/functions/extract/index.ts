@@ -31,8 +31,6 @@ import {
 } from "../_shared/serverExtract.ts";
 import { insertAuditEventMinimal } from "../_shared/auditInsertMinimal.ts";
 
-const BUCKET = "uploads";
-
 type ScriptVersionRow = {
   id: string;
   script_id: string;
@@ -47,6 +45,32 @@ type ScriptVersionRow = {
   extracted_text_hash: string | null;
   created_at: string;
 };
+
+/** Strip accidental `scripts/` or `uploads/` prefix; object key is path within bucket. */
+function normalizeStorageObjectPath(raw: string): string {
+  const t = raw.trim();
+  const m = t.match(/^(?:scripts|uploads)\/(.+)$/i);
+  return (m ? m[1]! : t).replace(/^\//, "");
+}
+
+/**
+ * Signed URL flow historically used `uploads`; raawi + current signed upload use `scripts`.
+ * Try both so legacy rows and Arabic/Unicode names still resolve.
+ */
+async function downloadScriptFileForExtract(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  objectPath: string,
+): Promise<{ blob: Blob } | { error: string }> {
+  const path = normalizeStorageObjectPath(objectPath);
+  const buckets = ["scripts", "uploads"] as const;
+  let lastMsg = "Object not found";
+  for (const bucket of buckets) {
+    const { data, error } = await supabase.storage.from(bucket).download(path);
+    if (!error && data) return { blob: data };
+    if (error?.message) lastMsg = error.message;
+  }
+  return { error: lastMsg };
+}
 
 function toFrontendVersion(row: ScriptVersionRow) {
   return {
@@ -352,14 +376,16 @@ Deno.serve(async (req: Request) => {
         .eq("id", versionId);
       return json({ error: "No source file path on version" }, 400);
     }
-    const { data: blob, error: downloadErr } = await supabase.storage.from("scripts").download(objectPath);
-    if (downloadErr || !blob) {
+    const dl = await downloadScriptFileForExtract(supabase, objectPath);
+    if ("error" in dl) {
       await supabase
         .from("script_versions")
         .update({ extraction_status: "failed" })
         .eq("id", versionId);
-      return json({ error: downloadErr?.message || "Failed to download file" }, 500);
+      console.error(`[extract] storage download failed path=${objectPath} err=${dl.error}`);
+      return json({ error: dl.error || "Failed to download file" }, 500);
     }
+    const blob = dl.blob;
     const ext = (v.source_file_name || "").toLowerCase().split(".").pop() || "";
     if (ext === "pdf" || ext === "docx") {
       try {
