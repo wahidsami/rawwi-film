@@ -7,7 +7,7 @@
 
 ## Strategy (best practice for this product)
 
-1. **Extract in the browser** with **PDF.js** (`getTextContent`) — already in place — avoids Edge limits and matches what users see.
+1. **Extract in the browser** with **PDF.js** (`getTextContent`) — already in place — avoids Edge limits and matches what users see. Glyph runs are merged with a **horizontal-gap heuristic** (not `join(' ')`) so Arabic letters are not spaced apart; word breaks still get a space when the PDF reports a large x-gap.
 2. **Normalize** with **NFC** (Canonical Composition).  
    - Prefer **NFC over NFKC** for screenplay/legal Arabic: NFKC changes compatibility characters (e.g. some punctuation/digit shapes) and can alter meaning or diffing.
 3. **Well-formed UTF-16** before JSON/network: use **`String.prototype.toWellFormed()`** when available (ES2024); otherwise replace lone surrogates with U+FFFD (same idea as Postgres-safe storage).

@@ -1032,6 +1032,8 @@ export function ScriptWorkspace() {
   const pageHtmlForLayout = editorData?.pages?.[safeCurrentPage - 1]?.contentHtml;
   useLayoutEffect(() => {
     if ((editorData?.pages?.length ?? 0) === 0) return;
+    // Editor div unmounts in PDF view; switching back must re-apply HTML (deps were unchanged).
+    if (workspaceViewMode !== 'text') return;
     const el = editorRef.current;
     if (!pageHtmlForLayout?.trim() || !el) return;
     const html = sanitizeFormattedHtml(pageHtmlForLayout);
@@ -1040,7 +1042,7 @@ export function ScriptWorkspace() {
       const idx = buildDomTextIndex(el);
       setDomTextIndex(idx ?? null);
     }
-  }, [editorData?.pages?.length, safeCurrentPage, pageHtmlForLayout]);
+  }, [editorData?.pages?.length, safeCurrentPage, pageHtmlForLayout, workspaceViewMode]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {

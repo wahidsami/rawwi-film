@@ -598,7 +598,109 @@ export function splitDocxIntoPages(html: string, plain: string): Array<{ pageNum
 
 const PAGE_SEPARATOR = '\n\n';
 
-type TextItem = { str?: string; transform?: number[]; fontName?: string; hasEOL?: boolean };
+type TextItem = {
+  str?: string;
+  transform?: number[];
+  fontName?: string;
+  hasEOL?: boolean;
+  /** Horizontal width in text space (pdf.js). */
+  width?: number;
+  /** Some PDFs expose writing direction. */
+  dir?: string;
+};
+
+/** Arabic / Arabic supplement / presentation forms — used to pick RTL sort + tighter joins. */
+function countArabicVsLatin(strings: string[]): { ar: number; lat: number } {
+  let ar = 0;
+  let lat = 0;
+  for (const s of strings) {
+    for (const ch of s) {
+      const cp = ch.codePointAt(0) ?? 0;
+      if (
+        (cp >= 0x0600 && cp <= 0x06ff) ||
+        (cp >= 0x0750 && cp <= 0x077f) ||
+        (cp >= 0x08a0 && cp <= 0x08ff) ||
+        (cp >= 0xfb50 && cp <= 0xfdff) ||
+        (cp >= 0xfe70 && cp <= 0xfeff)
+      ) {
+        ar += 1;
+      } else if (/[A-Za-z]/.test(ch)) {
+        lat += 1;
+      }
+    }
+  }
+  return { ar, lat };
+}
+
+function linePrefersRtl(parts: { str: string; dir?: string }[]): boolean {
+  const dirRtl = parts.some((p) => p.dir === 'rtl');
+  if (dirRtl) return true;
+  const { ar, lat } = countArabicVsLatin(parts.map((p) => p.str));
+  return ar > lat;
+}
+
+/**
+ * Join glyph runs on one baseline: PDFs often emit one item per letter — `join(' ')` breaks Arabic.
+ * Insert a space only when horizontal gap between origins looks like a word boundary.
+ */
+function joinPdfLineParts(parts: { str: string; x: number; width: number }[], rtl: boolean): string {
+  if (parts.length === 0) return '';
+  const s = [...parts].sort((a, b) => (rtl ? b.x - a.x : a.x - b.x));
+  const gaps: number[] = [];
+  for (let i = 1; i < s.length; i++) {
+    const d = rtl ? s[i - 1]!.x - s[i]!.x : s[i]!.x - s[i - 1]!.x;
+    gaps.push(Math.max(0, d));
+  }
+  const sortedG = [...gaps].sort((a, b) => a - b);
+  const med = sortedG.length ? sortedG[Math.floor(sortedG.length / 2)]! : 1;
+  const wordTh = Math.max(med * 2.75, 5);
+
+  let out = s[0]!.str;
+  for (let i = 1; i < s.length; i++) {
+    const g = gaps[i - 1]!;
+    out += (g > wordTh ? ' ' : '') + s[i]!.str;
+  }
+  return out;
+}
+
+/** Same ordering as joinPdfLineParts but preserves per-run bold for HTML. */
+function joinPdfLinePartsHtml(
+  parts: { str: string; bold: boolean; x: number; width: number; dir?: string }[],
+  rtl: boolean
+): string {
+  if (parts.length === 0) return '';
+  const s = [...parts].sort((a, b) => (rtl ? b.x - a.x : a.x - b.x));
+  const gaps: number[] = [];
+  for (let i = 1; i < s.length; i++) {
+    const d = rtl ? s[i - 1]!.x - s[i]!.x : s[i]!.x - s[i - 1]!.x;
+    gaps.push(Math.max(0, d));
+  }
+  const sortedG = [...gaps].sort((a, b) => a - b);
+  const med = sortedG.length ? sortedG[Math.floor(sortedG.length / 2)]! : 1;
+  const wordTh = Math.max(med * 2.75, 5);
+
+  let html = '';
+  let strongOpen = false;
+  for (let i = 0; i < s.length; i++) {
+    if (i > 0) {
+      const g = gaps[i - 1]!;
+      html += g > wordTh ? ' ' : '';
+    }
+    const p = s[i]!;
+    if (strongOpen && !p.bold) {
+      html += '</strong>';
+      strongOpen = false;
+    }
+    if (!strongOpen && p.bold) {
+      html += '<strong>';
+      strongOpen = true;
+    }
+    html += escapeHtmlForPdf(p.str);
+  }
+  if (strongOpen) html += '</strong>';
+  return html;
+}
+
 
 function escapeHtmlForPdf(s: string): string {
   return s
@@ -620,39 +722,39 @@ function pageItemsToHtml(items: TextItem[]): string {
   if (!items.length) return '';
   const hasTransform = items.some((it) => Array.isArray(it.transform) && it.transform.length >= 6);
   if (!hasTransform) {
-    const t = items.map((it) => it.str ?? '').join(' ').trim();
+    const t = items.map((it) => it.str ?? '').join('').trim();
     return t ? `<div class="pdf-page-body script-import-body"><p class="pdf-line">${escapeHtmlForPdf(t)}</p></div>` : '';
   }
-  type LinePart = { str: string; bold: boolean; x: number };
+  type LinePart = { str: string; bold: boolean; x: number; width: number; dir?: string };
   const lines: LinePart[][] = [];
   let lastY: number | null = null;
   let lineParts: LinePart[] = [];
+  const flushLine = () => {
+    if (!lineParts.length) return;
+    lines.push([...lineParts]);
+    lineParts = [];
+  };
   for (const it of items) {
     const str = it.str ?? '';
     const tr = Array.isArray(it.transform) && it.transform.length >= 6 ? it.transform : null;
     const y = tr ? tr[5]! : null;
     const x = tr ? tr[4]! : 0;
     if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) {
-      if (lineParts.length) {
-        lineParts.sort((a, b) => b.x - a.x);
-        lines.push(lineParts);
-      }
-      lineParts = [];
+      flushLine();
     }
     lastY = y;
-    if (str) lineParts.push({ str, bold: isBoldPdfFont(it.fontName), x });
+    if (str) {
+      const scale = tr ? Math.hypot(tr[0]!, tr[1]!) : 1;
+      const rawW =
+        typeof it.width === 'number' && Number.isFinite(it.width) ? it.width : Math.max(0.35, str.length * 0.5);
+      lineParts.push({ str, bold: isBoldPdfFont(it.fontName), x, width: rawW * scale, dir: it.dir });
+    }
+    if (it.hasEOL) flushLine();
   }
-  if (lineParts.length) {
-    lineParts.sort((a, b) => b.x - a.x);
-    lines.push(lineParts);
-  }
+  flushLine();
   const paras = lines.map((parts) => {
-    const inner = parts
-      .map((p) => {
-        const e = escapeHtmlForPdf(p.str);
-        return p.bold ? `<strong>${e}</strong>` : e;
-      })
-      .join(' ');
+    const rtl = linePrefersRtl(parts);
+    const inner = joinPdfLinePartsHtml(parts, rtl);
     return `<p class="pdf-line">${inner}</p>`;
   });
   return `<div class="pdf-page-body script-import-body">${paras.join('')}</div>`;
@@ -665,15 +767,15 @@ function pageItemsToText(items: TextItem[]): string {
   if (!items.length) return "";
   const hasTransform = items.some((it) => Array.isArray(it.transform) && it.transform.length >= 6);
   if (!hasTransform) {
-    return items.map((it) => it.str ?? "").join(" ").trim();
+    return items.map((it) => it.str ?? "").join("").trim();
   }
   const lines: string[] = [];
   let lastY: number | null = null;
-  const lineBuf: { str: string; x: number }[] = [];
+  const lineBuf: { str: string; x: number; width: number; dir?: string }[] = [];
   const flushLine = () => {
     if (!lineBuf.length) return;
-    lineBuf.sort((a, b) => b.x - a.x);
-    lines.push(lineBuf.map((p) => p.str).join(" ").trim());
+    const rtl = linePrefersRtl(lineBuf);
+    lines.push(joinPdfLineParts(lineBuf, rtl).trim());
     lineBuf.length = 0;
   };
   for (const it of items as TextItem[]) {
@@ -685,7 +787,13 @@ function pageItemsToText(items: TextItem[]): string {
       flushLine();
     }
     lastY = y;
-    if (str) lineBuf.push({ str, x });
+    if (str) {
+      const scale = tr ? Math.hypot(tr[0]!, tr[1]!) : 1;
+      const rawW =
+        typeof it.width === "number" && Number.isFinite(it.width) ? it.width : Math.max(0.35, str.length * 0.5);
+      lineBuf.push({ str, x, width: rawW * scale, dir: it.dir });
+    }
+    if (it.hasEOL) flushLine();
   }
   flushLine();
   return lines.join("\n").trim();
