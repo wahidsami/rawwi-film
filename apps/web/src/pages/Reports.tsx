@@ -141,7 +141,11 @@ function Reports() {
       toast.success(isAr ? 'تم تنزيل PDF' : 'PDF downloaded');
     } catch (err: any) {
       console.error(err);
-      toast.error(lang === 'ar' ? 'تعذر تنزيل PDF، سيتم الفتح للطباعة' : 'PDF direct download failed, opening print view');
+      const hint = typeof err?.message === 'string' && err.message.length < 200 ? err.message : null;
+      toast.error(
+        hint ||
+          (lang === 'ar' ? 'تعذر تنزيل PDF، سيتم الفتح للطباعة' : 'PDF direct download failed, opening print view')
+      );
       handleOpen(report);
     } finally {
       setDownloadingReportId(null);

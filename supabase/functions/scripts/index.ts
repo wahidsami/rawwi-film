@@ -9,6 +9,7 @@ import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { getCorrelationId, normalizeText } from "../_shared/utils.ts";
 import { canOverrideOwnScriptDecision, isRegulatorOnly, isSuperAdminOrAdmin, isUserAdmin } from "../_shared/roleCheck.ts";
+import { logAuditCanonical } from "../_shared/audit.ts";
 
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
@@ -344,7 +345,18 @@ Deno.serve(async (req: Request) => {
       console.error(`[scripts] correlationId=${correlationId} quick insert error=`, error?.message);
       return json({ error: error?.message || "Failed to create quick analysis script" }, 500);
     }
-    return json(toScriptFrontend(row as ScriptRow));
+    const quickRow = row as ScriptRow;
+    logAuditCanonical(supabase, {
+      event_type: "SCRIPT_CREATED_QUICK",
+      actor_user_id: uid,
+      target_type: "script",
+      target_id: quickRow.id,
+      target_label: quickRow.title,
+      result_status: "success",
+      correlation_id: correlationId,
+      metadata: { is_quick_analysis: true },
+    }).catch((e) => console.warn("[scripts] audit SCRIPT_CREATED_QUICK:", e));
+    return json(toScriptFrontend(quickRow));
   }
 
   // GET /scripts/quick — quick-analysis history (own items only).
@@ -631,6 +643,16 @@ Deno.serve(async (req: Request) => {
       const assignerName = (assignerProfile as { name?: string } | null)?.name ?? undefined;
       await notifyScriptAssigned(supabase, created.assignee_id, created.id, created.title, assignerName ?? "");
     }
+    logAuditCanonical(supabase, {
+      event_type: "SCRIPT_CREATED",
+      actor_user_id: uid,
+      target_type: "script",
+      target_id: created.id,
+      target_label: created.title,
+      result_status: "success",
+      correlation_id: correlationId,
+      metadata: { company_id: created.company_id ?? created.client_id, type: created.type },
+    }).catch((e) => console.warn("[scripts] audit SCRIPT_CREATED:", e));
     return json(toScriptFrontend(created));
   }
 
@@ -699,7 +721,18 @@ Deno.serve(async (req: Request) => {
       return json({ error: versionErr?.message || "Failed to create version" }, 500);
     }
     await supabase.from("scripts").update({ current_version_id: version.id }).eq("id", sid);
-    return json(toVersionFrontend(version as ScriptVersionRow));
+    const vRow = version as ScriptVersionRow;
+    logAuditCanonical(supabase, {
+      event_type: "SCRIPT_VERSION_CREATED",
+      actor_user_id: uid,
+      target_type: "script_version",
+      target_id: vRow.id,
+      target_label: `${sid} v${vRow.version_number}`,
+      result_status: "success",
+      correlation_id: correlationId,
+      metadata: { script_id: sid, source_file_name: vRow.source_file_name },
+    }).catch((e) => console.warn("[scripts] audit SCRIPT_VERSION_CREATED:", e));
+    return json(toVersionFrontend(vRow));
   }
 
   // GET /scripts/:id/versions

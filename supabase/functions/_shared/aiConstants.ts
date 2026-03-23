@@ -17,6 +17,7 @@ export const PROMPT_VERSIONS = {
   schema: "v1.9",
 };
 
+/** AI-002: temperature 0 (+ seed) for reproducibility; worker/pipeline must pass these to the API. */
 export const DEFAULT_DETERMINISTIC_CONFIG = {
   router_model: "gpt-4.1-mini",
   judge_model: "gpt-4.1",

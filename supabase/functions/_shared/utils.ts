@@ -24,6 +24,27 @@ export function sanitizeFileName(fileName: string): string {
   return trimmed;
 }
 
+/**
+ * Signed-upload paths: allow Arabic/Unicode names (incl. Arabic comma ،) like raawi-script-upload.
+ * Strips path traversal and replaces other risky chars with underscore.
+ */
+export function sanitizeUnicodeUploadFileName(fileName: string): string {
+  if (typeof fileName !== "string" || fileName.length === 0) {
+    throw new Error("fileName is required");
+  }
+  if (fileName.length > MAX_FILE_NAME_LENGTH) {
+    throw new Error(`fileName longer than ${MAX_FILE_NAME_LENGTH} characters`);
+  }
+  if (PATH_TRAVERSAL.test(fileName)) {
+    throw new Error("fileName must not contain path traversal (.., /, \\)");
+  }
+  const nfc = fileName.normalize("NFC").trim();
+  if (!nfc) throw new Error("fileName is empty after trim");
+  const safe = nfc.replace(/[^\p{L}\p{N}\s._\-،]/gu, "_").replace(/\s+/g, " ").trim();
+  if (!safe) throw new Error("fileName is empty after sanitization");
+  return safe.slice(0, MAX_FILE_NAME_LENGTH);
+}
+
 export function getCorrelationId(req: Request): string {
   const header = req.headers.get("x-correlation-id");
   if (header && header.trim()) return header.trim();

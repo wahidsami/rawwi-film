@@ -8,7 +8,7 @@
 import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
-import { sanitizeFileName, getCorrelationId } from "../_shared/utils.ts";
+import { sanitizeUnicodeUploadFileName, getCorrelationId } from "../_shared/utils.ts";
 
 const BUCKET = "uploads";
 const SIGNED_URL_EXPIRY_SEC = 60 * 5; // 5 minutes
@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
 
   let safeName: string;
   try {
-    safeName = sanitizeFileName(rawName);
+    safeName = sanitizeUnicodeUploadFileName(rawName);
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Invalid fileName" }, 400);
   }

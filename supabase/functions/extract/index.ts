@@ -29,6 +29,7 @@ import {
   extractPdfPageTexts,
   extractDocxPageTexts,
 } from "../_shared/serverExtract.ts";
+import { logAuditCanonical } from "../_shared/audit.ts";
 
 const BUCKET = "uploads";
 
@@ -227,6 +228,17 @@ async function persistMultipageExtract(
       return { error: ingest.error };
     }
   }
+
+  logAuditCanonical(supabase, {
+    event_type: "SCRIPT_TEXT_EXTRACTED",
+    actor_user_id: userId,
+    target_type: "script_version",
+    target_id: versionId,
+    target_label: v.source_file_name ?? versionId,
+    result_status: "success",
+    correlation_id: correlationId,
+    metadata: { script_id: scriptId, page_count: pageRows.length },
+  }).catch((e) => console.warn(`[extract] correlationId=${correlationId} audit SCRIPT_TEXT_EXTRACTED:`, e));
 
   return {};
 }
@@ -473,6 +485,17 @@ Deno.serve(async (req: Request) => {
       return json({ error: ingest.error }, 500);
     }
   }
+
+  logAuditCanonical(supabase, {
+    event_type: "SCRIPT_TEXT_EXTRACTED",
+    actor_user_id: auth.userId,
+    target_type: "script_version",
+    target_id: versionId,
+    target_label: v.source_file_name ?? versionId,
+    result_status: "success",
+    correlation_id: correlationId,
+    metadata: { script_id: v.script_id, path: "plain_or_txt" },
+  }).catch((e) => console.warn(`[extract] correlationId=${correlationId} audit SCRIPT_TEXT_EXTRACTED:`, e));
 
   const { data: updated } = await supabase
     .from("script_versions")

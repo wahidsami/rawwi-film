@@ -664,9 +664,12 @@ export function Results() {
         await downloadAnalysisPdf(basePayload);
       }
       toast.success(isAr ? 'تم تنزيل PDF' : 'PDF downloaded');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('[Results] Direct PDF download failed', err);
-      toast.error(isAr ? 'تعذر تنزيل PDF مباشرة. حاول مرة أخرى.' : 'Direct PDF download failed. Please try again.');
+      const msg = err instanceof Error && err.message.length < 200 ? err.message : null;
+      toast.error(
+        msg || (isAr ? 'تعذر تنزيل PDF مباشرة. حاول مرة أخرى.' : 'Direct PDF download failed. Please try again.')
+      );
     } finally {
       setIsDownloadingPdf(false);
     }

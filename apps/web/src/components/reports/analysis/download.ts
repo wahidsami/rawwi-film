@@ -103,6 +103,15 @@ export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Pr
     coverImageDataUrl,
   });
   const blob = await pdf(doc).toBlob();
+  /** Empty/corrupt react-pdf output is often under ~300 bytes; real reports are larger. */
+  const MIN_PDF_BYTES = 500;
+  if (blob.size < MIN_PDF_BYTES) {
+    const msg =
+      params.lang === "ar"
+        ? "الملف الناتج غير صالح (حجم صغير جداً). أعد المحاولة أو استخدم الطباعة."
+        : "Generated PDF is invalid (file too small). Retry or use print.";
+    throw new Error(msg);
+  }
   const objectUrl = URL.createObjectURL(blob);
   const safeTitle = (params.scriptTitle || (params.lang === "ar" ? "تقرير" : "report"))
     .replace(/[\\/:*?"<>|]/g, " ")
