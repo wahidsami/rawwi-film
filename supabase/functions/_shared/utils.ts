@@ -45,6 +45,35 @@ export function sanitizeUnicodeUploadFileName(fileName: string): string {
   return safe.slice(0, MAX_FILE_NAME_LENGTH);
 }
 
+/**
+ * PostgreSQL json/jsonb and some drivers reject lone UTF-16 surrogates and U+0000.
+ * PDF.js / mixed scripts can yield invalid surrogate pairs; replace with U+FFFD.
+ */
+export function stripInvalidUnicodeForDb(s: string): string {
+  if (typeof s !== "string" || s.length === 0) return s;
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c === 0) continue;
+    if (c >= 0xd800 && c <= 0xdbff) {
+      const low = i + 1 < s.length ? s.charCodeAt(i + 1) : 0;
+      if (low >= 0xdc00 && low <= 0xdfff) {
+        out += s.slice(i, i + 2);
+        i++;
+        continue;
+      }
+      out += "\uFFFD";
+      continue;
+    }
+    if (c >= 0xdc00 && c <= 0xdfff) {
+      out += "\uFFFD";
+      continue;
+    }
+    out += s.charAt(i);
+  }
+  return out;
+}
+
 export function getCorrelationId(req: Request): string {
   const header = req.headers.get("x-correlation-id");
   if (header && header.trim()) return header.trim();

@@ -3,6 +3,8 @@
  * DOCX parsing stays here (lighter than PDF). PDF text extraction runs in the browser — PDF.js on Edge
  * hits Supabase compute/memory limits; clients POST /extract with `pages` from pdfjs in the web app.
  */
+import { stripInvalidUnicodeForDb } from "./utils.ts";
+
 const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const PAGE_SEP = "\n\n";
 const CHARS_PER_VIRTUAL_PAGE = 1200;
@@ -13,12 +15,13 @@ const SCENE_SPLIT_RE =
   /(?=^(?:[^\S\r\n]*)(?:المشهد\s*[\d\u0660-\u0669]+|INT\.|EXT\.|I\/E\.|INT\/EXT|\.INT|\.EXT)\b)/gim;
 
 export function sanitizePageText(raw: string): string {
-  return (raw ?? "")
+  const t = (raw ?? "")
     .normalize("NFC")
     .replace(/\r\n/g, "\n")
     .replace(/\0/g, "")
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
     .trimEnd();
+  return stripInvalidUnicodeForDb(t);
 }
 
 function walkDocxBodyForPageBreaks(body: Element): string[] | null {

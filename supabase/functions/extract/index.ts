@@ -13,6 +13,7 @@ import {
   chunkText,
   chunkTextByScriptPages,
   htmlToText,
+  stripInvalidUnicodeForDb,
 } from "../_shared/utils.ts";
 import { saveScriptEditorContent } from "../_shared/scriptEditor.ts";
 import { isSuperAdminOrAdmin } from "../_shared/roleCheck.ts";
@@ -200,7 +201,10 @@ async function persistMultipageExtract(
     version_id: versionId,
     page_number: p.pageNumber ?? i + 1,
     content: pageContents[i] ?? "",
-    content_html: p.html != null && typeof p.html === "string" ? norm(String(p.html)) || null : null,
+    content_html:
+      p.html != null && typeof p.html === "string"
+        ? stripInvalidUnicodeForDb(norm(String(p.html))) || null
+        : null,
     start_offset_global: offsets[i]?.start_offset_global ?? 0,
     end_offset_global: offsets[i]?.end_offset_global ?? 0,
   }));
@@ -300,7 +304,10 @@ Deno.serve(async (req: Request) => {
   const enqueueAnalysis = body.enqueueAnalysis === true;
   // Normalize Unicode (NFC) so Arabic and other script from PDFs is consistent and safe for storage.
   const norm = (s: string) => (s ?? "").trim().normalize("NFC");
-  const contentHtml = body.contentHtml != null && typeof body.contentHtml === "string" ? norm(body.contentHtml) || null : null;
+  const contentHtml =
+    body.contentHtml != null && typeof body.contentHtml === "string"
+      ? stripInvalidUnicodeForDb(norm(body.contentHtml)) || null
+      : null;
   const pagesInput = Array.isArray(body.pages) ? body.pages : undefined;
   const hasPages = pagesInput != null && pagesInput.length > 0;
 
@@ -455,8 +462,10 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // Sanitize for storage: NFC and remove null bytes / C0 controls that can break JSON or DB.
-  extractedText = norm(extractedText).replace(/\0/g, "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+  // Sanitize for storage: NFC, controls, lone surrogates (Postgres: "unsupported Unicode escape sequence").
+  extractedText = stripInvalidUnicodeForDb(
+    norm(extractedText).replace(/\0/g, "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, ""),
+  );
 
   await supabase
     .from("script_versions")
@@ -465,10 +474,11 @@ Deno.serve(async (req: Request) => {
 
   // Strategy A: when contentHtml is provided (e.g. DOCX), derive canonical plain text from HTML
   // so offsets match the formatted viewer DOM. Otherwise use extracted text.
-  const normalized =
+  const normalized = stripInvalidUnicodeForDb(
     contentHtml != null && contentHtml.length > 0
       ? normalizeText(htmlToText(contentHtml))
-      : normalizeText(extractedText);
+      : normalizeText(extractedText),
+  );
   const contentHash = await sha256Hash(normalized);
   const extractedTextHash = await sha256Hash(extractedText);
 
@@ -491,7 +501,7 @@ Deno.serve(async (req: Request) => {
     v.script_id,
     normalized,
     contentHash,
-    contentHtml
+    contentHtml != null ? stripInvalidUnicodeForDb(contentHtml) : null,
   );
   if (editorSave.error) {
     console.warn(`[extract] correlationId=${correlationId} script_text/sections save failed:`, editorSave.error);
