@@ -1,23 +1,8 @@
 /**
  * Authoritative script extraction on Edge (Deno).
- * Output pages must match what we store in script_pages.content and join for script_text.content.
- *
- * PDF.js on Supabase Edge: no real Web Workers → PDF.js uses a "fake worker" that would normally
- * `import(workerSrc)` for pdf.worker.mjs. Remote dynamic imports fail on Edge ("Module not found").
- * mozilla/pdf.js supports pre-registering the handler: `globalThis.pdfjsWorker = { WorkerMessageHandler }`
- * so the fake worker uses statically imported worker code (no runtime URL import).
+ * DOCX parsing stays here (lighter than PDF). PDF text extraction runs in the browser — PDF.js on Edge
+ * hits Supabase compute/memory limits; clients POST /extract with `pages` from pdfjs in the web app.
  */
-import { getDocument } from "https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.mjs";
-import { WorkerMessageHandler } from "https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.mjs";
-
-type PdfJsWorkerGlobal = typeof globalThis & {
-  pdfjsWorker?: { WorkerMessageHandler: typeof WorkerMessageHandler };
-};
-const _pdfG = globalThis as PdfJsWorkerGlobal;
-if (!_pdfG.pdfjsWorker) {
-  _pdfG.pdfjsWorker = { WorkerMessageHandler };
-}
-
 const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const PAGE_SEP = "\n\n";
 const CHARS_PER_VIRTUAL_PAGE = 1200;
@@ -34,60 +19,6 @@ export function sanitizePageText(raw: string): string {
     .replace(/\0/g, "")
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
     .trimEnd();
-}
-
-type TextItem = { str?: string; transform?: number[]; fontName?: string; hasEOL?: boolean };
-
-function pageItemsToText(items: TextItem[]): string {
-  if (!items.length) return "";
-  const hasTransform = items.some((it) => Array.isArray(it.transform) && it.transform.length >= 6);
-  if (!hasTransform) {
-    return items.map((it) => it.str ?? "").join(" ").trim();
-  }
-  const lines: string[] = [];
-  let lastY: number | null = null;
-  const lineBuf: { str: string; x: number }[] = [];
-  const flushLine = () => {
-    if (!lineBuf.length) return;
-    lineBuf.sort((a, b) => b.x - a.x);
-    lines.push(lineBuf.map((p) => p.str).join(" ").trim());
-    lineBuf.length = 0;
-  };
-  for (const it of items) {
-    const str = it.str ?? "";
-    const tr = Array.isArray(it.transform) && it.transform.length >= 6 ? it.transform : null;
-    const y = tr ? tr[5]! : null;
-    const x = tr ? tr[4]! : 0;
-    if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) {
-      flushLine();
-    }
-    lastY = y;
-    if (str) lineBuf.push({ str, x });
-  }
-  flushLine();
-  return lines.join("\n").trim();
-}
-
-const PDFJS_VER = "4.4.168";
-const PDFJS_ORIGIN = `https://unpkg.com/pdfjs-dist@${PDFJS_VER}`;
-
-export async function extractPdfPageTexts(arrayBuffer: ArrayBuffer): Promise<string[]> {
-  const data = new Uint8Array(arrayBuffer);
-  const loadingTask = getDocument({
-    data,
-    cMapUrl: `${PDFJS_ORIGIN}/cmaps/`,
-    cMapPacked: true,
-    standardFontDataUrl: `${PDFJS_ORIGIN}/standard_fonts/`,
-  });
-  const doc = await loadingTask.promise;
-  const pages: string[] = [];
-  for (let i = 1; i <= doc.numPages; i++) {
-    const page = await doc.getPage(i);
-    const content = await page.getTextContent();
-    const text = pageItemsToText((content.items || []) as TextItem[]);
-    pages.push(sanitizePageText(text) || "");
-  }
-  return pages;
 }
 
 function walkDocxBodyForPageBreaks(body: Element): string[] | null {

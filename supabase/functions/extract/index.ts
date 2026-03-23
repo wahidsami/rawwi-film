@@ -26,7 +26,6 @@ import { offsetRangeToPageMinMax, type ScriptPageRow } from "../_shared/offsetTo
 import {
   sanitizePageText,
   computePageGlobalOffsets,
-  extractPdfPageTexts,
   extractDocxPageTexts,
 } from "../_shared/serverExtract.ts";
 import { insertAuditEventMinimal } from "../_shared/auditInsertMinimal.ts";
@@ -388,24 +387,26 @@ Deno.serve(async (req: Request) => {
     const blob = dl.blob;
     const ext = (v.source_file_name || "").toLowerCase().split(".").pop() || "";
     if (ext === "pdf" || ext === "docx") {
+      // PDF: never parse on Edge — PDF.js exceeds Supabase memory/CPU; client must POST `pages` (see web app).
+      if (ext === "pdf") {
+        await supabase.from("script_versions").update({ extraction_status: "failed" }).eq("id", versionId);
+        return json(
+          {
+            error:
+              "PDF extraction runs in the browser. Update the web app and import again, or POST /extract with a non-empty \"pages\" array.",
+          },
+          422,
+        );
+      }
       try {
         const ab = await blob.arrayBuffer();
-        const pageTexts =
-          ext === "pdf" ? await extractPdfPageTexts(ab) : await extractDocxPageTexts(ab);
+        const pageTexts = await extractDocxPageTexts(ab);
         if (!pageTexts.length || !pageTexts.some((t) => t.trim())) {
           await supabase
             .from("script_versions")
             .update({ extraction_status: "failed" })
             .eq("id", versionId);
-          return json(
-            {
-              error:
-                ext === "pdf"
-                  ? "No text in PDF (may be scanned/image-only)."
-                  : "No text extracted from DOCX.",
-            },
-            422
-          );
+          return json({ error: "No text extracted from DOCX." }, 422);
         }
         const pages = pageTexts.map((t, i) => ({
           pageNumber: i + 1,

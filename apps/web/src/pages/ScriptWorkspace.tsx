@@ -15,6 +15,7 @@ import { cn } from '@/utils/cn';
 import { getPolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
 import { getScriptDecisionCapabilities } from '@/utils/scriptDecisionCapabilities';
+import { extractDocx, extractTextFromPdfPerPage } from '@/utils/documentExtract';
 
 
 
@@ -1158,12 +1159,40 @@ export function ScriptWorkspace() {
         const fileText = await file.text();
         const res = await scriptsApi.extractText(version.id, fileText, { enqueueAnalysis: false });
         textToShow = (res as { extracted_text?: string })?.extracted_text ?? fileText;
-      } else if (ext === 'docx' || ext === 'pdf') {
+      } else if (ext === 'pdf') {
         try {
-          const res = await scriptsApi.extractText(version.id, undefined, { enqueueAnalysis: false });
+          const pdfPages = await extractTextFromPdfPerPage(file);
+          const res = await scriptsApi.extractText(version.id, undefined, {
+            pages: pdfPages.map((p) => ({
+              pageNumber: p.pageNumber,
+              text: p.text,
+              html: p.html || undefined,
+            })),
+            enqueueAnalysis: false,
+          });
           const err = (res as { error?: string })?.error;
           if (err) throw new Error(err);
-          textToShow = (res as { extracted_text?: string })?.extracted_text ?? '';
+          textToShow = (res as { extracted_text?: string })?.extracted_text ?? pdfPages.map((p) => p.text).join('\n\n');
+          if (!textToShow.trim()) {
+            toast.error(lang === 'ar' ? 'لم يتم العثور على نص في الملف' : 'No text found in document');
+            setUploadStatus('failed');
+            return;
+          }
+        } catch (pdfErr: unknown) {
+          const msg = pdfErr instanceof Error ? pdfErr.message : String(pdfErr);
+          toast.error(lang === 'ar' ? 'فشل استخراج الملف' : msg || 'Extraction failed');
+          throw pdfErr;
+        }
+      } else if (ext === 'docx') {
+        try {
+          const { plain, html } = await extractDocx(file);
+          const res = await scriptsApi.extractText(version.id, plain, {
+            contentHtml: html,
+            enqueueAnalysis: false,
+          });
+          const err = (res as { error?: string })?.error;
+          if (err) throw new Error(err);
+          textToShow = (res as { extracted_text?: string })?.extracted_text ?? plain;
           if (!textToShow.trim()) {
             toast.error(
               lang === 'ar' ? 'لم يتم العثور على نص في الملف' : 'No text found in document'
@@ -1171,10 +1200,10 @@ export function ScriptWorkspace() {
             setUploadStatus('failed');
             return;
           }
-        } catch (docPdfErr: unknown) {
-          const msg = docPdfErr instanceof Error ? docPdfErr.message : String(docPdfErr);
+        } catch (docxErr: unknown) {
+          const msg = docxErr instanceof Error ? docxErr.message : String(docxErr);
           toast.error(lang === 'ar' ? 'فشل استخراج الملف' : msg || 'Extraction failed');
-          throw docPdfErr;
+          throw docxErr;
         }
       } else {
         toast.error(lang === 'ar' ? 'نوع الملف غير مدعوم' : 'Unsupported file type');

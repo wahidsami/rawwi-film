@@ -24,6 +24,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate } from '@/utils/dateFormat';
 import { normalizeScriptStatusForDisplay } from '@/utils/scriptStatus';
 import { downloadClientDetailsPdf } from '@/components/reports/client-details/download';
+import { extractDocx, extractTextFromPdfPerPage } from '@/utils/documentExtract';
 
 export function ClientDetails() {
   const { id } = useParams<{ id: string }>();
@@ -257,10 +258,27 @@ export function ClientDetails() {
             toast.loading(lang === 'ar' ? 'جاري استخراج النص...' : 'Extracting text...', { id: 'upload-toast' });
 
             const ext = uploadFile.name.toLowerCase().split('.').pop() || '';
-            const { scriptsApi } = await import('@/api');
 
-            if (ext === 'docx' || ext === 'pdf') {
+            if (ext === 'pdf') {
+              const pdfPages = await extractTextFromPdfPerPage(uploadFile);
               const res = await scriptsApi.extractText(uploadResult.versionId, undefined, {
+                pages: pdfPages.map((p) => ({
+                  pageNumber: p.pageNumber,
+                  text: p.text,
+                  html: p.html || undefined,
+                })),
+                enqueueAnalysis: false,
+              });
+              if ((res as { error?: string }).error) {
+                throw new Error((res as { error: string }).error);
+              }
+              if (!(res as { extracted_text?: string }).extracted_text?.trim()) {
+                throw new Error(lang === 'ar' ? 'لم يتم العثور على نص في المستند' : 'No text found in document');
+              }
+            } else if (ext === 'docx') {
+              const { plain, html } = await extractDocx(uploadFile);
+              const res = await scriptsApi.extractText(uploadResult.versionId, plain, {
+                contentHtml: html,
                 enqueueAnalysis: false,
               });
               if ((res as { error?: string }).error) {
