@@ -1,14 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Loader2 } from 'lucide-react';
-
-let workerInit = false;
-async function ensurePdfWorker() {
-  if (workerInit) return;
-  const version = (pdfjsLib as { version?: string }).version || '4.7.76';
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.mjs`;
-  workerInit = true;
-}
+import { ensurePdfjsWorker } from '@/utils/pdfjsWorker';
 
 type Props = {
   signedUrl: string;
@@ -31,7 +24,7 @@ export function PdfOriginalViewer({ signedUrl, pageNumber, scale = 1.2, classNam
       setErr(null);
       setLoading(true);
       try {
-        await ensurePdfWorker();
+        await ensurePdfjsWorker();
         const pdf = await pdfjsLib.getDocument({ url: signedUrl, withCredentials: false }).promise;
         const num = Math.min(Math.max(1, pageNumber), pdf.numPages);
         const page = await pdf.getPage(num);

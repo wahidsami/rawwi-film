@@ -11,31 +11,12 @@ const mammoth = (mammothModule as { default?: typeof mammothModule }).default ??
 import * as pdfjsLib from 'pdfjs-dist';
 import JSZip from 'jszip';
 import { DOCX_SCRIPT_STYLE_MAP } from './mammothDocxStyles';
+import { ensurePdfjsWorker } from './pdfjsWorker';
 
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
 function mammothHtmlOptions(arrayBuffer: ArrayBuffer) {
   return { arrayBuffer, styleMap: DOCX_SCRIPT_STYLE_MAP };
-}
-
-let pdfWorkerInitialized = false;
-
-async function initPdfWorker() {
-  if (pdfWorkerInitialized) return;
-  let workerUrl: string;
-  if (import.meta.env.DEV) {
-    // Dev: use dynamic import so Vite serves the worker from node_modules.
-    workerUrl = await import(/* @vite-ignore */ 'pdfjs-dist/build/pdf.worker.mjs?url').then(
-      (m) => (m as { default: string }).default
-    );
-  } else {
-    // Production: use CDN so we never depend on your server (no Nginx, no MIME config).
-    // Same version as the installed pdfjs-dist; CDN serves correct MIME type for .mjs.
-    const version = (pdfjsLib as { version?: string }).version || "4.7.76";
-    workerUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.mjs`;
-  }
-  pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
-  pdfWorkerInitialized = true;
 }
 
 /**
@@ -718,7 +699,7 @@ function pageItemsToText(items: TextItem[]): string {
 export async function extractTextFromPdfPerPage(
   file: File
 ): Promise<Array<{ pageNumber: number; text: string; html: string }>> {
-  await initPdfWorker();
+  await ensurePdfjsWorker();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const numPages = pdf.numPages;
