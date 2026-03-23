@@ -266,6 +266,7 @@ export function ClientDetails() {
                   pageNumber: p.pageNumber,
                   text: p.text,
                   html: p.html || undefined,
+                  displayFontStack: p.displayFontStack,
                 })),
                 enqueueAnalysis: false,
               });

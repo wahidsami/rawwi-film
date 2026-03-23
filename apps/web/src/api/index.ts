@@ -110,7 +110,7 @@ export const scriptsApi = {
     options?: {
       enqueueAnalysis?: boolean;
       contentHtml?: string | null;
-      pages?: Array<{ pageNumber: number; text: string; html?: string | null }>;
+      pages?: Array<{ pageNumber: number; text: string; html?: string | null; displayFontStack?: string }>;
     }
   ): Promise<any> => {
     // Unicode: NFC + well-formed UTF-16 + C0 strip (see docs/UNICODE_EXTRACT_PIPELINE.md).
@@ -128,6 +128,10 @@ export const scriptsApi = {
         pageNumber: p.pageNumber,
         text: safe(p.text),
         ...(p.html != null && p.html !== "" && { html: safe(p.html) }),
+        ...(typeof p.displayFontStack === 'string' &&
+          p.displayFontStack.trim() && {
+            displayFontStack: p.displayFontStack.trim().slice(0, 480),
+          }),
       }));
     }
     return httpClient.post('/extract', body);
@@ -170,6 +174,8 @@ export interface EditorPageResponse {
   content: string;
   contentHtml?: string | null;
   startOffsetGlobal: number;
+  /** CSS font-family stack from PDF import (pdf.js fontName → web stack); null = Cairo default. */
+  displayFontStack?: string | null;
 }
 
 export interface EditorContentResponse {

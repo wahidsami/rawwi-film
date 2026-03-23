@@ -16,6 +16,10 @@ import { getPolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
 import { getScriptDecisionCapabilities } from '@/utils/scriptDecisionCapabilities';
 import { extractDocx, extractTextFromPdfPerPage } from '@/utils/documentExtract';
+import {
+  DEFAULT_SCRIPT_EDITOR_FONT_STACK,
+  sanitizeFontStackForCss,
+} from '@/utils/pdfDisplayFont';
 
 
 
@@ -1169,6 +1173,7 @@ export function ScriptWorkspace() {
               pageNumber: p.pageNumber,
               text: p.text,
               html: p.html || undefined,
+              displayFontStack: p.displayFontStack,
             })),
             enqueueAnalysis: false,
           });
@@ -1734,6 +1739,14 @@ export function ScriptWorkspace() {
 
   // Page-mode: current page data and findings scoped to this page (for toolbar + page view)
   const currentPageData = isPageMode && editorData?.pages?.[safeCurrentPage - 1] ? editorData.pages[safeCurrentPage - 1] : null;
+  /** PDF import can persist a font stack per page (see pdfDisplayFont + script_pages.display_font_stack). */
+  const workspaceBodyFontFamily = useMemo(() => {
+    if (isPageMode && currentPageData?.displayFontStack) {
+      const s = sanitizeFontStackForCss(currentPageData.displayFontStack);
+      if (s) return s;
+    }
+    return DEFAULT_SCRIPT_EDITOR_FONT_STACK;
+  }, [isPageMode, currentPageData?.displayFontStack]);
   const pageStart = currentPageData?.startOffsetGlobal ?? 0;
   const pageEnd = currentPageData ? pageStart + (currentPageData.content?.length ?? 0) : 0;
   const pagesSortedForViewer = useMemo(
@@ -2411,7 +2424,7 @@ export function ScriptWorkspace() {
                             'script-import-body text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words text-right select-text',
                             currentPageData.contentHtml ? '[&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm' : 'whitespace-pre-wrap'
                           )}
-                          style={{ fontFamily: "'Cairo', sans-serif" }}
+                          style={{ fontFamily: workspaceBodyFontFamily }}
                           dir="rtl"
                           lang={lang === 'ar' ? 'ar' : undefined}
                           onMouseDown={handleMouseDown}
@@ -2476,7 +2489,7 @@ export function ScriptWorkspace() {
                     key="editor-with-html"
               ref={editorRef}
                     className="script-import-body min-h-[480px] text-text-main break-words text-right select-text [&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm"
-                    style={{ fontFamily: "'Cairo', sans-serif" }}
+                    style={{ fontFamily: workspaceBodyFontFamily }}
                     dir="rtl"
                     lang={lang === 'ar' ? 'ar' : undefined}
                     onMouseDown={handleMouseDown}
@@ -2521,7 +2534,7 @@ export function ScriptWorkspace() {
                     key="editor-fallback"
                     ref={editorRef}
                     className="script-import-body min-h-[480px] text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words whitespace-pre-wrap text-right select-text"
-                    style={{ fontFamily: "'Cairo', sans-serif" }}
+                    style={{ fontFamily: workspaceBodyFontFamily }}
                     dir="rtl"
                     lang={lang === 'ar' ? 'ar' : undefined}
                     onMouseDown={handleMouseDown}

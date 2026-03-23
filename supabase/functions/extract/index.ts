@@ -174,12 +174,20 @@ async function runIngest(
 
 const PAGE_JOIN = "\n\n";
 
+/** CSS font-family stack from client; strip anything that could break inline styles. */
+function sanitizeDisplayFontStack(input: unknown): string | null {
+  if (typeof input !== "string") return null;
+  const t = stripInvalidUnicodeForDb(input.trim()).slice(0, 480);
+  if (!t || /[;{}<>@]/.test(t)) return null;
+  return t;
+}
+
 async function persistMultipageExtract(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   correlationId: string,
   versionId: string,
   scriptId: string,
-  pagesInput: Array<{ pageNumber?: number; text?: string; html?: string | null }>,
+  pagesInput: Array<{ pageNumber?: number; text?: string; html?: string | null; displayFontStack?: string }>,
   enqueueAnalysis: boolean,
   userId: string,
   v: ScriptVersionRow
@@ -212,6 +220,7 @@ async function persistMultipageExtract(
         : null,
     start_offset_global: offsets[i]?.start_offset_global ?? 0,
     end_offset_global: offsets[i]?.end_offset_global ?? 0,
+    display_font_stack: sanitizeDisplayFontStack(p.displayFontStack),
   }));
 
   const { error: insErr } = await supabase.from("script_pages").insert(pageRows);
@@ -293,7 +302,7 @@ Deno.serve(async (req: Request) => {
     text?: string;
     contentHtml?: string | null;
     enqueueAnalysis?: boolean;
-    pages?: Array<{ pageNumber?: number; text?: string; html?: string | null }>;
+    pages?: Array<{ pageNumber?: number; text?: string; html?: string | null; displayFontStack?: string }>;
   };
   let body: Body;
   try {

@@ -12,6 +12,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import JSZip from 'jszip';
 import { DOCX_SCRIPT_STYLE_MAP } from './mammothDocxStyles';
 import { ensurePdfjsWorker } from './pdfjsWorker';
+import { cssFontStackForPdfTextItems } from './pdfDisplayFont';
 
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
@@ -806,19 +807,20 @@ function pageItemsToText(items: TextItem[]): string {
  */
 export async function extractTextFromPdfPerPage(
   file: File
-): Promise<Array<{ pageNumber: number; text: string; html: string }>> {
+): Promise<Array<{ pageNumber: number; text: string; html: string; displayFontStack: string }>> {
   await ensurePdfjsWorker();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const numPages = pdf.numPages;
-  const pages: Array<{ pageNumber: number; text: string; html: string }> = [];
+  const pages: Array<{ pageNumber: number; text: string; html: string; displayFontStack: string }> = [];
   for (let i = 1; i <= numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
     const raw = (content.items || []) as TextItem[];
     const pageText = pageItemsToText(raw);
     const pageHtml = pageItemsToHtml(raw);
-    pages.push({ pageNumber: i, text: pageText, html: pageHtml });
+    const displayFontStack = cssFontStackForPdfTextItems(raw);
+    pages.push({ pageNumber: i, text: pageText, html: pageHtml, displayFontStack });
   }
   return pages;
 }
