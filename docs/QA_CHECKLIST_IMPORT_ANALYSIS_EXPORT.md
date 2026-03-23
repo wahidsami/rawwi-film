@@ -74,7 +74,8 @@ How to use: run each row; **Pass / Fail / N/A**; paste job/script IDs and notes 
 
 ## References (code / docs)
 
-- Extract / PDF text: `supabase/functions/extract/`, `_shared/serverExtract.ts`, `_shared/utils.ts` (`stripInvalidUnicodeForDb`, UTF-16 chunk snapping)
+- Unicode strategy (PDFs from many apps): `docs/UNICODE_EXTRACT_PIPELINE.md`
+- Extract / PDF text: `supabase/functions/extract/`, `_shared/serverExtract.ts`, `_shared/utils.ts` (`stripInvalidUnicodeForDb`, UTF-16 chunk snapping); client `apps/web/src/utils/extractUnicode.ts`
 - Report PDF: `apps/web/src/components/reports/analysis/download.ts`, `Pdf.tsx`, `mapper`
 - QA remediation summary: `docs/QA_REMEDIATION_REPORT.md`
 

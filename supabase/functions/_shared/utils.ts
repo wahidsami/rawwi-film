@@ -79,6 +79,16 @@ export function snapUtf16InclusiveStart(s: string, start: number): number {
 
 export function stripInvalidUnicodeForDb(s: string): string {
   if (typeof s !== "string" || s.length === 0) return s;
+  const well =
+    typeof (s as { toWellFormed?: () => string }).toWellFormed === "function"
+      ? s.toWellFormed()
+      : stripIllFormedUtf16Manual(s);
+  // Postgres text/json: avoid embedded NUL
+  return well.replace(/\0/g, "");
+}
+
+/** Deno may lag `String#toWellFormed`; keep manual surrogate repair as fallback. */
+function stripIllFormedUtf16Manual(s: string): string {
   let out = "";
   for (let i = 0; i < s.length; i++) {
     const c = s.charCodeAt(i);

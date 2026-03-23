@@ -1,4 +1,5 @@
 import { httpClient, USE_MOCK_API, API_BASE_URL } from './httpClient';
+import { prepareUnicodeForExtractTransport } from '@/utils/extractUnicode';
 import { Company, Script, ScriptVersion, Task, AnalysisJob, ChunkStatus, Finding, LexiconTerm, LexiconHistoryEntry, Report, ReportListItem, FindingReviewResponse } from './models';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -112,8 +113,10 @@ export const scriptsApi = {
       pages?: Array<{ pageNumber: number; text: string; html?: string | null }>;
     }
   ): Promise<any> => {
-    // PDFs (especially Arabic) can produce text that breaks JSON: backslash + u that isn't \uXXXX.
-    const safe = (s: string) => (s ?? "").normalize("NFC").replace(/\\/g, "\\u005C");
+    // Unicode: NFC + well-formed UTF-16 + C0 strip (see docs/UNICODE_EXTRACT_PIPELINE.md).
+    // PDFs can also break JSON: backslash + u that isn't \uXXXX — escape backslashes last.
+    const safe = (s: string) =>
+      prepareUnicodeForExtractTransport(String(s)).replace(/\\/g, '\\u005C');
     const body: Record<string, unknown> = {
       versionId,
       ...(options?.enqueueAnalysis !== undefined && { enqueueAnalysis: options.enqueueAnalysis }),
