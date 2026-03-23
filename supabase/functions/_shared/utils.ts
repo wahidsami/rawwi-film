@@ -49,6 +49,34 @@ export function sanitizeUnicodeUploadFileName(fileName: string): string {
  * PostgreSQL json/jsonb and some drivers reject lone UTF-16 surrogates and U+0000.
  * PDF.js / mixed scripts can yield invalid surrogate pairs; replace with U+FFFD.
  */
+/**
+ * Exclusive end index for slice(start, end): if end would cut between a UTF-16
+ * surrogate pair, move it back so the high surrogate is not the last code unit.
+ * Prevents lone surrogates in chunk substrings (Postgres: "unsupported Unicode escape sequence").
+ */
+export function snapUtf16ExclusiveEnd(s: string, end: number): number {
+  const e = Math.min(Math.max(0, end), s.length);
+  if (e === 0 || e >= s.length) return e;
+  const hi = s.charCodeAt(e - 1);
+  const lo = s.charCodeAt(e);
+  if (hi >= 0xd800 && hi <= 0xdbff && lo >= 0xdc00 && lo <= 0xdfff) {
+    return e - 1;
+  }
+  return e;
+}
+
+/** Inclusive start for slice(start, end): do not start on a low surrogate if preceded by high. */
+export function snapUtf16InclusiveStart(s: string, start: number): number {
+  const st = Math.min(Math.max(0, start), s.length);
+  if (st === 0 || st >= s.length) return st;
+  const c = s.charCodeAt(st);
+  if (c >= 0xdc00 && c <= 0xdfff) {
+    const prev = st > 0 ? s.charCodeAt(st - 1) : 0;
+    if (prev >= 0xd800 && prev <= 0xdbff) return st - 1;
+  }
+  return st;
+}
+
 export function stripInvalidUnicodeForDb(s: string): string {
   if (typeof s !== "string" || s.length === 0) return s;
   let out = "";
@@ -155,6 +183,7 @@ export function chunkText(
   let start = 0;
 
   while (start < normalized.length) {
+    start = snapUtf16InclusiveStart(normalized, start);
     let end = Math.min(start + maxChunkSize, normalized.length);
     if (end < normalized.length) {
       const nextNewline = normalized.indexOf("\n", end);
@@ -163,6 +192,19 @@ export function chunkText(
       } else {
         const lastSpace = normalized.lastIndexOf(" ", end);
         if (lastSpace > start) end = lastSpace + 1;
+      }
+    }
+    end = snapUtf16ExclusiveEnd(normalized, end);
+    if (end <= start) {
+      // Boundary fell inside a supplementary char (e.g. tiny maxChunkSize); include full pair or one unit.
+      if (
+        start + 1 < normalized.length &&
+        normalized.charCodeAt(start) >= 0xd800 &&
+        normalized.charCodeAt(start) <= 0xdbff
+      ) {
+        end = Math.min(start + 2, normalized.length);
+      } else {
+        end = Math.min(start + 1, normalized.length);
       }
     }
 

@@ -3,7 +3,7 @@
  * Call after extraction (or when queuing analysis) to store normalized content and sections.
  */
 import type { createSupabaseAdmin } from "./supabaseAdmin.ts";
-import { splitScriptSections } from "./utils.ts";
+import { splitScriptSections, stripInvalidUnicodeForDb, sha256Hash } from "./utils.ts";
 
 export type SectionRow = {
   script_id: string;
@@ -29,12 +29,19 @@ export async function saveScriptEditorContent(
   contentHtml?: string | null
 ): Promise<{ error?: string }> {
   try {
+    const content = stripInvalidUnicodeForDb(normalizedContent);
+    const hash =
+      content === normalizedContent ? contentHash : await sha256Hash(content);
+    const html =
+      contentHtml != null && typeof contentHtml === "string"
+        ? stripInvalidUnicodeForDb(contentHtml)
+        : null;
     const row: Record<string, unknown> = {
       version_id: versionId,
-      content: normalizedContent,
-      content_hash: contentHash,
+      content,
+      content_hash: hash,
     };
-    if (contentHtml != null) row.content_html = contentHtml;
+    if (html != null) row.content_html = html;
     const { error: textErr } = await supabase
       .from("script_text")
       .upsert(row, { onConflict: "version_id" });
@@ -43,7 +50,7 @@ export async function saveScriptEditorContent(
       return { error: textErr.message };
     }
 
-    const sections = splitScriptSections(normalizedContent);
+    const sections = splitScriptSections(content);
 
     const { error: delErr } = await supabase
       .from("script_sections")
@@ -59,7 +66,7 @@ export async function saveScriptEditorContent(
         script_id: scriptId,
         version_id: versionId,
         index: i,
-        title: s.title,
+        title: stripInvalidUnicodeForDb(s.title),
         start_offset: s.start_offset,
         end_offset: s.end_offset,
         meta: {},

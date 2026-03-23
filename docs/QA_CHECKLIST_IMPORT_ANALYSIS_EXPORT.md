@@ -62,9 +62,19 @@ How to use: run each row; **Pass / Fail / N/A**; paste job/script IDs and notes 
 
 ---
 
+## Troubleshooting: `unsupported Unicode escape sequence` on `/extract` (500)
+
+**Cause:** PostgreSQL rejects JSON that encodes **lone UTF-16 surrogates** (common when `String.slice` splits a **surrogate pair**, e.g. emoji / rare chars, or when PDF text still contains malformed pairs). The VPS/nginx logs **will not** show this — the request goes to **Supabase Edge** (`*.supabase.co/functions/v1/extract`).
+
+**Fixes in code:** (1) sanitize script text before inserts; (2) **snap chunk boundaries** so `chunkText()` never cuts between high/low surrogate; (3) strip + optional hash refresh in `saveScriptEditorContent` when legacy DB rows had bad Unicode.
+
+**Verify:** Supabase Dashboard → Edge Functions → **extract** → Logs, after redeploying `extract` (and `tasks` if you queue analysis separately).
+
+---
+
 ## References (code / docs)
 
-- Extract / PDF text: `supabase/functions/extract/`, `_shared/serverExtract.ts`
+- Extract / PDF text: `supabase/functions/extract/`, `_shared/serverExtract.ts`, `_shared/utils.ts` (`stripInvalidUnicodeForDb`, UTF-16 chunk snapping)
 - Report PDF: `apps/web/src/components/reports/analysis/download.ts`, `Pdf.tsx`, `mapper`
 - QA remediation summary: `docs/QA_REMEDIATION_REPORT.md`
 

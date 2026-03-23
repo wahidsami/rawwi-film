@@ -96,6 +96,9 @@ async function runIngest(
   userId: string,
   correlationId: string
 ): Promise<{ jobId: string } | { error: string }> {
+  // Whole-string clean + chunk boundary snapping (utils.chunkText) avoids Postgres
+  // "unsupported Unicode escape sequence" on jsonb inserts (lone surrogates / split pairs).
+  const safeNormalized = stripInvalidUnicodeForDb(normalized);
   const { data: spForChunk } = await supabase
     .from("script_pages")
     .select("page_number, content")
@@ -107,7 +110,9 @@ async function runIngest(
     typeof Deno !== "undefined" &&
     (Deno.env.get("ANALYSIS_CHUNK_BY_PAGE") ?? "").toLowerCase() === "true" &&
     pr.length > 0;
-  const chunks = usePageChunks ? chunkTextByScriptPages(normalized, pr, 12_000) : chunkText(normalized);
+  const chunks = usePageChunks
+    ? chunkTextByScriptPages(safeNormalized, pr, 12_000)
+    : chunkText(safeNormalized);
   const progressTotal = chunks.length + 1;
   const progressPercent = 0;
 
@@ -121,7 +126,7 @@ async function runIngest(
       progress_total: progressTotal,
       progress_done: 0,
       progress_percent: progressPercent,
-      normalized_text: normalized,
+      normalized_text: safeNormalized,
       script_content_hash: contentHash,
       config_snapshot: {
         ...DEFAULT_DETERMINISTIC_CONFIG,
@@ -261,7 +266,7 @@ async function persistMultipageExtract(
     actor_user_id: userId,
     target_type: "script_version",
     target_id: versionId,
-    target_label: v.source_file_name ?? versionId,
+    target_label: stripInvalidUnicodeForDb(v.source_file_name ?? versionId),
     correlation_id: correlationId,
     metadata: { script_id: scriptId, page_count: pageRows.length },
   }).catch((e) => console.warn(`[extract] correlationId=${correlationId} audit SCRIPT_TEXT_EXTRACTED:`, e));
@@ -527,7 +532,7 @@ Deno.serve(async (req: Request) => {
     actor_user_id: auth.userId,
     target_type: "script_version",
     target_id: versionId,
-    target_label: v.source_file_name ?? versionId,
+    target_label: stripInvalidUnicodeForDb(v.source_file_name ?? versionId),
     correlation_id: correlationId,
     metadata: { script_id: v.script_id, path: "plain_or_txt" },
   }).catch((e) => console.warn(`[extract] correlationId=${correlationId} audit SCRIPT_TEXT_EXTRACTED:`, e));

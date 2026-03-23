@@ -13,7 +13,15 @@ declare const Deno: any;
 import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
-import { getCorrelationId, sha256Hash, normalizeText, chunkText, chunkTextByScriptPages, htmlToText } from "../_shared/utils.ts";
+import {
+  getCorrelationId,
+  sha256Hash,
+  normalizeText,
+  chunkText,
+  chunkTextByScriptPages,
+  htmlToText,
+  stripInvalidUnicodeForDb,
+} from "../_shared/utils.ts";
 import { saveScriptEditorContent } from "../_shared/scriptEditor.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
 import { isUserAdmin } from "../_shared/roleCheck.ts";
@@ -342,6 +350,12 @@ Deno.serve(async (req: Request) => {
     if (editorSave.error) {
       console.warn(`[tasks] correlationId=${correlationId} script_text/sections save failed:`, editorSave.error);
     }
+  }
+
+  const normalizedBeforeClean = normalized;
+  normalized = stripInvalidUnicodeForDb(normalized);
+  if (normalized !== normalizedBeforeClean) {
+    script_content_hash = await sha256Hash(normalized);
   }
 
   const canonical_length = normalized.length;
