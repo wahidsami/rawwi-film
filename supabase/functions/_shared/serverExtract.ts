@@ -2,10 +2,21 @@
  * Authoritative script extraction on Edge (Deno).
  * Output pages must match what we store in script_pages.content and join for script_text.content.
  *
- * PDF.js: static import from unpkg (not esm.sh dynamic import). esm.sh shims pull /node/* deps that
- * Supabase Edge fails to resolve ("Module not found").
+ * PDF.js on Supabase Edge: no real Web Workers → PDF.js uses a "fake worker" that would normally
+ * `import(workerSrc)` for pdf.worker.mjs. Remote dynamic imports fail on Edge ("Module not found").
+ * mozilla/pdf.js supports pre-registering the handler: `globalThis.pdfjsWorker = { WorkerMessageHandler }`
+ * so the fake worker uses statically imported worker code (no runtime URL import).
  */
-import { getDocument, GlobalWorkerOptions } from "https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.mjs";
+import { getDocument } from "https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.mjs";
+import { WorkerMessageHandler } from "https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.mjs";
+
+type PdfJsWorkerGlobal = typeof globalThis & {
+  pdfjsWorker?: { WorkerMessageHandler: typeof WorkerMessageHandler };
+};
+const _pdfG = globalThis as PdfJsWorkerGlobal;
+if (!_pdfG.pdfjsWorker) {
+  _pdfG.pdfjsWorker = { WorkerMessageHandler };
+}
 
 const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const PAGE_SEP = "\n\n";
@@ -60,16 +71,7 @@ function pageItemsToText(items: TextItem[]): string {
 const PDFJS_VER = "4.4.168";
 const PDFJS_ORIGIN = `https://unpkg.com/pdfjs-dist@${PDFJS_VER}`;
 
-let pdfWorkerSrcSet = false;
-
-function ensurePdfJsWorker(): void {
-  if (pdfWorkerSrcSet) return;
-  GlobalWorkerOptions.workerSrc = `${PDFJS_ORIGIN}/build/pdf.worker.mjs`;
-  pdfWorkerSrcSet = true;
-}
-
 export async function extractPdfPageTexts(arrayBuffer: ArrayBuffer): Promise<string[]> {
-  ensurePdfJsWorker();
   const data = new Uint8Array(arrayBuffer);
   const loadingTask = getDocument({
     data,
