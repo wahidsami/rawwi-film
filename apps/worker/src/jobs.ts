@@ -129,14 +129,80 @@ export async function incrementJobProgress(jobId: string): Promise<void> {
  * Mark chunk as done or failed.
  */
 export async function setChunkDone(chunkId: string): Promise<void> {
-  await supabase.from("analysis_chunks").update({ status: "done" }).eq("id", chunkId);
+  await supabase
+    .from("analysis_chunks")
+    .update({
+      status: "done",
+      processing_phase: null,
+      passes_completed: 0,
+    })
+    .eq("id", chunkId);
 }
 
 export async function setChunkFailed(chunkId: string, lastError: string): Promise<void> {
   await supabase
     .from("analysis_chunks")
-    .update({ status: "failed", last_error: lastError })
+    .update({ status: "failed", last_error: lastError, processing_phase: null })
     .eq("id", chunkId);
+}
+
+/** Fire-and-forget UI phase label (does not block LLM work). */
+export function setChunkPhase(chunkId: string, phase: string): void {
+  void supabase
+    .from("analysis_chunks")
+    .update({ processing_phase: phase })
+    .eq("id", chunkId)
+    .then(({ error }) => {
+      if (error) logger.warn("setChunkPhase failed", { chunkId, phase, err: error.message });
+    });
+}
+
+/** Reset pass counters when entering multi-pass detection. */
+export function setChunkMultipassStart(chunkId: string, totalPasses: number): void {
+  void supabase
+    .from("analysis_chunks")
+    .update({
+      processing_phase: "multipass",
+      passes_completed: 0,
+      passes_total: totalPasses,
+    })
+    .eq("id", chunkId)
+    .then(({ error }) => {
+      if (error) logger.warn("setChunkMultipassStart failed", { chunkId, err: error.message });
+    });
+}
+
+const passProgressDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+/** Debounced pass counter for parallel detectors (~280ms coalesce). */
+export function reportChunkPassProgressDebounced(chunkId: string, completed: number, total: number): void {
+  const prev = passProgressDebounceTimers.get(chunkId);
+  if (prev) clearTimeout(prev);
+  const t = setTimeout(() => {
+    passProgressDebounceTimers.delete(chunkId);
+    void supabase
+      .from("analysis_chunks")
+      .update({ passes_completed: completed, passes_total: total })
+      .eq("id", chunkId)
+      .then(({ error }) => {
+        if (error) logger.warn("reportChunkPassProgress failed", { chunkId, err: error.message });
+      });
+  }, 280);
+  passProgressDebounceTimers.set(chunkId, t);
+}
+
+/** Final flush so UI shows 10/10 before chunk completes. */
+export function flushChunkPassProgress(chunkId: string, completed: number, total: number): void {
+  const prev = passProgressDebounceTimers.get(chunkId);
+  if (prev) clearTimeout(prev);
+  passProgressDebounceTimers.delete(chunkId);
+  void supabase
+    .from("analysis_chunks")
+    .update({ passes_completed: completed, passes_total: total })
+    .eq("id", chunkId)
+    .then(({ error }) => {
+      if (error) logger.warn("flushChunkPassProgress failed", { chunkId, err: error.message });
+    });
 }
 
 /**

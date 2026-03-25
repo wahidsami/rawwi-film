@@ -21,6 +21,7 @@ import {
   chunkTextByScriptPages,
   htmlToText,
   stripInvalidUnicodeForDb,
+  sliceTextPreview,
 } from "../_shared/utils.ts";
 import { saveScriptEditorContent } from "../_shared/scriptEditor.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
@@ -113,7 +114,9 @@ Deno.serve(async (req: Request) => {
       }
       const { data: chunkRows, error: chunkErr } = await supabase
         .from("analysis_chunks")
-        .select("chunk_index, status, last_error, page_number_min, page_number_max")
+        .select(
+          "chunk_index, status, last_error, page_number_min, page_number_max, processing_phase, passes_completed, passes_total, text_preview"
+        )
         .eq("job_id", jobId)
         .order("chunk_index", { ascending: true });
       if (chunkErr) {
@@ -127,6 +130,13 @@ Deno.serve(async (req: Request) => {
           lastError: c.last_error ?? null,
           pageNumberMin: c.page_number_min ?? null,
           pageNumberMax: c.page_number_max ?? null,
+          processingPhase: c.processing_phase ?? null,
+          passesCompleted: c.passes_completed ?? null,
+          passesTotal: c.passes_total ?? null,
+          textPreview:
+            c.status === "judging" && c.text_preview != null && String(c.text_preview).trim() !== ""
+              ? String(c.text_preview)
+              : null,
         }))
       );
     }
@@ -437,6 +447,7 @@ Deno.serve(async (req: Request) => {
       job_id: job.id,
       chunk_index: i,
       text: c.text,
+      text_preview: sliceTextPreview(c.text, 280),
       start_offset: c.start_offset,
       end_offset: c.end_offset,
       start_line: c.start_line,

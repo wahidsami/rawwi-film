@@ -77,6 +77,15 @@ import toast from 'react-hot-toast';
 /// <reference types="vite/client" />
 const IS_DEV = (import.meta as any).env?.DEV ?? false;
 
+/** Worker `processing_phase` → modal label */
+const PROCESSING_PHASE_LABELS: Record<string, { ar: string; en: string }> = {
+  router: { ar: 'اختيار المواد المرشحة', en: 'Routing (candidate articles)' },
+  multipass: { ar: 'كشف متعدد بالتوازي', en: 'Parallel multi-pass detection' },
+  hybrid: { ar: 'مراجعة سياقية', en: 'Hybrid context pass' },
+  aggregating: { ar: 'تجميع النتائج', en: 'Writing findings' },
+  cached: { ar: 'نتائج مخزنة', en: 'Cached AI results' },
+};
+
 /**
  * Stored offsets often span a whole dialogue block (character line + sentence).
  * Shrink to the evidence snippet when it appears inside that span so highlights
@@ -1112,6 +1121,23 @@ export function ScriptWorkspace() {
           ? `صفحات ${activeChunk.pageNumberMin}–${activeChunk.pageNumberMax}`
           : `Pages ${activeChunk.pageNumberMin}–${activeChunk.pageNumberMax}`
       : null;
+
+  const activePhaseLabel = useMemo(() => {
+    const p = activeChunk?.processingPhase;
+    if (!p) return null;
+    const m = PROCESSING_PHASE_LABELS[p];
+    return m ? (lang === 'ar' ? m.ar : m.en) : p;
+  }, [activeChunk?.processingPhase, lang]);
+
+  const passProgressLine = useMemo(() => {
+    if (activeChunk?.status !== 'judging') return null;
+    const t = activeChunk.passesTotal ?? 0;
+    const d = activeChunk.passesCompleted ?? 0;
+    if (t <= 0) return null;
+    return lang === 'ar'
+      ? `المكشوفات المكتملة: ${d} من ${t} (تُحدَّث أثناء التشغيل المتوازي)`
+      : `Detectors finished: ${d} of ${t} (parallel; completion order varies)`;
+  }, [activeChunk, lang]);
 
   const canReplaceFile = user?.role === 'Super Admin' || user?.role === 'Admin';
   const hasVersionForAnalysis = Boolean(script?.currentVersionId);
@@ -3202,6 +3228,23 @@ export function ScriptWorkspace() {
                   </span>
                 </div>
               </div>
+              {activePhaseLabel && (
+                <div className="text-[11px] text-text-muted">
+                  {lang === 'ar' ? 'المرحلة التفصيلية:' : 'Detail stage:'}{' '}
+                  <span className="text-text-main font-medium">{activePhaseLabel}</span>
+                </div>
+              )}
+              {passProgressLine && (
+                <div className="text-[11px] text-text-muted">{passProgressLine}</div>
+              )}
+              {activeChunk?.textPreview && activeChunk.status === 'judging' && (
+                <blockquote
+                  className="text-[11px] text-text-muted border-s-2 border-primary/30 ps-2 py-0.5 max-h-24 overflow-y-auto whitespace-pre-wrap break-words"
+                  dir="rtl"
+                >
+                  {activeChunk.textPreview}
+                </blockquote>
+              )}
               <div className="text-[11px] text-text-muted">
                 {lang === 'ar'
                   ? `الأجزاء المكتملة: ${doneChunks} من ${Math.max(totalChunksTracked, doneChunks)}`
@@ -3209,8 +3252,8 @@ export function ScriptWorkspace() {
               </div>
               <p className="text-[11px] text-text-muted">
                 {lang === 'ar'
-                  ? `الماسحات المتخصصة تعمل بالتوازي لكل جزء: ${analysisPasses.join('، ')}`
-                  : `Specialized scanners run in parallel for each chunk: ${analysisPasses.join(', ')}`}
+                  ? `عشرة ماسحات متخصصة تعمل بالتوازي على هذا الجزء؛ يُحدَّث العدّ أثناء التشغيل: ${analysisPasses.join('، ')}`
+                  : `Ten scanners run in parallel on this chunk; the counter updates as each finishes (order varies): ${analysisPasses.join(', ')}`}
               </p>
             </div>
           )}
@@ -3287,6 +3330,14 @@ export function ScriptWorkspace() {
                           )}>
                             {c.status}
                           </span>
+                          {c.processingPhase && (
+                            <span className="text-[10px] text-text-muted">{c.processingPhase}</span>
+                          )}
+                          {c.status === 'judging' && c.passesTotal != null && c.passesTotal > 0 && (
+                            <span className="text-[10px] text-text-muted">
+                              {c.passesCompleted ?? 0}/{c.passesTotal}
+                            </span>
+                          )}
                           {c.lastError && <span className="text-error truncate" title={c.lastError}>{c.lastError}</span>}
                         </div>
                       ))}

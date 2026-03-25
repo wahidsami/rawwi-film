@@ -17,6 +17,7 @@ import type { JudgeFinding } from "./schemas.js";
 import { callJudgeRaw, parseJudgeWithRepair } from "./openai.js";
 import { logger } from "./logger.js";
 import { getFrameworkPromptSection } from "./canonicalAtomFramework.js";
+import { flushChunkPassProgress, reportChunkPassProgressDebounced } from "./jobs.js";
 
 export interface LexiconTerm {
   term: string;
@@ -601,14 +602,16 @@ export async function runMultiPassDetection(
   chunkEnd: number,
   allArticles: GCAMArticle[],
   lexiconTerms: LexiconTerm[],
-  jobConfig: { temperature: number; seed: number }
+  jobConfig: { temperature: number; seed: number },
+  progressOpts?: { chunkId: string }
 ): Promise<{
   findings: JudgeFinding[];
   passResults: PassResult[];
   totalDuration: number;
 }> {
   const startTime = Date.now();
-  
+  const totalPasses = DETECTION_PASSES.length;
+
   logger.info("[DEBUG] runMultiPassDetection started", {
     chunkTextLength: chunkText.length,
     chunkStart,
@@ -626,12 +629,25 @@ export async function runMultiPassDetection(
     lexiconTermsCount: lexiconTerms.length 
   });
 
-  // Run all passes in parallel
+  // Run all passes in parallel (completion order is arbitrary; UI shows debounced count)
+  let completed = 0;
   const passResults = await Promise.all(
-    DETECTION_PASSES.map(pass =>
-      runSinglePass(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig)
+    DETECTION_PASSES.map((pass) =>
+      runSinglePass(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig).then(
+        (result) => {
+          completed++;
+          if (progressOpts?.chunkId) {
+            reportChunkPassProgressDebounced(progressOpts.chunkId, completed, totalPasses);
+          }
+          return result;
+        }
+      )
     )
   );
+
+  if (progressOpts?.chunkId) {
+    flushChunkPassProgress(progressOpts.chunkId, totalPasses, totalPasses);
+  }
 
   // Collect all findings
   const allFindings = passResults.flatMap(r => r.findings);

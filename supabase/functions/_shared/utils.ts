@@ -137,6 +137,14 @@ export function normalizeText(raw: string): string {
     .trim();
 }
 
+/** First maxChars Unicode code points (spread) + ellipsis for analysis_chunks.text_preview. */
+export function sliceTextPreview(s: string, maxChars: number): string {
+  if (typeof s !== "string" || maxChars <= 0) return "";
+  const arr = [...s.normalize("NFC")];
+  if (arr.length <= maxChars) return arr.join("");
+  return arr.slice(0, maxChars).join("") + "…";
+}
+
 /**
  * Extract plain text from HTML in DOM order (tag-stripping only).
  * Must match browser TreeWalker SHOW_TEXT output concatenation so that

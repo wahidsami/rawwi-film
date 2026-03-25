@@ -2,7 +2,13 @@ import { supabase } from "./db.js";
 import { ALWAYS_CHECK_ARTICLES, getScriptStandardArticle, type GCAMArticle } from "./gcam.js";
 import { evidenceHash, lexiconEvidenceHash, computeChunkRunKey } from "./hash.js";
 import type { AnalysisChunk, AnalysisJob } from "./jobs.js";
-import { incrementJobProgress, setChunkDone, setChunkFailed } from "./jobs.js";
+import {
+  incrementJobProgress,
+  setChunkDone,
+  setChunkFailed,
+  setChunkPhase,
+  setChunkMultipassStart,
+} from "./jobs.js";
 import { analyzeLexiconMatches } from "./lexiconMatcher.js";
 import { getLexiconCache } from "./lexiconCache.js";
 import { logger } from "./logger.js";
@@ -605,6 +611,7 @@ export async function processChunkJudge(
 
   if (cachedRun) {
     logger.info("Idempotency HIT: Using cached run results", { chunkId: chunk.id, runKey });
+    setChunkPhase(chunk.id, "cached");
     allFindings = (cachedRun.ai_findings as any[]) || [];
   } else {
     logger.info("Idempotency MISS: Executing AI pipeline", { chunkId: chunk.id, runKey });
@@ -617,6 +624,7 @@ export async function processChunkJudge(
       selectedIds = Array.from({ length: 25 }, (_, i) => i + 1);
       logger.info("HIGH_RECALL mode: bypassing router, using all 25 articles", { chunkId: chunk.id });
     } else {
+      setChunkPhase(chunk.id, "router");
       const articleList = getScriptStandardRouterList();
       try {
         const routerOut = await callRouter(chunkText, articleList, {
@@ -652,16 +660,18 @@ export async function processChunkJudge(
       selectedArticleIds: selectedArticles.map(a => a.id),
     });
 
-    // 3) Multi-Pass Detection (6 specialized scanners running in parallel)
+    // 3) Multi-Pass Detection (specialized scanners running in parallel)
     allFindings = [];
     try {
+      setChunkMultipassStart(chunk.id, DETECTION_PASSES.length);
       const multiPassResult = await runMultiPassDetection(
         chunkText,
         chunkStart,
         chunkEnd,
         selectedArticles,
         terms,
-        { temperature, seed }
+        { temperature, seed },
+        { chunkId: chunk.id }
       );
       
       // Enforce atom_ids and fill missing evidence snippets from local offsets when needed.
@@ -752,6 +762,7 @@ export async function processChunkJudge(
   let persistedFindings: FindingWithGlobal[] = baselineFindings;
   let hybridMetrics: Record<string, unknown> | null = null;
   if (config.ANALYSIS_ENGINE === "hybrid") {
+    setChunkPhase(chunk.id, "hybrid");
     const hybrid = await runHybridContextPipeline({
       findings: baselineFindings,
       fullText: normalizedText,
@@ -836,6 +847,8 @@ export async function processChunkJudge(
       audience_risk,
     };
   });
+
+  setChunkPhase(chunk.id, "aggregating");
 
   // 8) Insert findings (batch upsert with logging). Derive excerpt from canonical when available.
   if (resolvedFindings.length > 0) {

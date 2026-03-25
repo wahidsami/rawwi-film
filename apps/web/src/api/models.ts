@@ -118,6 +118,12 @@ export interface ChunkStatus {
   lastError: string | null;
   pageNumberMin?: number | null;
   pageNumberMax?: number | null;
+  /** Coarse worker stage: router, multipass, hybrid, aggregating, cached */
+  processingPhase?: string | null;
+  passesCompleted?: number | null;
+  passesTotal?: number | null;
+  /** Short excerpt; prefer when status is judging */
+  textPreview?: string | null;
 }
 
 export interface Finding {
