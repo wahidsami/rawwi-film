@@ -10,7 +10,7 @@ import {
   setChunkMultipassStart,
 } from "./jobs.js";
 import { analyzeLexiconMatches } from "./lexiconMatcher.js";
-import { getLexiconCache } from "./lexiconCache.js";
+import { findStringMatches, getLexiconCache } from "./lexiconCache.js";
 import { logger } from "./logger.js";
 import { callJudgeRaw, callRouter, parseJudgeWithRepair } from "./openai.js";
 import { config } from "./config.js";
@@ -81,19 +81,6 @@ const HARD_FALLBACK_INSULTS = [
 function compactEvidenceText(s: string): string {
   const cleaned = (s ?? "").replace(/\s+/g, " ").trim();
   return cleaned.length > MAX_EVIDENCE_LEN ? `${cleaned.slice(0, MAX_EVIDENCE_LEN)}…` : cleaned;
-}
-
-function isLetterOrNumber(ch: string): boolean {
-  return /[\p{L}\p{N}]/u.test(ch);
-}
-
-function isWholeWordAt(text: string, index: number, term: string): boolean {
-  const before = index > 0 ? text[index - 1] : "";
-  const afterIndex = index + term.length;
-  const after = afterIndex < text.length ? text[afterIndex] : "";
-  const beforeOk = before === "" || !isLetterOrNumber(before);
-  const afterOk = after === "" || !isLetterOrNumber(after);
-  return beforeOk && afterOk;
 }
 
 function getLineNumberAt(text: string, index: number): number {
@@ -462,99 +449,96 @@ export async function processChunkJudge(
   // 1a) Tiny hard fallback for critical direct insults (deterministic match; independent from model output).
   let hardFallbackInserted = 0;
   for (const rule of HARD_FALLBACK_INSULTS) {
-    let idx = chunkText.indexOf(rule.term);
-    while (idx !== -1) {
-      if (isWholeWordAt(chunkText, idx, rule.term)) {
-        const startLocal = idx;
-        const endLocal = idx + rule.term.length;
-        const startGlobal = chunkStart + startLocal;
-        const endGlobal = chunkStart + endLocal;
-        const line = getLineNumberAt(chunkText, startLocal);
-        const hash = lexiconEvidenceHash(jobId, rule.articleId, rule.term, line);
-        const evidence =
-          normalizedText != null && startGlobal >= 0 && endGlobal <= normalizedText.length
-            ? normalizedText.slice(startGlobal, endGlobal)
-            : rule.term;
+    const hardMatches = findStringMatches(chunkText, rule.term, "word");
+    for (const hardMatch of hardMatches) {
+      const startLocal = hardMatch.startIndex;
+      const endLocal = hardMatch.endIndex;
+      const startGlobal = chunkStart + startLocal;
+      const endGlobal = chunkStart + endLocal;
+      const line = getLineNumberAt(chunkText, startLocal);
+      const hash = lexiconEvidenceHash(jobId, rule.articleId, rule.term, line);
+      const evidence =
+        normalizedText != null && startGlobal >= 0 && endGlobal <= normalizedText.length
+          ? normalizedText.slice(startGlobal, endGlobal)
+          : rule.term;
 
-        const fallbackRow = {
-          job_id: jobId,
-          script_id: scriptId,
-          version_id: versionId,
+      const fallbackRow = {
+        job_id: jobId,
+        script_id: scriptId,
+        version_id: versionId,
+        source: "lexicon_mandatory",
+        article_id: rule.articleId,
+        atom_id: rule.atomId,
+        severity: rule.severity,
+        confidence: 1,
+        title_ar: `مخالفة إساءة مباشرة: ${rule.term}`,
+        description_ar: evidence,
+        evidence_snippet: evidence,
+        start_offset_global: startGlobal,
+        end_offset_global: endGlobal,
+        start_line_chunk: line,
+        canonical_atom: getPrimaryCanonicalAtomForGcam(rule.articleId, rule.atomId) ?? null,
+        end_line_chunk: line,
+        location: {},
+        evidence_hash: hash,
+        page_number: pageNumAt(startGlobal),
+        ...(() => {
+          const pl = computePageLocalSpan(startGlobal, endGlobal, pageRows);
+          return {
+            start_offset_page: pl.start_offset_page,
+            end_offset_page: pl.end_offset_page,
+          };
+        })(),
+      };
+
+      if (config.ANALYSIS_ENGINE === "hybrid") {
+        deferredLexiconCandidates.push({
           source: "lexicon_mandatory",
-          article_id: rule.articleId,
-          atom_id: rule.atomId,
-          severity: rule.severity,
+          article_id: fallbackRow.article_id,
+          atom_id: fallbackRow.atom_id,
+          title_ar: fallbackRow.title_ar,
+          description_ar: fallbackRow.description_ar,
+          severity: fallbackRow.severity,
           confidence: 1,
-          title_ar: `مخالفة إساءة مباشرة: ${rule.term}`,
-          description_ar: evidence,
-          evidence_snippet: evidence,
+          is_interpretive: false,
+          evidence_snippet: fallbackRow.evidence_snippet,
+          location: {
+            ...fallbackRow.location,
+            context_window_id: `ctx-${startGlobal}-${endGlobal}`,
+            detection_pass: "hard_fallback_insults",
+          },
+          depiction_type: "mention",
+          speaker_role: "unknown",
+          context_window_id: `ctx-${startGlobal}-${endGlobal}`,
+          context_confidence: 0.65,
+          lexical_confidence: 1,
+          policy_confidence: null,
+          rationale_ar: "مطابقة إساءة مباشرة من fallback الحتمي.",
+          final_ruling: null,
+          narrative_consequence: "unknown",
+          detection_pass: "hard_fallback_insults",
           start_offset_global: startGlobal,
           end_offset_global: endGlobal,
-          start_line_chunk: line,
-          canonical_atom: getPrimaryCanonicalAtomForGcam(rule.articleId, rule.atomId) ?? null,
-          end_line_chunk: line,
-          location: {},
-          evidence_hash: hash,
-          page_number: pageNumAt(startGlobal),
-          ...(() => {
-            const pl = computePageLocalSpan(startGlobal, endGlobal, pageRows);
-            return {
-              start_offset_page: pl.start_offset_page,
-              end_offset_page: pl.end_offset_page,
-            };
-          })(),
-        };
-
-        if (config.ANALYSIS_ENGINE === "hybrid") {
-          deferredLexiconCandidates.push({
-            source: "lexicon_mandatory",
-            article_id: fallbackRow.article_id,
-            atom_id: fallbackRow.atom_id,
-            title_ar: fallbackRow.title_ar,
-            description_ar: fallbackRow.description_ar,
-            severity: fallbackRow.severity,
-            confidence: 1,
-            is_interpretive: false,
-            evidence_snippet: fallbackRow.evidence_snippet,
-            location: {
-              ...fallbackRow.location,
-              context_window_id: `ctx-${startGlobal}-${endGlobal}`,
-              detection_pass: "hard_fallback_insults",
-            },
-            depiction_type: "mention",
-            speaker_role: "unknown",
-            context_window_id: `ctx-${startGlobal}-${endGlobal}`,
-            context_confidence: 0.65,
-            lexical_confidence: 1,
-            policy_confidence: null,
-            rationale_ar: "مطابقة إساءة مباشرة من fallback الحتمي.",
-            final_ruling: null,
-            narrative_consequence: "unknown",
-            detection_pass: "hard_fallback_insults",
-            start_offset_global: startGlobal,
-            end_offset_global: endGlobal,
-          });
+        });
+      } else {
+        const { data: fbData, error: fbErr } = await supabase
+          .from("analysis_findings")
+          .upsert(fallbackRow, { onConflict: "job_id,evidence_hash", ignoreDuplicates: true })
+          .select("id,article_id,atom_id,confidence");
+        if (fbErr) {
+          logger.error("Hard fallback insult upsert FAILED", { jobId, chunkId: chunk.id, term: rule.term, error: fbErr });
         } else {
-          const { data: fbData, error: fbErr } = await supabase
-            .from("analysis_findings")
-            .upsert(fallbackRow, { onConflict: "job_id,evidence_hash", ignoreDuplicates: true })
-            .select("id,article_id,atom_id,confidence");
-          if (fbErr) {
-            logger.error("Hard fallback insult upsert FAILED", { jobId, chunkId: chunk.id, term: rule.term, error: fbErr });
-          } else {
-            hardFallbackInserted += fbData?.length ?? 0;
-            await upsertFindingPolicyLinks(
-              (fbData ?? []).map((r) => ({
-                id: (r as { id: string }).id,
-                article_id: (r as { article_id: number }).article_id,
-                atom_id: (r as { atom_id: string | null }).atom_id,
-                confidence: (r as { confidence?: number | null }).confidence ?? 1,
-              }))
-            );
-          }
+          hardFallbackInserted += fbData?.length ?? 0;
+          await upsertFindingPolicyLinks(
+            (fbData ?? []).map((r) => ({
+              id: (r as { id: string }).id,
+              article_id: (r as { article_id: number }).article_id,
+              atom_id: (r as { atom_id: string | null }).atom_id,
+              confidence: (r as { confidence?: number | null }).confidence ?? 1,
+            }))
+          );
         }
       }
-      idx = chunkText.indexOf(rule.term, idx + rule.term.length);
     }
   }
   if (hardFallbackInserted > 0) {

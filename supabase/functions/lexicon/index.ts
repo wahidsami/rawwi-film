@@ -69,6 +69,22 @@ function normalizeSeverity(s: unknown): string {
   return SEVERITIES.includes(lower as (typeof SEVERITIES)[number]) ? lower : "medium";
 }
 
+/**
+ * Keep lexicon duplicate detection aligned with worker-side Arabic matching.
+ * This is intentionally conservative: common obfuscation cleanup only.
+ */
+function normalizeLexiconTerm(term: string): string {
+  return term
+    .normalize("NFC")
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, "")
+    .replace(/[\u0640\u200B-\u200F\u2060\uFEFF]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 /** If atom is not in policy_article_map (DB drift vs PolicyMap), save article-level only instead of 400. */
 async function resolveGcamAtomForLexicon(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -185,7 +201,7 @@ Deno.serve(async (req: Request) => {
       return json({ error: "term is required" }, 400);
     }
     const term = termRaw.trim();
-    const normalized_term = term.toLowerCase();
+    const normalized_term = normalizeLexiconTerm(term);
     const term_type = TERM_TYPES.includes((body.term_type as string) as (typeof TERM_TYPES)[number])
       ? (body.term_type as string)
       : "word";
@@ -310,7 +326,7 @@ Deno.serve(async (req: Request) => {
     const updates: Record<string, unknown> = {};
     if (typeof body.term === "string" && body.term.trim()) {
       updates.term = body.term.trim();
-      updates.normalized_term = body.term.trim().toLowerCase();
+      updates.normalized_term = normalizeLexiconTerm(body.term.trim());
     }
     if (body.term_type != null && TERM_TYPES.includes((body.term_type as string) as (typeof TERM_TYPES)[number])) {
       updates.term_type = body.term_type;

@@ -25,6 +25,18 @@ import {
   glossaryCsvTemplate,
 } from '@/utils/glossaryCsv';
 
+function normalizeLexiconTerm(term: string): string {
+  return term
+    .normalize('NFC')
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
+    .replace(/[\u0640\u200B-\u200F\u2060\uFEFF]/g, '')
+    .replace(/[أإآٱ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
 export function Glossary() {
   const { t, lang } = useLangStore();
   const { settings } = useSettingsStore();
@@ -163,7 +175,7 @@ export function Glossary() {
           await lexiconApi.addTerm({
             id: 'csv',
             term: row.term,
-            normalized_term: row.term.toLowerCase(),
+            normalized_term: normalizeLexiconTerm(row.term),
             term_type: row.term_type,
             category: row.category,
             severity_floor: row.severity_floor,
@@ -621,7 +633,7 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
       return;
     }
 
-    const normalized = formData.term.trim().toLowerCase();
+    const normalized = normalizeLexiconTerm(formData.term.trim());
 
     // Check duplicates (when editing, exclude current term)
     const exists = lexiconTerms.some(
@@ -675,8 +687,8 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
         />
         <p className="text-xs text-text-muted" dir="ltr">
           {lang === 'ar'
-            ? 'لا يُطبَّق تطبيع عربي (أ/إ/آ، ى/ي، ة/ه، التشكيل، الكشيدة). يجب أن يطابق المصطلح النص حرفياً.'
-            : 'Arabic normalization is not applied (أ/إ/آ, ى/ي, ة/ه, diacritics, kashida). Terms must match script text exactly.'}
+            ? 'يُطبَّق تطبيع كشف عربي محافظ عند المطابقة: إزالة التشكيل والكشيدة وبعض الأحرف المخفية، ودمج المسافات الغريبة بين الحروف، مع توحيد شائع مثل أ/إ/آ→ا و ى→ي. يُفضّل إدخال المصطلح بصيغته العربية الطبيعية.'
+            : 'Conservative Arabic detection normalization is applied during matching: diacritics, tatweel, hidden characters, and odd letter spacing are cleaned up, with common normalization such as أ/إ/آ -> ا and ى -> ي. It is still best to enter the term in normal Arabic spelling.'}
         </p>
 
         {/* Canonical atom: when selected, Article + Atom + Title are set automatically and shown read-only */}

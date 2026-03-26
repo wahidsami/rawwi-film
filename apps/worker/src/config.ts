@@ -19,7 +19,11 @@ export const config = {
   OVERLAP_COLLAPSE_RATIO: 0.7,
   /** Bypass router and judge against all 25 articles. Set WORKER_HIGH_RECALL=true in .env */
   HIGH_RECALL: (process.env.WORKER_HIGH_RECALL ?? "").toLowerCase() === "true",
-  DETERMINISTIC_MODE: (process.env.DETERMINISTIC_MODE ?? "").toLowerCase() === "true",
+  /**
+   * Deterministic mode defaults ON for production-safe repeatability.
+   * Set DETERMINISTIC_MODE=false to opt out explicitly.
+   */
+  DETERMINISTIC_MODE: (process.env.DETERMINISTIC_MODE ?? "true").toLowerCase() !== "false",
   /**
    * Analysis engine:
    * - v2: existing detector-only behavior
