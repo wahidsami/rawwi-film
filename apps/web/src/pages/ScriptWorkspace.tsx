@@ -577,19 +577,39 @@ function resolveFindingViaWorkspaceSearch(
   ) => { start: number; end: number; matched: boolean } | null
 ): { pageNumber: number; localStart: number; localEnd: number } | null {
   if (!workspacePlain.trim() || !pages.length) return null;
-  let span = locateSpanByEvidenceSearch(workspacePlain, f);
+  const span = resolveFindingSpanInText(workspacePlain, f, locateInFullDoc);
+  if (!span || span.end <= span.start) return null;
+  return workspaceGlobalSpanToPageLocal(span.start, span.end, pages);
+}
+
+function resolveFindingSpanInText(
+  plain: string,
+  finding: AnalysisFinding,
+  locateInText: (
+    content: string,
+    finding: AnalysisFinding,
+    opts?: { sliceGlobalStart?: number; pageSlice?: boolean }
+  ) => { start: number; end: number; matched: boolean } | null,
+  opts?: { sliceGlobalStart?: number; pageSlice?: boolean }
+): { start: number; end: number } | null {
+  if (!plain.trim()) return null;
+
+  let span = tryExactEvidenceSpan(plain, finding.evidenceSnippet ?? '');
   if (!span) {
-    const loc = locateInFullDoc(workspacePlain, f);
-    if (loc) span = { start: loc.start, end: loc.end };
+    span = locateSpanByEvidenceSearch(plain, finding, opts);
+  }
+  if (!span) {
+    const located = locateInText(plain, finding, opts);
+    if (located) span = { start: located.start, end: located.end };
   }
   if (!span || span.end <= span.start) return null;
-  const ev = (f.evidenceSnippet ?? '').trim();
-  if (ev.length >= 4) {
-    const t = tightenHighlightRangeToEvidence(workspacePlain, span.start, span.end, ev);
-    span = { start: t.start, end: t.end };
+
+  const evidence = normalizeEvidenceForSearch(finding.evidenceSnippet ?? '');
+  if (evidence.length >= 4) {
+    span = tightenHighlightRangeToEvidence(plain, span.start, span.end, evidence);
   }
-  span = expandHighlightRangeToSentence(workspacePlain, span.start, span.end);
-  return workspaceGlobalSpanToPageLocal(span.start, span.end, pages);
+  span = expandHighlightRangeToSentence(plain, span.start, span.end);
+  return span.end > span.start ? span : null;
 }
 
 /** Exact substring match (then NFC) for evidence in full workspace text. */
@@ -911,7 +931,7 @@ export function ScriptWorkspace() {
   const [highlightRetryTick, setHighlightRetryTick] = useState(0);
   // const [reportFindingsLoading, setReportFindingsLoading] = useState(false);
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
-  /** User clicked "Find in script" — only this finding is highlighted (exact/fuzzy search across pages). */
+  /** User clicked a finding card or retried highlight — only this finding is highlighted. */
   const [pinnedHighlight, setPinnedHighlight] = useState<{
     findingId: string;
     globalStart: number;
@@ -2242,8 +2262,13 @@ export function ScriptWorkspace() {
         ? pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
         : [{ pageNumber: 1, content: workspacePlainFull }];
     for (const f of workspaceVisibleReportFindings) {
-      const hit = resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
-      if (hit) map.set(f.id, hit);
+      const globalSpan = resolveFindingSpanInText(workspacePlainFull, f, locateFindingInContent);
+      const hit =
+        (globalSpan ? workspaceGlobalSpanToPageLocal(globalSpan.start, globalSpan.end, pages) : null) ??
+        resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
+      if (hit) {
+        map.set(f.id, hit);
+      }
     }
     return map;
   }, [workspacePlainFull, workspaceVisibleReportFindings, pagesSortedForViewer, locateFindingInContent]);
@@ -2295,39 +2320,17 @@ export function ScriptWorkspace() {
       const pages = pagesSortedForViewer.length
         ? pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
         : [{ pageNumber: 1, content: workspacePlainFull }];
-      let gs: number;
-      let ge: number;
-      const exact = tryExactEvidenceSpan(workspacePlainFull, f.evidenceSnippet ?? '');
-      if (exact) {
-        gs = exact.start;
-        ge = exact.end;
-      } else {
-        let span = locateSpanByEvidenceSearch(workspacePlainFull, f);
-        if (!span) {
-          const loc = locateFindingInContent(workspacePlainFull, f);
-          if (!loc) {
-            toast.error(
-              lang === 'ar'
-                ? 'لم يُعثر على النص في المستند. جرّب اقتباساً أطول في حقل الدليل.'
-                : 'Could not find this text in the document. Try a longer evidence quote.'
-            );
-            return;
-          }
-          span = { start: loc.start, end: loc.end };
-        }
-        const ev = (f.evidenceSnippet ?? '').trim();
-        if (ev.length >= 4) {
-          const t = tightenHighlightRangeToEvidence(workspacePlainFull, span.start, span.end, ev);
-          gs = t.start;
-          ge = t.end;
-        } else {
-          gs = span.start;
-          ge = span.end;
-        }
+      const resolvedSpan = resolveFindingSpanInText(workspacePlainFull, f, locateFindingInContent);
+      if (!resolvedSpan) {
+        toast.error(
+          lang === 'ar'
+            ? 'لم يُعثر على النص في المستند. جرّب اقتباساً أطول في حقل الدليل.'
+            : 'Could not find this text in the document. Try a longer evidence quote.'
+        );
+        return;
       }
-      const expanded = expandHighlightRangeToSentence(workspacePlainFull, gs, ge);
-      gs = expanded.start;
-      ge = expanded.end;
+      let gs = resolvedSpan.start;
+      let ge = resolvedSpan.end;
       if (ge <= gs) {
         toast.error(lang === 'ar' ? 'مدى غير صالح' : 'Invalid match range');
         return;
@@ -2398,40 +2401,21 @@ export function ScriptWorkspace() {
       let appliedCount = 0;
       const domRaw = idx.segments.map((s) => s.text).join('');
       for (const f of sorted) {
-        let loc: { start: number; end: number } | null =
-          locateSpanByEvidenceSearch(domRaw, f, locateOpts) ??
+        const resolvedInDom =
+          resolveFindingSpanInText(domRaw, f, locateFindingInContent, locateOpts) ??
           (currentPageData?.content
-            ? locateSpanByEvidenceSearch(currentPageData.content, f, locateOpts)
+            ? resolveFindingSpanInText(currentPageData.content, f, locateFindingInContent, locateOpts)
             : null);
-        if (!loc) {
-          loc = locateOpts
-            ? locateFindingInContent(domRaw, f, locateOpts)
-            : locateFindingInContent(domRaw, f);
-          if (!loc && currentPageData?.content) {
-            loc = locateOpts
-              ? locateFindingInContent(currentPageData.content, f, locateOpts)
-              : locateFindingInContent(currentPageData.content, f);
-          }
-        }
         let rawStart: number;
         let rawEnd: number;
-        if (loc) {
-          rawStart = loc.start;
-          rawEnd = loc.end;
+        if (resolvedInDom) {
+          rawStart = resolvedInDom.start;
+          rawEnd = resolvedInDom.end;
         } else {
           rawStart = f.startOffsetGlobal ?? -1;
           rawEnd = f.endOffsetGlobal ?? -1;
           if (rawStart < 0 || rawEnd <= rawStart) continue;
         }
-        const evSnip = normalizeEvidenceForSearch(f.evidenceSnippet ?? '');
-      if (evSnip.length >= 4 && rawEnd > rawStart) {
-          const t = tightenHighlightRangeToEvidence(domRaw, rawStart, rawEnd, evSnip);
-          rawStart = t.start;
-          rawEnd = t.end;
-        }
-        const expanded = expandHighlightRangeToSentence(domRaw, rawStart, rawEnd);
-        rawStart = expanded.start;
-        rawEnd = expanded.end;
         const maxRaw = Math.max(0, idx.rawToNorm.length - 1);
         rawStart = Math.max(0, Math.min(rawStart, maxRaw));
         rawEnd = Math.max(rawStart + 1, Math.min(rawEnd, maxRaw + 1));
@@ -3134,8 +3118,8 @@ export function ScriptWorkspace() {
                 <span className="text-xs font-medium text-text-muted">
                   {selectedReportForHighlights
                     ? lang === 'ar'
-                      ? 'اضغط على أي ملاحظة ليجري تحديدها وتمييزها تلقائياً داخل النص. ويمكنك استخدام «بحث في النص» لإعادة التموضع إذا لزم الأمر.'
-                      : 'Click any finding to automatically locate and highlight it in the script. Use “Find in script” to re-run the search if needed.'
+                      ? 'اضغط على أي ملاحظة ليجري تحديدها وتمييزها تلقائياً داخل النص. ويمكنك استخدام «إعادة التحديد في النص» إذا احتجت إلى إعادة المحاولة.'
+                      : 'Click any finding to automatically locate and highlight it in the script. Use “Retry highlight” if you need to run the match again.'
                     : lang === 'ar'
                       ? 'اختر تقريراً لعرض الملاحظات.'
                       : 'Select a report to view findings.'}
@@ -3242,12 +3226,20 @@ export function ScriptWorkspace() {
                     <div
                       key={f.id}
                       ref={(el) => { findingCardRefs.current[f.id] = el; }}
+                      role="button"
+                      tabIndex={0}
                       className={cn(
                         'bg-surface border rounded-xl p-3 shadow-sm cursor-pointer transition-all hover:border-primary/50',
                         selectedFindingId === f.id ? 'ring-2 ring-primary border-primary' : 'border-border',
                         f.reviewStatus === 'approved' ? 'border-success/30' : 'border-error/30'
                       )}
                       onClick={() => handleFindingCardClick(f)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleFindingCardClick(f);
+                        }
+                      }}
                     >
                       <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
                         <span className="text-[10px] font-mono text-text-muted">
@@ -3291,7 +3283,7 @@ export function ScriptWorkspace() {
                         onClick={(e) => handlePinFindingInScript(f, e)}
                       >
                         <Search className="w-3.5 h-3.5 shrink-0" />
-                        {lang === 'ar' ? 'بحث في النص وتمييز' : 'Find in script'}
+                        {lang === 'ar' ? 'إعادة التحديد في النص' : 'Retry highlight'}
                       </Button>
                       {f.source !== 'manual' && (
                         <div className="flex flex-wrap gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
