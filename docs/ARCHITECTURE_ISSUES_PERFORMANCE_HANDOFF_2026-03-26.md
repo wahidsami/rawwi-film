@@ -520,3 +520,68 @@ That combination should improve both wall-clock time and system clarity without 
 - `apps/worker/src/gcam.ts`
 - `apps/worker/src/policyMap.ts`
 - `supabase/functions/tasks/index.ts`
+
+## QA Closure Tracker
+
+This section is the practical checklist to compare against after each implementation step.
+
+Status legend:
+
+- `Closed`: implemented and verified in code
+- `Partial`: improved, but still needs real-world QA validation
+- `Open`: not fully implemented yet
+
+### Closed
+
+- Processing speed improvements for long scripts
+- Severity and article routing improvements
+- Narrative/context arbitration improvements
+- Repeatability and deterministic ordering improvements
+- Arabic obfuscation handling improvements
+- Analysis popup redesign
+- Pause / resume
+- Stop with partial report
+- Stale `judging` chunk auto-recovery
+- Workspace/report finding alignment improvements
+- Automatic finding highlight on finding-card click
+- Fuller sentence-based highlight resolution in workspace
+- Manual finding save hardening
+- Duplicate manual-note action removed
+- Clickable severity filter cards in analysis report
+- Bulk select / select all in workspace report findings
+- Bulk mark-selected-safe action in workspace
+- Finding reclassification workflow in workspace
+- AI/manual separation in workspace findings
+
+### Partial
+
+- PDF import text cleanup
+- DOCX import text fidelity
+- Severity classification consistency across all edge cases
+- Sensitive-content detection coverage
+- Repeated observation grouping and propagation
+- Highlight accuracy on all real imported files
+
+### Open
+
+- Re-review workflow as a richer review state, not just a relabeled status action
+- Re-analysis aware of manual notes and reviewer edits
+- Previously reviewed / client-linked duplicate-work indicators
+- Upload filename validation improvements
+- Word export
+- Official logo in reports
+- Company validation improvements
+
+### Current Highest-Priority Validation Targets
+
+1. Imported PDF and DOCX text quality on fresh imports
+2. Finding-card sentence vs highlighted sentence match
+3. Reclassification behavior in real review flow
+4. Bulk review actions in real workspace usage
+
+### Recommended Next Implementation Order
+
+1. Re-analysis aware of manual notes
+2. Previous-review / client duplication indicators
+3. Word export + report logo
+4. Upload and company validation cleanup
