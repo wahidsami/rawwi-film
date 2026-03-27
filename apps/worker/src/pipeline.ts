@@ -24,7 +24,8 @@ import { runHybridContextPipeline } from "./methodology-v3/index.js";
 import { upsertFindingPolicyLinks } from "./policyLinks.js";
 import { calculateSeverity } from "./severityRulebook.js";
 import { getPrimaryGcamForCanonicalAtom, getPrimaryCanonicalAtomForGcam } from "./canonicalAtomMapping.js";
-import { offsetToPageNumber, computePageLocalSpan, type ScriptPageRow } from "./offsetToPage.js";
+import { offsetToPageNumber, computePageLocalSpan } from "./offsetToPage.js";
+import { getCachedJobResources } from "./jobAnalysisCache.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
@@ -228,6 +229,13 @@ function sortFindingsStable(findings: FindingWithGlobal[]): FindingWithGlobal[] 
   return [...findings].sort(compareFindingsStable);
 }
 
+function articleListsAreEquivalent(a: number[], b: number[]): boolean {
+  if (a.length !== b.length) return false;
+  const left = [...a].sort((x, y) => x - y);
+  const right = [...b].sort((x, y) => x - y);
+  return left.every((value, index) => value === right[index]);
+}
+
 function computeContradictionMetrics(findings: FindingWithGlobal[]): {
   contradictionGroups: number;
   severeDisagreementGroups: number;
@@ -318,6 +326,7 @@ export async function processChunkJudge(
   chunk: AnalysisChunk,
   normalizedText: string | null
 ): Promise<void> {
+  const chunkStartedAt = Date.now();
   const { id: jobId, script_id: scriptId, version_id: versionId } = job;
   const chunkText = chunk.text;
   const chunkStart = chunk.start_offset;
@@ -339,22 +348,13 @@ export async function processChunkJudge(
     ALWAYS_CHECK_ARTICLES_ids: [...ALWAYS_CHECK_ARTICLES],
   });
 
-  const { data: scriptPageRows } = await supabase
-    .from("script_pages")
-    .select("page_number, content")
-    .eq("version_id", versionId)
-    .order("page_number", { ascending: true });
-  const pageRows: ScriptPageRow[] = (scriptPageRows ?? []) as ScriptPageRow[];
+  const jobResourcesStartedAt = Date.now();
+  const { pageRows, promptLexiconTerms } = await getCachedJobResources(supabase, jobId, versionId);
+  const jobResourcesDurationMs = Date.now() - jobResourcesStartedAt;
   const pageNumAt = (off: number) =>
     pageRows.length > 0 ? offsetToPageNumber(off, pageRows) : null;
-
-  // 0) Fetch lexicon terms for prompt injection (include variants, description, example for AI context)
-  const { data: lexiconTerms } = await supabase
-    .from("slang_lexicon")
-    .select("term, gcam_article_id, severity_floor, gcam_article_title_ar, term_variants, description, example_usage")
-    .eq("is_active", true);
   
-  const terms = lexiconTerms || [];
+  const terms = promptLexiconTerms;
   const { router: routerPrompt, judge: judgePrompt } = injectLexiconIntoPrompts(
     ROUTER_SYSTEM_MSG,
     JUDGE_SYSTEM_MSG,
@@ -677,8 +677,8 @@ export async function processChunkJudge(
   } else {
     logger.info("Idempotency MISS: Executing AI pipeline", { chunkId: chunk.id, runKey });
 
-    // 2) Router (or high-recall bypass)
-
+    // 2) Router (or high-recall bypass / deterministic no-op skip)
+    const routerStartedAt = Date.now();
 
     if (config.HIGH_RECALL) {
       // High-recall dev mode: judge against ALL 25 articles
@@ -687,32 +687,47 @@ export async function processChunkJudge(
     } else {
       setChunkPhase(chunk.id, "router");
       const articleList = getScriptStandardRouterList();
-      try {
-        const routerOut = await callRouter(chunkText, articleList, {
-          router_model: routerModel,
-          temperature,
-          seed,
-          max_router_candidates: maxRouter,
-        }, routerPrompt);
-        routerOutputJson = routerOut;
-        const candidateIds = routerOut.candidate_articles.map((a) => a.article_id);
-        selectedIds = [...new Set([...ALWAYS_CHECK_ARTICLES, ...candidateIds])].sort((a, b) => a - b).slice(0, 25);
-
-        // Verification Log: Proof of determinism for Router
-        if (isDev) {
-          logger.info("Router deterministic output", {
-            chunkId: chunk.id,
-            sortedCandidates: candidateIds,
-            model: routerModel,
+      const routerArticleIds = articleList.map((a) => a.id);
+      if (articleListsAreEquivalent(ALWAYS_CHECK_ARTICLES, routerArticleIds)) {
+        selectedIds = [...ALWAYS_CHECK_ARTICLES].sort((a, b) => a - b);
+        routerOutputJson = {
+          skipped: true,
+          reason: "always_check_covers_all_scannable_articles",
+          candidate_articles: selectedIds.map((article_id) => ({ article_id, confidence: 1 })),
+        };
+        logger.info("Router skipped because ALWAYS_CHECK_ARTICLES already covers all scannable articles", {
+          chunkId: chunk.id,
+          selectedCount: selectedIds.length,
+        });
+      } else {
+        try {
+          const routerOut = await callRouter(chunkText, articleList, {
+            router_model: routerModel,
+            temperature,
             seed,
-            runKey,
-          });
+            max_router_candidates: maxRouter,
+          }, routerPrompt);
+          routerOutputJson = routerOut;
+          const candidateIds = routerOut.candidate_articles.map((a) => a.article_id);
+          selectedIds = [...new Set([...ALWAYS_CHECK_ARTICLES, ...candidateIds])].sort((a, b) => a - b).slice(0, 25);
+
+          // Verification Log: Proof of determinism for Router
+          if (isDev) {
+            logger.info("Router deterministic output", {
+              chunkId: chunk.id,
+              sortedCandidates: candidateIds,
+              model: routerModel,
+              seed,
+              runKey,
+            });
+          }
+        } catch (e) {
+          logger.warn("Router failed, using ALWAYS_CHECK_ARTICLES", { error: String(e) });
+          selectedIds = [...ALWAYS_CHECK_ARTICLES];
         }
-      } catch (e) {
-        logger.warn("Router failed, using ALWAYS_CHECK_ARTICLES", { error: String(e) });
-        selectedIds = [...ALWAYS_CHECK_ARTICLES];
       }
     }
+    const routerDurationMs = Date.now() - routerStartedAt;
     const selectedArticles: GCAMArticle[] = selectedIds.map((id) => getScriptStandardArticle(id));
     logger.info("Articles selected for Multi-Pass Judge", { chunkId: chunk.id, count: selectedIds.length, ids: selectedIds });
     logger.info("[DEBUG] Articles passed to multi-pass", {
@@ -725,6 +740,7 @@ export async function processChunkJudge(
     allFindings = [];
     try {
       setChunkMultipassStart(chunk.id, DETECTION_PASSES.length);
+      const multiPassStartedAt = Date.now();
       const multiPassResult = await runMultiPassDetection(
         chunkText,
         chunkStart,
@@ -777,6 +793,13 @@ export async function processChunkJudge(
           duration: r.duration
         }))
       });
+      logger.info("Chunk multipass timings", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        routerDurationMs,
+        multiPassDurationMs: Date.now() - multiPassStartedAt,
+      });
     } catch (e) {
       logger.error("Multi-pass detection failed", { error: String(e), chunkId: chunk.id });
     }
@@ -825,6 +848,7 @@ export async function processChunkJudge(
   let hybridMetrics: Record<string, unknown> | null = null;
   if (config.ANALYSIS_ENGINE === "hybrid") {
     setChunkPhase(chunk.id, "hybrid");
+    const hybridStartedAt = Date.now();
     const hybrid = await runHybridContextPipeline({
       findings: baselineFindings,
       fullText: normalizedText,
@@ -914,6 +938,7 @@ export async function processChunkJudge(
 
   // 8) Insert findings (batch upsert with logging). Derive excerpt from canonical when available.
   if (resolvedFindings.length > 0) {
+    const insertStartedAt = Date.now();
       const rows = resolvedFindings.map((f) => {
       const start = f.start_offset_global ?? 0;
       const end = f.end_offset_global ?? start;
@@ -1037,6 +1062,14 @@ export async function processChunkJudge(
         }))
       );
     }
+    logger.info("Chunk insert timings", {
+      jobId,
+      chunkId: chunk.id,
+      runKey,
+      insertDurationMs: Date.now() - insertStartedAt,
+      totalChunkDurationMs: Date.now() - chunkStartedAt,
+      jobResourcesDurationMs,
+    });
   } else {
     logger.info("No AI findings to insert for chunk", { jobId, chunkId: chunk.id, runKey });
   }
@@ -1047,5 +1080,6 @@ export async function processChunkJudge(
     chunkId: chunk.id,
     runKey,
     findings: persistedFindings.length,
+    totalChunkDurationMs: Date.now() - chunkStartedAt,
   });
 }

@@ -13,6 +13,7 @@ import {
 import { clusterByOverlap, clusterCanonicalKey } from "./methodology-v3/canonicalClustering.js";
 import { generateScriptSummary } from "./scriptSummary.js";
 import { callRevisitSpotter } from "./openai.js";
+import { clearCachedJobResources } from "./jobAnalysisCache.js";
 
 export type SummaryJson = {
   job_id: string;
@@ -961,6 +962,7 @@ export function buildReportHtml(summary: SummaryJson): string {
  * If no pending/judging chunks for job: load findings, build summary + report, upsert analysis_reports, set job completed.
  */
 export async function runAggregation(jobId: string): Promise<void> {
+  const aggregationStartedAt = Date.now();
   const hasActive = await jobHasActiveChunks(jobId);
   if (hasActive) return;
 
@@ -970,6 +972,7 @@ export async function runAggregation(jobId: string): Promise<void> {
       script_id, 
       version_id, 
       created_by,
+      normalized_text,
       config_snapshot,
       scripts (
         title,
@@ -1011,6 +1014,7 @@ export async function runAggregation(jobId: string): Promise<void> {
       actor_user_id: j.created_by ?? null,
     }).catch(() => { });
     logger.info("Report already exists, job marked completed", { jobId });
+    clearCachedJobResources(jobId);
     return;
   }
 
@@ -1038,19 +1042,7 @@ export async function runAggregation(jobId: string): Promise<void> {
     queryError: findingsErr ?? null,
   });
 
-  let fullScriptText = "";
-  try {
-    const { data: chunks } = await supabase
-      .from("analysis_chunks")
-      .select("chunk_index, text")
-      .eq("job_id", jobId)
-      .order("chunk_index", { ascending: true });
-    if (chunks?.length) {
-      fullScriptText = (chunks as { text: string }[]).map((c) => c.text).join("\n");
-    }
-  } catch {
-    // ignore
-  }
+  const fullScriptText = ((job as { normalized_text?: string | null }).normalized_text ?? "").trim();
 
   const analysisOptions = (job as { config_snapshot?: { analysisOptions?: { mergeStrategy?: string } } }).config_snapshot?.analysisOptions;
   const summary = buildSummaryJson(jobId, job.script_id, list, clientName, scriptTitle, analysisOptions);
@@ -1134,5 +1126,8 @@ export async function runAggregation(jobId: string): Promise<void> {
     findings_count_total: summary.totals.findings_count,
     severity_counts: summary.totals.severity_counts,
     reportError: reportErr ?? null,
+    aggregationDurationMs: Date.now() - aggregationStartedAt,
+    scriptSummarySource: fullScriptText.length > 0 ? "analysis_jobs.normalized_text" : "none",
   });
+  clearCachedJobResources(jobId);
 }
