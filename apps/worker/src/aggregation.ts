@@ -542,6 +542,51 @@ function choosePrimaryFromDb(list: DbFinding[]): DbFinding {
   })[0];
 }
 
+function getFindingV3(f: DbFinding): Record<string, unknown> {
+  const locationObj = ((f.location as Record<string, unknown>) ?? {}) as Record<string, unknown>;
+  return ((locationObj.v3 as Record<string, unknown> | undefined) ?? {}) as Record<string, unknown>;
+}
+
+function getStoredCanonicalId(f: DbFinding): string | null {
+  const raw = getFindingV3(f).canonical_finding_id;
+  return typeof raw === "string" && raw.trim() !== "" ? raw.trim() : null;
+}
+
+function buildCanonicalGroups(
+  findings: DbFinding[],
+  oneCardPerOccurrence: boolean,
+  overlapRatio: number
+): Array<{ key: string; list: DbFinding[] }> {
+  if (oneCardPerOccurrence) {
+    return findings.map((f, index) => ({ key: `occurrence-${index}`, list: [f] }));
+  }
+
+  const byStoredId = new Map<string, DbFinding[]>();
+  const withoutStoredId: DbFinding[] = [];
+  for (const f of findings) {
+    const storedId = getStoredCanonicalId(f);
+    if (!storedId) {
+      withoutStoredId.push(f);
+      continue;
+    }
+    if (!byStoredId.has(storedId)) byStoredId.set(storedId, []);
+    byStoredId.get(storedId)!.push(f);
+  }
+
+  const groups: Array<{ key: string; list: DbFinding[] }> = [...byStoredId.entries()].map(([key, list]) => ({ key, list }));
+  const overlapSeed = withoutStoredId.map((f) => ({
+    ...f,
+    start_offset_global: f.start_offset_global ?? undefined,
+    end_offset_global: f.end_offset_global ?? undefined,
+  }));
+  const overlapGroups = clusterByOverlap(overlapSeed, overlapRatio) as Map<number, DbFinding[]>;
+  let fallbackIndex = 0;
+  for (const list of overlapGroups.values()) {
+    groups.push({ key: `fallback-${fallbackIndex++}`, list });
+  }
+  return groups;
+}
+
 /** Dedup key: same source + article + atom + span + snippet → keep one (highest severity). */
 function dedupKey(f: DbFinding, normAtom: string): string {
   const start = f.start_offset_global ?? 0;
@@ -614,6 +659,8 @@ export function buildSummaryJson(
     end_offset_global?: number | null;
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
+    page_number?: number | null;
+    primary_policy_atom_id?: string | null;
     canonical_atom?: string | null;
     intensity?: number | null;
     context_impact?: number | null;
@@ -623,18 +670,25 @@ export function buildSummaryJson(
     source?: string;
   }>();
 
-  const clusters = oneCardPerOccurrence
-    ? new Map(deduped.map((f, i) => [i, [f]]))
-    : clusterByOverlap(deduped, overlapRatio);
+  const canonicalGroups = buildCanonicalGroups(deduped, oneCardPerOccurrence, overlapRatio);
 
-  for (const [clusterIndex, list] of clusters.entries()) {
+  for (const [clusterIndex, { key: groupKey, list }] of canonicalGroups.entries()) {
     const primary = choosePrimaryFromDb(list);
     const relatedArticleIds = [...new Set(list.map((f) => f.article_id).filter((id) => id !== primary.article_id))];
     const cId = oneCardPerOccurrence
       ? `CF-every-${clusterIndex}-${primary.article_id}`
-      : `CF-${Buffer.from(clusterCanonicalKey(list)).toString("base64").replace(/=+$/g, "").slice(0, 20)}`;
-    const locationObj = ((primary.location as Record<string, unknown>) ?? {}) as Record<string, unknown>;
-    const v3 = ((locationObj.v3 as Record<string, unknown> | undefined) ?? {}) as Record<string, unknown>;
+      : groupKey.startsWith("CF-")
+        ? groupKey
+        : `CF-${Buffer.from(
+          clusterCanonicalKey(
+            list.map((f) => ({
+              ...f,
+              start_offset_global: f.start_offset_global ?? undefined,
+              end_offset_global: f.end_offset_global ?? undefined,
+            }))
+          )
+        ).toString("base64").replace(/=+$/g, "").slice(0, 20)}`;
+    const v3 = getFindingV3(primary);
     const policyLinks: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }> = [
       { article_id: primary.article_id, role: "primary" },
       ...relatedArticleIds.map((id) => ({ article_id: id, role: "related" as const })),

@@ -425,6 +425,7 @@ export function Results() {
       ? approvedFindings
       : approvedFindingsDeduped
     : [];
+  const rawViolationRowsCount = hasRealFindings ? violations.length : 0;
   const fallbackSummaryCount = canonicalSummaryFindings.length > 0
     ? canonicalSummaryFindings.length
     : summary.findings_by_article.reduce((acc, a) => acc + (a.top_findings?.length ?? 0), 0);
@@ -445,6 +446,7 @@ export function Results() {
     return base;
   })();
   const displayApproved = report.approvedCount ?? 0;
+  const displaySpecialNotes = reportHints.length;
 
   const decision: 'PASS' | 'REJECT' | 'REVIEW_REQUIRED' =
     (displaySc.critical > 0 || displaySc.high > 0) ? 'REJECT' :
@@ -1175,11 +1177,16 @@ export function Results() {
                   {lang === 'ar' ? 'كل السجلات (بما فيها التكرار)' : 'All rows (incl. duplicates)'}
                 </span>
               </div>
-              {violations.length !== violationsUniqueCount && (
+              <span className="text-[10px] text-text-muted max-w-[18rem] sm:max-w-none text-end sm:text-start">
+                {lang === 'ar'
+                  ? `${displayTotal} نهائية${displaySpecialNotes > 0 ? ` + ${displaySpecialNotes} ملاحظات خاصة` : ''}`
+                  : `${displayTotal} final${displaySpecialNotes > 0 ? ` + ${displaySpecialNotes} special notes` : ''}`}
+              </span>
+              {rawViolationRowsCount !== violationsUniqueCount && (
                 <span className="text-[10px] text-text-muted max-w-[14rem] sm:max-w-none text-end sm:text-start">
                   {lang === 'ar'
-                    ? `${violationsUniqueCount} فريدة من ${violations.length} سجل`
-                    : `${violationsUniqueCount} unique · ${violations.length} rows`}
+                    ? `${violationsUniqueCount} فريدة من ${rawViolationRowsCount} سجل خام`
+                    : `${violationsUniqueCount} unique · ${rawViolationRowsCount} raw rows`}
                 </span>
               )}
             </div>
@@ -1298,9 +1305,9 @@ export function Results() {
           <div className="text-sm text-text-muted mb-1 font-mono">Job: {report.jobId?.slice(0, 8)}...</div>
           <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 w-full mt-4">
             <div className="bg-surface/50 border border-border p-3 rounded-xl">
-              <div className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'مخالفات' : 'Violations'}</div>
+              <div className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'مخالفات نهائية' : 'Final violations'}</div>
               <div className="font-bold text-lg">{displayTotal}</div>
-          </div>
+            </div>
             <div className="bg-error/5 border border-error/20 p-3 rounded-xl text-error">
               <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'حرجة' : 'Critical'}</div>
               <div className="font-bold text-lg">{displaySc.critical}</div>
@@ -1321,6 +1328,12 @@ export function Results() {
               <div className="bg-success/5 border border-success/20 p-3 rounded-xl text-success">
                 <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'معتمد آمن' : 'Approved'}</div>
                 <div className="font-bold text-lg">{displayApproved}</div>
+              </div>
+            )}
+            {displaySpecialNotes > 0 && (
+              <div className="bg-info/5 border border-info/20 p-3 rounded-xl text-info">
+                <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'ملاحظات خاصة' : 'Special notes'}</div>
+                <div className="font-bold text-lg">{displaySpecialNotes}</div>
               </div>
             )}
           </div>

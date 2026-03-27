@@ -2,6 +2,8 @@ import type { HybridFindingLike } from "./contextArbiter.js";
 import { primaryPillarForArticle, secondaryPillarsForArticle } from "./pillarPolicy.js";
 import { clusterByOverlap, clusterCanonicalKey } from "./canonicalClustering.js";
 
+const LEGAL_LINK_OVERLAP_RATIO = 0.85;
+
 function severityRank(s: string): number {
   const r: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 };
   return r[s] ?? 0;
@@ -59,7 +61,7 @@ function choosePrimary(list: HybridFindingLike[]): HybridFindingLike {
  * and merged related articles per cluster. Single canonical finding per incident.
  */
 export function attachLegalLinkMetadata(findings: HybridFindingLike[]): HybridFindingLike[] {
-  const clusters = clusterByOverlap(findings, 0.4);
+  const clusters = clusterByOverlap(findings, LEGAL_LINK_OVERLAP_RATIO);
   const out: HybridFindingLike[] = [];
   for (const list of clusters.values()) {
     const primary = choosePrimary(list);
