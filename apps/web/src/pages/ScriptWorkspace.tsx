@@ -71,6 +71,13 @@ const PREVIEW_FOCUS_PATTERNS = [
   /([^.!؟\n]{18,140}[.!؟])/,
 ];
 
+const SEVERITY_ORDER: Record<string, number> = {
+  critical: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
+};
+
 function compactPreviewText(value: string | null | undefined): string {
   return (value ?? '').replace(/\s+/g, ' ').trim();
 }
