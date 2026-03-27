@@ -944,6 +944,13 @@ export function ScriptWorkspace() {
     toStatus: 'approved' | 'violation';
     titleAr: string;
   } | null>(null);
+  const [selectedReportFindingIds, setSelectedReportFindingIds] = useState<string[]>([]);
+  const [bulkReportFindingReviewModal, setBulkReportFindingReviewModal] = useState<{
+    findingIds: string[];
+    toStatus: 'approved' | 'violation';
+  } | null>(null);
+  const [bulkReportFindingReviewReason, setBulkReportFindingReviewReason] = useState('');
+  const [bulkReportFindingReviewSaving, setBulkReportFindingReviewSaving] = useState(false);
   const [reportFindingReviewReason, setReportFindingReviewReason] = useState('');
   const [reportFindingReviewSaving, setReportFindingReviewSaving] = useState(false);
   const findingCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -982,6 +989,11 @@ export function ScriptWorkspace() {
     );
     return dedupeAnalysisFindings(violations);
   }, [reportFindings, workspaceCanonicalHintIds]);
+
+  useEffect(() => {
+    const visibleIds = new Set(workspaceVisibleReportFindings.map((f) => f.id));
+    setSelectedReportFindingIds((prev) => prev.filter((id) => visibleIds.has(id)));
+  }, [workspaceVisibleReportFindings]);
 
   const loadReportHistory = useCallback(async () => {
     if (!id) return;
@@ -1055,6 +1067,7 @@ export function ScriptWorkspace() {
     setPinnedHighlight(null);
     // setReportFindingsLoading(true);
     setSelectedFindingId(null);
+    setSelectedReportFindingIds([]);
     setHighlightExpectedCount(0);
     setHighlightLocatableCount(0);
     setHighlightRenderedCount(0);
@@ -1134,6 +1147,60 @@ export function ScriptWorkspace() {
       setReportFindingReviewSaving(false);
     }
   }, [reportFindingReviewModal, reportFindingReviewReason, settings?.platform?.requireOverrideReason, lang, user?.id]);
+
+  const handleBulkReportFindingReviewSubmit = useCallback(async () => {
+    if (!bulkReportFindingReviewModal) return;
+    const reason = bulkReportFindingReviewReason.trim();
+    const requireReason = settings?.platform?.requireOverrideReason !== false;
+    if (requireReason && reason.length < 2) {
+      toast.error(lang === 'ar' ? 'يرجى إدخال سبب' : 'Please enter a reason');
+      return;
+    }
+    setBulkReportFindingReviewSaving(true);
+    try {
+      await Promise.all(
+        bulkReportFindingReviewModal.findingIds.map((findingId) =>
+          findingsApi.reviewFinding(findingId, bulkReportFindingReviewModal.toStatus, reason || '')
+        )
+      );
+      const selectedIds = new Set(bulkReportFindingReviewModal.findingIds);
+      setReportFindings((prev) =>
+        prev.map((f) =>
+          selectedIds.has(f.id)
+            ? {
+                ...f,
+                reviewStatus: bulkReportFindingReviewModal.toStatus,
+                reviewReason: reason,
+                reviewedAt: new Date().toISOString(),
+                reviewedBy: user?.id ?? null,
+              }
+            : f
+        )
+      );
+      setSelectedReportFindingIds([]);
+      toast.success(
+        bulkReportFindingReviewModal.toStatus === 'approved'
+          ? (lang === 'ar'
+              ? `تم اعتماد ${bulkReportFindingReviewModal.findingIds.length} ملاحظة كآمنة`
+              : `${bulkReportFindingReviewModal.findingIds.length} findings marked safe`)
+          : (lang === 'ar'
+              ? `تمت إعادة ${bulkReportFindingReviewModal.findingIds.length} ملاحظة كمخالفات`
+              : `${bulkReportFindingReviewModal.findingIds.length} findings reverted to violations`)
+      );
+      setBulkReportFindingReviewModal(null);
+      setBulkReportFindingReviewReason('');
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'فشلت المراجعة الجماعية' : 'Bulk review failed'));
+    } finally {
+      setBulkReportFindingReviewSaving(false);
+    }
+  }, [
+    bulkReportFindingReviewModal,
+    bulkReportFindingReviewReason,
+    settings?.platform?.requireOverrideReason,
+    lang,
+    user?.id,
+  ]);
 
   // Restore saved highlight preference when report list is ready (persists across logout/login)
   useEffect(() => {
@@ -3144,6 +3211,7 @@ export function ScriptWorkspace() {
                       setSelectedReportSummary(null);
                       setReportFindings([]);
                       setSelectedFindingId(null);
+                      setSelectedReportFindingIds([]);
                       setPinnedHighlight(null);
                     }}
                   >
@@ -3222,6 +3290,46 @@ export function ScriptWorkspace() {
                   <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
                     {lang === 'ar' ? 'ملاحظات التقرير' : 'Report findings'}
                   </h3>
+                  <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-surface/70 p-2.5">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[10px] px-2"
+                      onClick={() => setSelectedReportFindingIds(workspaceVisibleReportFindings.map((f) => f.id))}
+                    >
+                      {lang === 'ar' ? 'تحديد الكل' : 'Select all'}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-[10px] px-2"
+                      onClick={() => setSelectedReportFindingIds([])}
+                      disabled={selectedReportFindingIds.length === 0}
+                    >
+                      {lang === 'ar' ? 'إلغاء التحديد' : 'Clear selection'}
+                    </Button>
+                    <span className="text-[11px] text-text-muted">
+                      {lang === 'ar'
+                        ? `${selectedReportFindingIds.length} محددة من ${workspaceVisibleReportFindings.length}`
+                        : `${selectedReportFindingIds.length} selected of ${workspaceVisibleReportFindings.length}`}
+                    </span>
+                    <div className="flex-1" />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[10px] px-2 text-success border-success/30 hover:bg-success/10"
+                      disabled={selectedReportFindingIds.length === 0}
+                      onClick={() => {
+                        setBulkReportFindingReviewModal({ findingIds: selectedReportFindingIds, toStatus: 'approved' });
+                        setBulkReportFindingReviewReason('');
+                      }}
+                    >
+                      {lang === 'ar' ? 'اعتماد المحدد كآمن' : 'Mark selected safe'}
+                    </Button>
+                  </div>
                   {workspaceVisibleReportFindings.map((f) => (
                     <div
                       key={f.id}
@@ -3242,24 +3350,39 @@ export function ScriptWorkspace() {
                       }}
                     >
                       <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
-                        <span className="text-[10px] font-mono text-text-muted">
-                          Art {formatAtomDisplay(f.articleId, f.atomId)}
-                          {(() => {
-                            const ws = findingWorkspaceResolve.get(f.id);
-                            const dp =
-                              ws?.pageNumber ??
-                              displayPageForFinding(
-                                f.startOffsetGlobal,
-                                pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' })),
-                                f.pageNumber ?? null
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
+                            checked={selectedReportFindingIds.includes(f.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setSelectedReportFindingIds((prev) =>
+                                checked ? [...prev, f.id] : prev.filter((id) => id !== f.id)
                               );
-                            return dp != null ? (
-                              <span className="ms-2 text-primary font-semibold">
-                                {lang === 'ar' ? `صفحة ${dp}` : `p.${dp}`}
-                              </span>
-                            ) : null;
-                          })()}
-                        </span>
+                            }}
+                            aria-label={lang === 'ar' ? 'تحديد الملاحظة' : 'Select finding'}
+                          />
+                          <span className="text-[10px] font-mono text-text-muted">
+                            Art {formatAtomDisplay(f.articleId, f.atomId)}
+                            {(() => {
+                              const ws = findingWorkspaceResolve.get(f.id);
+                              const dp =
+                                ws?.pageNumber ??
+                                displayPageForFinding(
+                                  f.startOffsetGlobal,
+                                  pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' })),
+                                  f.pageNumber ?? null
+                                );
+                              return dp != null ? (
+                                <span className="ms-2 text-primary font-semibold">
+                                  {lang === 'ar' ? `صفحة ${dp}` : `p.${dp}`}
+                                </span>
+                              ) : null;
+                            })()}
+                          </span>
+                        </div>
                         <div className="flex items-center gap-1">
                           {f.source === 'manual' ? (
                             <Badge variant="outline" className="text-[10px]">{lang === 'ar' ? 'يدوي' : 'Manual'}</Badge>
@@ -4080,6 +4203,77 @@ export function ScriptWorkspace() {
                   : lang === 'ar'
                     ? 'إعادة كمخالفة'
                     : 'Revert'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!bulkReportFindingReviewModal}
+        onClose={() => {
+          setBulkReportFindingReviewModal(null);
+          setBulkReportFindingReviewReason('');
+        }}
+        title={
+          bulkReportFindingReviewModal?.toStatus === 'approved'
+            ? lang === 'ar'
+              ? 'اعتماد المحدد كآمن'
+              : 'Mark selected as safe'
+            : lang === 'ar'
+              ? 'إعادة المحدد كمخالفة'
+              : 'Revert selected to violations'
+        }
+        className="max-w-md"
+      >
+        <div className="space-y-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <div className="p-3 bg-background rounded-md border border-border text-sm text-text-main font-medium">
+            {lang === 'ar'
+              ? `سيُطبَّق هذا الإجراء على ${bulkReportFindingReviewModal?.findingIds.length ?? 0} ملاحظة.`
+              : `This action will be applied to ${bulkReportFindingReviewModal?.findingIds.length ?? 0} findings.`}
+          </div>
+          <Textarea
+            label={lang === 'ar' ? 'السبب (مطلوب)' : 'Reason (required)'}
+            value={bulkReportFindingReviewReason}
+            onChange={(e) => setBulkReportFindingReviewReason(e.target.value)}
+            placeholder={
+              bulkReportFindingReviewModal?.toStatus === 'approved'
+                ? lang === 'ar'
+                  ? 'اشرح لماذا هذه الملاحظات آمنة…'
+                  : 'Explain why these findings are safe…'
+                : lang === 'ar'
+                  ? 'اشرح لماذا يجب اعتبار هذه الملاحظات مخالفات…'
+                  : 'Explain why these findings should be violations…'
+            }
+          />
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setBulkReportFindingReviewModal(null);
+                setBulkReportFindingReviewReason('');
+              }}
+            >
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              variant={bulkReportFindingReviewModal?.toStatus === 'approved' ? 'primary' : 'danger'}
+              onClick={() => void handleBulkReportFindingReviewSubmit()}
+              disabled={
+                bulkReportFindingReviewSaving ||
+                (settings?.platform?.requireOverrideReason !== false && !bulkReportFindingReviewReason.trim())
+              }
+            >
+              {bulkReportFindingReviewSaving
+                ? lang === 'ar'
+                  ? 'جاري الحفظ…'
+                  : 'Saving…'
+                : bulkReportFindingReviewModal?.toStatus === 'approved'
+                  ? lang === 'ar'
+                    ? 'اعتماد المحدد'
+                    : 'Approve selected'
+                  : lang === 'ar'
+                    ? 'إعادة المحدد'
+                    : 'Revert selected'}
             </Button>
           </div>
         </div>
