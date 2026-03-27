@@ -34,6 +34,45 @@ export interface PassDefinition {
   model?: string; // Optional: override model for this pass
 }
 
+function compareNullableNumber(a: number | null | undefined, b: number | null | undefined): number {
+  const left = a ?? Number.POSITIVE_INFINITY;
+  const right = b ?? Number.POSITIVE_INFINITY;
+  return left - right;
+}
+
+function compareNullableText(a: string | null | undefined, b: string | null | undefined): number {
+  return (a ?? "").localeCompare(b ?? "", "ar");
+}
+
+function compareJudgeFindingsStable(a: JudgeFinding, b: JudgeFinding): number {
+  return (
+    compareNullableNumber(a.article_id, b.article_id) ||
+    compareNullableText(a.atom_id, b.atom_id) ||
+    compareNullableText(a.canonical_atom, b.canonical_atom) ||
+    compareNullableNumber(a.location?.start_offset, b.location?.start_offset) ||
+    compareNullableNumber(a.location?.end_offset, b.location?.end_offset) ||
+    compareNullableText(a.evidence_snippet, b.evidence_snippet) ||
+    compareNullableText(a.title_ar, b.title_ar) ||
+    compareNullableText(a.description_ar, b.description_ar) ||
+    compareNullableText(a.detection_pass, b.detection_pass) ||
+    compareNullableText(a.rationale_ar, b.rationale_ar)
+  );
+}
+
+function compareJudgeFindingPreference(a: JudgeFinding, b: JudgeFinding): number {
+  if (a.confidence !== b.confidence) return b.confidence - a.confidence;
+  if ((a.is_interpretive ? 1 : 0) !== (b.is_interpretive ? 1 : 0)) {
+    return (a.is_interpretive ? 1 : 0) - (b.is_interpretive ? 1 : 0);
+  }
+  const rationaleLenDiff = (b.rationale_ar?.trim().length ?? 0) - (a.rationale_ar?.trim().length ?? 0);
+  if (rationaleLenDiff !== 0) return rationaleLenDiff;
+  return compareJudgeFindingsStable(a, b);
+}
+
+function sortJudgeFindingsStable(findings: JudgeFinding[]): JudgeFinding[] {
+  return [...findings].sort(compareJudgeFindingsStable);
+}
+
 /**
  * Build article payload for a specific set of articles
  */
@@ -582,15 +621,16 @@ async function runSinglePass(
       final_ruling: f.final_ruling ?? null,
       narrative_consequence: f.narrative_consequence ?? "unknown",
     }));
+    const stableTagged = sortJudgeFindingsStable(tagged);
     
     const duration = Date.now() - startTime;
     logger.info(`Pass ${pass.name} completed`, { 
-      findingsCount: tagged.length, 
+      findingsCount: stableTagged.length, 
       duration,
       model 
     });
 
-    return { passName: pass.name, findings: tagged, duration };
+    return { passName: pass.name, findings: stableTagged, duration };
     
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -612,12 +652,12 @@ function deduplicateFindings(allFindings: JudgeFinding[]): JudgeFinding[] {
     const key = `${finding.article_id}-${finding.location.start_offset}-${evidenceKey}`;
     
     const existing = seen.get(key);
-    if (!existing || finding.confidence > existing.confidence) {
+    if (!existing || compareJudgeFindingPreference(finding, existing) < 0) {
       seen.set(key, finding);
     }
   }
   
-  return Array.from(seen.values());
+  return sortJudgeFindingsStable(Array.from(seen.values()));
 }
 
 /**

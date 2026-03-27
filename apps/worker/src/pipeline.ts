@@ -187,6 +187,47 @@ function severityRank(s: string | null | undefined): number {
   return s ? (r[s] ?? 0) : 0;
 }
 
+function compareNullableNumber(a: number | null | undefined, b: number | null | undefined): number {
+  const left = a ?? Number.POSITIVE_INFINITY;
+  const right = b ?? Number.POSITIVE_INFINITY;
+  return left - right;
+}
+
+function compareNullableText(a: string | null | undefined, b: string | null | undefined): number {
+  return (a ?? "").localeCompare(b ?? "", "ar");
+}
+
+function compareFindingsStable(a: FindingWithGlobal, b: FindingWithGlobal): number {
+  return (
+    compareNullableNumber(a.article_id, b.article_id) ||
+    compareNullableText(a.atom_id, b.atom_id) ||
+    compareNullableNumber(a.start_offset_global, b.start_offset_global) ||
+    compareNullableNumber(a.end_offset_global, b.end_offset_global) ||
+    compareNullableText(a.evidence_snippet, b.evidence_snippet) ||
+    compareNullableText(a.title_ar, b.title_ar) ||
+    compareNullableText(a.description_ar, b.description_ar) ||
+    compareNullableText(a.source, b.source) ||
+    compareNullableText(a.detection_pass, b.detection_pass) ||
+    compareNullableText(a.rationale_ar, b.rationale_ar)
+  );
+}
+
+function compareFindingPreference(a: FindingWithGlobal, b: FindingWithGlobal): number {
+  const severityDiff = severityRank(b.severity) - severityRank(a.severity);
+  if (severityDiff !== 0) return severityDiff;
+  if (a.confidence !== b.confidence) return b.confidence - a.confidence;
+  if ((a.is_interpretive ? 1 : 0) !== (b.is_interpretive ? 1 : 0)) {
+    return (a.is_interpretive ? 1 : 0) - (b.is_interpretive ? 1 : 0);
+  }
+  const rationaleLenDiff = (b.rationale_ar?.trim().length ?? 0) - (a.rationale_ar?.trim().length ?? 0);
+  if (rationaleLenDiff !== 0) return rationaleLenDiff;
+  return compareFindingsStable(a, b);
+}
+
+function sortFindingsStable(findings: FindingWithGlobal[]): FindingWithGlobal[] {
+  return [...findings].sort(compareFindingsStable);
+}
+
 function computeContradictionMetrics(findings: FindingWithGlobal[]): {
   contradictionGroups: number;
   severeDisagreementGroups: number;
@@ -226,14 +267,10 @@ export function dedupeByHash(findings: FindingWithGlobal[]): FindingWithGlobal[]
       byHash.set(h, f);
       continue;
     }
-    const better =
-      severityRank(f.severity) > severityRank(existing.severity) ||
-      (severityRank(f.severity) === severityRank(existing.severity) &&
-        (f.confidence > existing.confidence ||
-          (f.confidence === existing.confidence && !f.is_interpretive && existing.is_interpretive)));
+    const better = compareFindingPreference(f, existing) < 0;
     if (better) byHash.set(h, f);
   }
-  return [...byHash.values()];
+  return sortFindingsStable([...byHash.values()]);
 }
 
 /**
@@ -250,10 +287,7 @@ export function overlapCollapse(findings: FindingWithGlobal[]): FindingWithGloba
   const result: FindingWithGlobal[] = [];
   for (const list of groups.values()) {
     list.sort((a, b) => {
-      if (severityRank(b.severity) !== severityRank(a.severity))
-        return severityRank(b.severity) - severityRank(a.severity);
-      if (b.confidence !== a.confidence) return b.confidence - a.confidence;
-      return (a.is_interpretive ? 1 : 0) - (b.is_interpretive ? 1 : 0);
+      return compareFindingPreference(a, b);
     });
     const kept: FindingWithGlobal[] = [];
     for (const f of list) {
@@ -272,7 +306,7 @@ export function overlapCollapse(findings: FindingWithGlobal[]): FindingWithGloba
     }
     result.push(...kept);
   }
-  return result;
+  return sortFindingsStable(result);
 }
 
 /**
@@ -639,7 +673,7 @@ export async function processChunkJudge(
   if (cachedRun) {
     logger.info("Idempotency HIT: Using cached run results", { chunkId: chunk.id, runKey });
     setChunkPhase(chunk.id, "cached");
-    allFindings = (cachedRun.ai_findings as any[]) || [];
+    allFindings = sortFindingsStable(((cachedRun.ai_findings as any[]) || []) as FindingWithGlobal[]);
   } else {
     logger.info("Idempotency MISS: Executing AI pipeline", { chunkId: chunk.id, runKey });
 
@@ -662,7 +696,7 @@ export async function processChunkJudge(
         }, routerPrompt);
         routerOutputJson = routerOut;
         const candidateIds = routerOut.candidate_articles.map((a) => a.article_id);
-        selectedIds = [...new Set([...ALWAYS_CHECK_ARTICLES, ...candidateIds])].slice(0, 25);
+        selectedIds = [...new Set([...ALWAYS_CHECK_ARTICLES, ...candidateIds])].sort((a, b) => a - b).slice(0, 25);
 
         // Verification Log: Proof of determinism for Router
         if (isDev) {
@@ -727,6 +761,7 @@ export async function processChunkJudge(
         }
         return true; // Keep all findings
       });
+      allFindings = sortFindingsStable(allFindings);
       
       logger.info("Multi-pass detection stats", {
         chunkId: chunk.id,
@@ -784,7 +819,7 @@ export async function processChunkJudge(
   }
 
   // 6) Hybrid context arbitration and instrumentation hooks.
-  const baselineFindings = [...allFindings, ...deferredLexiconCandidates];
+  const baselineFindings = sortFindingsStable([...allFindings, ...deferredLexiconCandidates]);
   const baselineMetrics = computeContradictionMetrics(baselineFindings);
   let persistedFindings: FindingWithGlobal[] = baselineFindings;
   let hybridMetrics: Record<string, unknown> | null = null;
@@ -796,10 +831,10 @@ export async function processChunkJudge(
     });
     hybridMetrics = hybrid.metrics;
     if (config.ANALYSIS_HYBRID_MODE === "enforce") {
-      persistedFindings = hybrid.findings as FindingWithGlobal[];
+      persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
     } else {
       // Shadow: persist hybrid so the report shows auditor rationale and primary article; eval log still compares baseline vs hybrid.
-      persistedFindings = hybrid.findings as FindingWithGlobal[];
+      persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
     }
     if (config.ANALYSIS_EVAL_LOG) {
       const evalPayload = {
@@ -831,7 +866,7 @@ export async function processChunkJudge(
   });
 
   // 7) Resolve article_id/atom_id from canonical_atom when missing; compute severity from factors when present.
-  const resolvedFindings = persistedFindings.map((f) => {
+  const resolvedFindings = sortFindingsStable(persistedFindings.map((f) => {
     let article_id = f.article_id;
     let atom_id = f.atom_id ?? null;
     let severity = f.severity ?? null;
@@ -873,7 +908,7 @@ export async function processChunkJudge(
       legal_sensitivity,
       audience_risk,
     };
-  });
+  }));
 
   setChunkPhase(chunk.id, "aggregating");
 
