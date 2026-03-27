@@ -83,6 +83,63 @@ function pickFindingRationale(f: AnalysisFinding): string | null {
   return null;
 }
 
+const RATIONALE_SAYS_NOT_VIOLATION = [
+  "لا يعد مخالفة",
+  "لا توجد مخالفة",
+  "لا يعتبر مخالفة",
+  "لا تُعد مخالفة",
+  "لا تعتبر مخالفة",
+  "ليس مخالفة",
+  "لا يشكل مخالفة",
+  "لا يصل إلى حد المخالفة",
+  "لا يرقى إلى مخالفة",
+  "لا يشكل انتهاكاً",
+  "لا يشكل تجاوزاً",
+  "السياق مقبول",
+  "سياق مقبول",
+  "ضمن الضوابط",
+  "لا خرق للضوابط",
+  "لا يتجاوز الضوابط",
+  "معالجة إيجابية",
+  "دون أي إيحاء",
+  "لا إيحاءات جنسية",
+  "لا يتضمن أي إيحاء",
+  "سياق درامي فقط",
+  "جزء من السياق الدرامي",
+  "في إطار درامي",
+  "ليس تحريضاً",
+  "لا يروج للعنف",
+  "لا يروّج للعنف",
+  "يخدم السياق الدرامي",
+  "يخدم السرد",
+  "قد لا يعد مخالفة",
+  "قد لا يعتبر مخالفة",
+];
+
+function findingCanonicalId(f: AnalysisFinding): string | null {
+  const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+  const raw = v3.canonical_finding_id;
+  return typeof raw === 'string' && raw.trim() ? raw.trim() : null;
+}
+
+function rationaleSaysNotViolationText(value: string | null | undefined): boolean {
+  const text = (value ?? '').replace(/\s+/g, ' ').trim();
+  if (!text) return false;
+  return RATIONALE_SAYS_NOT_VIOLATION.some((phrase) => text.includes(phrase));
+}
+
+function shouldTreatFindingAsSpecialNote(
+  f: AnalysisFinding,
+  canonicalHintIds: Set<string>
+): boolean {
+  const canonicalId = findingCanonicalId(f);
+  if (canonicalId && canonicalHintIds.has(canonicalId)) return true;
+  const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+  const finalRuling = typeof v3.final_ruling === 'string' ? v3.final_ruling.toLowerCase() : '';
+  if (finalRuling === 'context_ok') return true;
+  return rationaleSaysNotViolationText(pickFindingRationale(f));
+}
+
 type CanonicalSummaryFinding = {
   canonical_finding_id: string;
   title_ar: string;
@@ -323,10 +380,13 @@ export function Results() {
   const canonicalSummaryFindings: CanonicalSummaryFinding[] = (summary.canonical_findings || []).filter(Boolean);
   const reportHints: CanonicalSummaryFinding[] = (summary.report_hints || []).filter(Boolean);
   const wordsToRevisit = (summary.words_to_revisit || []).filter(Boolean);
+  const canonicalHintIds = new Set(reportHints.map((f) => f.canonical_finding_id).filter(Boolean));
 
   // Split real findings into violations vs approved for card rendering
   const hasRealFindings = findings.length > 0;
-  const violations = hasRealFindings ? findings.filter(f => f.reviewStatus !== 'approved') : [];
+  const violations = hasRealFindings
+    ? findings.filter((f) => f.reviewStatus !== 'approved' && !shouldTreatFindingAsSpecialNote(f, canonicalHintIds))
+    : [];
   const approvedFindings = hasRealFindings ? findings.filter(f => f.reviewStatus === 'approved') : [];
   const violationsDeduped = hasRealFindings ? dedupeRealFindings(violations) : [];
   const approvedFindingsDeduped = hasRealFindings ? dedupeRealFindings(approvedFindings) : [];
@@ -1326,7 +1386,7 @@ export function Results() {
           <h3 className="font-bold text-xl text-text-main border-b border-border pb-2 flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-primary" />
             {lang === 'ar' ? 'المخالفات' : 'Violations'}
-            <Badge variant="outline" className="ms-2">{displayViolationsCount}</Badge>
+            <Badge variant="outline" className="ms-2">{displayTotal}</Badge>
           </h3>
 
           {(hasRealFindings ? displayViolations.length === 0 : displayViolationsCount === 0) ? (
