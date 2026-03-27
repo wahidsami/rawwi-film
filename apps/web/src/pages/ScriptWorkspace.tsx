@@ -50,6 +50,19 @@ function formatAtomDisplay(articleId: number, atomId: string | null): string {
   return a.includes('.') ? a : `${articleId}.${a}`;
 }
 
+function formatAnalysisElapsed(ms: number, lang: 'ar' | 'en'): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const parts: string[] = [];
+  if (hours > 0) parts.push(lang === 'ar' ? `${hours} س` : `${hours}h`);
+  if (minutes > 0 || hours > 0) parts.push(lang === 'ar' ? `${minutes} د` : `${minutes}m`);
+  parts.push(lang === 'ar' ? `${seconds} ث` : `${seconds}s`);
+  return parts.join(' ');
+}
+
 import { scriptsApi, tasksApi, reportsApi, findingsApi } from '@/api';
 import type { AnalysisFinding } from '@/api';
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
@@ -1146,6 +1159,28 @@ export function ScriptWorkspace() {
       ? `المكشوفات المكتملة: ${d} من ${t} (تُحدَّث أثناء التشغيل المتوازي)`
       : `Detectors finished: ${d} of ${t} (parallel; completion order varies)`;
   }, [activeChunk, lang]);
+
+  const [analysisTimerNow, setAnalysisTimerNow] = useState(() => Date.now());
+  useEffect(() => {
+    const shouldTick = analysisModalOpen && analysisJob != null && analysisJob.startedAt != null && !analysisJob.completedAt;
+    if (!shouldTick) return;
+    setAnalysisTimerNow(Date.now());
+    const timer = window.setInterval(() => setAnalysisTimerNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [analysisModalOpen, analysisJob?.startedAt, analysisJob?.completedAt]);
+
+  const analysisElapsedLabel = useMemo(() => {
+    if (!analysisJob) return null;
+    const startedAtMs = analysisJob.startedAt ? new Date(analysisJob.startedAt).getTime() : null;
+    const fallbackStartMs = analysisJob.createdAt ? new Date(analysisJob.createdAt).getTime() : null;
+    const endAtMs = analysisJob.completedAt ? new Date(analysisJob.completedAt).getTime() : analysisTimerNow;
+    const startMs = startedAtMs ?? fallbackStartMs;
+    if (!startMs || !Number.isFinite(startMs) || !Number.isFinite(endAtMs)) return null;
+    const elapsedMs = Math.max(0, endAtMs - startMs);
+    return lang === 'ar'
+      ? `المدة: ${formatAnalysisElapsed(elapsedMs, lang)}`
+      : `Elapsed: ${formatAnalysisElapsed(elapsedMs, lang)}`;
+  }, [analysisJob, analysisTimerNow, lang]);
 
   const canReplaceFile = user?.role === 'Super Admin' || user?.role === 'Admin';
   const hasVersionForAnalysis = Boolean(script?.currentVersionId);
@@ -3204,6 +3239,9 @@ export function ScriptWorkspace() {
               <p className="text-xs text-text-muted">
                 {analysisJob ? <span dir="ltr">{progressDisplayPair}</span> : '…'}
               </p>
+              {analysisElapsedLabel && (
+                <p className="text-xs text-text-muted">{analysisElapsedLabel}</p>
+              )}
             </div>
           </div>
 
