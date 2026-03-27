@@ -446,7 +446,7 @@ Deno.serve(async (req: Request) => {
 
     // ──────────────── POST — review update ────────────────
     if (req.method === "POST") {
-      let body: { id?: string; review_status?: string; review_notes?: string };
+      let body: { id?: string; review_status?: string; review_notes?: string; update_script_status?: boolean };
       try {
         body = await req.json();
       } catch {
@@ -461,10 +461,14 @@ Deno.serve(async (req: Request) => {
       if (!status || !validStatuses.includes(status)) {
         return json({ error: `review_status must be one of: ${validStatuses.join(", ")}` }, 400);
       }
+      const reviewNotes = body.review_notes?.trim() ?? "";
+      if (status === "under_review" && reviewNotes.length === 0) {
+        return json({ error: "review_notes are required when sending a report back for re-review" }, 400);
+      }
 
       const { data: row } = await supabase
         .from("analysis_reports")
-        .select("id, job_id")
+        .select("id, job_id, script_id")
         .eq("id", id)
         .maybeSingle();
       if (!row) return json({ error: "Report not found" }, 404);
@@ -478,6 +482,8 @@ Deno.serve(async (req: Request) => {
         review_status: status,
         reviewed_by: uid,
         reviewed_at: new Date().toISOString(),
+        last_reviewed_by: uid,
+        last_reviewed_at: new Date().toISOString(),
       };
       if (body.review_notes != null) update.review_notes = body.review_notes;
 
@@ -488,6 +494,23 @@ Deno.serve(async (req: Request) => {
       if (updErr) {
         console.error("[reports] POST review update error:", updErr.message);
         return json({ error: updErr.message }, 500);
+      }
+
+      if (body.update_script_status === true && (row as { script_id?: string | null }).script_id) {
+        const nextScriptStatus =
+          status === "approved"
+            ? "approved"
+            : status === "rejected"
+              ? "rejected"
+              : "review_required";
+        const { error: scriptUpdErr } = await supabase
+          .from("scripts")
+          .update({ status: nextScriptStatus })
+          .eq("id", (row as { script_id: string }).script_id);
+        if (scriptUpdErr) {
+          console.error("[reports] POST script status sync error:", scriptUpdErr.message);
+          return json({ error: scriptUpdErr.message }, 500);
+        }
       }
 
       return json({ ok: true });

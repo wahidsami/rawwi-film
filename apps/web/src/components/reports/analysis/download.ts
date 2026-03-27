@@ -24,6 +24,7 @@ export interface DownloadAnalysisPdfParams {
   scriptTitle: string;
   clientName: string;
   createdAt: string;
+  logoUrl?: string | null;
   findings?: AnalysisFinding[] | null;
   findingsByArticle?: Array<{ article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }> }> | null;
   canonicalFindings?: Array<{
@@ -85,7 +86,7 @@ export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Pr
   }));
   const [coverImageDataUrl, logoDataUrl] = await Promise.all([
     toDataUrl(`${origin}/cover.jpg`),
-    toDataUrl(`${origin}/dashboardlogo.png`),
+    toDataUrl(params.logoUrl || `${origin}/dashboardlogo.png`),
   ]);
   const doc = React.createElement(AnalysisSectionPdf, {
     data: {

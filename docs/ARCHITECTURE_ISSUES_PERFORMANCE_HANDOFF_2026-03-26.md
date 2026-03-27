@@ -528,7 +528,7 @@ This section is the practical checklist to compare against after each implementa
 Status legend:
 
 - `Closed`: implemented and verified in code
-- `Partial`: improved, but still needs real-world QA validation
+- `Validation`: implementation exists; needs end-to-end QA on real files/workflows
 - `Open`: not fully implemented yet
 
 ### Closed
@@ -554,8 +554,13 @@ Status legend:
 - AI/manual separation in workspace findings
 - Re-analysis carries forward manual findings into new jobs
 - Previous-review / client-linked duplicate-work indicators in workspace
+- Re-review workflow with explicit return-to-review reason
+- Upload filename validation improvements
+- Word export for analysis reports
+- Official logo support in analysis report exports
+- Company validation improvements (email, mobile, duplicate names)
 
-### Partial
+### Validation
 
 - PDF import text cleanup
 - DOCX import text fidelity
@@ -565,12 +570,7 @@ Status legend:
 - Highlight accuracy on all real imported files
 
 ### Open
-
-- Re-review workflow as a richer review state, not just a relabeled status action
-- Upload filename validation improvements
-- Word export
-- Official logo in reports
-- Company validation improvements
+- None in the currently tracked QA closure list
 
 ### Current Highest-Priority Validation Targets
 
@@ -578,10 +578,10 @@ Status legend:
 2. Finding-card sentence vs highlighted sentence match
 3. Reclassification behavior in real review flow
 4. Bulk review actions in real workspace usage
+5. Re-review + script-status sync in real reviewer flow
 
 ### Recommended Next Implementation Order
 
-1. Re-analysis aware of manual notes
-2. Previous-review / client duplication indicators
-3. Word export + report logo
-4. Upload and company validation cleanup
+1. End-to-end QA on imported files and highlighting
+2. End-to-end QA on reviewer workflow (bulk, reclassify, re-review)
+3. Compare Quality / Balanced / Turbo on the same long script

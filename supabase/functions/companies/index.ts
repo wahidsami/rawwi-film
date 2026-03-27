@@ -83,6 +83,84 @@ function validateSafeClientText(
   return null;
 }
 
+function toAsciiDigits(value: string): string {
+  return value
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
+}
+
+function normalizeMobile(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = toAsciiDigits(value).trim();
+  if (!trimmed) return null;
+  const digits = trimmed.replace(/[^\d]/g, "");
+  return digits || null;
+}
+
+function validateMobile(value: string | null): string | null {
+  if (!value) return "mobile is required";
+  if (!/^\d{10,15}$/.test(value)) {
+    return "mobile must contain 10 to 15 digits";
+  }
+  return null;
+}
+
+function normalizeEmail(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = toAsciiDigits(value).trim().toLowerCase();
+  return trimmed || null;
+}
+
+function validateEmail(value: string | null): string | null {
+  if (!value) return "email is required";
+  if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(value)) {
+    return "email must be a valid address";
+  }
+  return null;
+}
+
+async function ensureUniqueClientNames(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  nameAr: string | null,
+  nameEn: string | null,
+  excludeId?: string,
+): Promise<string | null> {
+  const checks: Promise<{ field: "nameAr" | "nameEn"; rowId: string | null }>[] = [];
+
+  if (nameAr) {
+    checks.push(
+      supabase
+        .from("clients")
+        .select("id")
+        .ilike("name_ar", nameAr)
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => ({ field: "nameAr" as const, rowId: data?.id ?? null })),
+    );
+  }
+  if (nameEn) {
+    checks.push(
+      supabase
+        .from("clients")
+        .select("id")
+        .ilike("name_en", nameEn)
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => ({ field: "nameEn" as const, rowId: data?.id ?? null })),
+    );
+  }
+
+  const results = await Promise.all(checks);
+  for (const result of results) {
+    if (result.rowId && result.rowId !== excludeId) {
+      return result.field === "nameAr"
+        ? "nameAr already exists"
+        : "nameEn already exists";
+    }
+  }
+  return null;
+}
+
 async function getActorUserId(req: Request, supabase: ReturnType<typeof createSupabaseAdmin>): Promise<string | null> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) return null;
@@ -199,14 +277,22 @@ Deno.serve(async (req: Request) => {
         const repTitleErr = validateSafeClientText("representativeTitle", repTitle);
         if (repTitleErr) return jsonResponse({ error: repTitleErr }, 400);
       }
+      const mobile = normalizeMobile(typeof body.mobile === "string" ? body.mobile : null);
+      const mobileErr = validateMobile(mobile);
+      if (mobileErr) return jsonResponse({ error: mobileErr }, 400);
+      const email = normalizeEmail(typeof body.email === "string" ? body.email : null);
+      const emailErr = validateEmail(email);
+      if (emailErr) return jsonResponse({ error: emailErr }, 400);
+      const duplicateErr = await ensureUniqueClientNames(supabase, nameAr, nameEn);
+      if (duplicateErr) return jsonResponse({ error: duplicateErr }, 409);
 
       const insert: Record<string, unknown> = {
         name_ar: nameAr,
         name_en: nameEn,
         representative_name: typeof body.representativeName === "string" ? body.representativeName.trim() || null : null,
         representative_title: typeof body.representativeTitle === "string" ? body.representativeTitle.trim() || null : null,
-        mobile: typeof body.mobile === "string" ? body.mobile.trim() || null : null,
-        email: typeof body.email === "string" ? body.email.trim() || null : null,
+        mobile,
+        email,
       };
 
       if (body.logoUrl !== undefined) (insert as Record<string, unknown>).logo_url = typeof body.logoUrl === "string" ? body.logoUrl.trim() || null : null;
@@ -358,12 +444,27 @@ Deno.serve(async (req: Request) => {
         }
         updates.representative_title = repTitle || null;
       }
-      if (body.mobile !== undefined) updates.mobile = typeof body.mobile === "string" ? body.mobile.trim() || null : null;
-      if (body.email !== undefined) updates.email = typeof body.email === "string" ? body.email.trim() || null : null;
+      if (body.mobile !== undefined) {
+        const mobile = normalizeMobile(typeof body.mobile === "string" ? body.mobile : null);
+        const mobileErr = validateMobile(mobile);
+        if (mobileErr) return jsonResponse({ error: mobileErr }, 400);
+        updates.mobile = mobile;
+      }
+      if (body.email !== undefined) {
+        const email = normalizeEmail(typeof body.email === "string" ? body.email : null);
+        const emailErr = validateEmail(email);
+        if (emailErr) return jsonResponse({ error: emailErr }, 400);
+        updates.email = email;
+      }
       if (body.logoUrl !== undefined) {
         updates.logo_url = typeof body.logoUrl === "string" ? body.logoUrl.trim() || null : null;
         updates.logo_updated_at = new Date().toISOString();
       }
+
+      const candidateNameAr = (updates.name_ar as string | undefined) ?? before.name_ar;
+      const candidateNameEn = (updates.name_en as string | undefined) ?? before.name_en;
+      const duplicateErr = await ensureUniqueClientNames(supabase, candidateNameAr, candidateNameEn, id);
+      if (duplicateErr) return jsonResponse({ error: duplicateErr }, 409);
 
       if (Object.keys(updates).length === 0) {
         return jsonResponse(toFrontend(before));

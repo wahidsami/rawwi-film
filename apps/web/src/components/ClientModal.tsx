@@ -11,6 +11,20 @@ import toast from 'react-hot-toast';
 const LOGO_MAX_BYTES = 2 * 1024 * 1024; // 2MB
 const LOGO_MIMES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 
+function toAsciiDigits(value: string): string {
+  return value
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
+}
+
+function normalizePhone(value: string): string {
+  return toAsciiDigits(value).replace(/[^\d]/g, '');
+}
+
+function normalizeEmail(value: string): string {
+  return toAsciiDigits(value).trim().toLowerCase();
+}
+
 interface ClientModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -121,13 +135,29 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+    const normalizedPhone = normalizePhone(formData.phone);
+    const normalizedEmail = normalizeEmail(formData.email);
+    const duplicateNameAr = companies.some((company) =>
+      company.companyId !== existingCompany?.companyId &&
+      company.nameAr.trim() === formData.nameAr.trim()
+    );
+    const duplicateNameEn = companies.some((company) =>
+      company.companyId !== existingCompany?.companyId &&
+      company.nameEn.trim().toLowerCase() === formData.nameEn.trim().toLowerCase()
+    );
     if (!formData.nameAr.trim()) newErrors.nameAr = lang === 'ar' ? 'الاسم بالعربية مطلوب' : 'Arabic name is required';
+    else if (duplicateNameAr) newErrors.nameAr = lang === 'ar' ? 'اسم الشركة العربي مستخدم بالفعل' : 'Arabic company name already exists';
     if (!formData.nameEn.trim()) newErrors.nameEn = lang === 'ar' ? 'الاسم بالإنجليزية مطلوب' : 'English name is required';
+    else if (duplicateNameEn) newErrors.nameEn = lang === 'ar' ? 'اسم الشركة الإنجليزي مستخدم بالفعل' : 'English company name already exists';
     if (!formData.repName.trim()) newErrors.repName = lang === 'ar' ? 'اسم الممثل مطلوب' : 'Representative name is required';
-    if (!formData.phone.trim()) newErrors.phone = lang === 'ar' ? 'الجوال مطلوب' : 'Mobile is required';
-    if (!formData.email.trim()) {
+    if (!normalizedPhone) {
+      newErrors.phone = lang === 'ar' ? 'الجوال مطلوب' : 'Mobile is required';
+    } else if (!/^\d{10,15}$/.test(normalizedPhone)) {
+      newErrors.phone = lang === 'ar' ? 'أدخل رقماً صالحاً من 10 إلى 15 رقماً' : 'Enter a valid mobile number with 10 to 15 digits';
+    }
+    if (!normalizedEmail) {
       newErrors.email = lang === 'ar' ? 'البريد الإلكتروني مطلوب' : 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+    } else if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(normalizedEmail)) {
       newErrors.email = lang === 'ar' ? 'أدخل بريداً إلكترونياً صالحاً' : 'Enter a valid email address';
     }
     setErrors(newErrors);
@@ -138,15 +168,18 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
     if (!validateForm()) return;
 
     setIsSaving(true);
+    const normalizedPhone = normalizePhone(formData.phone);
+    const normalizedEmail = normalizeEmail(formData.email);
 
     try {
       if (existingCompany) {
         await updateCompany(existingCompany.companyId, {
-          nameAr: formData.nameAr,
-          nameEn: formData.nameEn,
-          representativeName: formData.repTitle.trim() ? `${formData.repName} (${formData.repTitle})` : formData.repName,
-          email: formData.email.trim(),
-          phone: formData.phone.trim(),
+          nameAr: formData.nameAr.trim(),
+          nameEn: formData.nameEn.trim(),
+          representativeName: formData.repTitle.trim() ? `${formData.repName.trim()} (${formData.repTitle.trim()})` : formData.repName.trim(),
+          email: normalizedEmail,
+          phone: normalizedPhone,
+          mobile: normalizedPhone,
         });
         if (logoFile) {
           const updated = await companiesApi.uploadCompanyLogo(existingCompany.companyId, logoFile);
@@ -159,9 +192,9 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
           nameEn: formData.nameEn.trim(),
           representativeName: formData.repTitle.trim() ? `${formData.repName} (${formData.repTitle})` : formData.repName.trim(),
           representativeTitle: formData.repTitle.trim() || null,
-          email: formData.email.trim(),
-          phone: formData.phone.trim(),
-          mobile: formData.phone.trim(),
+          email: normalizedEmail,
+          phone: normalizedPhone,
+          mobile: normalizedPhone,
           createdAt: new Date().toISOString().split('T')[0],
           scriptsCount: 0,
         };

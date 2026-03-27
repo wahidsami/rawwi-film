@@ -17,7 +17,9 @@ import { cn } from '@/utils/cn';
 import { escapeHtmlSafe } from '@/utils/escapeHtml';
 import toast from 'react-hot-toast';
 import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
+import { downloadAnalysisWord } from '@/components/reports/analysis/downloadWord';
 import { downloadQuickAnalysisPdf } from '@/components/reports/quick-analysis/download';
+import { resolveStorageUrl } from '@/utils/storage';
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
@@ -204,6 +206,7 @@ export function Results() {
   const [reviewing, setReviewing] = useState(false);
   const [updateScriptStatus, setUpdateScriptStatus] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isDownloadingWord, setIsDownloadingWord] = useState(false);
   const [isQuickAnalysisReport, setIsQuickAnalysisReport] = useState(quickFromQuery);
   const [groupFindingsByAtom, setGroupFindingsByAtom] = useState(false);
   /** false = deduped list (default); true = every DB row (duplicates visible). */
@@ -219,10 +222,29 @@ export function Results() {
   // Report-level review
   const handleReportReview = async (status: ReviewStatus) => {
     if (!report?.id) return;
+    let reviewNotes = '';
+    if (status === 'under_review') {
+      const promptLabel = lang === 'ar'
+        ? 'اذكر سبب إعادة التقرير للمراجعة'
+        : 'Enter the reason for sending this report back for review';
+      const entered = window.prompt(promptLabel, report.reviewNotes ?? '');
+      if (entered == null) return;
+      reviewNotes = entered.trim();
+      if (!reviewNotes) {
+        toast.error(lang === 'ar' ? 'سبب إعادة المراجعة مطلوب' : 'A re-review reason is required');
+        return;
+      }
+    }
     setReviewing(true);
     try {
-      await reportsApi.review(report.id, status, undefined, updateScriptStatus);
-      setReport({ ...report, reviewStatus: status, reviewedAt: new Date().toISOString(), reviewedBy: user?.id ?? null });
+      await reportsApi.review(report.id, status, reviewNotes, updateScriptStatus);
+      setReport({
+        ...report,
+        reviewStatus: status,
+        reviewNotes: reviewNotes || report.reviewNotes,
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: user?.id ?? null,
+      });
       toast.success(
         status === 'approved' ? (lang === 'ar' ? 'تم قبول التقرير' : 'Report approved') :
           status === 'rejected' ? (lang === 'ar' ? 'تم رفض التقرير' : 'Report rejected') :
@@ -527,11 +549,15 @@ export function Results() {
       // 2. Prepare Data
       const isAr = lang === 'ar';
       const baseUrl = window.location.origin;
+      const brandingLogoRaw = settings?.branding?.logoUrl?.trim() || '';
+      const resolvedBrandLogo = brandingLogoRaw
+        ? (brandingLogoRaw.startsWith('/') ? `${baseUrl}${brandingLogoRaw}` : resolveStorageUrl(brandingLogoRaw))
+        : `${baseUrl}/dashboardlogo.png`;
 
       // Images (using absolute paths for print window)
-      const loginLogo = `${baseUrl}/loginlogo.png`;
+      const loginLogo = resolvedBrandLogo;
       const footerImg = `${baseUrl}/footer.png`;
-      const dashLogo = `${baseUrl}/loginlogo.png`;
+      const dashLogo = resolvedBrandLogo;
 
       // Metadata from summary (backend may attach client_name/script_title at top level or under metadata)
       const sum = summary as typeof summary & { client_name?: string; script_title?: string; scriptTitle?: string; metadata?: { client_name?: string } };
@@ -752,6 +778,7 @@ export function Results() {
         scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
         clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
         createdAt: report.createdAt,
+        logoUrl: settings?.branding?.logoUrl,
         findings: (findings || []).filter((f): f is AnalysisFinding => Boolean(f)),
         findingsByArticle: summary?.findings_by_article,
         canonicalFindings: summary?.canonical_findings,
@@ -780,6 +807,32 @@ export function Results() {
       );
     } finally {
       setIsDownloadingPdf(false);
+    }
+  };
+
+  const handleDownloadWord = async () => {
+    if (!report) return;
+    setIsDownloadingWord(true);
+    try {
+      const basePayload = {
+        scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
+        clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
+        createdAt: report.createdAt,
+        logoUrl: settings?.branding?.logoUrl,
+        findings,
+        findingsByArticle: summary.findings_by_article,
+        canonicalFindings: canonicalSummaryFindings,
+        reportHints: summary.report_hints ?? undefined,
+        scriptSummary: summary.script_summary ?? undefined,
+        lang: isAr ? 'ar' : 'en' as const,
+      };
+      downloadAnalysisWord(basePayload);
+      toast.success(isAr ? 'تم تنزيل ملف Word' : 'Word document downloaded');
+    } catch (err: unknown) {
+      console.error('[Results] Word download failed', err);
+      toast.error(isAr ? 'تعذر تنزيل ملف Word' : 'Word download failed');
+    } finally {
+      setIsDownloadingWord(false);
     }
   };
 
@@ -1225,6 +1278,10 @@ export function Results() {
           <Button variant="outline" onClick={handleDownloadPdf} className="h-10 px-4 flex gap-2" disabled={isDownloadingPdf}>
             {isDownloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
             {isDownloadingPdf ? (lang === 'ar' ? 'جاري تجهيز PDF...' : 'Preparing PDF...') : (lang === 'ar' ? 'تنزيل PDF' : 'Download PDF')}
+          </Button>
+          <Button variant="outline" onClick={handleDownloadWord} className="h-10 px-4 flex gap-2" disabled={isDownloadingWord}>
+            {isDownloadingWord ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+            {isDownloadingWord ? (lang === 'ar' ? 'جاري تجهيز Word...' : 'Preparing Word...') : (lang === 'ar' ? 'تنزيل Word' : 'Download Word')}
           </Button>
         </div>
       </div>

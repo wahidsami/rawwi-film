@@ -1084,8 +1084,21 @@ export function ScriptWorkspace() {
   }, [analysisJob?.status, loadReportHistory]);
 
   const handleReview = async (reportId: string, status: ReviewStatus, notes?: string) => {
+    let resolvedNotes = notes ?? '';
+    if (status === 'under_review' && !resolvedNotes.trim()) {
+      const promptLabel = lang === 'ar'
+        ? 'اذكر سبب إعادة التقرير للمراجعة'
+        : 'Enter the reason for sending this report back for review';
+      const entered = window.prompt(promptLabel, '');
+      if (entered == null) return;
+      resolvedNotes = entered.trim();
+      if (!resolvedNotes) {
+        toast.error(lang === 'ar' ? 'سبب إعادة المراجعة مطلوب' : 'A re-review reason is required');
+        return;
+      }
+    }
     try {
-      await reportsApi.review(reportId, status, notes);
+      await reportsApi.review(reportId, status, resolvedNotes);
       toast.success(lang === 'ar' ? 'تم تحديث حالة المراجعة' : 'Review status updated');
       loadReportHistory();
     } catch (err: any) {
@@ -3752,7 +3765,7 @@ export function ScriptWorkspace() {
                         )}
                         {r.reviewStatus !== 'under_review' && (
                           <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2" onClick={() => handleReview(r.id, 'under_review')}>
-                            {lang === 'ar' ? 'إعادة' : 'Reset'}
+                            {lang === 'ar' ? 'إعادة للمراجعة' : 'Re-review'}
                           </Button>
                         )}
                         <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2" onClick={() => {

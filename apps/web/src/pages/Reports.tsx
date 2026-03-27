@@ -7,6 +7,7 @@ import { useDataStore } from '@/store/dataStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate } from '@/utils/dateFormat';
 import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
+import { downloadAnalysisWord } from '@/components/reports/analysis/downloadWord';
 import toast from 'react-hot-toast';
 import { reportsApi, findingsApi, type AnalysisFinding } from '@/api';
 import { usersApi } from '@/api';
@@ -32,6 +33,7 @@ function Reports() {
   const [error, setError] = useState<string | null>(null);
   const [usersList, setUsersList] = useState<{ id: string; name: string }[]>([]);
   const [downloadingReportId, setDownloadingReportId] = useState<string | null>(null);
+  const [downloadingWordReportId, setDownloadingWordReportId] = useState<string | null>(null);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -128,6 +130,7 @@ function Reports() {
         scriptTitle: fullReport.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
         clientName: fullReport.clientName || (isAr ? 'عميل' : 'Client'),
         createdAt: fullReport.createdAt,
+        logoUrl: settings?.branding?.logoUrl,
         findings,
         findingsByArticle: fullReport.summaryJson?.findings_by_article,
         canonicalFindings: fullReport.summaryJson?.canonical_findings,
@@ -149,6 +152,39 @@ function Reports() {
       handleOpen(report);
     } finally {
       setDownloadingReportId(null);
+    }
+  };
+
+  const handleDownloadWord = async (e: React.MouseEvent, report: ReportListItem) => {
+    e.stopPropagation();
+    if (downloadingWordReportId) return;
+    setDownloadingWordReportId(report.id || null);
+    try {
+      const fullReport = await reportsApi.getById(report.id!);
+      let findings: AnalysisFinding[] = [];
+      if (fullReport.jobId) {
+        try {
+          findings = await findingsApi.getByJob(fullReport.jobId);
+        } catch { /* ignore */ }
+      }
+      downloadAnalysisWord({
+        scriptTitle: fullReport.scriptTitle || (lang === 'ar' ? 'تحليل النص' : 'Script Analysis'),
+        clientName: fullReport.clientName || (lang === 'ar' ? 'عميل' : 'Client'),
+        createdAt: fullReport.createdAt,
+        logoUrl: settings?.branding?.logoUrl,
+        findings,
+        findingsByArticle: fullReport.summaryJson?.findings_by_article,
+        canonicalFindings: fullReport.summaryJson?.canonical_findings,
+        reportHints: fullReport.summaryJson?.report_hints ?? undefined,
+        scriptSummary: fullReport.summaryJson?.script_summary ?? undefined,
+        lang: lang === 'ar' ? 'ar' : 'en',
+      });
+      toast.success(lang === 'ar' ? 'تم تنزيل Word' : 'Word downloaded');
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || (lang === 'ar' ? 'تعذر تنزيل Word' : 'Word download failed'));
+    } finally {
+      setDownloadingWordReportId(null);
     }
   };
 
@@ -350,6 +386,9 @@ function Reports() {
                         </Button>
                         <Button variant="ghost" size="sm" onClick={(e) => handleDownloadPdf(e, report)} disabled={downloadingReportId === report.id} className="h-8 hover:bg-primary/10 hover:text-primary transition-colors">
                           {downloadingReportId === report.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={(e) => handleDownloadWord(e, report)} disabled={downloadingWordReportId === report.id} className="h-8 hover:bg-primary/10 hover:text-primary transition-colors">
+                          {downloadingWordReportId === report.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
                         </Button>
                       </div>
                     </td>
