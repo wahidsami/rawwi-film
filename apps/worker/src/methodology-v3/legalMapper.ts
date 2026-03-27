@@ -42,6 +42,17 @@ function primaryScore(f: HybridFindingLike): number[] {
   ];
 }
 
+function compareFindingsStable(a: HybridFindingLike, b: HybridFindingLike): number {
+  return (
+    (a.start_offset_global ?? 0) - (b.start_offset_global ?? 0) ||
+    (a.end_offset_global ?? 0) - (b.end_offset_global ?? 0) ||
+    (a.article_id ?? 0) - (b.article_id ?? 0) ||
+    String(a.atom_id ?? "").localeCompare(String(b.atom_id ?? ""), "ar") ||
+    String(a.evidence_snippet ?? "").localeCompare(String(b.evidence_snippet ?? ""), "ar") ||
+    String(a.title_ar ?? "").localeCompare(String(b.title_ar ?? ""), "ar")
+  );
+}
+
 function choosePrimary(list: HybridFindingLike[]): HybridFindingLike {
   const specific = list.filter((f) => !BROAD_ARTICLES.has(f.article_id));
   const candidateList = specific.length > 0 ? specific : list;
@@ -52,7 +63,7 @@ function choosePrimary(list: HybridFindingLike[]): HybridFindingLike {
       const d = (sb[i] ?? 0) - (sa[i] ?? 0);
       if (d !== 0) return d;
     }
-    return 0;
+    return compareFindingsStable(a, b);
   })[0];
 }
 
@@ -65,7 +76,7 @@ export function attachLegalLinkMetadata(findings: HybridFindingLike[]): HybridFi
   const out: HybridFindingLike[] = [];
   for (const list of clusters.values()) {
     const primary = choosePrimary(list);
-    const relatedArticleIds = [...new Set(list.map((x) => x.article_id).filter((id) => id !== primary.article_id))];
+    const relatedArticleIds = [...new Set(list.map((x) => x.article_id).filter((id) => id !== primary.article_id))].sort((a, b) => a - b);
     const canonicalId = `CF-${Buffer.from(clusterCanonicalKey(list)).toString("base64").replace(/=+$/g, "").slice(0, 20)}`;
     for (const f of list) {
       out.push({

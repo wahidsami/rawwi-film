@@ -72,7 +72,7 @@ function isVerbatim(sourceText: string, snippet: string): boolean {
 }
 
 const MAX_EVIDENCE_SPAN = 280;
-const PIPELINE_LOGIC_VERSION = "v2.2";
+const PIPELINE_LOGIC_VERSION = "v2.3";
 const MAX_EVIDENCE_LEN = 260;
 const HARD_FALLBACK_INSULTS = [
   { term: "نصاب", articleId: 5, atomId: "5-2", severity: "high" as const },

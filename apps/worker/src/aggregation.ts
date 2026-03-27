@@ -362,10 +362,7 @@ function applyReportGate(summary: SummaryJson): void {
           counts[f.severity as keyof typeof counts]++;
         }
       }
-      const sorted = [...list].sort(
-        (a, b) =>
-          severityOrder(b.severity) - severityOrder(a.severity) || (b.confidence - a.confidence)
-      );
+      const sorted = [...list].sort(compareCanonicalItemsStable);
       const top_findings = sorted.slice(0, 10).map((f) => ({
         atom_id: null as string | null,
         title_ar: f.title_ar,
@@ -451,10 +448,7 @@ function applyReportGate(summary: SummaryJson): void {
           counts[f.severity as keyof typeof counts]++;
         }
       }
-      const sorted = [...list].sort(
-        (a, b) =>
-          severityOrder(b.severity) - severityOrder(a.severity) || (b.confidence - a.confidence)
-      );
+      const sorted = [...list].sort(compareCanonicalItemsStable);
       const top_findings = sorted.slice(0, 5).map((f) => ({
         canonical_finding_id: f.canonical_finding_id,
         title_ar: f.title_ar,
@@ -463,7 +457,7 @@ function applyReportGate(summary: SummaryJson): void {
       }));
       return { canonical_atom, count: list.length, severity_counts: counts, top_findings };
     })
-    .sort((a, b) => b.count - a.count);
+    .sort((a, b) => b.count - a.count || String(a.canonical_atom).localeCompare(String(b.canonical_atom), "ar"));
 
   if (summary.context_metrics) {
     summary.context_metrics.violation_count = violations.filter((x) => x.final_ruling === "violation").length;
@@ -501,6 +495,40 @@ const SEVERITIES = ["low", "medium", "high", "critical"] as const;
 const SEVERITY_ORDER: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 };
 const RATIONALE_FALLBACK = "يتطلب تقييم مراجع مختص.";
 
+function compareCanonicalItemsStable(
+  a: {
+    canonical_finding_id: string;
+    severity: string;
+    confidence: number;
+    start_offset_global?: number | null;
+    end_offset_global?: number | null;
+    primary_article_id?: number | null;
+    evidence_snippet?: string;
+    title_ar?: string;
+  },
+  b: {
+    canonical_finding_id: string;
+    severity: string;
+    confidence: number;
+    start_offset_global?: number | null;
+    end_offset_global?: number | null;
+    primary_article_id?: number | null;
+    evidence_snippet?: string;
+    title_ar?: string;
+  }
+): number {
+  return (
+    (SEVERITY_ORDER[b.severity] ?? 0) - (SEVERITY_ORDER[a.severity] ?? 0) ||
+    (b.confidence - a.confidence) ||
+    (a.start_offset_global ?? Number.MAX_SAFE_INTEGER) - (b.start_offset_global ?? Number.MAX_SAFE_INTEGER) ||
+    (a.end_offset_global ?? Number.MAX_SAFE_INTEGER) - (b.end_offset_global ?? Number.MAX_SAFE_INTEGER) ||
+    (a.primary_article_id ?? Number.MAX_SAFE_INTEGER) - (b.primary_article_id ?? Number.MAX_SAFE_INTEGER) ||
+    String(a.evidence_snippet ?? "").localeCompare(String(b.evidence_snippet ?? ""), "ar") ||
+    String(a.title_ar ?? "").localeCompare(String(b.title_ar ?? ""), "ar") ||
+    String(a.canonical_finding_id).localeCompare(String(b.canonical_finding_id), "ar")
+  );
+}
+
 /** Detect rationale that is only "المقتطف يخالف ضوابط المادة X" + excerpt (no real explanation). */
 function isSnippetOnlyRationale(rationale: string | null | undefined, evidenceSnippet: string | null | undefined): boolean {
   if (!rationale || rationale.trim() === "") return false;
@@ -514,6 +542,18 @@ function isSnippetOnlyRationale(rationale: string | null | undefined, evidenceSn
 }
 
 const BROAD_ARTICLES = new Set([4, 5]);
+
+function compareDbFindingStable(a: DbFinding, b: DbFinding): number {
+  return (
+    (a.start_offset_global ?? Number.MAX_SAFE_INTEGER) - (b.start_offset_global ?? Number.MAX_SAFE_INTEGER) ||
+    (a.end_offset_global ?? Number.MAX_SAFE_INTEGER) - (b.end_offset_global ?? Number.MAX_SAFE_INTEGER) ||
+    (a.article_id ?? 0) - (b.article_id ?? 0) ||
+    String(a.atom_id ?? "").localeCompare(String(b.atom_id ?? ""), "ar") ||
+    String(a.evidence_snippet ?? "").localeCompare(String(b.evidence_snippet ?? ""), "ar") ||
+    String(a.title_ar ?? "").localeCompare(String(b.title_ar ?? ""), "ar") ||
+    String(a.source ?? "").localeCompare(String(b.source ?? ""), "ar")
+  );
+}
 
 function primaryScoreForDb(f: DbFinding): number[] {
   const v3 = ((f.location as Record<string, unknown>)?.v3 as Record<string, unknown> | undefined) ?? {};
@@ -538,7 +578,7 @@ function choosePrimaryFromDb(list: DbFinding[]): DbFinding {
       const d = (sb[i] ?? 0) - (sa[i] ?? 0);
       if (d !== 0) return d;
     }
-    return 0;
+    return compareDbFindingStable(a, b);
   })[0];
 }
 
@@ -633,7 +673,7 @@ export function buildSummaryJson(
 ): SummaryJson {
   const generated_at = new Date().toISOString();
   const filtered = findings.filter((f) => f.article_id !== OUT_OF_SCOPE_ARTICLE_ID);
-  const deduped = dedupeFindings(filtered);
+  const deduped = dedupeFindings([...filtered].sort(compareDbFindingStable));
   const policyArticles = getPolicyArticles();
 
   const severityOrder = (s: string) => (SEVERITIES.indexOf(s as (typeof SEVERITIES)[number]) + 1) || 0;
@@ -674,7 +714,7 @@ export function buildSummaryJson(
 
   for (const [clusterIndex, { key: groupKey, list }] of canonicalGroups.entries()) {
     const primary = choosePrimaryFromDb(list);
-    const relatedArticleIds = [...new Set(list.map((f) => f.article_id).filter((id) => id !== primary.article_id))];
+    const relatedArticleIds = [...new Set(list.map((f) => f.article_id).filter((id) => id !== primary.article_id))].sort((a, b) => a - b);
     const cId = oneCardPerOccurrence
       ? `CF-every-${clusterIndex}-${primary.article_id}`
       : groupKey.startsWith("CF-")
@@ -734,9 +774,7 @@ export function buildSummaryJson(
     });
   }
 
-  const canonical_findings = [...canonicalMap.values()].sort((a, b) =>
-    severityOrder(b.severity) - severityOrder(a.severity) || (b.confidence - a.confidence)
-  );
+  const canonical_findings = [...canonicalMap.values()].sort(compareCanonicalItemsStable);
 
   // Severity counts from canonical (unique incidents).
   const severity_counts = { low: 0, medium: 0, high: 0, critical: 0 };
@@ -765,11 +803,7 @@ export function buildSummaryJson(
           counts[f.severity as keyof typeof counts]++;
         }
       }
-      const sorted = [...list].sort(
-        (a, b) =>
-          severityOrder(b.severity) - severityOrder(a.severity) ||
-          (b.confidence - a.confidence)
-      );
+      const sorted = [...list].sort(compareCanonicalItemsStable);
       const top_findings = sorted.slice(0, 10).map((f) => ({
         atom_id: null as string | null,
         title_ar: f.title_ar,
@@ -856,10 +890,7 @@ export function buildSummaryJson(
           counts[f.severity as keyof typeof counts]++;
         }
       }
-      const sorted = [...list].sort(
-        (a, b) =>
-          severityOrder(b.severity) - severityOrder(a.severity) || (b.confidence - a.confidence)
-      );
+      const sorted = [...list].sort(compareCanonicalItemsStable);
       const top_findings = sorted.slice(0, 5).map((f) => ({
         canonical_finding_id: f.canonical_finding_id,
         title_ar: f.title_ar,
@@ -868,7 +899,7 @@ export function buildSummaryJson(
       }));
       return { canonical_atom, count: list.length, severity_counts: counts, top_findings };
     })
-    .sort((a, b) => b.count - a.count);
+    .sort((a, b) => b.count - a.count || String(a.canonical_atom).localeCompare(String(b.canonical_atom), "ar"));
 
   return {
     job_id: jobId,

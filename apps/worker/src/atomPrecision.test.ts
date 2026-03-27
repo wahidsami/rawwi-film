@@ -7,6 +7,7 @@ function baseFinding(overrides: Partial<JudgeFinding>): JudgeFinding {
     article_id: 5,
     atom_id: "5-2",
     canonical_atom: "INSULT",
+    severity: "medium",
     intensity: 2,
     context_impact: 2,
     legal_sensitivity: 2,

@@ -12,6 +12,16 @@ export type SpanFinding = {
 const DEFAULT_OVERLAP_RATIO = 0.4;
 const MIN_SPAN_LEN = 10;
 
+function compareSpanFindingsStable(a: SpanFinding, b: SpanFinding): number {
+  return (
+    (a.start_offset_global ?? 0) - (b.start_offset_global ?? 0) ||
+    (a.end_offset_global ?? 0) - (b.end_offset_global ?? 0) ||
+    String((a as { article_id?: number }).article_id ?? 0).localeCompare(String((b as { article_id?: number }).article_id ?? 0), "ar") ||
+    String((a as { atom_id?: string | null }).atom_id ?? "").localeCompare(String((b as { atom_id?: string | null }).atom_id ?? ""), "ar") ||
+    String((a as { evidence_snippet?: string }).evidence_snippet ?? "").localeCompare(String((b as { evidence_snippet?: string }).evidence_snippet ?? ""), "ar")
+  );
+}
+
 function spanLength(f: SpanFinding): number {
   const start = f.start_offset_global ?? 0;
   const end = f.end_offset_global ?? start;
@@ -64,9 +74,7 @@ export function clusterByOverlap<T extends SpanFinding>(
   minOverlapRatio: number = DEFAULT_OVERLAP_RATIO
 ): Map<number, T[]> {
   if (findings.length === 0) return new Map();
-  const sorted = [...findings].sort(
-    (a, b) => (a.start_offset_global ?? 0) - (b.start_offset_global ?? 0)
-  );
+  const sorted = [...findings].sort(compareSpanFindingsStable);
   const clusterIdByIndex: number[] = [];
   const union: number[] = sorted.map((_, i) => i);
 
@@ -105,10 +113,12 @@ export function clusterByOverlap<T extends SpanFinding>(
  */
 export function clusterCanonicalKey(findings: SpanFinding[]): string {
   if (findings.length === 0) return "empty";
-  const starts = findings.map((f) => f.start_offset_global ?? 0);
-  const ends = findings.map((f) => f.end_offset_global ?? 0);
+  const sorted = [...findings].sort(compareSpanFindingsStable);
+  const starts = sorted.map((f) => f.start_offset_global ?? 0);
+  const ends = sorted.map((f) => f.end_offset_global ?? 0);
   const minStart = Math.min(...starts);
   const maxEnd = Math.max(...ends);
-  const firstSnippet = (findings[0] as { evidence_snippet?: string }).evidence_snippet ?? "";
-  return `${minStart}:${maxEnd}:${firstSnippet.slice(0, 80)}`;
+  const first = sorted[0] as { evidence_snippet?: string; article_id?: number; atom_id?: string | null };
+  const firstSnippet = first.evidence_snippet ?? "";
+  return `${minStart}:${maxEnd}:${first.article_id ?? 0}:${first.atom_id ?? ""}:${firstSnippet.slice(0, 80)}`;
 }
