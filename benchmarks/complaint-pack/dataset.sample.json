@@ -1,0 +1,140 @@
+{
+  "dataset_id": "complaint-pack-v1",
+  "description": "Starter complaint benchmark focused on weak atoms, explanation quality, and narrative-sensitive false positives.",
+  "cases": [
+    {
+      "case_id": "case01_obfuscated_insult",
+      "title": "Obfuscated insult should still be detected",
+      "priority": "critical",
+      "version_id": "",
+      "script_path": "benchmarks/complaint-pack/scripts/case01_obfuscated_insult.txt",
+      "must_find": [
+        {
+          "article_id": 5,
+          "accepted_atoms": ["5-2", "17-1"],
+          "preferred_atom": "5-2",
+          "evidence_any": ["قذر", "قـ ذر"],
+          "rationale_any": ["اللفظ", "إهان", "حوار"]
+        }
+      ],
+      "must_not_find": []
+    },
+    {
+      "case_id": "case02_gender_humiliation",
+      "title": "Gender-based humiliation should not collapse into generic insult only",
+      "priority": "high",
+      "version_id": "",
+      "script_path": "benchmarks/complaint-pack/scripts/case02_gender_humiliation.txt",
+      "must_find": [
+        {
+          "article_id": 7,
+          "accepted_atoms": ["7-2", "7-5"],
+          "preferred_atom": "7-2",
+          "evidence_any": ["المطبخ", "السرير", "الرجال"],
+          "rationale_any": ["امرأة", "جنس", "تحقير"]
+        }
+      ],
+      "must_not_find": []
+    },
+    {
+      "case_id": "case03_harassment_normalized",
+      "title": "Harassment normalized as ordinary behavior should hit the harassment atom",
+      "priority": "critical",
+      "version_id": "",
+      "script_path": "benchmarks/complaint-pack/scripts/case03_harassment_normalized.txt",
+      "must_find": [
+        {
+          "article_id": 7,
+          "accepted_atoms": ["7-3"],
+          "preferred_atom": "7-3",
+          "evidence_any": ["ألمسك", "شيء عادي"],
+          "rationale_any": ["تحرش", "اعتيادي", "إكراه"]
+        }
+      ],
+      "must_not_find": []
+    },
+    {
+      "case_id": "case04_victim_blaming",
+      "title": "Victim blaming should map to the victim-blaming atom",
+      "priority": "critical",
+      "version_id": "",
+      "script_path": "benchmarks/complaint-pack/scripts/case04_victim_blaming.txt",
+      "must_find": [
+        {
+          "article_id": 7,
+          "accepted_atoms": ["7-4"],
+          "preferred_atom": "7-4",
+          "evidence_any": ["هي السبب", "لما تعرضت للتحرش"],
+          "rationale_any": ["لوم", "الضحية", "تبرير"]
+        }
+      ],
+      "must_not_find": []
+    },
+    {
+      "case_id": "case05_violence_as_solution",
+      "title": "Violence presented as the solution should hit glorification/solution framing",
+      "priority": "high",
+      "version_id": "",
+      "script_path": "benchmarks/complaint-pack/scripts/case05_violence_as_solution.txt",
+      "must_find": [
+        {
+          "article_id": 9,
+          "accepted_atoms": ["9-1", "12-3"],
+          "preferred_atom": "9-1",
+          "evidence_any": ["الضرب هو الحل", "نكسر رأسه"],
+          "rationale_any": ["حل", "تمجيد", "عنف"]
+        }
+      ],
+      "must_not_find": []
+    },
+    {
+      "case_id": "case06_condemned_violence",
+      "title": "Condemned violence should not be treated as violence glorification",
+      "priority": "high",
+      "version_id": "",
+      "script_path": "benchmarks/complaint-pack/scripts/case06_condemned_violence.txt",
+      "must_find": [],
+      "must_not_find": [
+        {
+          "article_id": 9,
+          "accepted_atoms": ["9-1"],
+          "evidence_any": ["العنف لا يحل", "كان ذلك خطأ"]
+        }
+      ]
+    },
+    {
+      "case_id": "case07_human_dignity",
+      "title": "Direct human dignity attack should be recognized as dignity harm",
+      "priority": "high",
+      "version_id": "",
+      "script_path": "benchmarks/complaint-pack/scripts/case07_human_dignity.txt",
+      "must_find": [
+        {
+          "article_id": 17,
+          "accepted_atoms": ["17-1", "17-2", "5-2"],
+          "preferred_atom": "17-1",
+          "evidence_any": ["عديم الكرامة", "تافه"],
+          "rationale_any": ["كرامة", "إهان", "إنسانية"]
+        }
+      ],
+      "must_not_find": []
+    },
+    {
+      "case_id": "case08_false_fact_rumor",
+      "title": "False statement framed as fact should hit misinformation",
+      "priority": "medium",
+      "version_id": "",
+      "script_path": "benchmarks/complaint-pack/scripts/case08_false_fact_rumor.txt",
+      "must_find": [
+        {
+          "article_id": 11,
+          "accepted_atoms": ["11-1", "16-1"],
+          "preferred_atom": "11-1",
+          "evidence_any": ["هذه حقيقة", "يقتل الجميع"],
+          "rationale_any": ["حقيقة", "مضللة", "غير دقيقة"]
+        }
+      ],
+      "must_not_find": []
+    }
+  ]
+}
