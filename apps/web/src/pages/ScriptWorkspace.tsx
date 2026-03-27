@@ -989,6 +989,33 @@ export function ScriptWorkspace() {
   const [manualOffsets, setManualOffsets] = useState<{ startOffsetGlobal: number; endOffsetGlobal: number } | null>(null);
   const [persistentSelection, setPersistentSelection] = useState<{ rects: DOMRect[] } | null>(null);
 
+  const previousReviewInsight = useMemo(() => {
+    if (reportHistory.length === 0) return null;
+    const latest = [...reportHistory].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+    const latestActor =
+      latest.reportCreatorName ??
+      (latest.createdBy === user?.id
+        ? (lang === 'ar' ? 'أنت' : 'You')
+        : latest.createdBy
+          ? `${latest.createdBy.slice(0, 8)}…`
+          : (lang === 'ar' ? 'غير معروف' : 'Unknown'));
+    const latestDate = latest.createdAt ? formatDate(new Date(latest.createdAt), { lang, format: dateFormat }) : null;
+    const clientLabel =
+      latest.clientName ??
+      latest.companyNameAr ??
+      latest.companyNameEn ??
+      (lang === 'ar' ? 'غير محدد' : 'Unknown');
+    return {
+      totalReports: reportHistory.length,
+      latestActor,
+      latestDate,
+      clientLabel,
+      hasExternalReview: reportHistory.some((r) => (r.reportCreatorId ?? r.createdBy ?? null) !== (user?.id ?? null)),
+    };
+  }, [reportHistory, user?.id, lang, dateFormat]);
+
   const workspaceCanonicalHintIds = useMemo(
     () =>
       new Set(
@@ -3244,6 +3271,35 @@ export function ScriptWorkspace() {
               {reportHistory.length > 0 && <Badge variant="outline" className="text-[10px] px-1.5">{reportHistory.length}</Badge>}
             </button>
           </div>
+
+          {previousReviewInsight && (
+            <div className="border-b border-border bg-primary/5 px-4 py-3">
+              <div className="rounded-xl border border-primary/15 bg-surface/80 p-3 space-y-1.5">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold text-text-main">
+                    {lang === 'ar' ? 'سبق مراجعة هذا النص' : 'Previously reviewed script'}
+                  </p>
+                  <Badge variant="outline" className="text-[10px] px-1.5">
+                    {lang === 'ar'
+                      ? `${previousReviewInsight.totalReports} تقارير`
+                      : `${previousReviewInsight.totalReports} reports`}
+                  </Badge>
+                </div>
+                <p className="text-[11px] text-text-muted leading-5">
+                  {lang === 'ar'
+                    ? `آخر تقرير ${previousReviewInsight.latestDate ? `بتاريخ ${previousReviewInsight.latestDate}` : 'مسجل'} بواسطة ${previousReviewInsight.latestActor} للعميل ${previousReviewInsight.clientLabel}.`
+                    : `Latest report ${previousReviewInsight.latestDate ? `on ${previousReviewInsight.latestDate}` : 'recorded'} by ${previousReviewInsight.latestActor} for client ${previousReviewInsight.clientLabel}.`}
+                </p>
+                {previousReviewInsight.hasExternalReview && (
+                  <p className="text-[11px] text-warning">
+                    {lang === 'ar'
+                      ? 'هناك عمل مراجعة سابق من مستخدم آخر، فراجع التقارير الحالية قبل تكرار التحليل أو إعادة التصنيف.'
+                      : 'Another user has already reviewed this script, so check the existing reports before repeating analysis or reclassification.'}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
           
           {/* ── Findings tab ── */}
           {sidebarTab === 'findings' && (

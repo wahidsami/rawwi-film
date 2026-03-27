@@ -109,6 +109,61 @@ async function selectReportList(
   return fallback;
 }
 
+async function enrichReportListItems(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  reports: any[]
+) {
+  if (!reports || reports.length === 0) return [];
+
+  const scriptIds = [...new Set(reports.map((r: any) => r.script_id).filter(Boolean))];
+  const jobIds = [...new Set(reports.map((r: any) => r.job_id).filter(Boolean))];
+
+  const [scriptsResult, jobsResult] = await Promise.all([
+    scriptIds.length > 0
+      ? supabase.from("scripts").select("id, title, company_id, created_by").in("id", scriptIds)
+      : Promise.resolve({ data: [], error: null }),
+    jobIds.length > 0
+      ? supabase.from("analysis_jobs").select("id, created_by").in("id", jobIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  const scripts = scriptsResult.data ?? [];
+  const jobs = jobsResult.data ?? [];
+  const companyIds = [...new Set(scripts.map((s: any) => s.company_id).filter(Boolean))];
+  const creatorIds = [...new Set(jobs.map((j: any) => j.created_by).filter(Boolean))];
+
+  const [companiesResult, creatorsResult] = await Promise.all([
+    companyIds.length > 0
+      ? supabase.from("clients").select("id, name_ar, name_en").in("id", companyIds)
+      : Promise.resolve({ data: [], error: null }),
+    creatorIds.length > 0
+      ? supabase.from("profiles").select("user_id, name").in("user_id", creatorIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  const companies = companiesResult.data ?? [];
+  const creators = creatorsResult.data ?? [];
+
+  return reports.map((r: any) => {
+    const base = camelReport(r as Record<string, unknown>) as Record<string, unknown>;
+    const script = scripts.find((s: any) => s.id === r.script_id);
+    const job = jobs.find((j: any) => j.id === r.job_id);
+    const company = companies.find((c: any) => c.id === script?.company_id);
+    const creator = creators.find((c: any) => c.user_id === job?.created_by);
+    return {
+      ...base,
+      scriptTitle: script?.title ?? base.scriptTitle ?? undefined,
+      companyId: script?.company_id ?? undefined,
+      companyNameAr: company?.name_ar ?? undefined,
+      companyNameEn: company?.name_en ?? undefined,
+      clientName: (company?.name_ar || company?.name_en || base.clientName) ?? undefined,
+      scriptOwnerId: script?.created_by ?? undefined,
+      reportCreatorId: job?.created_by ?? base.reportCreatorId ?? undefined,
+      reportCreatorName: creator?.name ?? undefined,
+    };
+  });
+}
+
 async function checkOwnership(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   jobId: string,
@@ -382,7 +437,8 @@ Deno.serve(async (req: Request) => {
           console.error("[reports] GET scriptId list error:", error.message);
           return json({ error: error.message }, 500);
         }
-        return json((rows ?? []).map((r: any) => camelReport(r)));
+        const enriched = await enrichReportListItems(supabase, rows ?? []);
+        return json(enriched);
       }
 
       return json({ error: "Provide jobId, scriptId, or id query param" }, 400);
