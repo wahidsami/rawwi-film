@@ -2332,6 +2332,14 @@ export function ScriptWorkspace() {
       }
       setPinnedHighlight({ findingId: f.id, globalStart: gs, globalEnd: ge });
       setSelectedFindingId(f.id);
+      if (workspaceViewMode === 'pdf') {
+        setWorkspaceViewMode('text');
+        if (!opts?.silent) {
+          toast(lang === 'ar'
+            ? 'تم التحويل إلى وضع النص لضمان تمييز دقيق داخل المستند.'
+            : 'Switched to text view for accurate in-document highlighting.');
+        }
+      }
       if (pagesSortedForViewer.length > 0 && hit.pageNumber >= 1 && hit.pageNumber <= pagesSortedForViewer.length) {
         setCurrentPage(hit.pageNumber);
         setSearchParams(
@@ -2409,11 +2417,14 @@ export function ScriptWorkspace() {
           if (rawStart < 0 || rawEnd <= rawStart) continue;
         }
         const evSnip = normalizeEvidenceForSearch(f.evidenceSnippet ?? '');
-        if (evSnip.length >= 4 && rawEnd > rawStart) {
+      if (evSnip.length >= 4 && rawEnd > rawStart) {
           const t = tightenHighlightRangeToEvidence(domRaw, rawStart, rawEnd, evSnip);
           rawStart = t.start;
           rawEnd = t.end;
         }
+        const expanded = expandHighlightRangeToSentence(domRaw, rawStart, rawEnd);
+        rawStart = expanded.start;
+        rawEnd = expanded.end;
         const maxRaw = Math.max(0, idx.rawToNorm.length - 1);
         rawStart = Math.max(0, Math.min(rawStart, maxRaw));
         rawEnd = Math.max(rawStart + 1, Math.min(rawEnd, maxRaw + 1));
@@ -2945,7 +2956,7 @@ export function ScriptWorkspace() {
                       const mark = (e.target as HTMLElement).closest?.('[data-finding-id]');
                       if (mark) {
                         const id = mark.getAttribute('data-finding-id');
-                        const finding = reportFindings.find((f) => f.id === id);
+                        const finding = workspaceVisibleReportFindings.find((f) => f.id === id);
                         if (finding) {
                           setTooltipFinding(finding);
                           setTooltipPos({ x: e.clientX, y: e.clientY });
