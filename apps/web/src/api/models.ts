@@ -23,6 +23,8 @@ export enum OverrideEventType {
   HiddenFromOwner = 'hidden_from_owner'
 }
 
+export type AnalysisModeProfile = 'quality' | 'balanced' | 'turbo';
+
 export interface User {
   id: string;
   name: string;
@@ -99,6 +101,7 @@ export interface AnalysisJob {
   scriptId: string;
   versionId: string;
   status: string;
+  analysisMode?: AnalysisModeProfile | null;
   progressTotal: number;
   progressDone: number;
   progressPercent: number;

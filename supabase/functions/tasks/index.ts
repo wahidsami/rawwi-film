@@ -52,8 +52,32 @@ type JobRow = {
   paused_at?: string | null;
   partial_finalize_requested?: boolean | null;
   partial_finalize_requested_at?: string | null;
+  config_snapshot?: {
+    analysis_profile?: "quality" | "balanced" | "turbo";
+  } | null;
   script_content_hash?: string | null;
   canonical_length?: number | null;
+};
+
+const ANALYSIS_PROFILE_PRESETS = {
+  quality: {
+    analysisProfile: "quality" as const,
+    mergeStrategy: "every_occurrence" as const,
+    maxRouterCandidates: 10,
+    deepAuditorEnabled: true,
+  },
+  balanced: {
+    analysisProfile: "balanced" as const,
+    mergeStrategy: "same_location_only" as const,
+    maxRouterCandidates: 8,
+    deepAuditorEnabled: true,
+  },
+  turbo: {
+    analysisProfile: "turbo" as const,
+    mergeStrategy: "same_location_only" as const,
+    maxRouterCandidates: 6,
+    deepAuditorEnabled: false,
+  },
 };
 
 function toCamel(job: JobRow) {
@@ -66,6 +90,7 @@ function toCamel(job: JobRow) {
     scriptId: job.script_id,
     versionId: job.version_id,
     status: isStopping ? "stopping" : (isPaused ? "paused" : job.status),
+    analysisMode: job.config_snapshot?.analysis_profile ?? "balanced",
     progressTotal: job.progress_total,
     progressDone: job.progress_done,
     progressPercent: job.progress_percent,
@@ -156,7 +181,7 @@ Deno.serve(async (req: Request) => {
     if (jobId) {
       const { data: row, error: err } = await supabase
         .from("analysis_jobs")
-        .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, error_message, script_content_hash")
+        .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash")
         .eq("id", jobId)
         .maybeSingle();
       if (err) {
@@ -174,7 +199,7 @@ Deno.serve(async (req: Request) => {
     // 1. Fetch Analysis Jobs
     let jobQuery = supabase
       .from("analysis_jobs")
-      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, error_message")
+      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message")
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -272,7 +297,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: jobRow, error: jobErr } = await supabase
       .from("analysis_jobs")
-      .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, error_message, script_content_hash, canonical_length")
+      .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash, canonical_length")
       .eq("id", jobId)
       .maybeSingle();
 
@@ -310,7 +335,7 @@ Deno.serve(async (req: Request) => {
       .from("analysis_jobs")
       .update(patch)
       .eq("id", jobId)
-      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, error_message, script_content_hash, canonical_length")
+      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash, canonical_length")
       .single();
 
     if (updateErr || !updated) {
@@ -340,9 +365,14 @@ Deno.serve(async (req: Request) => {
 
   const versionId = body?.versionId;
   const forceFresh = body?.forceFresh === true;
+  const requestedAnalysisProfile =
+    body?.analysisProfile === "quality" || body?.analysisProfile === "turbo" || body?.analysisProfile === "balanced"
+      ? body.analysisProfile
+      : "balanced";
+  const analysisProfilePreset = ANALYSIS_PROFILE_PRESETS[requestedAnalysisProfile];
   const analysisOptions = body?.analysisOptions && typeof body.analysisOptions === "object"
     ? { mergeStrategy: body.analysisOptions.mergeStrategy === "every_occurrence" ? "every_occurrence" : "same_location_only" }
-    : undefined;
+    : { mergeStrategy: analysisProfilePreset.mergeStrategy };
   if (!versionId || typeof versionId !== "string" || !versionId.trim()) {
     return json({ error: "versionId is required" }, 400);
   }
@@ -477,6 +507,9 @@ Deno.serve(async (req: Request) => {
       config_snapshot: {
         ...DEFAULT_DETERMINISTIC_CONFIG,
         force_fresh: forceFresh,
+        analysis_profile: analysisProfilePreset.analysisProfile,
+        max_router_candidates: analysisProfilePreset.maxRouterCandidates,
+        deep_auditor_enabled: analysisProfilePreset.deepAuditorEnabled,
         router_prompt_version: PROMPT_VERSIONS.router,
         router_prompt_hash: await sha256Hash(ROUTER_SYSTEM_MSG),
         judge_prompt_version: PROMPT_VERSIONS.judge,

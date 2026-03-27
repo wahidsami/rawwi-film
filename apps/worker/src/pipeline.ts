@@ -599,9 +599,11 @@ export async function processChunkJudge(
   // 1b) Idempotency Check & Config Setup
   // Build logicVersion dynamically so cache invalidates automatically when prompts/passes change.
   const passSignature = DETECTION_PASSES.map((p) => `${p.name}:${p.model ?? "default"}`).join("|");
-  const rationaleModel = config.OPENAI_RATIONALE_MODEL;
-  const logicVersion = `pipeline:${PIPELINE_LOGIC_VERSION}|engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|deepAuditor:${config.ANALYSIS_DEEP_AUDITOR}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}|passGating:${config.ANALYSIS_PASS_GATING_ENABLED ? PASS_GATING_VERSION : "off"}`;
   const jobConfig = (job.config_snapshot as any) || {};
+  const analysisProfile = jobConfig.analysis_profile || "balanced";
+  const deepAuditorEnabled = jobConfig.deep_auditor_enabled ?? config.ANALYSIS_DEEP_AUDITOR;
+  const rationaleModel = config.OPENAI_RATIONALE_MODEL;
+  const logicVersion = `pipeline:${PIPELINE_LOGIC_VERSION}|profile:${analysisProfile}|engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|deepAuditor:${deepAuditorEnabled}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}|passGating:${config.ANALYSIS_PASS_GATING_ENABLED ? PASS_GATING_VERSION : "off"}`;
   const forceFresh = jobConfig.force_fresh === true;
   const routerModel = jobConfig.router_model || config.OPENAI_ROUTER_MODEL;
   const judgeModel = jobConfig.judge_model || config.OPENAI_JUDGE_MODEL;
@@ -841,6 +843,7 @@ export async function processChunkJudge(
         pillar_id: f.pillar_id ?? undefined,
       })),
       fullText: normalizedText,
+      deepAuditorEnabled,
     });
     hybridMetrics = hybrid.metrics;
     if (config.ANALYSIS_HYBRID_MODE === "enforce") {

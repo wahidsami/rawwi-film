@@ -230,6 +230,7 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
         scriptId: 'mock-script',
         versionId: 'mock-version',
         status: action === 'pause' ? 'paused' : action === 'stop' ? 'stopping' : 'running',
+        analysisMode: body?.analysisProfile ?? 'balanced',
         progressTotal: 10,
         progressDone: 4,
         progressPercent: 40,

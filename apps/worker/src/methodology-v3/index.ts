@@ -19,6 +19,7 @@ export type HybridPipelineResult = {
 export async function runHybridContextPipeline(args: {
   findings: HybridFindingLike[];
   fullText: string | null;
+  deepAuditorEnabled?: boolean;
 }): Promise<HybridPipelineResult> {
   const spans = args.findings.map((f) => ({
     start: Math.max(0, f.start_offset_global ?? 0),
@@ -30,7 +31,7 @@ export async function runHybridContextPipeline(args: {
   const policy = reasonPolicyAtScriptLevel(context, args.fullText);
   const decided = applyDecisionPolicy(policy.findings);
   const withLegal = attachLegalLinkMetadata(decided);
-  const final = await runDeepAuditorPass({ findings: withLegal, fullText: args.fullText });
+  const final = await runDeepAuditorPass({ findings: withLegal, fullText: args.fullText, enabled: args.deepAuditorEnabled });
   const contextOkCount = final.filter((f) => f.final_ruling === "context_ok").length;
   const needsReviewCount = final.filter((f) => f.final_ruling === "needs_review").length;
   const violationCount = final.filter((f) => f.final_ruling === "violation").length;

@@ -137,9 +137,10 @@ function buildCanonicalCandidates(findings: HybridFindingLike[]): CanonicalCandi
 export async function runDeepAuditorPass(args: {
   findings: HybridFindingLike[];
   fullText: string | null;
+  enabled?: boolean;
 }): Promise<HybridFindingLike[]> {
   const { findings, fullText } = args;
-  if (findings.length === 0 || !config.ANALYSIS_DEEP_AUDITOR || !config.OPENAI_API_KEY) return findings;
+  if (findings.length === 0 || args.enabled === false || !config.ANALYSIS_DEEP_AUDITOR || !config.OPENAI_API_KEY) return findings;
   if (shouldSkipDeepAuditorForJob({ textLength: fullText?.length ?? 0 })) {
     logger.info("Deep auditor skipped for large job", {
       findingsCount: findings.length,

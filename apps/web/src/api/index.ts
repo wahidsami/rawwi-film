@@ -1,6 +1,6 @@
 import { httpClient, USE_MOCK_API, API_BASE_URL } from './httpClient';
 import { prepareUnicodeForExtractTransport } from '@/utils/extractUnicode';
-import { Company, Script, ScriptVersion, Task, AnalysisJob, ChunkStatus, Finding, LexiconTerm, LexiconHistoryEntry, Report, ReportListItem, FindingReviewResponse } from './models';
+import { Company, Script, ScriptVersion, Task, AnalysisJob, ChunkStatus, Finding, LexiconTerm, LexiconHistoryEntry, Report, ReportListItem, FindingReviewResponse, AnalysisModeProfile } from './models';
 import { supabase } from '@/lib/supabaseClient';
 
 /** Response from GET /me: current user with permissions from RBAC. */
@@ -141,12 +141,14 @@ export const scriptsApi = {
     versionId: string,
     options?: {
       forceFresh?: boolean;
+      analysisProfile?: AnalysisModeProfile;
       analysisOptions?: { mergeStrategy?: 'same_location_only' | 'every_occurrence' };
     }
   ): Promise<{ jobId: string }> =>
     httpClient.post('/tasks', {
       versionId,
       ...(options?.forceFresh ? { forceFresh: true } : {}),
+      ...(options?.analysisProfile ? { analysisProfile: options.analysisProfile } : {}),
       ...(options?.analysisOptions ? { analysisOptions: options.analysisOptions } : {}),
     }),
   /** Get editor content and sections for a version. GET /scripts/editor?scriptId=...&versionId=... */

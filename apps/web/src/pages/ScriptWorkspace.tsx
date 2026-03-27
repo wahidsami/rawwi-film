@@ -116,7 +116,7 @@ import type { AnalysisFinding } from '@/api';
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
-import type { AnalysisJob, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
+import type { AnalysisJob, AnalysisModeProfile, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
 import { sanitizeFormattedHtml } from '@/utils/sanitizeHtml';
 import { PdfOriginalViewer } from '@/components/script/PdfOriginalViewer';
 import {
@@ -146,6 +146,36 @@ const PROCESSING_PHASE_LABELS: Record<string, { ar: string; en: string }> = {
   aggregating: { ar: 'تجميع النتائج', en: 'Writing findings' },
   cached: { ar: 'نتائج مخزنة', en: 'Cached AI results' },
 };
+
+const ANALYSIS_MODE_OPTIONS: Array<{
+  value: AnalysisModeProfile;
+  labelAr: string;
+  labelEn: string;
+  hintAr: string;
+  hintEn: string;
+}> = [
+  {
+    value: 'quality',
+    labelAr: 'جودة',
+    labelEn: 'Quality',
+    hintAr: 'تغطية أوسع وتجميع أكثر تفصيلاً.',
+    hintEn: 'Broader coverage with more detailed grouping.',
+  },
+  {
+    value: 'balanced',
+    labelAr: 'متوازن',
+    labelEn: 'Balanced',
+    hintAr: 'أفضل توازن بين الدقة والسرعة.',
+    hintEn: 'Best balance between quality and speed.',
+  },
+  {
+    value: 'turbo',
+    labelAr: 'توربو',
+    labelEn: 'Turbo',
+    hintAr: 'أسرع، مع تقليل بعض العمق لخفض الزمن.',
+    hintEn: 'Fastest mode, with some depth reduced to save time.',
+  },
+];
 
 /**
  * Stored offsets often span a whole dialogue block (character line + sentence).
@@ -544,6 +574,7 @@ export function ScriptWorkspace() {
   /** When job completes, we fetch the report id so "View Report" can use by=id. */
   const [reportIdWhenJobCompleted, setReportIdWhenJobCompleted] = useState<string | null>(null);
   const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
+  const [analysisModeProfile, setAnalysisModeProfile] = useState<AnalysisModeProfile>('balanced');
   const [analysisControlBusy, setAnalysisControlBusy] = useState<'pause' | 'resume' | 'stop' | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
@@ -1154,7 +1185,7 @@ export function ScriptWorkspace() {
     try {
       const { jobId } = await scriptsApi.createTask(script.currentVersionId, {
         forceFresh: true,
-        analysisOptions: { mergeStrategy: 'same_location_only' },
+        analysisProfile: analysisModeProfile,
       });
       setAnalysisJobId(jobId);
       setAnalysisJob(null);
@@ -1320,6 +1351,11 @@ export function ScriptWorkspace() {
         : (analysisJob?.status ?? '').toLowerCase() === 'failed'
           ? 'text-error'
           : 'text-primary';
+
+  const selectedAnalysisModeMeta = useMemo(
+    () => ANALYSIS_MODE_OPTIONS.find((option) => option.value === (analysisJob?.analysisMode ?? analysisModeProfile)) ?? ANALYSIS_MODE_OPTIONS[1],
+    [analysisJob?.analysisMode, analysisModeProfile]
+  );
 
   const handlePauseAnalysis = useCallback(async () => {
     if (!analysisJobId || analysisControlBusy) return;
@@ -2511,6 +2547,29 @@ export function ScriptWorkspace() {
               )}
             </Button>
           )}
+          <div className="hidden sm:flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold text-text-main">
+                {lang === 'ar' ? 'نمط التحليل' : 'Analysis mode'}
+              </p>
+              <p className="text-[10px] text-text-muted truncate max-w-[10rem]">
+                {lang === 'ar' ? selectedAnalysisModeMeta.hintAr : selectedAnalysisModeMeta.hintEn}
+              </p>
+            </div>
+            <select
+              value={analysisModeProfile}
+              onChange={(e) => setAnalysisModeProfile(e.target.value as AnalysisModeProfile)}
+              className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm text-text-main focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              disabled={isAnalyzing || isAnalysisRunning}
+              title={lang === 'ar' ? 'اختر نمط التحليل قبل بدء الفحص' : 'Choose an analysis mode before starting'}
+            >
+              {ANALYSIS_MODE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {lang === 'ar' ? option.labelAr : option.labelEn}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="relative hidden sm:block">
             <Button
               variant="outline"
@@ -3565,6 +3624,13 @@ export function ScriptWorkspace() {
                   <p className={cn("text-xs leading-6", analysisStatusToneClass)}>
                     {analysisStatusCaption}
                   </p>
+                  <div className="mt-2">
+                    <Badge variant="outline" className="text-[11px]">
+                      {lang === 'ar'
+                        ? `نمط التحليل: ${selectedAnalysisModeMeta.labelAr}`
+                        : `Mode: ${selectedAnalysisModeMeta.labelEn}`}
+                    </Badge>
+                  </div>
                 </div>
               </div>
 
@@ -3598,6 +3664,12 @@ export function ScriptWorkspace() {
                       : isPausedJobStatus(analysisJob?.status)
                       ? (lang === 'ar' ? 'متوقف مؤقتاً' : 'Paused')
                       : activePhaseLabel ?? (lang === 'ar' ? 'قيد الانتظار' : 'Waiting')}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border bg-background/60 p-3">
+                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'نمط التحليل' : 'Analysis mode'}</p>
+                  <p className="text-sm font-medium text-text-main">
+                    {lang === 'ar' ? selectedAnalysisModeMeta.labelAr : selectedAnalysisModeMeta.labelEn}
                   </p>
                 </div>
                 <div className="rounded-xl border border-border bg-background/60 p-3">
