@@ -27,6 +27,7 @@ import { calculateSeverity } from "./severityRulebook.js";
 import { getPrimaryGcamForCanonicalAtom, getPrimaryCanonicalAtomForGcam } from "./canonicalAtomMapping.js";
 import { offsetToPageNumber, computePageLocalSpan } from "./offsetToPage.js";
 import { getCachedJobResources } from "./jobAnalysisCache.js";
+import { refineAtomPrecision } from "./atomPrecision.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
@@ -71,7 +72,7 @@ function isVerbatim(sourceText: string, snippet: string): boolean {
 }
 
 const MAX_EVIDENCE_SPAN = 280;
-const PIPELINE_LOGIC_VERSION = "v2.1";
+const PIPELINE_LOGIC_VERSION = "v2.2";
 const MAX_EVIDENCE_LEN = 260;
 const HARD_FALLBACK_INSULTS = [
   { term: "نصاب", articleId: 5, atomId: "5-2", severity: "high" as const },
@@ -757,7 +758,8 @@ export async function processChunkJudge(
       
       // Enforce atom_ids and prefer literal local evidence from chunk offsets.
       const enforced = multiPassResult.findings.map(f => enforceAtomIds([f])[0]);
-      const enriched = enforced.map((f) => {
+      const precisionRefined = enforced.map((f) => refineAtomPrecision(f));
+      const enriched = precisionRefined.map((f) => {
         const localStart = Math.max(0, f.location?.start_offset ?? 0);
         const localEnd = Math.min(chunkText.length, f.location?.end_offset ?? localStart);
         const fallback = localEnd > localStart ? chunkText.slice(localStart, localEnd) : "";

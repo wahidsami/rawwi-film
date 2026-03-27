@@ -11,6 +11,7 @@
     "test:aggregation": "tsx src/aggregation.test.ts",
     "test:atom-enforcement": "tsx src/pipeline.atom-enforcement.test.ts",
     "test:audit": "tsx src/audit.test.ts",
+    "test:atom-precision": "tsx src/atomPrecision.test.ts",
     "test:lexicon": "tsx src/lexiconCache.test.ts",
     "test:pass-gating": "tsx src/passGating.test.ts",
     "test:offset-page": "tsx src/offsetToPage.test.ts",
