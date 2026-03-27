@@ -1208,6 +1208,65 @@ export function ScriptWorkspace() {
     return [...done].sort((a, b) => b.chunkIndex - a.chunkIndex)[0] ?? null;
   }, [chunkStatuses]);
 
+  const previewContextLabel = useMemo(() => {
+    if (activeChunkPageLabel) return activeChunkPageLabel;
+    if (latestCompletedChunk && (latestCompletedChunk.pageNumberMin != null || latestCompletedChunk.pageNumberMax != null)) {
+      if (latestCompletedChunk.pageNumberMin === latestCompletedChunk.pageNumberMax || latestCompletedChunk.pageNumberMax == null) {
+        return lang === 'ar'
+          ? `آخر جزء مكتمل: صفحة ${latestCompletedChunk.pageNumberMin ?? latestCompletedChunk.pageNumberMax}`
+          : `Last completed chunk: page ${latestCompletedChunk.pageNumberMin ?? latestCompletedChunk.pageNumberMax}`;
+      }
+      return lang === 'ar'
+        ? `آخر جزء مكتمل: صفحات ${latestCompletedChunk.pageNumberMin}–${latestCompletedChunk.pageNumberMax}`
+        : `Last completed chunk: pages ${latestCompletedChunk.pageNumberMin}–${latestCompletedChunk.pageNumberMax}`;
+    }
+    return lang === 'ar'
+      ? 'يعرض هذا القسم النص الجاري فحصه أو آخر جزء اكتمل.'
+      : 'This panel shows the active chunk text or the most recently completed one.';
+  }, [activeChunkPageLabel, latestCompletedChunk, lang]);
+
+  const previewModeLabel = useMemo(() => {
+    if (activeChunk?.textPreview) return lang === 'ar' ? 'بث مباشر' : 'Live';
+    if (latestCompletedChunk?.textPreview) return lang === 'ar' ? 'آخر تقدم محفوظ' : 'Last saved progress';
+    return lang === 'ar' ? 'بانتظار المعاينة' : 'Waiting for preview';
+  }, [activeChunk?.textPreview, latestCompletedChunk?.textPreview, lang]);
+
+  const analysisStatusCaption = useMemo(() => {
+    if (isSuccessfulJobStatus(analysisJob?.status)) {
+      return analysisJob?.isPartialReport
+        ? (lang === 'ar' ? 'تم حفظ التقدم الحالي وتحويله إلى تقرير جزئي جاهز للمراجعة.' : 'The saved progress has been turned into a partial report ready for review.')
+        : (lang === 'ar' ? 'اكتمل الفحص ويمكنك الآن فتح التقرير النهائي.' : 'The analysis is complete and the final report is ready.');
+    }
+    if (isStoppingJobStatus(analysisJob?.status)) {
+      return lang === 'ar'
+        ? 'لن يبدأ النظام أجزاء جديدة الآن. سيُنهي الجزء الجاري ثم يبني تقريراً جزئياً من النتائج المكتملة.'
+        : 'No new chunks will be started now. The worker will finish the current chunk, then build a partial report from the completed results.';
+    }
+    if (isPausedJobStatus(analysisJob?.status)) {
+      return lang === 'ar'
+        ? 'التقدم محفوظ. يمكنك استئناف التحليل لاحقاً من نفس النقطة تقريباً.'
+        : 'Your progress is preserved. You can resume analysis later from roughly the same point.';
+    }
+    if ((analysisJob?.status ?? '').toLowerCase() === 'failed') {
+      return lang === 'ar'
+        ? 'توقف التحليل بسبب خطأ. يمكنك الإغلاق أو إعادة المحاولة بعد مراجعة الرسالة.'
+        : 'The analysis stopped because of an error. You can close this dialog or retry after reviewing the message.';
+    }
+    return lang === 'ar'
+      ? 'يعمل النظام على تحليل النص جزءاً بعد جزء مع تحديثات مباشرة عن المرحلة الحالية.'
+      : 'The system is analyzing the script chunk by chunk and updating this panel live.';
+  }, [analysisJob?.isPartialReport, analysisJob?.status, lang]);
+
+  const analysisStatusToneClass = isSuccessfulJobStatus(analysisJob?.status)
+    ? 'text-success'
+    : isStoppingJobStatus(analysisJob?.status)
+      ? 'text-warning'
+      : isPausedJobStatus(analysisJob?.status)
+        ? 'text-warning'
+        : (analysisJob?.status ?? '').toLowerCase() === 'failed'
+          ? 'text-error'
+          : 'text-primary';
+
   const handlePauseAnalysis = useCallback(async () => {
     if (!analysisJobId || analysisControlBusy) return;
     setAnalysisControlBusy('pause');
@@ -3285,7 +3344,7 @@ export function ScriptWorkspace() {
         isOpen={analysisModalOpen}
         onClose={() => setAnalysisModalOpen(false)}
         title={lang === 'ar' ? 'تقدم التحليل' : 'Analysis Progress'}
-        className="max-w-5xl"
+        className="max-w-6xl"
       >
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
           <section className="rounded-2xl border border-border bg-background/40 overflow-hidden min-h-[24rem] flex flex-col">
@@ -3294,26 +3353,12 @@ export function ScriptWorkspace() {
                 <p className="text-sm font-semibold text-text-main">
                   {lang === 'ar' ? 'المقطع الجاري فحصه' : 'Live Chunk Preview'}
                 </p>
-                <p className="text-xs text-text-muted">
-                  {activeChunkPageLabel
-                    ? activeChunkPageLabel
-                    : latestCompletedChunk && (latestCompletedChunk.pageNumberMin != null || latestCompletedChunk.pageNumberMax != null)
-                      ? (
-                        latestCompletedChunk.pageNumberMin === latestCompletedChunk.pageNumberMax ||
-                        latestCompletedChunk.pageNumberMax == null
-                          ? (lang === 'ar'
-                            ? `آخر جزء مكتمل: صفحة ${latestCompletedChunk.pageNumberMin ?? latestCompletedChunk.pageNumberMax}`
-                            : `Last completed chunk: page ${latestCompletedChunk.pageNumberMin ?? latestCompletedChunk.pageNumberMax}`)
-                          : (lang === 'ar'
-                            ? `آخر جزء مكتمل: صفحات ${latestCompletedChunk.pageNumberMin}–${latestCompletedChunk.pageNumberMax}`
-                            : `Last completed chunk: pages ${latestCompletedChunk.pageNumberMin}–${latestCompletedChunk.pageNumberMax}`)
-                      )
-                      : (lang === 'ar'
-                        ? 'يعرض هذا القسم النص الجاري فحصه أو آخر جزء اكتمل.'
-                        : 'This panel shows the active chunk text or the most recently completed one.')}
-                </p>
+                <p className="text-xs text-text-muted">{previewContextLabel}</p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="text-[11px]">
+                  {previewModeLabel}
+                </Badge>
                 {activeChunkNumber != null && totalChunksTracked > 0 && (
                   <Badge variant="outline" className="text-[11px]">
                     {lang === 'ar'
@@ -3333,11 +3378,11 @@ export function ScriptWorkspace() {
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="text-xs text-text-muted">
                   {lang === 'ar'
-                    ? 'المعاينة المباشرة تساعدك على معرفة الجزء الذي يعمل عليه النظام الآن.'
-                    : 'This live preview shows the exact chunk the system is working on right now.'}
+                    ? 'هذه المساحة تعرض النص الذي يقرأه النظام الآن أو آخر تقدم محفوظ ليسهل عليك متابعة التحليل لحظة بلحظة.'
+                    : 'This panel shows the text the system is reading now, or the latest saved progress, so you can follow the analysis step by step.'}
                 </div>
                 {passProgressLine && (
-                  <div className="text-[11px] text-primary font-medium">
+                  <div className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] text-primary font-medium">
                     {passProgressLine}
                   </div>
                 )}
@@ -3358,7 +3403,7 @@ export function ScriptWorkspace() {
                     </span>
                   </div>
                   <div
-                    className="rounded-xl border border-primary/15 bg-primary/5 p-4 text-sm leading-7 text-text-main whitespace-pre-wrap break-words"
+                    className="rounded-xl border border-primary/15 bg-primary/5 p-4 text-sm leading-8 text-text-main whitespace-pre-wrap break-words shadow-sm"
                     dir="rtl"
                   >
                     {activeChunk.textPreview}
@@ -3377,7 +3422,7 @@ export function ScriptWorkspace() {
                     </span>
                   </div>
                   <div
-                    className="rounded-xl border border-border bg-background/70 p-4 text-sm leading-7 text-text-main whitespace-pre-wrap break-words"
+                    className="rounded-xl border border-border bg-background/70 p-4 text-sm leading-8 text-text-main whitespace-pre-wrap break-words"
                     dir="rtl"
                   >
                     {latestCompletedChunk.textPreview}
@@ -3429,10 +3474,8 @@ export function ScriptWorkspace() {
                         ? (lang === 'ar' ? 'فشل التحليل' : 'Analysis Failed')
                         : (lang === 'ar' ? 'جاري التحليل…' : 'Analyzing…')}
                   </p>
-                  <p className="text-xs text-text-muted">
-                    {lang === 'ar'
-                      ? 'لوحة الحالة تعرض التقدم والزمن والمرحلة الحالية بشكل مباشر.'
-                      : 'This panel shows live progress, elapsed time, and the current backend stage.'}
+                  <p className={cn("text-xs leading-6", analysisStatusToneClass)}>
+                    {analysisStatusCaption}
                   </p>
                 </div>
               </div>
@@ -3500,16 +3543,26 @@ export function ScriptWorkspace() {
                   </div>
                 )}
               </div>
-              <div className="text-[11px] text-text-muted">
-                {lang === 'ar'
-                  ? `الأجزاء المكتملة: ${progressDisplayDone} من ${Math.max(progressDisplayTotal, progressDisplayDone)}`
-                  : `Completed chunks: ${progressDisplayDone} of ${Math.max(progressDisplayTotal, progressDisplayDone)}`}
+              <div className="grid gap-2 text-[11px] text-text-muted">
+                <div className="flex items-start justify-between gap-3">
+                  <span>{lang === 'ar' ? 'الأجزاء المكتملة' : 'Completed chunks'}</span>
+                  <span className="font-medium text-text-main" dir="ltr">
+                    {progressDisplayDone} / {Math.max(progressDisplayTotal, progressDisplayDone)}
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-3">
+                  <span>{lang === 'ar' ? 'أسلوب التنفيذ' : 'Execution mode'}</span>
+                  <span className="font-medium text-text-main">
+                    {lang === 'ar' ? 'كشف متوازي متعدد الماسحات' : 'Parallel multi-detector scan'}
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-3">
+                  <span>{lang === 'ar' ? 'المكشوفات المحتملة' : 'Potential detectors'}</span>
+                  <span className="font-medium text-text-main text-end">
+                    {analysisPasses.join(lang === 'ar' ? '، ' : ', ')}
+                  </span>
+                </div>
               </div>
-              <p className="text-[11px] text-text-muted">
-                {lang === 'ar'
-                  ? `عشرة ماسحات متخصصة تعمل بالتوازي على هذا الجزء: ${analysisPasses.join('، ')}`
-                  : `Ten specialized detectors may run in parallel on this chunk: ${analysisPasses.join(', ')}`}
-              </p>
               {isPausedJobStatus(analysisJob?.status) && (
                 <p className="text-[11px] text-warning">
                   {lang === 'ar'
@@ -3541,8 +3594,13 @@ export function ScriptWorkspace() {
             )}
 
             {/* Action buttons */}
-            <div className="flex items-center justify-between gap-3 pt-1">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
+              <div className="text-[11px] text-text-muted">
+                {lang === 'ar'
+                  ? 'يمكنك الإيقاف المؤقت أو إنهاء التحليل بتقرير جزئي بدون فقد التقدم الحالي.'
+                  : 'You can pause or stop the analysis into a partial report without losing the current progress.'}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
                 {analysisJob && !isSuccessfulJobStatus(analysisJob.status) && analysisJob.status !== 'failed' && !isPausedJobStatus(analysisJob.status) && (
                   <Button size="sm" variant="outline" onClick={handlePauseAnalysis} disabled={analysisControlBusy != null}>
                     <Pause className="w-4 h-4 mr-1" />
