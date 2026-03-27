@@ -255,7 +255,7 @@ export function buildLexiconTermsString(terms: Array<{
   term: string;
   gcam_article_id: number;
   severity_floor: string;
-  gcam_article_title_ar?: string;
+  gcam_article_title_ar?: string | null;
   term_variants?: string[] | null;
   description?: string | null;
   example_usage?: string | null;
@@ -287,7 +287,7 @@ export function injectLexiconIntoPrompts(
     term: string;
     gcam_article_id: number;
     severity_floor: string;
-    gcam_article_title_ar?: string;
+    gcam_article_title_ar?: string | null;
     term_variants?: string[] | null;
     description?: string | null;
     example_usage?: string | null;

@@ -18,7 +18,8 @@ import { isValidAtomForArticle, normalizeAtomId } from "./policyMap.js";
 import type { JudgeFinding } from "./schemas.js";
 import { getScriptStandardRouterList } from "./gcam.js";
 import { ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG, injectLexiconIntoPrompts, PROMPT_VERSIONS } from "./aiConstants.js";
-import { runMultiPassDetection, DETECTION_PASSES, type LexiconTerm } from "./multiPassJudge.js";
+import { runMultiPassDetection, DETECTION_PASSES, planDetectionPassExecution, type LexiconTerm } from "./multiPassJudge.js";
+import { PASS_GATING_VERSION } from "./passGating.js";
 import { normalizeMisusedGlossaryPassTitle } from "./findingTitleNormalize.js";
 import { runHybridContextPipeline } from "./methodology-v3/index.js";
 import { upsertFindingPolicyLinks } from "./policyLinks.js";
@@ -626,7 +627,7 @@ export async function processChunkJudge(
   // Build logicVersion dynamically so cache invalidates automatically when prompts/passes change.
   const passSignature = DETECTION_PASSES.map((p) => `${p.name}:${p.model ?? "default"}`).join("|");
   const rationaleModel = config.OPENAI_RATIONALE_MODEL;
-  const logicVersion = `engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|deepAuditor:${config.ANALYSIS_DEEP_AUDITOR}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}`;
+  const logicVersion = `engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|deepAuditor:${config.ANALYSIS_DEEP_AUDITOR}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}|passGating:${config.ANALYSIS_PASS_GATING_ENABLED ? PASS_GATING_VERSION : "off"}`;
   const jobConfig = (job.config_snapshot as any) || {};
   const forceFresh = jobConfig.force_fresh === true;
   const routerModel = jobConfig.router_model || config.OPENAI_ROUTER_MODEL;
@@ -739,7 +740,8 @@ export async function processChunkJudge(
     // 3) Multi-Pass Detection (specialized scanners running in parallel)
     allFindings = [];
     try {
-      setChunkMultipassStart(chunk.id, DETECTION_PASSES.length);
+      const passExecutionPlan = planDetectionPassExecution(chunkText, selectedArticles, terms);
+      setChunkMultipassStart(chunk.id, Math.max(1, passExecutionPlan.activePasses.length));
       const multiPassStartedAt = Date.now();
       const multiPassResult = await runMultiPassDetection(
         chunkText,
@@ -748,7 +750,8 @@ export async function processChunkJudge(
         selectedArticles,
         terms,
         { temperature, seed },
-        { chunkId: chunk.id }
+        { chunkId: chunk.id },
+        passExecutionPlan
       );
       
       // Enforce atom_ids and fill missing evidence snippets from local offsets when needed.
@@ -783,6 +786,8 @@ export async function processChunkJudge(
         chunkId: chunk.id,
         runKey,
         totalPasses: multiPassResult.passResults.length,
+        executedPasses: multiPassResult.executedPassCount,
+        skippedPasses: multiPassResult.skippedPassCount,
         beforeVerbatim: beforeVerbatimCount,
         afterVerbatim: allFindings.length,
         dropped: beforeVerbatimCount - allFindings.length,
@@ -790,7 +795,9 @@ export async function processChunkJudge(
         passBreakdown: multiPassResult.passResults.map(r => ({
           pass: r.passName,
           findings: r.findings.length,
-          duration: r.duration
+          duration: r.duration,
+          skipped: r.skipped ?? false,
+          reason: r.reason ?? null,
         }))
       });
       logger.info("Chunk multipass timings", {

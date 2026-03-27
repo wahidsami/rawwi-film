@@ -18,12 +18,13 @@ import { callJudgeRaw, parseJudgeWithRepair } from "./openai.js";
 import { logger } from "./logger.js";
 import { getFrameworkPromptSection } from "./canonicalAtomFramework.js";
 import { flushChunkPassProgress, reportChunkPassProgressDebounced } from "./jobs.js";
+import { evaluatePassGating } from "./passGating.js";
 
 export interface LexiconTerm {
   term: string;
   gcam_article_id: number;
   severity_floor: string;
-  gcam_article_title_ar?: string;
+  gcam_article_title_ar?: string | null;
   term_variants?: string[] | null;
 }
 
@@ -32,6 +33,13 @@ export interface PassDefinition {
   articleIds: number[];
   buildPrompt: (articles: GCAMArticle[], lexiconTerms?: LexiconTerm[]) => string;
   model?: string; // Optional: override model for this pass
+}
+
+export interface PlannedPassSkip {
+  passName: string;
+  reason: string;
+  matchedSignals?: string[];
+  model?: string;
 }
 
 function compareNullableNumber(a: number | null | undefined, b: number | null | undefined): number {
@@ -554,7 +562,67 @@ interface PassResult {
   passName: string;
   findings: JudgeFinding[];
   duration: number;
+  skipped?: boolean;
+  reason?: string;
+  matchedSignals?: string[];
+  model?: string;
   error?: string;
+}
+
+export interface DetectionPassExecutionPlan {
+  activePasses: PassDefinition[];
+  skippedPasses: PlannedPassSkip[];
+}
+
+function getPassArticleIds(pass: PassDefinition, lexiconTerms: LexiconTerm[]): number[] {
+  if (pass.name === "glossary" && lexiconTerms.length > 0) {
+    return [...new Set(lexiconTerms.map((t) => t.gcam_article_id))];
+  }
+  return pass.articleIds;
+}
+
+function sortPassResultsStable(results: PassResult[]): PassResult[] {
+  const order = new Map(DETECTION_PASSES.map((pass, index) => [pass.name, index]));
+  return [...results].sort((a, b) => (order.get(a.passName) ?? 999) - (order.get(b.passName) ?? 999));
+}
+
+export function planDetectionPassExecution(
+  chunkText: string,
+  allArticles: GCAMArticle[],
+  lexiconTerms: LexiconTerm[]
+): DetectionPassExecutionPlan {
+  const activePasses: PassDefinition[] = [];
+  const skippedPasses: PlannedPassSkip[] = [];
+
+  for (const pass of DETECTION_PASSES) {
+    const articleIds = getPassArticleIds(pass, lexiconTerms);
+    const articles = allArticles.filter((article) => articleIds.includes(article.id));
+
+    if (pass.name === "glossary" && lexiconTerms.length === 0) {
+      skippedPasses.push({ passName: pass.name, reason: "no_lexicon_terms", model: pass.model });
+      continue;
+    }
+
+    if (articles.length === 0 && pass.name !== "glossary") {
+      skippedPasses.push({ passName: pass.name, reason: "no_articles", model: pass.model });
+      continue;
+    }
+
+    const gating = evaluatePassGating(pass.name, chunkText, pass.model);
+    if (!gating.shouldRun) {
+      skippedPasses.push({
+        passName: pass.name,
+        reason: gating.reason,
+        matchedSignals: gating.matchedSignals,
+        model: pass.model,
+      });
+      continue;
+    }
+
+    activePasses.push(pass);
+  }
+
+  return { activePasses, skippedPasses };
 }
 
 /**
@@ -583,13 +651,13 @@ async function runSinglePass(
     
     if (articles.length === 0 && pass.name !== "glossary") {
       logger.warn(`[DEBUG] Pass skipped: no articles`, { passName: pass.name, articleIds, allArticleIds: allArticles.map(a => a.id) });
-      return { passName: pass.name, findings: [], duration: 0 };
+      return { passName: pass.name, findings: [], duration: 0, skipped: true, reason: "no_articles", model: pass.model };
     }
 
     // Skip glossary pass if no lexicon terms
     if (pass.name === "glossary" && lexiconTerms.length === 0) {
       logger.info("Skipping glossary pass (no lexicon terms)");
-      return { passName: pass.name, findings: [], duration: 0 };
+      return { passName: pass.name, findings: [], duration: 0, skipped: true, reason: "no_lexicon_terms", model: pass.model };
     }
 
     // Build specialized prompt
@@ -627,10 +695,10 @@ async function runSinglePass(
     logger.info(`Pass ${pass.name} completed`, { 
       findingsCount: stableTagged.length, 
       duration,
-      model 
+      model
     });
 
-    return { passName: pass.name, findings: stableTagged, duration };
+    return { passName: pass.name, findings: stableTagged, duration, model };
     
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -671,14 +739,18 @@ export async function runMultiPassDetection(
   allArticles: GCAMArticle[],
   lexiconTerms: LexiconTerm[],
   jobConfig: { temperature: number; seed: number },
-  progressOpts?: { chunkId: string }
+  progressOpts?: { chunkId: string },
+  executionPlan?: DetectionPassExecutionPlan
 ): Promise<{
   findings: JudgeFinding[];
   passResults: PassResult[];
   totalDuration: number;
+  executedPassCount: number;
+  skippedPassCount: number;
 }> {
   const startTime = Date.now();
-  const totalPasses = DETECTION_PASSES.length;
+  const plan = executionPlan ?? planDetectionPassExecution(chunkText, allArticles, lexiconTerms);
+  const totalPasses = plan.activePasses.length;
 
   logger.info("[DEBUG] runMultiPassDetection started", {
     chunkTextLength: chunkText.length,
@@ -688,19 +760,55 @@ export async function runMultiPassDetection(
     allArticleIds: allArticles.map(a => a.id),
     lexiconTermsCount: lexiconTerms.length,
     passCount: DETECTION_PASSES.length,
+    activePassCount: plan.activePasses.length,
+    skippedPassCount: plan.skippedPasses.length,
   });
   
   logger.info("Starting multi-pass detection", { 
     chunkStart, 
     chunkEnd, 
     passCount: DETECTION_PASSES.length,
+    activePassCount: plan.activePasses.length,
+    skippedPassCount: plan.skippedPasses.length,
     lexiconTermsCount: lexiconTerms.length 
   });
 
-  // Run all passes in parallel (completion order is arbitrary; UI shows debounced count)
+  for (const skipped of plan.skippedPasses) {
+    logger.info("Pass skipped by execution planner", {
+      passName: skipped.passName,
+      reason: skipped.reason,
+      model: skipped.model ?? null,
+      matchedSignals: skipped.matchedSignals ?? [],
+    });
+  }
+
+  if (plan.activePasses.length === 0) {
+    if (progressOpts?.chunkId) {
+      flushChunkPassProgress(progressOpts.chunkId, 0, 0);
+    }
+    return {
+      findings: [],
+      passResults: sortPassResultsStable(
+        plan.skippedPasses.map((skipped) => ({
+          passName: skipped.passName,
+          findings: [],
+          duration: 0,
+          skipped: true,
+          reason: skipped.reason,
+          matchedSignals: skipped.matchedSignals,
+          model: skipped.model,
+        }))
+      ),
+      totalDuration: Date.now() - startTime,
+      executedPassCount: 0,
+      skippedPassCount: plan.skippedPasses.length,
+    };
+  }
+
+  // Run planned passes in parallel (completion order is arbitrary; UI shows debounced count)
   let completed = 0;
-  const passResults = await Promise.all(
-    DETECTION_PASSES.map((pass) =>
+  const activeResults = await Promise.all(
+    plan.activePasses.map((pass) =>
       runSinglePass(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig).then(
         (result) => {
           completed++;
@@ -717,8 +825,21 @@ export async function runMultiPassDetection(
     flushChunkPassProgress(progressOpts.chunkId, totalPasses, totalPasses);
   }
 
+  const passResults = sortPassResultsStable([
+    ...activeResults,
+    ...plan.skippedPasses.map((skipped) => ({
+      passName: skipped.passName,
+      findings: [],
+      duration: 0,
+      skipped: true,
+      reason: skipped.reason,
+      matchedSignals: skipped.matchedSignals,
+      model: skipped.model,
+    })),
+  ]);
+
   // Collect all findings
-  const allFindings = passResults.flatMap(r => r.findings);
+  const allFindings = activeResults.flatMap(r => r.findings);
   
   // Deduplicate
   const deduplicated = deduplicateFindings(allFindings);
@@ -730,10 +851,14 @@ export async function runMultiPassDetection(
     afterDedup: deduplicated.length,
     dropped: allFindings.length - deduplicated.length,
     totalDuration,
+    executedPassCount: activeResults.length,
+    skippedPassCount: plan.skippedPasses.length,
     passResults: passResults.map(r => ({
       pass: r.passName,
       findings: r.findings.length,
-      duration: r.duration
+      duration: r.duration,
+      skipped: r.skipped ?? false,
+      reason: r.reason ?? null,
     }))
   });
   
@@ -749,6 +874,8 @@ export async function runMultiPassDetection(
   return {
     findings: deduplicated,
     passResults,
-    totalDuration
+    totalDuration,
+    executedPassCount: activeResults.length,
+    skippedPassCount: plan.skippedPasses.length,
   };
 }
