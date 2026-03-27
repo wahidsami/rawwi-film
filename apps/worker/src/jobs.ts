@@ -27,6 +27,7 @@ export type AnalysisChunk = {
   start_line: number;
   end_line: number;
   status: string;
+  judging_started_at?: string | null;
 };
 
 async function fetchCandidateJobsBase(): Promise<AnalysisJob[]> {
@@ -181,10 +182,10 @@ export async function fetchNextPendingChunks(jobId: string, limit: number): Prom
 export async function claimChunk(chunkId: string): Promise<AnalysisChunk | null> {
   const { data: updated } = await supabase
     .from("analysis_chunks")
-    .update({ status: "judging" })
+    .update({ status: "judging", judging_started_at: new Date().toISOString() })
     .eq("id", chunkId)
     .eq("status", "pending")
-    .select("id, job_id, chunk_index, text, start_offset, end_offset, start_line, end_line, status")
+    .select("id, job_id, chunk_index, text, start_offset, end_offset, start_line, end_line, status, judging_started_at")
     .single();
 
   if (!updated) return null;
@@ -246,6 +247,7 @@ export async function setChunkDone(chunkId: string): Promise<void> {
     .from("analysis_chunks")
     .update({
       status: "done",
+      judging_started_at: null,
       processing_phase: null,
       passes_completed: 0,
     })
@@ -255,7 +257,7 @@ export async function setChunkDone(chunkId: string): Promise<void> {
 export async function setChunkFailed(chunkId: string, lastError: string): Promise<void> {
   await supabase
     .from("analysis_chunks")
-    .update({ status: "failed", last_error: lastError, processing_phase: null })
+    .update({ status: "failed", last_error: lastError, judging_started_at: null, processing_phase: null })
     .eq("id", chunkId);
 }
 
@@ -265,6 +267,7 @@ export async function setChunkPending(chunkId: string, lastError: string | null 
     .update({
       status: "pending",
       last_error: lastError,
+      judging_started_at: null,
       processing_phase: null,
       passes_completed: 0,
     })
@@ -369,6 +372,61 @@ export async function countChunksWithStatuses(jobId: string, statuses: string[])
     .eq("job_id", jobId)
     .in("status", statuses);
   return count ?? 0;
+}
+
+export async function recoverStaleJudgingChunks(maxAgeMs: number): Promise<number> {
+  const cutoffIso = new Date(Date.now() - maxAgeMs).toISOString();
+  const { data, error } = await supabase
+    .from("analysis_chunks")
+    .select("id, job_id, chunk_index, judging_started_at")
+    .eq("status", "judging")
+    .not("judging_started_at", "is", null)
+    .lt("judging_started_at", cutoffIso)
+    .order("judging_started_at", { ascending: true })
+    .limit(20);
+
+  if (error) {
+    logger.warn("Failed to query stale judging chunks", { error: error.message, cutoffIso });
+    return 0;
+  }
+
+  const staleChunks = (data ?? []) as Array<{
+    id: string;
+    job_id: string;
+    chunk_index: number;
+    judging_started_at?: string | null;
+  }>;
+
+  if (!staleChunks.length) return 0;
+
+  let recovered = 0;
+  for (const chunk of staleChunks) {
+    const jobState = await fetchJobControlState(chunk.job_id);
+    const message = (jobState as { partial_finalize_requested?: boolean | null } | null)?.partial_finalize_requested
+      ? "Recovered stale judging chunk during partial finalization"
+      : "Recovered stale judging chunk and re-queued it";
+
+    if ((jobState as { partial_finalize_requested?: boolean | null } | null)?.partial_finalize_requested) {
+      await setChunkFailed(chunk.id, message);
+      logger.warn("Stale judging chunk failed for partial finalize recovery", {
+        jobId: chunk.job_id,
+        chunkId: chunk.id,
+        chunkIndex: chunk.chunk_index,
+        judgingStartedAt: chunk.judging_started_at ?? null,
+      });
+    } else {
+      await setChunkPending(chunk.id, message);
+      logger.warn("Stale judging chunk returned to pending", {
+        jobId: chunk.job_id,
+        chunkId: chunk.id,
+        chunkIndex: chunk.chunk_index,
+        judgingStartedAt: chunk.judging_started_at ?? null,
+      });
+    }
+    recovered += 1;
+  }
+
+  return recovered;
 }
 
 /**

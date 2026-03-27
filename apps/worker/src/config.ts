@@ -12,6 +12,10 @@ export const config = {
   OPENAI_RATIONALE_MODEL: process.env.OPENAI_RATIONALE_MODEL ?? "gpt-4.1",
   JUDGE_TIMEOUT_MS: parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10),
   POLL_INTERVAL_MS: parseInt(process.env.POLL_INTERVAL_MS ?? "2000", 10),
+  STALE_JUDGING_MS: Math.max(
+    60_000,
+    parseInt(process.env.STALE_JUDGING_MS ?? "600000", 10) || 600_000
+  ),
   // Accept the legacy misnamed env key as a fallback so older deployments still get concurrency.
   WORKER_CHUNK_CONCURRENCY: Math.max(
     1,

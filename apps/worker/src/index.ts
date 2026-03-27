@@ -12,6 +12,7 @@ import {
   setJobFailed,
   setChunkPending,
   setChunkFailed,
+  recoverStaleJudgingChunks,
 } from "./jobs.js";
 import { setContext, logger } from "./logger.js";
 import { initializeLexiconCache, getLexiconCache } from "./lexiconCache.js";
@@ -73,6 +74,14 @@ async function processClaimedChunk(job: { id: string; script_id: string; version
 }
 
 async function processOneJob(): Promise<boolean> {
+  const recoveredChunks = await recoverStaleJudgingChunks(config.STALE_JUDGING_MS);
+  if (recoveredChunks > 0) {
+    logger.info("Recovered stale judging chunks before polling next job", {
+      recoveredChunks,
+      staleJudgingMs: config.STALE_JUDGING_MS,
+    });
+  }
+
   const jobStartedAt = Date.now();
   const job = await fetchNextJob();
   if (!job) {
