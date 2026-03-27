@@ -112,7 +112,7 @@ function renderPreviewWithHighlight(preview: string, focusSnippet: string | null
 }
 
 import { scriptsApi, tasksApi, reportsApi, findingsApi } from '@/api';
-import type { AnalysisFinding } from '@/api';
+import type { AnalysisFinding, Report as AnalysisReport } from '@/api';
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
@@ -226,6 +226,135 @@ function normalizeEvidenceForSearch(raw: string): string {
   let s = (raw ?? '').trim();
   s = s.replace(/^[\s"'""«»„]+|[\s"'""«»„]+$/gu, '').trim();
   return s;
+}
+
+const RATIONALE_SAYS_NOT_VIOLATION = [
+  "لا يعد مخالفة",
+  "لا توجد مخالفة",
+  "لا يعتبر مخالفة",
+  "لا تُعد مخالفة",
+  "لا تعتبر مخالفة",
+  "ليس مخالفة",
+  "لا يشكل مخالفة",
+  "لا يصل إلى حد المخالفة",
+  "لا يرقى إلى مخالفة",
+  "لا يشكل انتهاكاً",
+  "لا يشكل تجاوزاً",
+  "السياق مقبول",
+  "سياق مقبول",
+  "ضمن الضوابط",
+  "لا خرق للضوابط",
+  "لا يتجاوز الضوابط",
+  "معالجة إيجابية",
+  "لا يتضمن أي إيحاء",
+  "سياق درامي فقط",
+  "جزء من السياق الدرامي",
+  "في إطار درامي",
+  "ليس تحريضاً",
+  "لا يروج للعنف",
+  "لا يروّج للعنف",
+  "يخدم السياق الدرامي",
+  "يخدم السرد",
+];
+
+function isWeakRationaleText(value: string | null | undefined): boolean {
+  const text = (value ?? '').replace(/\s+/g, ' ').trim();
+  if (!text) return true;
+  if (text.length < 24) return true;
+  return [
+    /^وجود /,
+    /^مطابقة /,
+    /^مخالفة /,
+    /^إشارة /,
+    /^يحتوي النص/,
+    /^يحتوي المقتطف/,
+    /^يتطلب تقييم/,
+    /^يحتاج مراجعة/,
+  ].some((pattern) => pattern.test(text));
+}
+
+function pickFindingRationale(f: AnalysisFinding): string | null {
+  const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+  const candidates = [
+    v3.rationale_ar as string | undefined,
+    v3.rationale as string | undefined,
+    f.rationaleAr ?? undefined,
+    f.descriptionAr ?? undefined,
+  ];
+  for (const candidate of candidates) {
+    if (!isWeakRationaleText(candidate)) return candidate!.trim();
+  }
+  for (const candidate of candidates) {
+    const text = candidate?.trim();
+    if (text) return text;
+  }
+  return null;
+}
+
+function findingCanonicalId(f: AnalysisFinding): string | null {
+  const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+  const raw = v3.canonical_finding_id;
+  return typeof raw === 'string' && raw.trim() ? raw.trim() : null;
+}
+
+function rationaleSaysNotViolationText(value: string | null | undefined): boolean {
+  const text = (value ?? '').replace(/\s+/g, ' ').trim();
+  if (!text) return false;
+  return RATIONALE_SAYS_NOT_VIOLATION.some((phrase) => text.includes(phrase));
+}
+
+function shouldTreatFindingAsSpecialNote(
+  f: AnalysisFinding,
+  canonicalHintIds: Set<string>
+): boolean {
+  const canonicalId = findingCanonicalId(f);
+  if (canonicalId && canonicalHintIds.has(canonicalId)) return true;
+  const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+  const finalRuling = typeof v3.final_ruling === 'string' ? v3.final_ruling.toLowerCase() : '';
+  if (finalRuling === 'context_ok') return true;
+  return rationaleSaysNotViolationText(pickFindingRationale(f));
+}
+
+function dedupeAnalysisFindings(list: AnalysisFinding[]): AnalysisFinding[] {
+  const byCanonical = new Map<string, AnalysisFinding>();
+  for (const f of list) {
+    const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+    const canonicalId =
+      (v3.canonical_finding_id as string | undefined) ?? f.id ?? `${f.articleId}-${f.evidenceSnippet?.slice(0, 80) ?? ''}`;
+    const existing = byCanonical.get(canonicalId);
+    if (!existing) {
+      byCanonical.set(canonicalId, f);
+      continue;
+    }
+    const currentRank = SEVERITY_ORDER[existing.severity?.toLowerCase() ?? ''] ?? 0;
+    const nextRank = SEVERITY_ORDER[f.severity?.toLowerCase() ?? ''] ?? 0;
+    if (nextRank > currentRank || (nextRank === currentRank && (f.confidence ?? 0) > (existing.confidence ?? 0))) {
+      byCanonical.set(canonicalId, f);
+    }
+  }
+  return [...byCanonical.values()];
+}
+
+function expandHighlightRangeToSentence(
+  plain: string,
+  start: number,
+  end: number
+): { start: number; end: number } {
+  if (!plain || end <= start) return { start, end };
+  const separators = /[\n\r.!?؟…]/;
+  let lo = Math.max(0, start);
+  let hi = Math.min(plain.length, end);
+
+  while (lo > 0 && !separators.test(plain[lo - 1])) lo--;
+  while (hi < plain.length && !separators.test(plain[hi])) hi++;
+  while (lo < hi && /\s/.test(plain[lo])) lo++;
+  while (hi > lo && /\s/.test(plain[hi - 1])) hi--;
+
+  const maxLen = 260;
+  if (hi - lo > maxLen) {
+    return { start, end };
+  }
+  return hi > lo ? { start: lo, end: hi } : { start, end };
 }
 
 /** Dialogue after colon / last line first — avoids highlighting the speaker line with the line below. */
@@ -452,6 +581,7 @@ function resolveFindingViaWorkspaceSearch(
     const t = tightenHighlightRangeToEvidence(workspacePlain, span.start, span.end, ev);
     span = { start: t.start, end: t.end };
   }
+  span = expandHighlightRangeToSentence(workspacePlain, span.start, span.end);
   return workspaceGlobalSpanToPageLocal(span.start, span.end, pages);
 }
 
@@ -765,6 +895,7 @@ export function ScriptWorkspace() {
 
   // ── Report findings (for editor highlights) ──
   const [selectedReportForHighlights, setSelectedReportForHighlights] = useState<ReportListItem | null>(null);
+  const [selectedReportSummary, setSelectedReportSummary] = useState<AnalysisReport | null>(null);
   const [selectedJobCanonicalHash, setSelectedJobCanonicalHash] = useState<string | null>(null);
   const [reportFindings, setReportFindings] = useState<AnalysisFinding[]>([]);
   const [highlightExpectedCount, setHighlightExpectedCount] = useState(0);
@@ -807,6 +938,23 @@ export function ScriptWorkspace() {
   const [manualSaving, setManualSaving] = useState(false);
   const [manualOffsets, setManualOffsets] = useState<{ startOffsetGlobal: number; endOffsetGlobal: number } | null>(null);
   const [persistentSelection, setPersistentSelection] = useState<{ rects: DOMRect[] } | null>(null);
+
+  const workspaceCanonicalHintIds = useMemo(
+    () =>
+      new Set(
+        ((selectedReportSummary?.summaryJson?.report_hints ?? []) as Array<{ canonical_finding_id?: string }>)
+          .map((f) => f.canonical_finding_id)
+          .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+      ),
+    [selectedReportSummary]
+  );
+
+  const workspaceVisibleReportFindings = useMemo(() => {
+    const violations = reportFindings.filter(
+      (f) => f.reviewStatus !== 'approved' && !shouldTreatFindingAsSpecialNote(f, workspaceCanonicalHintIds)
+    );
+    return dedupeAnalysisFindings(violations);
+  }, [reportFindings, workspaceCanonicalHintIds]);
 
   const loadReportHistory = useCallback(async () => {
     if (!id) return;
@@ -861,6 +1009,7 @@ export function ScriptWorkspace() {
       toast.success(lang === 'ar' ? 'تم حذف التقرير' : 'Report deleted');
       if (selectedReportForHighlights?.id === reportId) {
         setSelectedReportForHighlights(null);
+        setSelectedReportSummary(null);
         setSelectedJobCanonicalHash(null);
         setReportFindings([]);
       }
@@ -884,11 +1033,13 @@ export function ScriptWorkspace() {
     setHighlightRenderedCount(0);
     try {
       if (jobId) {
-        const [job, list] = await Promise.all([
+        const [job, list, fullReport] = await Promise.all([
           tasksApi.getJob(jobId),
           findingsApi.getByJob(jobId),
+          reportsApi.getByJob(jobId),
         ]);
         setSelectedJobCanonicalHash((job as { scriptContentHash?: string | null }).scriptContentHash ?? null);
+        setSelectedReportSummary(fullReport);
         setReportFindings(list);
         if (IS_DEV) console.log('[ScriptWorkspace] Findings loaded for highlights:', list.length);
         if (id) {
@@ -896,12 +1047,17 @@ export function ScriptWorkspace() {
         }
       } else {
         setSelectedJobCanonicalHash(null);
-        const list = await findingsApi.getByReport(reportId!);
+        const [list, fullReport] = await Promise.all([
+          findingsApi.getByReport(reportId!),
+          reportsApi.getById(reportId!),
+        ]);
+        setSelectedReportSummary(fullReport);
         setReportFindings(list);
         if (IS_DEV) console.log('[ScriptWorkspace] Findings loaded for highlights:', list.length);
       }
     } catch (_) {
       setReportFindings([]);
+      setSelectedReportSummary(null);
       setSelectedJobCanonicalHash(null);
       toast.error(lang === 'ar' ? 'فشل تحميل الملاحظات' : 'Failed to load findings');
     } finally {
@@ -1508,6 +1664,7 @@ export function ScriptWorkspace() {
       // The file/context was replaced: clear stale highlight/report state immediately in UI.
       setReportFindings([]);
       setSelectedReportForHighlights(null);
+      setSelectedReportSummary(null);
       setSelectedJobCanonicalHash(null);
       setSelectedFindingId(null);
       loadReportHistory();
@@ -2053,36 +2210,36 @@ export function ScriptWorkspace() {
   /** Per-finding: where evidence actually appears in the workspace (page + local offsets). */
   const findingWorkspaceResolve = useMemo(() => {
     const map = new Map<string, { pageNumber: number; localStart: number; localEnd: number }>();
-    if (!workspacePlainFull.trim() || !reportFindings.length) return map;
+    if (!workspacePlainFull.trim() || !workspaceVisibleReportFindings.length) return map;
     const pages =
       pagesSortedForViewer.length > 0
         ? pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
         : [{ pageNumber: 1, content: workspacePlainFull }];
-    for (const f of reportFindings) {
+    for (const f of workspaceVisibleReportFindings) {
       const hit = resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
       if (hit) map.set(f.id, hit);
     }
     return map;
-  }, [workspacePlainFull, reportFindings, pagesSortedForViewer, locateFindingInContent]);
+  }, [workspacePlainFull, workspaceVisibleReportFindings, pagesSortedForViewer, locateFindingInContent]);
 
   const highlightTargetsForPageView = useMemo((): AnalysisFinding[] => {
-    if (!pinnedHighlight || !reportFindings.length) return [];
-    const f = reportFindings.find((x) => x.id === pinnedHighlight.findingId);
+    if (!pinnedHighlight || !workspaceVisibleReportFindings.length) return [];
+    const f = workspaceVisibleReportFindings.find((x) => x.id === pinnedHighlight.findingId);
     if (!f) return [];
     const pages = pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }));
     if (!pages.length) return [];
     const hit = workspaceGlobalSpanToPageLocal(pinnedHighlight.globalStart, pinnedHighlight.globalEnd, pages);
     if (!hit || hit.pageNumber !== safeCurrentPage) return [];
     return [{ ...f, startOffsetGlobal: hit.localStart, endOffsetGlobal: hit.localEnd }];
-  }, [pinnedHighlight, reportFindings, pagesSortedForViewer, safeCurrentPage]);
+  }, [pinnedHighlight, workspaceVisibleReportFindings, pagesSortedForViewer, safeCurrentPage]);
 
   const highlightTargetsForScrollView = useMemo((): AnalysisFinding[] => {
-    if (!pinnedHighlight || !reportFindings.length) return [];
+    if (!pinnedHighlight || !workspaceVisibleReportFindings.length) return [];
     if ((editorData?.pages?.length ?? 0) > 0) return [];
-    const f = reportFindings.find((x) => x.id === pinnedHighlight.findingId);
+    const f = workspaceVisibleReportFindings.find((x) => x.id === pinnedHighlight.findingId);
     if (!f) return [];
     return [{ ...f, startOffsetGlobal: pinnedHighlight.globalStart, endOffsetGlobal: pinnedHighlight.globalEnd }];
-  }, [pinnedHighlight, reportFindings, editorData?.pages?.length]);
+  }, [pinnedHighlight, workspaceVisibleReportFindings, editorData?.pages?.length]);
 
   const findingSegments = useMemo(
     () =>
@@ -2103,7 +2260,7 @@ export function ScriptWorkspace() {
   );
 
   const handlePinFindingInScript = useCallback(
-    (f: AnalysisFinding, e?: React.MouseEvent) => {
+    (f: AnalysisFinding, e?: React.MouseEvent, opts?: { silent?: boolean }) => {
       e?.stopPropagation();
       if (!workspacePlainFull.trim()) {
         toast.error(lang === 'ar' ? 'لا يوجد نص محمّل' : 'No script text loaded');
@@ -2142,6 +2299,9 @@ export function ScriptWorkspace() {
           ge = span.end;
         }
       }
+      const expanded = expandHighlightRangeToSentence(workspacePlainFull, gs, ge);
+      gs = expanded.start;
+      ge = expanded.end;
       if (ge <= gs) {
         toast.error(lang === 'ar' ? 'مدى غير صالح' : 'Invalid match range');
         return;
@@ -2165,7 +2325,9 @@ export function ScriptWorkspace() {
         );
       }
       setHighlightRetryTick((n) => n + 1);
-      toast.success(lang === 'ar' ? 'تم العثور على النص وتمييزه' : 'Found and highlighted in script');
+      if (!opts?.silent) {
+        toast.success(lang === 'ar' ? 'تم العثور على النص وتمييزه' : 'Found and highlighted in script');
+      }
     },
     [workspacePlainFull, pagesSortedForViewer, locateFindingInContent, lang, setSearchParams, setCurrentPage]
   );
@@ -2448,54 +2610,7 @@ export function ScriptWorkspace() {
 
   const handleFindingCardClick = (f: AnalysisFinding) => {
     if (IS_DEV) console.log(`[ScriptWorkspace] Card clicked for ${f.id}`);
-    setSelectedFindingId(f.id);
-    const wsHit = findingWorkspaceResolve.get(f.id);
-    const pagesForVpn = (editorData?.pages ?? []).map((p) => ({
-      pageNumber: p.pageNumber,
-      content: p.content ?? '',
-    }));
-    const vpn =
-      pagesForVpn.length > 0
-        ? viewerPageNumberFromStartOffset([...pagesForVpn].sort((a, b) => a.pageNumber - b.pageNumber), f.startOffsetGlobal)
-        : null;
-    const targetPage = wsHit?.pageNumber ?? vpn ?? f.pageNumber ?? null;
-    if (isPageMode && targetPage != null && targetPage >= 1 && targetPage <= totalPages) {
-      setCurrentPage(targetPage);
-    }
-    if (targetPage != null && targetPage >= 1) {
-      setSearchParams(
-        (prev) => {
-          const n = new URLSearchParams(prev);
-          n.set('page', String(targetPage));
-          return n;
-        },
-        { replace: true }
-      );
-    } else if (
-      isPageMode &&
-      f.startOffsetGlobal != null &&
-      f.endOffsetGlobal != null &&
-      (editorData?.pages?.length ?? 0) > 0
-    ) {
-      const pages = editorData!.pages!;
-      const start = f.startOffsetGlobal;
-      for (let i = 0; i < pages.length; i++) {
-        const ps = pages[i].startOffsetGlobal ?? 0;
-        const pe = ps + (pages[i].content?.length ?? 0);
-        if (start >= ps && start < pe) {
-          setCurrentPage(i + 1);
-          setSearchParams(
-            (prev) => {
-              const n = new URLSearchParams(prev);
-              n.set('page', String(i + 1));
-              return n;
-            },
-            { replace: true }
-          );
-          break;
-        }
-      }
-    }
+    handlePinFindingInScript(f, undefined, { silent: true });
   };
 
   return (
@@ -2961,7 +3076,7 @@ export function ScriptWorkspace() {
               {lang === 'ar' ? 'الملاحظات' : 'Findings'}
               <Badge variant="outline" className="text-[10px] px-1.5">{
                 (Number.isFinite(scriptFindings.length) ? scriptFindings.length : 0) +
-                (Number.isFinite(reportFindings.length) ? reportFindings.length : 0)
+                (Number.isFinite(workspaceVisibleReportFindings.length) ? workspaceVisibleReportFindings.length : 0)
               }</Badge>
             </button>
             <button
@@ -2982,8 +3097,8 @@ export function ScriptWorkspace() {
                 <span className="text-xs font-medium text-text-muted">
                   {selectedReportForHighlights
                     ? lang === 'ar'
-                      ? 'اضغط «بحث في النص» على أي ملاحظة للتمييز (نفس المساحة للتحليل السريع والعميل).'
-                      : 'Use «Find in script» on a card to search all pages and highlight that finding only. Same workspace for Quick Analysis and client scripts.'
+                      ? 'اضغط على أي ملاحظة ليجري تحديدها وتمييزها تلقائياً داخل النص. ويمكنك استخدام «بحث في النص» لإعادة التموضع إذا لزم الأمر.'
+                      : 'Click any finding to automatically locate and highlight it in the script. Use “Find in script” to re-run the search if needed.'
                     : lang === 'ar'
                       ? 'اختر تقريراً لعرض الملاحظات.'
                       : 'Select a report to view findings.'}
@@ -3005,6 +3120,7 @@ export function ScriptWorkspace() {
                     className="h-6 text-[10px] px-2 text-error hover:text-error hover:bg-error/10"
                     onClick={() => {
                       setSelectedReportForHighlights(null);
+                      setSelectedReportSummary(null);
                       setReportFindings([]);
                       setSelectedFindingId(null);
                       setPinnedHighlight(null);
@@ -3048,7 +3164,7 @@ export function ScriptWorkspace() {
                   Count highlights ({editorRef.current?.querySelectorAll('[data-finding-id]')?.length ?? 0})
                 </Button>
               )}
-              {reportFindings.length > 0 && (
+              {workspaceVisibleReportFindings.length > 0 && (
                 <div className="space-y-2 mb-4">
                   {!blockHighlightsCompletely &&
                     pinnedHighlight &&
@@ -3085,7 +3201,7 @@ export function ScriptWorkspace() {
                   <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
                     {lang === 'ar' ? 'ملاحظات التقرير' : 'Report findings'}
                   </h3>
-                  {reportFindings.map((f) => (
+                  {workspaceVisibleReportFindings.map((f) => (
                     <div
                       key={f.id}
                       ref={(el) => { findingCardRefs.current[f.id] = el; }}
@@ -3236,7 +3352,7 @@ export function ScriptWorkspace() {
                 </div>
               </div>
             ))}
-              {scriptFindings.length === 0 && reportFindings.length === 0 && (
+              {scriptFindings.length === 0 && workspaceVisibleReportFindings.length === 0 && (
               <div className="text-center p-8 text-text-muted text-sm border-2 border-dashed border-border rounded-xl">
                   {lang === 'ar' ? 'لا توجد ملاحظات. اختر تقريراً لعرض التمييز، أو حدد نصاً وانقر بزر الماوس الأيمن لإضافة ملاحظة.' : 'No findings. Select a report to show highlights, or select text and right-click to add a manual finding.'}
               </div>
