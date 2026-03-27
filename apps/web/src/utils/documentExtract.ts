@@ -612,14 +612,89 @@ type TextItem = {
 
 const PDF_TEXT_INVISIBLE_RE = /[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g;
 const PDF_TEXT_SOFT_SPACE_RE = /[\u00A0\t]+/g;
+const PDF_ARABIC_RE = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/u;
+const PDF_ARABIC_LETTER_RE = /[\u0621-\u064A\u066E-\u066F\u0671-\u06D3\u06FA-\u06FC\u06FF]/u;
+const PDF_STRAY_LATIN_IN_ARABIC_RE =
+  /(?<=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])[A-Za-z](?=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])/gu;
+const PDF_STRAY_LATIN_EDGE_RE =
+  /(^|\s)[A-Za-z](?=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])|(?<=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])[A-Za-z](?=$|\s)/gu;
 
 export function normalizePdfTextRun(value: string): string {
   return (value ?? '')
     .normalize('NFKC')
     .replace(PDF_TEXT_INVISIBLE_RE, '')
     .replace(PDF_TEXT_SOFT_SPACE_RE, ' ')
+    .replace(/[\u06CC\u06D0\u06CE\u06D2]/g, 'ي')
+    .replace(/[\u06A9\u06AA]/g, 'ك')
+    .replace(/[\u06C1\u06BE\u06D5]/g, 'ه')
     .replace(/\r?\n/g, ' ')
     .replace(/ {2,}/g, ' ');
+}
+
+function hasArabicPdfText(value: string): boolean {
+  return PDF_ARABIC_RE.test(value);
+}
+
+function isArabicPdfLetter(ch: string): boolean {
+  return PDF_ARABIC_LETTER_RE.test(ch);
+}
+
+function firstVisibleChar(value: string): string {
+  return value.trimStart()[0] ?? '';
+}
+
+function lastVisibleChar(value: string): string {
+  const trimmed = value.trimEnd();
+  return trimmed[trimmed.length - 1] ?? '';
+}
+
+export function postprocessPdfExtractedLine(line: string): string {
+  let out = normalizePdfTextRun(line).trim();
+  if (!out) return '';
+
+  if (hasArabicPdfText(out)) {
+    out = out
+      .replace(PDF_STRAY_LATIN_IN_ARABIC_RE, '')
+      .replace(PDF_STRAY_LATIN_EDGE_RE, '$1')
+      .replace(/(\d+)\.([\u0600-\u06FF])/gu, '$1. $2')
+      .replace(/([\u0600-\u06FF])-(?=[\u0600-\u06FF])/gu, '$1 - ')
+      .replace(/(?<=[\u0600-\u06FF])\/(?=[\u0600-\u06FF])/gu, ' / ')
+      .replace(/(?<=[\u0600-\u06FF])\)\s*(V\.O|O\.S)\(/giu, ' ($1) ')
+      .replace(/\(\s*(V\.O|O\.S)\s*\)/giu, '($1)')
+      .replace(/([:؟!،؛.])(?=[\u0600-\u06FF])/gu, '$1 ')
+      .replace(/\s+\)/g, ')')
+      .replace(/\(\s+/g, '(')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
+  return out;
+}
+
+function shouldInsertPdfSpace(
+  prev: { str: string },
+  cur: { str: string },
+  gap: number,
+  wordThreshold: number,
+  medianWidth: number,
+  rtl: boolean
+): boolean {
+  if (gap > wordThreshold) return true;
+  if (gap <= 0.08) return false;
+
+  const prevLast = lastVisibleChar(prev.str);
+  const curFirst = firstVisibleChar(cur.str);
+  if (!prevLast || !curFirst) return false;
+
+  const prevArabic = isArabicPdfLetter(prevLast);
+  const curArabic = isArabicPdfLetter(curFirst);
+  if (!prevArabic || !curArabic) return false;
+
+  const aggressiveArabicGap = rtl
+    ? Math.max(Math.min(medianWidth * 0.025, 0.4), 0.06)
+    : Math.max(Math.min(medianWidth * 0.04, 0.5), 0.08);
+
+  return gap >= aggressiveArabicGap && (prev.str.trim().length > 1 || cur.str.trim().length > 1);
 }
 
 /** Arabic / Arabic supplement / presentation forms — used to pick RTL sort + tighter joins. */
@@ -678,9 +753,9 @@ function joinPdfLineParts(parts: { str: string; x: number; width: number }[], rt
   let out = s[0]!.str;
   for (let i = 1; i < s.length; i++) {
     const g = gaps[i - 1]!;
-    out += (g > wordTh ? ' ' : '') + s[i]!.str;
+    out += (shouldInsertPdfSpace(s[i - 1]!, s[i]!, g, wordTh, medW, rtl) ? ' ' : '') + s[i]!.str;
   }
-  return out.replace(/ {2,}/g, ' ');
+  return postprocessPdfExtractedLine(out);
 }
 
 /** Same ordering as joinPdfLineParts but preserves per-run bold for HTML. */
@@ -711,7 +786,7 @@ function joinPdfLinePartsHtml(
   for (let i = 0; i < s.length; i++) {
     if (i > 0) {
       const g = gaps[i - 1]!;
-      html += g > wordTh ? ' ' : '';
+      html += shouldInsertPdfSpace(s[i - 1]!, s[i]!, g, wordTh, medW, rtl) ? ' ' : '';
     }
     const p = s[i]!;
     if (strongOpen && !p.bold) {
@@ -794,7 +869,9 @@ function pageItemsToText(items: TextItem[]): string {
   if (!items.length) return "";
   const hasTransform = items.some((it) => Array.isArray(it.transform) && it.transform.length >= 6);
   if (!hasTransform) {
-    return items.map((it) => normalizePdfTextRun(it.str ?? '')).join('').replace(/ {2,}/g, ' ').trim();
+    return postprocessPdfExtractedLine(
+      items.map((it) => normalizePdfTextRun(it.str ?? '')).join('').replace(/ {2,}/g, ' ')
+    );
   }
   const lines: string[] = [];
   let lastY: number | null = null;
@@ -823,7 +900,7 @@ function pageItemsToText(items: TextItem[]): string {
     if (it.hasEOL) flushLine();
   }
   flushLine();
-  return lines.join("\n").trim();
+  return lines.map((line) => postprocessPdfExtractedLine(line)).filter(Boolean).join("\n").trim();
 }
 
 /**

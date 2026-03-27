@@ -1,7 +1,7 @@
 /**
  * Run: npx tsx src/utils/documentExtract.pdf-arabic.test.ts
  */
-import { normalizePdfTextRun } from './documentExtract';
+import { normalizePdfTextRun, postprocessPdfExtractedLine } from './documentExtract';
 
 const presentation = 'ﺷﺎرع اﻷﻋﺸﻰ';
 const normalized = normalizePdfTextRun(presentation);
@@ -13,6 +13,21 @@ if (normalized !== 'شارع الأعشى') {
 const hidden = normalizePdfTextRun('ق\u200dذ\u200cر');
 if (hidden !== 'قذر') {
   throw new Error(`expected hidden chars to be removed, got: ${hidden}`);
+}
+
+const sceneHeader = postprocessPdfExtractedLine('2.اﻟﻄﺮﯾﻖ-ﺧﺎرﺟﻲ/ﻟﯿﻠﻲ');
+if (sceneHeader !== '2. الطريق - خارجي / ليلي') {
+  throw new Error(`expected scene header cleanup, got: ${sceneHeader}`);
+}
+
+const bidiVoiceOver = postprocessPdfExtractedLine('ﻋﺰﯾﺰة) V.O(');
+if (bidiVoiceOver !== 'عزيزة (V.O)') {
+  throw new Error(`expected voice-over marker cleanup, got: ${bidiVoiceOver}`);
+}
+
+const strayLatin = postprocessPdfExtractedLine('sﯾﺮﺣﻤﮫوﯾﻌﻔﻲﻋﻨﮫ.');
+if (strayLatin !== 'يرحمهويعفيعنه.') {
+  throw new Error(`expected stray latin cleanup, got: ${strayLatin}`);
 }
 
 console.log('documentExtract.pdf-arabic.test.ts: ok');
