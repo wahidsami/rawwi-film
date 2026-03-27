@@ -671,6 +671,14 @@ export function ScriptWorkspace() {
   const [scriptByIdLoading, setScriptByIdLoading] = useState(true);
   const script = scriptFromList ?? scriptFetched ?? undefined;
   const scriptFindings = findings.filter(f => f.scriptId === id);
+  const manualScriptFindings = useMemo(
+    () => scriptFindings.filter((f) => f.source === 'manual'),
+    [scriptFindings]
+  );
+  const legacyAutomatedScriptFindings = useMemo(
+    () => scriptFindings.filter((f) => f.source !== 'manual'),
+    [scriptFindings]
+  );
   const isQuickContext = useMemo(() => {
     const fromQuery = new URLSearchParams(location.search).get('quick') === '1';
     return fromQuery || Boolean(script?.isQuickAnalysis);
@@ -3213,7 +3221,8 @@ export function ScriptWorkspace() {
               <ShieldAlert className="w-3.5 h-3.5" />
               {lang === 'ar' ? 'الملاحظات' : 'Findings'}
               <Badge variant="outline" className="text-[10px] px-1.5">{
-                (Number.isFinite(scriptFindings.length) ? scriptFindings.length : 0) +
+                (Number.isFinite(manualScriptFindings.length) ? manualScriptFindings.length : 0) +
+                (Number.isFinite(legacyAutomatedScriptFindings.length) ? legacyAutomatedScriptFindings.length : 0) +
                 (Number.isFinite(workspaceVisibleReportFindings.length) ? workspaceVisibleReportFindings.length : 0)
               }</Badge>
             </button>
@@ -3509,22 +3518,22 @@ export function ScriptWorkspace() {
                   ))}
                 </div>
               )}
-              {scriptFindings.length > 0 && (
+              {manualScriptFindings.length > 0 && (
                 <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
                   {lang === 'ar' ? 'ملاحظات يدوية' : 'Manual findings'}
                 </h3>
               )}
-            {scriptFindings.map(f => (
+            {manualScriptFindings.map(f => (
               <div 
                 key={f.id} 
                 className={cn(
                   "bg-surface border rounded-xl p-4 shadow-sm transition-all cursor-pointer group hover:border-primary/50",
-                    (f.source === 'ai' || f.source === 'lexicon_mandatory') ? 'border-warning/30' : 'border-error/30'
+                    'border-error/30'
                 )}
               >
                 <div className="flex items-center justify-between mb-2">
-                    <Badge variant={(f.source === 'ai' || f.source === 'lexicon_mandatory') ? 'warning' : 'error'} className="text-[10px]">
-                      {f.source === 'manual' ? (lang === 'ar' ? 'يدوي' : 'Manual') : f.source === 'lexicon_mandatory' ? (lang === 'ar' ? 'قاموس' : 'Lexicon') : 'AI Agent'}
+                    <Badge variant="error" className="text-[10px]">
+                      {lang === 'ar' ? 'يدوي' : 'Manual'}
                   </Badge>
                   <span className={cn(
                     "text-xs font-semibold px-2 py-0.5 rounded-md",
@@ -3539,22 +3548,6 @@ export function ScriptWorkspace() {
                 </p>
                 <div className="flex items-center justify-between mt-3 text-xs text-text-muted">
                   <span className="font-medium">{f.articleId}</span>
-                    {f.status === 'open' && (f.source === 'ai' || f.source === 'lexicon_mandatory') && (
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); updateFindingStatus(f.id, 'accepted', 'Override AI finding', user?.name); }}
-                        className="p-1.5 bg-success/10 text-success rounded hover:bg-success/20 transition-colors" title="Accept/Override"
-                      >
-                        <Check className="w-3 h-3" />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); updateFindingStatus(f.id, 'confirmed', 'Confirm Violation', user?.name); }}
-                        className="p-1.5 bg-error/10 text-error rounded hover:bg-error/20 transition-colors" title="Confirm Violation"
-                      >
-                        <ShieldAlert className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )}
                   {f.status !== 'open' && (
                     <Badge variant={f.status === 'accepted' ? 'success' : 'error'} className="text-[10px]">
                       {f.status}
@@ -3563,7 +3556,60 @@ export function ScriptWorkspace() {
                 </div>
               </div>
             ))}
-              {scriptFindings.length === 0 && workspaceVisibleReportFindings.length === 0 && (
+              {legacyAutomatedScriptFindings.length > 0 && (
+                <>
+                  <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                    {lang === 'ar' ? 'ملاحظات آلية من مساحة العمل' : 'Workspace AI findings'}
+                  </h3>
+                  {legacyAutomatedScriptFindings.map(f => (
+                    <div 
+                      key={f.id} 
+                      className="bg-surface border border-warning/30 rounded-xl p-4 shadow-sm transition-all cursor-pointer group hover:border-primary/50"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="warning" className="text-[10px]">
+                          {f.source === 'lexicon_mandatory' ? (lang === 'ar' ? 'قاموس' : 'Lexicon') : 'AI Agent'}
+                        </Badge>
+                        <span className={cn(
+                          "text-xs font-semibold px-2 py-0.5 rounded-md",
+                          f.severity === 'Critical' ? 'bg-error/10 text-error' : 
+                          f.severity === 'High' ? 'bg-warning/20 text-warning-700' : 'bg-background text-text-muted'
+                        )}>
+                          {f.severity}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-text-main leading-snug mb-2 line-clamp-3 bg-background/50 p-2 rounded-md border border-border/50" dir="rtl">
+                        "{f.excerpt}"
+                      </p>
+                      <div className="flex items-center justify-between mt-3 text-xs text-text-muted">
+                        <span className="font-medium">{f.articleId}</span>
+                        {f.status === 'open' && (
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); updateFindingStatus(f.id, 'accepted', 'Override AI finding', user?.name); }}
+                              className="p-1.5 bg-success/10 text-success rounded hover:bg-success/20 transition-colors" title="Accept/Override"
+                            >
+                              <Check className="w-3 h-3" />
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); updateFindingStatus(f.id, 'confirmed', 'Confirm Violation', user?.name); }}
+                              className="p-1.5 bg-error/10 text-error rounded hover:bg-error/20 transition-colors" title="Confirm Violation"
+                            >
+                              <ShieldAlert className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                        {f.status !== 'open' && (
+                          <Badge variant={f.status === 'accepted' ? 'success' : 'error'} className="text-[10px]">
+                            {f.status}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+              {manualScriptFindings.length === 0 && legacyAutomatedScriptFindings.length === 0 && workspaceVisibleReportFindings.length === 0 && (
               <div className="text-center p-8 text-text-muted text-sm border-2 border-dashed border-border rounded-xl">
                   {lang === 'ar' ? 'لا توجد ملاحظات. اختر تقريراً لعرض التمييز، أو حدد نصاً وانقر بزر الماوس الأيمن لإضافة ملاحظة.' : 'No findings. Select a report to show highlights, or select text and right-click to add a manual finding.'}
               </div>
