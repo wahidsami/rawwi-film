@@ -14,6 +14,7 @@ import { clusterByOverlap, clusterCanonicalKey } from "./methodology-v3/canonica
 import { generateScriptSummary } from "./scriptSummary.js";
 import { callRevisitSpotter } from "./openai.js";
 import { clearCachedJobResources } from "./jobAnalysisCache.js";
+import { shouldSkipRevisitForJob, shouldSkipScriptSummaryForJob } from "./performanceGating.js";
 
 export type SummaryJson = {
   job_id: string;
@@ -973,6 +974,7 @@ export async function runAggregation(jobId: string): Promise<void> {
       version_id, 
       created_by,
       normalized_text,
+      progress_total,
       config_snapshot,
       scripts (
         title,
@@ -1046,22 +1048,46 @@ export async function runAggregation(jobId: string): Promise<void> {
 
   const analysisOptions = (job as { config_snapshot?: { analysisOptions?: { mergeStrategy?: string } } }).config_snapshot?.analysisOptions;
   const summary = buildSummaryJson(jobId, job.script_id, list, clientName, scriptTitle, analysisOptions);
+  const largeJobSize = {
+    textLength: fullScriptText.length,
+    chunkCount: Math.max(0, (((job as { progress_total?: number | null }).progress_total ?? 1) - 1)),
+  };
   if (fullScriptText.trim()) {
-    const scriptSummary = await generateScriptSummary(fullScriptText, scriptTitle);
-    if (scriptSummary) summary.script_summary = scriptSummary;
+    if (shouldSkipScriptSummaryForJob(largeJobSize)) {
+      logger.info("Script summary skipped for large job", {
+        jobId,
+        textLength: largeJobSize.textLength,
+        chunkCount: largeJobSize.chunkCount,
+        textThreshold: config.ANALYSIS_LARGE_JOB_TEXT_LENGTH_THRESHOLD,
+        chunkThreshold: config.ANALYSIS_LARGE_JOB_CHUNK_THRESHOLD,
+      });
+    } else {
+      const scriptSummary = await generateScriptSummary(fullScriptText, scriptTitle);
+      if (scriptSummary) summary.script_summary = scriptSummary;
+    }
     // Separate light pass: words to revisit (glossary terms that appear in script). Does not affect violations.
-    try {
-      const { data: lexiconRows } = await supabase
-        .from("slang_lexicon")
-        .select("term")
-        .eq("is_active", true);
-      const terms = (lexiconRows ?? []).map((r: { term?: string }) => (r.term ?? "").trim()).filter(Boolean);
-      if (terms.length > 0) {
-        const mentions = await callRevisitSpotter(fullScriptText, terms);
-        if (mentions.length > 0) summary.words_to_revisit = mentions;
+    if (shouldSkipRevisitForJob(largeJobSize)) {
+      logger.info("Revisit pass skipped for large job", {
+        jobId,
+        textLength: largeJobSize.textLength,
+        chunkCount: largeJobSize.chunkCount,
+        textThreshold: config.ANALYSIS_LARGE_JOB_TEXT_LENGTH_THRESHOLD,
+        chunkThreshold: config.ANALYSIS_LARGE_JOB_CHUNK_THRESHOLD,
+      });
+    } else {
+      try {
+        const { data: lexiconRows } = await supabase
+          .from("slang_lexicon")
+          .select("term")
+          .eq("is_active", true);
+        const terms = (lexiconRows ?? []).map((r: { term?: string }) => (r.term ?? "").trim()).filter(Boolean);
+        if (terms.length > 0) {
+          const mentions = await callRevisitSpotter(fullScriptText, terms);
+          if (mentions.length > 0) summary.words_to_revisit = mentions;
+        }
+      } catch (e) {
+        logger.warn("Revisit pass skipped or failed", { jobId, error: String(e) });
       }
-    } catch (e) {
-      logger.warn("Revisit pass skipped or failed", { jobId, error: String(e) });
     }
   }
   applySummaryContextToRulings(summary);

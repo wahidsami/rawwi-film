@@ -13,6 +13,8 @@ export const config = {
   JUDGE_TIMEOUT_MS: parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10),
   POLL_INTERVAL_MS: parseInt(process.env.POLL_INTERVAL_MS ?? "2000", 10),
   WORKER_CHUNK_CONCURRENCY: Math.max(1, parseInt(process.env.WORKER_CHUNK_CONCURRENCY ?? "1", 10) || 1),
+  ANALYSIS_LARGE_JOB_CHUNK_THRESHOLD: Math.max(1, parseInt(process.env.ANALYSIS_LARGE_JOB_CHUNK_THRESHOLD ?? "35", 10) || 35),
+  ANALYSIS_LARGE_JOB_TEXT_LENGTH_THRESHOLD: Math.max(10_000, parseInt(process.env.ANALYSIS_LARGE_JOB_TEXT_LENGTH_THRESHOLD ?? "180000", 10) || 180000),
   LEXICON_REFRESH_MS: 2 * 60 * 1000,
   CHUNK_WINDOW_THRESHOLD: 10_000,
   MICRO_WINDOW_SIZE: 8_000,
@@ -46,4 +48,12 @@ export const config = {
    * Runs inside hybrid flow; safe default enabled.
    */
   ANALYSIS_DEEP_AUDITOR: (process.env.ANALYSIS_DEEP_AUDITOR ?? "true").toLowerCase() !== "false",
+  /**
+   * Large-job gating:
+   * - summary/revisit default to skip on very large jobs
+   * - deep auditor skip is opt-in because it can change final persisted rulings
+   */
+  ANALYSIS_SKIP_SCRIPT_SUMMARY_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_SCRIPT_SUMMARY_ON_LARGE_JOBS ?? "true").toLowerCase() !== "false",
+  ANALYSIS_SKIP_REVISIT_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_REVISIT_ON_LARGE_JOBS ?? "true").toLowerCase() !== "false",
+  ANALYSIS_SKIP_DEEP_AUDITOR_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_DEEP_AUDITOR_ON_LARGE_JOBS ?? "false").toLowerCase() === "true",
 } as const;

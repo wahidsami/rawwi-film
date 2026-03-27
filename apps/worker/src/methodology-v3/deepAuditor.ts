@@ -4,6 +4,7 @@ import { callAuditorRaw, callRationaleOnly, parseAuditorWithRepair } from "../op
 import { logger } from "../logger.js";
 import type { AuditorAssessment } from "../schemas.js";
 import type { HybridFindingLike } from "./contextArbiter.js";
+import { shouldSkipDeepAuditorForJob } from "../performanceGating.js";
 
 const AUDITOR_RATIONALE_DEFAULT = "يتطلب تقييم مراجع مختص.";
 const RATIONALE_ONLY_BATCH_SIZE = 6;
@@ -104,6 +105,14 @@ export async function runDeepAuditorPass(args: {
 }): Promise<HybridFindingLike[]> {
   const { findings, fullText } = args;
   if (findings.length === 0 || !config.ANALYSIS_DEEP_AUDITOR || !config.OPENAI_API_KEY) return findings;
+  if (shouldSkipDeepAuditorForJob({ textLength: fullText?.length ?? 0 })) {
+    logger.info("Deep auditor skipped for large job", {
+      findingsCount: findings.length,
+      textLength: fullText?.length ?? 0,
+      textThreshold: config.ANALYSIS_LARGE_JOB_TEXT_LENGTH_THRESHOLD,
+    });
+    return findings;
+  }
 
   const candidates = buildCanonicalCandidates(findings);
   const raw = await callAuditorRaw(
