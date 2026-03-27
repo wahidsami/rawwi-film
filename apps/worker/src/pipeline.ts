@@ -83,6 +83,34 @@ function compactEvidenceText(s: string): string {
   return cleaned.length > MAX_EVIDENCE_LEN ? `${cleaned.slice(0, MAX_EVIDENCE_LEN)}…` : cleaned;
 }
 
+function buildLexiconMandatoryRationale(args: {
+  term: string;
+  evidence: string;
+  articleId: number;
+  atomId: string | null;
+  articleTitleAr?: string | null;
+}): string {
+  const evidence = compactEvidenceText(args.evidence);
+  const articleRef = args.atomId
+    ? `المادة ${args.articleId} (${args.atomId})`
+    : `المادة ${args.articleId}`;
+  const articleTitle = args.articleTitleAr?.trim() ? ` ${args.articleTitleAr.trim()}` : "";
+  return `المقتطف يتضمن المصطلح "${args.term}" كما ورد في النص: "${evidence}". هذا اللفظ مرتبط في القاموس الإلزامي بـ${articleRef}${articleTitle ? ` - ${articleTitle}` : ""} لذلك رُصد كمؤشر مخالفة مباشر يحتاج تحققاً سياقياً عند المراجعة النهائية.`;
+}
+
+function buildDirectInsultRationale(args: {
+  term: string;
+  evidence: string;
+  articleId: number;
+  atomId: string | null;
+}): string {
+  const evidence = compactEvidenceText(args.evidence);
+  const articleRef = args.atomId
+    ? `المادة ${args.articleId} (${args.atomId})`
+    : `المادة ${args.articleId}`;
+  return `المقتطف يحتوي إهانة أو وصفاً مهيناً مباشراً باللفظ "${args.term}" ضمن العبارة: "${evidence}". لذلك صُنّف كمخالفة لفظية مباشرة تحت ${articleRef} وليس مجرد وصف محايد أو تقني.`;
+}
+
 function getLineNumberAt(text: string, index: number): number {
   if (index <= 0) return 1;
   let lines = 1;
@@ -154,9 +182,9 @@ function toGlobalFinding(
   };
 }
 
-function severityRank(s: string): number {
+function severityRank(s: string | null | undefined): number {
   const r: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 };
-  return r[s] ?? 0;
+  return s ? (r[s] ?? 0) : 0;
 }
 
 function computeContradictionMetrics(findings: FindingWithGlobal[]): {
@@ -167,7 +195,7 @@ function computeContradictionMetrics(findings: FindingWithGlobal[]): {
   for (const f of findings) {
     const key = `${f.article_id}|${f.start_offset_global}|${f.end_offset_global}|${(f.evidence_snippet || "").slice(0, 80)}`;
     if (!byEvidence.has(key)) byEvidence.set(key, new Set());
-    byEvidence.get(key)!.add(f.severity);
+    byEvidence.get(key)!.add(f.severity ?? "medium");
   }
   let contradictionGroups = 0;
   let severeDisagreementGroups = 0;
@@ -362,6 +390,13 @@ export async function processChunkJudge(
     } else {
       evidence_snippet = m.evidence_snippet;
     }
+    const rationaleAr = buildLexiconMandatoryRationale({
+      term: m.term.term,
+      evidence: evidence_snippet,
+      articleId: m.articleId,
+      atomId: m.atomId,
+      articleTitleAr: m.term.gcam_article_title_ar ?? null,
+    });
 
     const lexRow = {
       job_id: jobId,
@@ -374,6 +409,7 @@ export async function processChunkJudge(
       confidence: 1,
       title_ar: `مخالفة من قاموس المصطلحات: ${m.term.term}`,
       description_ar: evidence_snippet,
+      rationale_ar: rationaleAr,
       evidence_snippet,
       start_offset_global: startGlobal,
       end_offset_global: endGlobal,
@@ -398,7 +434,7 @@ export async function processChunkJudge(
         atom_id: lexRow.atom_id,
         title_ar: lexRow.title_ar,
         description_ar: lexRow.description_ar,
-        severity: lexRow.severity,
+        severity: lexRow.severity as FindingWithGlobal["severity"],
         confidence: 1,
         is_interpretive: false,
         evidence_snippet: lexRow.evidence_snippet,
@@ -406,14 +442,14 @@ export async function processChunkJudge(
           ...location,
           context_window_id: `ctx-${startGlobal}-${endGlobal}`,
           detection_pass: "glossary",
-        },
+        } as unknown as JudgeFinding["location"] & Record<string, unknown>,
         depiction_type: "mention",
         speaker_role: "unknown",
         context_window_id: `ctx-${startGlobal}-${endGlobal}`,
         context_confidence: 0.6,
         lexical_confidence: 1,
         policy_confidence: null,
-        rationale_ar: "إشارة معجمية أولية تحتاج تحقق سياقي.",
+        rationale_ar: rationaleAr,
         final_ruling: null,
         narrative_consequence: "unknown",
         detection_pass: "glossary",
@@ -461,6 +497,12 @@ export async function processChunkJudge(
         normalizedText != null && startGlobal >= 0 && endGlobal <= normalizedText.length
           ? normalizedText.slice(startGlobal, endGlobal)
           : rule.term;
+      const rationaleAr = buildDirectInsultRationale({
+        term: rule.term,
+        evidence,
+        articleId: rule.articleId,
+        atomId: rule.atomId,
+      });
 
       const fallbackRow = {
         job_id: jobId,
@@ -473,6 +515,7 @@ export async function processChunkJudge(
         confidence: 1,
         title_ar: `مخالفة إساءة مباشرة: ${rule.term}`,
         description_ar: evidence,
+        rationale_ar: rationaleAr,
         evidence_snippet: evidence,
         start_offset_global: startGlobal,
         end_offset_global: endGlobal,
@@ -498,7 +541,7 @@ export async function processChunkJudge(
           atom_id: fallbackRow.atom_id,
           title_ar: fallbackRow.title_ar,
           description_ar: fallbackRow.description_ar,
-          severity: fallbackRow.severity,
+          severity: fallbackRow.severity as FindingWithGlobal["severity"],
           confidence: 1,
           is_interpretive: false,
           evidence_snippet: fallbackRow.evidence_snippet,
@@ -506,14 +549,14 @@ export async function processChunkJudge(
             ...fallbackRow.location,
             context_window_id: `ctx-${startGlobal}-${endGlobal}`,
             detection_pass: "hard_fallback_insults",
-          },
+          } as unknown as JudgeFinding["location"] & Record<string, unknown>,
           depiction_type: "mention",
           speaker_role: "unknown",
           context_window_id: `ctx-${startGlobal}-${endGlobal}`,
           context_confidence: 0.65,
           lexical_confidence: 1,
           policy_confidence: null,
-          rationale_ar: "مطابقة إساءة مباشرة من fallback الحتمي.",
+          rationale_ar: rationaleAr,
           final_ruling: null,
           narrative_consequence: "unknown",
           detection_pass: "hard_fallback_insults",

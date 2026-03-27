@@ -38,6 +38,23 @@ function isConfidenceInconsistent(a: AuditorAssessment): boolean {
   return Math.abs(avg - main) > 0.25;
 }
 
+function isWeakRationaleText(value: string | null | undefined): boolean {
+  const text = (value ?? "").replace(/\s+/g, " ").trim();
+  if (!text) return true;
+  if (text === AUDITOR_RATIONALE_DEFAULT) return true;
+  if (text.length < 24) return true;
+  return [
+    /^وجود /,
+    /^مطابقة /,
+    /^مخالفة /,
+    /^إشارة /,
+    /^يحتوي النص/,
+    /^يحتوي المقتطف/,
+    /^يحتاج مراجعة/,
+    /^يتطلب تقييم/,
+  ].some((pattern) => pattern.test(text));
+}
+
 function applyGuardrails(a: AuditorAssessment): AuditorAssessment {
   const primaryArticle = a.primary_article_id ?? 0;
   const related = normalizeRelated(a.related_article_ids ?? [], primaryArticle);
@@ -106,7 +123,7 @@ export async function runDeepAuditorPass(args: {
   const byId = new Map(dedupedAssessments.map((a) => [a.canonical_finding_id, a]));
 
   const withRationale = dedupedAssessments.filter(
-    (a) => a.rationale_ar != null && a.rationale_ar.trim() !== "" && a.rationale_ar !== AUDITOR_RATIONALE_DEFAULT
+    (a) => !isWeakRationaleText(a.rationale_ar)
   );
   logger.info("Auditor assessments rationale stats", {
     total: dedupedAssessments.length,
@@ -153,15 +170,23 @@ export async function runDeepAuditorPass(args: {
     };
   });
 
-  const needRationale = new Map<string, { evidence_snippet: string; final_ruling: string; primary_article_id: number }>();
+  const needRationale = new Map<string, {
+    title_ar: string;
+    evidence_snippet: string;
+    final_ruling: string;
+    primary_article_id: number;
+    weak_rationale: string | null;
+  }>();
   for (const m of merged) {
     const id = m.canonical_finding_id ?? "";
     if (!id || needRationale.has(id)) continue;
-    if (m.rationale_ar !== AUDITOR_RATIONALE_DEFAULT && m.rationale_ar != null && m.rationale_ar.trim() !== "") continue;
+    if (!isWeakRationaleText(m.rationale_ar)) continue;
     needRationale.set(id, {
+      title_ar: m.title_ar || "مخالفة محتوى",
       evidence_snippet: m.evidence_snippet || "",
       final_ruling: m.final_ruling ?? "violation",
       primary_article_id: m.primary_article_id ?? m.article_id,
+      weak_rationale: m.rationale_ar ?? null,
     });
   }
   const rationaleItems = [...needRationale.entries()].map(([canonical_finding_id, v]) => ({

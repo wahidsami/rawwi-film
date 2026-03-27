@@ -49,6 +49,40 @@ function formatAtomDisplayR(articleId: number, atomId: string | null): string {
   return a.includes('.') ? a : `${articleId}.${a}`;
 }
 
+function isWeakRationaleText(value: string | null | undefined): boolean {
+  const text = (value ?? '').replace(/\s+/g, ' ').trim();
+  if (!text) return true;
+  if (text.length < 24) return true;
+  return [
+    /^وجود /,
+    /^مطابقة /,
+    /^مخالفة /,
+    /^إشارة /,
+    /^يحتوي النص/,
+    /^يحتوي المقتطف/,
+    /^يتطلب تقييم/,
+    /^يحتاج مراجعة/,
+  ].some((pattern) => pattern.test(text));
+}
+
+function pickFindingRationale(f: AnalysisFinding): string | null {
+  const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+  const candidates = [
+    v3.rationale_ar as string | undefined,
+    v3.rationale as string | undefined,
+    f.rationaleAr ?? undefined,
+    f.descriptionAr ?? undefined,
+  ];
+  for (const candidate of candidates) {
+    if (!isWeakRationaleText(candidate)) return candidate!.trim();
+  }
+  for (const candidate of candidates) {
+    const text = candidate?.trim();
+    if (text) return text;
+  }
+  return null;
+}
+
 type CanonicalSummaryFinding = {
   canonical_finding_id: string;
   title_ar: string;
@@ -701,7 +735,7 @@ export function Results() {
     const primaryArticleId = Number(v3.primary_article_id);
     const primaryArticle = Number.isFinite(primaryArticleId) ? primaryArticleId : f.articleId;
     const relatedArticles = ((v3.related_article_ids as number[] | undefined) ?? []).filter((id) => id !== primaryArticle);
-    const rationale = (v3.rationale_ar as string | undefined) ?? null;
+    const rationale = pickFindingRationale(f);
     const pillarId = (v3.pillar_id as string | undefined) ?? null;
     const displayPage = displayPageForFinding(f.startOffsetGlobal, reportViewerPages, f.pageNumber ?? null);
     return (

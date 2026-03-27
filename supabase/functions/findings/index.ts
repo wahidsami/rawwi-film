@@ -19,7 +19,7 @@ function pathAfter(base: string, url: string): string {
 }
 
 const FINDING_COLS =
-  "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, created_at";
+  "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, rationale_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, created_at";
 
 async function selectFindings(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -53,6 +53,7 @@ function camelFinding(r: Record<string, unknown>, createdBy: string | null = nul
     confidence: r.confidence ?? 0,
     titleAr: r.title_ar,
     descriptionAr: r.description_ar,
+    rationaleAr: r.rationale_ar ?? null,
     evidenceSnippet: r.evidence_snippet,
     startOffsetGlobal: r.start_offset_global ?? null,
     endOffsetGlobal: r.end_offset_global ?? null,

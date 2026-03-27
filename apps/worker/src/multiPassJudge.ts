@@ -1,7 +1,7 @@
 /**
  * Multi-Pass Detection System
  * 
- * Uses 6 specialized scanners instead of 1 complex prompt:
+ * Uses 10 specialized scanners instead of 1 complex prompt:
  * - Pass 0: Glossary (Lexicon terms from database)
  * - Pass 1: Insults & Profanity
  * - Pass 2: Violence & Threats
@@ -49,11 +49,18 @@ function buildArticlePayload(articles: GCAMArticle[]): string {
     .join("\n\n");
 }
 
+const STRUCTURED_RATIONALE_INSTRUCTIONS = `قواعد الشرح الإلزامية لكل finding:
+1. rationale_ar مطلوبة دائماً ولا تتركها فارغة.
+2. اشرح باختصار: أين يظهر المقتطف في النص، ما اللفظ أو السلوك الذي تم رصده، ولماذا يندرج تحت المادة.
+3. اذكر سبباً قانونياً أو دلالياً واضحاً، لا مجرد إعادة صياغة النص.
+4. ممنوع التعليل العام مثل: "يحتوي النص على مخالفة" أو "وجود لفظ مخالف" دون شرح.
+5. إذا كان المقتطف حواراً أو وصفاً أو تهديداً أو إهانة مباشرة فاذكر ذلك صراحة.`;
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // PASS 0: GLOSSARY (Lexicon Terms)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function buildGlossaryPrompt(articles: GCAMArticle[], lexiconTerms: LexiconTerm[]): string {
+function buildGlossaryPrompt(articles: GCAMArticle[], lexiconTerms: LexiconTerm[] = []): string {
   const variantsList = (t: LexiconTerm) => [t.term, ...(t.term_variants ?? [])].filter(Boolean);
   const lexiconList = lexiconTerms.map(t => variantsList(t).map(v => `"${v}"`).join('، ')).join(' ؛ ');
   const lexiconDetails = lexiconTerms
@@ -70,6 +77,8 @@ function buildGlossaryPrompt(articles: GCAMArticle[], lexiconTerms: LexiconTerm[
   return `${MAX_DETECTION_NOTE}
 
 ${frameworkBlock}
+
+${STRUCTURED_RATIONALE_INSTRUCTIONS}
 
 أنت كاشف ألفاظ محظورة من المعجم.
 
@@ -104,6 +113,7 @@ ${articlePayload}
       "audience_risk": 1,
       "title_ar": "مخالفة معجمية: نصاب",
       "description_ar": "وجود لفظ 'نصاب' في النص",
+      "rationale_ar": "المقتطف يظهر في حوار مباشر ويتضمن اللفظ المحظور \"نصاب\" كما ورد حرفياً، لذلك يندرج تحت المادة 5 بوصفه إهانة أو اتهاماً مهيناً مباشراً.",
       "confidence": 1.0,
       "is_interpretive": false,
       "evidence_snippet": "أنت مجرد نصاب",
@@ -126,6 +136,8 @@ function buildInsultsPrompt(articles: GCAMArticle[]): string {
   return `${MAX_DETECTION_NOTE}
 
 ${frameworkBlock}
+
+${STRUCTURED_RATIONALE_INSTRUCTIONS}
 
 أنت كاشف ألفاظ مسيئة وشتائم.
 
@@ -152,7 +164,7 @@ ${articlePayload}
 
 استثناء: عناوين المشاهد والمدد الزمنية فقط.
 
-أرجع JSON: { "findings": [...] }`;
+أرجع JSON: { "findings": [ { "rationale_ar": "..." } ] }`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -166,6 +178,8 @@ function buildViolencePrompt(articles: GCAMArticle[]): string {
   return `${MAX_DETECTION_NOTE}
 
 ${frameworkBlock}
+
+${STRUCTURED_RATIONALE_INSTRUCTIONS}
 
 أنت كاشف عنف وتهديدات.
 
@@ -185,7 +199,7 @@ ${articlePayload}
 
 استثناء: عناوين المشاهد والمدد الزمنية فقط.
 
-أرجع JSON: { "findings": [...] }`;
+أرجع JSON: { "findings": [ { "rationale_ar": "..." } ] }`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -199,6 +213,8 @@ function buildSexualContentPrompt(articles: GCAMArticle[]): string {
   return `${MAX_DETECTION_NOTE}
 
 ${frameworkBlock}
+
+${STRUCTURED_RATIONALE_INSTRUCTIONS}
 
 أنت كاشف محتوى جنسي.
 
@@ -217,7 +233,7 @@ ${articlePayload}
 
 استثناء: عناوين المشاهد والمدد الزمنية فقط.
 
-أرجع JSON: { "findings": [...] }`;
+أرجع JSON: { "findings": [ { "rationale_ar": "..." } ] }`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -231,6 +247,8 @@ function buildDrugsPrompt(articles: GCAMArticle[]): string {
   return `${MAX_DETECTION_NOTE}
 
 ${frameworkBlock}
+
+${STRUCTURED_RATIONALE_INSTRUCTIONS}
 
 أنت كاشف مخدرات وكحول.
 
@@ -249,7 +267,7 @@ ${articlePayload}
 
 استثناء: عناوين المشاهد والمدد الزمنية فقط.
 
-أرجع JSON: { "findings": [...] }`;
+أرجع JSON: { "findings": [ { "rationale_ar": "..." } ] }`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -263,6 +281,8 @@ function buildDiscriminationPrompt(articles: GCAMArticle[]): string {
   return `${MAX_DETECTION_NOTE}
 
 ${frameworkBlock}
+
+${STRUCTURED_RATIONALE_INSTRUCTIONS}
 
 أنت كاشف تمييز وتحريض.
 
@@ -281,7 +301,7 @@ ${articlePayload}
 
 استثناء: عناوين المشاهد والمدد الزمنية فقط.
 
-أرجع JSON: { "findings": [...] }`;
+أرجع JSON: { "findings": [ { "rationale_ar": "..." } ] }`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -295,6 +315,8 @@ function buildNationalSecurityPrompt(articles: GCAMArticle[]): string {
   return `${MAX_DETECTION_NOTE}
 
 ${frameworkBlock}
+
+${STRUCTURED_RATIONALE_INSTRUCTIONS}
 
 أنت كاشف محتوى يمس الأمن الوطني أو ثوابت الحكم.
 
@@ -313,7 +335,7 @@ ${articlePayload}
 
 استثناء: عناوين المشاهد والمدد الزمنية فقط.
 
-أرجع JSON: { "findings": [...] }`;
+أرجع JSON: { "findings": [ { "rationale_ar": "..." } ] }`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -327,6 +349,8 @@ function buildExtremismPrompt(articles: GCAMArticle[]): string {
   return `${MAX_DETECTION_NOTE}
 
 ${frameworkBlock}
+
+${STRUCTURED_RATIONALE_INSTRUCTIONS}
 
 أنت كاشف تطرف وجماعات محظورة.
 
@@ -345,7 +369,7 @@ ${articlePayload}
 
 استثناء: عناوين المشاهد والمدد الزمنية فقط.
 
-أرجع JSON: { "findings": [...] }`;
+أرجع JSON: { "findings": [ { "rationale_ar": "..." } ] }`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -359,6 +383,8 @@ function buildMisinformationPrompt(articles: GCAMArticle[]): string {
   return `${MAX_DETECTION_NOTE}
 
 ${frameworkBlock}
+
+${STRUCTURED_RATIONALE_INSTRUCTIONS}
 
 أنت كاشف معلومات مضللة وشائعات وتحريض.
 
@@ -377,7 +403,7 @@ ${articlePayload}
 
 استثناء: عناوين المشاهد والمدد الزمنية فقط.
 
-أرجع JSON: { "findings": [...] }`;
+أرجع JSON: { "findings": [ { "rationale_ar": "..." } ] }`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -391,6 +417,8 @@ function buildInternationalPrompt(articles: GCAMArticle[]): string {
   return `${MAX_DETECTION_NOTE}
 
 ${frameworkBlock}
+
+${STRUCTURED_RATIONALE_INSTRUCTIONS}
 
 أنت كاشف محتوى يمس العلاقات الدولية.
 
@@ -409,7 +437,7 @@ ${articlePayload}
 
 استثناء: عناوين المشاهد والمدد الزمنية فقط.
 
-أرجع JSON: { "findings": [...] }`;
+أرجع JSON: { "findings": [ { "rationale_ar": "..." } ] }`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

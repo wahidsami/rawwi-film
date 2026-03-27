@@ -223,6 +223,7 @@ export interface AnalysisFinding {
   confidence: number;
   titleAr: string;
   descriptionAr: string;
+  rationaleAr?: string | null;
   evidenceSnippet: string;
   startOffsetGlobal: number | null;
   endOffsetGlobal: number | null;
