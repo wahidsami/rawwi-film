@@ -208,6 +208,7 @@ export function Results() {
   const [groupFindingsByAtom, setGroupFindingsByAtom] = useState(false);
   /** false = deduped list (default); true = every DB row (duplicates visible). */
   const [showAllFindingRows, setShowAllFindingRows] = useState(false);
+  const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'high' | 'medium' | 'low'>('all');
   /** script_pages slices for viewer-accurate page labels (same model as workspace). */
   const [reportViewerPages, setReportViewerPages] = useState<Array<{ pageNumber: number; content: string }> | null>(null);
 
@@ -225,7 +226,7 @@ export function Results() {
       toast.success(
         status === 'approved' ? (lang === 'ar' ? 'تم قبول التقرير' : 'Report approved') :
           status === 'rejected' ? (lang === 'ar' ? 'تم رفض التقرير' : 'Report rejected') :
-            (lang === 'ar' ? 'تم إعادة التقرير للمراجعة' : 'Report reset to under review')
+            (lang === 'ar' ? 'تمت إعادة التقرير للمراجعة' : 'Report sent back for review')
       );
       if (updateScriptStatus) {
         toast.success(lang === 'ar' ? 'تم تحديث حالة النص' : 'Script status updated');
@@ -448,6 +449,15 @@ export function Results() {
   })();
   const displayApproved = report.approvedCount ?? 0;
   const displaySpecialNotes = reportHints.length;
+  const matchesSeverityFilter = (severity?: string | null) =>
+    severityFilter === 'all' || (severity ?? '').toLowerCase() === severityFilter;
+  const filteredDisplayViolations = hasRealFindings
+    ? displayViolations.filter((f) => matchesSeverityFilter(f.severity))
+    : [];
+  const filteredCanonicalSummaryFindings = canonicalSummaryFindings.filter((f) => matchesSeverityFilter(f.severity));
+  const filteredViolationsCount = hasRealFindings
+    ? filteredDisplayViolations.length
+    : filteredCanonicalSummaryFindings.length;
 
   const decision: 'PASS' | 'REJECT' | 'REVIEW_REQUIRED' =
     (displaySc.critical > 0 || displaySc.high > 0) ? 'REJECT' :
@@ -871,12 +881,17 @@ export function Results() {
   }
 
   // Render a findings section (either from real findings or from summary)
-  function renderFindingsFromSummary() {
+  function renderFindingsFromSummary(listInput: CanonicalSummaryFinding[] = canonicalSummaryFindings) {
     type Art = (typeof summary.findings_by_article)[number];
     type F = NonNullable<Art["top_findings"]>[number];
     const rows: { art: Art; f: F; idx: number }[] = [];
+    const allowedEvidence = new Set(listInput.map((f) => (f.evidence_snippet ?? '').trim()).filter(Boolean));
     for (const art of summary.findings_by_article) {
-      (art.top_findings ?? []).forEach((f, idx) => rows.push({ art, f, idx }));
+      (art.top_findings ?? []).forEach((f, idx) => {
+        const evidence = (f.evidence_snippet ?? '').trim();
+        if (allowedEvidence.size > 0 && !allowedEvidence.has(evidence)) return;
+        rows.push({ art, f, idx });
+      });
     }
     const byCat = new Map<SemanticCategoryId, typeof rows>();
     for (const row of rows) {
@@ -938,9 +953,9 @@ export function Results() {
     });
   }
 
-  function renderFindingsFromCanonicalSummary() {
+  function renderFindingsFromCanonicalSummary(listInput: CanonicalSummaryFinding[] = canonicalSummaryFindings) {
     const byCat = new Map<SemanticCategoryId, CanonicalSummaryFinding[]>();
-    for (const f of canonicalSummaryFindings) {
+    for (const f of listInput) {
       const articleId = Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0;
       const cat = getPrimarySemanticCategory(articleId, null, f.primary_policy_atom_id);
       if (!byCat.has(cat)) byCat.set(cat, []);
@@ -1311,7 +1326,7 @@ export function Results() {
             )}
             {report.reviewStatus !== 'under_review' && (
               <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => handleReportReview('under_review')} disabled={reviewing}>
-                {lang === 'ar' ? 'إعادة للمراجعة' : 'Reset'}
+                {lang === 'ar' ? 'إعادة للمراجعة' : 'Re-review'}
               </Button>
             )}
           </div>
@@ -1326,26 +1341,61 @@ export function Results() {
         <div className="flex-1 w-full">
           <div className="text-sm text-text-muted mb-1 font-mono">Job: {report.jobId?.slice(0, 8)}...</div>
           <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 w-full mt-4">
-            <div className="bg-surface/50 border border-border p-3 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setSeverityFilter('all')}
+              className={cn(
+                "bg-surface/50 border border-border p-3 rounded-xl text-start transition-colors",
+                severityFilter === 'all' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/40'
+              )}
+            >
               <div className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'مخالفات نهائية' : 'Final violations'}</div>
               <div className="font-bold text-lg">{displayTotal}</div>
-            </div>
-            <div className="bg-error/5 border border-error/20 p-3 rounded-xl text-error">
+            </button>
+            <button
+              type="button"
+              onClick={() => setSeverityFilter((v) => (v === 'critical' ? 'all' : 'critical'))}
+              className={cn(
+                "bg-error/5 border border-error/20 p-3 rounded-xl text-error text-start transition-colors",
+                severityFilter === 'critical' ? 'ring-2 ring-error border-error' : 'hover:border-error/50'
+              )}
+            >
               <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'حرجة' : 'Critical'}</div>
               <div className="font-bold text-lg">{displaySc.critical}</div>
-            </div>
-            <div className="bg-error/5 border border-error/10 p-3 rounded-xl text-error">
+            </button>
+            <button
+              type="button"
+              onClick={() => setSeverityFilter((v) => (v === 'high' ? 'all' : 'high'))}
+              className={cn(
+                "bg-error/5 border border-error/10 p-3 rounded-xl text-error text-start transition-colors",
+                severityFilter === 'high' ? 'ring-2 ring-error border-error' : 'hover:border-error/40'
+              )}
+            >
               <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'عالية' : 'High'}</div>
               <div className="font-bold text-lg">{displaySc.high}</div>
-            </div>
-            <div className="bg-warning/5 border border-warning/20 p-3 rounded-xl text-warning">
+            </button>
+            <button
+              type="button"
+              onClick={() => setSeverityFilter((v) => (v === 'medium' ? 'all' : 'medium'))}
+              className={cn(
+                "bg-warning/5 border border-warning/20 p-3 rounded-xl text-warning text-start transition-colors",
+                severityFilter === 'medium' ? 'ring-2 ring-warning border-warning' : 'hover:border-warning/40'
+              )}
+            >
               <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'متوسطة' : 'Medium'}</div>
               <div className="font-bold text-lg">{displaySc.medium}</div>
-            </div>
-            <div className="bg-info/5 border border-info/20 p-3 rounded-xl text-info">
+            </button>
+            <button
+              type="button"
+              onClick={() => setSeverityFilter((v) => (v === 'low' ? 'all' : 'low'))}
+              className={cn(
+                "bg-info/5 border border-info/20 p-3 rounded-xl text-info text-start transition-colors",
+                severityFilter === 'low' ? 'ring-2 ring-info border-info' : 'hover:border-info/40'
+              )}
+            >
               <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'منخفضة' : 'Low'}</div>
               <div className="font-bold text-lg">{displaySc.low}</div>
-            </div>
+            </button>
             {displayApproved > 0 && (
               <div className="bg-success/5 border border-success/20 p-3 rounded-xl text-success">
                 <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'معتمد آمن' : 'Approved'}</div>
@@ -1421,26 +1471,45 @@ export function Results() {
           <h3 className="font-bold text-xl text-text-main border-b border-border pb-2 flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-primary" />
             {lang === 'ar' ? 'المخالفات' : 'Violations'}
-            <Badge variant="outline" className="ms-2">{displayTotal}</Badge>
+            <Badge variant="outline" className="ms-2">
+              {severityFilter === 'all' ? displayTotal : `${filteredViolationsCount} / ${displayTotal}`}
+            </Badge>
+            {severityFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => setSeverityFilter('all')}
+                className="text-xs text-primary hover:underline"
+              >
+                {lang === 'ar' ? 'إلغاء التصفية' : 'Clear filter'}
+              </button>
+            )}
           </h3>
 
-          {(hasRealFindings ? displayViolations.length === 0 : displayViolationsCount === 0) ? (
+          {(hasRealFindings ? filteredDisplayViolations.length === 0 : filteredViolationsCount === 0) ? (
             <div className="text-center py-16 bg-surface border-2 border-dashed border-border rounded-2xl">
               <CheckCircle className="w-12 h-12 text-success mx-auto mb-4 opacity-50" />
-              <h4 className="text-lg font-bold text-text-main">{lang === 'ar' ? 'النص سليم' : 'Script Is Compliant'}</h4>
+              <h4 className="text-lg font-bold text-text-main">
+                {severityFilter === 'all'
+                  ? (lang === 'ar' ? 'النص سليم' : 'Script Is Compliant')
+                  : (lang === 'ar' ? 'لا توجد مخالفات بهذه الدرجة' : 'No violations at this severity')}
+              </h4>
               <p className="text-text-muted mt-2">
-                {lang === 'ar'
-                  ? 'لم يتم رصد أي مخالفات في هذا النص وفق قواعد التحليل الحالية.'
-                  : 'No violations were detected in this script under the current analysis policy.'}
+                {severityFilter === 'all'
+                  ? (lang === 'ar'
+                    ? 'لم يتم رصد أي مخالفات في هذا النص وفق قواعد التحليل الحالية.'
+                    : 'No violations were detected in this script under the current analysis policy.')
+                  : (lang === 'ar'
+                    ? 'جرّب درجة أخرى أو ألغِ التصفية لعرض جميع المخالفات.'
+                    : 'Try another severity or clear the filter to view all violations.')}
               </p>
             </div>
-          ) : hasRealFindings && displayViolations.length > 0
-            ? renderFindingsFromReal(displayViolations)
-            : canonicalSummaryFindings.length > 0
-              ? renderFindingsFromCanonicalSummary()
+          ) : hasRealFindings && filteredDisplayViolations.length > 0
+            ? renderFindingsFromReal(filteredDisplayViolations)
+            : filteredCanonicalSummaryFindings.length > 0
+              ? renderFindingsFromCanonicalSummary(filteredCanonicalSummaryFindings)
               : hasRealFindings
-                ? renderFindingsFromReal(displayViolations)
-                : renderFindingsFromSummary()}
+                ? renderFindingsFromReal(filteredDisplayViolations)
+                : renderFindingsFromSummary(filteredCanonicalSummaryFindings)}
 
           {/* Report hints: not violations but notes for director (e.g. Islamic rules when filming) */}
           {reportHints.length > 0 && (

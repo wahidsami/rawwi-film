@@ -3523,20 +3523,13 @@ export function ScriptWorkspace() {
             onClick={(e) => { e.stopPropagation(); handleMarkViolation(); }}
           >
             <ShieldAlert className="w-4 h-4 text-error" />
-            {lang === 'ar' ? 'إضافة إلى الملاحظات' : 'Add to findings'}
-          </button>
-          <button
-            className="w-full text-start px-4 py-2 text-sm text-text-muted hover:bg-background hover:text-text-main flex items-center gap-2 transition-colors"
-            onClick={(e) => { e.stopPropagation(); handleMarkViolation(); }}
-          >
-            <FileText className="w-4 h-4" />
-            {lang === 'ar' ? 'إضافة ملاحظة' : 'Add Note'}
+            {lang === 'ar' ? 'إضافة ملاحظة يدوية' : 'Add manual finding'}
           </button>
         </div>
       )}
 
       {/* Add Manual Finding / Add to findings Modal */}
-      <Modal isOpen={isViolationModalOpen} onClose={() => setIsViolationModalOpen(false)} title={lang === 'ar' ? 'إضافة إلى الملاحظات' : 'Add to findings'}>
+      <Modal isOpen={isViolationModalOpen} onClose={() => setIsViolationModalOpen(false)} title={lang === 'ar' ? 'إضافة ملاحظة يدوية' : 'Add manual finding'}>
         <div className="space-y-4">
           <div className="p-3 bg-error/5 border border-error/20 rounded-md text-sm text-text-main italic font-medium" dir="rtl">
             &quot;{formData.excerpt}&quot;
