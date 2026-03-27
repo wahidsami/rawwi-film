@@ -29,23 +29,88 @@ export type AnalysisChunk = {
   status: string;
 };
 
+async function fetchCandidateJobsBase(): Promise<AnalysisJob[]> {
+  const selectWithControls =
+    "id, script_id, version_id, status, progress_total, progress_done, started_at, pause_requested, paused_at, partial_finalize_requested, partial_finalize_requested_at";
+  const { data, error } = await supabase
+    .from("analysis_jobs")
+    .select(selectWithControls)
+    .in("status", ["queued", "running"])
+    .order("created_at", { ascending: true })
+    .limit(20);
+
+  if (!error) return (data ?? []) as AnalysisJob[];
+
+  logger.warn("analysis_jobs control columns unavailable; falling back to legacy job query", {
+    error: error.message,
+  });
+
+  const { data: legacyData, error: legacyError } = await supabase
+    .from("analysis_jobs")
+    .select("id, script_id, version_id, status, progress_total, progress_done, started_at")
+    .in("status", ["queued", "running"])
+    .order("created_at", { ascending: true })
+    .limit(20);
+
+  if (legacyError) {
+    logger.error("Failed to fetch candidate jobs", { error: legacyError.message });
+    return [];
+  }
+
+  return (legacyData ?? []) as AnalysisJob[];
+}
+
+async function fetchJobControlState(jobId: string): Promise<{
+  started_at: string | null;
+  created_by?: string | null;
+  pause_requested?: boolean | null;
+  partial_finalize_requested?: boolean | null;
+} | null> {
+  const { data, error } = await supabase
+    .from("analysis_jobs")
+    .select("started_at, created_by, pause_requested, partial_finalize_requested")
+    .eq("id", jobId)
+    .single();
+
+  if (!error) {
+    return data as {
+      started_at: string | null;
+      created_by?: string | null;
+      pause_requested?: boolean | null;
+      partial_finalize_requested?: boolean | null;
+    };
+  }
+
+  logger.warn("analysis_jobs control state unavailable; falling back to legacy job state query", {
+    jobId,
+    error: error.message,
+  });
+
+  const { data: legacyData, error: legacyError } = await supabase
+    .from("analysis_jobs")
+    .select("started_at, created_by")
+    .eq("id", jobId)
+    .single();
+
+  if (legacyError) {
+    logger.error("Failed to fetch job state", { jobId, error: legacyError.message });
+    return null;
+  }
+
+  return legacyData as { started_at: string | null; created_by?: string | null };
+}
+
 /**
  * Pick oldest job with status in ('queued','running') that has at least one pending chunk.
  * Prefer queued over running.
  */
 export async function fetchNextJob(): Promise<AnalysisJob | null> {
-  const { data: queued } = await supabase
-    .from("analysis_jobs")
-    .select("id, script_id, version_id, status, progress_total, progress_done, started_at, pause_requested, paused_at, partial_finalize_requested, partial_finalize_requested_at")
-    .in("status", ["queued", "running"])
-    .eq("pause_requested", false)
-    .eq("partial_finalize_requested", false)
-    .order("created_at", { ascending: true })
-    .limit(10);
+  const queued = await fetchCandidateJobsBase();
 
   if (!queued?.length) return null;
 
   for (const job of queued) {
+    if (job.pause_requested === true || job.partial_finalize_requested === true) continue;
     const { count } = await supabase
       .from("analysis_chunks")
       .select("id", { count: "exact", head: true })
@@ -61,12 +126,7 @@ export async function fetchNextJob(): Promise<AnalysisJob | null> {
  * Used to recover jobs that got stuck during aggregation/finalization.
  */
 export async function fetchNextAggregationCandidateJob(): Promise<AnalysisJob | null> {
-  const { data: running } = await supabase
-    .from("analysis_jobs")
-    .select("id, script_id, version_id, status, progress_total, progress_done, started_at, pause_requested, paused_at, partial_finalize_requested, partial_finalize_requested_at")
-    .in("status", ["queued", "running"])
-    .order("created_at", { ascending: true })
-    .limit(10);
+  const running = await fetchCandidateJobsBase();
 
   if (!running?.length) return null;
 
@@ -130,11 +190,7 @@ export async function claimChunk(chunkId: string): Promise<AnalysisChunk | null>
   if (!updated) return null;
 
   const jobId = (updated as AnalysisChunk).job_id;
-  const { data: job } = await supabase
-    .from("analysis_jobs")
-    .select("started_at, created_by, pause_requested, partial_finalize_requested")
-    .eq("id", jobId)
-    .single();
+  const job = await fetchJobControlState(jobId);
 
   if (job && (
     (job as { pause_requested?: boolean | null }).pause_requested === true ||
