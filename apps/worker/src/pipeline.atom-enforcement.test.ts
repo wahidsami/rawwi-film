@@ -11,18 +11,43 @@ function assert(cond: boolean, msg: string) {
 
 const loc = { start_offset: 0, end_offset: 10, start_line: 1, end_line: 1 };
 
+function buildFinding(overrides: Partial<JudgeFinding>): JudgeFinding {
+  return {
+    article_id: 5,
+    atom_id: "5-2",
+    canonical_atom: null,
+    canonical_atoms: null,
+    intensity: null,
+    context_impact: null,
+    legal_sensitivity: null,
+    audience_risk: null,
+    title_ar: "x",
+    description_ar: "",
+    severity: "low",
+    confidence: 0.8,
+    is_interpretive: false,
+    depiction_type: "unknown",
+    speaker_role: "unknown",
+    narrative_consequence: "unknown",
+    context_window_id: null,
+    context_confidence: null,
+    lexical_confidence: null,
+    policy_confidence: null,
+    rationale_ar: null,
+    final_ruling: null,
+    detection_pass: null,
+    evidence_snippet: "y",
+    location: loc,
+    ...overrides,
+  };
+}
+
 function testInvalidAtomCleared() {
   const findings: JudgeFinding[] = [
-    {
+    buildFinding({
       article_id: 5,
       atom_id: "99-1",
-      title_ar: "x",
-      description_ar: "",
-      severity: "low",
-      confidence: 0.8,
-      evidence_snippet: "y",
-      location: loc,
-    },
+    }),
   ];
   const out = enforceAtomIds(findings);
   assert(out.length === 1, "one finding");
@@ -32,16 +57,10 @@ function testInvalidAtomCleared() {
 
 function testValidAtomPreserved() {
   const findings: JudgeFinding[] = [
-    {
+    buildFinding({
       article_id: 5,
       atom_id: "5-2",
-      title_ar: "x",
-      description_ar: "",
-      severity: "low",
-      confidence: 0.8,
-      evidence_snippet: "y",
-      location: loc,
-    },
+    }),
   ];
   const out = enforceAtomIds(findings);
   assert(out.length === 1, "one finding");
@@ -51,16 +70,10 @@ function testValidAtomPreserved() {
 
 function testNormalizedAtomAccepted() {
   const findings: JudgeFinding[] = [
-    {
+    buildFinding({
       article_id: 5,
       atom_id: "5.2",
-      title_ar: "x",
-      description_ar: "",
-      severity: "low",
-      confidence: 0.8,
-      evidence_snippet: "y",
-      location: loc,
-    },
+    }),
   ];
   const out = enforceAtomIds(findings);
   assert(out.length === 1, "one finding");
@@ -70,16 +83,10 @@ function testNormalizedAtomAccepted() {
 
 function testArticleWithNoAtomsAcceptsNull() {
   const findings: JudgeFinding[] = [
-    {
+    buildFinding({
       article_id: 1,
       atom_id: null,
-      title_ar: "x",
-      description_ar: "",
-      severity: "low",
-      confidence: 0.8,
-      evidence_snippet: "y",
-      location: loc,
-    },
+    }),
   ];
   const out = enforceAtomIds(findings);
   assert(out.length === 1 && out[0].atom_id === null, "article 1 has no atoms; null preserved");

@@ -1133,7 +1133,13 @@ export async function runAggregation(jobId: string): Promise<void> {
 
   const fullScriptText = ((job as { normalized_text?: string | null }).normalized_text ?? "").trim();
 
-  const analysisOptions = (job as { config_snapshot?: { analysisOptions?: { mergeStrategy?: string } } }).config_snapshot?.analysisOptions;
+  const rawAnalysisOptions = (job as { config_snapshot?: { analysisOptions?: { mergeStrategy?: string } } }).config_snapshot?.analysisOptions;
+  let analysisOptions: AnalysisSummaryOptions | undefined;
+  if (rawAnalysisOptions?.mergeStrategy === "same_location_only") {
+    analysisOptions = { mergeStrategy: "same_location_only" };
+  } else if (rawAnalysisOptions?.mergeStrategy === "every_occurrence") {
+    analysisOptions = { mergeStrategy: "every_occurrence" };
+  }
   const summary = buildSummaryJson(jobId, job.script_id, list, clientName, scriptTitle, analysisOptions);
   const largeJobSize = {
     textLength: fullScriptText.length,

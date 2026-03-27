@@ -34,6 +34,12 @@ export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
   start_offset_global: number;
   end_offset_global: number;
+  policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
+  primary_article_id?: number | null;
+  related_article_ids?: number[];
+  canonical_finding_id?: string | null;
+  pillar_id?: string | null;
+  secondary_pillar_ids?: string[];
 };
 
 const MAX_EVIDENCE_SPAN = 280;
@@ -827,7 +833,13 @@ export async function processChunkJudge(
     setChunkPhase(chunk.id, "hybrid");
     const hybridStartedAt = Date.now();
     const hybrid = await runHybridContextPipeline({
-      findings: baselineFindings,
+      findings: baselineFindings.map((f) => ({
+        ...f,
+        severity: f.severity ?? "medium",
+        primary_article_id: f.primary_article_id ?? undefined,
+        canonical_finding_id: f.canonical_finding_id ?? undefined,
+        pillar_id: f.pillar_id ?? undefined,
+      })),
       fullText: normalizedText,
     });
     hybridMetrics = hybrid.metrics;
