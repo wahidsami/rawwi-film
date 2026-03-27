@@ -195,6 +195,18 @@ export interface EditorContentResponse {
 
 export type GetTasksParams = { scriptId?: string; versionId?: string; limit?: number };
 
+async function controlAnalysisJob(jobId: string, action: 'pause' | 'resume' | 'stop'): Promise<AnalysisJob> {
+  try {
+    return await httpClient.patch('/tasks', { jobId, action });
+  } catch (error) {
+    const status = (error as Error & { status?: number } | null)?.status;
+    if (status === 405) {
+      return httpClient.post('/tasks', { jobId, action });
+    }
+    throw error;
+  }
+}
+
 export const tasksApi = {
   /** List analysis jobs (GET /tasks). Optional filters; limit default 20, max 100. */
   getTasks: (params?: GetTasksParams): Promise<AnalysisJob[]> => {
@@ -209,9 +221,9 @@ export const tasksApi = {
   getJob: (jobId: string): Promise<AnalysisJob> => httpClient.get(`/tasks?jobId=${encodeURIComponent(jobId)}`),
   /** Get per-chunk statuses for a job (debug). */
   getJobChunks: (jobId: string): Promise<ChunkStatus[]> => httpClient.get(`/tasks?jobId=${encodeURIComponent(jobId)}&chunks=true`),
-  pauseJob: (jobId: string): Promise<AnalysisJob> => httpClient.patch('/tasks', { jobId, action: 'pause' }),
-  resumeJob: (jobId: string): Promise<AnalysisJob> => httpClient.patch('/tasks', { jobId, action: 'resume' }),
-  stopJob: (jobId: string): Promise<AnalysisJob> => httpClient.patch('/tasks', { jobId, action: 'stop' }),
+  pauseJob: (jobId: string): Promise<AnalysisJob> => controlAnalysisJob(jobId, 'pause'),
+  resumeJob: (jobId: string): Promise<AnalysisJob> => controlAnalysisJob(jobId, 'resume'),
+  stopJob: (jobId: string): Promise<AnalysisJob> => controlAnalysisJob(jobId, 'stop'),
   addTask: (task: Task): Promise<Task> => httpClient.post('/tasks', task),
 };
 

@@ -280,69 +280,82 @@ Deno.serve(async (req: Request) => {
     return json(allTasks.slice(0, limit));
   }
 
-  if (req.method === "PATCH") {
-    let body: any;
-    try {
-      body = await req.json();
-    } catch {
-      return json({ error: "Invalid JSON body" }, 400);
-    }
-
+  const isControlRequest = (body: any) => {
     const jobId = typeof body?.jobId === "string" ? body.jobId.trim() : "";
     const action = typeof body?.action === "string" ? body.action.trim().toLowerCase() : "";
-    if (!jobId) return json({ error: "jobId is required" }, 400);
-    if (action !== "pause" && action !== "resume" && action !== "stop") {
+    return Boolean(jobId) && (action === "pause" || action === "resume" || action === "stop");
+  };
+
+  if (req.method === "PATCH" || req.method === "POST") {
+    let body: any;
+    try {
+      body = await req.clone().json();
+    } catch {
+      if (req.method === "PATCH") return json({ error: "Invalid JSON body" }, 400);
+      body = null;
+    }
+
+    if (isControlRequest(body)) {
+      const jobId = typeof body?.jobId === "string" ? body.jobId.trim() : "";
+      const action = typeof body?.action === "string" ? body.action.trim().toLowerCase() : "";
+
+      if (!jobId) return json({ error: "jobId is required" }, 400);
+      if (action !== "pause" && action !== "resume" && action !== "stop") {
+        return json({ error: "action must be pause, resume, or stop" }, 400);
+      }
+
+      const { data: jobRow, error: jobErr } = await supabase
+        .from("analysis_jobs")
+        .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash, canonical_length")
+        .eq("id", jobId)
+        .maybeSingle();
+
+      if (jobErr) return json({ error: jobErr.message }, 500);
+      if (!jobRow) return json({ error: "Job not found" }, 404);
+      if (!isAdmin && (jobRow as any).created_by !== uid) return json({ error: "Job not found" }, 404);
+
+      const normalizedStatus = String((jobRow as any).status ?? "").toLowerCase();
+      if (["completed", "failed", "done", "succeeded"].includes(normalizedStatus)) {
+        return json({ error: "Cannot control a completed job" }, 400);
+      }
+      if (action !== "resume" && (jobRow as any).partial_finalize_requested) {
+        return json({ error: "Partial finalization already requested" }, 400);
+      }
+      if (action === "pause" && (jobRow as any).partial_finalize_requested) {
+        return json({ error: "Cannot pause a job that is finalizing a partial report" }, 400);
+      }
+      if (action === "resume" && (jobRow as any).partial_finalize_requested) {
+        return json({ error: "Cannot resume a job that is finalizing a partial report" }, 400);
+      }
+
+      const patch =
+        action === "pause"
+          ? { pause_requested: true, paused_at: new Date().toISOString(), partial_finalize_requested: false, partial_finalize_requested_at: null }
+          : action === "resume"
+            ? { pause_requested: false, paused_at: null }
+            : {
+                pause_requested: false,
+                paused_at: null,
+                partial_finalize_requested: true,
+                partial_finalize_requested_at: new Date().toISOString(),
+              };
+
+      const { data: updated, error: updateErr } = await supabase
+        .from("analysis_jobs")
+        .update(patch)
+        .eq("id", jobId)
+        .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash, canonical_length")
+        .single();
+
+      if (updateErr || !updated) {
+        return json({ error: updateErr?.message ?? "Failed to update job" }, 500);
+      }
+
+      return json(toCamel(updated as JobRow));
+    }
+    if (req.method === "PATCH") {
       return json({ error: "action must be pause, resume, or stop" }, 400);
     }
-
-    const { data: jobRow, error: jobErr } = await supabase
-      .from("analysis_jobs")
-      .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash, canonical_length")
-      .eq("id", jobId)
-      .maybeSingle();
-
-    if (jobErr) return json({ error: jobErr.message }, 500);
-    if (!jobRow) return json({ error: "Job not found" }, 404);
-    if (!isAdmin && (jobRow as any).created_by !== uid) return json({ error: "Job not found" }, 404);
-
-    const normalizedStatus = String((jobRow as any).status ?? "").toLowerCase();
-    if (["completed", "failed", "done", "succeeded"].includes(normalizedStatus)) {
-      return json({ error: "Cannot control a completed job" }, 400);
-    }
-    if (action !== "resume" && (jobRow as any).partial_finalize_requested) {
-      return json({ error: "Partial finalization already requested" }, 400);
-    }
-    if (action === "pause" && (jobRow as any).partial_finalize_requested) {
-      return json({ error: "Cannot pause a job that is finalizing a partial report" }, 400);
-    }
-    if (action === "resume" && (jobRow as any).partial_finalize_requested) {
-      return json({ error: "Cannot resume a job that is finalizing a partial report" }, 400);
-    }
-
-    const patch =
-      action === "pause"
-        ? { pause_requested: true, paused_at: new Date().toISOString(), partial_finalize_requested: false, partial_finalize_requested_at: null }
-        : action === "resume"
-          ? { pause_requested: false, paused_at: null }
-          : {
-              pause_requested: false,
-              paused_at: null,
-              partial_finalize_requested: true,
-              partial_finalize_requested_at: new Date().toISOString(),
-            };
-
-    const { data: updated, error: updateErr } = await supabase
-      .from("analysis_jobs")
-      .update(patch)
-      .eq("id", jobId)
-      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash, canonical_length")
-      .single();
-
-    if (updateErr || !updated) {
-      return json({ error: updateErr?.message ?? "Failed to update job" }, 500);
-    }
-
-    return json(toCamel(updated as JobRow));
   }
 
   if (req.method !== "POST") {

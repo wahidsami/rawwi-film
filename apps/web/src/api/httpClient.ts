@@ -413,7 +413,9 @@ export const httpClient = {
         if (res.status >= 500) {
           console.error(`API Error ${res.status}:`, msg, url);
         }
-        throw new Error(msg);
+        const apiError = new Error(msg) as Error & { status?: number };
+        apiError.status = res.status;
+        throw apiError;
       }
       return await res.json();
     } catch (error) {
