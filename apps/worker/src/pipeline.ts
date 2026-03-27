@@ -71,6 +71,7 @@ function isVerbatim(sourceText: string, snippet: string): boolean {
 }
 
 const MAX_EVIDENCE_SPAN = 280;
+const PIPELINE_LOGIC_VERSION = "v2.1";
 const MAX_EVIDENCE_LEN = 260;
 const HARD_FALLBACK_INSULTS = [
   { term: "نصاب", articleId: 5, atomId: "5-2", severity: "high" as const },
@@ -627,7 +628,7 @@ export async function processChunkJudge(
   // Build logicVersion dynamically so cache invalidates automatically when prompts/passes change.
   const passSignature = DETECTION_PASSES.map((p) => `${p.name}:${p.model ?? "default"}`).join("|");
   const rationaleModel = config.OPENAI_RATIONALE_MODEL;
-  const logicVersion = `engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|deepAuditor:${config.ANALYSIS_DEEP_AUDITOR}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}|passGating:${config.ANALYSIS_PASS_GATING_ENABLED ? PASS_GATING_VERSION : "off"}`;
+  const logicVersion = `pipeline:${PIPELINE_LOGIC_VERSION}|engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|deepAuditor:${config.ANALYSIS_DEEP_AUDITOR}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}|passGating:${config.ANALYSIS_PASS_GATING_ENABLED ? PASS_GATING_VERSION : "off"}`;
   const jobConfig = (job.config_snapshot as any) || {};
   const forceFresh = jobConfig.force_fresh === true;
   const routerModel = jobConfig.router_model || config.OPENAI_ROUTER_MODEL;
@@ -754,31 +755,33 @@ export async function processChunkJudge(
         passExecutionPlan
       );
       
-      // Enforce atom_ids and fill missing evidence snippets from local offsets when needed.
+      // Enforce atom_ids and prefer literal local evidence from chunk offsets.
       const enforced = multiPassResult.findings.map(f => enforceAtomIds([f])[0]);
       const enriched = enforced.map((f) => {
-        if (f.evidence_snippet && f.evidence_snippet.trim().length > 0) return f;
         const localStart = Math.max(0, f.location?.start_offset ?? 0);
         const localEnd = Math.min(chunkText.length, f.location?.end_offset ?? localStart);
         const fallback = localEnd > localStart ? chunkText.slice(localStart, localEnd) : "";
+        if (fallback && isVerbatim(chunkText, fallback)) {
+          return { ...f, evidence_snippet: fallback };
+        }
+        if (f.evidence_snippet && f.evidence_snippet.trim().length > 0) return f;
         return { ...f, evidence_snippet: fallback };
       });
       const withGlobal = enriched.map((f) => toGlobalFinding(f, chunkStart));
       
-      // Relaxed verbatim filter: keep findings even if evidence doesn't match exactly
+      // Final guardrail: keep only findings anchored to literal script text.
       const beforeVerbatimCount = withGlobal.length;
       allFindings = withGlobal.filter((f) => {
         const isExact = isVerbatim(chunkText, f.evidence_snippet);
         if (!isExact) {
-          // Log but keep the finding (AI detected it for a reason)
-          logger.warn("Evidence mismatch (keeping finding)", { 
+          logger.warn("Evidence mismatch (dropping finding)", { 
             chunkId: chunk.id,
             article: f.article_id,
             evidence: f.evidence_snippet?.slice(0, 50),
             severity: f.severity
           });
         }
-        return true; // Keep all findings
+        return isExact;
       });
       allFindings = sortFindingsStable(allFindings);
       

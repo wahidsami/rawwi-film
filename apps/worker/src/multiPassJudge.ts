@@ -19,6 +19,7 @@ import { logger } from "./logger.js";
 import { getFrameworkPromptSection } from "./canonicalAtomFramework.js";
 import { flushChunkPassProgress, reportChunkPassProgressDebounced } from "./jobs.js";
 import { evaluatePassGating } from "./passGating.js";
+import { getGcamRefsForCanonicalAtom } from "./canonicalAtomMapping.js";
 
 export interface LexiconTerm {
   term: string;
@@ -79,6 +80,42 @@ function compareJudgeFindingPreference(a: JudgeFinding, b: JudgeFinding): number
 
 function sortJudgeFindingsStable(findings: JudgeFinding[]): JudgeFinding[] {
   return [...findings].sort(compareJudgeFindingsStable);
+}
+
+function normalizeFindingForPass(
+  finding: JudgeFinding,
+  articles: GCAMArticle[]
+): JudgeFinding {
+  const allowedArticleIds = new Set(articles.map((article) => article.id));
+  const fallbackArticleId = articles[0]?.id ?? 5;
+  const canonicalAtom = finding.canonical_atom ?? null;
+  let articleId = typeof finding.article_id === "number" ? finding.article_id : 0;
+  let atomId = finding.atom_id ?? null;
+
+  if (canonicalAtom) {
+    const allowedRefs = getGcamRefsForCanonicalAtom(canonicalAtom).filter((ref) => allowedArticleIds.has(ref.article_id));
+    if (allowedRefs.length > 0) {
+      const currentAllowed = allowedRefs.some((ref) => ref.article_id === articleId);
+      const preferred = allowedRefs[0];
+      if (!currentAllowed) {
+        articleId = preferred.article_id;
+        atomId = preferred.atom_id ?? atomId;
+      } else if (atomId != null && !atomId.startsWith(`${articleId}-`)) {
+        atomId = preferred.atom_id ?? null;
+      }
+    }
+  }
+
+  if (!allowedArticleIds.has(articleId)) {
+    articleId = fallbackArticleId;
+    if (atomId != null && !atomId.startsWith(`${articleId}-`)) atomId = null;
+  }
+
+  return {
+    ...finding,
+    article_id: articleId,
+    atom_id: atomId,
+  };
 }
 
 /**
@@ -688,7 +725,7 @@ async function runSinglePass(
       rationale_ar: f.rationale_ar ?? null,
       final_ruling: f.final_ruling ?? null,
       narrative_consequence: f.narrative_consequence ?? "unknown",
-    }));
+    })).map((f) => normalizeFindingForPass(f, articles));
     const stableTagged = sortJudgeFindingsStable(tagged);
     
     const duration = Date.now() - startTime;

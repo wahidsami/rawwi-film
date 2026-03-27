@@ -69,7 +69,7 @@ export async function fetchNextAggregationCandidateJob(): Promise<AnalysisJob | 
       .from("analysis_chunks")
       .select("id", { count: "exact", head: true })
       .eq("job_id", job.id)
-      .in("status", ["pending", "judging"]);
+      .in("status", ["pending", "judging", "failed"]);
     if ((count ?? 0) === 0) return job as AnalysisJob;
   }
 
@@ -187,6 +187,18 @@ export async function setChunkFailed(chunkId: string, lastError: string): Promis
     .eq("id", chunkId);
 }
 
+export async function setChunkPending(chunkId: string, lastError: string | null = null): Promise<void> {
+  await supabase
+    .from("analysis_chunks")
+    .update({
+      status: "pending",
+      last_error: lastError,
+      processing_phase: null,
+      passes_completed: 0,
+    })
+    .eq("id", chunkId);
+}
+
 export async function setJobFailed(jobId: string, errorMessage: string): Promise<void> {
   await supabase
     .from("analysis_jobs")
@@ -258,14 +270,14 @@ export function flushChunkPassProgress(chunkId: string, completed: number, total
 }
 
 /**
- * True if any chunk for job has status in ('pending','judging').
+ * True if any chunk for job is not fully done yet.
  */
 export async function jobHasActiveChunks(jobId: string): Promise<boolean> {
   const { count } = await supabase
     .from("analysis_chunks")
     .select("id", { count: "exact", head: true })
     .eq("job_id", jobId)
-    .in("status", ["pending", "judging"]);
+    .in("status", ["pending", "judging", "failed"]);
   return (count ?? 0) > 0;
 }
 

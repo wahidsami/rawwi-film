@@ -1107,8 +1107,14 @@ export function ScriptWorkspace() {
   const chunkCountFromJob = Math.max(0, (analysisJob?.progressTotal ?? 0) - 1);
   const totalChunksTracked = chunkStatuses.length > 0 ? chunkStatuses.length : chunkCountFromJob;
   const doneChunks = chunkStatuses.filter((c) => c.status === 'done').length;
-  const progressDisplayDone = totalChunksTracked > 0 ? doneChunks : (analysisJob?.progressDone ?? 0);
+  const isCompletedSuccessfully = analysisJob != null && isSuccessfulJobStatus(analysisJob.status);
+  const progressDisplayDone = isCompletedSuccessfully
+    ? (totalChunksTracked > 0 ? totalChunksTracked : (analysisJob?.progressTotal ?? 0))
+    : totalChunksTracked > 0
+      ? doneChunks
+      : (analysisJob?.progressDone ?? 0);
   const progressDisplayTotal = totalChunksTracked > 0 ? totalChunksTracked : (analysisJob?.progressTotal ?? 0);
+  const progressDisplayPair = `${progressDisplayDone} / ${progressDisplayTotal}`;
   const activeChunk = chunkStatuses.find((c) => c.status === 'judging') ?? null;
   const activeChunkNumber = activeChunk ? activeChunk.chunkIndex + 1 : null;
   const activeChunkPageLabel =
@@ -3196,7 +3202,7 @@ export function ScriptWorkspace() {
                     : (lang === 'ar' ? 'جاري التحليل…' : 'Analyzing…')}
               </p>
               <p className="text-xs text-text-muted">
-                {analysisJob ? `${progressDisplayDone} / ${progressDisplayTotal}` : '…'}
+                {analysisJob ? <span dir="ltr">{progressDisplayPair}</span> : '…'}
               </p>
             </div>
           </div>
@@ -3304,7 +3310,7 @@ export function ScriptWorkspace() {
                     <span className="text-text-muted">status:</span>
                     <span className="text-text-main">{analysisJob.status}</span>
                     <span className="text-text-muted">progress:</span>
-                    <span className="text-text-main">{progressDisplayDone}/{progressDisplayTotal} ({analysisJob.progressPercent}%)</span>
+                    <span className="text-text-main"><span dir="ltr">{progressDisplayDone}/{progressDisplayTotal}</span> ({analysisJob.progressPercent}%)</span>
                     <span className="text-text-muted">created:</span>
                     <span className="text-text-main">{analysisJob.createdAt ? formatTime(new Date(analysisJob.createdAt), { lang }) : '-'}</span>
                     <span className="text-text-muted">started:</span>
@@ -3346,7 +3352,7 @@ export function ScriptWorkspace() {
                     </div>
                   ) : (
                     <div className="text-text-muted text-[10px]">
-                      {progressDisplayDone}/{progressDisplayTotal} done (chunk detail unavailable)
+                      <span dir="ltr">{progressDisplayDone}/{progressDisplayTotal}</span> done (chunk detail unavailable)
                     </div>
                   )}
                 </div>

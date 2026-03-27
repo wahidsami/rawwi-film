@@ -9,13 +9,19 @@ import {
   fetchNextPendingChunks,
   claimChunk,
   fetchJobNormalizedText,
-  incrementJobProgress,
   setJobFailed,
+  setChunkPending,
+  setChunkFailed,
 } from "./jobs.js";
 import { setContext, logger } from "./logger.js";
 import { initializeLexiconCache, getLexiconCache } from "./lexiconCache.js";
 import { processChunkJudge } from "./pipeline.js";
-import { setChunkFailed } from "./jobs.js";
+
+type ChunkProcessResult = {
+  ok: boolean;
+  retryable: boolean;
+  error?: string;
+};
 
 let lastLexiconRefreshJobId: string | null = null;
 
@@ -43,17 +49,26 @@ async function claimChunkBatch(jobId: string, desired: number) {
   return claimed;
 }
 
-async function processClaimedChunk(job: { id: string; script_id: string; version_id: string }, claimed: { id: string }, normalizedText: string | null): Promise<boolean> {
+async function processClaimedChunk(job: { id: string; script_id: string; version_id: string }, claimed: { id: string }, normalizedText: string | null): Promise<ChunkProcessResult> {
   setContext({ jobId: job.id, chunkId: claimed.id });
   try {
     await processChunkJudge(job as any, claimed as any, normalizedText);
-    return true;
+    return { ok: true, retryable: false };
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : String(e);
+    if (/429|rate limit|tokens per min|requests per min/i.test(errMsg)) {
+      logger.warn("Chunk processing rate-limited; re-queueing chunk", {
+        jobId: job.id,
+        chunkId: claimed.id,
+        error: errMsg,
+      });
+      await setChunkPending(claimed.id, errMsg);
+      return { ok: false, retryable: true, error: errMsg };
+    }
     logger.error("Chunk processing failed", { error: errMsg, jobId: job.id, chunkId: claimed.id });
     await setChunkFailed(claimed.id, errMsg);
-    await incrementJobProgress(job.id);
-    return false;
+    await setJobFailed(job.id, errMsg);
+    return { ok: false, retryable: false, error: errMsg };
   }
 }
 
@@ -96,6 +111,19 @@ async function processOneJob(): Promise<boolean> {
 
   const results = await Promise.all(claimed.map((chunk) => processClaimedChunk(job, chunk, normalizedText)));
 
+  if (results.some((result) => !result.ok)) {
+    logger.warn("Job batch incomplete; aggregation deferred", {
+      jobId: job.id,
+      desiredConcurrency,
+      claimedCount: claimed.length,
+      succeededCount: results.filter((result) => result.ok).length,
+      retryableCount: results.filter((result) => !result.ok && result.retryable).length,
+      failedCount: results.filter((result) => !result.ok && !result.retryable).length,
+      batchDurationMs: Date.now() - jobStartedAt,
+    });
+    return true;
+  }
+
   try {
     await runAggregation(job.id);
   } catch (e) {
@@ -108,8 +136,8 @@ async function processOneJob(): Promise<boolean> {
     jobId: job.id,
     desiredConcurrency,
     claimedCount: claimed.length,
-    succeededCount: results.filter(Boolean).length,
-    failedCount: results.filter((ok) => !ok).length,
+    succeededCount: results.filter((result) => result.ok).length,
+    failedCount: results.filter((result) => !result.ok).length,
     batchDurationMs: Date.now() - jobStartedAt,
   });
   return true;
@@ -148,7 +176,8 @@ async function runOnce(jobId: string | undefined): Promise<void> {
           processClaimedChunk(job as { id: string; script_id: string; version_id: string }, chunk, normalizedText)
         )
       );
-      processed += results.filter(Boolean).length;
+      processed += results.filter((result) => result.ok).length;
+      if (results.some((result) => !result.ok)) continue;
       try {
         await runAggregation(job.id);
       } catch (e) {

@@ -81,6 +81,16 @@ function isWeakRationaleText(value: string | null | undefined): boolean {
   ].some((pattern) => pattern.test(text));
 }
 
+function hasExplicitArticleMismatch(value: string | null | undefined, primaryArticle: number): boolean {
+  const text = (value ?? "").trim();
+  if (!text) return false;
+  const mentionedArticles = [...text.matchAll(/مادة\s+(\d+)/g)]
+    .map((match) => Number(match[1]))
+    .filter((num) => Number.isFinite(num));
+  if (mentionedArticles.length === 0) return false;
+  return !mentionedArticles.includes(primaryArticle);
+}
+
 function applyGuardrails(a: AuditorAssessment): AuditorAssessment {
   const primaryArticle = a.primary_article_id ?? 0;
   const related = normalizeRelated(a.related_article_ids ?? [], primaryArticle);
@@ -214,12 +224,13 @@ export async function runDeepAuditorPass(args: {
   for (const m of merged) {
     const id = m.canonical_finding_id ?? "";
     if (!id || needRationale.has(id)) continue;
-    if (!isWeakRationaleText(m.rationale_ar)) continue;
+    const primaryArticle = m.primary_article_id ?? m.article_id;
+    if (!isWeakRationaleText(m.rationale_ar) && !hasExplicitArticleMismatch(m.rationale_ar, primaryArticle)) continue;
     needRationale.set(id, {
       title_ar: m.title_ar || "مخالفة محتوى",
       evidence_snippet: m.evidence_snippet || "",
       final_ruling: m.final_ruling ?? "violation",
-      primary_article_id: m.primary_article_id ?? m.article_id,
+      primary_article_id: primaryArticle,
       weak_rationale: m.rationale_ar ?? null,
     });
   }

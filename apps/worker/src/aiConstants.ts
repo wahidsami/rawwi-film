@@ -19,8 +19,8 @@
 
 export const PROMPT_VERSIONS = {
   router: "v1.1",
-  judge: "v2.0-multipass",
-  auditor: "v1.0",
+  judge: "v2.1-multipass",
+  auditor: "v1.1",
   schema: "v2.0",
 };
 
