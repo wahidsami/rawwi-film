@@ -377,6 +377,7 @@ export function Results() {
   }
 
   const summary = report.summaryJson;
+  const partialReportMeta = summary.partial_report;
   const canonicalSummaryFindings: CanonicalSummaryFinding[] = (summary.canonical_findings || []).filter(Boolean);
   const reportHints: CanonicalSummaryFinding[] = (summary.report_hints || []).filter(Boolean);
   const wordsToRevisit = (summary.words_to_revisit || []).filter(Boolean);
@@ -1241,6 +1242,24 @@ export function Results() {
             {lang === "ar" ? "ثقة الملخص: " : "Summary confidence: "}
             {Math.round((summary.script_summary.confidence ?? 0) * 100)}%
           </p>
+        </div>
+      )}
+
+      {partialReportMeta?.is_partial && (
+        <div className="rounded-xl border border-warning/20 bg-warning/5 p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-semibold text-text-main">
+                {lang === 'ar' ? 'تقرير جزئي' : 'Partial report'}
+              </p>
+              <p className="text-sm text-text-muted">
+                {lang === 'ar'
+                  ? `تم إنشاء هذا التقرير بعد إيقاف التحليل مبكراً. تم فحص ${partialReportMeta.processed_chunks} من ${partialReportMeta.total_chunks} جزءاً، لذلك قد تزيد النتائج عند تشغيل التحليل كاملاً.`
+                  : `This report was generated after analysis was stopped early. ${partialReportMeta.processed_chunks} of ${partialReportMeta.total_chunks} chunks were processed, so findings may increase in a full run.`}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

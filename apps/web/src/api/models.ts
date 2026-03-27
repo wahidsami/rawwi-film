@@ -106,6 +106,8 @@ export interface AnalysisJob {
   startedAt: string | null;
   completedAt: string | null;
   pausedAt?: string | null;
+  partialFinalizeRequestedAt?: string | null;
+  isPartialReport?: boolean;
   errorMessage: string | null;
   /** Hash of canonical text used for this job; must match editor content to highlight. */
   scriptContentHash?: string | null;
@@ -333,6 +335,14 @@ export interface Report {
       start_offset: number;
       end_offset: number;
     }>;
+    partial_report?: {
+      is_partial: boolean;
+      processed_chunks: number;
+      total_chunks: number;
+      pending_chunks: number;
+      failed_chunks: number;
+      stopped_at?: string | null;
+    };
   };
   reportHtml: string;
   findingsCount: number;

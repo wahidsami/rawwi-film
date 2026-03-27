@@ -50,17 +50,22 @@ type JobRow = {
   error_message: string | null;
   pause_requested?: boolean | null;
   paused_at?: string | null;
+  partial_finalize_requested?: boolean | null;
+  partial_finalize_requested_at?: string | null;
   script_content_hash?: string | null;
   canonical_length?: number | null;
 };
 
 function toCamel(job: JobRow) {
-  const isPaused = Boolean(job.pause_requested) && !["completed", "failed", "done", "succeeded"].includes(String(job.status ?? "").toLowerCase());
+  const normalizedStatus = String(job.status ?? "").toLowerCase();
+  const isTerminal = ["completed", "failed", "done", "succeeded"].includes(normalizedStatus);
+  const isStopping = Boolean(job.partial_finalize_requested) && !isTerminal;
+  const isPaused = !isStopping && Boolean(job.pause_requested) && !isTerminal;
   return {
     id: job.id,
     scriptId: job.script_id,
     versionId: job.version_id,
-    status: isPaused ? "paused" : job.status,
+    status: isStopping ? "stopping" : (isPaused ? "paused" : job.status),
     progressTotal: job.progress_total,
     progressDone: job.progress_done,
     progressPercent: job.progress_percent,
@@ -68,6 +73,8 @@ function toCamel(job: JobRow) {
     startedAt: job.started_at,
     completedAt: job.completed_at,
     pausedAt: isPaused ? (job.paused_at ?? null) : null,
+    partialFinalizeRequestedAt: job.partial_finalize_requested_at ?? null,
+    isPartialReport: Boolean(job.partial_finalize_requested) && isTerminal,
     errorMessage: job.error_message,
     scriptContentHash: job.script_content_hash ?? null,
     canonicalLength: job.canonical_length ?? null,
@@ -149,7 +156,7 @@ Deno.serve(async (req: Request) => {
     if (jobId) {
       const { data: row, error: err } = await supabase
         .from("analysis_jobs")
-        .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, error_message, script_content_hash")
+        .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, error_message, script_content_hash")
         .eq("id", jobId)
         .maybeSingle();
       if (err) {
@@ -167,7 +174,7 @@ Deno.serve(async (req: Request) => {
     // 1. Fetch Analysis Jobs
     let jobQuery = supabase
       .from("analysis_jobs")
-      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, error_message")
+      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, error_message")
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -259,13 +266,13 @@ Deno.serve(async (req: Request) => {
     const jobId = typeof body?.jobId === "string" ? body.jobId.trim() : "";
     const action = typeof body?.action === "string" ? body.action.trim().toLowerCase() : "";
     if (!jobId) return json({ error: "jobId is required" }, 400);
-    if (action !== "pause" && action !== "resume") {
-      return json({ error: "action must be pause or resume" }, 400);
+    if (action !== "pause" && action !== "resume" && action !== "stop") {
+      return json({ error: "action must be pause, resume, or stop" }, 400);
     }
 
     const { data: jobRow, error: jobErr } = await supabase
       .from("analysis_jobs")
-      .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, error_message, script_content_hash, canonical_length")
+      .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, error_message, script_content_hash, canonical_length")
       .eq("id", jobId)
       .maybeSingle();
 
@@ -277,17 +284,33 @@ Deno.serve(async (req: Request) => {
     if (["completed", "failed", "done", "succeeded"].includes(normalizedStatus)) {
       return json({ error: "Cannot control a completed job" }, 400);
     }
+    if (action !== "resume" && (jobRow as any).partial_finalize_requested) {
+      return json({ error: "Partial finalization already requested" }, 400);
+    }
+    if (action === "pause" && (jobRow as any).partial_finalize_requested) {
+      return json({ error: "Cannot pause a job that is finalizing a partial report" }, 400);
+    }
+    if (action === "resume" && (jobRow as any).partial_finalize_requested) {
+      return json({ error: "Cannot resume a job that is finalizing a partial report" }, 400);
+    }
 
     const patch =
       action === "pause"
-        ? { pause_requested: true, paused_at: new Date().toISOString() }
-        : { pause_requested: false, paused_at: null };
+        ? { pause_requested: true, paused_at: new Date().toISOString(), partial_finalize_requested: false, partial_finalize_requested_at: null }
+        : action === "resume"
+          ? { pause_requested: false, paused_at: null }
+          : {
+              pause_requested: false,
+              paused_at: null,
+              partial_finalize_requested: true,
+              partial_finalize_requested_at: new Date().toISOString(),
+            };
 
     const { data: updated, error: updateErr } = await supabase
       .from("analysis_jobs")
       .update(patch)
       .eq("id", jobId)
-      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, error_message, script_content_hash, canonical_length")
+      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, error_message, script_content_hash, canonical_length")
       .single();
 
     if (updateErr || !updated) {

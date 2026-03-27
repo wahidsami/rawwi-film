@@ -10,7 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
-import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Search, Pause, Play } from 'lucide-react';
+import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Search, Pause, Play, Square } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getPolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
@@ -416,6 +416,10 @@ function isPausedJobStatus(status?: string | null): boolean {
   return (status ?? '').toLowerCase() === 'paused';
 }
 
+function isStoppingJobStatus(status?: string | null): boolean {
+  return (status ?? '').toLowerCase() === 'stopping';
+}
+
 export function ScriptWorkspace() {
 
   const { id } = useParams<{ id: string }>();
@@ -492,7 +496,7 @@ export function ScriptWorkspace() {
   /** When job completes, we fetch the report id so "View Report" can use by=id. */
   const [reportIdWhenJobCompleted, setReportIdWhenJobCompleted] = useState<string | null>(null);
   const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
-  const [analysisControlBusy, setAnalysisControlBusy] = useState<'pause' | 'resume' | null>(null);
+  const [analysisControlBusy, setAnalysisControlBusy] = useState<'pause' | 'resume' | 'stop' | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1123,11 +1127,14 @@ export function ScriptWorkspace() {
 
   const isAnalysisRunning = analysisJob != null && !isTerminalJobStatus(analysisJob.status);
   const chunkCountFromJob = Math.max(0, (analysisJob?.progressTotal ?? 0) - 1);
-  const totalChunksTracked = chunkStatuses.length > 0 ? chunkStatuses.length : chunkCountFromJob;
+  const hasTrackedChunks = chunkStatuses.length > 0;
+  const totalChunksTracked = hasTrackedChunks ? chunkStatuses.length : chunkCountFromJob;
   const doneChunks = chunkStatuses.filter((c) => c.status === 'done').length;
   const isCompletedSuccessfully = analysisJob != null && isSuccessfulJobStatus(analysisJob.status);
   const progressDisplayDone = isCompletedSuccessfully
-    ? (totalChunksTracked > 0 ? totalChunksTracked : (analysisJob?.progressTotal ?? 0))
+    ? (analysisJob?.isPartialReport
+        ? (hasTrackedChunks ? doneChunks : (analysisJob?.progressDone ?? 0))
+        : (totalChunksTracked > 0 ? totalChunksTracked : (analysisJob?.progressTotal ?? 0)))
     : totalChunksTracked > 0
       ? doneChunks
       : (analysisJob?.progressDone ?? 0);
@@ -1229,6 +1236,20 @@ export function ScriptWorkspace() {
       setAnalysisControlBusy(null);
     }
   }, [analysisJobId, analysisControlBusy, lang, startPolling]);
+
+  const handleStopAnalysis = useCallback(async () => {
+    if (!analysisJobId || analysisControlBusy) return;
+    setAnalysisControlBusy('stop');
+    try {
+      const job = await tasksApi.stopJob(analysisJobId);
+      setAnalysisJob(job);
+      toast.success(lang === 'ar' ? 'سيتم إنشاء تقرير جزئي بعد إنهاء الجزء الجاري.' : 'A partial report will be generated after the current chunk finishes.');
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذر إيقاف التحليل وإنشاء تقرير جزئي' : 'Failed to stop analysis and generate a partial report'));
+    } finally {
+      setAnalysisControlBusy(null);
+    }
+  }, [analysisJobId, analysisControlBusy, lang]);
 
   const canReplaceFile = user?.role === 'Super Admin' || user?.role === 'Admin';
   const hasVersionForAnalysis = Boolean(script?.currentVersionId);
@@ -3385,6 +3406,8 @@ export function ScriptWorkspace() {
               <div className="flex items-center gap-3">
                 {isSuccessfulJobStatus(analysisJob?.status) ? (
                   <CheckCircle2 className="w-8 h-8 text-success flex-shrink-0" />
+                ) : isStoppingJobStatus(analysisJob?.status) ? (
+                  <Loader2 className="w-8 h-8 text-warning flex-shrink-0 animate-spin" />
                 ) : isPausedJobStatus(analysisJob?.status) ? (
                   <Pause className="w-8 h-8 text-warning flex-shrink-0" />
                 ) : (analysisJob?.status ?? '').toLowerCase() === 'failed' ? (
@@ -3395,7 +3418,11 @@ export function ScriptWorkspace() {
                 <div>
                   <p className="font-semibold text-text-main">
                     {isSuccessfulJobStatus(analysisJob?.status)
-                      ? (lang === 'ar' ? 'اكتمل التحليل' : 'Analysis Complete')
+                      ? (analysisJob?.isPartialReport
+                          ? (lang === 'ar' ? 'اكتمل التقرير الجزئي' : 'Partial Report Ready')
+                          : (lang === 'ar' ? 'اكتمل التحليل' : 'Analysis Complete'))
+                      : isStoppingJobStatus(analysisJob?.status)
+                        ? (lang === 'ar' ? 'جارٍ إنهاء التحليل وإنشاء تقرير جزئي' : 'Finalizing partial report')
                       : isPausedJobStatus(analysisJob?.status)
                         ? (lang === 'ar' ? 'التحليل متوقف مؤقتاً' : 'Analysis Paused')
                       : (analysisJob?.status ?? '').toLowerCase() === 'failed'
@@ -3415,6 +3442,7 @@ export function ScriptWorkspace() {
                   className={cn(
                     "h-full rounded-full transition-all duration-300",
                     isSuccessfulJobStatus(analysisJob?.status) ? 'bg-success' :
+                      isStoppingJobStatus(analysisJob?.status) ? 'bg-warning' :
                       isPausedJobStatus(analysisJob?.status) ? 'bg-warning' :
                       (analysisJob?.status ?? '').toLowerCase() === 'failed' ? 'bg-error' : 'bg-primary'
                   )}
@@ -3434,7 +3462,9 @@ export function ScriptWorkspace() {
                 <div className="rounded-xl border border-border bg-background/60 p-3">
                   <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الحالة الخلفية' : 'Backend stage'}</p>
                   <p className="text-sm font-medium text-text-main">
-                    {isPausedJobStatus(analysisJob?.status)
+                    {isStoppingJobStatus(analysisJob?.status)
+                      ? (lang === 'ar' ? 'جارٍ إعداد تقرير جزئي' : 'Preparing partial report')
+                      : isPausedJobStatus(analysisJob?.status)
                       ? (lang === 'ar' ? 'متوقف مؤقتاً' : 'Paused')
                       : activePhaseLabel ?? (lang === 'ar' ? 'قيد الانتظار' : 'Waiting')}
                   </p>
@@ -3457,7 +3487,7 @@ export function ScriptWorkspace() {
                 <p className="text-xs text-text-muted">
                   {lang === 'ar' ? 'تفاصيل التنفيذ الحالية' : 'Current execution details'}
                 </p>
-                {isAnalysisRunning && !isPausedJobStatus(analysisJob?.status) && (
+                {isAnalysisRunning && !isPausedJobStatus(analysisJob?.status) && !isStoppingJobStatus(analysisJob?.status) && (
                   <div className="flex items-center gap-2 text-xs font-medium text-primary">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     <span>
@@ -3487,6 +3517,20 @@ export function ScriptWorkspace() {
                     : 'Pause stops the worker from claiming new chunks while preserving the current progress until you resume.'}
                 </p>
               )}
+              {isStoppingJobStatus(analysisJob?.status) && (
+                <p className="text-[11px] text-warning">
+                  {lang === 'ar'
+                    ? 'سيُكمِل العامل الجزء الجاري فقط، ثم سيبني تقريراً جزئياً من النتائج المكتملة ويُظهِره لك.'
+                    : 'The worker will finish only the current in-flight chunk, then build and show a partial report from the completed findings.'}
+                </p>
+              )}
+              {isSuccessfulJobStatus(analysisJob?.status) && analysisJob?.isPartialReport && (
+                <p className="text-[11px] text-warning">
+                  {lang === 'ar'
+                    ? `هذا تقرير جزئي مبني على التقدم المحفوظ حتى لحظة الإيقاف (${progressDisplayPair}).`
+                    : `This is a partial report built from the saved progress at stop time (${progressDisplayPair}).`}
+                </p>
+              )}
             </div>
 
             {/* Error message */}
@@ -3513,6 +3557,14 @@ export function ScriptWorkspace() {
                     {analysisControlBusy === 'resume'
                       ? (lang === 'ar' ? 'جارٍ الاستئناف…' : 'Resuming…')
                       : (lang === 'ar' ? 'استئناف' : 'Resume')}
+                  </Button>
+                )}
+                {analysisJob && !isSuccessfulJobStatus(analysisJob.status) && analysisJob.status !== 'failed' && !isStoppingJobStatus(analysisJob.status) && (
+                  <Button size="sm" variant="outline" onClick={handleStopAnalysis} disabled={analysisControlBusy != null} className="border-warning/30 text-warning hover:bg-warning/10">
+                    <Square className="w-4 h-4 mr-1" />
+                    {analysisControlBusy === 'stop'
+                      ? (lang === 'ar' ? 'جارٍ الإيقاف…' : 'Stopping…')
+                      : (lang === 'ar' ? 'إيقاف وإنشاء تقرير جزئي' : 'Stop + Partial Report')}
                   </Button>
                 )}
                 {isSuccessfulJobStatus(analysisJob?.status) && (

@@ -1,6 +1,6 @@
 import { supabase } from "./db.js";
 import { sha256 } from "./hash.js";
-import { incrementJobProgress, jobHasActiveChunks } from "./jobs.js";
+import { countChunksWithStatuses, incrementJobProgress, jobHasActiveChunks, jobHasInFlightChunks } from "./jobs.js";
 import { logger } from "./logger.js";
 import {
   getPolicyArticles,
@@ -144,6 +144,14 @@ export type SummaryJson = {
     start_offset: number;
     end_offset: number;
   }>;
+  partial_report?: {
+    is_partial: boolean;
+    processed_chunks: number;
+    total_chunks: number;
+    pending_chunks: number;
+    failed_chunks: number;
+    stopped_at?: string | null;
+  };
 }
 
 const COMPLIANCE_NEUTRAL_HINTS = ["محايد", "سياق درامي", "ليس تحريضي", "ليس تمجيد", "متوافق إجمالاً", "درامي نفسي"];
@@ -1051,7 +1059,15 @@ export function buildReportHtml(summary: SummaryJson): string {
  */
 export async function runAggregation(jobId: string): Promise<void> {
   const aggregationStartedAt = Date.now();
-  const hasActive = await jobHasActiveChunks(jobId);
+  const { data: jobControl } = await supabase
+    .from("analysis_jobs")
+    .select("partial_finalize_requested")
+    .eq("id", jobId)
+    .maybeSingle();
+  const isPartialFinalize = Boolean((jobControl as { partial_finalize_requested?: boolean | null } | null)?.partial_finalize_requested);
+  const hasActive = isPartialFinalize
+    ? await jobHasInFlightChunks(jobId)
+    : await jobHasActiveChunks(jobId);
   if (hasActive) return;
 
   const { data: job } = await supabase
@@ -1060,6 +1076,8 @@ export async function runAggregation(jobId: string): Promise<void> {
       script_id, 
       version_id, 
       created_by,
+      partial_finalize_requested,
+      partial_finalize_requested_at,
       normalized_text,
       progress_total,
       config_snapshot,
@@ -1141,9 +1159,25 @@ export async function runAggregation(jobId: string): Promise<void> {
     analysisOptions = { mergeStrategy: "every_occurrence" };
   }
   const summary = buildSummaryJson(jobId, job.script_id, list, clientName, scriptTitle, analysisOptions);
+  const totalChunks = Math.max(0, (((job as { progress_total?: number | null }).progress_total ?? 1) - 1));
+  if ((job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested) {
+    const [doneChunks, pendingChunks, failedChunks] = await Promise.all([
+      countChunksWithStatuses(jobId, ["done"]),
+      countChunksWithStatuses(jobId, ["pending"]),
+      countChunksWithStatuses(jobId, ["failed"]),
+    ]);
+    summary.partial_report = {
+      is_partial: true,
+      processed_chunks: doneChunks,
+      total_chunks: totalChunks,
+      pending_chunks: pendingChunks,
+      failed_chunks: failedChunks,
+      stopped_at: (job as { partial_finalize_requested_at?: string | null }).partial_finalize_requested_at ?? null,
+    };
+  }
   const largeJobSize = {
     textLength: fullScriptText.length,
-    chunkCount: Math.max(0, (((job as { progress_total?: number | null }).progress_total ?? 1) - 1)),
+    chunkCount: totalChunks,
   };
   if (fullScriptText.trim()) {
     if (shouldSkipScriptSummaryForJob(largeJobSize)) {
@@ -1209,25 +1243,46 @@ export async function runAggregation(jobId: string): Promise<void> {
     logger.error("Aggregation: report upsert FAILED", { jobId, error: reportErr });
   }
 
-  // Increment progress for the aggregation step (+1 that was reserved)
-  await incrementJobProgress(jobId);
+  const isPartialReport = Boolean(summary.partial_report?.is_partial);
+  if (!isPartialReport) {
+    // Increment progress for the aggregation step (+1 that was reserved)
+    await incrementJobProgress(jobId);
+  }
 
-  // Mark completed with progress pinned to 100%
-  const { data: jobFinal } = await supabase
-    .from("analysis_jobs")
-    .select("progress_total")
-    .eq("id", jobId)
-    .single();
-  const total = jobFinal?.progress_total ?? 1;
-  await supabase
-    .from("analysis_jobs")
-    .update({
-      status: "completed",
-      completed_at: new Date().toISOString(),
-      progress_done: total,
-      progress_percent: 100,
-    })
-    .eq("id", jobId);
+  // Mark completed. Partial reports preserve honest chunk progress instead of forcing 100%.
+  const completedAt = new Date().toISOString();
+  if (isPartialReport) {
+    const processedChunks = summary.partial_report?.processed_chunks ?? 0;
+    const totalProgress = Math.max(1, ((job as { progress_total?: number | null }).progress_total ?? 1));
+    const progressPercent = Math.floor((100 * processedChunks) / totalProgress);
+    await supabase
+      .from("analysis_jobs")
+      .update({
+        status: "completed",
+        completed_at: completedAt,
+        progress_done: processedChunks,
+        progress_percent: progressPercent,
+        pause_requested: false,
+        paused_at: null,
+      })
+      .eq("id", jobId);
+  } else {
+    const { data: jobFinal } = await supabase
+      .from("analysis_jobs")
+      .select("progress_total")
+      .eq("id", jobId)
+      .single();
+    const total = jobFinal?.progress_total ?? 1;
+    await supabase
+      .from("analysis_jobs")
+      .update({
+        status: "completed",
+        completed_at: completedAt,
+        progress_done: total,
+        progress_percent: 100,
+      })
+      .eq("id", jobId);
+  }
 
   const { logAuditEvent } = await import("./audit.js");
   const jobRow = job as { script_id: string; created_by?: string | null };
@@ -1241,6 +1296,7 @@ export async function runAggregation(jobId: string): Promise<void> {
 
   logger.info("Aggregation done", {
     jobId,
+    isPartialReport,
     findings_count: list.length,
     findings_count_total: summary.totals.findings_count,
     severity_counts: summary.totals.severity_counts,

@@ -170,7 +170,16 @@ async function runOnce(jobId: string | undefined): Promise<void> {
     let processed = 0;
     while (true) {
       const claimed = await claimChunkBatch(jobId, config.WORKER_CHUNK_CONCURRENCY);
-      if (claimed.length === 0) break;
+      if (claimed.length === 0) {
+        try {
+          await runAggregation(job.id);
+        } catch (e) {
+          const errMsg = e instanceof Error ? e.message : String(e);
+          logger.error("Aggregation failed during worker:once idle finalize", { jobId: job.id, error: errMsg });
+          await setJobFailed(job.id, errMsg);
+        }
+        break;
+      }
       const results = await Promise.all(
         claimed.map((chunk) =>
           processClaimedChunk(job as { id: string; script_id: string; version_id: string }, chunk, normalizedText)

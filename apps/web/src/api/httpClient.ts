@@ -224,18 +224,21 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
       return { jobId };
     }
     if (method === 'PATCH') {
+      const action = body?.action;
       return {
         id: body?.jobId ?? 'mock-job',
         scriptId: 'mock-script',
         versionId: 'mock-version',
-        status: body?.action === 'pause' ? 'paused' : 'running',
+        status: action === 'pause' ? 'paused' : action === 'stop' ? 'stopping' : 'running',
         progressTotal: 10,
         progressDone: 4,
         progressPercent: 40,
         createdAt: new Date().toISOString(),
         startedAt: new Date(Date.now() - 120000).toISOString(),
         completedAt: null,
-        pausedAt: body?.action === 'pause' ? new Date().toISOString() : null,
+        pausedAt: action === 'pause' ? new Date().toISOString() : null,
+        partialFinalizeRequestedAt: action === 'stop' ? new Date().toISOString() : null,
+        isPartialReport: false,
         errorMessage: null,
       };
     }
