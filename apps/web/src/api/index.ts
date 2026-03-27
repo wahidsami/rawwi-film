@@ -144,7 +144,7 @@ export const scriptsApi = {
       analysisProfile?: AnalysisModeProfile;
       analysisOptions?: { mergeStrategy?: 'same_location_only' | 'every_occurrence' };
     }
-  ): Promise<{ jobId: string }> =>
+  ): Promise<{ jobId: string; manualReviewContextCount?: number }> =>
     httpClient.post('/tasks', {
       versionId,
       ...(options?.forceFresh ? { forceFresh: true } : {}),

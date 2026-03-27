@@ -1491,7 +1491,7 @@ export function ScriptWorkspace() {
     }
     setIsAnalyzing(true);
     try {
-      const { jobId } = await scriptsApi.createTask(script.currentVersionId, {
+      const { jobId, manualReviewContextCount } = await scriptsApi.createTask(script.currentVersionId, {
         forceFresh: true,
         analysisProfile: analysisModeProfile,
       });
@@ -1502,6 +1502,14 @@ export function ScriptWorkspace() {
       setAnalysisModalOpen(true);
       startPolling(jobId);
       toast.success(lang === 'ar' ? 'تم بدء التحليل.' : 'Analysis started.');
+      if ((manualReviewContextCount ?? 0) > 0) {
+        toast(
+          lang === 'ar'
+            ? `تم حمل ${manualReviewContextCount} ملاحظة يدوية من المراجعات السابقة إلى هذه الجولة.`
+            : `${manualReviewContextCount} manual review notes were carried into this analysis run.`,
+          { duration: 5000 }
+        );
+      }
     } catch (err: any) {
       console.error('[ScriptWorkspace] Analysis trigger failed:', err);
       toast.error(err?.message ?? (lang === 'ar' ? 'فشل تفعيل التحليل' : 'Failed to start analysis'));
@@ -4113,6 +4121,13 @@ export function ScriptWorkspace() {
                   {lang === 'ar'
                     ? `هذا تقرير جزئي مبني على التقدم المحفوظ حتى لحظة الإيقاف (${progressDisplayPair}).`
                     : `This is a partial report built from the saved progress at stop time (${progressDisplayPair}).`}
+                </p>
+              )}
+              {(analysisJob?.manualReviewContextCount ?? 0) > 0 && (
+                <p className="text-[11px] text-primary">
+                  {lang === 'ar'
+                    ? `تمت الاستفادة من ${(analysisJob?.manualReviewContextCount ?? 0)} ملاحظات يدوية محفوظة من جولات سابقة أثناء تجهيز هذا التحليل.`
+                    : `${analysisJob?.manualReviewContextCount ?? 0} saved manual review notes were carried into this analysis setup from earlier runs.`}
                 </p>
               )}
             </div>

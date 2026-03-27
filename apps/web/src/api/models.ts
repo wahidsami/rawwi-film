@@ -102,6 +102,7 @@ export interface AnalysisJob {
   versionId: string;
   status: string;
   analysisMode?: AnalysisModeProfile | null;
+  manualReviewContextCount?: number;
   progressTotal: number;
   progressDone: number;
   progressPercent: number;
@@ -338,6 +339,20 @@ export interface Report {
       start_offset: number;
       end_offset: number;
     }>;
+    manual_review_context?: {
+      carried_forward_count: number;
+      source_job_ids?: string[];
+      items?: Array<{
+        article_id: number;
+        atom_id?: string | null;
+        severity: string;
+        evidence_snippet: string;
+        manual_comment?: string | null;
+        start_offset_global?: number | null;
+        end_offset_global?: number | null;
+        page_number?: number | null;
+      }>;
+    };
     partial_report?: {
       is_partial: boolean;
       processed_chunks: number;

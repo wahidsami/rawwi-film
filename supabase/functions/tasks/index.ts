@@ -54,6 +54,20 @@ type JobRow = {
   partial_finalize_requested_at?: string | null;
   config_snapshot?: {
     analysis_profile?: "quality" | "balanced" | "turbo";
+    manual_review_context?: {
+      carried_forward_count?: number;
+      source_job_ids?: string[];
+      items?: Array<{
+        article_id: number;
+        atom_id?: string | null;
+        severity: string;
+        evidence_snippet: string;
+        manual_comment?: string | null;
+        start_offset_global?: number | null;
+        end_offset_global?: number | null;
+        page_number?: number | null;
+      }>;
+    };
   } | null;
   script_content_hash?: string | null;
   canonical_length?: number | null;
@@ -80,6 +94,92 @@ const ANALYSIS_PROFILE_PRESETS = {
   },
 };
 
+type ManualReviewSnapshotItem = {
+  article_id: number;
+  atom_id?: string | null;
+  severity: string;
+  evidence_snippet: string;
+  manual_comment?: string | null;
+  start_offset_global?: number | null;
+  end_offset_global?: number | null;
+  page_number?: number | null;
+  job_id?: string | null;
+};
+
+async function loadManualReviewSnapshot(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  scriptId: string,
+  versionId: string,
+): Promise<{
+  carriedForwardCount: number;
+  sourceJobIds: string[];
+  items: ManualReviewSnapshotItem[];
+}> {
+  const { data, error } = await supabase
+    .from("analysis_findings")
+    .select(
+      "job_id, article_id, atom_id, severity, evidence_snippet, manual_comment, start_offset_global, end_offset_global, page_number, created_at"
+    )
+    .eq("script_id", scriptId)
+    .eq("version_id", versionId)
+    .eq("source", "manual")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error || !data) {
+    console.warn("[tasks] manual review snapshot skipped:", error?.message ?? "No data");
+    return { carriedForwardCount: 0, sourceJobIds: [], items: [] };
+  }
+
+  const byKey = new Map<string, ManualReviewSnapshotItem>();
+  const sourceJobIds = new Set<string>();
+  for (const row of data as Array<Record<string, unknown>>) {
+    const articleId = Number(row.article_id ?? 0);
+    if (!Number.isFinite(articleId) || articleId <= 0) continue;
+    const atomId = typeof row.atom_id === "string" && row.atom_id.trim() ? row.atom_id.trim() : null;
+    const severity = typeof row.severity === "string" && row.severity.trim() ? row.severity.trim().toLowerCase() : "medium";
+    const evidenceSnippet = typeof row.evidence_snippet === "string" ? row.evidence_snippet.trim() : "";
+    const manualComment = typeof row.manual_comment === "string" && row.manual_comment.trim() ? row.manual_comment.trim() : null;
+    const startOffsetGlobal =
+      typeof row.start_offset_global === "number" ? row.start_offset_global : row.start_offset_global == null ? null : Number(row.start_offset_global);
+    const endOffsetGlobal =
+      typeof row.end_offset_global === "number" ? row.end_offset_global : row.end_offset_global == null ? null : Number(row.end_offset_global);
+    const pageNumber =
+      typeof row.page_number === "number" ? row.page_number : row.page_number == null ? null : Number(row.page_number);
+    const jobId = typeof row.job_id === "string" && row.job_id.trim() ? row.job_id.trim() : null;
+    if (jobId) sourceJobIds.add(jobId);
+    const key = [
+      articleId,
+      atomId ?? "",
+      severity,
+      startOffsetGlobal ?? "",
+      endOffsetGlobal ?? "",
+      evidenceSnippet,
+      manualComment ?? "",
+    ].join("|");
+    if (!byKey.has(key)) {
+      byKey.set(key, {
+        article_id: articleId,
+        atom_id: atomId,
+        severity,
+        evidence_snippet: evidenceSnippet,
+        manual_comment: manualComment,
+        start_offset_global: Number.isFinite(startOffsetGlobal as number) ? startOffsetGlobal : null,
+        end_offset_global: Number.isFinite(endOffsetGlobal as number) ? endOffsetGlobal : null,
+        page_number: Number.isFinite(pageNumber as number) ? pageNumber : null,
+        job_id: jobId,
+      });
+    }
+  }
+
+  const items = [...byKey.values()].slice(0, 50);
+  return {
+    carriedForwardCount: items.length,
+    sourceJobIds: [...sourceJobIds].slice(0, 20),
+    items,
+  };
+}
+
 function toCamel(job: JobRow) {
   const normalizedStatus = String(job.status ?? "").toLowerCase();
   const isTerminal = ["completed", "failed", "done", "succeeded"].includes(normalizedStatus);
@@ -100,6 +200,7 @@ function toCamel(job: JobRow) {
     pausedAt: isPaused ? (job.paused_at ?? null) : null,
     partialFinalizeRequestedAt: job.partial_finalize_requested_at ?? null,
     isPartialReport: Boolean(job.partial_finalize_requested) && isTerminal,
+    manualReviewContextCount: job.config_snapshot?.manual_review_context?.carried_forward_count ?? 0,
     errorMessage: job.error_message,
     scriptContentHash: job.script_content_hash ?? null,
     canonicalLength: job.canonical_length ?? null,
@@ -503,6 +604,7 @@ Deno.serve(async (req: Request) => {
     ? chunkTextByScriptPages(normalized, pageRows, 12_000)
     : chunkText(normalized, 12_000, 800);
   const progress_total = chunks.length + 1;
+  const manualReviewSnapshot = await loadManualReviewSnapshot(supabase, scriptId, versionId.trim());
 
   const { data: job, error: jobErr } = await supabase
     .from("analysis_jobs")
@@ -528,6 +630,15 @@ Deno.serve(async (req: Request) => {
         judge_prompt_version: PROMPT_VERSIONS.judge,
         judge_prompt_hash: await sha256Hash(JUDGE_SYSTEM_MSG),
         schema_version: PROMPT_VERSIONS.schema,
+        ...(manualReviewSnapshot.carriedForwardCount > 0
+          ? {
+              manual_review_context: {
+                carried_forward_count: manualReviewSnapshot.carriedForwardCount,
+                source_job_ids: manualReviewSnapshot.sourceJobIds,
+                items: manualReviewSnapshot.items,
+              },
+            }
+          : {}),
         ...(analysisOptions ? { analysisOptions } : {}),
       },
     })
@@ -586,5 +697,8 @@ Deno.serve(async (req: Request) => {
     return json({ error: chunksErr.message }, 500);
   }
 
-  return json({ jobId: job.id });
+  return json({
+    jobId: job.id,
+    manualReviewContextCount: manualReviewSnapshot.carriedForwardCount,
+  });
 });

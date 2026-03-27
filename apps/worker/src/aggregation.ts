@@ -144,6 +144,20 @@ export type SummaryJson = {
     start_offset: number;
     end_offset: number;
   }>;
+  manual_review_context?: {
+    carried_forward_count: number;
+    source_job_ids?: string[];
+    items?: Array<{
+      article_id: number;
+      atom_id?: string | null;
+      severity: string;
+      evidence_snippet: string;
+      manual_comment?: string | null;
+      start_offset_global?: number | null;
+      end_offset_global?: number | null;
+      page_number?: number | null;
+    }>;
+  };
   partial_report?: {
     is_partial: boolean;
     processed_chunks: number;
@@ -1173,6 +1187,19 @@ export async function runAggregation(jobId: string): Promise<void> {
       pending_chunks: pendingChunks,
       failed_chunks: failedChunks,
       stopped_at: (job as { partial_finalize_requested_at?: string | null }).partial_finalize_requested_at ?? null,
+    };
+  }
+  const manualReviewContext =
+    ((job as {
+      config_snapshot?: {
+        manual_review_context?: SummaryJson["manual_review_context"];
+      };
+    }).config_snapshot?.manual_review_context) ?? null;
+  if (manualReviewContext && (manualReviewContext.carried_forward_count ?? 0) > 0) {
+    summary.manual_review_context = {
+      carried_forward_count: manualReviewContext.carried_forward_count,
+      source_job_ids: manualReviewContext.source_job_ids ?? [],
+      items: manualReviewContext.items ?? [],
     };
   }
   const largeJobSize = {
