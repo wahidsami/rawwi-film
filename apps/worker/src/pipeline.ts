@@ -960,9 +960,8 @@ export async function processChunkJudge(
         const canonicalSnippet = hasSaneGlobalOffsets
           ? compactEvidenceText(normalizedText!.slice(start, end))
           : "";
-        // Prefer model-provided evidence text for report readability.
-        // Use canonical slice only when model snippet is missing.
-        const excerpt = modelSnippet.length > 0 ? modelSnippet : canonicalSnippet;
+        // Prefer canonical script text whenever offsets are sane so report evidence stays literal.
+        const excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
         const title_ar = normalizeMisusedGlossaryPassTitle({
           titleAr: f.title_ar,
           rationaleAr: f.rationale_ar ?? null,

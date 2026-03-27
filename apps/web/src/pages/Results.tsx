@@ -778,6 +778,9 @@ export function Results() {
           'bg-info/10 text-info border-info/20';
 
   const articleLabel = (articleId: number) => {
+    if (!Number.isFinite(articleId) || articleId <= 0) {
+      return lang === 'ar' ? 'مادة غير محددة' : 'Unresolved article';
+    }
     const meta = policyArticles.find((a) => a.id === articleId);
     return lang === 'ar'
       ? `مادة ${articleId}${meta?.titleAr ? `: ${meta.titleAr}` : ''}`

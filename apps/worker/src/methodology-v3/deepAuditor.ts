@@ -1,4 +1,5 @@
 import { config } from "../config.js";
+import { getGcamRefsForCanonicalAtom } from "../canonicalAtomMapping.js";
 import { normalizeMisusedGlossaryPassTitle } from "../findingTitleNormalize.js";
 import { callAuditorRaw, callRationaleOnly, parseAuditorWithRepair } from "../openai.js";
 import { logger } from "../logger.js";
@@ -27,6 +28,30 @@ function uniqueNums(values: Array<number | null | undefined>): number[] {
 function normalizeRelated(related: number[], primaryArticle: number): number[] {
   return uniqueNums(related)
     .filter((id) => id >= 1 && id <= 25 && id !== primaryArticle);
+}
+
+function canonicalAtomForFinding(f: HybridFindingLike): string | null {
+  return ((f as { canonical_atom?: string | null }).canonical_atom ?? null);
+}
+
+function basePrimaryArticleForFinding(f: HybridFindingLike): number {
+  const primary = f.primary_article_id ?? f.article_id;
+  return typeof primary === "number" && primary >= 1 && primary <= 25 ? primary : 5;
+}
+
+function chooseSafePrimaryArticle(
+  proposedPrimary: number | null | undefined,
+  f: HybridFindingLike
+): number {
+  const fallbackPrimary = basePrimaryArticleForFinding(f);
+  if (typeof proposedPrimary !== "number" || proposedPrimary < 1 || proposedPrimary > 25) {
+    return fallbackPrimary;
+  }
+  const canonicalAtom = canonicalAtomForFinding(f);
+  if (!canonicalAtom) return proposedPrimary;
+  const allowedArticleIds = [...new Set(getGcamRefsForCanonicalAtom(canonicalAtom).map((ref) => ref.article_id))];
+  if (allowedArticleIds.length === 0) return proposedPrimary;
+  return allowedArticleIds.includes(proposedPrimary) ? proposedPrimary : fallbackPrimary;
 }
 
 function isConfidenceInconsistent(a: AuditorAssessment): boolean {
@@ -143,8 +168,8 @@ export async function runDeepAuditorPass(args: {
     const cId = f.canonical_finding_id ?? `LEGACY-${f.article_id}-${f.start_offset_global ?? 0}-${f.end_offset_global ?? 0}`;
     const a = byId.get(cId);
     if (!a) return f;
-    const primaryArticle = a.primary_article_id ?? f.primary_article_id ?? f.article_id;
-    const related = normalizeRelated(a.related_article_ids ?? [], primaryArticle);
+    const primaryArticle = chooseSafePrimaryArticle(a.primary_article_id, f);
+    const related = normalizeRelated(f.related_article_ids ?? [], primaryArticle);
     const rationale = (a.rationale_ar && a.rationale_ar.trim() !== "")
       ? a.rationale_ar
       : (f.rationale_ar && f.rationale_ar.trim() !== "")
