@@ -63,6 +63,54 @@ function formatAnalysisElapsed(ms: number, lang: 'ar' | 'en'): string {
   return parts.join(' ');
 }
 
+const PREVIEW_FOCUS_PATTERNS = [
+  /"([^"]{8,160})"/,
+  /“([^”]{8,160})”/,
+  /«([^»]{8,160})»/,
+  /([اأإآء-ي]{2,}\s+(?:يضرب|يخنق|يطعن|يهدد|يلكم|سكران|يشرب|بيرة|مخدر|سيجارة|لعنة|حقير|معتوه|حمار|خاين)[^.!؟\n]{0,120})/i,
+  /([^.!؟\n]{18,140}[.!؟])/,
+];
+
+function compactPreviewText(value: string | null | undefined): string {
+  return (value ?? '').replace(/\s+/g, ' ').trim();
+}
+
+function extractPreviewFocusSnippet(preview: string | null | undefined): string | null {
+  const text = compactPreviewText(preview);
+  if (!text) return null;
+  for (const pattern of PREVIEW_FOCUS_PATTERNS) {
+    const match = text.match(pattern);
+    const candidate = (match?.[1] ?? match?.[0] ?? '').trim();
+    if (candidate.length >= 12) return candidate;
+  }
+  if (text.length <= 120) return text;
+  const mid = Math.floor(text.length / 2);
+  const start = Math.max(0, mid - 55);
+  const end = Math.min(text.length, start + 110);
+  return text.slice(start, end).trim();
+}
+
+function renderPreviewWithHighlight(preview: string, focusSnippet: string | null) {
+  if (!focusSnippet) return preview;
+  const source = compactPreviewText(preview);
+  const focus = compactPreviewText(focusSnippet);
+  if (!source || !focus) return preview;
+  const idx = source.indexOf(focus);
+  if (idx < 0) return preview;
+  const before = source.slice(0, idx);
+  const match = source.slice(idx, idx + focus.length);
+  const after = source.slice(idx + focus.length);
+  return (
+    <>
+      {before}
+      <mark className="rounded-md bg-warning/20 px-1 py-0.5 text-text-main shadow-sm">
+        {match}
+      </mark>
+      {after}
+    </>
+  );
+}
+
 import { scriptsApi, tasksApi, reportsApi, findingsApi } from '@/api';
 import type { AnalysisFinding } from '@/api';
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
@@ -1230,6 +1278,12 @@ export function ScriptWorkspace() {
     if (latestCompletedChunk?.textPreview) return lang === 'ar' ? 'آخر تقدم محفوظ' : 'Last saved progress';
     return lang === 'ar' ? 'بانتظار المعاينة' : 'Waiting for preview';
   }, [activeChunk?.textPreview, latestCompletedChunk?.textPreview, lang]);
+
+  const previewSourceText = activeChunk?.textPreview ?? latestCompletedChunk?.textPreview ?? null;
+  const previewFocusSnippet = useMemo(
+    () => extractPreviewFocusSnippet(previewSourceText),
+    [previewSourceText]
+  );
 
   const analysisStatusCaption = useMemo(() => {
     if (isSuccessfulJobStatus(analysisJob?.status)) {
@@ -3402,11 +3456,28 @@ export function ScriptWorkspace() {
                         : 'This preview updates as the worker moves between chunks.'}
                     </span>
                   </div>
+                  {previewFocusSnippet && (
+                    <div className="rounded-xl border border-warning/20 bg-warning/5 p-3">
+                      <div className="flex items-center gap-2 text-[11px] text-warning mb-1.5">
+                        <Badge variant="warning" className="text-[10px]">
+                          {lang === 'ar' ? 'المقطع الأبرز الآن' : 'Current focus'}
+                        </Badge>
+                        <span>
+                          {lang === 'ar'
+                            ? 'هذا هو الجزء الأقرب لما يلفت انتباه التحليل داخل المعاينة الحالية.'
+                            : 'This is the most salient snippet inside the current live preview.'}
+                        </span>
+                      </div>
+                      <div className="text-sm leading-8 text-text-main whitespace-pre-wrap break-words" dir="rtl">
+                        {previewFocusSnippet}
+                      </div>
+                    </div>
+                  )}
                   <div
                     className="rounded-xl border border-primary/15 bg-primary/5 p-4 text-sm leading-8 text-text-main whitespace-pre-wrap break-words shadow-sm"
                     dir="rtl"
                   >
-                    {activeChunk.textPreview}
+                    {renderPreviewWithHighlight(activeChunk.textPreview, previewFocusSnippet)}
                   </div>
                 </div>
               ) : latestCompletedChunk?.textPreview ? (
@@ -3421,11 +3492,28 @@ export function ScriptWorkspace() {
                         : 'No active chunk is running right now, so the last completed chunk is shown.'}
                     </span>
                   </div>
+                  {previewFocusSnippet && (
+                    <div className="rounded-xl border border-info/20 bg-info/5 p-3">
+                      <div className="flex items-center gap-2 text-[11px] text-info mb-1.5">
+                        <Badge variant="outline" className="text-[10px]">
+                          {lang === 'ar' ? 'أبرز ما تم حفظه' : 'Saved focus'}
+                        </Badge>
+                        <span>
+                          {lang === 'ar'
+                            ? 'يساعدك هذا السطر على تذكر آخر جزء كان التحليل قد وصل إليه.'
+                            : 'This line helps you quickly recall the last saved point in the analysis.'}
+                        </span>
+                      </div>
+                      <div className="text-sm leading-8 text-text-main whitespace-pre-wrap break-words" dir="rtl">
+                        {previewFocusSnippet}
+                      </div>
+                    </div>
+                  )}
                   <div
                     className="rounded-xl border border-border bg-background/70 p-4 text-sm leading-8 text-text-main whitespace-pre-wrap break-words"
                     dir="rtl"
                   >
-                    {latestCompletedChunk.textPreview}
+                    {renderPreviewWithHighlight(latestCompletedChunk.textPreview, previewFocusSnippet)}
                   </div>
                 </div>
               ) : (
