@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "benchmark:complaints": "node scripts/run-complaint-benchmark.mjs",
+    "benchmark:human-ai": "node scripts/run-human-ai-scorecard.mjs",
     "dev:web": "npm run dev --workspace=web",
     "worker:dev": "npm run worker:dev --workspace=worker",
     "worker:once": "npm run worker:once --workspace=worker",
