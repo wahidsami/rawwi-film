@@ -74,6 +74,36 @@ function camelFinding(r: Record<string, unknown>, createdBy: string | null = nul
   };
 }
 
+async function resolveManualAtomId(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  articleId: number,
+  atomId: string | null | undefined,
+): Promise<{ normalizedAtomId: string | null; warning: string | null; error: string | null }> {
+  const raw = typeof atomId === "string" ? atomId.trim() : atomId == null ? "" : String(atomId).trim();
+  const atomForValidation = raw.length > 0 ? raw : null;
+  const validation = await validateArticleAtomLink(
+    supabase as unknown as { from: (table: string) => { select: (cols: string) => any } },
+    articleId,
+    atomForValidation,
+  );
+  if (validation.ok) {
+    return { normalizedAtomId: validation.normalizedAtomId, warning: null, error: null };
+  }
+  if (atomForValidation) {
+    console.warn("[findings] Manual atom not in policy map; saving at article-level", {
+      articleId,
+      atomId: atomForValidation,
+      reason: validation.reason,
+    });
+    return {
+      normalizedAtomId: null,
+      warning: `Atom ${atomForValidation} is not yet mapped for article ${articleId}; saved at article level instead.`,
+      error: null,
+    };
+  }
+  return { normalizedAtomId: null, warning: null, error: validation.reason ?? "Invalid atom/article mapping" };
+}
+
 /**
  * Recompute aggregates for a job's report from analysis_findings (excluding approved).
  * Updates analysis_reports columns + summary_json.totals inline.
@@ -342,9 +372,9 @@ Deno.serve(async (req: Request) => {
       if (articleId == null || typeof articleId !== "number") {
         return json({ error: "articleId required" }, 400);
       }
-      const atomValidation = await validateArticleAtomLink(supabase as unknown as { from: (table: string) => { select: (cols: string) => any } }, articleId, atomId);
-      if (!atomValidation.ok) {
-        return json({ error: atomValidation.reason ?? "Invalid atom/article mapping" }, 400);
+      const atomResolution = await resolveManualAtomId(supabase, articleId, atomId);
+      if (atomResolution.error) {
+        return json({ error: atomResolution.error }, 400);
       }
       const severityOk = severity && ["low", "medium", "high", "critical"].includes(severity.toLowerCase());
       if (!severityOk) {
@@ -411,7 +441,7 @@ Deno.serve(async (req: Request) => {
         source: "manual",
         created_by: uid,
         article_id: articleId,
-        atom_id: atomValidation.normalizedAtomId,
+        atom_id: atomResolution.normalizedAtomId,
         severity: severity!.toLowerCase(),
         confidence: 1,
         title_ar: titleAr,
@@ -491,7 +521,10 @@ Deno.serve(async (req: Request) => {
       await recomputeReportAggregates(supabase, jobId, uid, "user");
 
       const row = inserted as Record<string, unknown>;
-      return json(camelFinding(row, (row.created_by as string) ?? uid));
+      return json({
+        ...camelFinding(row, (row.created_by as string) ?? uid),
+        atomMappingWarning: atomResolution.warning,
+      });
     }
 
     // Legacy stubs

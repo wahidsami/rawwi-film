@@ -261,6 +261,10 @@ export interface CreateManualFindingBody {
   manualComment?: string;
 }
 
+export interface ManualFindingResponse extends AnalysisFinding {
+  atomMappingWarning?: string | null;
+}
+
 export const findingsApi = {
   getFindings: (): Promise<Finding[]> => httpClient.get('/findings'),
   /** List findings for a specific job (with review status). */
@@ -276,7 +280,7 @@ export const findingsApi = {
   reviewFinding: (findingId: string, toStatus: 'approved' | 'violation', reason: string): Promise<FindingReviewResponse> =>
     httpClient.post('/findings/review', { findingId, toStatus, reason }),
   /** Create a manual finding (POST /findings/manual). */
-  createManual: (body: CreateManualFindingBody): Promise<AnalysisFinding> =>
+  createManual: (body: CreateManualFindingBody): Promise<ManualFindingResponse> =>
     httpClient.post('/findings/manual', body),
 };
 

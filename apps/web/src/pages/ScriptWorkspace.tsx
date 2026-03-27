@@ -1825,16 +1825,35 @@ export function ScriptWorkspace() {
     try {
       const created = await findingsApi.createManual({
         reportId: formData.reportId,
-      scriptId: script.id,
+        scriptId: script.id,
         versionId: script.currentVersionId,
         startOffsetGlobal: manualOffsets.startOffsetGlobal,
         endOffsetGlobal: manualOffsets.endOffsetGlobal,
         articleId: parseInt(formData.articleId, 10) || 1,
         atomId: formData.atomId?.trim() ? formData.atomId.trim() : null,
-      severity: formData.severity,
+        severity: formData.severity,
         manualComment: formData.comment?.trim() || undefined,
       });
       toast.success(lang === 'ar' ? 'تمت إضافة الملاحظة اليدوية' : 'Manual finding added');
+      if (created.atomMappingWarning) {
+        toast((t) => (
+          <div className="max-w-sm text-sm leading-6" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+            <p className="font-semibold mb-1">{lang === 'ar' ? 'تم الحفظ مع ملاحظة' : 'Saved with note'}</p>
+            <p>
+              {lang === 'ar'
+                ? 'تعذر ربط البند الفرعي المحدد حالياً بجدول السياسة في قاعدة البيانات، لذا حُفظت الملاحظة على مستوى المادة فقط.'
+                : 'The selected atom is not yet mapped in the policy table, so the finding was saved at article level only.'}
+            </p>
+            <button
+              type="button"
+              className="mt-2 text-xs underline"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              {lang === 'ar' ? 'إغلاق' : 'Dismiss'}
+            </button>
+          </div>
+        ), { duration: 7000 });
+      }
       // const report = reportHistory.find((r) => r.id === formData.reportId) ?? selectedReportForHighlights;
       // const jobId = (report as { jobId?: string })?.jobId ?? created.jobId;
       if (selectedReportForHighlights?.jobId === created.jobId) {
@@ -3539,6 +3558,11 @@ export function ScriptWorkspace() {
             onChange={(e) => setFormData({ ...formData, atomId: e.target.value })}
             options={ARTICLE_ATOMS[formData.articleId] ?? ARTICLE_ATOMS['1']}
           />
+          <p className="text-[11px] text-text-muted" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+            {lang === 'ar'
+              ? 'تُحمَّل البنود الفرعية من خريطة السياسة الحالية. إذا كانت قاعدة البيانات لم تُحدَّث بعد لبعض البنود، فسيُحفظ الإدخال على مستوى المادة فقط بدلاً من رفضه.'
+              : 'Atoms are loaded from the current policy map. If the database mapping is still behind for a specific atom, the finding will be saved at article level instead of being rejected.'}
+          </p>
           
           <Select 
             label={lang === 'ar' ? 'درجة الخطورة' : 'Severity'}
