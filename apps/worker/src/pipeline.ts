@@ -28,6 +28,7 @@ import { getPrimaryGcamForCanonicalAtom, getPrimaryCanonicalAtomForGcam } from "
 import { offsetToPageNumber, computePageLocalSpan } from "./offsetToPage.js";
 import { getCachedJobResources } from "./jobAnalysisCache.js";
 import { refineAtomPrecision } from "./atomPrecision.js";
+import { isDetectionVerbatim } from "./textDetectionNormalize.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
@@ -35,44 +36,8 @@ export type FindingWithGlobal = JudgeFinding & {
   end_offset_global: number;
 };
 
-/**
- * Normalize for strict verbatim: NFC + collapse whitespace.
- */
-function normalizeForMatch(s: string): string {
-  return s.normalize("NFC").replace(/\s+/g, " ").trim();
-}
-
-/**
- * Relaxed normalize: strip all punctuation and extra spaces, keep only letters/digits/whitespace.
- */
-function relaxedNormalize(s: string): string {
-  return s
-    .normalize("NFC")
-    .replace(/[^\p{L}\p{N}\s]/gu, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/**
- * Two-tier verbatim check:
- * 1) Strict: normalized source includes normalized snippet
- * 2) Relaxed: punctuation-stripped source includes punctuation-stripped snippet
- * Only drops if BOTH fail.
- */
-function isVerbatim(sourceText: string, snippet: string): boolean {
-  if (!snippet || snippet.trim().length === 0) return false;
-  // Strict
-  const normSrc = normalizeForMatch(sourceText);
-  const normSnip = normalizeForMatch(snippet);
-  if (normSrc.includes(normSnip)) return true;
-  // Relaxed (strip punctuation)
-  const relaxSrc = relaxedNormalize(sourceText);
-  const relaxSnip = relaxedNormalize(snippet);
-  return relaxSrc.includes(relaxSnip);
-}
-
 const MAX_EVIDENCE_SPAN = 280;
-const PIPELINE_LOGIC_VERSION = "v2.3";
+const PIPELINE_LOGIC_VERSION = "v2.4";
 const MAX_EVIDENCE_LEN = 260;
 const HARD_FALLBACK_INSULTS = [
   { term: "نصاب", articleId: 5, atomId: "5-2", severity: "high" as const },
@@ -763,7 +728,7 @@ export async function processChunkJudge(
         const localStart = Math.max(0, f.location?.start_offset ?? 0);
         const localEnd = Math.min(chunkText.length, f.location?.end_offset ?? localStart);
         const fallback = localEnd > localStart ? chunkText.slice(localStart, localEnd) : "";
-        if (fallback && isVerbatim(chunkText, fallback)) {
+        if (fallback && isDetectionVerbatim(chunkText, fallback)) {
           return { ...f, evidence_snippet: fallback };
         }
         if (f.evidence_snippet && f.evidence_snippet.trim().length > 0) return f;
@@ -774,7 +739,7 @@ export async function processChunkJudge(
       // Final guardrail: keep only findings anchored to literal script text.
       const beforeVerbatimCount = withGlobal.length;
       allFindings = withGlobal.filter((f) => {
-        const isExact = isVerbatim(chunkText, f.evidence_snippet);
+        const isExact = isDetectionVerbatim(chunkText, f.evidence_snippet);
         if (!isExact) {
           logger.warn("Evidence mismatch (dropping finding)", { 
             chunkId: chunk.id,

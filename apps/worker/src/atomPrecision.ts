@@ -1,25 +1,18 @@
 import type { JudgeFinding } from "./schemas.js";
-import { canonicalArabicToken } from "./lexiconCache.js";
 import { getPrimaryCanonicalAtomForGcam } from "./canonicalAtomMapping.js";
-
-function normalizeText(value: string): string {
-  return canonicalArabicToken(value)
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+import { normalizeDetectionText } from "./textDetectionNormalize.js";
 
 function combinedFindingText(finding: JudgeFinding): string {
-  return normalizeText([
+  return normalizeDetectionText([
     finding.title_ar ?? "",
     finding.description_ar ?? "",
     finding.evidence_snippet ?? "",
     finding.rationale_ar ?? "",
-  ].join(" "));
+  ].join(" "), { stripPunctuation: true });
 }
 
 function includesAny(text: string, needles: string[]): boolean {
-  return needles.some((needle) => text.includes(normalizeText(needle)));
+  return needles.some((needle) => text.includes(normalizeDetectionText(needle, { stripPunctuation: true })));
 }
 
 function withPolicy(finding: JudgeFinding, articleId: number, atomId: string | null): JudgeFinding {

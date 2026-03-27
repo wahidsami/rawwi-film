@@ -16,6 +16,7 @@ import { callRevisitSpotter } from "./openai.js";
 import { clearCachedJobResources } from "./jobAnalysisCache.js";
 import { shouldSkipRevisitForJob, shouldSkipScriptSummaryForJob } from "./performanceGating.js";
 import { config } from "./config.js";
+import { containsAnyNormalized } from "./textDetectionNormalize.js";
 
 export type SummaryJson = {
   job_id: string;
@@ -150,7 +151,7 @@ const COMPLIANCE_NEUTRAL_HINTS = ["محايد", "سياق درامي", "ليس �
 function scriptSuggestsNeutralContext(scriptSummary: SummaryJson["script_summary"]): boolean {
   if (!scriptSummary?.compliance_posture_ar && !scriptSummary?.narrative_stance_ar) return false;
   const text = [scriptSummary.compliance_posture_ar ?? "", scriptSummary.narrative_stance_ar ?? ""].join(" ");
-  return COMPLIANCE_NEUTRAL_HINTS.some((hint) => text.includes(hint));
+  return containsAnyNormalized(text, COMPLIANCE_NEUTRAL_HINTS);
 }
 
 /**
@@ -301,8 +302,8 @@ const RATIONALE_SAYS_VIOLATION = [
 function rationaleSaysNotViolation(rationale: string | null | undefined): boolean {
   if (!rationale || rationale.trim() === "") return false;
   const r = rationale.trim();
-  if (RATIONALE_SAYS_VIOLATION.some((phrase) => r.includes(phrase))) return false;
-  return RATIONALE_SAYS_NOT_VIOLATION.some((phrase) => r.includes(phrase));
+  if (containsAnyNormalized(r, RATIONALE_SAYS_VIOLATION)) return false;
+  return containsAnyNormalized(r, RATIONALE_SAYS_NOT_VIOLATION);
 }
 
 type CanonicalFindingItem = NonNullable<SummaryJson["canonical_findings"]>[number];
