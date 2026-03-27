@@ -4,6 +4,7 @@
  * GET  /findings?jobId=<uuid>   → list findings for a job (with review_status)
  * GET  /findings                → [] (backward compat)
  * POST /findings/review         → approve/revert a finding + recompute report aggregates
+ * POST /findings/reclassify     → edit article/atom/severity/manual note + recompute report aggregates
  */
 import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
@@ -19,7 +20,7 @@ function pathAfter(base: string, url: string): string {
 }
 
 const FINDING_COLS =
-  "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, rationale_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, created_at";
+  "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, rationale_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, created_at, created_by, manual_comment";
 
 async function selectFindings(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -331,6 +332,127 @@ Deno.serve(async (req: Request) => {
         findingId,
         fromStatus,
         toStatus,
+        reportAggregates: agg,
+      });
+    }
+
+    // ── POST /findings/reclassify ──
+    if (method === "POST" && rest === "reclassify") {
+      let body: {
+        findingId?: string;
+        articleId?: number;
+        atomId?: string | null;
+        severity?: string;
+        manualComment?: string | null;
+      };
+      try {
+        body = await req.json();
+      } catch {
+        return json({ error: "Invalid JSON" }, 400);
+      }
+
+      const findingId = body.findingId?.trim();
+      const articleId = body.articleId;
+      const atomId = body.atomId?.trim() || null;
+      const severity = body.severity?.trim().toLowerCase();
+      const manualComment = body.manualComment?.trim() ?? null;
+
+      if (!findingId) return json({ error: "findingId required" }, 400);
+      if (articleId == null || typeof articleId !== "number") {
+        return json({ error: "articleId required" }, 400);
+      }
+      if (!severity || !["low", "medium", "high", "critical"].includes(severity)) {
+        return json({ error: "severity must be low, medium, high, or critical" }, 400);
+      }
+
+      const atomResolution = await resolveManualAtomId(supabase, articleId, atomId);
+      if (atomResolution.error) {
+        return json({ error: atomResolution.error }, 400);
+      }
+
+      const { data: finding } = await supabase
+        .from("analysis_findings")
+        .select("id, job_id, script_id, article_id, atom_id, severity, manual_comment")
+        .eq("id", findingId)
+        .maybeSingle();
+      if (!finding) return json({ error: "Finding not found" }, 404);
+
+      const f = finding as {
+        id: string;
+        job_id: string;
+        script_id: string;
+        article_id: number;
+        atom_id: string | null;
+        severity: string;
+        manual_comment: string | null;
+      };
+
+      const { data: job } = await supabase
+        .from("analysis_jobs")
+        .select("created_by")
+        .eq("id", f.job_id)
+        .maybeSingle();
+      if (!job) return json({ error: "Job not found" }, 404);
+      const isOwner = (job as { created_by?: string | null }).created_by === uid;
+      if (!isAdmin && !isOwner) return json({ error: "Forbidden" }, 403);
+
+      const actorRole = "user";
+      const nowIso = new Date().toISOString();
+      const { error: updErr } = await supabase
+        .from("analysis_findings")
+        .update({
+          article_id: articleId,
+          atom_id: atomResolution.normalizedAtomId,
+          severity,
+          manual_comment: manualComment,
+          reviewed_by: uid,
+          reviewed_at: nowIso,
+          reviewed_role: actorRole,
+        })
+        .eq("id", findingId);
+      if (updErr) {
+        console.error("[findings] reclassify update error:", updErr.message);
+        return json({ error: updErr.message }, 500);
+      }
+
+      await logAuditCanonical(supabase, {
+        event_type: "FINDING_RECLASSIFIED",
+        actor_user_id: uid,
+        actor_role: actorRole,
+        target_type: "report",
+        target_id: f.job_id,
+        target_label: findingId,
+        result_status: "success",
+        metadata: {
+          oldArticleId: f.article_id,
+          oldAtomId: f.atom_id,
+          oldSeverity: f.severity,
+          newArticleId: articleId,
+          newAtomId: atomResolution.normalizedAtomId,
+          newSeverity: severity,
+          manualComment,
+        },
+      }).catch((e) => console.warn("[findings] reclassify audit canonical:", e));
+
+      const agg = await recomputeReportAggregates(supabase, f.job_id, uid, actorRole);
+      const { data: updatedRow, error: refetchErr } = await supabase
+        .from("analysis_findings")
+        .select(FINDING_COLS + ", review_status, review_reason, reviewed_by, reviewed_at, reviewed_role")
+        .eq("id", findingId)
+        .maybeSingle();
+      if (refetchErr || !updatedRow) {
+        return json({
+          ok: true,
+          findingId,
+          atomMappingWarning: atomResolution.warning,
+          reportAggregates: agg,
+        });
+      }
+
+      return json({
+        ok: true,
+        finding: camelFinding(updatedRow as Record<string, unknown>),
+        atomMappingWarning: atomResolution.warning,
         reportAggregates: agg,
       });
     }

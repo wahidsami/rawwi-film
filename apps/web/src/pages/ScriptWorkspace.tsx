@@ -944,6 +944,14 @@ export function ScriptWorkspace() {
     toStatus: 'approved' | 'violation';
     titleAr: string;
   } | null>(null);
+  const [editReportFindingModal, setEditReportFindingModal] = useState<AnalysisFinding | null>(null);
+  const [editReportFindingSaving, setEditReportFindingSaving] = useState(false);
+  const [editReportFindingForm, setEditReportFindingForm] = useState({
+    articleId: '1',
+    atomId: '',
+    severity: 'medium',
+    manualComment: '',
+  });
   const [selectedReportFindingIds, setSelectedReportFindingIds] = useState<string[]>([]);
   const [bulkReportFindingReviewModal, setBulkReportFindingReviewModal] = useState<{
     findingIds: string[];
@@ -994,6 +1002,16 @@ export function ScriptWorkspace() {
     const visibleIds = new Set(workspaceVisibleReportFindings.map((f) => f.id));
     setSelectedReportFindingIds((prev) => prev.filter((id) => visibleIds.has(id)));
   }, [workspaceVisibleReportFindings]);
+
+  useEffect(() => {
+    if (!editReportFindingModal) return;
+    setEditReportFindingForm({
+      articleId: String(editReportFindingModal.articleId || 1),
+      atomId: editReportFindingModal.atomId ?? '',
+      severity: (editReportFindingModal.severity || 'medium').toLowerCase(),
+      manualComment: editReportFindingModal.manualComment ?? '',
+    });
+  }, [editReportFindingModal]);
 
   const loadReportHistory = useCallback(async () => {
     if (!id) return;
@@ -1201,6 +1219,38 @@ export function ScriptWorkspace() {
     lang,
     user?.id,
   ]);
+
+  const handleEditReportFindingSubmit = useCallback(async () => {
+    if (!editReportFindingModal) return;
+    setEditReportFindingSaving(true);
+    try {
+      const res = await findingsApi.reclassifyFinding({
+        findingId: editReportFindingModal.id,
+        articleId: parseInt(editReportFindingForm.articleId, 10) || 1,
+        atomId: editReportFindingForm.atomId?.trim() ? editReportFindingForm.atomId.trim() : null,
+        severity: editReportFindingForm.severity,
+        manualComment: editReportFindingForm.manualComment?.trim() || null,
+      });
+      if (res.finding) {
+        setReportFindings((prev) => prev.map((f) => (f.id === res.finding!.id ? res.finding! : f)));
+      }
+      if (res.atomMappingWarning) {
+        toast((t) => (
+          <div className="max-w-sm text-sm">
+            <p className="font-semibold mb-1">{lang === 'ar' ? 'تم الحفظ مع ملاحظة' : 'Saved with note'}</p>
+            <p>{res.atomMappingWarning}</p>
+          </div>
+        ));
+      } else {
+        toast.success(lang === 'ar' ? 'تم تحديث التصنيف' : 'Finding classification updated');
+      }
+      setEditReportFindingModal(null);
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذر تحديث التصنيف' : 'Failed to update finding'));
+    } finally {
+      setEditReportFindingSaving(false);
+    }
+  }, [editReportFindingModal, editReportFindingForm, lang]);
 
   // Restore saved highlight preference when report list is ready (persists across logout/login)
   useEffect(() => {
@@ -3410,6 +3460,15 @@ export function ScriptWorkspace() {
                       </Button>
                       {f.source !== 'manual' && (
                         <div className="flex flex-wrap gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-[10px] px-2"
+                            onClick={() => setEditReportFindingModal(f)}
+                          >
+                            {lang === 'ar' ? 'تعديل التصنيف' : 'Edit classification'}
+                          </Button>
                           {f.reviewStatus !== 'approved' ? (
                             <Button
                               type="button"
@@ -4274,6 +4333,69 @@ export function ScriptWorkspace() {
                   : lang === 'ar'
                     ? 'إعادة المحدد'
                     : 'Revert selected'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!editReportFindingModal}
+        onClose={() => setEditReportFindingModal(null)}
+        title={lang === 'ar' ? 'تعديل التصنيف' : 'Edit classification'}
+        className="max-w-md"
+      >
+        <div className="space-y-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <div className="p-3 bg-background rounded-md border border-border text-sm text-text-main font-medium" dir="rtl">
+            {editReportFindingModal?.evidenceSnippet || editReportFindingModal?.descriptionAr}
+          </div>
+
+          <Select
+            label={lang === 'ar' ? 'المادة (البند)' : 'Article'}
+            value={editReportFindingForm.articleId}
+            onChange={(e) => setEditReportFindingForm((prev) => ({ ...prev, articleId: e.target.value, atomId: '' }))}
+            options={ARTICLES_CHECKLIST.map((a) => ({ label: a.label, value: a.id }))}
+          />
+
+          <Select
+            label={lang === 'ar' ? 'البند الفرعي (اختياري)' : 'Atom (optional)'}
+            value={editReportFindingForm.atomId}
+            onChange={(e) => setEditReportFindingForm((prev) => ({ ...prev, atomId: e.target.value }))}
+            options={ARTICLE_ATOMS[editReportFindingForm.articleId] ?? ARTICLE_ATOMS['1']}
+          />
+
+          <Select
+            label={lang === 'ar' ? 'درجة الخطورة' : 'Severity'}
+            value={editReportFindingForm.severity}
+            onChange={(e) => setEditReportFindingForm((prev) => ({ ...prev, severity: e.target.value }))}
+            options={[
+              { label: 'Low', value: 'low' },
+              { label: 'Medium', value: 'medium' },
+              { label: 'High', value: 'high' },
+              { label: 'Critical', value: 'critical' },
+            ]}
+          />
+
+          <Textarea
+            label={lang === 'ar' ? 'ملاحظة المراجع (اختياري)' : 'Reviewer note (optional)'}
+            value={editReportFindingForm.manualComment}
+            onChange={(e) => setEditReportFindingForm((prev) => ({ ...prev, manualComment: e.target.value }))}
+            placeholder={lang === 'ar' ? 'اكتب سبب إعادة التصنيف أو توضيحًا للمراجع…' : 'Add a note explaining the reclassification…'}
+          />
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={() => setEditReportFindingModal(null)}
+            >
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              onClick={() => void handleEditReportFindingSubmit()}
+              disabled={editReportFindingSaving}
+            >
+              {editReportFindingSaving
+                ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…')
+                : (lang === 'ar' ? 'حفظ التعديل' : 'Save changes')}
             </Button>
           </div>
         </div>

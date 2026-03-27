@@ -279,6 +279,21 @@ export interface ManualFindingResponse extends AnalysisFinding {
   atomMappingWarning?: string | null;
 }
 
+export interface ReclassifyFindingBody {
+  findingId: string;
+  articleId: number;
+  atomId?: string | null;
+  severity: string;
+  manualComment?: string | null;
+}
+
+export interface ReclassifyFindingResponse {
+  ok: true;
+  finding?: AnalysisFinding;
+  atomMappingWarning?: string | null;
+  reportAggregates?: FindingReviewResponse['reportAggregates'];
+}
+
 export const findingsApi = {
   getFindings: (): Promise<Finding[]> => httpClient.get('/findings'),
   /** List findings for a specific job (with review status). */
@@ -293,6 +308,8 @@ export const findingsApi = {
   /** Approve (mark safe) or revert a finding. */
   reviewFinding: (findingId: string, toStatus: 'approved' | 'violation', reason: string): Promise<FindingReviewResponse> =>
     httpClient.post('/findings/review', { findingId, toStatus, reason }),
+  reclassifyFinding: (body: ReclassifyFindingBody): Promise<ReclassifyFindingResponse> =>
+    httpClient.post('/findings/reclassify', body),
   /** Create a manual finding (POST /findings/manual). */
   createManual: (body: CreateManualFindingBody): Promise<ManualFindingResponse> =>
     httpClient.post('/findings/manual', body),
