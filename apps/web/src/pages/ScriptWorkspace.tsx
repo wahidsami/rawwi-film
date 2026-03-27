@@ -10,7 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
-import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Search } from 'lucide-react';
+import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Search, Pause, Play } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getPolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
@@ -412,6 +412,10 @@ function isSuccessfulJobStatus(status?: string | null): boolean {
   return s === 'completed' || s === 'done' || s === 'succeeded';
 }
 
+function isPausedJobStatus(status?: string | null): boolean {
+  return (status ?? '').toLowerCase() === 'paused';
+}
+
 export function ScriptWorkspace() {
 
   const { id } = useParams<{ id: string }>();
@@ -488,6 +492,7 @@ export function ScriptWorkspace() {
   /** When job completes, we fetch the report id so "View Report" can use by=id. */
   const [reportIdWhenJobCompleted, setReportIdWhenJobCompleted] = useState<string | null>(null);
   const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
+  const [analysisControlBusy, setAnalysisControlBusy] = useState<'pause' | 'resume' | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1162,18 +1167,26 @@ export function ScriptWorkspace() {
 
   const [analysisTimerNow, setAnalysisTimerNow] = useState(() => Date.now());
   useEffect(() => {
-    const shouldTick = analysisModalOpen && analysisJob != null && analysisJob.startedAt != null && !analysisJob.completedAt;
+    const shouldTick =
+      analysisModalOpen &&
+      analysisJob != null &&
+      analysisJob.startedAt != null &&
+      !analysisJob.completedAt &&
+      !isPausedJobStatus(analysisJob.status);
     if (!shouldTick) return;
     setAnalysisTimerNow(Date.now());
     const timer = window.setInterval(() => setAnalysisTimerNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
-  }, [analysisModalOpen, analysisJob?.startedAt, analysisJob?.completedAt]);
+  }, [analysisModalOpen, analysisJob?.startedAt, analysisJob?.completedAt, analysisJob?.status]);
 
   const analysisElapsedLabel = useMemo(() => {
     if (!analysisJob) return null;
     const startedAtMs = analysisJob.startedAt ? new Date(analysisJob.startedAt).getTime() : null;
     const fallbackStartMs = analysisJob.createdAt ? new Date(analysisJob.createdAt).getTime() : null;
-    const endAtMs = analysisJob.completedAt ? new Date(analysisJob.completedAt).getTime() : analysisTimerNow;
+    const pausedAtMs = analysisJob.pausedAt ? new Date(analysisJob.pausedAt).getTime() : null;
+    const endAtMs = analysisJob.completedAt
+      ? new Date(analysisJob.completedAt).getTime()
+      : pausedAtMs ?? analysisTimerNow;
     const startMs = startedAtMs ?? fallbackStartMs;
     if (!startMs || !Number.isFinite(startMs) || !Number.isFinite(endAtMs)) return null;
     const elapsedMs = Math.max(0, endAtMs - startMs);
@@ -1187,6 +1200,35 @@ export function ScriptWorkspace() {
     if (done.length === 0) return null;
     return [...done].sort((a, b) => b.chunkIndex - a.chunkIndex)[0] ?? null;
   }, [chunkStatuses]);
+
+  const handlePauseAnalysis = useCallback(async () => {
+    if (!analysisJobId || analysisControlBusy) return;
+    setAnalysisControlBusy('pause');
+    try {
+      const job = await tasksApi.pauseJob(analysisJobId);
+      setAnalysisJob(job);
+      toast.success(lang === 'ar' ? 'تم إيقاف التحليل مؤقتاً.' : 'Analysis paused.');
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذر إيقاف التحليل مؤقتاً' : 'Failed to pause analysis'));
+    } finally {
+      setAnalysisControlBusy(null);
+    }
+  }, [analysisJobId, analysisControlBusy, lang]);
+
+  const handleResumeAnalysis = useCallback(async () => {
+    if (!analysisJobId || analysisControlBusy) return;
+    setAnalysisControlBusy('resume');
+    try {
+      const job = await tasksApi.resumeJob(analysisJobId);
+      setAnalysisJob(job);
+      startPolling(analysisJobId);
+      toast.success(lang === 'ar' ? 'تم استئناف التحليل.' : 'Analysis resumed.');
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذر استئناف التحليل' : 'Failed to resume analysis'));
+    } finally {
+      setAnalysisControlBusy(null);
+    }
+  }, [analysisJobId, analysisControlBusy, lang, startPolling]);
 
   const canReplaceFile = user?.role === 'Super Admin' || user?.role === 'Admin';
   const hasVersionForAnalysis = Boolean(script?.currentVersionId);
@@ -3343,6 +3385,8 @@ export function ScriptWorkspace() {
               <div className="flex items-center gap-3">
                 {isSuccessfulJobStatus(analysisJob?.status) ? (
                   <CheckCircle2 className="w-8 h-8 text-success flex-shrink-0" />
+                ) : isPausedJobStatus(analysisJob?.status) ? (
+                  <Pause className="w-8 h-8 text-warning flex-shrink-0" />
                 ) : (analysisJob?.status ?? '').toLowerCase() === 'failed' ? (
                   <XCircle className="w-8 h-8 text-error flex-shrink-0" />
                 ) : (
@@ -3352,6 +3396,8 @@ export function ScriptWorkspace() {
                   <p className="font-semibold text-text-main">
                     {isSuccessfulJobStatus(analysisJob?.status)
                       ? (lang === 'ar' ? 'اكتمل التحليل' : 'Analysis Complete')
+                      : isPausedJobStatus(analysisJob?.status)
+                        ? (lang === 'ar' ? 'التحليل متوقف مؤقتاً' : 'Analysis Paused')
                       : (analysisJob?.status ?? '').toLowerCase() === 'failed'
                         ? (lang === 'ar' ? 'فشل التحليل' : 'Analysis Failed')
                         : (lang === 'ar' ? 'جاري التحليل…' : 'Analyzing…')}
@@ -3369,6 +3415,7 @@ export function ScriptWorkspace() {
                   className={cn(
                     "h-full rounded-full transition-all duration-300",
                     isSuccessfulJobStatus(analysisJob?.status) ? 'bg-success' :
+                      isPausedJobStatus(analysisJob?.status) ? 'bg-warning' :
                       (analysisJob?.status ?? '').toLowerCase() === 'failed' ? 'bg-error' : 'bg-primary'
                   )}
                   style={{ width: `${Math.min(100, analysisJob?.progressPercent ?? 0)}%` }}
@@ -3387,7 +3434,9 @@ export function ScriptWorkspace() {
                 <div className="rounded-xl border border-border bg-background/60 p-3">
                   <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الحالة الخلفية' : 'Backend stage'}</p>
                   <p className="text-sm font-medium text-text-main">
-                    {activePhaseLabel ?? (lang === 'ar' ? 'قيد الانتظار' : 'Waiting')}
+                    {isPausedJobStatus(analysisJob?.status)
+                      ? (lang === 'ar' ? 'متوقف مؤقتاً' : 'Paused')
+                      : activePhaseLabel ?? (lang === 'ar' ? 'قيد الانتظار' : 'Waiting')}
                   </p>
                 </div>
                 <div className="rounded-xl border border-border bg-background/60 p-3">
@@ -3408,7 +3457,7 @@ export function ScriptWorkspace() {
                 <p className="text-xs text-text-muted">
                   {lang === 'ar' ? 'تفاصيل التنفيذ الحالية' : 'Current execution details'}
                 </p>
-                {isAnalysisRunning && (
+                {isAnalysisRunning && !isPausedJobStatus(analysisJob?.status) && (
                   <div className="flex items-center gap-2 text-xs font-medium text-primary">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     <span>
@@ -3431,6 +3480,13 @@ export function ScriptWorkspace() {
                   ? `عشرة ماسحات متخصصة تعمل بالتوازي على هذا الجزء: ${analysisPasses.join('، ')}`
                   : `Ten specialized detectors may run in parallel on this chunk: ${analysisPasses.join(', ')}`}
               </p>
+              {isPausedJobStatus(analysisJob?.status) && (
+                <p className="text-[11px] text-warning">
+                  {lang === 'ar'
+                    ? 'الإيقاف المؤقت يمنع العامل من أخذ أجزاء جديدة، لكنه يحافظ على التقدم الحالي حتى تستأنف التحليل.'
+                    : 'Pause stops the worker from claiming new chunks while preserving the current progress until you resume.'}
+                </p>
+              )}
             </div>
 
             {/* Error message */}
@@ -3443,6 +3499,22 @@ export function ScriptWorkspace() {
             {/* Action buttons */}
             <div className="flex items-center justify-between gap-3 pt-1">
               <div className="flex items-center gap-2">
+                {analysisJob && !isSuccessfulJobStatus(analysisJob.status) && analysisJob.status !== 'failed' && !isPausedJobStatus(analysisJob.status) && (
+                  <Button size="sm" variant="outline" onClick={handlePauseAnalysis} disabled={analysisControlBusy != null}>
+                    <Pause className="w-4 h-4 mr-1" />
+                    {analysisControlBusy === 'pause'
+                      ? (lang === 'ar' ? 'جارٍ الإيقاف…' : 'Pausing…')
+                      : (lang === 'ar' ? 'إيقاف مؤقت' : 'Pause')}
+                  </Button>
+                )}
+                {analysisJob && isPausedJobStatus(analysisJob.status) && (
+                  <Button size="sm" onClick={handleResumeAnalysis} disabled={analysisControlBusy != null}>
+                    <Play className="w-4 h-4 mr-1" />
+                    {analysisControlBusy === 'resume'
+                      ? (lang === 'ar' ? 'جارٍ الاستئناف…' : 'Resuming…')
+                      : (lang === 'ar' ? 'استئناف' : 'Resume')}
+                  </Button>
+                )}
                 {isSuccessfulJobStatus(analysisJob?.status) && (
                   <Button size="sm" onClick={() => { setAnalysisModalOpen(false); const rid = reportIdWhenJobCompleted ?? analysisJobId; navigate(rid ? (reportIdWhenJobCompleted ? `/report/${rid}?by=id${reportQuickQuery}` : `/report/${rid}?by=job${reportQuickQuery}`) : '/reports'); }}>
                     <FileText className="w-4 h-4 mr-1" />

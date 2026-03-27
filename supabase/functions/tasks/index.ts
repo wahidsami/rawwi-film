@@ -48,22 +48,26 @@ type JobRow = {
   started_at: string | null;
   completed_at: string | null;
   error_message: string | null;
+  pause_requested?: boolean | null;
+  paused_at?: string | null;
   script_content_hash?: string | null;
   canonical_length?: number | null;
 };
 
 function toCamel(job: JobRow) {
+  const isPaused = Boolean(job.pause_requested) && !["completed", "failed", "done", "succeeded"].includes(String(job.status ?? "").toLowerCase());
   return {
     id: job.id,
     scriptId: job.script_id,
     versionId: job.version_id,
-    status: job.status,
+    status: isPaused ? "paused" : job.status,
     progressTotal: job.progress_total,
     progressDone: job.progress_done,
     progressPercent: job.progress_percent,
     createdAt: job.created_at,
     startedAt: job.started_at,
     completedAt: job.completed_at,
+    pausedAt: isPaused ? (job.paused_at ?? null) : null,
     errorMessage: job.error_message,
     scriptContentHash: job.script_content_hash ?? null,
     canonicalLength: job.canonical_length ?? null,
@@ -145,7 +149,7 @@ Deno.serve(async (req: Request) => {
     if (jobId) {
       const { data: row, error: err } = await supabase
         .from("analysis_jobs")
-        .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, error_message, script_content_hash")
+        .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, error_message, script_content_hash")
         .eq("id", jobId)
         .maybeSingle();
       if (err) {
@@ -163,7 +167,7 @@ Deno.serve(async (req: Request) => {
     // 1. Fetch Analysis Jobs
     let jobQuery = supabase
       .from("analysis_jobs")
-      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, error_message")
+      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, error_message")
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -242,6 +246,55 @@ Deno.serve(async (req: Request) => {
     });
 
     return json(allTasks.slice(0, limit));
+  }
+
+  if (req.method === "PATCH") {
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+
+    const jobId = typeof body?.jobId === "string" ? body.jobId.trim() : "";
+    const action = typeof body?.action === "string" ? body.action.trim().toLowerCase() : "";
+    if (!jobId) return json({ error: "jobId is required" }, 400);
+    if (action !== "pause" && action !== "resume") {
+      return json({ error: "action must be pause or resume" }, 400);
+    }
+
+    const { data: jobRow, error: jobErr } = await supabase
+      .from("analysis_jobs")
+      .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, error_message, script_content_hash, canonical_length")
+      .eq("id", jobId)
+      .maybeSingle();
+
+    if (jobErr) return json({ error: jobErr.message }, 500);
+    if (!jobRow) return json({ error: "Job not found" }, 404);
+    if (!isAdmin && (jobRow as any).created_by !== uid) return json({ error: "Job not found" }, 404);
+
+    const normalizedStatus = String((jobRow as any).status ?? "").toLowerCase();
+    if (["completed", "failed", "done", "succeeded"].includes(normalizedStatus)) {
+      return json({ error: "Cannot control a completed job" }, 400);
+    }
+
+    const patch =
+      action === "pause"
+        ? { pause_requested: true, paused_at: new Date().toISOString() }
+        : { pause_requested: false, paused_at: null };
+
+    const { data: updated, error: updateErr } = await supabase
+      .from("analysis_jobs")
+      .update(patch)
+      .eq("id", jobId)
+      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, error_message, script_content_hash, canonical_length")
+      .single();
+
+    if (updateErr || !updated) {
+      return json({ error: updateErr?.message ?? "Failed to update job" }, 500);
+    }
+
+    return json(toCamel(updated as JobRow));
   }
 
   if (req.method !== "POST") {

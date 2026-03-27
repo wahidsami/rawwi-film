@@ -207,6 +207,8 @@ export const tasksApi = {
   getJob: (jobId: string): Promise<AnalysisJob> => httpClient.get(`/tasks?jobId=${encodeURIComponent(jobId)}`),
   /** Get per-chunk statuses for a job (debug). */
   getJobChunks: (jobId: string): Promise<ChunkStatus[]> => httpClient.get(`/tasks?jobId=${encodeURIComponent(jobId)}&chunks=true`),
+  pauseJob: (jobId: string): Promise<AnalysisJob> => httpClient.patch('/tasks', { jobId, action: 'pause' }),
+  resumeJob: (jobId: string): Promise<AnalysisJob> => httpClient.patch('/tasks', { jobId, action: 'resume' }),
   addTask: (task: Task): Promise<Task> => httpClient.post('/tasks', task),
 };
 

@@ -223,6 +223,22 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
       const jobId = 'mock-job-' + (body?.versionId ?? Math.random().toString(36).slice(2));
       return { jobId };
     }
+    if (method === 'PATCH') {
+      return {
+        id: body?.jobId ?? 'mock-job',
+        scriptId: 'mock-script',
+        versionId: 'mock-version',
+        status: body?.action === 'pause' ? 'paused' : 'running',
+        progressTotal: 10,
+        progressDone: 4,
+        progressPercent: 40,
+        createdAt: new Date().toISOString(),
+        startedAt: new Date(Date.now() - 120000).toISOString(),
+        completedAt: null,
+        pausedAt: body?.action === 'pause' ? new Date().toISOString() : null,
+        errorMessage: null,
+      };
+    }
   }
 
   if (path.startsWith('/findings')) {

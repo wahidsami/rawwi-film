@@ -105,6 +105,7 @@ export interface AnalysisJob {
   createdAt: string;
   startedAt: string | null;
   completedAt: string | null;
+  pausedAt?: string | null;
   errorMessage: string | null;
   /** Hash of canonical text used for this job; must match editor content to highlight. */
   scriptContentHash?: string | null;

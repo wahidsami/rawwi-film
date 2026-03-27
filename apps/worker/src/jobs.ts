@@ -10,6 +10,8 @@ export type AnalysisJob = {
   progress_total: number;
   progress_done: number;
   started_at: string | null;
+  pause_requested?: boolean;
+  paused_at?: string | null;
   config_snapshot?: any;
 };
 
@@ -32,8 +34,9 @@ export type AnalysisChunk = {
 export async function fetchNextJob(): Promise<AnalysisJob | null> {
   const { data: queued } = await supabase
     .from("analysis_jobs")
-    .select("id, script_id, version_id, status, progress_total, progress_done, started_at")
+    .select("id, script_id, version_id, status, progress_total, progress_done, started_at, pause_requested, paused_at")
     .in("status", ["queued", "running"])
+    .eq("pause_requested", false)
     .order("created_at", { ascending: true })
     .limit(10);
 
@@ -57,8 +60,9 @@ export async function fetchNextJob(): Promise<AnalysisJob | null> {
 export async function fetchNextAggregationCandidateJob(): Promise<AnalysisJob | null> {
   const { data: running } = await supabase
     .from("analysis_jobs")
-    .select("id, script_id, version_id, status, progress_total, progress_done, started_at")
+    .select("id, script_id, version_id, status, progress_total, progress_done, started_at, pause_requested, paused_at")
     .eq("status", "running")
+    .eq("pause_requested", false)
     .order("created_at", { ascending: true })
     .limit(10);
 
@@ -124,9 +128,14 @@ export async function claimChunk(chunkId: string): Promise<AnalysisChunk | null>
   const jobId = (updated as AnalysisChunk).job_id;
   const { data: job } = await supabase
     .from("analysis_jobs")
-    .select("started_at, created_by")
+    .select("started_at, created_by, pause_requested")
     .eq("id", jobId)
     .single();
+
+  if (job && (job as { pause_requested?: boolean | null }).pause_requested === true) {
+    await setChunkPending(chunkId, null);
+    return null;
+  }
 
   if (job && (job as { started_at: string | null }).started_at == null) {
     await supabase
