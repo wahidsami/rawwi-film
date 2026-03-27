@@ -66,6 +66,21 @@ export async function fetchNextPendingChunk(jobId: string): Promise<AnalysisChun
 }
 
 /**
+ * Earliest N pending chunks for a job, ordered by chunk_index.
+ */
+export async function fetchNextPendingChunks(jobId: string, limit: number): Promise<AnalysisChunk[]> {
+  const safeLimit = Math.max(1, limit);
+  const { data } = await supabase
+    .from("analysis_chunks")
+    .select("id, job_id, chunk_index, text, start_offset, end_offset, start_line, end_line, status")
+    .eq("job_id", jobId)
+    .eq("status", "pending")
+    .order("chunk_index", { ascending: true })
+    .limit(safeLimit);
+  return (data ?? []) as AnalysisChunk[];
+}
+
+/**
  * Atomically set chunk to 'judging' only if currently 'pending'. Returns updated row or null.
  * If job.started_at is null, set job to status='running' and started_at=now().
  */

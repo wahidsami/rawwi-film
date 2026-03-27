@@ -2,7 +2,14 @@ import "dotenv/config";
 import { runAggregation } from "./aggregation.js";
 import { config } from "./config.js";
 import { supabase } from "./db.js";
-import { fetchNextJob, fetchNextPendingChunk, claimChunk } from "./jobs.js";
+import {
+  fetchNextJob,
+  fetchNextPendingChunk,
+  fetchNextPendingChunks,
+  claimChunk,
+  fetchJobNormalizedText,
+  incrementJobProgress,
+} from "./jobs.js";
 import { setContext, logger } from "./logger.js";
 import { initializeLexiconCache, getLexiconCache } from "./lexiconCache.js";
 import { processChunkJudge } from "./pipeline.js";
@@ -10,7 +17,46 @@ import { setChunkFailed } from "./jobs.js";
 
 let lastLexiconRefreshJobId: string | null = null;
 
+async function claimChunkBatch(jobId: string, desired: number) {
+  const claimed = [];
+  let attempts = 0;
+  const maxAttempts = Math.max(1, desired * 3);
+
+  while (claimed.length < desired && attempts < maxAttempts) {
+    attempts++;
+    const remaining = desired - claimed.length;
+    const pending = claimed.length === 0
+      ? await fetchNextPendingChunks(jobId, remaining)
+      : [await fetchNextPendingChunk(jobId)].filter(Boolean);
+    if (!pending.length) break;
+
+    for (const chunk of pending) {
+      if (!chunk) continue;
+      const got = await claimChunk(chunk.id);
+      if (got) claimed.push(got);
+      if (claimed.length >= desired) break;
+    }
+  }
+
+  return claimed;
+}
+
+async function processClaimedChunk(job: { id: string; script_id: string; version_id: string }, claimed: { id: string }, normalizedText: string | null): Promise<boolean> {
+  setContext({ jobId: job.id, chunkId: claimed.id });
+  try {
+    await processChunkJudge(job as any, claimed as any, normalizedText);
+    return true;
+  } catch (e) {
+    const errMsg = e instanceof Error ? e.message : String(e);
+    logger.error("Chunk processing failed", { error: errMsg, jobId: job.id, chunkId: claimed.id });
+    await setChunkFailed(claimed.id, errMsg);
+    await incrementJobProgress(job.id);
+    return false;
+  }
+}
+
 async function processOneJob(): Promise<boolean> {
+  const jobStartedAt = Date.now();
   const job = await fetchNextJob();
   if (!job) return false;
 
@@ -20,27 +66,29 @@ async function processOneJob(): Promise<boolean> {
   }
 
   setContext({ jobId: job.id });
-  const chunk = await fetchNextPendingChunk(job.id);
-  if (!chunk) return false;
-
-  const claimed = await claimChunk(chunk.id);
-  if (!claimed) return false;
-
-  const { fetchJobNormalizedText } = await import("./jobs.js");
   const normalizedText = await fetchJobNormalizedText(job.id);
+  const desiredConcurrency = config.WORKER_CHUNK_CONCURRENCY;
+  const claimed = await claimChunkBatch(job.id, desiredConcurrency);
+  if (claimed.length === 0) return false;
 
-  setContext({ jobId: job.id, chunkId: chunk.id });
-  try {
-    await processChunkJudge(job, claimed, normalizedText);
-  } catch (e) {
-    const errMsg = e instanceof Error ? e.message : String(e);
-    logger.error("Chunk processing failed", { error: errMsg });
-    await setChunkFailed(claimed.id, errMsg);
-    const { incrementJobProgress } = await import("./jobs.js");
-    await incrementJobProgress(job.id);
-  }
+  logger.info("Claimed chunk batch", {
+    jobId: job.id,
+    desiredConcurrency,
+    claimedCount: claimed.length,
+    chunkIndexes: claimed.map((chunk) => chunk.chunk_index),
+  });
+
+  const results = await Promise.all(claimed.map((chunk) => processClaimedChunk(job, chunk, normalizedText)));
 
   await runAggregation(job.id);
+  logger.info("Job batch processed", {
+    jobId: job.id,
+    desiredConcurrency,
+    claimedCount: claimed.length,
+    succeededCount: results.filter(Boolean).length,
+    failedCount: results.filter((ok) => !ok).length,
+    batchDurationMs: Date.now() - jobStartedAt,
+  });
   return true;
 }
 
@@ -67,28 +115,24 @@ async function runOnce(jobId: string | undefined): Promise<void> {
     }
     setContext({ jobId: job.id });
     await getLexiconCache(supabase).refresh();
+    const normalizedText = await fetchJobNormalizedText(jobId);
     let processed = 0;
     while (true) {
-      const chunk = await fetchNextPendingChunk(jobId);
-      if (!chunk) break;
-      const claimed = await claimChunk(chunk.id);
-      if (!claimed) break;
-      setContext({ jobId, chunkId: claimed.id });
-      const { fetchJobNormalizedText } = await import("./jobs.js");
-      const normalizedText = await fetchJobNormalizedText(jobId);
-      try {
-        await processChunkJudge(job as { id: string; script_id: string; version_id: string }, claimed, normalizedText);
-        processed++;
-      } catch (e) {
-        const errMsg = e instanceof Error ? e.message : String(e);
-        logger.error("Chunk processing failed", { error: errMsg });
-        await setChunkFailed(claimed.id, errMsg);
-        const { incrementJobProgress } = await import("./jobs.js");
-        await incrementJobProgress(job.id);
-      }
+      const claimed = await claimChunkBatch(jobId, config.WORKER_CHUNK_CONCURRENCY);
+      if (claimed.length === 0) break;
+      const results = await Promise.all(
+        claimed.map((chunk) =>
+          processClaimedChunk(job as { id: string; script_id: string; version_id: string }, chunk, normalizedText)
+        )
+      );
+      processed += results.filter(Boolean).length;
       await runAggregation(job.id);
     }
-    logger.info("worker:once finished", { jobId, chunksProcessed: processed });
+    logger.info("worker:once finished", {
+      jobId,
+      chunksProcessed: processed,
+      chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
+    });
     return;
   }
 
@@ -106,7 +150,10 @@ async function runDev(): Promise<never> {
   }
 
   await initializeLexiconCache(supabase);
-  logger.info("Worker dev loop started", { pollIntervalMs: config.POLL_INTERVAL_MS });
+  logger.info("Worker dev loop started", {
+    pollIntervalMs: config.POLL_INTERVAL_MS,
+    chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
+  });
 
   while (true) {
     setContext({});

@@ -12,6 +12,7 @@ export const config = {
   OPENAI_RATIONALE_MODEL: process.env.OPENAI_RATIONALE_MODEL ?? "gpt-4.1",
   JUDGE_TIMEOUT_MS: parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10),
   POLL_INTERVAL_MS: parseInt(process.env.POLL_INTERVAL_MS ?? "2000", 10),
+  WORKER_CHUNK_CONCURRENCY: Math.max(1, parseInt(process.env.WORKER_CHUNK_CONCURRENCY ?? "1", 10) || 1),
   LEXICON_REFRESH_MS: 2 * 60 * 1000,
   CHUNK_WINDOW_THRESHOLD: 10_000,
   MICRO_WINDOW_SIZE: 8_000,
