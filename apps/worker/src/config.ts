@@ -12,7 +12,11 @@ export const config = {
   OPENAI_RATIONALE_MODEL: process.env.OPENAI_RATIONALE_MODEL ?? "gpt-4.1",
   JUDGE_TIMEOUT_MS: parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10),
   POLL_INTERVAL_MS: parseInt(process.env.POLL_INTERVAL_MS ?? "2000", 10),
-  WORKER_CHUNK_CONCURRENCY: Math.max(1, parseInt(process.env.WORKER_CHUNK_CONCURRENCY ?? "1", 10) || 1),
+  // Accept the legacy misnamed env key as a fallback so older deployments still get concurrency.
+  WORKER_CHUNK_CONCURRENCY: Math.max(
+    1,
+    parseInt(process.env.WORKER_CHUNK_CONCURRENCY ?? process.env.export_WORKER_CHUNK_CONCURRENCY ?? "1", 10) || 1
+  ),
   ANALYSIS_LARGE_JOB_CHUNK_THRESHOLD: Math.max(1, parseInt(process.env.ANALYSIS_LARGE_JOB_CHUNK_THRESHOLD ?? "35", 10) || 35),
   ANALYSIS_LARGE_JOB_TEXT_LENGTH_THRESHOLD: Math.max(10_000, parseInt(process.env.ANALYSIS_LARGE_JOB_TEXT_LENGTH_THRESHOLD ?? "180000", 10) || 180000),
   ANALYSIS_PASS_GATING_ENABLED: (process.env.ANALYSIS_PASS_GATING_ENABLED ?? "true").toLowerCase() !== "false",

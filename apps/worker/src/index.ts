@@ -4,11 +4,13 @@ import { config } from "./config.js";
 import { supabase } from "./db.js";
 import {
   fetchNextJob,
+  fetchNextAggregationCandidateJob,
   fetchNextPendingChunk,
   fetchNextPendingChunks,
   claimChunk,
   fetchJobNormalizedText,
   incrementJobProgress,
+  setJobFailed,
 } from "./jobs.js";
 import { setContext, logger } from "./logger.js";
 import { initializeLexiconCache, getLexiconCache } from "./lexiconCache.js";
@@ -58,7 +60,21 @@ async function processClaimedChunk(job: { id: string; script_id: string; version
 async function processOneJob(): Promise<boolean> {
   const jobStartedAt = Date.now();
   const job = await fetchNextJob();
-  if (!job) return false;
+  if (!job) {
+    const aggregationJob = await fetchNextAggregationCandidateJob();
+    if (!aggregationJob) return false;
+    setContext({ jobId: aggregationJob.id });
+    try {
+      await runAggregation(aggregationJob.id);
+      logger.info("Recovered aggregation-only job", { jobId: aggregationJob.id });
+      return true;
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
+      logger.error("Aggregation recovery failed", { jobId: aggregationJob.id, error: errMsg });
+      await setJobFailed(aggregationJob.id, errMsg);
+      return true;
+    }
+  }
 
   if (job.id !== lastLexiconRefreshJobId) {
     await getLexiconCache(supabase).refresh();
@@ -80,7 +96,14 @@ async function processOneJob(): Promise<boolean> {
 
   const results = await Promise.all(claimed.map((chunk) => processClaimedChunk(job, chunk, normalizedText)));
 
-  await runAggregation(job.id);
+  try {
+    await runAggregation(job.id);
+  } catch (e) {
+    const errMsg = e instanceof Error ? e.message : String(e);
+    logger.error("Aggregation failed after batch", { jobId: job.id, error: errMsg });
+    await setJobFailed(job.id, errMsg);
+    return true;
+  }
   logger.info("Job batch processed", {
     jobId: job.id,
     desiredConcurrency,
@@ -126,7 +149,14 @@ async function runOnce(jobId: string | undefined): Promise<void> {
         )
       );
       processed += results.filter(Boolean).length;
-      await runAggregation(job.id);
+      try {
+        await runAggregation(job.id);
+      } catch (e) {
+        const errMsg = e instanceof Error ? e.message : String(e);
+        logger.error("Aggregation failed during worker:once", { jobId: job.id, error: errMsg });
+        await setJobFailed(job.id, errMsg);
+        break;
+      }
     }
     logger.info("worker:once finished", {
       jobId,

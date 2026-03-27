@@ -51,6 +51,32 @@ export async function fetchNextJob(): Promise<AnalysisJob | null> {
 }
 
 /**
+ * Oldest running job that has no active chunks left.
+ * Used to recover jobs that got stuck during aggregation/finalization.
+ */
+export async function fetchNextAggregationCandidateJob(): Promise<AnalysisJob | null> {
+  const { data: running } = await supabase
+    .from("analysis_jobs")
+    .select("id, script_id, version_id, status, progress_total, progress_done, started_at")
+    .eq("status", "running")
+    .order("created_at", { ascending: true })
+    .limit(10);
+
+  if (!running?.length) return null;
+
+  for (const job of running) {
+    const { count } = await supabase
+      .from("analysis_chunks")
+      .select("id", { count: "exact", head: true })
+      .eq("job_id", job.id)
+      .in("status", ["pending", "judging"]);
+    if ((count ?? 0) === 0) return job as AnalysisJob;
+  }
+
+  return null;
+}
+
+/**
  * Earliest chunk for job with status='pending'.
  */
 export async function fetchNextPendingChunk(jobId: string): Promise<AnalysisChunk | null> {
@@ -159,6 +185,17 @@ export async function setChunkFailed(chunkId: string, lastError: string): Promis
     .from("analysis_chunks")
     .update({ status: "failed", last_error: lastError, processing_phase: null })
     .eq("id", chunkId);
+}
+
+export async function setJobFailed(jobId: string, errorMessage: string): Promise<void> {
+  await supabase
+    .from("analysis_jobs")
+    .update({
+      status: "failed",
+      error_message: errorMessage,
+      completed_at: new Date().toISOString(),
+    })
+    .eq("id", jobId);
 }
 
 /** Fire-and-forget UI phase label (does not block LLM work). */

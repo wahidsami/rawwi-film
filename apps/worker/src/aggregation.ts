@@ -15,6 +15,7 @@ import { generateScriptSummary } from "./scriptSummary.js";
 import { callRevisitSpotter } from "./openai.js";
 import { clearCachedJobResources } from "./jobAnalysisCache.js";
 import { shouldSkipRevisitForJob, shouldSkipScriptSummaryForJob } from "./performanceGating.js";
+import { config } from "./config.js";
 
 export type SummaryJson = {
   job_id: string;
