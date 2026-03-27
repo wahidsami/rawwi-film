@@ -610,6 +610,18 @@ type TextItem = {
   dir?: string;
 };
 
+const PDF_TEXT_INVISIBLE_RE = /[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g;
+const PDF_TEXT_SOFT_SPACE_RE = /[\u00A0\t]+/g;
+
+export function normalizePdfTextRun(value: string): string {
+  return (value ?? '')
+    .normalize('NFKC')
+    .replace(PDF_TEXT_INVISIBLE_RE, '')
+    .replace(PDF_TEXT_SOFT_SPACE_RE, ' ')
+    .replace(/\r?\n/g, ' ')
+    .replace(/ {2,}/g, ' ');
+}
+
 /** Arabic / Arabic supplement / presentation forms — used to pick RTL sort + tighter joins. */
 function countArabicVsLatin(strings: string[]): { ar: number; lat: number } {
   let ar = 0;
@@ -647,21 +659,28 @@ function linePrefersRtl(parts: { str: string; dir?: string }[]): boolean {
 function joinPdfLineParts(parts: { str: string; x: number; width: number }[], rtl: boolean): string {
   if (parts.length === 0) return '';
   const s = [...parts].sort((a, b) => (rtl ? b.x - a.x : a.x - b.x));
+  const widths = s.map((p) => Math.max(0, p.width)).filter((w) => Number.isFinite(w) && w > 0.01);
+  const sortedW = [...widths].sort((a, b) => a - b);
+  const medW = sortedW.length ? sortedW[Math.floor(sortedW.length / 2)]! : 6;
   const gaps: number[] = [];
   for (let i = 1; i < s.length; i++) {
-    const d = rtl ? s[i - 1]!.x - s[i]!.x : s[i]!.x - s[i - 1]!.x;
+    const prev = s[i - 1]!;
+    const cur = s[i]!;
+    const d = rtl ? prev.x - (cur.x + Math.max(0, cur.width)) : cur.x - (prev.x + Math.max(0, prev.width));
     gaps.push(Math.max(0, d));
   }
-  const sortedG = [...gaps].sort((a, b) => a - b);
-  const med = sortedG.length ? sortedG[Math.floor(sortedG.length / 2)]! : 1;
-  const wordTh = Math.max(med * 2.75, 5);
+  const positiveGaps = gaps.filter((g) => g > 0.01);
+  const sortedG = [...positiveGaps].sort((a, b) => a - b);
+  const med = sortedG.length ? sortedG[Math.floor(sortedG.length / 2)]! : 0;
+  const wordTh =
+    med > 0 ? Math.max(med * 1.85, Math.min(medW * 0.18, 6), 1.25) : Math.max(Math.min(medW * 0.22, 5), 1.25);
 
   let out = s[0]!.str;
   for (let i = 1; i < s.length; i++) {
     const g = gaps[i - 1]!;
     out += (g > wordTh ? ' ' : '') + s[i]!.str;
   }
-  return out;
+  return out.replace(/ {2,}/g, ' ');
 }
 
 /** Same ordering as joinPdfLineParts but preserves per-run bold for HTML. */
@@ -671,14 +690,21 @@ function joinPdfLinePartsHtml(
 ): string {
   if (parts.length === 0) return '';
   const s = [...parts].sort((a, b) => (rtl ? b.x - a.x : a.x - b.x));
+  const widths = s.map((p) => Math.max(0, p.width)).filter((w) => Number.isFinite(w) && w > 0.01);
+  const sortedW = [...widths].sort((a, b) => a - b);
+  const medW = sortedW.length ? sortedW[Math.floor(sortedW.length / 2)]! : 6;
   const gaps: number[] = [];
   for (let i = 1; i < s.length; i++) {
-    const d = rtl ? s[i - 1]!.x - s[i]!.x : s[i]!.x - s[i - 1]!.x;
+    const prev = s[i - 1]!;
+    const cur = s[i]!;
+    const d = rtl ? prev.x - (cur.x + Math.max(0, cur.width)) : cur.x - (prev.x + Math.max(0, prev.width));
     gaps.push(Math.max(0, d));
   }
-  const sortedG = [...gaps].sort((a, b) => a - b);
-  const med = sortedG.length ? sortedG[Math.floor(sortedG.length / 2)]! : 1;
-  const wordTh = Math.max(med * 2.75, 5);
+  const positiveGaps = gaps.filter((g) => g > 0.01);
+  const sortedG = [...positiveGaps].sort((a, b) => a - b);
+  const med = sortedG.length ? sortedG[Math.floor(sortedG.length / 2)]! : 0;
+  const wordTh =
+    med > 0 ? Math.max(med * 1.85, Math.min(medW * 0.18, 6), 1.25) : Math.max(Math.min(medW * 0.22, 5), 1.25);
 
   let html = '';
   let strongOpen = false;
@@ -723,7 +749,7 @@ function pageItemsToHtml(items: TextItem[]): string {
   if (!items.length) return '';
   const hasTransform = items.some((it) => Array.isArray(it.transform) && it.transform.length >= 6);
   if (!hasTransform) {
-    const t = items.map((it) => it.str ?? '').join('').trim();
+    const t = items.map((it) => normalizePdfTextRun(it.str ?? '')).join('').replace(/ {2,}/g, ' ').trim();
     return t ? `<div class="pdf-page-body script-import-body"><p class="pdf-line">${escapeHtmlForPdf(t)}</p></div>` : '';
   }
   type LinePart = { str: string; bold: boolean; x: number; width: number; dir?: string };
@@ -736,7 +762,7 @@ function pageItemsToHtml(items: TextItem[]): string {
     lineParts = [];
   };
   for (const it of items) {
-    const str = it.str ?? '';
+    const str = normalizePdfTextRun(it.str ?? '');
     const tr = Array.isArray(it.transform) && it.transform.length >= 6 ? it.transform : null;
     const y = tr ? tr[5]! : null;
     const x = tr ? tr[4]! : 0;
@@ -768,7 +794,7 @@ function pageItemsToText(items: TextItem[]): string {
   if (!items.length) return "";
   const hasTransform = items.some((it) => Array.isArray(it.transform) && it.transform.length >= 6);
   if (!hasTransform) {
-    return items.map((it) => it.str ?? "").join("").trim();
+    return items.map((it) => normalizePdfTextRun(it.str ?? '')).join('').replace(/ {2,}/g, ' ').trim();
   }
   const lines: string[] = [];
   let lastY: number | null = null;
@@ -780,7 +806,7 @@ function pageItemsToText(items: TextItem[]): string {
     lineBuf.length = 0;
   };
   for (const it of items as TextItem[]) {
-    const str = it.str ?? "";
+    const str = normalizePdfTextRun(it.str ?? '');
     const tr = Array.isArray(it.transform) && it.transform.length >= 6 ? it.transform : null;
     const y = tr ? tr[5]! : null;
     const x = tr ? tr[4]! : 0;

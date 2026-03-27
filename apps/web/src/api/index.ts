@@ -197,11 +197,13 @@ export type GetTasksParams = { scriptId?: string; versionId?: string; limit?: nu
 
 async function controlAnalysisJob(jobId: string, action: 'pause' | 'resume' | 'stop'): Promise<AnalysisJob> {
   try {
-    return await httpClient.patch('/tasks', { jobId, action });
+    // Prefer POST for job control because Supabase Edge deployments have shown
+    // more reliable request-body handling on POST than PATCH in production.
+    return await httpClient.post('/tasks', { jobId, action });
   } catch (error) {
     const status = (error as Error & { status?: number } | null)?.status;
-    if (status === 405) {
-      return httpClient.post('/tasks', { jobId, action });
+    if (status === 405 || status === 404) {
+      return httpClient.patch('/tasks', { jobId, action });
     }
     throw error;
   }

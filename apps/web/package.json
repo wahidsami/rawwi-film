@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:document-extract": "tsx src/utils/documentExtract.scene.test.ts"
+    "test:document-extract": "tsx src/utils/documentExtract.scene.test.ts && tsx src/utils/documentExtract.pdf-arabic.test.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.3.2",
