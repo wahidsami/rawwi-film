@@ -102,8 +102,11 @@ type ManualReviewSnapshotItem = {
   manual_comment?: string | null;
   start_offset_global?: number | null;
   end_offset_global?: number | null;
+  start_offset_page?: number | null;
+  end_offset_page?: number | null;
   page_number?: number | null;
   job_id?: string | null;
+  created_by?: string | null;
 };
 
 async function loadManualReviewSnapshot(
@@ -118,7 +121,7 @@ async function loadManualReviewSnapshot(
   const { data, error } = await supabase
     .from("analysis_findings")
     .select(
-      "job_id, article_id, atom_id, severity, evidence_snippet, manual_comment, start_offset_global, end_offset_global, page_number, created_at"
+      "job_id, article_id, atom_id, severity, evidence_snippet, manual_comment, start_offset_global, end_offset_global, start_offset_page, end_offset_page, page_number, created_at, created_by"
     )
     .eq("script_id", scriptId)
     .eq("version_id", versionId)
@@ -146,7 +149,12 @@ async function loadManualReviewSnapshot(
       typeof row.end_offset_global === "number" ? row.end_offset_global : row.end_offset_global == null ? null : Number(row.end_offset_global);
     const pageNumber =
       typeof row.page_number === "number" ? row.page_number : row.page_number == null ? null : Number(row.page_number);
+    const startOffsetPage =
+      typeof row.start_offset_page === "number" ? row.start_offset_page : row.start_offset_page == null ? null : Number(row.start_offset_page);
+    const endOffsetPage =
+      typeof row.end_offset_page === "number" ? row.end_offset_page : row.end_offset_page == null ? null : Number(row.end_offset_page);
     const jobId = typeof row.job_id === "string" && row.job_id.trim() ? row.job_id.trim() : null;
+    const createdBy = typeof row.created_by === "string" && row.created_by.trim() ? row.created_by.trim() : null;
     if (jobId) sourceJobIds.add(jobId);
     const key = [
       articleId,
@@ -166,8 +174,11 @@ async function loadManualReviewSnapshot(
         manual_comment: manualComment,
         start_offset_global: Number.isFinite(startOffsetGlobal as number) ? startOffsetGlobal : null,
         end_offset_global: Number.isFinite(endOffsetGlobal as number) ? endOffsetGlobal : null,
+        start_offset_page: Number.isFinite(startOffsetPage as number) ? startOffsetPage : null,
+        end_offset_page: Number.isFinite(endOffsetPage as number) ? endOffsetPage : null,
         page_number: Number.isFinite(pageNumber as number) ? pageNumber : null,
         job_id: jobId,
+        created_by: createdBy,
       });
     }
   }
@@ -178,6 +189,50 @@ async function loadManualReviewSnapshot(
     sourceJobIds: [...sourceJobIds].slice(0, 20),
     items,
   };
+}
+
+async function cloneManualReviewFindingsToJob(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  jobId: string,
+  scriptId: string,
+  versionId: string,
+  items: ManualReviewSnapshotItem[],
+): Promise<number> {
+  if (!items.length) return 0;
+
+  const payload = items.map((item) => ({
+    job_id: jobId,
+    script_id: scriptId,
+    version_id: versionId,
+    source: "manual",
+    created_by: item.created_by ?? null,
+    article_id: item.article_id,
+    atom_id: item.atom_id ?? null,
+    severity: item.severity,
+    confidence: 1,
+    title_ar: "ملاحظة يدوية",
+    description_ar: item.manual_comment || item.evidence_snippet || "—",
+    evidence_snippet: item.evidence_snippet || item.manual_comment || "—",
+    start_offset_global: item.start_offset_global ?? null,
+    end_offset_global: item.end_offset_global ?? null,
+    start_offset_page: item.start_offset_page ?? null,
+    end_offset_page: item.end_offset_page ?? null,
+    page_number: item.page_number ?? null,
+    evidence_hash: `manual-carry-${crypto.randomUUID()}`,
+    manual_comment: item.manual_comment ?? null,
+  }));
+
+  const { data, error } = await supabase
+    .from("analysis_findings")
+    .insert(payload)
+    .select("id");
+
+  if (error) {
+    console.error("[tasks] failed to clone manual review findings into new job:", error.message);
+    return 0;
+  }
+
+  return (data ?? []).length;
 }
 
 function toCamel(job: JobRow) {
@@ -697,8 +752,16 @@ Deno.serve(async (req: Request) => {
     return json({ error: chunksErr.message }, 500);
   }
 
+  const clonedManualFindings = await cloneManualReviewFindingsToJob(
+    supabase,
+    job.id,
+    scriptId,
+    versionId.trim(),
+    manualReviewSnapshot.items
+  );
+
   return json({
     jobId: job.id,
-    manualReviewContextCount: manualReviewSnapshot.carriedForwardCount,
+    manualReviewContextCount: clonedManualFindings,
   });
 });

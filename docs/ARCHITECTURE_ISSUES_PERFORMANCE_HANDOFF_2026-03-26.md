@@ -552,6 +552,8 @@ Status legend:
 - Bulk mark-selected-safe action in workspace
 - Finding reclassification workflow in workspace
 - AI/manual separation in workspace findings
+- Re-analysis carries forward manual findings into new jobs
+- Previous-review / client-linked duplicate-work indicators in workspace
 
 ### Partial
 
@@ -565,8 +567,6 @@ Status legend:
 ### Open
 
 - Re-review workflow as a richer review state, not just a relabeled status action
-- Re-analysis aware of manual notes and reviewer edits
-- Previously reviewed / client-linked duplicate-work indicators
 - Upload filename validation improvements
 - Word export
 - Official logo in reports
