@@ -88,16 +88,20 @@ export const scriptsApi = {
   /** Make approval/rejection decision on a script */
   makeDecision: (id: string, decision: 'approve' | 'reject', reason: string, relatedReportId?: string): Promise<{ success: boolean; script: Script; message: string }> =>
     httpClient.post(`/scripts/${encodeURIComponent(id)}/decision`, { decision, reason, relatedReportId }),
-  getScriptVersions: (scriptId: string): Promise<ScriptVersion[]> => httpClient.get(`/scripts/${encodeURIComponent(scriptId)}/versions`),
-  createVersion: (scriptId: string, versionData: any): Promise<any> => httpClient.post('/scripts/versions', { ...versionData, scriptId }),
+  getScriptVersions: (scriptId: string, options?: { signal?: AbortSignal }): Promise<ScriptVersion[]> =>
+    httpClient.get(`/scripts/${encodeURIComponent(scriptId)}/versions`, { signal: options?.signal }),
+  createVersion: (scriptId: string, versionData: any, options?: { signal?: AbortSignal }): Promise<any> =>
+    httpClient.post('/scripts/versions', { ...versionData, scriptId }, { signal: options?.signal }),
   /** Get signed upload URL; returns { url, path? }. */
-  getUploadUrl: (fileName: string): Promise<UploadUrlResponse> => httpClient.post('/upload', { fileName }),
+  getUploadUrl: (fileName: string, options?: { signal?: AbortSignal }): Promise<UploadUrlResponse> =>
+    httpClient.post('/upload', { fileName }, { signal: options?.signal }),
   /** Upload file bytes to the signed URL (no auth). */
-  uploadToSignedUrl: async (file: File, signedUrl: string): Promise<void> => {
+  uploadToSignedUrl: async (file: File, signedUrl: string, options?: { signal?: AbortSignal }): Promise<void> => {
     const res = await fetch(signedUrl, {
       method: 'PUT',
       headers: { 'Content-Type': file.type || 'application/octet-stream' },
       body: file,
+      signal: options?.signal,
     });
     if (!res.ok) throw new Error(res.statusText || 'Upload failed');
   },
@@ -111,6 +115,7 @@ export const scriptsApi = {
       enqueueAnalysis?: boolean;
       contentHtml?: string | null;
       pages?: Array<{ pageNumber: number; text: string; html?: string | null; displayFontStack?: string }>;
+      signal?: AbortSignal;
     }
   ): Promise<any> => {
     // Unicode: NFC + well-formed UTF-16 + C0 strip (see docs/UNICODE_EXTRACT_PIPELINE.md).
@@ -134,7 +139,7 @@ export const scriptsApi = {
           }),
       }));
     }
-    return httpClient.post('/extract', body);
+    return httpClient.post('/extract', body, { signal: options?.signal });
   },
   /** Queue analysis for a version (creates new analysis_jobs + chunks). POST /tasks */
   createTask: (

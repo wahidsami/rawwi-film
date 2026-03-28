@@ -427,10 +427,10 @@ export const httpClient = {
     }
   },
 
-  get(url: string) { return this.request(url); },
-  post(url: string, body: any) { return this.request(url, { method: 'POST', body: JSON.stringify(body) }); },
-  put(url: string, body: any) { return this.request(url, { method: 'PUT', body: JSON.stringify(body) }); },
-  patch(url: string, body: any) { return this.request(url, { method: 'PATCH', body: JSON.stringify(body) }); },
+  get(url: string, options?: RequestInit) { return this.request(url, options); },
+  post(url: string, body: any, options?: RequestInit) { return this.request(url, { ...options, method: 'POST', body: JSON.stringify(body) }); },
+  put(url: string, body: any, options?: RequestInit) { return this.request(url, { ...options, method: 'PUT', body: JSON.stringify(body) }); },
+  patch(url: string, body: any, options?: RequestInit) { return this.request(url, { ...options, method: 'PATCH', body: JSON.stringify(body) }); },
   delete(url: string, opts?: { body?: any }) {
     return this.request(url, { method: 'DELETE', ...(opts?.body != null && { body: JSON.stringify(opts.body) }) });
   },

@@ -68,6 +68,16 @@ function formatImportElapsed(ms: number, lang: 'ar' | 'en'): string {
   return formatAnalysisElapsed(ms, lang);
 }
 
+function createImportAbortError(): Error {
+  const error = new Error('Import aborted by user');
+  error.name = 'AbortError';
+  return error;
+}
+
+function isImportAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError';
+}
+
 const PREVIEW_FOCUS_PATTERNS = [
   /"([^"]{8,160})"/,
   /“([^”]{8,160})”/,
@@ -736,12 +746,15 @@ export function ScriptWorkspace() {
   const [floatingAction, setFloatingAction] = useState<{ x: number; y: number; text: string; startOffsetGlobal?: number; endOffsetGlobal?: number } | null>(null);
   const [isViolationModalOpen, setIsViolationModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'extracting' | 'done' | 'failed'>('idle');
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'extracting' | 'done' | 'failed' | 'aborted'>('idle');
   const [uploadPhaseLabel, setUploadPhaseLabel] = useState<string>('');
   const [uploadStatusMessage, setUploadStatusMessage] = useState<string>('');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadStartedAt, setUploadStartedAt] = useState<number | null>(null);
   const [uploadElapsedMs, setUploadElapsedMs] = useState(0);
+  const uploadAbortControllerRef = useRef<AbortController | null>(null);
+  const uploadSessionIdRef = useRef(0);
+  const uploadAutoCloseTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const [extractedText, setExtractedText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisJobId, setAnalysisJobId] = useState<string | null>(null);
@@ -786,7 +799,7 @@ export function ScriptWorkspace() {
   );
   const isImportModalOpen = uploadStatus !== 'idle';
   const uploadStatusTone =
-    uploadStatus === 'failed' ? 'error' : uploadStatus === 'done' ? 'success' : 'info';
+    uploadStatus === 'failed' ? 'error' : uploadStatus === 'done' ? 'success' : uploadStatus === 'aborted' ? 'outline' : 'info';
 
   useEffect(() => {
     if (!isImportModalOpen || uploadStartedAt == null) return;
@@ -795,6 +808,60 @@ export function ScriptWorkspace() {
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
   }, [isImportModalOpen, uploadStartedAt]);
+
+  const clearImportAutoClose = useCallback(() => {
+    if (uploadAutoCloseTimeoutRef.current != null) {
+      window.clearTimeout(uploadAutoCloseTimeoutRef.current);
+      uploadAutoCloseTimeoutRef.current = null;
+    }
+  }, []);
+
+  const resetImportState = useCallback(() => {
+    clearImportAutoClose();
+    const controller = uploadAbortControllerRef.current;
+    if (controller && !controller.signal.aborted) controller.abort();
+    uploadAbortControllerRef.current = null;
+    uploadSessionIdRef.current += 1;
+    setIsUploading(false);
+    setUploadStatus('idle');
+    setUploadError(null);
+    setUploadStartedAt(null);
+    setUploadElapsedMs(0);
+    setUploadPhaseLabel('');
+    setUploadStatusMessage('');
+  }, [clearImportAutoClose]);
+
+  const stopImportProcess = useCallback((closeModal = false) => {
+    clearImportAutoClose();
+    const controller = uploadAbortControllerRef.current;
+    if (controller && !controller.signal.aborted) controller.abort();
+    uploadAbortControllerRef.current = null;
+    uploadSessionIdRef.current += 1;
+    setIsUploading(false);
+    if (closeModal) {
+      setUploadStatus('idle');
+      setUploadError(null);
+      setUploadStartedAt(null);
+      setUploadElapsedMs(0);
+      setUploadPhaseLabel('');
+      setUploadStatusMessage('');
+      return;
+    }
+    setUploadStatus('aborted');
+    setUploadError(null);
+    setUploadPhaseLabel(lang === 'ar' ? 'تم إيقاف الاستيراد' : 'Import stopped');
+    setUploadStatusMessage(
+      lang === 'ar'
+        ? 'تم إيقاف عملية الاستيراد الحالية. يمكنك إغلاق النافذة أو إعادة المحاولة لاحقاً.'
+        : 'The current import was stopped. You can close this window or try again later.',
+    );
+  }, [clearImportAutoClose, lang]);
+
+  useEffect(() => () => {
+    clearImportAutoClose();
+    const controller = uploadAbortControllerRef.current;
+    if (controller && !controller.signal.aborted) controller.abort();
+  }, [clearImportAutoClose]);
 
   // Polling for analysis job progress
   const stopPolling = useCallback(() => {
@@ -1801,6 +1868,17 @@ export function ScriptWorkspace() {
     const file = e.target.files?.[0];
     if (!file || !script) return;
 
+    clearImportAutoClose();
+    const controller = new AbortController();
+    uploadAbortControllerRef.current = controller;
+    const importSessionId = uploadSessionIdRef.current + 1;
+    uploadSessionIdRef.current = importSessionId;
+    const ensureImportActive = () => {
+      if (controller.signal.aborted || uploadSessionIdRef.current !== importSessionId) {
+        throw createImportAbortError();
+      }
+    };
+
     setIsUploading(true);
     setUploadStatus('uploading');
     setUploadPhaseLabel(lang === 'ar' ? 'رفع الملف' : 'Uploading file');
@@ -1814,11 +1892,14 @@ export function ScriptWorkspace() {
     setUploadElapsedMs(0);
 
     try {
+      ensureImportActive();
       setUploadStatus('uploading');
       setUploadPhaseLabel(lang === 'ar' ? 'رفع الملف' : 'Uploading file');
       const uploadName = safeUploadFileName(file.name);
-      const { url, path } = await scriptsApi.getUploadUrl(uploadName);
-      await scriptsApi.uploadToSignedUrl(file, url);
+      const { url, path } = await scriptsApi.getUploadUrl(uploadName, { signal: controller.signal });
+      ensureImportActive();
+      await scriptsApi.uploadToSignedUrl(file, url, { signal: controller.signal });
+      ensureImportActive();
       setUploadStatusMessage(
         lang === 'ar'
           ? 'تم رفع الملف. يجري الآن إنشاء نسخة جديدة وربطها بهذا النص.'
@@ -1836,7 +1917,8 @@ export function ScriptWorkspace() {
         source_file_path: storagePath,
         source_file_url: storagePath,
         clearAnalysisOnReplace: true,
-      });
+      }, { signal: controller.signal });
+      ensureImportActive();
       
       setUploadStatus('extracting');
       setUploadPhaseLabel(lang === 'ar' ? 'استخراج النص' : 'Extracting text');
@@ -1852,6 +1934,7 @@ export function ScriptWorkspace() {
       let textToShow = '';
       if (ext === 'txt') {
         const fileText = await file.text();
+        ensureImportActive();
         const res = await scriptsApi.extractText(version.id, fileText, { enqueueAnalysis: false });
         textToShow = (res as { extracted_text?: string })?.extracted_text ?? fileText;
       } else if (ext === 'pdf') {
@@ -1863,11 +1946,15 @@ export function ScriptWorkspace() {
           );
           await scriptsApi.extractText(version.id, undefined, {
             enqueueAnalysis: false,
+            signal: controller.signal,
           });
+          ensureImportActive();
           const extractedVersion = await waitForVersionExtraction(script.id, version.id, {
             timeoutMs: PDF_EXTRACTION_TIMEOUT_MS,
             intervalMs: PDF_EXTRACTION_INTERVAL_MS,
+            signal: controller.signal,
           });
+          ensureImportActive();
           textToShow = extractedVersion.extracted_text ?? '';
           if (!textToShow.trim()) {
             toast.error(lang === 'ar' ? 'لم يتم العثور على نص في الملف' : 'No text found in document');
@@ -1893,10 +1980,13 @@ export function ScriptWorkspace() {
               : 'Parsing the Word document and saving the extracted text to this version.',
           );
           const { plain, html } = await extractDocx(file);
+          ensureImportActive();
           const res = await scriptsApi.extractText(version.id, plain, {
             contentHtml: html,
             enqueueAnalysis: false,
+            signal: controller.signal,
           });
+          ensureImportActive();
           const err = (res as { error?: string })?.error;
           if (err) throw new Error(err);
           textToShow = (res as { extracted_text?: string })?.extracted_text ?? plain;
@@ -1929,6 +2019,7 @@ export function ScriptWorkspace() {
         );
         return;
       }
+      ensureImportActive();
       setExtractedText(textToShow);
       // The file/context was replaced: clear stale highlight/report state immediately in UI.
       setReportFindings([]);
@@ -1945,22 +2036,28 @@ export function ScriptWorkspace() {
           : 'Import finished successfully. You can now review the text or start analysis.',
       );
       toast.success(lang === 'ar' ? 'تم استخراج النص بنجاح' : 'Text extracted successfully');
-      window.setTimeout(() => {
+      uploadAutoCloseTimeoutRef.current = window.setTimeout(() => {
         setUploadStatus('idle');
         setUploadError(null);
         setUploadStartedAt(null);
         setUploadElapsedMs(0);
         setUploadPhaseLabel('');
         setUploadStatusMessage('');
+        uploadAutoCloseTimeoutRef.current = null;
       }, 1800);
       await updateScript(script.id, { currentVersionId: version.id });
+      ensureImportActive();
       try {
         const data = await scriptsApi.getEditor(script.id, version.id);
+        ensureImportActive();
         setEditorData(data);
       } catch (_) {
         setEditorData(null);
       }
     } catch (err: any) {
+      if (isImportAbortError(err)) {
+        return;
+      }
       setUploadStatus('failed');
       setUploadPhaseLabel(lang === 'ar' ? 'فشل الاستيراد' : 'Import failed');
       setUploadError(err?.message || 'Upload failed');
@@ -1971,6 +2068,9 @@ export function ScriptWorkspace() {
       );
       toast.error(err.message || 'Upload failed');
     } finally {
+      if (uploadAbortControllerRef.current === controller) {
+        uploadAbortControllerRef.current = null;
+      }
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -2901,6 +3001,10 @@ export function ScriptWorkspace() {
       ? lang === 'ar'
         ? 'فشل'
         : 'Failed'
+      : uploadStatus === 'aborted'
+        ? lang === 'ar'
+          ? 'متوقف'
+          : 'Stopped'
       : uploadStatus === 'done'
         ? lang === 'ar'
           ? 'مكتمل'
@@ -2928,13 +3032,11 @@ export function ScriptWorkspace() {
       <Modal
         isOpen={isImportModalOpen}
         onClose={() => {
-          if (isUploading) return;
-          setUploadStatus('idle');
-          setUploadError(null);
-          setUploadStartedAt(null);
-          setUploadElapsedMs(0);
-          setUploadPhaseLabel('');
-          setUploadStatusMessage('');
+          if (isUploading) {
+            stopImportProcess(true);
+            return;
+          }
+          resetImportState();
         }}
         title={lang === 'ar' ? 'استيراد المستند' : 'Document Import'}
         className="max-w-2xl"
@@ -2969,6 +3071,8 @@ export function ScriptWorkspace() {
               <p className="mt-1 text-base font-semibold text-text-main">
                 {uploadStatus === 'extracting'
                   ? (lang === 'ar' ? 'استخراج ومعالجة' : 'Extraction')
+                  : uploadStatus === 'aborted'
+                    ? (lang === 'ar' ? 'تم الإيقاف' : 'Stopped')
                   : uploadStatus === 'done'
                     ? (lang === 'ar' ? 'اكتمل' : 'Completed')
                     : uploadStatus === 'failed'
@@ -2982,6 +3086,8 @@ export function ScriptWorkspace() {
             <div className="flex items-center gap-3">
               {uploadStatus === 'failed' ? (
                 <XCircle className="w-5 h-5 text-error shrink-0" />
+              ) : uploadStatus === 'aborted' ? (
+                <Pause className="w-5 h-5 text-warning shrink-0" />
               ) : uploadStatus === 'done' ? (
                 <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
               ) : (
@@ -2992,6 +3098,8 @@ export function ScriptWorkspace() {
                   ? (lang === 'ar' ? 'يتم رفع الملف إلى التخزين وربطه بالنص الحالي.' : 'Uploading the document and linking it to this script.')
                   : uploadStatus === 'extracting'
                     ? (lang === 'ar' ? 'يتم الآن استخراج النص في الخلفية. قد تستغرق ملفات PDF الكبيرة وقتاً أطول.' : 'The text is currently being extracted in the background. Large PDFs can take longer.')
+                    : uploadStatus === 'aborted'
+                      ? (lang === 'ar' ? 'تم إيقاف هذه العملية قبل اكتمالها. لن يتم تحديث النص الحالي من هذه الجلسة.' : 'This import was stopped before completion. The current text will not be updated from this session.')
                     : uploadStatus === 'done'
                       ? (lang === 'ar' ? 'انتهى الاستيراد بنجاح وتم تحديث النص المعروض.' : 'Import completed successfully and the displayed text was updated.')
                       : (lang === 'ar' ? 'توقف الاستيراد قبل اكتماله.' : 'The import stopped before completion.')}
@@ -3014,24 +3122,31 @@ export function ScriptWorkspace() {
             <p className="text-xs text-text-muted">
               {uploadStatus === 'failed'
                 ? (lang === 'ar' ? 'يمكنك إغلاق هذه النافذة ثم إعادة محاولة الاستيراد.' : 'You can close this window and try the import again.')
+                : uploadStatus === 'aborted'
+                  ? (lang === 'ar' ? 'تم إيقاف الاستيراد يدوياً. يمكنك إغلاق النافذة أو بدء استيراد جديد.' : 'The import was stopped manually. You can close this window or start a new import.')
                 : uploadStatus === 'done'
                   ? (lang === 'ar' ? 'سيتم إغلاق هذه النافذة تلقائياً بعد لحظة قصيرة.' : 'This window will close automatically shortly.')
                   : (lang === 'ar' ? 'سيبقى هذا المؤشر مفتوحاً حتى نعرف أين وصلت عملية الاستيراد.' : 'This panel stays open so you can see where the import currently stands.')}
             </p>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setUploadStatus('idle');
-                setUploadError(null);
-                setUploadStartedAt(null);
-                setUploadElapsedMs(0);
-                setUploadPhaseLabel('');
-                setUploadStatusMessage('');
-              }}
-              disabled={isUploading}
-            >
-              {lang === 'ar' ? 'إغلاق' : 'Close'}
-            </Button>
+            <div className="flex items-center gap-2">
+              {isUploading && (
+                <Button variant="danger" onClick={() => stopImportProcess(false)}>
+                  {lang === 'ar' ? 'إيقاف' : 'Stop'}
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  if (isUploading) {
+                    stopImportProcess(true);
+                    return;
+                  }
+                  resetImportState();
+                }}
+              >
+                {lang === 'ar' ? 'إغلاق' : 'Close'}
+              </Button>
+            </div>
           </div>
         </div>
       </Modal>
