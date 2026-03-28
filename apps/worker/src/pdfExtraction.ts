@@ -27,6 +27,19 @@ type ExtractedPdfPage = {
   text: string;
   meta: PageMeta;
 };
+type PdfWordBox = {
+  text: string;
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+};
+type PdfHorizontalLine = {
+  x1: number;
+  x2: number;
+  y: number;
+  strokeWidth: number;
+};
 
 type ExtractionVersion = {
   id: string;
@@ -452,6 +465,36 @@ function collectPdfQualityFlags(text: string): string[] {
   return [...flags];
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function normalizeSnippetForSearch(value: string): string {
+  return value
+    .normalize("NFKC")
+    .replace(PDF_TEXT_INVISIBLE_RE, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function findSnippetOffsets(pageText: string, snippet: string): { start: number; end: number } | null {
+  const normalizedSnippet = normalizeSnippetForSearch(snippet);
+  if (!normalizedSnippet) return null;
+
+  const directIndex = pageText.indexOf(normalizedSnippet);
+  if (directIndex >= 0) {
+    return { start: directIndex, end: directIndex + normalizedSnippet.length };
+  }
+
+  const tokens = normalizedSnippet.split(/\s+/).filter(Boolean);
+  if (!tokens.length) return null;
+  const pattern = tokens.map((token) => escapeRegExp(token)).join("\\s*");
+  const regex = new RegExp(pattern, "u");
+  const match = regex.exec(pageText);
+  if (!match || match.index < 0) return null;
+  return { start: match.index, end: match.index + match[0].length };
+}
+
 function shouldRunOcrForPdfPage(text: string): boolean {
   if (!text.trim()) return true;
   if (isMostlySingleCharArabicPage(text)) return true;
@@ -645,6 +688,206 @@ async function renderPdfPageToPng(pdfPath: string, pageNumber: number, outputPre
   return `${outputPrefix}-${pageNumber}.png`;
 }
 
+async function renderPdfPageToSvg(pdfPath: string, pageNumber: number, outputPrefix: string): Promise<string> {
+  await execFileAsync("pdftocairo", [
+    "-f",
+    String(pageNumber),
+    "-l",
+    String(pageNumber),
+    "-svg",
+    pdfPath,
+    outputPrefix,
+  ], { timeout: 120_000 });
+
+  const candidates = [
+    `${outputPrefix}.svg`,
+    `${outputPrefix}-${pageNumber}.svg`,
+  ];
+  for (const candidate of candidates) {
+    try {
+      await fs.access(candidate);
+      return candidate;
+    } catch {
+      // keep trying
+    }
+  }
+  throw new Error(`SVG render output not found for page ${pageNumber}`);
+}
+
+async function extractPdfPageWordBoxes(pdfPath: string, pageNumber: number, tempDir: string): Promise<PdfWordBox[]> {
+  const outPath = path.join(tempDir, `bbox-page-${pageNumber}.html`);
+  await execFileAsync("pdftotext", [
+    "-bbox-layout",
+    "-f",
+    String(pageNumber),
+    "-l",
+    String(pageNumber),
+    "-enc",
+    "UTF-8",
+    pdfPath,
+    outPath,
+  ], { timeout: 120_000 });
+
+  const html = await fs.readFile(outPath, "utf8");
+  await fs.rm(outPath, { force: true }).catch(() => undefined);
+
+  const boxes: PdfWordBox[] = [];
+  const wordRe =
+    /<word\b[^>]*xMin="([^"]+)"[^>]*yMin="([^"]+)"[^>]*xMax="([^"]+)"[^>]*yMax="([^"]+)"[^>]*>([\s\S]*?)<\/word>/giu;
+  let match: RegExpExecArray | null;
+  while ((match = wordRe.exec(html)) !== null) {
+    const text = postprocessPdfExtractedLine(
+      match[5]
+        ?.replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&#39;/g, "'")
+        .replace(/&quot;/g, '"') ?? "",
+    );
+    if (!text) continue;
+    boxes.push({
+      text,
+      xMin: Number(match[1]),
+      yMin: Number(match[2]),
+      xMax: Number(match[3]),
+      yMax: Number(match[4]),
+    });
+  }
+  return boxes;
+}
+
+function parseSvgHorizontalLines(svgText: string): PdfHorizontalLine[] {
+  const lines: PdfHorizontalLine[] = [];
+  const lineRe =
+    /<line\b[^>]*x1="([^"]+)"[^>]*y1="([^"]+)"[^>]*x2="([^"]+)"[^>]*y2="([^"]+)"[^>]*?(?:stroke-width="([^"]+)")?[^>]*>/giu;
+  let match: RegExpExecArray | null;
+  while ((match = lineRe.exec(svgText)) !== null) {
+    const x1 = Number(match[1]);
+    const y1 = Number(match[2]);
+    const x2 = Number(match[3]);
+    const y2 = Number(match[4]);
+    const strokeWidth = Number(match[5] ?? "1");
+    if (!Number.isFinite(x1) || !Number.isFinite(x2) || !Number.isFinite(y1) || !Number.isFinite(y2)) continue;
+    if (Math.abs(y1 - y2) > 1.5) continue;
+    if (Math.abs(x2 - x1) < 14) continue;
+    lines.push({
+      x1: Math.min(x1, x2),
+      x2: Math.max(x1, x2),
+      y: (y1 + y2) / 2,
+      strokeWidth: Number.isFinite(strokeWidth) ? strokeWidth : 1,
+    });
+  }
+
+  const pathRe = /<path\b[^>]*d="([^"]+)"[^>]*?(?:stroke-width="([^"]+)")?[^>]*>/giu;
+  while ((match = pathRe.exec(svgText)) !== null) {
+    const d = match[1] ?? "";
+    const strokeWidth = Number(match[2] ?? "1");
+    const simpleLine = /M\s*([0-9.+-]+)\s+([0-9.+-]+)\s+L\s*([0-9.+-]+)\s+([0-9.+-]+)/iu.exec(d);
+    if (!simpleLine) continue;
+    const x1 = Number(simpleLine[1]);
+    const y1 = Number(simpleLine[2]);
+    const x2 = Number(simpleLine[3]);
+    const y2 = Number(simpleLine[4]);
+    if (!Number.isFinite(x1) || !Number.isFinite(x2) || !Number.isFinite(y1) || !Number.isFinite(y2)) continue;
+    if (Math.abs(y1 - y2) > 1.5) continue;
+    if (Math.abs(x2 - x1) < 14) continue;
+    lines.push({
+      x1: Math.min(x1, x2),
+      x2: Math.max(x1, x2),
+      y: (y1 + y2) / 2,
+      strokeWidth: Number.isFinite(strokeWidth) ? strokeWidth : 1,
+    });
+  }
+
+  return lines;
+}
+
+async function detectStrikeSpans(
+  pdfPath: string,
+  pageNumber: number,
+  pageText: string,
+  tempDir: string,
+): Promise<Array<Record<string, unknown>>> {
+  const [wordBoxes, svgPath] = await Promise.all([
+    extractPdfPageWordBoxes(pdfPath, pageNumber, tempDir),
+    renderPdfPageToSvg(pdfPath, pageNumber, path.join(tempDir, `svg-page-${pageNumber}`)),
+  ]);
+  const svgText = await fs.readFile(svgPath, "utf8");
+  await fs.rm(svgPath, { force: true }).catch(() => undefined);
+
+  if (!wordBoxes.length) return [];
+  const lines = parseSvgHorizontalLines(svgText);
+  if (!lines.length) return [];
+
+  const struckWordIndexes = new Set<number>();
+  for (const line of lines) {
+    for (let i = 0; i < wordBoxes.length; i++) {
+      const word = wordBoxes[i]!;
+      const height = Math.max(word.yMax - word.yMin, 1);
+      const overlap = Math.min(line.x2, word.xMax) - Math.max(line.x1, word.xMin);
+      if (overlap < Math.max(8, (word.xMax - word.xMin) * 0.35)) continue;
+      if (line.y < word.yMin + height * 0.22 || line.y > word.yMax - height * 0.18) continue;
+      if (line.strokeWidth > height * 0.55) continue;
+      struckWordIndexes.add(i);
+    }
+  }
+
+  if (!struckWordIndexes.size) return [];
+
+  const spans: Array<Record<string, unknown>> = [];
+  let current: number[] = [];
+  const flush = () => {
+    if (!current.length) return;
+    const words = current.map((index) => wordBoxes[index]!).filter(Boolean);
+    const snippet = words.map((word) => word.text).join(" ").replace(/\s{2,}/g, " ").trim();
+    if (!snippet) {
+      current = [];
+      return;
+    }
+    const offsets = findSnippetOffsets(pageText, snippet);
+    spans.push({
+      text: snippet,
+      localStart: offsets?.start ?? null,
+      localEnd: offsets?.end ?? null,
+      wordCount: words.length,
+      bbox: {
+        xMin: Math.min(...words.map((word) => word.xMin)),
+        xMax: Math.max(...words.map((word) => word.xMax)),
+        yMin: Math.min(...words.map((word) => word.yMin)),
+        yMax: Math.max(...words.map((word) => word.yMax)),
+      },
+    });
+    current = [];
+  };
+
+  for (let i = 0; i < wordBoxes.length; i++) {
+    if (!struckWordIndexes.has(i)) {
+      flush();
+      continue;
+    }
+    if (!current.length) {
+      current.push(i);
+      continue;
+    }
+    const prev = wordBoxes[current[current.length - 1]!]!;
+    const next = wordBoxes[i]!;
+    const sameLine = Math.abs(((prev.yMin + prev.yMax) / 2) - ((next.yMin + next.yMax) / 2)) <= Math.max(6, (prev.yMax - prev.yMin) * 0.75);
+    const closeX = next.xMin - prev.xMax <= Math.max(24, (prev.xMax - prev.xMin) * 1.8);
+    if (sameLine && closeX) {
+      current.push(i);
+    } else {
+      flush();
+      current.push(i);
+    }
+  }
+  flush();
+
+  return spans.filter((span) => {
+    const text = typeof span.text === "string" ? span.text : "";
+    return text.length >= 3;
+  });
+}
+
 async function runTesseractArabic(imagePath: string): Promise<string> {
   const { stdout } = await execFileAsync("tesseract", [
     imagePath,
@@ -710,66 +953,80 @@ async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<ExtractedP
         qualityFlags: collectPdfQualityFlags(merged),
       };
 
-      if (!shouldRunOcrForPdfPage(merged)) {
-        finalPages.push({ text: merged, meta: mergedMeta });
-        continue;
-      }
+      let selectedText = merged;
+      let selectedMeta: PageMeta = mergedMeta;
 
-      try {
-        const ocrText = await runArabicPageOcr(pdfPath, i + 1, tempDir);
-        if (!ocrText) {
-          finalPages.push({
-            text: merged,
-            meta: {
+      if (shouldRunOcrForPdfPage(merged)) {
+        try {
+          const ocrText = await runArabicPageOcr(pdfPath, i + 1, tempDir);
+          if (ocrText) {
+            const ocrScore = scorePdfPageQuality(ocrText);
+            const ocrMeta: PageMeta = {
+              extractionEngine: "tesseract_ocr",
+              ocrUsed: true,
+              ocrAttempted: true,
+              ocrSelected: true,
+              sourceMode: "ocr",
+              qualityScore: ocrScore,
+              textLayerScore: mergedScore,
+              qualityFlags: collectPdfQualityFlags(ocrText),
+            };
+            if (ocrScore >= mergedScore) {
+              selectedText = ocrText;
+              selectedMeta = ocrMeta;
+            } else {
+              selectedMeta = {
+                ...mergedMeta,
+                ocrUsed: true,
+                ocrAttempted: true,
+                ocrSelected: false,
+                ocrScore,
+              };
+            }
+          } else {
+            selectedMeta = {
               ...mergedMeta,
               ocrUsed: true,
               ocrSelected: false,
               ocrAttempted: true,
-            },
+            };
+          }
+        } catch (error) {
+          logger.warn("Arabic OCR fallback failed for PDF page", {
+            pageNumber: i + 1,
+            error: error instanceof Error ? error.message : String(error),
           });
-          continue;
-        }
-        const ocrScore = scorePdfPageQuality(ocrText);
-        const ocrMeta: PageMeta = {
-          extractionEngine: "tesseract_ocr",
-          ocrUsed: true,
-          ocrAttempted: true,
-          ocrSelected: true,
-          sourceMode: "ocr",
-          qualityScore: ocrScore,
-          textLayerScore: mergedScore,
-          qualityFlags: collectPdfQualityFlags(ocrText),
-        };
-        if (ocrScore >= mergedScore) {
-          finalPages.push({ text: ocrText, meta: ocrMeta });
-        } else {
-          finalPages.push({
-            text: merged,
-            meta: {
-              ...mergedMeta,
-              ocrUsed: true,
-              ocrAttempted: true,
-              ocrSelected: false,
-              ocrScore,
-            },
-          });
-        }
-      } catch (error) {
-        logger.warn("Arabic OCR fallback failed for PDF page", {
-          pageNumber: i + 1,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        finalPages.push({
-          text: merged,
-          meta: {
+          selectedMeta = {
             ...mergedMeta,
             ocrUsed: true,
             ocrAttempted: true,
             ocrSelected: false,
             ocrError: error instanceof Error ? error.message : String(error),
-          },
-        });
+          };
+        }
       }
+
+      try {
+        const strikeSpans = await detectStrikeSpans(pdfPath, i + 1, selectedText, tempDir);
+        if (strikeSpans.length > 0) {
+          selectedMeta = {
+            ...selectedMeta,
+            strikeSpans,
+            editorialFlags: [...new Set([...(Array.isArray(selectedMeta.editorialFlags) ? selectedMeta.editorialFlags as string[] : []), "crossed_out_text_detected"])],
+          };
+        }
+      } catch (error) {
+        logger.warn("Strike-through detection failed for PDF page", {
+          pageNumber: i + 1,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        selectedMeta = {
+          ...selectedMeta,
+          strikeDetectionError: error instanceof Error ? error.message : String(error),
+        };
+      }
+
+      finalPages.push({ text: selectedText, meta: selectedMeta });
     }
 
     return finalPages;
