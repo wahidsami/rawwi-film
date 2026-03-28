@@ -236,6 +236,34 @@ function postprocessPdfExtractedLine(line: string): string {
   return out;
 }
 
+function collapseSpacedArabicLetters(line: string): string {
+  const trimmed = line.trim();
+  if (!trimmed || !/[\u0600-\u06FF]/u.test(trimmed)) return line;
+  const tokens = trimmed.split(/\s+/).filter(Boolean);
+  if (tokens.length < 4) return line;
+
+  const mostlyShortArabicTokens = tokens.filter((token) => {
+    const plain = token.replace(/[()"'“”‘’.,:;!?،؛؟]/g, "");
+    return plain.length <= 2 && /[\u0600-\u06FF0-9]/u.test(plain);
+  }).length;
+
+  if (mostlyShortArabicTokens / tokens.length < 0.8) return line;
+
+  let out = trimmed
+    // collapse spaces between Arabic letters / digits
+    .replace(/(?<=[\u0600-\u06FF0-9])\s+(?=[\u0600-\u06FF0-9])/gu, "")
+    // then restore more likely word boundaries
+    .replace(/(?<=[\u0621-\u064A]{3,})(?=ال[\u0621-\u064A]{2,})/gu, " ")
+    .replace(/(?<=[\u0621-\u064A])(?=\d)/gu, " ")
+    .replace(/(?<=\d)(?=[\u0621-\u064A])/gu, " ")
+    .replace(/([:؟!،؛.])(?=[\u0600-\u06FF])/gu, "$1 ")
+    .replace(/\)\(/g, ") (")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  return out;
+}
+
 function isMostlySingleCharArabicLine(line: string): boolean {
   const trimmed = line.trim();
   if (!trimmed) return false;
@@ -396,7 +424,7 @@ function splitPdfPages(rawText: string): string[] {
       let cleanedLines = stripDuplicateLetterDump(
         page
         .split(/\r?\n/)
-        .map((line) => postprocessPdfExtractedLine(line))
+        .map((line) => collapseSpacedArabicLetters(postprocessPdfExtractedLine(line)))
         .filter(Boolean),
       );
       if (isMostlySingleCharArabicPage(cleanedLines.join("\n"))) {
