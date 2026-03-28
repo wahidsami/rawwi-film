@@ -253,6 +253,68 @@ function isMostlySingleCharArabicPage(text: string): boolean {
   return shortLines.length >= Math.max(8, Math.floor(lines.length * 0.7));
 }
 
+function lineWhitespaceRatio(text: string): number {
+  return (text.match(/\s/g)?.length ?? 0) / Math.max(text.length, 1);
+}
+
+function scorePdfLineQuality(text: string): number {
+  if (!text.trim()) return -100;
+  let score = 0;
+  if (isMostlySingleCharArabicLine(text)) score -= 8;
+  if (looksLikeBrokenArabicPdfExtraction(text)) score -= 5;
+  if (hasArabicPdfText(text)) score += 2;
+  score += Math.min(lineWhitespaceRatio(text) * 12, 3);
+  score += Math.min(text.trim().length / 40, 2);
+  return score;
+}
+
+function chooseBetterPdfLine(layoutLine: string, rawLine: string): string {
+  if (!layoutLine.trim()) return rawLine;
+  if (!rawLine.trim()) return layoutLine;
+
+  const layoutLetterDump = isMostlySingleCharArabicLine(layoutLine);
+  const rawLetterDump = isMostlySingleCharArabicLine(rawLine);
+  if (layoutLetterDump && !rawLetterDump) return rawLine;
+  if (rawLetterDump && !layoutLetterDump) return layoutLine;
+
+  const layoutScore = scorePdfLineQuality(layoutLine);
+  const rawScore = scorePdfLineQuality(rawLine);
+  if (Math.abs(layoutScore - rawScore) >= 1) {
+    return rawScore > layoutScore ? rawLine : layoutLine;
+  }
+
+  const layoutSpaces = lineWhitespaceRatio(layoutLine);
+  const rawSpaces = lineWhitespaceRatio(rawLine);
+  if (rawSpaces > layoutSpaces + 0.03) return rawLine;
+  if (layoutSpaces > rawSpaces + 0.03) return layoutLine;
+
+  return layoutLine.length >= rawLine.length ? layoutLine : rawLine;
+}
+
+function mergePdfPageLines(layoutPage: string, rawPage: string): string {
+  if (!layoutPage.trim()) return rawPage;
+  if (!rawPage.trim()) return layoutPage;
+
+  const layoutLines = layoutPage.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const rawLines = rawPage.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (!layoutLines.length) return rawPage;
+  if (!rawLines.length) return layoutPage;
+
+  if (Math.abs(layoutLines.length - rawLines.length) > Math.max(4, Math.floor(Math.max(layoutLines.length, rawLines.length) * 0.35))) {
+    return chooseBetterPdfLine(layoutPage, rawPage);
+  }
+
+  const merged: string[] = [];
+  const maxLines = Math.max(layoutLines.length, rawLines.length);
+  for (let i = 0; i < maxLines; i++) {
+    const layoutLine = layoutLines[i] ?? "";
+    const rawLine = rawLines[i] ?? "";
+    const chosen = chooseBetterPdfLine(layoutLine, rawLine).trim();
+    if (chosen) merged.push(chosen);
+  }
+  return merged.join("\n").trim();
+}
+
 function stripDuplicateLetterDump(lines: string[]): string[] {
   if (lines.length < 10) return lines;
 
@@ -375,6 +437,11 @@ function chooseBetterPdfPages(layoutPages: string[], rawPages: string[]): string
     }
     if (layoutLetterDump && !rawLetterDump) {
       chosen.push(raw);
+      continue;
+    }
+    const merged = mergePdfPageLines(layout, raw);
+    if (merged && !isMostlySingleCharArabicPage(merged)) {
+      chosen.push(merged);
       continue;
     }
     if (layoutBroken && !rawBroken) {
