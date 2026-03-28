@@ -20,6 +20,7 @@ const PDF_STRAY_LATIN_EDGE_RE =
   /(^|\s)[A-Za-z](?=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])|(?<=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])[A-Za-z](?=$|\s)/gu;
 const OCR_SUSPICIOUS_MAX_TEXT_LENGTH = 1400;
 const OCR_SUSPICIOUS_MAX_LINE_COUNT = 28;
+const OCR_PAGE_DPI = 300;
 
 type ExtractionVersion = {
   id: string;
@@ -328,6 +329,15 @@ function trimGarbageTailLines(lines: string[]): string[] {
   return out;
 }
 
+function countGarbageTailLines(lines: string[]): number {
+  let count = 0;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (isLikelyGarbageTailLine(lines[i]!)) count += 1;
+    else break;
+  }
+  return count;
+}
+
 function isMostlySingleCharArabicLine(line: string): boolean {
   const trimmed = line.trim();
   if (!trimmed) return false;
@@ -405,6 +415,33 @@ function mergePdfPageLines(layoutPage: string, rawPage: string): string {
     if (chosen) merged.push(chosen);
   }
   return merged.join("\n").trim();
+}
+
+function scorePdfPageQuality(text: string): number {
+  const trimmed = text.trim();
+  if (!trimmed) return -100;
+  const lines = trimmed.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  let score = 0;
+  if (hasArabicPdfText(trimmed)) score += 8;
+  if (looksLikeBrokenArabicPdfExtraction(trimmed)) score -= 10;
+  if (isMostlySingleCharArabicPage(trimmed)) score -= 20;
+  score -= countGarbageTailLines(lines) * 2;
+  score += Math.min(lineWhitespaceRatio(trimmed) * 20, 5);
+  score += Math.min(lines.length, 8) * 0.35;
+  if (/تورطيني|وأنا|و أنا|الصعب|الحياة/u.test(trimmed)) score += 1.5;
+  return score;
+}
+
+function shouldRunOcrForPdfPage(text: string): boolean {
+  if (!text.trim()) return true;
+  if (isMostlySingleCharArabicPage(text)) return true;
+  if (looksLikeBrokenArabicPdfExtraction(text)) return true;
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const spacedLines = lines.filter((line) => isMostlySingleCharArabicLine(line)).length;
+  if (spacedLines >= 2) return true;
+  if (countGarbageTailLines(lines) >= 2) return true;
+  if (/[\u0600-\u06FF]\)\s+\(V\.O\)/u.test(text) || /^\)/m.test(text)) return true;
+  return false;
 }
 
 function stripDuplicateLetterDump(lines: string[]): string[] {
@@ -573,6 +610,61 @@ async function runPdftotext(pdfPath: string, mode: "layout" | "raw"): Promise<st
   }
 }
 
+async function renderPdfPageToPng(pdfPath: string, pageNumber: number, outputPrefix: string): Promise<string> {
+  await execFileAsync("pdftoppm", [
+    "-f",
+    String(pageNumber),
+    "-l",
+    String(pageNumber),
+    "-r",
+    String(OCR_PAGE_DPI),
+    "-png",
+    pdfPath,
+    outputPrefix,
+  ], { timeout: 120_000 });
+  return `${outputPrefix}-${pageNumber}.png`;
+}
+
+async function runTesseractArabic(imagePath: string): Promise<string> {
+  const { stdout } = await execFileAsync("tesseract", [
+    imagePath,
+    "stdout",
+    "-l",
+    "ara",
+    "--psm",
+    "6",
+  ], {
+    timeout: 180_000,
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  return stdout ?? "";
+}
+
+function postprocessOcrPageText(text: string): string {
+  const cleanedLines = trimGarbageTailLines(
+    text
+      .split(/\r?\n/)
+      .map((line) => repairCollapsedArabicWordSpacing(collapseSpacedArabicLetters(postprocessPdfExtractedLine(line))))
+      .filter(Boolean),
+  );
+  return cleanedLines.join("\n").trim();
+}
+
+async function runArabicPageOcr(pdfPath: string, pageNumber: number, tempDir: string): Promise<string | null> {
+  const prefix = path.join(tempDir, `ocr-page-${pageNumber}`);
+  let imagePath: string | null = null;
+  try {
+    imagePath = await renderPdfPageToPng(pdfPath, pageNumber, prefix);
+    const rawText = await runTesseractArabic(imagePath);
+    const cleaned = postprocessOcrPageText(rawText);
+    return cleaned || null;
+  } finally {
+    if (imagePath) {
+      await fs.rm(imagePath, { force: true }).catch(() => undefined);
+    }
+  }
+}
+
 async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<string[]> {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "raawi-pdf-"));
   const pdfPath = path.join(tempDir, "input.pdf");
@@ -584,7 +676,35 @@ async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<string[]> 
     ]);
     const layoutPages = splitPdfPages(layoutText);
     const rawPages = splitPdfPages(rawText);
-    return chooseBetterPdfPages(layoutPages, rawPages);
+    const mergedPages = chooseBetterPdfPages(layoutPages, rawPages);
+    const finalPages: string[] = [];
+
+    for (let i = 0; i < mergedPages.length; i++) {
+      const merged = mergedPages[i] ?? "";
+      if (!shouldRunOcrForPdfPage(merged)) {
+        finalPages.push(merged);
+        continue;
+      }
+
+      try {
+        const ocrText = await runArabicPageOcr(pdfPath, i + 1, tempDir);
+        if (!ocrText) {
+          finalPages.push(merged);
+          continue;
+        }
+        const mergedScore = scorePdfPageQuality(merged);
+        const ocrScore = scorePdfPageQuality(ocrText);
+        finalPages.push(ocrScore >= mergedScore ? ocrText : merged);
+      } catch (error) {
+        logger.warn("Arabic OCR fallback failed for PDF page", {
+          pageNumber: i + 1,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        finalPages.push(merged);
+      }
+    }
+
+    return finalPages;
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true }).catch(() => undefined);
   }
