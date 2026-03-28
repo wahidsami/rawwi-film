@@ -21,6 +21,10 @@ const PDF_STRAY_LATIN_EDGE_RE =
 const OCR_SUSPICIOUS_MAX_TEXT_LENGTH = 1400;
 const OCR_SUSPICIOUS_MAX_LINE_COUNT = 28;
 const OCR_PAGE_DPI = 300;
+const OCR_MAX_PAGES_PER_DOCUMENT = 12;
+const OCR_MIN_PAGE_BUDGET = 4;
+const OCR_MAX_PAGE_RATIO = 0.03;
+const OCR_QUALITY_THRESHOLD = 3.5;
 const STRIKE_DETECTION_FULL_SCAN_PAGE_THRESHOLD = 120;
 
 type PageMeta = Record<string, unknown>;
@@ -1003,6 +1007,11 @@ async function extractPdfPagesWithPoppler(
     const mergedPages = chooseBetterPdfPages(layoutPages, rawPages);
     const finalPages: ExtractedPdfPage[] = [];
     let strikeDetectionAvailable = true;
+    let ocrPagesUsed = 0;
+    const ocrBudget = Math.min(
+      OCR_MAX_PAGES_PER_DOCUMENT,
+      Math.max(OCR_MIN_PAGE_BUDGET, Math.ceil(mergedPages.length * OCR_MAX_PAGE_RATIO)),
+    );
 
     for (let i = 0; i < mergedPages.length; i++) {
       if (options?.versionId) {
@@ -1025,9 +1034,15 @@ async function extractPdfPagesWithPoppler(
       let selectedText = merged;
       let selectedMeta: PageMeta = mergedMeta;
 
-      if (shouldRunOcrForPdfPage(merged)) {
+      const shouldAttemptOcr =
+        shouldRunOcrForPdfPage(merged) &&
+        ocrPagesUsed < ocrBudget &&
+        mergedScore <= OCR_QUALITY_THRESHOLD;
+
+      if (shouldAttemptOcr) {
         try {
           const ocrText = await runArabicPageOcr(pdfPath, i + 1, tempDir);
+          ocrPagesUsed += 1;
           if (ocrText) {
             const ocrScore = scorePdfPageQuality(ocrText);
             const ocrMeta: PageMeta = {
@@ -1073,6 +1088,14 @@ async function extractPdfPagesWithPoppler(
             ocrError: error instanceof Error ? error.message : String(error),
           };
         }
+      } else if (shouldRunOcrForPdfPage(merged)) {
+        selectedMeta = {
+          ...mergedMeta,
+          ocrUsed: false,
+          ocrSkipped: true,
+          ocrSkipReason:
+            ocrPagesUsed >= ocrBudget ? "document_ocr_budget_reached" : "quality_threshold_not_low_enough",
+        };
       }
 
       if (strikeDetectionAvailable && shouldRunStrikeDetectionForPdfPage(selectedText, i + 1, mergedPages.length)) {
