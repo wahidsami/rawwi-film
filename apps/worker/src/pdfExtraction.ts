@@ -264,6 +264,46 @@ function collapseSpacedArabicLetters(line: string): string {
   return out;
 }
 
+function repairCollapsedArabicWordSpacing(line: string): string {
+  let out = line.trim();
+  if (!out || !/[\u0600-\u06FF]/u.test(out)) return out;
+
+  out = out
+    .replace(/([)\]])\((V\.O|O\.S)\b/giu, "$1 ($2)")
+    .replace(/([)\]])\s*([اأإآء-ي])/gu, "$1 $2")
+    .replace(/([اأإآء-ي])\((V\.O|O\.S)\b/giu, "$1 ($2)")
+    .replace(/(?<=[\u0621-\u064A]{2,})و(?=[\u0621-\u064A]{2,})/gu, " و")
+    .replace(/(?<=[\u0621-\u064A]{3,})(في|من|عن|مع|عند|بعد|قبل|الى|إلى|على)(?=[\u0621-\u064A]{2,})/gu, " $1 ")
+    .replace(/(?<=[\u0621-\u064A]{3,})(بصوت|بطريقة|بيده|بمعنى|بسرعة|بدهشة|بقوة|بحدة)(?=[\u0621-\u064A]{2,}|$)/gu, " $1 ")
+    .replace(/(?<=[\u0621-\u064A]{3,})(خارجي|داخلي|ليلي|نهاري|صغير|كبيرة|كبيرة|مشفرة|الأرضية|الغرفة|الباب|المكان)(?=[\u0621-\u064A]{2,}|$)/gu, " $1 ")
+    .replace(/(?<=[\u0621-\u064A]{3,})(تغلي|يجلس|يدخل|يطرق|يغطي|يتفقد|يسيرون|تأخذ|تسير|مطلقة|التحدث)(?=[\u0621-\u064A]{2,})/gu, " $1 ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  return out;
+}
+
+function isLikelyGarbageTailLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return true;
+  if (/^\d+$/.test(trimmed)) return true;
+  if (trimmed.length <= 2) return true;
+  if (/^[\u064B-\u065F\u0670\s]+$/u.test(trimmed)) return true;
+  const tokenCount = trimmed.split(/\s+/).filter(Boolean).length;
+  if (tokenCount <= 2 && trimmed.length <= 8 && !/[.!؟?،؛:]$/.test(trimmed)) return true;
+  return false;
+}
+
+function trimGarbageTailLines(lines: string[]): string[] {
+  const out = [...lines];
+  let removed = 0;
+  while (out.length > 0 && removed < 4 && isLikelyGarbageTailLine(out[out.length - 1]!)) {
+    out.pop();
+    removed += 1;
+  }
+  return out;
+}
+
 function isMostlySingleCharArabicLine(line: string): boolean {
   const trimmed = line.trim();
   if (!trimmed) return false;
@@ -424,7 +464,7 @@ function splitPdfPages(rawText: string): string[] {
       let cleanedLines = stripDuplicateLetterDump(
         page
         .split(/\r?\n/)
-        .map((line) => collapseSpacedArabicLetters(postprocessPdfExtractedLine(line)))
+        .map((line) => repairCollapsedArabicWordSpacing(collapseSpacedArabicLetters(postprocessPdfExtractedLine(line))))
         .filter(Boolean),
       );
       if (isMostlySingleCharArabicPage(cleanedLines.join("\n"))) {
@@ -434,6 +474,7 @@ function splitPdfPages(rawText: string): string[] {
           ),
         ].filter(Boolean);
       }
+      cleanedLines = trimGarbageTailLines(cleanedLines);
       return cleanedLines.join("\n").trim();
     })
     .filter((page, index, pages) => page.length > 0 || index < pages.length - 1)
