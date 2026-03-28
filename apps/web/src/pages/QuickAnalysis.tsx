@@ -9,7 +9,8 @@ import { scriptsApi, reportsApi } from '@/api';
 import type { Script } from '@/api/models';
 import type { ReportListItem } from '@/api/models';
 import { formatDate, formatTime } from '@/utils/dateFormat';
-import { extractDocx, extractTextFromPdfPerPage } from '@/utils/documentExtract';
+import { extractDocx } from '@/utils/documentExtract';
+import { waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -139,20 +140,9 @@ export function QuickAnalysis() {
         const text = await file.text();
         await scriptsApi.extractText(version.id, text, { enqueueAnalysis: false });
       } else if (ext === 'pdf') {
-        const pdfPages = await extractTextFromPdfPerPage(file);
-        const res = await scriptsApi.extractText(version.id, undefined, {
-          pages: pdfPages.map((p) => ({
-            pageNumber: p.pageNumber,
-            text: p.text,
-            html: p.html || undefined,
-            displayFontStack: p.displayFontStack,
-          })),
-          enqueueAnalysis: false,
-        });
-        if ((res as { error?: string })?.error) {
-          throw new Error((res as { error: string }).error);
-        }
-        if (!(res as { extracted_text?: string })?.extracted_text?.trim()) {
+        await scriptsApi.extractText(version.id, undefined, { enqueueAnalysis: false });
+        const extractedVersion = await waitForVersionExtraction(quickScript.id, version.id);
+        if (!extractedVersion.extracted_text?.trim()) {
           throw new Error(isAr ? 'لم يتم العثور على نص في الملف' : 'No text found in document');
         }
       } else if (ext === 'docx') {

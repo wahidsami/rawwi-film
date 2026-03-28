@@ -24,7 +24,8 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate } from '@/utils/dateFormat';
 import { normalizeScriptStatusForDisplay } from '@/utils/scriptStatus';
 import { downloadClientDetailsPdf } from '@/components/reports/client-details/download';
-import { extractDocx, extractTextFromPdfPerPage } from '@/utils/documentExtract';
+import { extractDocx } from '@/utils/documentExtract';
+import { waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 
 export function ClientDetails() {
   const { id } = useParams<{ id: string }>();
@@ -260,20 +261,11 @@ export function ClientDetails() {
             const ext = uploadFile.name.toLowerCase().split('.').pop() || '';
 
             if (ext === 'pdf') {
-              const pdfPages = await extractTextFromPdfPerPage(uploadFile);
-              const res = await scriptsApi.extractText(uploadResult.versionId, undefined, {
-                pages: pdfPages.map((p) => ({
-                  pageNumber: p.pageNumber,
-                  text: p.text,
-                  html: p.html || undefined,
-                  displayFontStack: p.displayFontStack,
-                })),
+              await scriptsApi.extractText(uploadResult.versionId, undefined, {
                 enqueueAnalysis: false,
               });
-              if ((res as { error?: string }).error) {
-                throw new Error((res as { error: string }).error);
-              }
-              if (!(res as { extracted_text?: string }).extracted_text?.trim()) {
+              const extractedVersion = await waitForVersionExtraction(saved.id, uploadResult.versionId);
+              if (!extractedVersion.extracted_text?.trim()) {
                 throw new Error(lang === 'ar' ? 'لم يتم العثور على نص في المستند' : 'No text found in document');
               }
             } else if (ext === 'docx') {

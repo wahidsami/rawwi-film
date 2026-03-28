@@ -30,6 +30,18 @@ export type AnalysisChunk = {
   judging_started_at?: string | null;
 };
 
+export type ExtractionVersion = {
+  id: string;
+  script_id: string;
+  source_file_name: string | null;
+  source_file_type: string | null;
+  source_file_path: string | null;
+  source_file_url: string | null;
+  extracted_text: string | null;
+  extraction_status: string;
+  created_at: string;
+};
+
 async function fetchCandidateJobsBase(): Promise<AnalysisJob[]> {
   const selectWithControls =
     "id, script_id, version_id, status, progress_total, progress_done, started_at, pause_requested, paused_at, partial_finalize_requested, partial_finalize_requested_at";
@@ -143,6 +155,40 @@ export async function fetchNextAggregationCandidateJob(): Promise<AnalysisJob | 
   }
 
   return null;
+}
+
+export async function fetchNextPendingExtractionVersion(): Promise<ExtractionVersion | null> {
+  const { data, error } = await supabase
+    .from("script_versions")
+    .select(
+      "id, script_id, source_file_name, source_file_type, source_file_path, source_file_url, extracted_text, extraction_status, created_at",
+    )
+    .eq("extraction_status", "extracting")
+    .is("extracted_text", null)
+    .not("source_file_path", "is", null)
+    .order("created_at", { ascending: true })
+    .limit(20);
+
+  if (error) {
+    logger.warn("Failed to query pending extraction versions", { error: error.message });
+    return null;
+  }
+
+  const rows = (data ?? []) as ExtractionVersion[];
+  return rows.find((row) => {
+    const fileName = (row.source_file_name ?? "").toLowerCase();
+    const fileType = (row.source_file_type ?? "").toLowerCase();
+    return fileName.endsWith(".pdf") || fileType === "application/pdf";
+  }) ?? null;
+}
+
+export async function setExtractionFailed(versionId: string, errorMessage: string): Promise<void> {
+  await supabase
+    .from("script_versions")
+    .update({ extraction_status: "failed" })
+    .eq("id", versionId);
+
+  logger.error("PDF extraction failed", { versionId, error: errorMessage });
 }
 
 /**

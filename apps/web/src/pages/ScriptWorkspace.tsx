@@ -15,7 +15,8 @@ import { cn } from '@/utils/cn';
 import { getPolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
 import { getScriptDecisionCapabilities } from '@/utils/scriptDecisionCapabilities';
-import { extractDocx, extractTextFromPdfPerPage } from '@/utils/documentExtract';
+import { extractDocx } from '@/utils/documentExtract';
+import { waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 import {
   DEFAULT_SCRIPT_EDITOR_FONT_STACK,
   sanitizeFontStackForCss,
@@ -1810,19 +1811,11 @@ export function ScriptWorkspace() {
         textToShow = (res as { extracted_text?: string })?.extracted_text ?? fileText;
       } else if (ext === 'pdf') {
         try {
-          const pdfPages = await extractTextFromPdfPerPage(file);
-          const res = await scriptsApi.extractText(version.id, undefined, {
-            pages: pdfPages.map((p) => ({
-              pageNumber: p.pageNumber,
-              text: p.text,
-              html: p.html || undefined,
-              displayFontStack: p.displayFontStack,
-            })),
+          await scriptsApi.extractText(version.id, undefined, {
             enqueueAnalysis: false,
           });
-          const err = (res as { error?: string })?.error;
-          if (err) throw new Error(err);
-          textToShow = (res as { extracted_text?: string })?.extracted_text ?? pdfPages.map((p) => p.text).join('\n\n');
+          const extractedVersion = await waitForVersionExtraction(script.id, version.id);
+          textToShow = extractedVersion.extracted_text ?? '';
           if (!textToShow.trim()) {
             toast.error(lang === 'ar' ? 'لم يتم العثور على نص في الملف' : 'No text found in document');
             setUploadStatus('failed');
@@ -1830,7 +1823,7 @@ export function ScriptWorkspace() {
           }
         } catch (pdfErr: unknown) {
           const msg = pdfErr instanceof Error ? pdfErr.message : String(pdfErr);
-          toast.error(lang === 'ar' ? 'فشل استخراج الملف' : msg || 'Extraction failed');
+          toast.error(msg || (lang === 'ar' ? 'فشل استخراج الملف' : 'Extraction failed'));
           throw pdfErr;
         }
       } else if (ext === 'docx') {

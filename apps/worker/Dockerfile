@@ -1,6 +1,7 @@
 # apps/worker/Dockerfile
 FROM node:20-alpine
 WORKDIR /app
+RUN apk add --no-cache poppler-utils
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Context is root

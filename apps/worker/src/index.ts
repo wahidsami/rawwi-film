@@ -13,10 +13,13 @@ import {
   setChunkPending,
   setChunkFailed,
   recoverStaleJudgingChunks,
+  fetchNextPendingExtractionVersion,
+  setExtractionFailed,
 } from "./jobs.js";
 import { setContext, logger } from "./logger.js";
 import { initializeLexiconCache, getLexiconCache } from "./lexiconCache.js";
 import { processChunkJudge } from "./pipeline.js";
+import { processPdfExtraction } from "./pdfExtraction.js";
 
 type ChunkProcessResult = {
   ok: boolean;
@@ -74,6 +77,23 @@ async function processClaimedChunk(job: { id: string; script_id: string; version
 }
 
 async function processOneJob(): Promise<boolean> {
+  const extractionVersion = await fetchNextPendingExtractionVersion();
+  if (extractionVersion) {
+    setContext({});
+    try {
+      await processPdfExtraction(extractionVersion);
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
+      logger.error("Backend PDF extraction failed", {
+        versionId: extractionVersion.id,
+        scriptId: extractionVersion.script_id,
+        error: errMsg,
+      });
+      await setExtractionFailed(extractionVersion.id, errMsg);
+    }
+    return true;
+  }
+
   const recoveredChunks = await recoverStaleJudgingChunks(config.STALE_JUDGING_MS);
   if (recoveredChunks > 0) {
     logger.info("Recovered stale judging chunks before polling next job", {

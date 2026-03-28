@@ -388,6 +388,26 @@ Deno.serve(async (req: Request) => {
   if (body.text != null && typeof body.text === "string") {
     extractedText = norm(body.text);
   } else {
+    const ext = (v.source_file_name || "").toLowerCase().split(".").pop() || "";
+    if (ext === "pdf") {
+      const { error: queueErr } = await supabase
+        .from("script_versions")
+        .update({ extraction_status: "extracting" })
+        .eq("id", versionId);
+      if (queueErr) {
+        return json({ error: queueErr.message }, 500);
+      }
+      const { data: queued } = await supabase
+        .from("script_versions")
+        .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extracted_text_hash, created_at")
+        .eq("id", versionId)
+        .single();
+      return json({
+        ...toFrontendVersion((queued ?? v) as ScriptVersionRow),
+        queued_for_backend_extraction: true,
+      }, 202);
+    }
+
     const objectPath = v.source_file_path;
     if (!objectPath) {
       await supabase
@@ -406,19 +426,7 @@ Deno.serve(async (req: Request) => {
       return json({ error: dl.error || "Failed to download file" }, 500);
     }
     const blob = dl.blob;
-    const ext = (v.source_file_name || "").toLowerCase().split(".").pop() || "";
-    if (ext === "pdf" || ext === "docx") {
-      // PDF: never parse on Edge — PDF.js exceeds Supabase memory/CPU; client must POST `pages` (see web app).
-      if (ext === "pdf") {
-        await supabase.from("script_versions").update({ extraction_status: "failed" }).eq("id", versionId);
-        return json(
-          {
-            error:
-              "PDF extraction runs in the browser. Update the web app and import again, or POST /extract with a non-empty \"pages\" array.",
-          },
-          422,
-        );
-      }
+    if (ext === "docx") {
       try {
         const ab = await blob.arrayBuffer();
         const pageTexts = await extractDocxPageTexts(ab);
