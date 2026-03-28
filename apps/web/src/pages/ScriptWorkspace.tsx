@@ -68,6 +68,70 @@ function formatImportElapsed(ms: number, lang: 'ar' | 'en'): string {
   return formatAnalysisElapsed(ms, lang);
 }
 
+function formatExtractionProgressMessage(
+  progress: Record<string, unknown> | undefined,
+  lang: 'ar' | 'en',
+): string | null {
+  if (!progress) return null;
+  const phase = typeof progress.phase === 'string' ? progress.phase : '';
+  const currentPage = typeof progress.currentPage === 'number' ? progress.currentPage : null;
+  const totalPages = typeof progress.totalPages === 'number' ? progress.totalPages : null;
+  const ocrPagesUsed = typeof progress.ocrPagesUsed === 'number' ? progress.ocrPagesUsed : null;
+  const ocrBudget = typeof progress.ocrBudget === 'number' ? progress.ocrBudget : null;
+
+  if (phase === 'queued_for_backend_pdf') {
+    return lang === 'ar'
+      ? 'تمت جدولة استخراج PDF في الخلفية. ننتظر بدء معالجة الصفحات.'
+      : 'PDF extraction was queued in the backend. Waiting for page processing to start.';
+  }
+
+  if (phase === 'preparing_pdf') {
+    return lang === 'ar'
+      ? 'يجري تجهيز ملف PDF واختيار أفضل طبقة نص قبل بدء معالجة الصفحات.'
+      : 'Preparing the PDF and choosing the best text layer before page processing starts.';
+  }
+
+  if ((phase === 'processing_page' || phase === 'ocr_page') && currentPage != null) {
+    const pagePart =
+      totalPages != null
+        ? (lang === 'ar' ? `الصفحة ${currentPage} من ${totalPages}` : `Page ${currentPage} of ${totalPages}`)
+        : (lang === 'ar' ? `الصفحة ${currentPage}` : `Page ${currentPage}`);
+    const ocrPart =
+      ocrPagesUsed != null && ocrBudget != null
+        ? lang === 'ar'
+          ? ` • OCR ${ocrPagesUsed}/${ocrBudget}`
+          : ` • OCR ${ocrPagesUsed}/${ocrBudget}`
+        : '';
+    return phase === 'ocr_page'
+      ? lang === 'ar'
+        ? `يجري الآن تشغيل OCR على ${pagePart}${ocrPart}.`
+        : `Running OCR on ${pagePart}${ocrPart}.`
+      : lang === 'ar'
+        ? `يجري الآن استخراج ومعالجة ${pagePart}${ocrPart}.`
+        : `Extracting and processing ${pagePart}${ocrPart}.`;
+  }
+
+  if (phase === 'saving_pages') {
+    return lang === 'ar'
+      ? 'اكتمل استخراج الصفحات ويجري الآن حفظ النص النهائي في مساحة العمل.'
+      : 'Page extraction completed and the final text is now being saved to the workspace.';
+  }
+
+  if (phase === 'cancelled') {
+    return lang === 'ar'
+      ? 'تم إيقاف استخراج المستند من الخادم.'
+      : 'Document extraction was cancelled on the server.';
+  }
+
+  if (phase === 'failed') {
+    return lang === 'ar'
+      ? 'فشلت عملية استخراج المستند في الخلفية.'
+      : 'Document extraction failed in the backend.';
+  }
+
+  return null;
+}
+
 function createImportAbortError(): Error {
   const error = new Error('Import aborted by user');
   error.name = 'AbortError';
@@ -1965,6 +2029,15 @@ export function ScriptWorkspace() {
             timeoutMs: PDF_EXTRACTION_TIMEOUT_MS,
             intervalMs: PDF_EXTRACTION_INTERVAL_MS,
             signal: controller.signal,
+            onUpdate: (currentVersion) => {
+              const progressMessage = formatExtractionProgressMessage(currentVersion.extraction_progress, lang);
+              if (progressMessage) {
+                setUploadStatusMessage(progressMessage);
+              }
+              if (currentVersion.extraction_status === 'failed' && currentVersion.extraction_error) {
+                setUploadError(currentVersion.extraction_error);
+              }
+            },
           });
           ensureImportActive();
           textToShow = extractedVersion.extracted_text ?? '';

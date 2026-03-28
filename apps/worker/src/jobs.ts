@@ -185,7 +185,13 @@ export async function fetchNextPendingExtractionVersion(): Promise<ExtractionVer
 export async function setExtractionFailed(versionId: string, errorMessage: string): Promise<void> {
   await supabase
     .from("script_versions")
-    .update({ extraction_status: "failed" })
+    .update({
+      extraction_status: "failed",
+      extraction_error: errorMessage,
+      extraction_progress: {
+        phase: "failed",
+      },
+    })
     .eq("id", versionId);
 
   logger.error("PDF extraction failed", { versionId, error: errorMessage });

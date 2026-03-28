@@ -42,6 +42,8 @@ type ScriptVersionRow = {
   source_file_url: string | null;
   extracted_text: string | null;
   extraction_status: string;
+  extraction_progress?: Record<string, unknown> | null;
+  extraction_error?: string | null;
   extracted_text_hash: string | null;
   created_at: string;
 };
@@ -83,6 +85,8 @@ function toFrontendVersion(row: ScriptVersionRow) {
     source_file_url: row.source_file_url ?? undefined,
     extracted_text: row.extracted_text ?? undefined,
     extraction_status: row.extraction_status,
+    extraction_progress: row.extraction_progress ?? undefined,
+    extraction_error: row.extraction_error ?? undefined,
     createdAt: row.created_at,
   };
 }
@@ -200,7 +204,11 @@ async function persistMultipageExtract(
 
   await supabase
     .from("script_versions")
-    .update({ extraction_status: "extracting" })
+    .update({
+      extraction_status: "extracting",
+      extraction_progress: { phase: "saving_pages" },
+      extraction_error: null,
+    })
     .eq("id", versionId);
 
   const { error: delErr } = await supabase.from("script_pages").delete().eq("version_id", versionId);
@@ -227,7 +235,7 @@ async function persistMultipageExtract(
   const { error: insErr } = await supabase.from("script_pages").insert(pageRows);
   if (insErr) {
     console.warn(`[extract] correlationId=${correlationId} script_pages insert failed:`, insErr.message);
-    await supabase.from("script_versions").update({ extraction_status: "failed" }).eq("id", versionId);
+    await supabase.from("script_versions").update({ extraction_status: "failed", extraction_error: insErr.message, extraction_progress: { phase: "failed" } }).eq("id", versionId);
     return { error: insErr.message };
   }
 
@@ -237,6 +245,8 @@ async function persistMultipageExtract(
       extracted_text: canonicalContent,
       extracted_text_hash: extractedTextHash,
       extraction_status: "done",
+      extraction_progress: { phase: "done", pageCount: pageRows.length },
+      extraction_error: null,
     })
     .eq("id", versionId);
 
@@ -335,7 +345,7 @@ Deno.serve(async (req: Request) => {
   const supabase = createSupabaseAdmin();
   const { data: version, error: versionErr } = await supabase
     .from("script_versions")
-    .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extracted_text_hash, created_at")
+    .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extraction_progress, extraction_error, extracted_text_hash, created_at")
     .eq("id", versionId)
     .single();
 
@@ -371,14 +381,18 @@ Deno.serve(async (req: Request) => {
     if (nextStatus !== v.extraction_status) {
       const { error: cancelErr } = await supabase
         .from("script_versions")
-        .update({ extraction_status: nextStatus })
+        .update({
+          extraction_status: nextStatus,
+          extraction_progress: nextStatus === "cancelled" ? { phase: "cancelled" } : v.extraction_progress ?? {},
+          extraction_error: null,
+        })
         .eq("id", versionId);
       if (cancelErr) return json({ error: cancelErr.message }, 500);
     }
 
     const { data: updated } = await supabase
       .from("script_versions")
-      .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extracted_text_hash, created_at")
+      .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extraction_progress, extraction_error, extracted_text_hash, created_at")
       .eq("id", versionId)
       .single();
 
@@ -405,7 +419,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: updated } = await supabase
       .from("script_versions")
-      .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extracted_text_hash, created_at")
+      .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extraction_progress, extraction_error, extracted_text_hash, created_at")
       .eq("id", versionId)
       .single();
 
@@ -421,14 +435,18 @@ Deno.serve(async (req: Request) => {
     if (ext === "pdf") {
       const { error: queueErr } = await supabase
         .from("script_versions")
-        .update({ extraction_status: "extracting" })
+        .update({
+          extraction_status: "extracting",
+          extraction_progress: { phase: "queued_for_backend_pdf" },
+          extraction_error: null,
+        })
         .eq("id", versionId);
       if (queueErr) {
         return json({ error: queueErr.message }, 500);
       }
       const { data: queued } = await supabase
         .from("script_versions")
-        .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extracted_text_hash, created_at")
+        .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extraction_progress, extraction_error, extracted_text_hash, created_at")
         .eq("id", versionId)
         .single();
       return json({
@@ -441,7 +459,7 @@ Deno.serve(async (req: Request) => {
     if (!objectPath) {
       await supabase
         .from("script_versions")
-        .update({ extraction_status: "failed" })
+        .update({ extraction_status: "failed", extraction_error: "No source file path on version", extraction_progress: { phase: "failed" } })
         .eq("id", versionId);
       return json({ error: "No source file path on version" }, 400);
     }
@@ -449,7 +467,7 @@ Deno.serve(async (req: Request) => {
     if ("error" in dl) {
       await supabase
         .from("script_versions")
-        .update({ extraction_status: "failed" })
+        .update({ extraction_status: "failed", extraction_error: dl.error || "Failed to download file", extraction_progress: { phase: "failed" } })
         .eq("id", versionId);
       console.error(`[extract] storage download failed path=${objectPath} err=${dl.error}`);
       return json({ error: dl.error || "Failed to download file" }, 500);
@@ -462,7 +480,7 @@ Deno.serve(async (req: Request) => {
         if (!pageTexts.length || !pageTexts.some((t) => t.trim())) {
           await supabase
             .from("script_versions")
-            .update({ extraction_status: "failed" })
+            .update({ extraction_status: "failed", extraction_error: "No text extracted from DOCX.", extraction_progress: { phase: "failed" } })
             .eq("id", versionId);
           return json({ error: "No text extracted from DOCX." }, 422);
         }
@@ -484,14 +502,14 @@ Deno.serve(async (req: Request) => {
         if (pe.error) {
           await supabase
             .from("script_versions")
-            .update({ extraction_status: "failed" })
+            .update({ extraction_status: "failed", extraction_error: pe.error, extraction_progress: { phase: "failed" } })
             .eq("id", versionId);
           return json({ error: pe.error }, 500);
         }
         const { data: updated } = await supabase
           .from("script_versions")
           .select(
-            "id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extracted_text_hash, created_at"
+            "id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extraction_progress, extraction_error, extracted_text_hash, created_at"
           )
           .eq("id", versionId)
           .single();
@@ -501,7 +519,7 @@ Deno.serve(async (req: Request) => {
         console.error(`[extract] correlationId=${correlationId} server extract failed:`, msg);
         await supabase
           .from("script_versions")
-          .update({ extraction_status: "failed" })
+          .update({ extraction_status: "failed", extraction_error: msg, extraction_progress: { phase: "failed" } })
           .eq("id", versionId);
         return json({ error: `Extraction failed: ${msg}` }, 500);
       }
@@ -520,7 +538,7 @@ Deno.serve(async (req: Request) => {
 
   await supabase
     .from("script_versions")
-    .update({ extraction_status: "extracting" })
+    .update({ extraction_status: "extracting", extraction_progress: { phase: "normalizing_text" }, extraction_error: null })
     .eq("id", versionId);
 
   // Strategy A: when contentHtml is provided (e.g. DOCX), derive canonical plain text from HTML
@@ -539,6 +557,8 @@ Deno.serve(async (req: Request) => {
       extracted_text: extractedText,
       extracted_text_hash: extractedTextHash,
       extraction_status: "done",
+      extraction_progress: { phase: "done" },
+      extraction_error: null,
     })
     .eq("id", versionId);
 
@@ -585,7 +605,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: updated } = await supabase
     .from("script_versions")
-    .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extracted_text_hash, created_at")
+    .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extraction_progress, extraction_error, extracted_text_hash, created_at")
     .eq("id", versionId)
     .single();
 

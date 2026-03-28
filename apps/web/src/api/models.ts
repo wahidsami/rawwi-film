@@ -63,6 +63,8 @@ export interface ScriptVersion {
   source_file_url?: string;
   extracted_text?: string;
   extraction_status: 'pending' | 'extracting' | 'done' | 'failed' | 'cancelled';
+  extraction_progress?: Record<string, unknown>;
+  extraction_error?: string | null;
   createdAt: string;
 }
 

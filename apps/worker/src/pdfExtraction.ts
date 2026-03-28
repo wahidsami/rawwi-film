@@ -322,9 +322,15 @@ function repairCollapsedArabicWordSpacing(line: string): string {
     .replace(/بينمايجلس/gu, "بينما يجلس")
     .replace(/السائقعلى/gu, "السائق على")
     .replace(/تنظرزوجتهبدهشة/gu, "تنظر زوجته بدهشة")
+    .replace(/تنظرإلىزوجهاوكأنها/gu, "تنظر إلى زوجها وكأنها")
+    .replace(/عزيزةإلىسعد/gu, "عزيزة إلى سعد")
+    .replace(/بدهشةوكأنها/gu, "بدهشة وكأنها")
     .replace(/أنهاتدعوهكي/gu, "أنها تدعوه كي")
     .replace(/السائقبغضب/gu, "السائق بغضب")
+    .replace(/بينمايضع/gu, "بينما يضع")
     .replace(/وشالسالفة/gu, "وش السالفة")
+    .replace(/وش الس الفة/gu, "وش السالفة")
+    .replace(/يدخلانإلى/gu, "يدخلان إلى")
     .replace(/يقولو/gu, "يقولوا")
     .replace(/بينماتنظرعزيزة/gu, "بينما تنظر عزيزة")
     .replace(/الذييقود/gu, "الذي يقود")
@@ -332,6 +338,8 @@ function repairCollapsedArabicWordSpacing(line: string): string {
     .replace(/وكأنهاتريدأنتقنعه/gu, "وكأنها تريد أن تقنعه")
     .replace(/تخلعغطاءها/gu, "تخلع غطاءها")
     .replace(/لكنهاقلقة/gu, "لكنها قلقة")
+    .replace(/[ّ]طيني بها يعني؟\s*وأنا ما داري أيش خلفها تشتي تور/gu, "وأنا ما داري أيش خلفها تشتي تورطيني بها يعني؟")
+    .replace(/طيني بها يعني؟\s*وأنا ما داري أيش خلفها تشتي تور/gu, "وأنا ما داري أيش خلفها تشتي تورطيني بها يعني؟")
     .replace(/\s{2,}/g, " ")
     .trim();
 
@@ -990,6 +998,27 @@ async function isExtractionStillActive(versionId: string): Promise<boolean> {
   return (data?.extraction_status ?? "extracting") === "extracting";
 }
 
+async function updateExtractionProgress(
+  versionId: string,
+  progress: Record<string, unknown>,
+): Promise<void> {
+  const { error } = await supabase
+    .from("script_versions")
+    .update({
+      extraction_progress: progress,
+      extraction_error: null,
+    })
+    .eq("id", versionId)
+    .eq("extraction_status", "extracting");
+
+  if (error) {
+    logger.warn("Failed to update PDF extraction progress", {
+      versionId,
+      error: error.message,
+    });
+  }
+}
+
 async function extractPdfPagesWithPoppler(
   pdfBuffer: Buffer,
   options?: { versionId?: string },
@@ -1019,6 +1048,14 @@ async function extractPdfPagesWithPoppler(
         if (!stillActive) {
           throw createExtractionAbortError();
         }
+        await updateExtractionProgress(options.versionId, {
+          phase: "processing_page",
+          currentPage: i + 1,
+          totalPages: mergedPages.length,
+          ocrPagesUsed,
+          ocrBudget,
+          strikeDetectionAvailable,
+        });
       }
 
       const merged = mergedPages[i] ?? "";
@@ -1041,6 +1078,16 @@ async function extractPdfPagesWithPoppler(
 
       if (shouldAttemptOcr) {
         try {
+          if (options?.versionId) {
+            await updateExtractionProgress(options.versionId, {
+              phase: "ocr_page",
+              currentPage: i + 1,
+              totalPages: mergedPages.length,
+              ocrPagesUsed,
+              ocrBudget,
+              strikeDetectionAvailable,
+            });
+          }
           const ocrText = await runArabicPageOcr(pdfPath, i + 1, tempDir);
           ocrPagesUsed += 1;
           if (ocrText) {
@@ -1211,6 +1258,11 @@ async function persistPdfPages(version: ExtractionVersion, pageTexts: string[]):
       extracted_text: canonicalContent,
       extracted_text_hash: extractedTextHash,
       extraction_status: "done",
+      extraction_progress: {
+        phase: "done",
+        pageCount: canonicalPages.length,
+      },
+      extraction_error: null,
     })
     .eq("id", version.id);
   if (updateVersionErr) throw new Error(updateVersionErr.message);
@@ -1268,6 +1320,12 @@ export async function processPdfExtraction(version: ExtractionVersion): Promise<
     versionId: version.id,
     scriptId: version.script_id,
     sourceFileName: version.source_file_name ?? null,
+  });
+
+  await updateExtractionProgress(version.id, {
+    phase: "preparing_pdf",
+    currentPage: 0,
+    totalPages: null,
   });
 
   const pdfBuffer = await downloadScriptFile(version);

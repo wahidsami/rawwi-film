@@ -62,6 +62,8 @@ type ScriptVersionRow = {
   source_file_url: string | null;
   extracted_text: string | null;
   extraction_status: string;
+  extraction_progress?: Record<string, unknown> | null;
+  extraction_error?: string | null;
   created_at: string;
 };
 
@@ -76,6 +78,8 @@ function toVersionFrontend(row: ScriptVersionRow) {
     source_file_url: row.source_file_url ?? undefined,
     extracted_text: row.extracted_text ?? undefined,
     extraction_status: row.extraction_status,
+    extraction_progress: row.extraction_progress ?? undefined,
+    extraction_error: row.extraction_error ?? undefined,
     createdAt: row.created_at,
   };
 }
@@ -718,7 +722,7 @@ Deno.serve(async (req: Request) => {
     const { data: version, error: versionErr } = await supabase
       .from("script_versions")
       .insert(versionInsert)
-      .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, created_at")
+      .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extraction_progress, extraction_error, created_at")
       .single();
     if (versionErr || !version) {
       console.error(`[scripts] correlationId=${correlationId} version insert error=`, versionErr?.message);
