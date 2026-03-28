@@ -673,35 +673,14 @@ async function runPdftotext(pdfPath: string, mode: "layout" | "raw"): Promise<st
   }
 }
 
-async function renderPdfPageToPng(pdfPath: string, pageNumber: number, outputPrefix: string): Promise<string> {
-  await execFileAsync("pdftoppm", [
-    "-f",
-    String(pageNumber),
-    "-l",
-    String(pageNumber),
-    "-r",
-    String(OCR_PAGE_DPI),
-    "-png",
-    pdfPath,
-    outputPrefix,
-  ], { timeout: 120_000 });
-  return `${outputPrefix}-${pageNumber}.png`;
-}
-
-async function renderPdfPageToSvg(pdfPath: string, pageNumber: number, outputPrefix: string): Promise<string> {
-  await execFileAsync("pdftocairo", [
-    "-f",
-    String(pageNumber),
-    "-l",
-    String(pageNumber),
-    "-svg",
-    pdfPath,
-    outputPrefix,
-  ], { timeout: 120_000 });
-
+async function resolveRenderedOutputFile(
+  outputPrefix: string,
+  extension: ".png" | ".svg",
+  pageNumber: number,
+): Promise<string> {
   const candidates = [
-    `${outputPrefix}.svg`,
-    `${outputPrefix}-${pageNumber}.svg`,
+    `${outputPrefix}${extension}`,
+    `${outputPrefix}-${pageNumber}${extension}`,
   ];
   for (const candidate of candidates) {
     try {
@@ -711,7 +690,44 @@ async function renderPdfPageToSvg(pdfPath: string, pageNumber: number, outputPre
       // keep trying
     }
   }
-  throw new Error(`SVG render output not found for page ${pageNumber}`);
+
+  const dir = path.dirname(outputPrefix);
+  const base = path.basename(outputPrefix);
+  const entries = await fs.readdir(dir).catch(() => []);
+  const matched = entries.find((entry) => entry.startsWith(base) && entry.endsWith(extension));
+  if (matched) return path.join(dir, matched);
+
+  throw new Error(`Rendered ${extension} output not found for page ${pageNumber}`);
+}
+
+async function renderPdfPageToPng(pdfPath: string, pageNumber: number, outputPrefix: string): Promise<string> {
+  await execFileAsync("pdftoppm", [
+    "-f",
+    String(pageNumber),
+    "-l",
+    String(pageNumber),
+    "-r",
+    String(OCR_PAGE_DPI),
+    "-png",
+    "-singlefile",
+    pdfPath,
+    outputPrefix,
+  ], { timeout: 120_000 });
+  return resolveRenderedOutputFile(outputPrefix, ".png", pageNumber);
+}
+
+async function renderPdfPageToSvg(pdfPath: string, pageNumber: number, outputPrefix: string): Promise<string> {
+  await execFileAsync("pdftocairo", [
+    "-f",
+    String(pageNumber),
+    "-l",
+    String(pageNumber),
+    "-svg",
+    "-singlefile",
+    pdfPath,
+    outputPrefix,
+  ], { timeout: 120_000 });
+  return resolveRenderedOutputFile(outputPrefix, ".svg", pageNumber);
 }
 
 async function extractPdfPageWordBoxes(pdfPath: string, pageNumber: number, tempDir: string): Promise<PdfWordBox[]> {
