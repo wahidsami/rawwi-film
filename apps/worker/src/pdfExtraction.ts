@@ -246,6 +246,13 @@ function isMostlySingleCharArabicLine(line: string): boolean {
   return hasArabicish && shortTokens.length / tokens.length >= 0.85;
 }
 
+function isMostlySingleCharArabicPage(text: string): boolean {
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (lines.length < 8) return false;
+  const shortLines = lines.filter((line) => isMostlySingleCharArabicLine(line));
+  return shortLines.length >= Math.max(8, Math.floor(lines.length * 0.7));
+}
+
 function stripDuplicateLetterDump(lines: string[]): string[] {
   if (lines.length < 10) return lines;
 
@@ -324,12 +331,19 @@ function splitPdfPages(rawText: string): string[] {
   return rawText
     .split(/\f/g)
     .map((page) => {
-      const cleanedLines = stripDuplicateLetterDump(
+      let cleanedLines = stripDuplicateLetterDump(
         page
         .split(/\r?\n/)
         .map((line) => postprocessPdfExtractedLine(line))
         .filter(Boolean),
       );
+      if (isMostlySingleCharArabicPage(cleanedLines.join("\n"))) {
+        cleanedLines = [
+          postprocessPdfExtractedLine(
+            cleanedLines.join(""),
+          ),
+        ].filter(Boolean);
+      }
       return cleanedLines.join("\n").trim();
     })
     .filter((page, index, pages) => page.length > 0 || index < pages.length - 1)
@@ -353,6 +367,16 @@ function chooseBetterPdfPages(layoutPages: string[], rawPages: string[]): string
 
     const layoutBroken = looksLikeBrokenArabicPdfExtraction(layout);
     const rawBroken = looksLikeBrokenArabicPdfExtraction(raw);
+    const layoutLetterDump = isMostlySingleCharArabicPage(layout);
+    const rawLetterDump = isMostlySingleCharArabicPage(raw);
+    if (rawLetterDump && !layoutLetterDump) {
+      chosen.push(layout);
+      continue;
+    }
+    if (layoutLetterDump && !rawLetterDump) {
+      chosen.push(raw);
+      continue;
+    }
     if (layoutBroken && !rawBroken) {
       chosen.push(raw);
       continue;
