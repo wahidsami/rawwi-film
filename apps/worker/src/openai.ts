@@ -64,7 +64,7 @@ export async function callRouter(
     response_format: { type: "json_object" },
     temperature: jobConfig.temperature,
     seed: jobConfig.seed,
-  });
+  }, { timeout: config.JUDGE_TIMEOUT_MS });
 
   const raw = resp.choices[0]?.message?.content ?? "{}";
   const parsed = parseRouterOutput(raw);
@@ -133,7 +133,7 @@ export async function callRepairJson(
       { role: "user", content: `Context: ${context}\n\nBroken JSON:\n${slice}\n\nReturn the corrected JSON only.` },
     ],
     response_format: { type: "json_object" },
-  });
+  }, { timeout: config.JUDGE_TIMEOUT_MS });
   return resp.choices[0]?.message?.content ?? "{}";
 }
 
@@ -359,7 +359,7 @@ export async function callRevisitSpotter(
       response_format: { type: "json_object" },
       max_tokens: 2048,
       temperature: 0,
-    });
+    }, { timeout: config.JUDGE_TIMEOUT_MS });
     const raw = resp.choices[0]?.message?.content ?? "{}";
     const parsed = JSON.parse(raw) as { mentions?: Array<{ term?: string; snippet?: string; start_offset?: number; end_offset?: number }> };
     const list = Array.isArray(parsed.mentions) ? parsed.mentions : [];

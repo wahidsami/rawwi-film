@@ -20,6 +20,7 @@ import { getFrameworkPromptSection } from "./canonicalAtomFramework.js";
 import { flushChunkPassProgress, reportChunkPassProgressDebounced } from "./jobs.js";
 import { evaluatePassGating } from "./passGating.js";
 import { getGcamRefsForCanonicalAtom } from "./canonicalAtomMapping.js";
+import { config } from "./config.js";
 
 export interface LexiconTerm {
   term: string;
@@ -765,6 +766,55 @@ function deduplicateFindings(allFindings: JudgeFinding[]): JudgeFinding[] {
   return sortJudgeFindingsStable(Array.from(seen.values()));
 }
 
+async function runSinglePassWithHardTimeout(
+  chunkText: string,
+  chunkStart: number,
+  chunkEnd: number,
+  pass: PassDefinition,
+  allArticles: GCAMArticle[],
+  lexiconTerms: LexiconTerm[],
+  jobConfig: { temperature: number; seed: number }
+): Promise<PassResult> {
+  return new Promise<PassResult>((resolve) => {
+    const timer = setTimeout(() => {
+      logger.error(`Pass ${pass.name} exceeded hard timeout`, {
+        timeoutMs: config.PASS_HARD_TIMEOUT_MS,
+        model: pass.model ?? "gpt-4.1",
+      });
+      resolve({
+        passName: pass.name,
+        findings: [],
+        duration: config.PASS_HARD_TIMEOUT_MS,
+        error: "hard_timeout",
+        reason: "hard_timeout",
+        model: pass.model ?? "gpt-4.1",
+      });
+    }, config.PASS_HARD_TIMEOUT_MS);
+
+    runSinglePass(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig).then(
+      (result) => {
+        clearTimeout(timer);
+        resolve(result);
+      },
+      (error) => {
+        clearTimeout(timer);
+        logger.error(`Pass ${pass.name} crashed unexpectedly`, {
+          error: String(error),
+          model: pass.model ?? "gpt-4.1",
+        });
+        resolve({
+          passName: pass.name,
+          findings: [],
+          duration: 0,
+          error: String(error),
+          reason: "unexpected_error",
+          model: pass.model ?? "gpt-4.1",
+        });
+      }
+    );
+  });
+}
+
 /**
  * Run multi-pass detection on a chunk
  * Returns deduplicated findings from all passes
@@ -846,7 +896,7 @@ export async function runMultiPassDetection(
   let completed = 0;
   const activeResults = await Promise.all(
     plan.activePasses.map((pass) =>
-      runSinglePass(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig).then(
+      runSinglePassWithHardTimeout(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig).then(
         (result) => {
           completed++;
           if (progressOpts?.chunkId) {
