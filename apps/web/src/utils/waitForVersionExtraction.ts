@@ -1,6 +1,9 @@
 import { scriptsApi } from '@/api';
 import type { ScriptVersion } from '@/api/models';
 
+export const PDF_EXTRACTION_TIMEOUT_MS = 20 * 60 * 1000;
+export const PDF_EXTRACTION_INTERVAL_MS = 2_500;
+
 async function delay(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -29,4 +32,3 @@ export async function waitForVersionExtraction(
 
   throw new Error('Document extraction timed out');
 }
-

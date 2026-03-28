@@ -10,7 +10,7 @@ import type { Script } from '@/api/models';
 import type { ReportListItem } from '@/api/models';
 import { formatDate, formatTime } from '@/utils/dateFormat';
 import { extractDocx } from '@/utils/documentExtract';
-import { waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
+import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -141,7 +141,10 @@ export function QuickAnalysis() {
         await scriptsApi.extractText(version.id, text, { enqueueAnalysis: false });
       } else if (ext === 'pdf') {
         await scriptsApi.extractText(version.id, undefined, { enqueueAnalysis: false });
-        const extractedVersion = await waitForVersionExtraction(quickScript.id, version.id);
+        const extractedVersion = await waitForVersionExtraction(quickScript.id, version.id, {
+          timeoutMs: PDF_EXTRACTION_TIMEOUT_MS,
+          intervalMs: PDF_EXTRACTION_INTERVAL_MS,
+        });
         if (!extractedVersion.extracted_text?.trim()) {
           throw new Error(isAr ? 'لم يتم العثور على نص في الملف' : 'No text found in document');
         }

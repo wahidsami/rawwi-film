@@ -25,7 +25,7 @@ import { formatDate } from '@/utils/dateFormat';
 import { normalizeScriptStatusForDisplay } from '@/utils/scriptStatus';
 import { downloadClientDetailsPdf } from '@/components/reports/client-details/download';
 import { extractDocx } from '@/utils/documentExtract';
-import { waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
+import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 
 export function ClientDetails() {
   const { id } = useParams<{ id: string }>();
@@ -264,7 +264,10 @@ export function ClientDetails() {
               await scriptsApi.extractText(uploadResult.versionId, undefined, {
                 enqueueAnalysis: false,
               });
-              const extractedVersion = await waitForVersionExtraction(saved.id, uploadResult.versionId);
+              const extractedVersion = await waitForVersionExtraction(saved.id, uploadResult.versionId, {
+                timeoutMs: PDF_EXTRACTION_TIMEOUT_MS,
+                intervalMs: PDF_EXTRACTION_INTERVAL_MS,
+              });
               if (!extractedVersion.extracted_text?.trim()) {
                 throw new Error(lang === 'ar' ? 'لم يتم العثور على نص في المستند' : 'No text found in document');
               }

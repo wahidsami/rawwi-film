@@ -21,6 +21,7 @@ const PDF_STRAY_LATIN_EDGE_RE =
 const OCR_SUSPICIOUS_MAX_TEXT_LENGTH = 1400;
 const OCR_SUSPICIOUS_MAX_LINE_COUNT = 28;
 const OCR_PAGE_DPI = 300;
+const STRIKE_DETECTION_FULL_SCAN_PAGE_THRESHOLD = 120;
 
 type PageMeta = Record<string, unknown>;
 type ExtractedPdfPage = {
@@ -465,6 +466,24 @@ function collectPdfQualityFlags(text: string): string[] {
   return [...flags];
 }
 
+function shouldRunStrikeDetectionForPdfPage(
+  text: string,
+  pageNumber: number,
+  totalPages: number,
+): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  const lines = trimmed.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (totalPages <= STRIKE_DETECTION_FULL_SCAN_PAGE_THRESHOLD) return true;
+  if (looksLikeBrokenArabicPdfExtraction(trimmed)) return true;
+  if (isMostlySingleCharArabicPage(trimmed)) return true;
+  if (countGarbageTailLines(lines) >= 1) return true;
+  if (/[\u0600-\u06FF]\)\s+\(V\.O\)/u.test(trimmed) || /^\)/m.test(trimmed)) return true;
+  if (lines.length > 0 && lines.length <= 10 && trimmed.length <= 700) return true;
+  if (pageNumber <= 12) return true;
+  return false;
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -723,7 +742,6 @@ async function renderPdfPageToSvg(pdfPath: string, pageNumber: number, outputPre
     "-l",
     String(pageNumber),
     "-svg",
-    "-singlefile",
     pdfPath,
     outputPrefix,
   ], { timeout: 120_000 });
@@ -1022,24 +1040,26 @@ async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<ExtractedP
         }
       }
 
-      try {
-        const strikeSpans = await detectStrikeSpans(pdfPath, i + 1, selectedText, tempDir);
-        if (strikeSpans.length > 0) {
+      if (shouldRunStrikeDetectionForPdfPage(selectedText, i + 1, mergedPages.length)) {
+        try {
+          const strikeSpans = await detectStrikeSpans(pdfPath, i + 1, selectedText, tempDir);
+          if (strikeSpans.length > 0) {
+            selectedMeta = {
+              ...selectedMeta,
+              strikeSpans,
+              editorialFlags: [...new Set([...(Array.isArray(selectedMeta.editorialFlags) ? selectedMeta.editorialFlags as string[] : []), "crossed_out_text_detected"])],
+            };
+          }
+        } catch (error) {
+          logger.warn("Strike-through detection failed for PDF page", {
+            pageNumber: i + 1,
+            error: error instanceof Error ? error.message : String(error),
+          });
           selectedMeta = {
             ...selectedMeta,
-            strikeSpans,
-            editorialFlags: [...new Set([...(Array.isArray(selectedMeta.editorialFlags) ? selectedMeta.editorialFlags as string[] : []), "crossed_out_text_detected"])],
+            strikeDetectionError: error instanceof Error ? error.message : String(error),
           };
         }
-      } catch (error) {
-        logger.warn("Strike-through detection failed for PDF page", {
-          pageNumber: i + 1,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        selectedMeta = {
-          ...selectedMeta,
-          strikeDetectionError: error instanceof Error ? error.message : String(error),
-        };
       }
 
       finalPages.push({ text: selectedText, meta: selectedMeta });

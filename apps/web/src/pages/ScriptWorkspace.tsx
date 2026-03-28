@@ -16,7 +16,7 @@ import { getPolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
 import { getScriptDecisionCapabilities } from '@/utils/scriptDecisionCapabilities';
 import { extractDocx } from '@/utils/documentExtract';
-import { waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
+import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 import {
   DEFAULT_SCRIPT_EDITOR_FONT_STACK,
   sanitizeFontStackForCss,
@@ -1864,7 +1864,10 @@ export function ScriptWorkspace() {
           await scriptsApi.extractText(version.id, undefined, {
             enqueueAnalysis: false,
           });
-          const extractedVersion = await waitForVersionExtraction(script.id, version.id);
+          const extractedVersion = await waitForVersionExtraction(script.id, version.id, {
+            timeoutMs: PDF_EXTRACTION_TIMEOUT_MS,
+            intervalMs: PDF_EXTRACTION_INTERVAL_MS,
+          });
           textToShow = extractedVersion.extracted_text ?? '';
           if (!textToShow.trim()) {
             toast.error(lang === 'ar' ? 'لم يتم العثور على نص في الملف' : 'No text found in document');
