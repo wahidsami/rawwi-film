@@ -64,6 +64,10 @@ function formatAnalysisElapsed(ms: number, lang: 'ar' | 'en'): string {
   return parts.join(' ');
 }
 
+function formatImportElapsed(ms: number, lang: 'ar' | 'en'): string {
+  return formatAnalysisElapsed(ms, lang);
+}
+
 const PREVIEW_FOCUS_PATTERNS = [
   /"([^"]{8,160})"/,
   /“([^”]{8,160})”/,
@@ -733,6 +737,11 @@ export function ScriptWorkspace() {
   const [isViolationModalOpen, setIsViolationModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'extracting' | 'done' | 'failed'>('idle');
+  const [uploadPhaseLabel, setUploadPhaseLabel] = useState<string>('');
+  const [uploadStatusMessage, setUploadStatusMessage] = useState<string>('');
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadStartedAt, setUploadStartedAt] = useState<number | null>(null);
+  const [uploadElapsedMs, setUploadElapsedMs] = useState(0);
   const [extractedText, setExtractedText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisJobId, setAnalysisJobId] = useState<string | null>(null);
@@ -775,6 +784,17 @@ export function ScriptWorkspace() {
           ],
     [lang]
   );
+  const isImportModalOpen = uploadStatus !== 'idle';
+  const uploadStatusTone =
+    uploadStatus === 'failed' ? 'error' : uploadStatus === 'done' ? 'success' : 'info';
+
+  useEffect(() => {
+    if (!isImportModalOpen || uploadStartedAt == null) return;
+    const tick = () => setUploadElapsedMs(Date.now() - uploadStartedAt);
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [isImportModalOpen, uploadStartedAt]);
 
   // Polling for analysis job progress
   const stopPolling = useCallback(() => {
@@ -1783,12 +1803,27 @@ export function ScriptWorkspace() {
 
     setIsUploading(true);
     setUploadStatus('uploading');
+    setUploadPhaseLabel(lang === 'ar' ? 'رفع الملف' : 'Uploading file');
+    setUploadStatusMessage(
+      lang === 'ar'
+        ? 'يجري تجهيز الملف ورفعه إلى التخزين الآمن قبل بدء الاستخراج.'
+        : 'Preparing and uploading the document before extraction starts.',
+    );
+    setUploadError(null);
+    setUploadStartedAt(Date.now());
+    setUploadElapsedMs(0);
 
     try {
       setUploadStatus('uploading');
+      setUploadPhaseLabel(lang === 'ar' ? 'رفع الملف' : 'Uploading file');
       const uploadName = safeUploadFileName(file.name);
       const { url, path } = await scriptsApi.getUploadUrl(uploadName);
       await scriptsApi.uploadToSignedUrl(file, url);
+      setUploadStatusMessage(
+        lang === 'ar'
+          ? 'تم رفع الملف. يجري الآن إنشاء نسخة جديدة وربطها بهذا النص.'
+          : 'Upload completed. Creating a fresh version for this script.',
+      );
 
       const storagePath = path ?? url;
       const ext = file.name.toLowerCase().split('.').pop() || '';
@@ -1804,6 +1839,16 @@ export function ScriptWorkspace() {
       });
       
       setUploadStatus('extracting');
+      setUploadPhaseLabel(lang === 'ar' ? 'استخراج النص' : 'Extracting text');
+      setUploadStatusMessage(
+        lang === 'ar'
+          ? ext === 'pdf'
+            ? 'ملفات PDF قد تستغرق وقتاً أطول لأن النظام يحلل الصفحات ويعيد بناء النص خطوة بخطوة.'
+            : 'يجري الآن استخراج النص وتجهيزه لعرضه داخل مساحة العمل.'
+          : ext === 'pdf'
+            ? 'PDF imports can take longer while the worker reconstructs page text.'
+            : 'Extracting and preparing the document text for the workspace.',
+      );
       let textToShow = '';
       if (ext === 'txt') {
         const fileText = await file.text();
@@ -1811,6 +1856,11 @@ export function ScriptWorkspace() {
         textToShow = (res as { extracted_text?: string })?.extracted_text ?? fileText;
       } else if (ext === 'pdf') {
         try {
+          setUploadStatusMessage(
+            lang === 'ar'
+              ? 'تم إرسال الطلب إلى الخادم. ننتظر اكتمال استخراج صفحات PDF في الخلفية.'
+              : 'The request was queued. Waiting for backend PDF extraction to finish.',
+          );
           await scriptsApi.extractText(version.id, undefined, {
             enqueueAnalysis: false,
           });
@@ -1823,11 +1873,22 @@ export function ScriptWorkspace() {
           }
         } catch (pdfErr: unknown) {
           const msg = pdfErr instanceof Error ? pdfErr.message : String(pdfErr);
+          setUploadError(msg || (lang === 'ar' ? 'فشل استخراج الملف' : 'Extraction failed'));
+          setUploadStatusMessage(
+            lang === 'ar'
+              ? 'تعذر استخراج النص من ملف PDF. راجع الرسالة أدناه ثم أعد المحاولة.'
+              : 'PDF extraction failed. Review the message below and try again.',
+          );
           toast.error(msg || (lang === 'ar' ? 'فشل استخراج الملف' : 'Extraction failed'));
           throw pdfErr;
         }
       } else if (ext === 'docx') {
         try {
+          setUploadStatusMessage(
+            lang === 'ar'
+              ? 'يجري تحليل ملف Word واستخراج النص المنسق ثم حفظه في النسخة الحالية.'
+              : 'Parsing the Word document and saving the extracted text to this version.',
+          );
           const { plain, html } = await extractDocx(file);
           const res = await scriptsApi.extractText(version.id, plain, {
             contentHtml: html,
@@ -1845,12 +1906,24 @@ export function ScriptWorkspace() {
           }
         } catch (docxErr: unknown) {
           const msg = docxErr instanceof Error ? docxErr.message : String(docxErr);
+          setUploadError(msg || (lang === 'ar' ? 'فشل استخراج الملف' : 'Extraction failed'));
+          setUploadStatusMessage(
+            lang === 'ar'
+              ? 'تعذر استخراج النص من ملف Word. راجع الخطأ ثم أعد المحاولة.'
+              : 'Word extraction failed. Review the error and try again.',
+          );
           toast.error(lang === 'ar' ? 'فشل استخراج الملف' : msg || 'Extraction failed');
           throw docxErr;
         }
       } else {
         toast.error(lang === 'ar' ? 'نوع الملف غير مدعوم' : 'Unsupported file type');
         setUploadStatus('failed');
+        setUploadError(lang === 'ar' ? 'نوع الملف غير مدعوم' : 'Unsupported file type');
+        setUploadStatusMessage(
+          lang === 'ar'
+            ? 'يمكن استيراد ملفات PDF أو DOCX أو TXT فقط.'
+            : 'Only PDF, DOCX, or TXT files can be imported.',
+        );
         return;
       }
       setExtractedText(textToShow);
@@ -1862,7 +1935,21 @@ export function ScriptWorkspace() {
       setSelectedFindingId(null);
       loadReportHistory();
       setUploadStatus('done');
+      setUploadPhaseLabel(lang === 'ar' ? 'اكتمل الاستيراد' : 'Import complete');
+      setUploadStatusMessage(
+        lang === 'ar'
+          ? 'تم استيراد الملف واستخراج النص بنجاح. يمكنك الآن مراجعة المحتوى أو بدء التحليل.'
+          : 'Import finished successfully. You can now review the text or start analysis.',
+      );
       toast.success(lang === 'ar' ? 'تم استخراج النص بنجاح' : 'Text extracted successfully');
+      window.setTimeout(() => {
+        setUploadStatus('idle');
+        setUploadError(null);
+        setUploadStartedAt(null);
+        setUploadElapsedMs(0);
+        setUploadPhaseLabel('');
+        setUploadStatusMessage('');
+      }, 1800);
       await updateScript(script.id, { currentVersionId: version.id });
       try {
         const data = await scriptsApi.getEditor(script.id, version.id);
@@ -1872,10 +1959,16 @@ export function ScriptWorkspace() {
       }
     } catch (err: any) {
       setUploadStatus('failed');
+      setUploadPhaseLabel(lang === 'ar' ? 'فشل الاستيراد' : 'Import failed');
+      setUploadError(err?.message || 'Upload failed');
+      setUploadStatusMessage(
+        lang === 'ar'
+          ? 'توقف الاستيراد قبل اكتماله. راجع السبب أدناه ثم أعد المحاولة.'
+          : 'The import stopped before completion. Review the reason below and try again.',
+      );
       toast.error(err.message || 'Upload failed');
     } finally {
       setIsUploading(false);
-      setTimeout(() => setUploadStatus('idle'), 3000);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -2800,6 +2893,23 @@ export function ScriptWorkspace() {
     handlePinFindingInScript(f, undefined, { silent: true });
   };
 
+  const importStatusBadge =
+    uploadStatus === 'failed'
+      ? lang === 'ar'
+        ? 'فشل'
+        : 'Failed'
+      : uploadStatus === 'done'
+        ? lang === 'ar'
+          ? 'مكتمل'
+          : 'Done'
+        : uploadStatus === 'extracting'
+          ? lang === 'ar'
+            ? 'استخراج'
+            : 'Extracting'
+          : lang === 'ar'
+            ? 'رفع'
+            : 'Uploading';
+
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] -m-6 md:-m-8 bg-background overflow-hidden" onClick={handleClickOutside}>
       <style>{`
@@ -2812,6 +2922,116 @@ export function ScriptWorkspace() {
           z-index: 50;
         }
       `}</style>
+      <Modal
+        isOpen={isImportModalOpen}
+        onClose={() => {
+          if (isUploading) return;
+          setUploadStatus('idle');
+          setUploadError(null);
+          setUploadStartedAt(null);
+          setUploadElapsedMs(0);
+          setUploadPhaseLabel('');
+          setUploadStatusMessage('');
+        }}
+        title={lang === 'ar' ? 'استيراد المستند' : 'Document Import'}
+        className="max-w-2xl"
+      >
+        <div className="space-y-5" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <div className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-background px-4 py-4">
+            <div className="min-w-0 space-y-1">
+              <p className="text-sm font-semibold text-text-main">{uploadPhaseLabel || (lang === 'ar' ? 'جاري الاستيراد' : 'Import in progress')}</p>
+              <p className="text-sm text-text-muted leading-6">
+                {uploadStatusMessage || (lang === 'ar' ? 'يجري تجهيز الملف وعرض حالته هنا.' : 'The file is being processed and its status will appear here.')}
+              </p>
+            </div>
+            <Badge
+              variant={uploadStatusTone === 'error' ? 'error' : uploadStatusTone === 'success' ? 'success' : 'outline'}
+              className="shrink-0"
+            >
+              {importStatusBadge}
+            </Badge>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="rounded-2xl border border-border bg-background px-4 py-3">
+              <p className="text-xs text-text-muted">{lang === 'ar' ? 'الحالة' : 'Status'}</p>
+              <p className="mt-1 text-base font-semibold text-text-main">{uploadPhaseLabel || '—'}</p>
+            </div>
+            <div className="rounded-2xl border border-border bg-background px-4 py-3">
+              <p className="text-xs text-text-muted">{lang === 'ar' ? 'المدة' : 'Elapsed'}</p>
+              <p className="mt-1 text-base font-semibold text-text-main">{formatImportElapsed(uploadElapsedMs, lang)}</p>
+            </div>
+            <div className="rounded-2xl border border-border bg-background px-4 py-3">
+              <p className="text-xs text-text-muted">{lang === 'ar' ? 'نوع العملية' : 'Operation'}</p>
+              <p className="mt-1 text-base font-semibold text-text-main">
+                {uploadStatus === 'extracting'
+                  ? (lang === 'ar' ? 'استخراج ومعالجة' : 'Extraction')
+                  : uploadStatus === 'done'
+                    ? (lang === 'ar' ? 'اكتمل' : 'Completed')
+                    : uploadStatus === 'failed'
+                      ? (lang === 'ar' ? 'توقف' : 'Stopped')
+                      : (lang === 'ar' ? 'رفع وتجهيز' : 'Upload')}
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-surface px-4 py-4 space-y-3">
+            <div className="flex items-center gap-3">
+              {uploadStatus === 'failed' ? (
+                <XCircle className="w-5 h-5 text-error shrink-0" />
+              ) : uploadStatus === 'done' ? (
+                <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
+              ) : (
+                <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
+              )}
+              <p className="text-sm text-text-main">
+                {uploadStatus === 'uploading'
+                  ? (lang === 'ar' ? 'يتم رفع الملف إلى التخزين وربطه بالنص الحالي.' : 'Uploading the document and linking it to this script.')
+                  : uploadStatus === 'extracting'
+                    ? (lang === 'ar' ? 'يتم الآن استخراج النص في الخلفية. قد تستغرق ملفات PDF الكبيرة وقتاً أطول.' : 'The text is currently being extracted in the background. Large PDFs can take longer.')
+                    : uploadStatus === 'done'
+                      ? (lang === 'ar' ? 'انتهى الاستيراد بنجاح وتم تحديث النص المعروض.' : 'Import completed successfully and the displayed text was updated.')
+                      : (lang === 'ar' ? 'توقف الاستيراد قبل اكتماله.' : 'The import stopped before completion.')}
+              </p>
+            </div>
+            {uploadStatus === 'extracting' && (
+              <div className="h-2 rounded-full bg-border overflow-hidden">
+                <div className="h-full w-2/3 bg-primary animate-pulse rounded-full" />
+              </div>
+            )}
+            {uploadError && (
+              <div className="rounded-xl border border-error/25 bg-error/5 px-4 py-3">
+                <p className="text-xs font-semibold text-error mb-1">{lang === 'ar' ? 'رسالة الخطأ' : 'Error message'}</p>
+                <p className="text-sm text-text-main whitespace-pre-wrap break-words">{uploadError}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-text-muted">
+              {uploadStatus === 'failed'
+                ? (lang === 'ar' ? 'يمكنك إغلاق هذه النافذة ثم إعادة محاولة الاستيراد.' : 'You can close this window and try the import again.')
+                : uploadStatus === 'done'
+                  ? (lang === 'ar' ? 'سيتم إغلاق هذه النافذة تلقائياً بعد لحظة قصيرة.' : 'This window will close automatically shortly.')
+                  : (lang === 'ar' ? 'سيبقى هذا المؤشر مفتوحاً حتى نعرف أين وصلت عملية الاستيراد.' : 'This panel stays open so you can see where the import currently stands.')}
+            </p>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setUploadStatus('idle');
+                setUploadError(null);
+                setUploadStartedAt(null);
+                setUploadElapsedMs(0);
+                setUploadPhaseLabel('');
+                setUploadStatusMessage('');
+              }}
+              disabled={isUploading}
+            >
+              {lang === 'ar' ? 'إغلاق' : 'Close'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
       {/* Workspace Header */}
       <div className="h-16 flex-shrink-0 bg-surface border-b border-border flex items-center justify-between px-6 z-10 shadow-sm">
         <div className="flex items-center gap-4">
