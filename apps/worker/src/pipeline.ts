@@ -53,6 +53,24 @@ const HARD_FALLBACK_INSULTS = [
   { term: "لص", articleId: 5, atomId: "5-2", severity: "medium" as const },
 ] as const;
 
+async function isPartialFinalizeRequested(jobId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("analysis_jobs")
+    .select("partial_finalize_requested")
+    .eq("id", jobId)
+    .maybeSingle();
+
+  if (error) {
+    logger.warn("Failed to read job partial finalize state during chunk processing", {
+      jobId,
+      error: error.message,
+    });
+    return false;
+  }
+
+  return Boolean((data as { partial_finalize_requested?: boolean | null } | null)?.partial_finalize_requested);
+}
+
 function compactEvidenceText(s: string): string {
   const cleaned = (s ?? "").replace(/\s+/g, " ").trim();
   return cleaned.length > MAX_EVIDENCE_LEN ? `${cleaned.slice(0, MAX_EVIDENCE_LEN)}…` : cleaned;
@@ -831,7 +849,15 @@ export async function processChunkJudge(
   const baselineMetrics = computeContradictionMetrics(baselineFindings);
   let persistedFindings: FindingWithGlobal[] = baselineFindings;
   let hybridMetrics: Record<string, unknown> | null = null;
-  if (config.ANALYSIS_ENGINE === "hybrid") {
+  const partialFinalizeRequested = await isPartialFinalizeRequested(jobId);
+  if (partialFinalizeRequested) {
+    logger.info("Partial finalize requested; skipping hybrid context pipeline for current chunk", {
+      jobId,
+      chunkId: chunk.id,
+      baselineFindings: baselineFindings.length,
+    });
+    hybridMetrics = { skipped_reason: "partial_finalize_requested" };
+  } else if (config.ANALYSIS_ENGINE === "hybrid") {
     setChunkPhase(chunk.id, "hybrid");
     const hybridStartedAt = Date.now();
     const hybrid = await runHybridContextPipeline({

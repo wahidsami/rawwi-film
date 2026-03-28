@@ -1202,12 +1202,19 @@ export async function runAggregation(jobId: string): Promise<void> {
       items: manualReviewContext.items ?? [],
     };
   }
+  const isPartialReport = Boolean(summary.partial_report?.is_partial);
   const largeJobSize = {
     textLength: fullScriptText.length,
     chunkCount: totalChunks,
   };
   if (fullScriptText.trim()) {
-    if (shouldSkipScriptSummaryForJob(largeJobSize)) {
+    if (isPartialReport) {
+      logger.info("Skipping script summary and revisit pass for partial report finalization", {
+        jobId,
+        textLength: largeJobSize.textLength,
+        chunkCount: largeJobSize.chunkCount,
+      });
+    } else if (shouldSkipScriptSummaryForJob(largeJobSize)) {
       logger.info("Script summary skipped for large job", {
         jobId,
         textLength: largeJobSize.textLength,
@@ -1220,7 +1227,9 @@ export async function runAggregation(jobId: string): Promise<void> {
       if (scriptSummary) summary.script_summary = scriptSummary;
     }
     // Separate light pass: words to revisit (glossary terms that appear in script). Does not affect violations.
-    if (shouldSkipRevisitForJob(largeJobSize)) {
+    if (isPartialReport) {
+      // Skip revisit generation on partial reports to finish quickly after stop.
+    } else if (shouldSkipRevisitForJob(largeJobSize)) {
       logger.info("Revisit pass skipped for large job", {
         jobId,
         textLength: largeJobSize.textLength,
@@ -1270,7 +1279,6 @@ export async function runAggregation(jobId: string): Promise<void> {
     logger.error("Aggregation: report upsert FAILED", { jobId, error: reportErr });
   }
 
-  const isPartialReport = Boolean(summary.partial_report?.is_partial);
   if (!isPartialReport) {
     // Increment progress for the aggregation step (+1 that was reserved)
     await incrementJobProgress(jobId);
