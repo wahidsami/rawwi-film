@@ -221,6 +221,7 @@ async function persistMultipageExtract(
     start_offset_global: offsets[i]?.start_offset_global ?? 0,
     end_offset_global: offsets[i]?.end_offset_global ?? 0,
     display_font_stack: sanitizeDisplayFontStack(p.displayFontStack),
+    meta: {},
   }));
 
   const { error: insErr } = await supabase.from("script_pages").insert(pageRows);

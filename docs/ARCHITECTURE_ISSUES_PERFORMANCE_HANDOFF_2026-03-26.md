@@ -585,3 +585,241 @@ Status legend:
 1. End-to-end QA on imported files and highlighting
 2. End-to-end QA on reviewer workflow (bulk, reclassify, re-review)
 3. Compare Quality / Balanced / Turbo on the same long script
+
+## Human-Audit Inspired Expansion
+
+This section tracks a new layer inspired by how Saudi Film Commission reviewers appear to audit scripts in practice.
+
+Important framing:
+
+- This does **not** replace the current article/atom system.
+- It adds a parallel **editorial + cultural compliance layer** that can produce supporting findings, structured notes, or routing hints.
+- The goal is to make the AI behave more like a human compliance auditor without weakening the legal taxonomy already in place.
+
+### What Human Auditors Are Clearly Doing
+
+Based on the sample audit behavior, the human review process appears to combine:
+
+1. sequential page-by-page reading
+2. rule-trigger detection
+3. structured issue logging
+4. explicit adjustment rationale
+
+Their notes behave like:
+
+- `location`
+- `issue`
+- `reason`
+- `action`
+
+This is effectively a human compliance tagging system layered on top of the script.
+
+### New Dimensions To Add
+
+#### 1. Editorial / Script Integrity Signals
+
+Examples:
+
+- crossed-out text or scenes
+- ambiguous kept-vs-deleted edits
+- orphan fragments after manual edits
+- duplicated or partially removed scene blocks
+
+Why it matters:
+
+- humans treat these as editorial compliance signals, not just visual formatting
+- a crossed-out scene should not silently disappear from the imported script
+- the system should preserve that text and flag that it appears intentionally struck through
+
+Planned outputs:
+
+- imported text keeps the original text content
+- page metadata marks the span as `editorial_deleted_candidate`
+- a finding or special note is created under a `script_integrity` family
+
+#### 2. Dialect / Localization Compliance
+
+Examples:
+
+- non-Saudi dialect in dialogue
+- mixed regional dialect drift
+- wording that conflicts with expected Saudi localization
+
+Why it matters:
+
+- human auditors repeatedly log this as a first-class compliance issue
+- it is not fully captured by current legal atoms alone
+
+Planned outputs:
+
+- `dialect_compliance` hints/findings
+- page/snippet evidence
+- rationale such as `requires Saudi dialect localization`
+
+#### 3. Religious / Cultural Formula Compliance
+
+Examples:
+
+- prohibited oath patterns
+- culturally sensitive curse formulas
+- phrasing that triggers faith-value concerns even if not a core legal violation atom
+
+Why it matters:
+
+- this is often a reviewer-facing compliance adjustment, not only a model-detected policy atom
+
+Planned outputs:
+
+- supporting compliance notes alongside existing article findings
+- improved rationale text for Article 5 / faith-and-values style issues
+
+#### 4. Sensitive Historical / Political Alignment
+
+Examples:
+
+- references to sensitive Saudi historical incidents
+- depictions that are not strictly illegal in text form but require alignment in portrayal/tone
+
+Why it matters:
+
+- human reviewers frequently mark these as `للمواءمة`
+- this is closer to `alignment needed` than a pure binary violation
+
+Planned outputs:
+
+- `alignment_required` notes
+- stronger report wording for sensitive-event portrayal
+- optional dedicated checklist category later
+
+### Proposed System Modules
+
+These would sit above or beside the current atoms:
+
+1. `script_integrity`
+- struck-through text
+- unclear edits
+- partial removals
+- orphan scene fragments
+
+2. `dialect_localization`
+- Saudi vs non-Saudi dialogue patterns
+- dialect drift heuristics
+
+3. `cultural_religious_compliance`
+- oath formulas
+- culturally sensitive expressions
+- localized religious-risk phrasing
+
+4. `sensitive_event_alignment`
+- sensitive event/entity/topic detection
+- tone/alignment recommendation instead of only hard violation logic
+
+### Proposed Status Tracker
+
+#### Open
+
+- Detect struck-through / crossed-out text during PDF import
+- Preserve struck-through text as readable extracted text instead of losing it
+- Mark struck-through spans in page metadata for the workspace
+- Emit a `script_integrity` finding or special note for struck-through content
+- Add dialect/localization review hints
+- Add cultural/religious formula review hints
+- Add sensitive-event alignment notes (`للمواءمة` style)
+
+### Phased Delivery Plan
+
+#### Phase 1 — Metadata Plumbing and Safe Scaffolding
+
+Goal:
+
+- create a safe transport path for extraction-side annotations without changing legal findings yet
+
+Deliverables:
+
+- `script_pages.meta` JSON storage
+- worker writes per-page extraction provenance and quality flags
+- scripts/editor API returns page metadata to workspace
+- workspace can later consume `strike_spans`, `ocr_used`, or `saudi_sensitivity_hints` without schema redesign
+
+#### Phase 2 — Struck-Through / Editorial Deletion Detection
+
+Goal:
+
+- preserve text that appears intentionally crossed out and expose it as an editorial signal
+
+Deliverables:
+
+- server-side PDF geometry pass for line/strike detection
+- `strike_spans` in page metadata
+- workspace visual treatment for struck-through spans
+- `script_integrity` finding or special note generation
+
+#### Phase 3 — Saudi Sensitivity Alignment Layer
+
+Goal:
+
+- detect content that may relate to Saudi Arabia, the royal family, state institutions, sensitive historical incidents, or national/religious sites
+
+Deliverables:
+
+- `saudi_reference_detected`
+- `saudi_sensitive_reference`
+- `saudi_historical_event_reference`
+- `saudi_royal_reference`
+- `alignment_review_required`
+
+Behavior:
+
+- mostly `needs_review` or `special note`, not hard violation by default
+- evidence-first, conservative wording
+- remains separate from current article/atom legal decisions
+
+#### Phase 4 — Dialect / Localization Layer
+
+Goal:
+
+- surface non-Saudi dialect or localization drift as review-grade findings
+
+Deliverables:
+
+- dialogue-focused dialect hints
+- localization review note templates
+- optional reviewer wording such as `يتطلب مواءمة باللهجة السعودية`
+
+#### Phase 5 — Cultural / Religious Formula Layer
+
+Goal:
+
+- catch recurring formula-based issues that human auditors commonly flag
+
+Deliverables:
+
+- oath and curse pattern hints
+- culturally sensitive expression notes
+- stronger rationale support for faith-and-values style findings
+
+#### Recommended Build Order
+
+1. Detect struck-through text and preserve it in extraction
+2. Surface struck-through spans in workspace and create `script_integrity` notes
+3. Add dialect/localization heuristics
+4. Add cultural/religious formula heuristics
+5. Add sensitive-event alignment notes
+
+### Notes On Implementation Direction
+
+For struck-through text specifically:
+
+- this should likely be solved in the PDF import/extraction pipeline, not only in the AI stage
+- we need both:
+  - text preservation
+  - visual/editorial signal detection
+
+The likely architecture is:
+
+1. detect text spans intersected by drawn horizontal rules or strike marks on the PDF page
+2. keep the underlying text in extracted output
+3. annotate the span in page metadata
+4. surface a structured finding/note in the workspace/report pipeline
+
+This should be treated as a high-value trust feature because it directly mirrors human editorial review behavior.

@@ -178,6 +178,8 @@ export interface EditorPageResponse {
   startOffsetGlobal: number;
   /** CSS font-family stack from PDF import (pdf.js fontName → web stack); null = Cairo default. */
   displayFontStack?: string | null;
+  /** Extraction/display metadata for this page (OCR, quality flags, future editorial annotations). */
+  meta?: Record<string, unknown>;
 }
 
 export interface EditorContentResponse {

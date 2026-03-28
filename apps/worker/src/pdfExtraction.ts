@@ -22,6 +22,12 @@ const OCR_SUSPICIOUS_MAX_TEXT_LENGTH = 1400;
 const OCR_SUSPICIOUS_MAX_LINE_COUNT = 28;
 const OCR_PAGE_DPI = 300;
 
+type PageMeta = Record<string, unknown>;
+type ExtractedPdfPage = {
+  text: string;
+  meta: PageMeta;
+};
+
 type ExtractionVersion = {
   id: string;
   script_id: string;
@@ -432,6 +438,20 @@ function scorePdfPageQuality(text: string): number {
   return score;
 }
 
+function collectPdfQualityFlags(text: string): string[] {
+  const flags = new Set<string>();
+  const trimmed = text.trim();
+  const lines = trimmed.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (!trimmed) flags.add("empty");
+  if (looksLikeBrokenArabicPdfExtraction(trimmed)) flags.add("broken_arabic_spacing");
+  if (isMostlySingleCharArabicPage(trimmed)) flags.add("single_char_dump");
+  if (countGarbageTailLines(lines) >= 1) flags.add("garbage_tail");
+  if (/[\u0600-\u06FF]\)\s+\(V\.O\)/u.test(trimmed) || /^\)/m.test(trimmed)) {
+    flags.add("rtl_punctuation_drift");
+  }
+  return [...flags];
+}
+
 function shouldRunOcrForPdfPage(text: string): boolean {
   if (!text.trim()) return true;
   if (isMostlySingleCharArabicPage(text)) return true;
@@ -665,7 +685,7 @@ async function runArabicPageOcr(pdfPath: string, pageNumber: number, tempDir: st
   }
 }
 
-async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<string[]> {
+async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<ExtractedPdfPage[]> {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "raawi-pdf-"));
   const pdfPath = path.join(tempDir, "input.pdf");
   try {
@@ -677,30 +697,78 @@ async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<string[]> 
     const layoutPages = splitPdfPages(layoutText);
     const rawPages = splitPdfPages(rawText);
     const mergedPages = chooseBetterPdfPages(layoutPages, rawPages);
-    const finalPages: string[] = [];
+    const finalPages: ExtractedPdfPage[] = [];
 
     for (let i = 0; i < mergedPages.length; i++) {
       const merged = mergedPages[i] ?? "";
+      const mergedScore = scorePdfPageQuality(merged);
+      const mergedMeta: PageMeta = {
+        extractionEngine: "poppler",
+        ocrUsed: false,
+        sourceMode: "merged_text_layers",
+        qualityScore: mergedScore,
+        qualityFlags: collectPdfQualityFlags(merged),
+      };
+
       if (!shouldRunOcrForPdfPage(merged)) {
-        finalPages.push(merged);
+        finalPages.push({ text: merged, meta: mergedMeta });
         continue;
       }
 
       try {
         const ocrText = await runArabicPageOcr(pdfPath, i + 1, tempDir);
         if (!ocrText) {
-          finalPages.push(merged);
+          finalPages.push({
+            text: merged,
+            meta: {
+              ...mergedMeta,
+              ocrUsed: true,
+              ocrSelected: false,
+              ocrAttempted: true,
+            },
+          });
           continue;
         }
-        const mergedScore = scorePdfPageQuality(merged);
         const ocrScore = scorePdfPageQuality(ocrText);
-        finalPages.push(ocrScore >= mergedScore ? ocrText : merged);
+        const ocrMeta: PageMeta = {
+          extractionEngine: "tesseract_ocr",
+          ocrUsed: true,
+          ocrAttempted: true,
+          ocrSelected: true,
+          sourceMode: "ocr",
+          qualityScore: ocrScore,
+          textLayerScore: mergedScore,
+          qualityFlags: collectPdfQualityFlags(ocrText),
+        };
+        if (ocrScore >= mergedScore) {
+          finalPages.push({ text: ocrText, meta: ocrMeta });
+        } else {
+          finalPages.push({
+            text: merged,
+            meta: {
+              ...mergedMeta,
+              ocrUsed: true,
+              ocrAttempted: true,
+              ocrSelected: false,
+              ocrScore,
+            },
+          });
+        }
       } catch (error) {
         logger.warn("Arabic OCR fallback failed for PDF page", {
           pageNumber: i + 1,
           error: error instanceof Error ? error.message : String(error),
         });
-        finalPages.push(merged);
+        finalPages.push({
+          text: merged,
+          meta: {
+            ...mergedMeta,
+            ocrUsed: true,
+            ocrAttempted: true,
+            ocrSelected: false,
+            ocrError: error instanceof Error ? error.message : String(error),
+          },
+        });
       }
     }
 
@@ -785,6 +853,46 @@ async function persistPdfPages(version: ExtractionVersion, pageTexts: string[]):
   await persistScriptEditorContent(version.id, version.script_id, canonicalContent, extractedTextHash);
 }
 
+async function persistPdfPagesWithMeta(version: ExtractionVersion, pages: ExtractedPdfPage[]): Promise<void> {
+  const canonicalPages = pages.map((page) => sanitizePageText(page.text));
+  const canonicalContent = canonicalPages.join(PAGE_JOIN);
+  const extractedTextHash = sha256Hash(canonicalContent);
+  const offsets = computePageGlobalOffsets(canonicalPages);
+
+  const { error: deletePagesErr } = await supabase
+    .from("script_pages")
+    .delete()
+    .eq("version_id", version.id);
+  if (deletePagesErr) throw new Error(deletePagesErr.message);
+
+  if (canonicalPages.length > 0) {
+    const pageRows = canonicalPages.map((content, index) => ({
+      version_id: version.id,
+      page_number: index + 1,
+      content,
+      content_html: null,
+      start_offset_global: offsets[index]!.start_offset_global,
+      end_offset_global: offsets[index]!.end_offset_global,
+      display_font_stack: null,
+      meta: pages[index]?.meta ?? {},
+    }));
+    const { error: insertPagesErr } = await supabase.from("script_pages").insert(pageRows);
+    if (insertPagesErr) throw new Error(insertPagesErr.message);
+  }
+
+  const { error: updateVersionErr } = await supabase
+    .from("script_versions")
+    .update({
+      extracted_text: canonicalContent,
+      extracted_text_hash: extractedTextHash,
+      extraction_status: "done",
+    })
+    .eq("id", version.id);
+  if (updateVersionErr) throw new Error(updateVersionErr.message);
+
+  await persistScriptEditorContent(version.id, version.script_id, canonicalContent, extractedTextHash);
+}
+
 export async function processPdfExtraction(version: ExtractionVersion): Promise<void> {
   const sourceName = (version.source_file_name ?? "").toLowerCase();
   const sourceType = (version.source_file_type ?? "").toLowerCase();
@@ -798,16 +906,16 @@ export async function processPdfExtraction(version: ExtractionVersion): Promise<
   });
 
   const pdfBuffer = await downloadScriptFile(version);
-  const pageTexts = await extractPdfPagesWithPoppler(pdfBuffer);
-  if (!pageTexts.length || !pageTexts.some((page) => page.trim().length > 0)) {
+  const pages = await extractPdfPagesWithPoppler(pdfBuffer);
+  if (!pages.length || !pages.some((page) => page.text.trim().length > 0)) {
     throw new Error("No text extracted from PDF");
   }
 
-  await persistPdfPages(version, pageTexts);
+  await persistPdfPagesWithMeta(version, pages);
 
   logger.info("Backend PDF extraction completed", {
     versionId: version.id,
     scriptId: version.script_id,
-    pageCount: pageTexts.length,
+    pageCount: pages.length,
   });
 }

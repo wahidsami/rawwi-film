@@ -428,7 +428,7 @@ Deno.serve(async (req: Request) => {
     }
     const { data: pageRows } = await supabase
       .from("script_pages")
-      .select("page_number, content, content_html, start_offset_global, end_offset_global, display_font_stack")
+      .select("page_number, content, content_html, start_offset_global, end_offset_global, display_font_stack, meta")
       .eq("version_id", versionId)
       .order("page_number", { ascending: true });
     const content = textRow != null ? (textRow as { content: string }).content : "";
@@ -450,6 +450,7 @@ Deno.serve(async (req: Request) => {
       start_offset_global?: number | null;
       end_offset_global?: number | null;
       display_font_stack?: string | null;
+      meta?: Record<string, unknown> | null;
     }>;
     let derivedCursor = 0;
     const pages = pr.map((row, i) => {
@@ -469,6 +470,7 @@ Deno.serve(async (req: Request) => {
         contentHtml: row.content_html ?? null,
         startOffsetGlobal: g0,
         displayFontStack: row.display_font_stack ?? null,
+        meta: row.meta ?? {},
       };
     });
     const { data: verMeta } = await supabase
