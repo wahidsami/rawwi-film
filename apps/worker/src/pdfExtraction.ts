@@ -975,6 +975,7 @@ async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<ExtractedP
     const rawPages = splitPdfPages(rawText);
     const mergedPages = chooseBetterPdfPages(layoutPages, rawPages);
     const finalPages: ExtractedPdfPage[] = [];
+    let strikeDetectionAvailable = true;
 
     for (let i = 0; i < mergedPages.length; i++) {
       const merged = mergedPages[i] ?? "";
@@ -1040,7 +1041,7 @@ async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<ExtractedP
         }
       }
 
-      if (shouldRunStrikeDetectionForPdfPage(selectedText, i + 1, mergedPages.length)) {
+      if (strikeDetectionAvailable && shouldRunStrikeDetectionForPdfPage(selectedText, i + 1, mergedPages.length)) {
         try {
           const strikeSpans = await detectStrikeSpans(pdfPath, i + 1, selectedText, tempDir);
           if (strikeSpans.length > 0) {
@@ -1051,14 +1052,28 @@ async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<ExtractedP
             };
           }
         } catch (error) {
-          logger.warn("Strike-through detection failed for PDF page", {
-            pageNumber: i + 1,
-            error: error instanceof Error ? error.message : String(error),
-          });
-          selectedMeta = {
-            ...selectedMeta,
-            strikeDetectionError: error instanceof Error ? error.message : String(error),
-          };
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (/Rendered \.svg output not found/i.test(errorMessage)) {
+            strikeDetectionAvailable = false;
+            logger.warn("Strike-through detection disabled for remaining PDF pages", {
+              pageNumber: i + 1,
+              reason: errorMessage,
+            });
+            selectedMeta = {
+              ...selectedMeta,
+              strikeDetectionSkipped: true,
+              strikeDetectionReason: "svg_output_unavailable",
+            };
+          } else {
+            logger.warn("Strike-through detection failed for PDF page", {
+              pageNumber: i + 1,
+              error: errorMessage,
+            });
+            selectedMeta = {
+              ...selectedMeta,
+              strikeDetectionError: errorMessage,
+            };
+          }
         }
       }
 
