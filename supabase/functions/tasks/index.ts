@@ -307,7 +307,7 @@ Deno.serve(async (req: Request) => {
       const { data: chunkRows, error: chunkErr } = await supabase
         .from("analysis_chunks")
         .select(
-          "chunk_index, status, last_error, page_number_min, page_number_max, processing_phase, passes_completed, passes_total, text_preview"
+          "chunk_index, status, last_error, page_number_min, page_number_max, processing_phase, passes_completed, passes_total, text_preview, judging_started_at"
         )
         .eq("job_id", jobId)
         .order("chunk_index", { ascending: true });
@@ -325,6 +325,7 @@ Deno.serve(async (req: Request) => {
           processingPhase: c.processing_phase ?? null,
           passesCompleted: c.passes_completed ?? null,
           passesTotal: c.passes_total ?? null,
+          judgingStartedAt: c.judging_started_at ?? null,
           textPreview:
             c.status === "judging" && c.text_preview != null && String(c.text_preview).trim() !== ""
               ? String(c.text_preview)

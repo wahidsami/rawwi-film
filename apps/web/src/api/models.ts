@@ -125,6 +125,7 @@ export interface ChunkStatus {
   chunkIndex: number;
   status: string;
   lastError: string | null;
+  judgingStartedAt?: string | null;
   pageNumberMin?: number | null;
   pageNumberMax?: number | null;
   /** Coarse worker stage: router, multipass, hybrid, aggregating, cached */

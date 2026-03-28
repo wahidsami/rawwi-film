@@ -68,6 +68,10 @@ function formatImportElapsed(ms: number, lang: 'ar' | 'en'): string {
   return formatAnalysisElapsed(ms, lang);
 }
 
+function formatRelativeDuration(ms: number, lang: 'ar' | 'en'): string {
+  return formatAnalysisElapsed(ms, lang);
+}
+
 function formatExtractionProgressMessage(
   progress: Record<string, unknown> | undefined,
   lang: 'ar' | 'en',
@@ -1809,6 +1813,25 @@ export function ScriptWorkspace() {
       : `Elapsed: ${formatAnalysisElapsed(elapsedMs, lang)}`;
   }, [analysisJob, analysisTimerNow, lang]);
 
+  const activeChunkAgeMs = useMemo(() => {
+    if (!activeChunk?.judgingStartedAt) return null;
+    const started = new Date(activeChunk.judgingStartedAt).getTime();
+    if (!Number.isFinite(started)) return null;
+    return Math.max(0, analysisTimerNow - started);
+  }, [activeChunk?.judgingStartedAt, analysisTimerNow]);
+
+  const activeChunkAgeLabel = useMemo(() => {
+    if (activeChunkAgeMs == null) return null;
+    return lang === 'ar'
+      ? `زمن الجزء الجاري: ${formatRelativeDuration(activeChunkAgeMs, lang)}`
+      : `Active chunk time: ${formatRelativeDuration(activeChunkAgeMs, lang)}`;
+  }, [activeChunkAgeMs, lang]);
+
+  const activeChunkIsStalled = useMemo(() => {
+    if (activeChunkAgeMs == null) return false;
+    return activeChunkAgeMs >= 10 * 60 * 1000;
+  }, [activeChunkAgeMs]);
+
   const latestCompletedChunk = useMemo(() => {
     const done = chunkStatuses.filter((c) => c.status === 'done');
     if (done.length === 0) return null;
@@ -1852,8 +1875,8 @@ export function ScriptWorkspace() {
     }
     if (isStoppingJobStatus(analysisJob?.status)) {
       return lang === 'ar'
-        ? 'لن يبدأ النظام أجزاء جديدة الآن. سيُنهي الجزء الجاري ثم يبني تقريراً جزئياً من النتائج المكتملة.'
-        : 'No new chunks will be started now. The worker will finish the current chunk, then build a partial report from the completed results.';
+        ? 'لن يبدأ النظام أجزاء جديدة الآن. سيُنهي الجزء الجاري فقط ثم يبني تقريراً جزئياً سريعاً من النتائج المكتملة بدون تشغيل التحسينات الثقيلة.'
+        : 'No new chunks will be started now. The worker will finish only the current chunk, then build a faster partial report from the completed results without the heavier enrichments.';
     }
     if (isPausedJobStatus(analysisJob?.status)) {
       return lang === 'ar'
@@ -4535,7 +4558,7 @@ export function ScriptWorkspace() {
                   <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الحالة الخلفية' : 'Backend stage'}</p>
                   <p className="text-sm font-medium text-text-main">
                     {isStoppingJobStatus(analysisJob?.status)
-                      ? (lang === 'ar' ? 'جارٍ إعداد تقرير جزئي' : 'Preparing partial report')
+                      ? (activePhaseLabel ?? (lang === 'ar' ? 'إنهاء الجزء الجاري' : 'Finishing current chunk'))
                       : isPausedJobStatus(analysisJob?.status)
                       ? (lang === 'ar' ? 'متوقف مؤقتاً' : 'Paused')
                       : activePhaseLabel ?? (lang === 'ar' ? 'قيد الانتظار' : 'Waiting')}
@@ -4591,6 +4614,14 @@ export function ScriptWorkspace() {
                     {lang === 'ar' ? 'كشف متوازي متعدد الماسحات' : 'Parallel multi-detector scan'}
                   </span>
                 </div>
+                {activeChunkAgeLabel && (
+                  <div className="flex items-start justify-between gap-3">
+                    <span>{lang === 'ar' ? 'زمن الجزء الجاري' : 'Active chunk time'}</span>
+                    <span className={cn("font-medium", activeChunkIsStalled ? "text-warning" : "text-text-main")}>
+                      {activeChunkAgeLabel.replace(/^زمن الجزء الجاري:\s*/, '').replace(/^Active chunk time:\s*/, '')}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-start justify-between gap-3">
                   <span>{lang === 'ar' ? 'المكشوفات المحتملة' : 'Potential detectors'}</span>
                   <span className="font-medium text-text-main text-end">
@@ -4606,11 +4637,39 @@ export function ScriptWorkspace() {
                 </p>
               )}
               {isStoppingJobStatus(analysisJob?.status) && (
-                <p className="text-[11px] text-warning">
+                <div className="space-y-2">
+                  <p className="text-[11px] text-warning">
+                    {lang === 'ar'
+                      ? 'سيُكمِل العامل الجزء الجاري فقط، ثم سيبني ويعرض تقريراً جزئياً سريعاً من النتائج المكتملة.'
+                      : 'The worker will finish only the current in-flight chunk, then build and show a faster partial report from the completed findings.'}
+                  </p>
+                  {activeChunkNumber != null && (
+                    <p className="text-[11px] text-text-muted">
+                      {lang === 'ar'
+                        ? `الجزء الجاري الآن: ${activeChunkNumber} من ${Math.max(totalChunksTracked, activeChunkNumber)}${activePhaseLabel ? ` • ${activePhaseLabel}` : ''}${activeChunkPageLabel ? ` • ${activeChunkPageLabel}` : ''}`
+                        : `Current chunk: ${activeChunkNumber} of ${Math.max(totalChunksTracked, activeChunkNumber)}${activePhaseLabel ? ` • ${activePhaseLabel}` : ''}${activeChunkPageLabel ? ` • ${activeChunkPageLabel}` : ''}`}
+                    </p>
+                  )}
+                  {activeChunkAgeLabel && (
+                    <p className={cn("text-[11px]", activeChunkIsStalled ? "text-warning" : "text-text-muted")}>
+                      {activeChunkAgeLabel}
+                    </p>
+                  )}
+                  {activeChunkIsStalled && (
+                    <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-[11px] text-warning">
+                      {lang === 'ar'
+                        ? 'لم يتغير الجزء الجاري منذ أكثر من 10 دقائق. قد يكون العامل معلّقاً أو بانتظار مهلة طويلة. إذا استمر هذا الوضع، أعد تشغيل العامل أو أعد جدولة الجزء العالق.'
+                        : 'The active chunk has not moved for more than 10 minutes. The worker may be stuck or waiting on a long timeout. If this continues, restart the worker or re-queue the stuck chunk.'}
+                    </div>
+                  )}
+                </div>
+              )}
+              {!isStoppingJobStatus(analysisJob?.status) && activeChunkIsStalled && (
+                <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-[11px] text-warning">
                   {lang === 'ar'
-                    ? 'سيُكمِل العامل الجزء الجاري فقط، ثم سيبني تقريراً جزئياً من النتائج المكتملة ويُظهِره لك.'
-                    : 'The worker will finish only the current in-flight chunk, then build and show a partial report from the completed findings.'}
-                </p>
+                    ? 'لم يتغير الجزء الجاري منذ أكثر من 10 دقائق. قد يكون التحليل عالقاً أو بانتظار مهلة طويلة. راقب السجلات أو أعد تشغيل العامل إذا استمرت هذه الحالة.'
+                    : 'The active chunk has not moved for more than 10 minutes. The analysis may be stuck or waiting on a long timeout. Check the logs or restart the worker if this continues.'}
+                </div>
               )}
               {isSuccessfulJobStatus(analysisJob?.status) && analysisJob?.isPartialReport && (
                 <p className="text-[11px] text-warning">
@@ -4737,6 +4796,11 @@ export function ScriptWorkspace() {
                           {c.status === 'judging' && c.passesTotal != null && c.passesTotal > 0 && (
                             <span className="text-[10px] text-text-muted">
                               {c.passesCompleted ?? 0}/{c.passesTotal}
+                            </span>
+                          )}
+                          {c.status === 'judging' && c.judgingStartedAt && (
+                            <span className="text-[10px] text-text-muted">
+                              {lang === 'ar' ? 'منذ' : 'since'} {formatTime(new Date(c.judgingStartedAt), { lang })}
                             </span>
                           )}
                           {c.lastError && <span className="text-error truncate" title={c.lastError}>{c.lastError}</span>}
