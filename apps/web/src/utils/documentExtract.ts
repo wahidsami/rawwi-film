@@ -386,6 +386,13 @@ function escapeHtmlMinimal(s: string): string {
     .join('');
 }
 
+function escapeHtmlInline(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 /**
  * Split HTML at boundaries that match page text lengths, so each segment's content matches one page.
  * Uses safe tag boundaries (e.g. after </p>) so we don't cut inside a tag.
@@ -614,10 +621,29 @@ const PDF_TEXT_INVISIBLE_RE = /[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g;
 const PDF_TEXT_SOFT_SPACE_RE = /[\u00A0\t]+/g;
 const PDF_ARABIC_RE = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/u;
 const PDF_ARABIC_LETTER_RE = /[\u0621-\u064A\u066E-\u066F\u0671-\u06D3\u06FA-\u06FC\u06FF]/u;
+const PDF_ARABIC_TOKEN_RE = /[\u0621-\u064A]{6,}/gu;
 const PDF_STRAY_LATIN_IN_ARABIC_RE =
   /(?<=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])[A-Za-z](?=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])/gu;
 const PDF_STRAY_LATIN_EDGE_RE =
   /(^|\s)[A-Za-z](?=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])|(?<=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])[A-Za-z](?=$|\s)/gu;
+const OCR_SUSPICIOUS_MAX_TEXT_LENGTH = 1400;
+const OCR_SUSPICIOUS_MAX_LINE_COUNT = 28;
+
+type TesseractWorkerLike = {
+  setParameters: (params: Record<string, string>) => Promise<unknown>;
+  recognize: (
+    image: HTMLCanvasElement,
+    options?: Record<string, unknown>,
+    output?: Record<string, unknown>,
+    jobId?: string,
+  ) => Promise<{ data?: { text?: string } }>;
+  terminate: () => Promise<unknown>;
+};
+
+type PdfPageLike = {
+  getViewport: (params: { scale: number }) => { width: number; height: number };
+  render: (params: { canvasContext: CanvasRenderingContext2D; viewport: { width: number; height: number } }) => { promise: Promise<unknown> };
+};
 
 export function normalizePdfTextRun(value: string): string {
   return (value ?? '')
@@ -919,6 +945,85 @@ function pageItemsToText(items: TextItem[]): string {
   return lines.map((line) => postprocessPdfExtractedLine(line)).filter(Boolean).join("\n").trim();
 }
 
+export function looksLikeBrokenArabicPdfExtraction(text: string): boolean {
+  const normalized = normalizePdfTextRun(text).trim();
+  if (!normalized || !hasArabicPdfText(normalized)) return false;
+  if (normalized.length > OCR_SUSPICIOUS_MAX_TEXT_LENGTH) return false;
+  const lines = normalized.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (lines.length === 0 || lines.length > OCR_SUSPICIOUS_MAX_LINE_COUNT) return false;
+
+  const tokens = normalized.split(/\s+/).filter(Boolean);
+  const arabicTokens = tokens.filter((token) => hasArabicPdfText(token));
+  if (arabicTokens.length === 0) return false;
+
+  const suspiciousTokens = arabicTokens.filter((token) =>
+    token.length >= 8 &&
+    (
+      token.includes('ال') ||
+      /[\u0621-\u064A]\d|\d[\u0621-\u064A]/u.test(token) ||
+      (token.match(PDF_ARABIC_TOKEN_RE)?.length ?? 0) > 1
+    )
+  );
+
+  const suspiciousLineCount = lines.filter((line) => {
+    const lineTokens = line.split(/\s+/).filter(Boolean);
+    return lineTokens.length <= 2 && lineTokens.some((token) => token.length >= 8 && hasArabicPdfText(token));
+  }).length;
+
+  const whitespaceChars = normalized.match(/\s/g)?.length ?? 0;
+  const whitespaceRatio = whitespaceChars / Math.max(normalized.length, 1);
+  const suspiciousRatio = suspiciousTokens.length / Math.max(arabicTokens.length, 1);
+
+  return suspiciousTokens.length >= 2 && (suspiciousRatio >= 0.45 || suspiciousLineCount >= 3 || whitespaceRatio < 0.12);
+}
+
+function ocrTextToHtml(text: string): string {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => `<p class="pdf-line">${escapeHtmlInline(line)}</p>`)
+    .join('');
+}
+
+async function renderPdfPageToCanvas(page: PdfPageLike): Promise<HTMLCanvasElement> {
+  const viewport = page.getViewport({ scale: 2.5 });
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) {
+    throw new Error('Canvas 2D context not available for PDF OCR');
+  }
+  canvas.width = Math.ceil(viewport.width);
+  canvas.height = Math.ceil(viewport.height);
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvasContext: context, viewport }).promise;
+  return canvas;
+}
+
+async function runArabicPageOcr(page: PdfPageLike): Promise<string | null> {
+  const mod = await import('tesseract.js');
+  const createWorker = (mod as { createWorker?: (...args: unknown[]) => Promise<TesseractWorkerLike>; default?: { createWorker?: (...args: unknown[]) => Promise<TesseractWorkerLike> } }).createWorker
+    ?? (mod as { default?: { createWorker?: (...args: unknown[]) => Promise<TesseractWorkerLike> } }).default?.createWorker;
+  if (!createWorker) {
+    throw new Error('tesseract.js createWorker is unavailable');
+  }
+
+  const worker = await createWorker('ara', 1, {});
+  try {
+    await worker.setParameters({
+      preserve_interword_spaces: '1',
+      user_defined_dpi: '300',
+    });
+    const canvas = await renderPdfPageToCanvas(page);
+    const result = await worker.recognize(canvas, {});
+    const text = result?.data?.text?.trim() ?? '';
+    return text ? text.split(/\r?\n/).map((line) => postprocessPdfExtractedLine(line)).filter(Boolean).join('\n').trim() : null;
+  } finally {
+    await worker.terminate();
+  }
+}
+
 /**
  * Extract text per page from a PDF file (browser).
  * Uses PDF.js getTextContent; preserves line structure when item positions are available.
@@ -936,9 +1041,20 @@ export async function extractTextFromPdfPerPage(
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
     const raw = (content.items || []) as TextItem[];
-    const pageText = pageItemsToText(raw);
-    const pageHtml = pageItemsToHtml(raw);
+    let pageText = pageItemsToText(raw);
+    let pageHtml = pageItemsToHtml(raw);
     const displayFontStack = cssFontStackForPdfTextItems(raw);
+    if (looksLikeBrokenArabicPdfExtraction(pageText)) {
+      try {
+        const ocrText = await runArabicPageOcr(page as unknown as PdfPageLike);
+        if (ocrText && ocrText.length >= Math.max(12, Math.floor(pageText.length * 0.45))) {
+          pageText = ocrText;
+          pageHtml = `<div class="pdf-page-body script-import-body">${ocrTextToHtml(ocrText)}</div>`;
+        }
+      } catch (err) {
+        console.warn('[documentExtract] Arabic OCR fallback failed for PDF page', i, err);
+      }
+    }
     pages.push({ pageNumber: i, text: pageText, html: pageHtml, displayFontStack });
   }
   return pages;

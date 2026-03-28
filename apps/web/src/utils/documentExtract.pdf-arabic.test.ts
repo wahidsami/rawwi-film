@@ -1,7 +1,7 @@
 /**
  * Run: npx tsx src/utils/documentExtract.pdf-arabic.test.ts
  */
-import { normalizePdfTextRun, postprocessPdfExtractedLine } from './documentExtract';
+import { looksLikeBrokenArabicPdfExtraction, normalizePdfTextRun, postprocessPdfExtractedLine } from './documentExtract';
 
 const presentation = 'ﺷﺎرع اﻷﻋﺸﻰ';
 const normalized = normalizePdfTextRun(presentation);
@@ -43,6 +43,14 @@ if (collapsedSeason !== 'الموسم الثاني') {
 const digitSpacing = postprocessPdfExtractedLine('الحلقة1');
 if (digitSpacing !== 'الحلقة 1') {
   throw new Error(`expected digit spacing recovery, got: ${digitSpacing}`);
+}
+
+if (!looksLikeBrokenArabicPdfExtraction(`شارعالأعشى\n\nالموسمالثاني\n\nمعالجةمحليةوكتابة\n\nهندالفهاد\n\nالحلقة1`)) {
+  throw new Error('expected suspicious Arabic PDF extraction to be detected');
+}
+
+if (looksLikeBrokenArabicPdfExtraction('شارع الأعشى\nالموسم الثاني\nمعالجة محلية وكتابة\nهند الفهاد\nالحلقة 1')) {
+  throw new Error('expected clean Arabic extraction not to be flagged as suspicious');
 }
 
 console.log('documentExtract.pdf-arabic.test.ts: ok');
