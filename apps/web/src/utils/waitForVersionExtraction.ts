@@ -31,6 +31,9 @@ export async function waitForVersionExtraction(
       throw new Error('Version not found while waiting for extraction');
     }
     if (version.extraction_status === 'done') return version;
+    if (version.extraction_status === 'cancelled') {
+      throw createAbortError();
+    }
     if (version.extraction_status === 'failed') {
       throw new Error('Document extraction failed');
     }

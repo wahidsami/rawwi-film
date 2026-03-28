@@ -294,12 +294,13 @@ Deno.serve(async (req: Request) => {
 
   const correlationId = getCorrelationId(req);
 
-  if (req.method !== "POST") {
+  if (req.method !== "POST" && req.method !== "PATCH") {
     return json({ error: "Method not allowed" }, 405);
   }
 
   type Body = {
     versionId?: string;
+    action?: "cancel";
     text?: string;
     contentHtml?: string | null;
     enqueueAnalysis?: boolean;
@@ -356,6 +357,33 @@ Deno.serve(async (req: Request) => {
     canExtract = !!s && s.is_quick_analysis === true && (s.created_by === auth.userId || s.assignee_id === auth.userId);
   }
   if (!canExtract) return json({ error: "Only Admin/Super Admin can replace script files." }, 403);
+
+  if (req.method === "PATCH") {
+    if (body.action !== "cancel") {
+      return json({ error: "Unsupported extract action" }, 400);
+    }
+
+    const nextStatus =
+      v.extraction_status === "extracting" || v.extraction_status === "pending"
+        ? "cancelled"
+        : v.extraction_status;
+
+    if (nextStatus !== v.extraction_status) {
+      const { error: cancelErr } = await supabase
+        .from("script_versions")
+        .update({ extraction_status: nextStatus })
+        .eq("id", versionId);
+      if (cancelErr) return json({ error: cancelErr.message }, 500);
+    }
+
+    const { data: updated } = await supabase
+      .from("script_versions")
+      .select("id, script_id, version_number, source_file_name, source_file_type, source_file_size, source_file_path, source_file_url, extracted_text, extraction_status, extracted_text_hash, created_at")
+      .eq("id", versionId)
+      .single();
+
+    return json(toFrontendVersion((updated ?? { ...v, extraction_status: nextStatus }) as ScriptVersionRow));
+  }
 
   if (v.extraction_status === "done" && v.extracted_text) {
     return json(toFrontendVersion(v));

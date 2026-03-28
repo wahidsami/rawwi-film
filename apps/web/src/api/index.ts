@@ -141,6 +141,8 @@ export const scriptsApi = {
     }
     return httpClient.post('/extract', body, { signal: options?.signal });
   },
+  cancelVersionExtraction: (versionId: string): Promise<ScriptVersion> =>
+    httpClient.patch('/extract', { versionId, action: 'cancel' }),
   /** Queue analysis for a version (creates new analysis_jobs + chunks). POST /tasks */
   createTask: (
     versionId: string,

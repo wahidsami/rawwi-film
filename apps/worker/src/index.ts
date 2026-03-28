@@ -83,6 +83,13 @@ async function processOneJob(): Promise<boolean> {
     try {
       await processPdfExtraction(extractionVersion);
     } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") {
+        logger.info("Backend PDF extraction cancelled", {
+          versionId: extractionVersion.id,
+          scriptId: extractionVersion.script_id,
+        });
+        return true;
+      }
       const errMsg = e instanceof Error ? e.message : String(e);
       logger.error("Backend PDF extraction failed", {
         versionId: extractionVersion.id,

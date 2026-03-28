@@ -752,6 +752,7 @@ export function ScriptWorkspace() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadStartedAt, setUploadStartedAt] = useState<number | null>(null);
   const [uploadElapsedMs, setUploadElapsedMs] = useState(0);
+  const [uploadVersionId, setUploadVersionId] = useState<string | null>(null);
   const uploadAbortControllerRef = useRef<AbortController | null>(null);
   const uploadSessionIdRef = useRef(0);
   const uploadAutoCloseTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
@@ -827,6 +828,7 @@ export function ScriptWorkspace() {
     setUploadError(null);
     setUploadStartedAt(null);
     setUploadElapsedMs(0);
+    setUploadVersionId(null);
     setUploadPhaseLabel('');
     setUploadStatusMessage('');
   }, [clearImportAutoClose]);
@@ -837,7 +839,16 @@ export function ScriptWorkspace() {
     if (controller && !controller.signal.aborted) controller.abort();
     uploadAbortControllerRef.current = null;
     uploadSessionIdRef.current += 1;
+    const versionIdToCancel = uploadVersionId;
+    const shouldCancelBackend = uploadStatus === 'extracting' && !!versionIdToCancel;
     setIsUploading(false);
+    setUploadVersionId(null);
+    if (shouldCancelBackend && versionIdToCancel) {
+      void scriptsApi.cancelVersionExtraction(versionIdToCancel).catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn('[ScriptWorkspace] Failed to cancel backend extraction', { versionId: versionIdToCancel, error: message });
+      });
+    }
     if (closeModal) {
       setUploadStatus('idle');
       setUploadError(null);
@@ -855,7 +866,7 @@ export function ScriptWorkspace() {
         ? 'تم إيقاف عملية الاستيراد الحالية. يمكنك إغلاق النافذة أو إعادة المحاولة لاحقاً.'
         : 'The current import was stopped. You can close this window or try again later.',
     );
-  }, [clearImportAutoClose, lang]);
+  }, [clearImportAutoClose, lang, uploadStatus, uploadVersionId]);
 
   useEffect(() => () => {
     clearImportAutoClose();
@@ -1919,6 +1930,7 @@ export function ScriptWorkspace() {
         clearAnalysisOnReplace: true,
       }, { signal: controller.signal });
       ensureImportActive();
+      setUploadVersionId(version.id);
       
       setUploadStatus('extracting');
       setUploadPhaseLabel(lang === 'ar' ? 'استخراج النص' : 'Extracting text');
@@ -2029,6 +2041,7 @@ export function ScriptWorkspace() {
       setSelectedFindingId(null);
       loadReportHistory();
       setUploadStatus('done');
+      setUploadVersionId(null);
       setUploadPhaseLabel(lang === 'ar' ? 'اكتمل الاستيراد' : 'Import complete');
       setUploadStatusMessage(
         lang === 'ar'
@@ -2059,6 +2072,7 @@ export function ScriptWorkspace() {
         return;
       }
       setUploadStatus('failed');
+      setUploadVersionId(null);
       setUploadPhaseLabel(lang === 'ar' ? 'فشل الاستيراد' : 'Import failed');
       setUploadError(err?.message || 'Upload failed');
       setUploadStatusMessage(

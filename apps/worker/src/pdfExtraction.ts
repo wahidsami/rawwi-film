@@ -50,6 +50,12 @@ type ExtractionVersion = {
   source_file_path: string | null;
 };
 
+function createExtractionAbortError(): Error {
+  const error = new Error("PDF extraction cancelled");
+  error.name = "AbortError";
+  return error;
+}
+
 function normalizeStorageObjectPath(raw: string): string {
   const t = raw.trim();
   const m = t.match(/^(?:scripts|uploads)\/(.+)$/i);
@@ -962,7 +968,28 @@ async function runArabicPageOcr(pdfPath: string, pageNumber: number, tempDir: st
   }
 }
 
-async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<ExtractedPdfPage[]> {
+async function isExtractionStillActive(versionId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("script_versions")
+    .select("extraction_status")
+    .eq("id", versionId)
+    .single();
+
+  if (error) {
+    logger.warn("Failed to refresh PDF extraction status", {
+      versionId,
+      error: error.message,
+    });
+    return true;
+  }
+
+  return (data?.extraction_status ?? "extracting") === "extracting";
+}
+
+async function extractPdfPagesWithPoppler(
+  pdfBuffer: Buffer,
+  options?: { versionId?: string },
+): Promise<ExtractedPdfPage[]> {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "raawi-pdf-"));
   const pdfPath = path.join(tempDir, "input.pdf");
   try {
@@ -978,6 +1005,13 @@ async function extractPdfPagesWithPoppler(pdfBuffer: Buffer): Promise<ExtractedP
     let strikeDetectionAvailable = true;
 
     for (let i = 0; i < mergedPages.length; i++) {
+      if (options?.versionId) {
+        const stillActive = await isExtractionStillActive(options.versionId);
+        if (!stillActive) {
+          throw createExtractionAbortError();
+        }
+      }
+
       const merged = mergedPages[i] ?? "";
       const mergedScore = scorePdfPageQuality(merged);
       const mergedMeta: PageMeta = {
@@ -1214,9 +1248,13 @@ export async function processPdfExtraction(version: ExtractionVersion): Promise<
   });
 
   const pdfBuffer = await downloadScriptFile(version);
-  const pages = await extractPdfPagesWithPoppler(pdfBuffer);
+  const pages = await extractPdfPagesWithPoppler(pdfBuffer, { versionId: version.id });
   if (!pages.length || !pages.some((page) => page.text.trim().length > 0)) {
     throw new Error("No text extracted from PDF");
+  }
+
+  if (!(await isExtractionStillActive(version.id))) {
+    throw createExtractionAbortError();
   }
 
   await persistPdfPagesWithMeta(version, pages);
