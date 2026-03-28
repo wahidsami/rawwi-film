@@ -236,6 +236,56 @@ function postprocessPdfExtractedLine(line: string): string {
   return out;
 }
 
+function isMostlySingleCharArabicLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  const tokens = trimmed.split(/\s+/).filter(Boolean);
+  if (!tokens.length) return false;
+  const shortTokens = tokens.filter((token) => token.length <= 2);
+  const hasArabicish = tokens.some((token) => /[\u0600-\u06FF0-9]/u.test(token));
+  return hasArabicish && shortTokens.length / tokens.length >= 0.85;
+}
+
+function stripDuplicateLetterDump(lines: string[]): string[] {
+  if (lines.length < 10) return lines;
+
+  let bestStart = -1;
+  let bestEnd = -1;
+  let blockStart = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (isMostlySingleCharArabicLine(lines[i]!)) {
+      if (blockStart === -1) blockStart = i;
+      continue;
+    }
+    if (blockStart !== -1) {
+      if (i - blockStart >= 8) {
+        bestStart = blockStart;
+        bestEnd = i;
+      }
+      blockStart = -1;
+    }
+  }
+  if (blockStart !== -1 && lines.length - blockStart >= 8) {
+    bestStart = blockStart;
+    bestEnd = lines.length;
+  }
+
+  if (bestStart === -1 || bestEnd === -1) return lines;
+
+  const before = lines.slice(0, bestStart).filter(Boolean);
+  const block = lines.slice(bestStart, bestEnd).filter(Boolean);
+  const after = lines.slice(bestEnd).filter(Boolean);
+  const hasReadableContext = before.some((line) => !isMostlySingleCharArabicLine(line));
+  const blockDominates = block.length >= Math.max(8, Math.floor(lines.length * 0.35));
+
+  if (hasReadableContext && blockDominates && after.length === 0) {
+    return before;
+  }
+
+  return lines;
+}
+
 function looksLikeBrokenArabicPdfExtraction(text: string): boolean {
   const normalized = normalizePdfTextRun(text).trim();
   if (!normalized || !hasArabicPdfText(normalized)) return false;
@@ -273,14 +323,15 @@ function looksLikeBrokenArabicPdfExtraction(text: string): boolean {
 function splitPdfPages(rawText: string): string[] {
   return rawText
     .split(/\f/g)
-    .map((page) =>
-      page
+    .map((page) => {
+      const cleanedLines = stripDuplicateLetterDump(
+        page
         .split(/\r?\n/)
         .map((line) => postprocessPdfExtractedLine(line))
-        .filter(Boolean)
-        .join("\n")
-        .trim()
-    )
+        .filter(Boolean),
+      );
+      return cleanedLines.join("\n").trim();
+    })
     .filter((page, index, pages) => page.length > 0 || index < pages.length - 1)
     .map((page) => sanitizePageText(page));
 }
