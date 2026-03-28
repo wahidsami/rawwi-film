@@ -648,11 +648,23 @@ function lastVisibleChar(value: string): string {
   return trimmed[trimmed.length - 1] ?? '';
 }
 
+function repairCollapsedArabicTokenSpacing(token: string): string {
+  if (!token || !hasArabicPdfText(token) || /\s/.test(token)) return token;
+  return token
+    .replace(/(?<=[\u0621-\u064A]{3,})(?=ال[\u0621-\u064A]{2,})/gu, ' ')
+    .replace(/(?<=[\u0621-\u064A])(?=\d)/gu, ' ')
+    .replace(/(?<=\d)(?=[\u0621-\u064A])/gu, ' ');
+}
+
 export function postprocessPdfExtractedLine(line: string): string {
   let out = normalizePdfTextRun(line).trim();
   if (!out) return '';
 
   if (hasArabicPdfText(out)) {
+    out = out
+      .split(/\s+/)
+      .map((token) => repairCollapsedArabicTokenSpacing(token))
+      .join(' ');
     out = out
       .replace(PDF_STRAY_LATIN_IN_ARABIC_RE, '')
       .replace(PDF_STRAY_LATIN_EDGE_RE, '$1')
@@ -690,11 +702,15 @@ function shouldInsertPdfSpace(
   const curArabic = isArabicPdfLetter(curFirst);
   if (!prevArabic || !curArabic) return false;
 
+  const prevLen = prev.str.trim().length;
+  const curLen = cur.str.trim().length;
+  if (gap >= 0.02 && prevLen >= 2 && curLen >= 2) return true;
+
   const aggressiveArabicGap = rtl
     ? Math.max(Math.min(medianWidth * 0.025, 0.4), 0.06)
     : Math.max(Math.min(medianWidth * 0.04, 0.5), 0.08);
 
-  return gap >= aggressiveArabicGap && (prev.str.trim().length > 1 || cur.str.trim().length > 1);
+  return gap >= aggressiveArabicGap && (prevLen > 1 || curLen > 1);
 }
 
 /** Arabic / Arabic supplement / presentation forms — used to pick RTL sort + tighter joins. */

@@ -30,4 +30,19 @@ if (strayLatin !== 'يرحمهويعفيعنه.') {
   throw new Error(`expected stray latin cleanup, got: ${strayLatin}`);
 }
 
+const collapsedTitle = postprocessPdfExtractedLine('شارعالأعشى');
+if (collapsedTitle !== 'شارع الأعشى') {
+  throw new Error(`expected collapsed title spacing recovery, got: ${collapsedTitle}`);
+}
+
+const collapsedSeason = postprocessPdfExtractedLine('الموسمالثاني');
+if (collapsedSeason !== 'الموسم الثاني') {
+  throw new Error(`expected collapsed season spacing recovery, got: ${collapsedSeason}`);
+}
+
+const digitSpacing = postprocessPdfExtractedLine('الحلقة1');
+if (digitSpacing !== 'الحلقة 1') {
+  throw new Error(`expected digit spacing recovery, got: ${digitSpacing}`);
+}
+
 console.log('documentExtract.pdf-arabic.test.ts: ok');
