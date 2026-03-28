@@ -15,6 +15,7 @@ import {
   recoverStaleJudgingChunks,
   fetchNextPendingExtractionVersion,
   setExtractionFailed,
+  notifyAdminAiOverload,
 } from "./jobs.js";
 import { setContext, logger } from "./logger.js";
 import { initializeLexiconCache, getLexiconCache } from "./lexiconCache.js";
@@ -27,7 +28,28 @@ type ChunkProcessResult = {
   error?: string;
 };
 
+const AI_OVERLOAD_PUBLIC_MESSAGE = "Raawi AI overloading issue, code 101";
+const AI_OVERLOAD_RETRY_MARKER = "__ai_overload_retry:";
+
 let lastLexiconRefreshJobId: string | null = null;
+
+function isAiOverloadIssue(errorMessage: string): boolean {
+  return /429|rate limit|tokens per min|requests per min|insufficient[_\s-]?quota|quota|credit|billing|timeout|timed out|etimedout|fetch failed|socket hang up|connection error|overloaded|service unavailable|temporarily unavailable|server overloaded|api key|unauthorized|authentication/i.test(
+    errorMessage,
+  );
+}
+
+function getAiOverloadRetryCount(lastError: string | null | undefined): number {
+  if (!lastError) return 0;
+  const match = lastError.match(/__ai_overload_retry:(\d+)__/i);
+  if (!match) return 0;
+  const parsed = parseInt(match[1], 10);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function encodeAiOverloadRetry(rawError: string, retryCount: number): string {
+  return `${AI_OVERLOAD_RETRY_MARKER}${retryCount}__ ${rawError}`.trim();
+}
 
 async function claimChunkBatch(jobId: string, desired: number) {
   const claimed = [];
@@ -53,21 +75,44 @@ async function claimChunkBatch(jobId: string, desired: number) {
   return claimed;
 }
 
-async function processClaimedChunk(job: { id: string; script_id: string; version_id: string }, claimed: { id: string }, normalizedText: string | null): Promise<ChunkProcessResult> {
+async function processClaimedChunk(
+  job: { id: string; script_id: string; version_id: string },
+  claimed: { id: string; last_error?: string | null },
+  normalizedText: string | null,
+): Promise<ChunkProcessResult> {
   setContext({ jobId: job.id, chunkId: claimed.id });
   try {
     await processChunkJudge(job as any, claimed as any, normalizedText);
     return { ok: true, retryable: false };
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : String(e);
-    if (/429|rate limit|tokens per min|requests per min/i.test(errMsg)) {
-      logger.warn("Chunk processing rate-limited; re-queueing chunk", {
+    if (isAiOverloadIssue(errMsg)) {
+      const retryCount = getAiOverloadRetryCount(claimed.last_error) + 1;
+      if (retryCount <= config.AI_OVERLOAD_MAX_RETRIES) {
+        logger.warn("Chunk processing hit AI overload; re-queueing chunk", {
+          jobId: job.id,
+          chunkId: claimed.id,
+          retryCount,
+          maxRetries: config.AI_OVERLOAD_MAX_RETRIES,
+          error: errMsg,
+        });
+        await setChunkPending(claimed.id, encodeAiOverloadRetry(errMsg, retryCount));
+        return { ok: false, retryable: true, error: AI_OVERLOAD_PUBLIC_MESSAGE };
+      }
+
+      logger.error("Chunk processing failed after AI overload retries", {
         jobId: job.id,
         chunkId: claimed.id,
+        retryCount,
+        maxRetries: config.AI_OVERLOAD_MAX_RETRIES,
         error: errMsg,
       });
-      await setChunkPending(claimed.id, errMsg);
-      return { ok: false, retryable: true, error: errMsg };
+      await setChunkFailed(claimed.id, AI_OVERLOAD_PUBLIC_MESSAGE);
+      const markedFailed = await setJobFailed(job.id, AI_OVERLOAD_PUBLIC_MESSAGE);
+      if (markedFailed) {
+        await notifyAdminAiOverload(job, AI_OVERLOAD_PUBLIC_MESSAGE, errMsg);
+      }
+      return { ok: false, retryable: false, error: AI_OVERLOAD_PUBLIC_MESSAGE };
     }
     logger.error("Chunk processing failed", { error: errMsg, jobId: job.id, chunkId: claimed.id });
     await setChunkFailed(claimed.id, errMsg);

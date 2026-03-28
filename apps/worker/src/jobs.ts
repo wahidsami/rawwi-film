@@ -28,6 +28,7 @@ export type AnalysisChunk = {
   end_line: number;
   status: string;
   judging_started_at?: string | null;
+  last_error?: string | null;
 };
 
 export type ExtractionVersion = {
@@ -203,7 +204,7 @@ export async function setExtractionFailed(versionId: string, errorMessage: strin
 export async function fetchNextPendingChunk(jobId: string): Promise<AnalysisChunk | null> {
   const { data } = await supabase
     .from("analysis_chunks")
-    .select("id, job_id, chunk_index, text, start_offset, end_offset, start_line, end_line, status")
+    .select("id, job_id, chunk_index, text, start_offset, end_offset, start_line, end_line, status, last_error")
     .eq("job_id", jobId)
     .eq("status", "pending")
     .order("chunk_index", { ascending: true })
@@ -219,7 +220,7 @@ export async function fetchNextPendingChunks(jobId: string, limit: number): Prom
   const safeLimit = Math.max(1, limit);
   const { data } = await supabase
     .from("analysis_chunks")
-    .select("id, job_id, chunk_index, text, start_offset, end_offset, start_line, end_line, status")
+    .select("id, job_id, chunk_index, text, start_offset, end_offset, start_line, end_line, status, last_error")
     .eq("job_id", jobId)
     .eq("status", "pending")
     .order("chunk_index", { ascending: true })
@@ -237,7 +238,7 @@ export async function claimChunk(chunkId: string): Promise<AnalysisChunk | null>
     .update({ status: "judging", judging_started_at: new Date().toISOString() })
     .eq("id", chunkId)
     .eq("status", "pending")
-    .select("id, job_id, chunk_index, text, start_offset, end_offset, start_line, end_line, status, judging_started_at")
+    .select("id, job_id, chunk_index, text, start_offset, end_offset, start_line, end_line, status, judging_started_at, last_error")
     .single();
 
   if (!updated) return null;
@@ -326,15 +327,76 @@ export async function setChunkPending(chunkId: string, lastError: string | null 
     .eq("id", chunkId);
 }
 
-export async function setJobFailed(jobId: string, errorMessage: string): Promise<void> {
-  await supabase
+export async function setJobFailed(jobId: string, errorMessage: string): Promise<boolean> {
+  const { data, error } = await supabase
     .from("analysis_jobs")
     .update({
       status: "failed",
       error_message: errorMessage,
       completed_at: new Date().toISOString(),
     })
-    .eq("id", jobId);
+    .eq("id", jobId)
+    .neq("status", "failed")
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    logger.warn("Failed to mark job as failed", { jobId, error: error.message });
+    return false;
+  }
+
+  return !!data;
+}
+
+export async function notifyAdminAiOverload(job: {
+  id: string;
+  script_id: string;
+  version_id: string;
+}, publicMessage: string, rawError: string): Promise<void> {
+  const { data: roleRows, error: roleErr } = await supabase
+    .from("user_roles")
+    .select("user_id, roles(key)")
+    .not("user_id", "is", null);
+
+  if (roleErr) {
+    logger.warn("Failed to fetch admin recipients for AI overload notification", {
+      jobId: job.id,
+      error: roleErr.message,
+    });
+    return;
+  }
+
+  const adminIds = [...new Set(
+    ((roleRows ?? []) as Array<{ user_id?: string | null; roles?: { key?: string | null } | null }>)
+      .filter((row) => {
+        const key = (row.roles?.key ?? "").toLowerCase();
+        return !!row.user_id && (key === "admin" || key === "super_admin");
+      })
+      .map((row) => row.user_id as string)
+  )];
+
+  if (adminIds.length === 0) return;
+
+  const rows = adminIds.map((userId) => ({
+    user_id: userId,
+    type: "analysis_ai_overload",
+    title: publicMessage,
+    body: "Analysis stopped because the AI provider was unavailable, overloaded, or out of quota.",
+    metadata: {
+      job_id: job.id,
+      script_id: job.script_id,
+      version_id: job.version_id,
+      internal_error: rawError,
+    },
+  }));
+
+  const { error: notifErr } = await supabase.from("notifications").insert(rows);
+  if (notifErr) {
+    logger.warn("Failed to insert AI overload notifications", {
+      jobId: job.id,
+      error: notifErr.message,
+    });
+  }
 }
 
 /** Fire-and-forget UI phase label (does not block LLM work). */

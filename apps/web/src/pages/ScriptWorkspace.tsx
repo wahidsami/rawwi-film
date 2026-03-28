@@ -832,6 +832,7 @@ export function ScriptWorkspace() {
   const [debugOpen, setDebugOpen] = useState(false);
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastFailedAnalysisAlertRef = useRef<string | null>(null);
   const [decisionCan, setDecisionCan] = useState<{ canApprove: boolean; canReject: boolean; reason?: string } | null>(null);
   const analysisPasses = useMemo(
     () =>
@@ -948,12 +949,20 @@ export function ScriptWorkspace() {
 
   const startPolling = useCallback((jobId: string) => {
     stopPolling();
+    lastFailedAnalysisAlertRef.current = null;
     const poll = async () => {
       try {
         const job = await tasksApi.getJob(jobId);
         setAnalysisJob(job);
         if (isTerminalJobStatus(job.status)) {
           stopPolling();
+          if (job.status === 'failed' && job.errorMessage) {
+            const alertKey = `${job.id}:${job.errorMessage}`;
+            if (lastFailedAnalysisAlertRef.current !== alertKey) {
+              lastFailedAnalysisAlertRef.current = alertKey;
+              toast.error(job.errorMessage);
+            }
+          }
           // Fetch the report id so "View Report" navigates correctly (by=id preferred)
           if (isSuccessfulJobStatus(job.status)) {
             reportsApi.getByJob(job.id).then((report) => {
