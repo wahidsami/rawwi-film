@@ -15,9 +15,17 @@ export const config = {
     parseInt(process.env.PASS_HARD_TIMEOUT_MS ?? "180000", 10) || 180000,
     parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10) || 120000
   ),
+  CHUNK_HARD_TIMEOUT_MS: Math.max(
+    parseInt(process.env.CHUNK_HARD_TIMEOUT_MS ?? "300000", 10) || 300000,
+    parseInt(process.env.PASS_HARD_TIMEOUT_MS ?? "180000", 10) || 180000
+  ),
   HYBRID_HARD_TIMEOUT_MS: Math.max(
     parseInt(process.env.HYBRID_HARD_TIMEOUT_MS ?? "240000", 10) || 240000,
     parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10) || 120000
+  ),
+  CHUNK_HARD_TIMEOUT_MAX_RETRIES: Math.max(
+    1,
+    parseInt(process.env.CHUNK_HARD_TIMEOUT_MAX_RETRIES ?? "1", 10) || 1
   ),
   AI_OVERLOAD_MAX_RETRIES: Math.max(
     1,
@@ -27,6 +35,10 @@ export const config = {
   STALE_JUDGING_MS: Math.max(
     60_000,
     parseInt(process.env.STALE_JUDGING_MS ?? "600000", 10) || 600_000
+  ),
+  STALE_JUDGING_SWEEP_INTERVAL_MS: Math.max(
+    15_000,
+    parseInt(process.env.STALE_JUDGING_SWEEP_INTERVAL_MS ?? "30000", 10) || 30_000
   ),
   // Accept the legacy misnamed env key as a fallback so older deployments still get concurrency.
   WORKER_CHUNK_CONCURRENCY: Math.max(
