@@ -676,6 +676,40 @@ function detectProbableTableStructure(text: string): {
   };
 }
 
+function preserveProbableTableRows(text: string): { text: string; changedRows: number } {
+  const lines = text.split(/\r?\n/);
+  let changedRows = 0;
+  const repaired = lines.map((rawLine) => {
+    const line = normalizePdfTextRun(rawLine).trim();
+    if (!line) return rawLine;
+
+    const tabCells = line.split(/\t+/).map((part) => part.trim()).filter(Boolean);
+    if (tabCells.length >= 2) {
+      changedRows += 1;
+      return tabCells.join(" | ");
+    }
+
+    const wideGapCells = line.split(/\s{2,}/).map((part) => part.trim()).filter(Boolean);
+    if (wideGapCells.length >= 3) {
+      changedRows += 1;
+      return wideGapCells.join(" | ");
+    }
+
+    const pipeCells = line.split(/\s*\|\s*/).map((part) => part.trim()).filter(Boolean);
+    if (pipeCells.length >= 2) {
+      changedRows += 1;
+      return pipeCells.join(" | ");
+    }
+
+    return rawLine;
+  });
+
+  return {
+    text: changedRows >= 2 ? repaired.join("\n") : text,
+    changedRows: changedRows >= 2 ? changedRows : 0,
+  };
+}
+
 function detectProbableMultiColumnLayout(text: string): {
   detected: boolean;
   confidence: "low" | "medium" | "high";
@@ -1468,10 +1502,20 @@ async function extractPdfPagesWithPoppler(
 
       const probableTable = detectProbableTableStructure(selectedText);
       if (probableTable.detected) {
+        const preservedTable = preserveProbableTableRows(selectedText);
+        if (preservedTable.changedRows > 0) {
+          selectedText = preservedTable.text;
+        }
         selectedMeta = appendMetaFlag(selectedMeta, "documentFlags", "probable_table_detected");
         selectedMeta = {
           ...selectedMeta,
           probableTable,
+          ...(preservedTable.changedRows > 0
+            ? {
+                tableStructurePreserved: true,
+                tableRowsNormalized: preservedTable.changedRows,
+              }
+            : {}),
         };
       }
       const probableMultiColumn = detectProbableMultiColumnLayout(selectedText);
