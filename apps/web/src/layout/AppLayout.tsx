@@ -205,11 +205,11 @@ export function AppLayout() {
       <div className="flex-1 flex flex-col min-w-0">
         <Toaster position="top-center" />
         {/* Topbar */}
-        <header className="h-16 bg-surface border-b border-border flex items-center justify-between px-6 z-10">
+        <header className="relative h-16 bg-surface border-b border-border flex items-center justify-between px-6 z-[140]">
           <div></div>
 
           <div className="flex items-center gap-4">
-            <div className="relative" ref={notifRef}>
+            <div className="relative z-[150]" ref={notifRef}>
               <button
                 onClick={openNotifPanel}
                 aria-label={lang === 'ar' ? 'الإشعارات' : 'Notifications'}
@@ -224,7 +224,7 @@ export function AppLayout() {
               </button>
               {notifOpen && (
                 <div
-                  className="fixed max-h-[min(24rem,70vh)] overflow-hidden rounded-lg border border-border bg-surface shadow-lg z-50 flex flex-col"
+                  className="fixed max-h-[min(24rem,70vh)] overflow-hidden rounded-lg border border-border bg-surface shadow-lg z-[200] flex flex-col"
                   style={notifPanelStyle ? { top: notifPanelStyle.top, left: notifPanelStyle.left, width: notifPanelStyle.width } : undefined}
                 >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border">
