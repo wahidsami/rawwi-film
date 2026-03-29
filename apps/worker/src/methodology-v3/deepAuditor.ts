@@ -138,6 +138,7 @@ export async function runDeepAuditorPass(args: {
   findings: HybridFindingLike[];
   fullText: string | null;
   enabled?: boolean;
+  signal?: AbortSignal;
 }): Promise<HybridFindingLike[]> {
   const { findings, fullText } = args;
   if (findings.length === 0 || args.enabled === false || !config.ANALYSIS_DEEP_AUDITOR || !config.OPENAI_API_KEY) return findings;
@@ -154,9 +155,13 @@ export async function runDeepAuditorPass(args: {
   const raw = await callAuditorRaw(
     JSON.stringify({ candidates }),
     fullText ?? "",
-    config.OPENAI_AUDITOR_MODEL
+    config.OPENAI_AUDITOR_MODEL,
+    undefined,
+    { signal: args.signal }
   );
-  const parsed = await parseAuditorWithRepair(raw, config.OPENAI_AUDITOR_MODEL);
+  const parsed = await parseAuditorWithRepair(raw, config.OPENAI_AUDITOR_MODEL, {
+    signal: args.signal,
+  });
   const seen = new Set<string>();
   const dedupedAssessments: AuditorAssessment[] = [];
   for (const a of parsed.assessments) {
@@ -246,7 +251,7 @@ export async function runDeepAuditorPass(args: {
     try {
       for (let i = 0; i < rationaleItems.length; i += RATIONALE_ONLY_BATCH_SIZE) {
         const batch = rationaleItems.slice(i, i + RATIONALE_ONLY_BATCH_SIZE);
-        const results = await callRationaleOnly(batch, model);
+        const results = await callRationaleOnly(batch, model, { signal: args.signal });
         for (const r of results) {
           if (r.rationale_ar && r.rationale_ar.trim() !== "") generatedByCId.set(r.canonical_finding_id, r.rationale_ar.trim());
         }
@@ -256,6 +261,12 @@ export async function runDeepAuditorPass(args: {
         logger.warn("Rationale-only pass returned no rationales; consider OPENAI_RATIONALE_MODEL=gpt-4o or check logs for parse errors");
       }
     } catch (err) {
+      if (
+        (err instanceof Error && (err.name === "AbortError" || err.name === "ChunkTimeoutError")) ||
+        args.signal?.aborted
+      ) {
+        throw err;
+      }
       logger.warn("Rationale-only pass failed, keeping default rationale", { model, error: String(err) });
     }
     if (generatedByCId.size > 0) {

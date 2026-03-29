@@ -607,6 +607,15 @@ interface PassResult {
   error?: string;
 }
 
+function throwIfAborted(signal?: AbortSignal): void {
+  if (!signal?.aborted) return;
+  const reason = signal.reason;
+  if (reason instanceof Error) throw reason;
+  const error = new Error(typeof reason === "string" ? reason : "Operation aborted");
+  error.name = "AbortError";
+  throw error;
+}
+
 export interface DetectionPassExecutionPlan {
   activePasses: PassDefinition[];
   skippedPasses: PlannedPassSkip[];
@@ -673,11 +682,13 @@ async function runSinglePass(
   pass: PassDefinition,
   allArticles: GCAMArticle[],
   lexiconTerms: LexiconTerm[],
-  jobConfig: { temperature: number; seed: number }
+  jobConfig: { temperature: number; seed: number },
+  signal?: AbortSignal
 ): Promise<PassResult> {
   const startTime = Date.now();
   
   try {
+    throwIfAborted(signal);
     // Get articles for this pass
     let articleIds = pass.articleIds;
     if (pass.name === "glossary" && lexiconTerms.length > 0) {
@@ -709,11 +720,13 @@ async function runSinglePass(
       chunkStart,
       chunkEnd,
       { judge_model: model, temperature: jobConfig.temperature, seed: jobConfig.seed },
-      prompt
+      prompt,
+      { signal }
     );
+    throwIfAborted(signal);
 
     // Parse findings
-    const { findings } = await parseJudgeWithRepair(raw, model);
+    const { findings } = await parseJudgeWithRepair(raw, model, { signal });
     const tagged = findings.map((f) => ({
       ...f,
       detection_pass: pass.name,
@@ -739,6 +752,13 @@ async function runSinglePass(
     return { passName: pass.name, findings: stableTagged, duration, model };
     
   } catch (error) {
+    if (
+      (error instanceof Error && (error.name === "AbortError" || error.name === "ChunkTimeoutError")) ||
+      signal?.aborted
+    ) {
+      throwIfAborted(signal);
+      throw error;
+    }
     const duration = Date.now() - startTime;
     logger.error(`Pass ${pass.name} failed`, { error: String(error), duration });
     return { passName: pass.name, findings: [], duration, error: String(error) };
@@ -773,9 +793,11 @@ async function runSinglePassWithHardTimeout(
   pass: PassDefinition,
   allArticles: GCAMArticle[],
   lexiconTerms: LexiconTerm[],
-  jobConfig: { temperature: number; seed: number }
+  jobConfig: { temperature: number; seed: number },
+  signal?: AbortSignal
 ): Promise<PassResult> {
-  return new Promise<PassResult>((resolve) => {
+  return new Promise<PassResult>((resolve, reject) => {
+    throwIfAborted(signal);
     const timer = setTimeout(() => {
       logger.error(`Pass ${pass.name} exceeded hard timeout`, {
         timeoutMs: config.PASS_HARD_TIMEOUT_MS,
@@ -791,13 +813,20 @@ async function runSinglePassWithHardTimeout(
       });
     }, config.PASS_HARD_TIMEOUT_MS);
 
-    runSinglePass(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig).then(
+    runSinglePass(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig, signal).then(
       (result) => {
         clearTimeout(timer);
         resolve(result);
       },
       (error) => {
         clearTimeout(timer);
+        if (
+          (error instanceof Error && (error.name === "AbortError" || error.name === "ChunkTimeoutError")) ||
+          signal?.aborted
+        ) {
+          reject(error);
+          return;
+        }
         logger.error(`Pass ${pass.name} crashed unexpectedly`, {
           error: String(error),
           model: pass.model ?? "gpt-4.1",
@@ -827,7 +856,8 @@ export async function runMultiPassDetection(
   lexiconTerms: LexiconTerm[],
   jobConfig: { temperature: number; seed: number },
   progressOpts?: { chunkId: string },
-  executionPlan?: DetectionPassExecutionPlan
+  executionPlan?: DetectionPassExecutionPlan,
+  signal?: AbortSignal
 ): Promise<{
   findings: JudgeFinding[];
   passResults: PassResult[];
@@ -836,6 +866,7 @@ export async function runMultiPassDetection(
   skippedPassCount: number;
 }> {
   const startTime = Date.now();
+  throwIfAborted(signal);
   const plan = executionPlan ?? planDetectionPassExecution(chunkText, allArticles, lexiconTerms);
   const totalPasses = plan.activePasses.length;
 
@@ -896,7 +927,7 @@ export async function runMultiPassDetection(
   let completed = 0;
   const activeResults = await Promise.all(
     plan.activePasses.map((pass) =>
-      runSinglePassWithHardTimeout(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig).then(
+      runSinglePassWithHardTimeout(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig, signal).then(
         (result) => {
           completed++;
           if (progressOpts?.chunkId) {
@@ -907,6 +938,7 @@ export async function runMultiPassDetection(
       )
     )
   );
+  throwIfAborted(signal);
 
   if (progressOpts?.chunkId) {
     flushChunkPassProgress(progressOpts.chunkId, totalPasses, totalPasses);

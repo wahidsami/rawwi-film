@@ -306,6 +306,7 @@ export async function setChunkDone(chunkId: string): Promise<void> {
       judging_started_at: null,
       processing_phase: null,
       passes_completed: 0,
+      passes_total: 0,
     })
     .eq("id", chunkId);
 }
@@ -313,7 +314,14 @@ export async function setChunkDone(chunkId: string): Promise<void> {
 export async function setChunkFailed(chunkId: string, lastError: string): Promise<void> {
   await supabase
     .from("analysis_chunks")
-    .update({ status: "failed", last_error: lastError, judging_started_at: null, processing_phase: null })
+    .update({
+      status: "failed",
+      last_error: lastError,
+      judging_started_at: null,
+      processing_phase: null,
+      passes_completed: 0,
+      passes_total: 0,
+    })
     .eq("id", chunkId);
 }
 
@@ -326,6 +334,7 @@ export async function setChunkPending(chunkId: string, lastError: string | null 
       judging_started_at: null,
       processing_phase: null,
       passes_completed: 0,
+      passes_total: 0,
     })
     .eq("id", chunkId);
 }

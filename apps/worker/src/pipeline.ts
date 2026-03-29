@@ -79,6 +79,15 @@ class JobCancelledError extends Error {
   }
 }
 
+function throwIfAborted(signal?: AbortSignal): void {
+  if (!signal?.aborted) return;
+  const reason = signal.reason;
+  if (reason instanceof Error) throw reason;
+  const error = new Error(typeof reason === "string" ? reason : "Chunk processing aborted");
+  error.name = "AbortError";
+  throw error;
+}
+
 function compactEvidenceText(s: string): string {
   const cleaned = (s ?? "").replace(/\s+/g, " ").trim();
   return cleaned.length > MAX_EVIDENCE_LEN ? `${cleaned.slice(0, MAX_EVIDENCE_LEN)}…` : cleaned;
@@ -324,7 +333,8 @@ export function overlapCollapse(findings: FindingWithGlobal[]): FindingWithGloba
 export async function processChunkJudge(
   job: AnalysisJob,
   chunk: AnalysisChunk,
-  normalizedText: string | null
+  normalizedText: string | null,
+  signal?: AbortSignal
 ): Promise<void> {
   const chunkStartedAt = Date.now();
   const { id: jobId, script_id: scriptId, version_id: versionId } = job;
@@ -332,6 +342,7 @@ export async function processChunkJudge(
   const chunkStart = chunk.start_offset;
   const chunkEnd = chunk.end_offset;
 
+  throwIfAborted(signal);
   if (await isJobCancelled(jobId)) {
     await setChunkFailed(chunk.id, "Cancelled by user");
     throw new JobCancelledError();
@@ -355,6 +366,7 @@ export async function processChunkJudge(
 
   const jobResourcesStartedAt = Date.now();
   const { pageRows, promptLexiconTerms } = await getCachedJobResources(supabase, jobId, versionId);
+  throwIfAborted(signal);
   const jobResourcesDurationMs = Date.now() - jobResourcesStartedAt;
   const pageNumAt = (off: number) =>
     pageRows.length > 0 ? offsetToPageNumber(off, pageRows) : null;
@@ -708,12 +720,14 @@ export async function processChunkJudge(
         });
       } else {
         try {
+          throwIfAborted(signal);
           const routerOut = await callRouter(chunkText, articleList, {
             router_model: routerModel,
             temperature,
             seed,
             max_router_candidates: maxRouter,
-          }, routerPrompt);
+          }, routerPrompt, { signal });
+          throwIfAborted(signal);
           routerOutputJson = routerOut;
           const candidateIds = routerOut.candidate_articles.map((a) => a.article_id);
           selectedIds = [...new Set([...ALWAYS_CHECK_ARTICLES, ...candidateIds])].sort((a, b) => a - b).slice(0, 25);
@@ -729,6 +743,13 @@ export async function processChunkJudge(
             });
           }
         } catch (e) {
+          if (
+            (e instanceof Error && (e.name === "AbortError" || e.name === "ChunkTimeoutError")) ||
+            signal?.aborted
+          ) {
+            throwIfAborted(signal);
+            throw e;
+          }
           logger.warn("Router failed, using ALWAYS_CHECK_ARTICLES", { error: String(e) });
           selectedIds = [...ALWAYS_CHECK_ARTICLES];
         }
@@ -749,6 +770,7 @@ export async function processChunkJudge(
       const passExecutionPlan = planDetectionPassExecution(chunkText, selectedArticles, terms);
       setChunkMultipassStart(chunk.id, Math.max(1, passExecutionPlan.activePasses.length));
       const multiPassStartedAt = Date.now();
+      throwIfAborted(signal);
       const multiPassResult = await runMultiPassDetection(
         chunkText,
         chunkStart,
@@ -757,8 +779,10 @@ export async function processChunkJudge(
         terms,
         { temperature, seed },
         { chunkId: chunk.id },
-        passExecutionPlan
+        passExecutionPlan,
+        signal
       );
+      throwIfAborted(signal);
       
       // Enforce atom_ids and prefer literal local evidence from chunk offsets.
       const enforced = multiPassResult.findings.map(f => enforceAtomIds([f])[0]);
@@ -817,6 +841,13 @@ export async function processChunkJudge(
         multiPassDurationMs: Date.now() - multiPassStartedAt,
       });
     } catch (e) {
+      if (
+        (e instanceof Error && (e.name === "AbortError" || e.name === "ChunkTimeoutError")) ||
+        signal?.aborted
+      ) {
+        throwIfAborted(signal);
+        throw e;
+      }
       logger.error("Multi-pass detection failed", { error: String(e), chunkId: chunk.id });
     }
 
@@ -849,6 +880,7 @@ export async function processChunkJudge(
       router_candidates: routerOutputJson,
       ai_findings: allFindings
     });
+    throwIfAborted(signal);
 
     if (runErr) {
       logger.warn("Failed to persist analysis_chunk_run", { runKey, error: runErr.message });
@@ -863,6 +895,7 @@ export async function processChunkJudge(
   let persistedFindings: FindingWithGlobal[] = baselineFindings;
   let hybridMetrics: Record<string, unknown> | null = null;
   const partialFinalizeRequested = await isPartialFinalizeRequested(jobId);
+  throwIfAborted(signal);
   if (partialFinalizeRequested) {
     logger.info("Partial finalize requested; skipping hybrid context pipeline for current chunk", {
       jobId,
@@ -886,6 +919,7 @@ export async function processChunkJudge(
           })),
           fullText: normalizedText,
           deepAuditorEnabled,
+          signal,
         }),
         new Promise<never>((_, reject) => {
           hybridTimeoutHandle = setTimeout(() => {
@@ -896,6 +930,7 @@ export async function processChunkJudge(
         }),
       ]);
       if (hybridTimeoutHandle) clearTimeout(hybridTimeoutHandle);
+      throwIfAborted(signal);
       hybridMetrics = hybrid.metrics;
       if (config.ANALYSIS_HYBRID_MODE === "enforce") {
         persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
@@ -921,6 +956,13 @@ export async function processChunkJudge(
         await supabase.from("analysis_engine_evaluations").insert(evalPayload);
       }
     } catch (error) {
+      if (
+        (error instanceof Error && (error.name === "AbortError" || error.name === "ChunkTimeoutError")) ||
+        signal?.aborted
+      ) {
+        throwIfAborted(signal);
+        throw error;
+      }
       const message = error instanceof Error ? error.message : String(error);
       logger.warn("Hybrid context pipeline failed or timed out; falling back to baseline findings", {
         jobId,
@@ -951,6 +993,7 @@ export async function processChunkJudge(
     hybridMode: config.ANALYSIS_HYBRID_MODE,
   });
 
+  throwIfAborted(signal);
   if (await isJobCancelled(jobId)) {
     await setChunkFailed(chunk.id, "Cancelled by user");
     throw new JobCancelledError();
@@ -1001,9 +1044,11 @@ export async function processChunkJudge(
     };
   }));
 
+  throwIfAborted(signal);
   setChunkPhase(chunk.id, "aggregating");
 
   // 8) Insert findings (batch upsert with logging). Derive excerpt from canonical when available.
+  throwIfAborted(signal);
   if (await isJobCancelled(jobId)) {
     await setChunkFailed(chunk.id, "Cancelled by user");
     throw new JobCancelledError();
@@ -1105,6 +1150,7 @@ export async function processChunkJudge(
       .from("analysis_findings")
       .upsert(rows, { onConflict: "job_id,evidence_hash", ignoreDuplicates: true })
       .select("id,article_id,atom_id,confidence");
+    throwIfAborted(signal);
 
     logger.info("AI findings upsert result", {
       jobId, chunkId: chunk.id,
@@ -1144,6 +1190,7 @@ export async function processChunkJudge(
     logger.info("No AI findings to insert for chunk", { jobId, chunkId: chunk.id, runKey });
   }
 
+  throwIfAborted(signal);
   await setChunkDone(chunk.id);
   await incrementJobProgress(jobId);
   logger.info("Chunk processed", {

@@ -30,6 +30,8 @@ type ChunkProcessResult = {
 
 const AI_OVERLOAD_PUBLIC_MESSAGE = "Raawi AI overloading issue, code 101";
 const AI_OVERLOAD_RETRY_MARKER = "__ai_overload_retry:";
+const CHUNK_TIMEOUT_PUBLIC_MESSAGE = "Analysis chunk timed out and was re-queued";
+const CHUNK_TIMEOUT_RETRY_MARKER = "__chunk_timeout_retry:";
 
 let lastLexiconRefreshJobId: string | null = null;
 
@@ -49,6 +51,25 @@ function getAiOverloadRetryCount(lastError: string | null | undefined): number {
 
 function encodeAiOverloadRetry(rawError: string, retryCount: number): string {
   return `${AI_OVERLOAD_RETRY_MARKER}${retryCount}__ ${rawError}`.trim();
+}
+
+function getChunkTimeoutRetryCount(lastError: string | null | undefined): number {
+  if (!lastError) return 0;
+  const match = lastError.match(/__chunk_timeout_retry:(\d+)__/i);
+  if (!match) return 0;
+  const parsed = parseInt(match[1], 10);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function encodeChunkTimeoutRetry(rawError: string, retryCount: number): string {
+  return `${CHUNK_TIMEOUT_RETRY_MARKER}${retryCount}__ ${rawError}`.trim();
+}
+
+class ChunkTimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ChunkTimeoutError";
+  }
 }
 
 async function claimChunkBatch(jobId: string, desired: number) {
@@ -81,8 +102,22 @@ async function processClaimedChunk(
   normalizedText: string | null,
 ): Promise<ChunkProcessResult> {
   setContext({ jobId: job.id, chunkId: claimed.id });
+  const abortController = new AbortController();
+  let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
   try {
-    await processChunkJudge(job as any, claimed as any, normalizedText);
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutHandle = setTimeout(() => {
+        const error = new ChunkTimeoutError(
+          `Chunk exceeded hard timeout of ${config.CHUNK_HARD_TIMEOUT_MS}ms`,
+        );
+        abortController.abort(error);
+        reject(error);
+      }, config.CHUNK_HARD_TIMEOUT_MS);
+    });
+    await Promise.race([
+      processChunkJudge(job as any, claimed as any, normalizedText, abortController.signal),
+      timeoutPromise,
+    ]);
     return { ok: true, retryable: false };
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : String(e);
@@ -92,6 +127,38 @@ async function processClaimedChunk(
         chunkId: claimed.id,
       });
       return { ok: false, retryable: false, error: errMsg };
+    }
+    const timeoutReason = abortController.signal.reason;
+    const isChunkTimeout =
+      (e instanceof Error && e.name === "ChunkTimeoutError") ||
+      (e instanceof Error &&
+        e.name === "AbortError" &&
+        timeoutReason instanceof Error &&
+        timeoutReason.name === "ChunkTimeoutError");
+    if (isChunkTimeout) {
+      const retryCount = getChunkTimeoutRetryCount(claimed.last_error) + 1;
+      if (retryCount <= config.CHUNK_HARD_TIMEOUT_MAX_RETRIES) {
+        logger.warn("Chunk processing exceeded hard timeout; re-queueing chunk", {
+          jobId: job.id,
+          chunkId: claimed.id,
+          retryCount,
+          maxRetries: config.CHUNK_HARD_TIMEOUT_MAX_RETRIES,
+          timeoutMs: config.CHUNK_HARD_TIMEOUT_MS,
+        });
+        await setChunkPending(claimed.id, encodeChunkTimeoutRetry(errMsg, retryCount));
+        return { ok: false, retryable: true, error: CHUNK_TIMEOUT_PUBLIC_MESSAGE };
+      }
+
+      logger.error("Chunk processing exceeded hard timeout retries", {
+        jobId: job.id,
+        chunkId: claimed.id,
+        retryCount,
+        maxRetries: config.CHUNK_HARD_TIMEOUT_MAX_RETRIES,
+        timeoutMs: config.CHUNK_HARD_TIMEOUT_MS,
+      });
+      await setChunkFailed(claimed.id, CHUNK_TIMEOUT_PUBLIC_MESSAGE);
+      await setJobFailed(job.id, CHUNK_TIMEOUT_PUBLIC_MESSAGE);
+      return { ok: false, retryable: false, error: CHUNK_TIMEOUT_PUBLIC_MESSAGE };
     }
     if (isAiOverloadIssue(errMsg)) {
       const retryCount = getAiOverloadRetryCount(claimed.last_error) + 1;
@@ -125,6 +192,9 @@ async function processClaimedChunk(
     await setChunkFailed(claimed.id, errMsg);
     await setJobFailed(job.id, errMsg);
     return { ok: false, retryable: false, error: errMsg };
+  } finally {
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+    abortController.abort();
   }
 }
 
@@ -231,6 +301,29 @@ async function processOneJob(): Promise<boolean> {
   return true;
 }
 
+function startStaleJudgingSweep(): ReturnType<typeof setInterval> {
+  let running = false;
+  return setInterval(() => {
+    if (running) return;
+    running = true;
+    void recoverStaleJudgingChunks(config.STALE_JUDGING_MS)
+      .then((recoveredChunks) => {
+        if (recoveredChunks > 0) {
+          logger.warn("Recovered stale judging chunks during watchdog sweep", {
+            recoveredChunks,
+            staleJudgingMs: config.STALE_JUDGING_MS,
+          });
+        }
+      })
+      .catch((error) => {
+        logger.warn("Stale judging sweep failed", { error: String(error) });
+      })
+      .finally(() => {
+        running = false;
+      });
+  }, config.STALE_JUDGING_SWEEP_INTERVAL_MS);
+}
+
 async function runOnce(jobId: string | undefined): Promise<void> {
   if (!config.SUPABASE_URL || !config.SUPABASE_SERVICE_ROLE_KEY) {
     logger.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
@@ -241,59 +334,64 @@ async function runOnce(jobId: string | undefined): Promise<void> {
   }
 
   await initializeLexiconCache(supabase);
+  const staleSweep = startStaleJudgingSweep();
 
-  if (jobId) {
-    const { data: job } = await supabase
-      .from("analysis_jobs")
-      .select("id, script_id, version_id, status, progress_total, progress_done, started_at")
-      .eq("id", jobId)
-      .single();
-    if (!job) {
-      logger.error("Job not found", { jobId });
-      process.exit(1);
-    }
-    setContext({ jobId: job.id });
-    await getLexiconCache(supabase).refresh();
-    const normalizedText = await fetchJobNormalizedText(jobId);
-    let processed = 0;
-    while (true) {
-      const claimed = await claimChunkBatch(jobId, config.WORKER_CHUNK_CONCURRENCY);
-      if (claimed.length === 0) {
+  try {
+    if (jobId) {
+      const { data: job } = await supabase
+        .from("analysis_jobs")
+        .select("id, script_id, version_id, status, progress_total, progress_done, started_at")
+        .eq("id", jobId)
+        .single();
+      if (!job) {
+        logger.error("Job not found", { jobId });
+        process.exit(1);
+      }
+      setContext({ jobId: job.id });
+      await getLexiconCache(supabase).refresh();
+      const normalizedText = await fetchJobNormalizedText(jobId);
+      let processed = 0;
+      while (true) {
+        const claimed = await claimChunkBatch(jobId, config.WORKER_CHUNK_CONCURRENCY);
+        if (claimed.length === 0) {
+          try {
+            await runAggregation(job.id);
+          } catch (e) {
+            const errMsg = e instanceof Error ? e.message : String(e);
+            logger.error("Aggregation failed during worker:once idle finalize", { jobId: job.id, error: errMsg });
+            await setJobFailed(job.id, errMsg);
+          }
+          break;
+        }
+        const results = await Promise.all(
+          claimed.map((chunk) =>
+            processClaimedChunk(job as { id: string; script_id: string; version_id: string }, chunk, normalizedText)
+          )
+        );
+        processed += results.filter((result) => result.ok).length;
+        if (results.some((result) => !result.ok)) continue;
         try {
           await runAggregation(job.id);
         } catch (e) {
           const errMsg = e instanceof Error ? e.message : String(e);
-          logger.error("Aggregation failed during worker:once idle finalize", { jobId: job.id, error: errMsg });
+          logger.error("Aggregation failed during worker:once", { jobId: job.id, error: errMsg });
           await setJobFailed(job.id, errMsg);
+          break;
         }
-        break;
       }
-      const results = await Promise.all(
-        claimed.map((chunk) =>
-          processClaimedChunk(job as { id: string; script_id: string; version_id: string }, chunk, normalizedText)
-        )
-      );
-      processed += results.filter((result) => result.ok).length;
-      if (results.some((result) => !result.ok)) continue;
-      try {
-        await runAggregation(job.id);
-      } catch (e) {
-        const errMsg = e instanceof Error ? e.message : String(e);
-        logger.error("Aggregation failed during worker:once", { jobId: job.id, error: errMsg });
-        await setJobFailed(job.id, errMsg);
-        break;
-      }
+      logger.info("worker:once finished", {
+        jobId,
+        chunksProcessed: processed,
+        chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
+      });
+      return;
     }
-    logger.info("worker:once finished", {
-      jobId,
-      chunksProcessed: processed,
-      chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
-    });
-    return;
-  }
 
-  const didWork = await processOneJob();
-  if (!didWork) logger.info("No job or chunk available");
+    const didWork = await processOneJob();
+    if (!didWork) logger.info("No job or chunk available");
+  } finally {
+    clearInterval(staleSweep);
+  }
 }
 
 async function runDev(): Promise<never> {
@@ -310,11 +408,16 @@ async function runDev(): Promise<never> {
     pollIntervalMs: config.POLL_INTERVAL_MS,
     chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
   });
+  const staleSweep = startStaleJudgingSweep();
 
-  while (true) {
-    setContext({});
-    await processOneJob();
-    await new Promise((r) => setTimeout(r, config.POLL_INTERVAL_MS));
+  try {
+    while (true) {
+      setContext({});
+      await processOneJob();
+      await new Promise((r) => setTimeout(r, config.POLL_INTERVAL_MS));
+    }
+  } finally {
+    clearInterval(staleSweep);
   }
 }
 

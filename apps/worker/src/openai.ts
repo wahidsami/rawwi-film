@@ -25,6 +25,10 @@ const REPAIR_SYSTEM = `You fix broken JSON. Return only valid JSON, no markdown,
 Expected shape: { "findings": [ { "article_id", "atom_id", "canonical_atom", "intensity", "context_impact", "legal_sensitivity", "audience_risk", "confidence", "title_ar", "description_ar", "evidence_snippet", "location": { "start_offset", "end_offset", "start_line", "end_line" }, "is_interpretive" } ] }
 Each of intensity, context_impact, legal_sensitivity, audience_risk must be 1-4. Do NOT include "severity" (computed by backend).`;
 
+type OpenAiCallOptions = {
+  signal?: AbortSignal;
+};
+
 function buildRouterArticlesPayload(articleList: GCAMArticle[]): string {
   return articleList.map((a) => `المادة ${a.id}: ${a.title_ar}`).join("\n");
 }
@@ -49,7 +53,8 @@ export async function callRouter(
   chunkText: string,
   articleList: GCAMArticle[],
   jobConfig: { router_model: string; temperature: number; seed: number; max_router_candidates: number },
-  routerSystemPrompt?: string
+  routerSystemPrompt?: string,
+  options: OpenAiCallOptions = {}
 ): Promise<RouterOutput> {
   const payload = buildRouterArticlesPayload(articleList);
   const textSlice = chunkText.slice(0, 15_000);
@@ -64,7 +69,7 @@ export async function callRouter(
     response_format: { type: "json_object" },
     temperature: jobConfig.temperature,
     seed: jobConfig.seed,
-  }, { timeout: config.JUDGE_TIMEOUT_MS });
+  }, { timeout: config.JUDGE_TIMEOUT_MS, signal: options.signal });
 
   const raw = resp.choices[0]?.message?.content ?? "{}";
   const parsed = parseRouterOutput(raw);
@@ -95,7 +100,8 @@ export async function callJudgeRaw(
   globalStart: number,
   globalEnd: number,
   jobConfig: { judge_model: string; temperature: number; seed: number },
-  judgeSystemPrompt?: string
+  judgeSystemPrompt?: string,
+  options: OpenAiCallOptions = {}
 ): Promise<string> {
   const payload = buildJudgeArticlesPayload(selectedArticles);
   const textSlice = chunkText.slice(0, 30_000);
@@ -123,7 +129,8 @@ export async function callJudgeRaw(
 export async function callRepairJson(
   model: string,
   brokenContent: string,
-  context: string
+  context: string,
+  options: OpenAiCallOptions = {}
 ): Promise<string> {
   const slice = brokenContent.slice(0, 8000);
   const resp = await openai.chat.completions.create({
@@ -133,7 +140,7 @@ export async function callRepairJson(
       { role: "user", content: `Context: ${context}\n\nBroken JSON:\n${slice}\n\nReturn the corrected JSON only.` },
     ],
     response_format: { type: "json_object" },
-  }, { timeout: config.JUDGE_TIMEOUT_MS });
+  }, { timeout: config.JUDGE_TIMEOUT_MS, signal: options.signal });
   return resp.choices[0]?.message?.content ?? "{}";
 }
 
@@ -142,7 +149,8 @@ export async function callRepairJson(
  */
 export async function parseJudgeWithRepair(
   raw: string,
-  model: string
+  model: string,
+  options: OpenAiCallOptions = {}
 ): Promise<{ findings: JudgeFinding[] }> {
   let content = raw;
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -190,7 +198,7 @@ export async function parseJudgeWithRepair(
         // ignore salvage errors; continue to repair path
       }
 
-      content = await callRepairJson(model, content, "Judge findings JSON");
+      content = await callRepairJson(model, content, "Judge findings JSON", options);
     }
   }
   return { findings: [] };
@@ -200,7 +208,8 @@ export async function callAuditorRaw(
   canonicalPayload: string,
   fullText: string,
   model: string,
-  auditorSystemPrompt?: string
+  auditorSystemPrompt?: string,
+  options: OpenAiCallOptions = {}
 ): Promise<string> {
   const clippedPayload = canonicalPayload.slice(0, 45_000);
   const clippedText = fullText.slice(0, 35_000);
@@ -217,7 +226,7 @@ export async function callAuditorRaw(
     max_tokens: 8192,
     temperature: 0,
     seed: 12345,
-  }, { timeout: config.JUDGE_TIMEOUT_MS });
+  }, { timeout: config.JUDGE_TIMEOUT_MS, signal: options.signal });
   return resp.choices[0]?.message?.content ?? '{"assessments":[]}';
 }
 
@@ -241,7 +250,8 @@ export type RationaleOnlyResult = {
  */
 export async function callRationaleOnly(
   items: RationaleOnlyItem[],
-  model: string
+  model: string,
+  options: OpenAiCallOptions = {}
 ): Promise<RationaleOnlyResult[]> {
   if (items.length === 0) return [];
   const payload = items
@@ -260,7 +270,7 @@ export async function callRationaleOnly(
     max_tokens: 3072,
     temperature: 0,
     seed: 12345,
-  }, { timeout: config.JUDGE_TIMEOUT_MS });
+  }, { timeout: config.JUDGE_TIMEOUT_MS, signal: options.signal });
   const raw = resp.choices[0]?.message?.content ?? "{}";
   try {
     const json = extractJsonFromText(raw);
@@ -288,7 +298,8 @@ export async function callRationaleOnly(
 
 export async function parseAuditorWithRepair(
   raw: string,
-  model: string
+  model: string,
+  options: OpenAiCallOptions = {}
 ): Promise<AuditorOutput> {
   let content = raw;
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -316,7 +327,7 @@ export async function parseAuditorWithRepair(
       } catch {
         // ignore and try repair
       }
-      content = await callRepairJson(model, content, "Auditor assessments JSON");
+      content = await callRepairJson(model, content, "Auditor assessments JSON", options);
     }
   }
   return { assessments: [] };
@@ -343,7 +354,8 @@ const REVISIT_SPOTTER_SYSTEM = `أنت مكتشف كلمات وعبارات فق
 export async function callRevisitSpotter(
   textSlice: string,
   terms: string[],
-  model: string = "gpt-4.1-mini"
+  model: string = "gpt-4.1-mini",
+  options: OpenAiCallOptions = {}
 ): Promise<RevisitMention[]> {
   if (!config.OPENAI_API_KEY || terms.length === 0 || !textSlice.trim()) return [];
   const termsList = terms.slice(0, 80).map((t) => `"${t}"`).join("، ");
@@ -359,7 +371,7 @@ export async function callRevisitSpotter(
       response_format: { type: "json_object" },
       max_tokens: 2048,
       temperature: 0,
-    }, { timeout: config.JUDGE_TIMEOUT_MS });
+    }, { timeout: config.JUDGE_TIMEOUT_MS, signal: options.signal });
     const raw = resp.choices[0]?.message?.content ?? "{}";
     const parsed = JSON.parse(raw) as { mentions?: Array<{ term?: string; snippet?: string; start_offset?: number; end_offset?: number }> };
     const list = Array.isArray(parsed.mentions) ? parsed.mentions : [];
