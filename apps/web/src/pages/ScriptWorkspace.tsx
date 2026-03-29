@@ -225,6 +225,61 @@ function formatImportDocumentCaseSummary(cases: ImportDocumentCases, lang: 'ar' 
     : 'The importer detected document structure that may need manual review.';
 }
 
+type WorkspaceDocumentFlagInfo = {
+  flag: string;
+  labelAr: string;
+  labelEn: string;
+  descriptionAr: string;
+  descriptionEn: string;
+};
+
+const WORKSPACE_DOCUMENT_FLAG_MAP: Record<string, WorkspaceDocumentFlagInfo> = {
+  probable_table_detected: {
+    flag: 'probable_table_detected',
+    labelAr: 'جدول محتمل',
+    labelEn: 'Probable table',
+    descriptionAr: 'هذه الصفحة تبدو كجدول أو أعمدة منظمة. قد يبقى النص صحيحاً بينما تضيع بنية الصفوف والخلايا.',
+    descriptionEn: 'This page looks like a table or structured columns. The text may survive while row/cell structure is lost.',
+  },
+  probable_multi_column_layout: {
+    flag: 'probable_multi_column_layout',
+    labelAr: 'أعمدة متعددة',
+    labelEn: 'Multi-column',
+    descriptionAr: 'هذه الصفحة تبدو متعددة الأعمدة، وقد يتأثر ترتيب القراءة في النص المستخرج.',
+    descriptionEn: 'This page appears multi-column, so reading order may drift in extracted text.',
+  },
+  probable_form_layout: {
+    flag: 'probable_form_layout',
+    labelAr: 'نموذج أو حقول',
+    labelEn: 'Form-like layout',
+    descriptionAr: 'هذه الصفحة تشبه النماذج أو الحقول، وقد لا تبقى العلاقة بين العنوان والقيمة كما في الأصل.',
+    descriptionEn: 'This page looks form-like, so label/value relationships may not survive exactly.',
+  },
+  probable_repeated_header_footer: {
+    flag: 'probable_repeated_header_footer',
+    labelAr: 'ترويسة/تذييل متكرر',
+    labelEn: 'Repeated header/footer',
+    descriptionAr: 'رصد النظام ترويسة أو تذييلاً متكرراً قد يظهر داخل النص المستخرج رغم أنه ليس من المتن الأصلي.',
+    descriptionEn: 'The importer detected repeated header/footer text that may appear in extracted content even though it is not part of the body.',
+  },
+  crossed_out_text_detected: {
+    flag: 'crossed_out_text_detected',
+    labelAr: 'نص مشطوب',
+    labelEn: 'Crossed-out text',
+    descriptionAr: 'رصد النظام نصاً مشطوباً في الأصل. قد يكون المقصود حذفه أو تعديله ويحتاج إلى قرار بشري.',
+    descriptionEn: 'The importer detected crossed-out text in the source. It may be intended for deletion or revision and needs human review.',
+  },
+};
+
+function getWorkspaceDocumentFlags(meta: Record<string, unknown> | undefined): WorkspaceDocumentFlagInfo[] {
+  if (!meta) return [];
+  const documentFlags = Array.isArray(meta.documentFlags) ? meta.documentFlags.filter((flag): flag is string => typeof flag === 'string') : [];
+  const editorialFlags = Array.isArray(meta.editorialFlags) ? meta.editorialFlags.filter((flag): flag is string => typeof flag === 'string') : [];
+  return [...new Set([...documentFlags, ...editorialFlags])]
+    .map((flag) => WORKSPACE_DOCUMENT_FLAG_MAP[flag])
+    .filter(Boolean);
+}
+
 function createImportAbortError(): Error {
   const error = new Error('Import aborted by user');
   error.name = 'AbortError';
@@ -2849,6 +2904,24 @@ export function ScriptWorkspace() {
 
   // Page-mode: current page data and findings scoped to this page (for toolbar + page view)
   const currentPageData = isPageMode && editorData?.pages?.[safeCurrentPage - 1] ? editorData.pages[safeCurrentPage - 1] : null;
+  const currentPageDocumentFlags = useMemo(
+    () => getWorkspaceDocumentFlags((currentPageData?.meta as Record<string, unknown> | undefined) ?? undefined),
+    [currentPageData?.meta]
+  );
+  const currentPageStrikeSpanCount = useMemo(() => {
+    const meta = (currentPageData?.meta as Record<string, unknown> | undefined) ?? undefined;
+    const spans = meta && Array.isArray(meta.strikeSpans) ? meta.strikeSpans : [];
+    return spans.length;
+  }, [currentPageData?.meta]);
+  const currentPageOcrInfo = useMemo(() => {
+    const meta = (currentPageData?.meta as Record<string, unknown> | undefined) ?? undefined;
+    if (!meta) return null;
+    return {
+      attempted: meta.ocrAttempted === true,
+      selected: meta.ocrSelected === true,
+      used: meta.ocrUsed === true,
+    };
+  }, [currentPageData?.meta]);
   /** PDF import can persist a font stack per page (see pdfDisplayFont + script_pages.display_font_stack). */
   const workspaceBodyFontFamily = useMemo(() => {
     if (isPageMode && currentPageData?.displayFontStack) {
@@ -3698,8 +3771,49 @@ export function ScriptWorkspace() {
                 )}
                 {isPageMode && currentPageData ? (
                   <div className="workspace-a4-stage flex justify-center py-6 px-2 overflow-x-auto">
+                    <div className="w-full max-w-4xl space-y-3">
+                    {(currentPageDocumentFlags.length > 0 || currentPageStrikeSpanCount > 0 || currentPageOcrInfo?.selected) && (
+                      <div className="rounded-2xl border border-warning/25 bg-warning/5 px-4 py-3 space-y-3" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                        <div className="space-y-1">
+                          <p className="text-xs font-semibold text-warning">
+                            {lang === 'ar' ? 'تنبيهات بنية الصفحة الحالية' : 'Current page structure warnings'}
+                          </p>
+                          <p className="text-sm text-text-main leading-6">
+                            {lang === 'ar'
+                              ? 'قد لا تطابق هذه الصفحة البنية الأصلية بالكامل داخل النص المستخرج. راجع الأصل البصري عند الحاجة قبل اتخاذ قرار نهائي.'
+                              : 'This page may not preserve the original document structure perfectly in extracted text. Review the visual original when needed before making a final decision.'}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {currentPageDocumentFlags.map((item) => (
+                            <Badge key={item.flag} variant="outline" className="text-[11px]">
+                              {lang === 'ar' ? item.labelAr : item.labelEn}
+                            </Badge>
+                          ))}
+                          {currentPageStrikeSpanCount > 0 && (
+                            <Badge variant="outline" className="text-[11px]">
+                              {lang === 'ar' ? `شطب مرصود: ${currentPageStrikeSpanCount}` : `Crossed-out spans: ${currentPageStrikeSpanCount}`}
+                            </Badge>
+                          )}
+                          {currentPageOcrInfo?.selected && (
+                            <Badge variant="outline" className="text-[11px]">
+                              {lang === 'ar' ? 'تم الاعتماد على OCR' : 'OCR selected'}
+                            </Badge>
+                          )}
+                        </div>
+                        {currentPageDocumentFlags.length > 0 && (
+                          <div className="space-y-1.5">
+                            {currentPageDocumentFlags.map((item) => (
+                              <p key={`${item.flag}-desc`} className="text-xs text-text-muted leading-6">
+                                {lang === 'ar' ? item.descriptionAr : item.descriptionEn}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {workspaceViewMode === 'pdf' && editorData?.sourcePdfSignedUrl ? (
-                      <div className="w-full max-w-4xl">
+                      <div className="w-full">
                         <p className="text-[11px] text-text-muted mb-2 text-center" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                           {lang === 'ar'
                             ? 'عرض بصري يطابق الملف الأصلي. التمييز والتحليل يعملان على النص المستخرج.'
@@ -3783,6 +3897,7 @@ export function ScriptWorkspace() {
                       </article>
                     </div>
                     )}
+                    </div>
                   </div>
                 ) : editorData?.contentHtml ? (
                   <div className="workspace-a4-stage workspace-a4-stage--fluid">
