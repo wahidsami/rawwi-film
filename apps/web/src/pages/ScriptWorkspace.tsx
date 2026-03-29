@@ -2071,10 +2071,78 @@ export function ScriptWorkspace() {
       : `Active chunk time: ${formatRelativeDuration(activeChunkAgeMs, lang)}`;
   }, [activeChunkAgeMs, lang]);
 
+  const activeChunkActivitySignature = useMemo(
+    () =>
+      activeChunk == null
+        ? null
+        : [
+            activeChunk.chunkIndex,
+            activeChunk.status,
+            activeChunk.processingPhase ?? '',
+            activeChunk.passesCompleted ?? '',
+            activeChunk.passesTotal ?? '',
+            activeChunk.pageNumberMin ?? '',
+            activeChunk.pageNumberMax ?? '',
+            activeChunk.lastError ?? '',
+          ].join('|'),
+    [activeChunk],
+  );
+  const [activeChunkLastMovementAt, setActiveChunkLastMovementAt] = useState<number | null>(null);
+  const activeChunkLastMovementSignatureRef = useRef<string | null>(null);
+  const completedChunksCount = useMemo(
+    () => chunkStatuses.filter((c) => c.status === 'done').length,
+    [chunkStatuses],
+  );
+  const completedChunksCountRef = useRef(0);
+
+  useEffect(() => {
+    if (!analysisModalOpen) return;
+    if (!analysisJob || isTerminalJobStatus(analysisJob.status) || isPausedJobStatus(analysisJob.status)) return;
+    if (!activeChunkActivitySignature) return;
+
+    const completedChanged = completedChunksCount !== completedChunksCountRef.current;
+    const signatureChanged = activeChunkActivitySignature !== activeChunkLastMovementSignatureRef.current;
+    if (signatureChanged || completedChanged) {
+      activeChunkLastMovementSignatureRef.current = activeChunkActivitySignature;
+      completedChunksCountRef.current = completedChunksCount;
+      setActiveChunkLastMovementAt(Date.now());
+    }
+  }, [
+    analysisModalOpen,
+    analysisJob,
+    activeChunkActivitySignature,
+    completedChunksCount,
+  ]);
+
+  useEffect(() => {
+    if (!analysisModalOpen || !analysisJobId) {
+      activeChunkLastMovementSignatureRef.current = null;
+      completedChunksCountRef.current = 0;
+      setActiveChunkLastMovementAt(null);
+      return;
+    }
+    if (isTerminalJobStatus(analysisJob?.status) || isPausedJobStatus(analysisJob?.status)) {
+      activeChunkLastMovementSignatureRef.current = activeChunkActivitySignature;
+      completedChunksCountRef.current = completedChunksCount;
+      setActiveChunkLastMovementAt(null);
+    }
+  }, [
+    analysisModalOpen,
+    analysisJobId,
+    analysisJob?.status,
+    activeChunkActivitySignature,
+    completedChunksCount,
+  ]);
+
+  const activeChunkIdleMs = useMemo(() => {
+    if (!activeChunkActivitySignature || activeChunkLastMovementAt == null) return null;
+    return Math.max(0, analysisTimerNow - activeChunkLastMovementAt);
+  }, [activeChunkActivitySignature, activeChunkLastMovementAt, analysisTimerNow]);
+
   const activeChunkIsStalled = useMemo(() => {
-    if (activeChunkAgeMs == null) return false;
-    return activeChunkAgeMs >= 10 * 60 * 1000;
-  }, [activeChunkAgeMs]);
+    if (activeChunkIdleMs == null) return false;
+    return activeChunkIdleMs >= 10 * 60 * 1000;
+  }, [activeChunkIdleMs]);
 
   const latestCompletedChunk = useMemo(() => {
     const done = chunkStatuses.filter((c) => c.status === 'done');
