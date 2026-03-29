@@ -9,7 +9,7 @@ import { scriptsApi, reportsApi, type DuplicateScriptCheckResponse } from '@/api
 import type { Script } from '@/api/models';
 import type { ReportListItem } from '@/api/models';
 import { formatDate, formatTime } from '@/utils/dateFormat';
-import { extractDocx } from '@/utils/documentExtract';
+import { extractDocxWithPages } from '@/utils/documentExtract';
 import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 import { DocumentImportModal } from '@/components/import/DocumentImportModal';
 import { Button } from '@/components/ui/Button';
@@ -310,10 +310,10 @@ export function QuickAnalysis() {
           throw new Error(isAr ? 'لم يتم العثور على نص في الملف' : 'No text found in document');
         }
       } else if (ext === 'docx') {
-        const { plain, html } = await extractDocx(file);
+        const { pages } = await extractDocxWithPages(file);
         ensureImportActive();
-        const res = await scriptsApi.extractText(version.id, plain, {
-          contentHtml: html,
+        const res = await scriptsApi.extractText(version.id, undefined, {
+          pages,
           enqueueAnalysis: false,
           signal: controller.signal,
         });

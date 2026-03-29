@@ -24,7 +24,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate } from '@/utils/dateFormat';
 import { normalizeScriptStatusForDisplay } from '@/utils/scriptStatus';
 import { downloadClientDetailsPdf } from '@/components/reports/client-details/download';
-import { extractDocx } from '@/utils/documentExtract';
+import { extractDocxWithPages } from '@/utils/documentExtract';
 import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 
 const WORK_CLASSIFICATION_OPTIONS = [
@@ -305,9 +305,9 @@ export function ClientDetails() {
                 throw new Error(lang === 'ar' ? 'لم يتم العثور على نص في المستند' : 'No text found in document');
               }
             } else if (ext === 'docx') {
-              const { plain, html } = await extractDocx(uploadFile);
-              const res = await scriptsApi.extractText(uploadResult.versionId, plain, {
-                contentHtml: html,
+              const { pages } = await extractDocxWithPages(uploadFile);
+              const res = await scriptsApi.extractText(uploadResult.versionId, undefined, {
+                pages,
                 enqueueAnalysis: false,
               });
               if ((res as { error?: string }).error) {

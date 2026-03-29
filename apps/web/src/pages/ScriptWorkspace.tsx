@@ -16,7 +16,7 @@ import { cn } from '@/utils/cn';
 import { getPolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
 import { getScriptDecisionCapabilities } from '@/utils/scriptDecisionCapabilities';
-import { extractDocx } from '@/utils/documentExtract';
+import { extractDocxWithPages } from '@/utils/documentExtract';
 import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 import {
   DEFAULT_SCRIPT_EDITOR_FONT_STACK,
@@ -2349,10 +2349,10 @@ export function ScriptWorkspace() {
               ? 'يجري تحليل ملف Word واستخراج النص المنسق ثم حفظه في النسخة الحالية.'
               : 'Parsing the Word document and saving the extracted text to this version.',
           );
-          const { plain, html } = await extractDocx(file);
+          const { pages } = await extractDocxWithPages(file);
           ensureImportActive();
-          const res = await scriptsApi.extractText(version.id, plain, {
-            contentHtml: html,
+          const res = await scriptsApi.extractText(version.id, undefined, {
+            pages,
             enqueueAnalysis: false,
             signal: controller.signal,
           });
