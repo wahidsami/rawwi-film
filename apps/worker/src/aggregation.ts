@@ -169,11 +169,58 @@ export type SummaryJson = {
 }
 
 const COMPLIANCE_NEUTRAL_HINTS = ["محايد", "سياق درامي", "ليس تحريضي", "ليس تمجيد", "متوافق إجمالاً", "درامي نفسي"];
+const FRAGMENTED_ARABIC_TOKEN_RE =
+  /[\u0621-\u064A]{1,2}(?:(?:\s+|[-ـ])[\u0621-\u064A]{1,3}){1,4}/gu;
+
+type RevisitMention = NonNullable<SummaryJson["words_to_revisit"]>[number];
 
 function scriptSuggestsNeutralContext(scriptSummary: SummaryJson["script_summary"]): boolean {
   if (!scriptSummary?.compliance_posture_ar && !scriptSummary?.narrative_stance_ar) return false;
   const text = [scriptSummary.compliance_posture_ar ?? "", scriptSummary.narrative_stance_ar ?? ""].join(" ");
   return containsAnyNormalized(text, COMPLIANCE_NEUTRAL_HINTS);
+}
+
+function buildContextSnippet(text: string, start: number, end: number, radius = 18): string {
+  const lo = Math.max(0, start - radius);
+  const hi = Math.min(text.length, end + radius);
+  return text.slice(lo, hi).replace(/\s+/g, " ").trim();
+}
+
+function findFragmentedArabicMentions(text: string): RevisitMention[] {
+  if (!text.trim()) return [];
+
+  const mentions: RevisitMention[] = [];
+  const seen = new Set<string>();
+  let match: RegExpExecArray | null;
+
+  while ((match = FRAGMENTED_ARABIC_TOKEN_RE.exec(text)) !== null) {
+    const raw = match[0] ?? "";
+    const fragments = raw.split(/(?:\s+|[-ـ])+/).filter(Boolean);
+    if (fragments.length < 2 || fragments.length > 5) continue;
+    const hasSingleLetterFragment = fragments.some((fragment) => fragment.length === 1);
+    if (!hasSingleLetterFragment) continue;
+
+    const combined = fragments.join("");
+    if (combined.length < 3 || combined.length > 9) continue;
+
+    const start = match.index;
+    const end = start + raw.length;
+    const snippet = buildContextSnippet(text, start, end);
+    const key = `${start}:${end}:${raw}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    mentions.push({
+      term: raw.trim(),
+      snippet,
+      start_offset: start,
+      end_offset: end,
+    });
+
+    if (mentions.length >= 30) break;
+  }
+
+  return mentions;
 }
 
 /**
@@ -1251,6 +1298,19 @@ export async function runAggregation(jobId: string): Promise<void> {
       } catch (e) {
         logger.warn("Revisit pass skipped or failed", { jobId, error: String(e) });
       }
+    }
+    const fragmentedMentions = findFragmentedArabicMentions(fullScriptText);
+    if (fragmentedMentions.length > 0) {
+      const existing = summary.words_to_revisit ?? [];
+      const seen = new Set(existing.map((item) => `${item.start_offset}:${item.end_offset}:${item.term}`));
+      for (const mention of fragmentedMentions) {
+        const key = `${mention.start_offset}:${mention.end_offset}:${mention.term}`;
+        if (!seen.has(key)) {
+          existing.push(mention);
+          seen.add(key);
+        }
+      }
+      summary.words_to_revisit = existing.slice(0, 60);
     }
   }
   applySummaryContextToRulings(summary);
