@@ -51,6 +51,38 @@ Still worth adding next:
 - stamp / seal / handwritten annotation hints
 - structured preservation for DOCX/PDF tables instead of text-only flattening
 
+## Rollback-Safe Rollout Notes
+
+Some importer improvements touch canonical extracted text and can affect offset-sensitive
+review flows. For those, prefer rollout behind an environment flag first.
+
+Current guarded flag:
+
+- `EXTRACT_PRESERVE_DOCX_TABLES=true|false`
+
+Behavior:
+
+- `false`:
+  - current stable DOCX HTML-to-text path
+  - strips tags only
+  - lowest risk for offset parity
+- `true`:
+  - conservative DOCX table preservation for HTML table content
+  - obvious rows are normalized more structurally for analysis readability
+  - slightly higher risk of offset drift versus the raw DOM text stream
+
+Rollback plan:
+
+1. Set `EXTRACT_PRESERVE_DOCX_TABLES=false`.
+2. Redeploy Supabase `extract`.
+3. Re-import only the affected DOCX version if you need the older canonical form again.
+
+Deployment command:
+
+```powershell
+supabase functions deploy extract --project-ref swbobhxyluupjzsxpzrd
+```
+
 ## Architecture Map
 
 ### Frontend

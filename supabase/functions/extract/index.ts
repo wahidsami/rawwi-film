@@ -13,6 +13,7 @@ import {
   chunkText,
   chunkTextByScriptPages,
   htmlToText,
+  htmlToTextPreserveTables,
   stripInvalidUnicodeForDb,
 } from "../_shared/utils.ts";
 import { saveScriptEditorContent } from "../_shared/scriptEditor.ts";
@@ -184,6 +185,16 @@ function sanitizeDisplayFontStack(input: unknown): string | null {
   const t = stripInvalidUnicodeForDb(input.trim()).slice(0, 480);
   if (!t || /[;{}<>@]/.test(t)) return null;
   return t;
+}
+
+function isDocxTablePreservationEnabled(): boolean {
+  try {
+    // Default OFF for a staged rollout because canonical DOCX text also drives
+    // offset-sensitive review flows. Ops can enable and rollback with one env flip.
+    return (Deno.env.get("EXTRACT_PRESERVE_DOCX_TABLES") ?? "").toLowerCase() === "true";
+  } catch {
+    return false;
+  }
 }
 
 function detectProbableTableFromText(text: string): {
@@ -792,11 +803,19 @@ Deno.serve(async (req: Request) => {
     .update({ extraction_status: "extracting", extraction_progress: { phase: "normalizing_text" }, extraction_error: null })
     .eq("id", versionId);
 
+  const preserveDocxTables =
+    contentHtml != null &&
+    contentHtml.length > 0 &&
+    /<table\b/i.test(contentHtml) &&
+    isDocxTablePreservationEnabled();
+
   // Strategy A: when contentHtml is provided (e.g. DOCX), derive canonical plain text from HTML
   // so offsets match the formatted viewer DOM. Otherwise use extracted text.
   const normalized = stripInvalidUnicodeForDb(
     contentHtml != null && contentHtml.length > 0
-      ? normalizeText(htmlToText(contentHtml))
+      ? normalizeText(
+          preserveDocxTables ? htmlToTextPreserveTables(contentHtml) : htmlToText(contentHtml),
+        )
       : normalizeText(extractedText),
   );
   const contentHash = await sha256Hash(normalized);
@@ -812,7 +831,13 @@ Deno.serve(async (req: Request) => {
       extracted_text: extractedText,
       extracted_text_hash: extractedTextHash,
       extraction_status: "done",
-      extraction_progress: { phase: "done", documentCases },
+      extraction_progress: {
+        phase: "done",
+        documentCases,
+        featureFlags: {
+          docxTablePreservation: preserveDocxTables,
+        },
+      },
       extraction_error: null,
     })
     .eq("id", versionId);

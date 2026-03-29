@@ -30,3 +30,22 @@ Read from `analysis_engine_evaluations`:
 3. Review metrics and sampled reports weekly.
 4. Switch selected tenants to `enforce`.
 5. Promote global `enforce` after acceptance threshold.
+
+## Import Rollback Guardrails
+
+Document-import changes that alter canonical extracted text should roll out behind
+feature flags whenever possible.
+
+Current guarded importer flag:
+
+- `EXTRACT_PRESERVE_DOCX_TABLES=true|false`
+
+Recommended rollout:
+
+1. Keep `EXTRACT_PRESERVE_DOCX_TABLES=false` in production by default.
+2. Enable it in one test environment first.
+3. Verify:
+   - DOCX table readability improves
+   - editor offsets/highlighting still behave correctly
+   - duplicate-content fingerprints remain acceptable
+4. If any regression appears, set the flag back to `false` and redeploy `extract`.

@@ -168,6 +168,125 @@ export function htmlToText(html: string): string {
   return out;
 }
 
+function parseHtmlTagName(rawTag: string): string {
+  const trimmed = rawTag.trim().replace(/^\/+/, "").replace(/^\s*!DOCTYPE\s+/i, "");
+  const match = /^([a-zA-Z0-9:_-]+)/.exec(trimmed);
+  return (match?.[1] ?? "").toLowerCase();
+}
+
+/**
+ * Safer table-aware HTML→text for DOCX/Mammoth flows.
+ * Keeps obvious table rows as `cell | cell | cell` while preserving the old
+ * strip-tags behavior for non-table content. This is intentionally conservative
+ * and should be enabled only where rollback is easy.
+ */
+export function htmlToTextPreserveTables(html: string): string {
+  if (typeof html !== "string" || html.length === 0) return "";
+  if (!/<table\b/i.test(html)) return htmlToText(html);
+
+  const tokens = html.match(/<[^>]+>|[^<]+/g) ?? [];
+  let out = "";
+  let insideTable = false;
+  let currentRow: string[] | null = null;
+  let currentCell = "";
+
+  const appendOutside = (value: string) => {
+    out += value;
+  };
+
+  const flushCell = () => {
+    if (!insideTable || currentRow == null) return;
+    const text = currentCell;
+    currentCell = "";
+    currentRow.push(text);
+  };
+
+  const flushRow = () => {
+    if (!insideTable || currentRow == null) return;
+    const cells = currentRow.map((cell) => cell.trim()).filter((cell) => cell.length > 0);
+    currentRow = null;
+    if (cells.length === 0) return;
+    if (out.length > 0 && !out.endsWith("\n")) out += "\n";
+    out += cells.join(" | ");
+    if (!out.endsWith("\n")) out += "\n";
+  };
+
+  for (const token of tokens) {
+    if (!token) continue;
+
+    if (!token.startsWith("<")) {
+      if (insideTable) currentCell += token;
+      else appendOutside(token);
+      continue;
+    }
+
+    const inner = token.slice(1, -1);
+    const lower = inner.trim().toLowerCase();
+    const isClosing = lower.startsWith("/");
+    const tagName = parseHtmlTagName(inner);
+
+    if (!tagName) continue;
+
+    if (!isClosing && (tagName === "br" || tagName === "hr")) {
+      if (insideTable) currentCell += "\n";
+      else appendOutside("\n");
+      continue;
+    }
+
+    if (!isClosing && tagName === "table") {
+      insideTable = true;
+      currentRow = null;
+      currentCell = "";
+      if (out.length > 0 && !out.endsWith("\n")) out += "\n";
+      continue;
+    }
+
+    if (isClosing && tagName === "table") {
+      flushCell();
+      flushRow();
+      insideTable = false;
+      currentCell = "";
+      if (out.length > 0 && !out.endsWith("\n")) out += "\n";
+      continue;
+    }
+
+    if (insideTable) {
+      if (!isClosing && tagName === "tr") {
+        flushCell();
+        flushRow();
+        currentRow = [];
+        currentCell = "";
+        continue;
+      }
+      if (isClosing && tagName === "tr") {
+        flushCell();
+        flushRow();
+        continue;
+      }
+      if (!isClosing && (tagName === "td" || tagName === "th")) {
+        if (currentRow == null) currentRow = [];
+        currentCell = "";
+        continue;
+      }
+      if (isClosing && (tagName === "td" || tagName === "th")) {
+        flushCell();
+        continue;
+      }
+      if (!isClosing && (tagName === "p" || tagName === "div" || tagName === "li")) {
+        currentCell += "\n";
+        continue;
+      }
+      continue;
+    }
+
+    if (!isClosing && (tagName === "p" || tagName === "div" || tagName === "li" || tagName === "tr")) {
+      appendOutside("\n");
+    }
+  }
+
+  return out;
+}
+
 export type Chunk = {
   text: string;
   start_offset: number;
