@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import { createHash } from "node:crypto";
 import { supabase } from "./db.js";
 import { logger } from "./logger.js";
+import { config } from "./config.js";
 
 const execFileAsync = promisify(execFile);
 const PAGE_JOIN = "\n\n";
@@ -860,11 +861,28 @@ function applyRepeatedHeaderFooterFlags(pages: ExtractedPdfPage[]): ExtractedPdf
 
   return pages.map((page) => {
     const lines = page.text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-    const top = normalizeHeaderFooterCandidate(lines[0] ?? "");
-    const bottom = normalizeHeaderFooterCandidate(lines[lines.length - 1] ?? "");
+    if (lines.length === 0) return page;
+    const topLine = lines[0] ?? "";
+    const bottomLine = lines[lines.length - 1] ?? "";
+    const top = normalizeHeaderFooterCandidate(topLine);
+    const bottom = normalizeHeaderFooterCandidate(bottomLine);
     const repeatedTop = top.length >= 6 && (topCounts.get(top) ?? 0) >= 3;
     const repeatedBottom = bottom.length >= 6 && (bottomCounts.get(bottom) ?? 0) >= 3;
     if (!repeatedTop && !repeatedBottom) return page;
+
+    const strippedLines = [...lines];
+    let removedTop: string | null = null;
+    let removedBottom: string | null = null;
+    if (config.EXTRACT_STRIP_REPEATED_HEADERS && repeatedBottom && strippedLines.length > 1) {
+      removedBottom = strippedLines.pop() ?? null;
+    }
+    if (config.EXTRACT_STRIP_REPEATED_HEADERS && repeatedTop && strippedLines.length > 1) {
+      removedTop = strippedLines.shift() ?? null;
+    }
+    const strippedText =
+      config.EXTRACT_STRIP_REPEATED_HEADERS && strippedLines.length > 0
+        ? strippedLines.join("\n")
+        : page.text;
 
     let meta = appendMetaFlag(page.meta, "documentFlags", "probable_repeated_header_footer");
     meta = {
@@ -872,9 +890,12 @@ function applyRepeatedHeaderFooterFlags(pages: ExtractedPdfPage[]): ExtractedPdf
       repeatedHeaderFooter: {
         top: repeatedTop ? top : null,
         bottom: repeatedBottom ? bottom : null,
+        stripped: config.EXTRACT_STRIP_REPEATED_HEADERS && (removedTop != null || removedBottom != null),
+        removedTop,
+        removedBottom,
       },
     };
-    return { ...page, meta };
+    return { ...page, text: strippedText, meta };
   });
 }
 
@@ -1695,6 +1716,7 @@ function summarizePdfDocumentCases(pages: ExtractedPdfPage[]): Record<string, un
 
   return {
     flags: [...flags],
+    totalPages: pages.length,
     probableTablePages,
     multiColumnPages,
     formLayoutPages,
@@ -1794,6 +1816,9 @@ async function persistPdfPagesWithMeta(version: ExtractionVersion, pages: Extrac
         phase: "done",
         pageCount: canonicalPages.length,
         documentCases,
+        featureFlags: {
+          repeatedHeaderFooterSuppression: config.EXTRACT_STRIP_REPEATED_HEADERS,
+        },
       },
       extraction_error: null,
     })

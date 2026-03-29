@@ -350,11 +350,20 @@ function normalizeHeaderFooterCandidate(value: string): string {
     .trim();
 }
 
+function isRepeatedHeaderSuppressionEnabled(): boolean {
+  try {
+    return (Deno.env.get("EXTRACT_STRIP_REPEATED_HEADERS") ?? "").toLowerCase() === "true";
+  } catch {
+    return false;
+  }
+}
+
 function summarizeDocumentCases(
   pagesInput: Array<{ text?: string; html?: string | null }>,
   contentHtml?: string | null,
 ): {
   flags: string[];
+  totalPages: number;
   probableTablePages: number[];
   probableTableCount: number;
   multiColumnPages: number[];
@@ -413,6 +422,7 @@ function summarizeDocumentCases(
 
   return {
     flags: [...flags],
+    totalPages: pagesInput.length,
     probableTablePages,
     probableTableCount: probableTablePages.length,
     multiColumnPages,
@@ -422,6 +432,31 @@ function summarizeDocumentCases(
     repeatedHeaderFooterPages,
     repeatedHeaderFooterCount: repeatedHeaderFooterPages.length,
     htmlTableDetected,
+  };
+}
+
+function stripRepeatedHeaderFooterFromPageText(
+  text: string,
+  repeatedTop: boolean,
+  repeatedBottom: boolean,
+): { text: string; removedTop: string | null; removedBottom: string | null; stripped: boolean } {
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (lines.length <= 1) {
+    return { text, removedTop: null, removedBottom: null, stripped: false };
+  }
+  const strippedLines = [...lines];
+  let removedTop: string | null = null;
+  let removedBottom: string | null = null;
+  if (repeatedBottom && strippedLines.length > 1) removedBottom = strippedLines.pop() ?? null;
+  if (repeatedTop && strippedLines.length > 1) removedTop = strippedLines.shift() ?? null;
+  if (removedTop == null && removedBottom == null) {
+    return { text, removedTop: null, removedBottom: null, stripped: false };
+  }
+  return {
+    text: strippedLines.length > 0 ? strippedLines.join("\n") : text,
+    removedTop,
+    removedBottom,
+    stripped: true,
   };
 }
 
@@ -436,11 +471,32 @@ async function persistMultipageExtract(
   v: ScriptVersionRow
 ): Promise<{ error?: string }> {
   const sorted = [...pagesInput].sort((a, b) => (a.pageNumber ?? 0) - (b.pageNumber ?? 0));
-  const pageContents = sorted.map((p) => sanitizePageText(String(p.text ?? "")));
+  const documentCases = summarizeDocumentCases(sorted);
+  const stripRepeatedHeaders = isRepeatedHeaderSuppressionEnabled();
+  const topCounts = new Map<string, number>();
+  const bottomCounts = new Map<string, number>();
+
+  sorted.forEach((p) => {
+    const lines = String(p.text ?? "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const top = normalizeHeaderFooterCandidate(lines[0] ?? "");
+    const bottom = normalizeHeaderFooterCandidate(lines[lines.length - 1] ?? "");
+    if (top.length >= 6 && top.length <= 80) topCounts.set(top, (topCounts.get(top) ?? 0) + 1);
+    if (bottom.length >= 6 && bottom.length <= 80) bottomCounts.set(bottom, (bottomCounts.get(bottom) ?? 0) + 1);
+  });
+
+  const pageContents = sorted.map((p) => {
+    const originalText = sanitizePageText(String(p.text ?? ""));
+    if (!stripRepeatedHeaders || documentCases.repeatedHeaderFooterCount === 0) return originalText;
+    const lines = originalText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const top = normalizeHeaderFooterCandidate(lines[0] ?? "");
+    const bottom = normalizeHeaderFooterCandidate(lines[lines.length - 1] ?? "");
+    const repeatedTop = top.length >= 6 && (topCounts.get(top) ?? 0) >= 3;
+    const repeatedBottom = bottom.length >= 6 && (bottomCounts.get(bottom) ?? 0) >= 3;
+    return stripRepeatedHeaderFooterFromPageText(originalText, repeatedTop, repeatedBottom).text;
+  });
   const canonicalContent = pageContents.join(PAGE_JOIN);
   const contentHash = await sha256Hash(canonicalContent);
   const extractedTextHash = await sha256Hash(canonicalContent);
-  const documentCases = summarizeDocumentCases(sorted);
 
   await supabase
     .from("script_versions")
@@ -462,6 +518,15 @@ async function persistMultipageExtract(
     const probableTable = detectProbableTableFromText(pageContents[i] ?? "");
     const probableMultiColumn = detectProbableMultiColumnFromText(pageContents[i] ?? "");
     const probableForm = detectProbableFormFromText(pageContents[i] ?? "");
+    const originalText = sanitizePageText(String(p.text ?? ""));
+    const originalLines = originalText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const top = normalizeHeaderFooterCandidate(originalLines[0] ?? "");
+    const bottom = normalizeHeaderFooterCandidate(originalLines[originalLines.length - 1] ?? "");
+    const repeatedTop = top.length >= 6 && (topCounts.get(top) ?? 0) >= 3;
+    const repeatedBottom = bottom.length >= 6 && (bottomCounts.get(bottom) ?? 0) >= 3;
+    const repeatedHeaderFooter = stripRepeatedHeaders
+      ? stripRepeatedHeaderFooterFromPageText(originalText, repeatedTop, repeatedBottom)
+      : { text: originalText, removedTop: null, removedBottom: null, stripped: false };
     const documentFlags = [
       ...(probableTable.detected ? ["probable_table_detected"] : []),
       ...(probableMultiColumn.detected ? ["probable_multi_column_layout"] : []),
@@ -475,7 +540,14 @@ async function persistMultipageExtract(
           ...(probableMultiColumn.detected ? { probableMultiColumn } : {}),
           ...(probableForm.detected ? { probableFormLayout: probableForm } : {}),
           ...(documentCases.repeatedHeaderFooterPages.includes(i + 1)
-            ? { repeatedHeaderFooter: { detected: true } }
+            ? {
+                repeatedHeaderFooter: {
+                  detected: true,
+                  stripped: repeatedHeaderFooter.stripped,
+                  removedTop: repeatedHeaderFooter.removedTop,
+                  removedBottom: repeatedHeaderFooter.removedBottom,
+                },
+              }
             : {}),
         }
       : {};
@@ -507,7 +579,14 @@ async function persistMultipageExtract(
       extracted_text: canonicalContent,
       extracted_text_hash: extractedTextHash,
       extraction_status: "done",
-      extraction_progress: { phase: "done", pageCount: pageRows.length, documentCases },
+      extraction_progress: {
+        phase: "done",
+        pageCount: pageRows.length,
+        documentCases,
+        featureFlags: {
+          repeatedHeaderFooterSuppression: stripRepeatedHeaders,
+        },
+      },
       extraction_error: null,
     })
     .eq("id", versionId);

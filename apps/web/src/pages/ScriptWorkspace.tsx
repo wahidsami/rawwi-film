@@ -142,6 +142,7 @@ function formatExtractionProgressMessage(
 
 type ImportDocumentCases = {
   flags: string[];
+  totalPages: number;
   probableTablePages: number[];
   probableTableCount: number;
   multiColumnPages: number[];
@@ -175,6 +176,13 @@ function parseImportDocumentCases(progress: Record<string, unknown> | undefined)
   const repeatedHeaderFooterPages = Array.isArray(value.repeatedHeaderFooterPages)
     ? value.repeatedHeaderFooterPages.filter((page): page is number => typeof page === 'number')
     : [];
+  const totalPages = typeof value.totalPages === 'number' ? value.totalPages : Math.max(
+    probableTablePages.length,
+    multiColumnPages.length,
+    formLayoutPages.length,
+    scanAnnotationPages.length,
+    repeatedHeaderFooterPages.length,
+  );
   const probableTableCount =
     typeof value.probableTableCount === 'number' ? value.probableTableCount : probableTablePages.length;
   const multiColumnCount =
@@ -189,6 +197,7 @@ function parseImportDocumentCases(progress: Record<string, unknown> | undefined)
   if (!flags.length && probableTablePages.length === 0 && multiColumnPages.length === 0 && formLayoutPages.length === 0 && scanAnnotationPages.length === 0 && repeatedHeaderFooterPages.length === 0 && !htmlTableDetected) return null;
   return {
     flags,
+    totalPages,
     probableTablePages,
     probableTableCount,
     multiColumnPages,
@@ -201,6 +210,33 @@ function parseImportDocumentCases(progress: Record<string, unknown> | undefined)
     repeatedHeaderFooterCount,
     htmlTableDetected,
   };
+}
+
+function shouldCompactPageList(pageCount: number, totalPages: number): boolean {
+  if (pageCount === 0) return false;
+  if (pageCount >= 20) return true;
+  if (totalPages > 0 && pageCount / totalPages >= 0.7) return true;
+  return false;
+}
+
+function formatPageListSummary(
+  pages: number[],
+  totalPages: number,
+  lang: 'ar' | 'en',
+  labels: { almostAllAr: string; almostAllEn: string; pagesAr: string; pagesEn: string },
+): string {
+  if (pages.length === 0) return '';
+  if (totalPages > 0 && pages.length === totalPages) {
+    return lang === 'ar' ? 'جميع الصفحات تقريباً' : 'Nearly all pages';
+  }
+  if (shouldCompactPageList(pages.length, totalPages)) {
+    return lang === 'ar'
+      ? `${labels.almostAllAr} (${pages.length} صفحة)`
+      : `${labels.almostAllEn} (${pages.length} pages)`;
+  }
+  return lang === 'ar'
+    ? `${labels.pagesAr}: ${pages.join('، ')}`
+    : `${labels.pagesEn}: ${pages.join(', ')}`;
 }
 
 function formatImportDocumentCaseSummary(cases: ImportDocumentCases, lang: 'ar' | 'en'): string {
@@ -223,9 +259,15 @@ function formatImportDocumentCaseSummary(cases: ImportDocumentCases, lang: 'ar' 
       : `The importer detected ${parts.join(', ')}. Review these pages manually because extraction preserves text better than full original structure.`;
   }
   if (cases.repeatedHeaderFooterCount > 0) {
+    const touchesMostPages =
+      cases.totalPages > 0 && cases.repeatedHeaderFooterCount / cases.totalPages >= 0.7;
     return lang === 'ar'
-      ? `رصد النظام ترويسات أو تذييلات متكررة في ${cases.repeatedHeaderFooterCount} صفحة، وقد تظهر داخل النص المستخرج وتحتاج إلى تجاهل أو مراجعة.`
-      : `The importer detected repeated headers or footers on ${cases.repeatedHeaderFooterCount} page(s). They may appear in extracted text and need review.`;
+      ? touchesMostPages
+        ? `رصد النظام ترويسات أو تذييلات متكررة في معظم صفحات المستند (${cases.repeatedHeaderFooterCount} من ${cases.totalPages}). سيتم التعامل معها بحذر لأنها قد تختلط مع متن الصفحة إن لم تُستبعد.`
+        : `رصد النظام ترويسات أو تذييلات متكررة في ${cases.repeatedHeaderFooterCount} صفحة، وقد تظهر داخل النص المستخرج وتحتاج إلى تجاهل أو مراجعة.`
+      : touchesMostPages
+        ? `The importer detected repeated headers or footers across most of the document (${cases.repeatedHeaderFooterCount} of ${cases.totalPages} pages). They need careful handling so they do not pollute extracted body text.`
+        : `The importer detected repeated headers or footers on ${cases.repeatedHeaderFooterCount} page(s). They may appear in extracted text and need review.`;
   }
   if (cases.htmlTableDetected) {
     return lang === 'ar'
@@ -278,8 +320,8 @@ const WORKSPACE_DOCUMENT_FLAG_MAP: Record<string, WorkspaceDocumentFlagInfo> = {
     flag: 'probable_repeated_header_footer',
     labelAr: 'ترويسة/تذييل متكرر',
     labelEn: 'Repeated header/footer',
-    descriptionAr: 'رصد النظام ترويسة أو تذييلاً متكرراً قد يظهر داخل النص المستخرج رغم أنه ليس من المتن الأصلي.',
-    descriptionEn: 'The importer detected repeated header/footer text that may appear in extracted content even though it is not part of the body.',
+    descriptionAr: 'رصد النظام ترويسة أو تذييلاً متكرراً ليس من المتن الأصلي. قد يظهر داخل النص المستخرج أو يتم تجاهله تلقائياً بحسب إعدادات الاستيراد.',
+    descriptionEn: 'The importer detected repeated header/footer text that is not part of the body. It may appear in extracted content or be suppressed automatically depending on import settings.',
   },
   crossed_out_text_detected: {
     flag: 'crossed_out_text_detected',
@@ -3574,8 +3616,18 @@ export function ScriptWorkspace() {
                 {uploadDocumentCases.repeatedHeaderFooterPages.length > 0 && (
                   <p className="text-xs text-text-muted">
                     {lang === 'ar'
-                      ? `صفحات تحتوي على ترويسات/تذييلات متكررة: ${uploadDocumentCases.repeatedHeaderFooterPages.join('، ')}`
-                      : `Pages with repeated headers/footers: ${uploadDocumentCases.repeatedHeaderFooterPages.join(', ')}`}
+                      ? formatPageListSummary(uploadDocumentCases.repeatedHeaderFooterPages, uploadDocumentCases.totalPages, lang, {
+                          almostAllAr: 'تكررت الترويسات/التذييلات في معظم الصفحات',
+                          almostAllEn: 'Repeated headers/footers on most pages',
+                          pagesAr: 'صفحات تحتوي على ترويسات/تذييلات متكررة',
+                          pagesEn: 'Pages with repeated headers/footers',
+                        })
+                      : formatPageListSummary(uploadDocumentCases.repeatedHeaderFooterPages, uploadDocumentCases.totalPages, lang, {
+                          almostAllAr: 'تكررت الترويسات/التذييلات في معظم الصفحات',
+                          almostAllEn: 'Repeated headers/footers on most pages',
+                          pagesAr: 'صفحات تحتوي على ترويسات/تذييلات متكررة',
+                          pagesEn: 'Pages with repeated headers/footers',
+                        })}
                   </p>
                 )}
               </div>

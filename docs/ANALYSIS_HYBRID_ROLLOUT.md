@@ -39,6 +39,7 @@ feature flags whenever possible.
 Current guarded importer flag:
 
 - `EXTRACT_PRESERVE_DOCX_TABLES=true|false`
+- `EXTRACT_STRIP_REPEATED_HEADERS=true|false`
 
 Recommended rollout:
 
@@ -48,4 +49,5 @@ Recommended rollout:
    - DOCX table readability improves
    - editor offsets/highlighting still behave correctly
    - duplicate-content fingerprints remain acceptable
-4. If any regression appears, set the flag back to `false` and redeploy `extract`.
+4. For PDF-heavy scripts with fixed banners, enable `EXTRACT_STRIP_REPEATED_HEADERS=true` only after checking that repeated headers/footers are being removed without dropping real body lines.
+5. If any regression appears, set the relevant flag back to `false` and redeploy `extract` or the PDF worker path.

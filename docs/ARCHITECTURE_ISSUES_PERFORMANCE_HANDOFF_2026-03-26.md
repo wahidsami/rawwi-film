@@ -59,6 +59,7 @@ review flows. For those, prefer rollout behind an environment flag first.
 Current guarded flag:
 
 - `EXTRACT_PRESERVE_DOCX_TABLES=true|false`
+- `EXTRACT_STRIP_REPEATED_HEADERS=true|false`
 
 Behavior:
 
@@ -71,17 +72,28 @@ Behavior:
   - obvious rows are normalized more structurally for analysis readability
   - slightly higher risk of offset drift versus the raw DOM text stream
 
+- `EXTRACT_STRIP_REPEATED_HEADERS=false`:
+  - warning-only mode for repeated page headers/footers
+  - extracted body text remains untouched
+- `EXTRACT_STRIP_REPEATED_HEADERS=true`:
+  - repeated top/bottom lines detected across many pages are stripped from canonical extracted text
+  - removed values are preserved in page metadata for audit/review
+  - improves analysis quality on scripts with fixed banners, code lines, or running headers
+
 Rollback plan:
 
 1. Set `EXTRACT_PRESERVE_DOCX_TABLES=false`.
-2. Redeploy Supabase `extract`.
-3. Re-import only the affected DOCX version if you need the older canonical form again.
+2. Set `EXTRACT_STRIP_REPEATED_HEADERS=false` if header/footer suppression caused a regression.
+3. Redeploy Supabase `extract` and/or `worker` depending on which import path handled the file.
+4. Re-import only the affected version if you need the older canonical form again.
 
 Deployment command:
 
 ```powershell
 supabase functions deploy extract --project-ref swbobhxyluupjzsxpzrd
 ```
+
+Worker redeploy is also needed for backend PDF extraction changes.
 
 ## Architecture Map
 
