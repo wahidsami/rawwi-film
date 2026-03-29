@@ -4858,6 +4858,13 @@ export function ScriptWorkspace() {
                         : `Mode: ${selectedAnalysisModeMeta.labelEn}`}
                     </Badge>
                   </div>
+                  {analysisJob?.id && (
+                    <div className="mt-2">
+                      <Badge variant="outline" className="text-[11px] font-mono max-w-full">
+                        {lang === 'ar' ? `رقم المهمة: ${analysisJob.id}` : `Job ID: ${analysisJob.id}`}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </div>
 

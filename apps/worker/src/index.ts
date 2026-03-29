@@ -30,7 +30,8 @@ type ChunkProcessResult = {
 
 const AI_OVERLOAD_PUBLIC_MESSAGE = "Raawi AI overloading issue, code 101";
 const AI_OVERLOAD_RETRY_MARKER = "__ai_overload_retry:";
-const CHUNK_TIMEOUT_PUBLIC_MESSAGE = "Analysis chunk timed out and was re-queued";
+const CHUNK_TIMEOUT_REQUEUED_PUBLIC_MESSAGE = "Analysis chunk timed out and was re-queued";
+const CHUNK_TIMEOUT_FAILED_PUBLIC_MESSAGE = "Analysis chunk timed out repeatedly and the job failed";
 const CHUNK_TIMEOUT_RETRY_MARKER = "__chunk_timeout_retry:";
 
 let lastLexiconRefreshJobId: string | null = null;
@@ -146,7 +147,7 @@ async function processClaimedChunk(
           timeoutMs: config.CHUNK_HARD_TIMEOUT_MS,
         });
         await setChunkPending(claimed.id, encodeChunkTimeoutRetry(errMsg, retryCount));
-        return { ok: false, retryable: true, error: CHUNK_TIMEOUT_PUBLIC_MESSAGE };
+        return { ok: false, retryable: true, error: CHUNK_TIMEOUT_REQUEUED_PUBLIC_MESSAGE };
       }
 
       logger.error("Chunk processing exceeded hard timeout retries", {
@@ -156,9 +157,9 @@ async function processClaimedChunk(
         maxRetries: config.CHUNK_HARD_TIMEOUT_MAX_RETRIES,
         timeoutMs: config.CHUNK_HARD_TIMEOUT_MS,
       });
-      await setChunkFailed(claimed.id, CHUNK_TIMEOUT_PUBLIC_MESSAGE);
-      await setJobFailed(job.id, CHUNK_TIMEOUT_PUBLIC_MESSAGE);
-      return { ok: false, retryable: false, error: CHUNK_TIMEOUT_PUBLIC_MESSAGE };
+      await setChunkFailed(claimed.id, CHUNK_TIMEOUT_FAILED_PUBLIC_MESSAGE);
+      await setJobFailed(job.id, CHUNK_TIMEOUT_FAILED_PUBLIC_MESSAGE);
+      return { ok: false, retryable: false, error: CHUNK_TIMEOUT_FAILED_PUBLIC_MESSAGE };
     }
     if (isAiOverloadIssue(errMsg)) {
       const retryCount = getAiOverloadRetryCount(claimed.last_error) + 1;
