@@ -365,6 +365,8 @@ export const lexiconApi = {
 };
 
 let reportsEndpointUnavailable = false;
+let reportsAvailabilityKnown = false;
+let reportsAvailabilityProbe: Promise<void> | null = null;
 
 function isHttp404(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'status' in error && (error as { status?: unknown }).status === 404;
@@ -381,15 +383,40 @@ async function requestReports<T>(request: () => Promise<T>, fallbackValue?: T): 
     if (fallbackValue !== undefined) return fallbackValue;
     throw createReportsUnavailableError();
   }
-  try {
-    return await request();
-  } catch (error) {
-    if (isHttp404(error)) {
-      reportsEndpointUnavailable = true;
+  if (reportsAvailabilityKnown) {
+    return request();
+  }
+  if (reportsAvailabilityProbe) {
+    await reportsAvailabilityProbe.catch(() => undefined);
+    if (reportsEndpointUnavailable) {
       if (fallbackValue !== undefined) return fallbackValue;
       throw createReportsUnavailableError();
     }
+    return request();
+  }
+  let resolveProbe!: () => void;
+  let rejectProbe!: (reason?: unknown) => void;
+  reportsAvailabilityProbe = new Promise<void>((resolve, reject) => {
+    resolveProbe = resolve;
+    rejectProbe = reject;
+  });
+  try {
+    const result = await request();
+    reportsAvailabilityKnown = true;
+    resolveProbe();
+    return result;
+  } catch (error) {
+    if (isHttp404(error)) {
+      reportsEndpointUnavailable = true;
+      reportsAvailabilityKnown = false;
+      resolveProbe();
+      if (fallbackValue !== undefined) return fallbackValue;
+      throw createReportsUnavailableError();
+    }
+    rejectProbe(error);
     throw error;
+  } finally {
+    reportsAvailabilityProbe = null;
   }
 }
 
