@@ -453,6 +453,89 @@ function repairPdfLineFormation(lines: string[]): string[] {
   return merged;
 }
 
+function normalizeArabicLineForDedup(line: string): string {
+  return normalizePdfTextRun(line)
+    .replace(/[\u064B-\u065F\u0670]/gu, "")
+    .replace(/[()"'“”‘’.,:;!?،؛؟[\]{}\-–—_]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractArabicDedupTokens(line: string): string[] {
+  return normalizeArabicLineForDedup(line)
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 2 && hasArabicPdfText(token));
+}
+
+function tokenSetOverlapRatio(a: string[], b: string[]): number {
+  if (!a.length || !b.length) return 0;
+  const aSet = new Set(a);
+  const bSet = new Set(b);
+  let overlap = 0;
+  for (const token of aSet) {
+    if (bSet.has(token)) overlap += 1;
+  }
+  return overlap / Math.max(Math.min(aSet.size, bSet.size), 1);
+}
+
+function areAdjacentLinesNearDuplicates(current: string, next: string): boolean {
+  const currentTrimmed = current.trim();
+  const nextTrimmed = next.trim();
+  if (!currentTrimmed || !nextTrimmed) return false;
+  if (!hasArabicPdfText(currentTrimmed) || !hasArabicPdfText(nextTrimmed)) return false;
+  if (isPdfStructuralLine(currentTrimmed) || isPdfStructuralLine(nextTrimmed)) return false;
+
+  const currentNorm = normalizeArabicLineForDedup(currentTrimmed);
+  const nextNorm = normalizeArabicLineForDedup(nextTrimmed);
+  if (!currentNorm || !nextNorm) return false;
+  if (currentNorm === nextNorm) return true;
+
+  const currentTokens = extractArabicDedupTokens(currentTrimmed);
+  const nextTokens = extractArabicDedupTokens(nextTrimmed);
+  if (currentTokens.length < 3 || nextTokens.length < 3) return false;
+
+  const overlap = tokenSetOverlapRatio(currentTokens, nextTokens);
+  if (overlap < 0.7) return false;
+
+  const lengthRatio = Math.min(currentNorm.length, nextNorm.length) / Math.max(currentNorm.length, nextNorm.length);
+  if (lengthRatio < 0.55) return false;
+
+  return true;
+}
+
+function scorePdfDedupLineCandidate(line: string): number {
+  const trimmed = line.trim();
+  if (!trimmed) return -100;
+  let score = scorePdfLineQuality(trimmed);
+  const normalized = normalizeArabicLineForDedup(trimmed);
+  const spaces = trimmed.match(/\s/g)?.length ?? 0;
+  if (!/^[)\]}.،؛:?؟!]/u.test(trimmed)) score += 0.5;
+  if (!/[([{"']$/u.test(trimmed)) score += 0.25;
+  if (spaces >= 2) score += Math.min(spaces * 0.08, 0.8);
+  if (!/[\u064B-\u065F\u0670]\s*$/u.test(trimmed)) score += 0.3;
+  if (normalized.length >= 18) score += 0.4;
+  return score;
+}
+
+function collapseAdjacentDuplicatePdfLines(lines: string[]): string[] {
+  const collapsed: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const current = lines[i]!.trim();
+    if (!current) continue;
+    const next = lines[i + 1]?.trim() ?? "";
+    if (next && areAdjacentLinesNearDuplicates(current, next)) {
+      const keep =
+        scorePdfDedupLineCandidate(next) > scorePdfDedupLineCandidate(current) ? next : current;
+      collapsed.push(keep);
+      i += 1;
+      continue;
+    }
+    collapsed.push(current);
+  }
+  return collapsed;
+}
+
 function isLikelyGarbageTailLine(line: string): boolean {
   const trimmed = line.trim();
   if (!trimmed) return true;
@@ -1053,6 +1136,7 @@ function splitPdfPages(rawText: string): string[] {
       cleanedLines = repairPdfLineFormation(cleanedLines)
         .map((line) => repairCollapsedArabicWordSpacing(postprocessPdfExtractedLine(line)))
         .filter(Boolean);
+      cleanedLines = collapseAdjacentDuplicatePdfLines(cleanedLines);
       cleanedLines = trimGarbageTailLines(cleanedLines);
       return cleanedLines.join("\n").trim();
     })
@@ -1375,11 +1459,13 @@ async function runTesseractArabic(imagePath: string): Promise<string> {
 
 function postprocessOcrPageText(text: string): string {
   const cleanedLines = trimGarbageTailLines(
-    repairPdfLineFormation(
-      text
-        .split(/\r?\n/)
-        .map((line) => repairCollapsedArabicWordSpacing(collapseSpacedArabicLetters(postprocessPdfExtractedLine(line))))
-        .filter(Boolean),
+    collapseAdjacentDuplicatePdfLines(
+      repairPdfLineFormation(
+        text
+          .split(/\r?\n/)
+          .map((line) => repairCollapsedArabicWordSpacing(collapseSpacedArabicLetters(postprocessPdfExtractedLine(line))))
+          .filter(Boolean),
+      ),
     ),
   );
   return cleanedLines.join("\n").trim();
