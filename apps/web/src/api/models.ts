@@ -73,6 +73,9 @@ export interface Script {
   companyId: string;
   title: string;
   type: 'Film' | 'Series';
+  workClassification?: string;
+  episodeCount?: number | null;
+  receivedAt?: string | null;
   synopsis?: string;
   fileUrl?: string;
   status: ScriptStatus | string;

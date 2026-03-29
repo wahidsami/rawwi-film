@@ -27,6 +27,27 @@ import { downloadClientDetailsPdf } from '@/components/reports/client-details/do
 import { extractDocx } from '@/utils/documentExtract';
 import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 
+const WORK_CLASSIFICATION_OPTIONS = [
+  { value: '', labelAr: 'غير محدد', labelEn: 'Unspecified' },
+  { value: 'أمني', labelAr: 'أمني', labelEn: 'Security' },
+  { value: 'وثائقي', labelAr: 'وثائقي', labelEn: 'Documentary' },
+  { value: 'درامي', labelAr: 'درامي', labelEn: 'Drama' },
+  { value: 'كوميدي', labelAr: 'كوميدي', labelEn: 'Comedy' },
+  { value: 'تاريخي', labelAr: 'تاريخي', labelEn: 'Historical' },
+  { value: 'اجتماعي', labelAr: 'اجتماعي', labelEn: 'Social' },
+  { value: 'أطفال', labelAr: 'أطفال', labelEn: 'Children' },
+  { value: 'إعلامي', labelAr: 'إعلامي', labelEn: 'Media' },
+  { value: 'آخر', labelAr: 'آخر', labelEn: 'Other' },
+] as const;
+
+function parseEpisodeCountInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return parsed;
+}
+
 export function ClientDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -48,7 +69,10 @@ export function ClientDetails() {
       await scriptsApi.updateScript(isEditScriptOpen.id, {
         title: editScriptForm.title,
         synopsis: editScriptForm.synopsis,
-        assigneeId: editScriptForm.assigneeId
+        assigneeId: editScriptForm.assigneeId,
+        workClassification: editScriptForm.workClassification,
+        episodeCount: editScriptForm.episodeCount ?? null,
+        receivedAt: editScriptForm.receivedAt ?? null,
       });
       toast.success(lang === 'ar' ? 'تم تحديث النص' : 'Script updated');
       await fetchInitialData();
@@ -66,7 +90,10 @@ export function ClientDetails() {
     setEditScriptForm({
       title: script.title,
       synopsis: script.synopsis,
-      assigneeId: script.assigneeId || ''
+      assigneeId: script.assigneeId || '',
+      workClassification: script.workClassification || '',
+      episodeCount: script.episodeCount ?? null,
+      receivedAt: script.receivedAt ?? '',
     });
   };
 
@@ -78,6 +105,9 @@ export function ClientDetails() {
   const [formData, setFormData] = useState({
     title: '',
     type: 'Film' as 'Film' | 'Series',
+    workClassification: '',
+    episodeCount: '' as string,
+    receivedAt: new Date().toISOString().split('T')[0],
     synopsis: '',
     assigneeId: user?.id || '',
   });
@@ -232,6 +262,9 @@ export function ClientDetails() {
         companyId: company.companyId,
         title: formData.title,
         type: formData.type,
+        workClassification: formData.workClassification || undefined,
+        episodeCount: parseEpisodeCountInput(formData.episodeCount),
+        receivedAt: formData.receivedAt || null,
         synopsis: formData.synopsis,
         status: isAssigning ? 'Draft' : 'Draft',
         createdAt: new Date().toISOString().split('T')[0],
@@ -333,7 +366,15 @@ export function ClientDetails() {
       }
 
       setIsUploadOpen(false);
-      setFormData({ ...formData, title: '', synopsis: '', assigneeId: user?.id || '' }); // Reset assignee too
+      setFormData({
+        ...formData,
+        title: '',
+        synopsis: '',
+        workClassification: '',
+        episodeCount: '',
+        receivedAt: new Date().toISOString().split('T')[0],
+        assigneeId: user?.id || '',
+      }); // Reset assignee too
       setUploadFile(null); // Reset file
 
       // Navigate to workspace only if not assigning to others
@@ -565,6 +606,28 @@ export function ClientDetails() {
               value={editScriptForm.synopsis || ''}
               onChange={e => setEditScriptForm({ ...editScriptForm, synopsis: e.target.value })}
             />
+            <Select
+              label={lang === 'ar' ? 'تصنيف العمل' : 'Work Classification'}
+              value={editScriptForm.workClassification || ''}
+              onChange={e => setEditScriptForm({ ...editScriptForm, workClassification: e.target.value })}
+              options={WORK_CLASSIFICATION_OPTIONS.map((option) => ({
+                value: option.value,
+                label: lang === 'ar' ? option.labelAr : option.labelEn,
+              }))}
+            />
+            <Input
+              label={lang === 'ar' ? 'عدد الحلقات' : 'Episode Count'}
+              type="number"
+              min={0}
+              value={editScriptForm.episodeCount ?? ''}
+              onChange={e => setEditScriptForm({ ...editScriptForm, episodeCount: parseEpisodeCountInput(e.target.value) })}
+            />
+            <Input
+              label={lang === 'ar' ? 'تاريخ الاستلام' : 'Received Date'}
+              type="date"
+              value={typeof editScriptForm.receivedAt === 'string' ? editScriptForm.receivedAt : ''}
+              onChange={e => setEditScriptForm({ ...editScriptForm, receivedAt: e.target.value })}
+            />
             {hasPermission('assign_tasks') && (
               <Select
                 label={lang === 'ar' ? 'إسناد إلى' : 'Assign To'}
@@ -606,6 +669,30 @@ export function ClientDetails() {
               { label: 'Series', value: 'Series' }
             ]}
           />
+          <Select
+            label={lang === 'ar' ? 'تصنيف العمل' : 'Work Classification'}
+            value={formData.workClassification}
+            onChange={e => setFormData({ ...formData, workClassification: e.target.value })}
+            options={WORK_CLASSIFICATION_OPTIONS.map((option) => ({
+              value: option.value,
+              label: lang === 'ar' ? option.labelAr : option.labelEn,
+            }))}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label={lang === 'ar' ? 'عدد الحلقات' : 'Episode Count'}
+              type="number"
+              min={0}
+              value={formData.episodeCount}
+              onChange={e => setFormData({ ...formData, episodeCount: e.target.value })}
+            />
+            <Input
+              label={lang === 'ar' ? 'تاريخ الاستلام' : 'Received Date'}
+              type="date"
+              value={formData.receivedAt}
+              onChange={e => setFormData({ ...formData, receivedAt: e.target.value })}
+            />
+          </div>
           {hasPermission('assign_tasks') && (
             <Select
               label={lang === 'ar' ? 'إسناد إلى' : 'Assign To'}

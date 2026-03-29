@@ -23,6 +23,9 @@ type ScriptRow = {
   company_id: string | null;
   title: string;
   type: string;
+  work_classification: string | null;
+  episode_count: number | null;
+  received_at: string | null;
   status: string;
   synopsis: string | null;
   file_url: string | null;
@@ -40,6 +43,9 @@ function toScriptFrontend(row: ScriptRow) {
     companyId: row.company_id ?? row.client_id,
     title: row.title,
     type,
+    workClassification: row.work_classification ?? undefined,
+    episodeCount: row.episode_count ?? null,
+    receivedAt: row.received_at ?? null,
     synopsis: row.synopsis ?? undefined,
     fileUrl: row.file_url ?? undefined,
     status: row.status,
@@ -110,6 +116,31 @@ function normalizeStatus(s: unknown): string {
   const v = String(s).toLowerCase().replace(/\s+/g, "_");
   const allowed = ["draft", "in_review", "analysis_running", "review_required", "approved", "rejected"];
   return allowed.includes(v) ? v : "draft";
+}
+
+function normalizeWorkClassification(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().normalize("NFC");
+  return trimmed ? trimmed.slice(0, 120) : null;
+}
+
+function normalizeEpisodeCount(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number.parseInt(value.trim(), 10)
+        : Number.NaN;
+  if (!Number.isFinite(parsed) || Number.isNaN(parsed)) return null;
+  return parsed >= 0 ? parsed : null;
+}
+
+function normalizeReceivedAt(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : null;
 }
 
 async function ensureQuickAnalysisClientId(
@@ -306,7 +337,7 @@ Deno.serve(async (req: Request) => {
   if (method === "GET" && rest === "") {
     let query = supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("is_quick_analysis", false)
       .order("created_at", { ascending: false });
     const seeAll = await isSuperAdminOrAdmin(supabase, uid);
@@ -351,6 +382,9 @@ Deno.serve(async (req: Request) => {
       type: normalizeType(typeRaw),
       status: normalizeStatus(statusRaw),
       synopsis: typeof body.synopsis === "string" ? body.synopsis.trim() || null : null,
+      work_classification: normalizeWorkClassification(body.workClassification ?? body.work_classification),
+      episode_count: normalizeEpisodeCount(body.episodeCount ?? body.episode_count),
+      received_at: normalizeReceivedAt(body.receivedAt ?? body.received_at),
       file_url: null,
       created_by: uid,
       assignee_id: uid,
@@ -359,7 +393,7 @@ Deno.serve(async (req: Request) => {
     const { data: row, error } = await supabase
       .from("scripts")
       .insert(insert)
-      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .single();
     if (error || !row) {
       console.error(`[scripts] correlationId=${correlationId} quick insert error=`, error?.message);
@@ -383,7 +417,7 @@ Deno.serve(async (req: Request) => {
   if (method === "GET" && rest === "quick") {
     const { data: rows, error } = await supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("is_quick_analysis", true)
       .eq("created_by", uid)
       .order("created_at", { ascending: false });
@@ -782,7 +816,7 @@ Deno.serve(async (req: Request) => {
     const scriptId = rest.trim();
     const { data: row, error } = await supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("id", scriptId)
       .maybeSingle();
     if (error) return json({ error: error.message }, 500);
@@ -832,6 +866,9 @@ Deno.serve(async (req: Request) => {
       company_id: clientId,
       title: String(title).trim().normalize("NFC"),
       type: normalizeType(type),
+      work_classification: normalizeWorkClassification(body.workClassification ?? body.work_classification),
+      episode_count: normalizeEpisodeCount(body.episodeCount ?? body.episode_count),
+      received_at: normalizeReceivedAt(body.receivedAt ?? body.received_at),
       status: normalizeStatus(status),
       synopsis: typeof body.synopsis === "string" ? body.synopsis.trim() || null : null,
       file_url: typeof body.fileUrl === "string" ? body.fileUrl.trim() || null : null,
@@ -842,7 +879,7 @@ Deno.serve(async (req: Request) => {
     const { data: row, error } = await supabase
       .from("scripts")
       .insert(insert)
-      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .single();
     if (error) {
       console.error(`[scripts] correlationId=${correlationId} insert error=`, error.message);
@@ -1109,7 +1146,7 @@ Deno.serve(async (req: Request) => {
     // Fetch updated script
     const { data: updated } = await supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
       .eq("id", scriptId)
       .single();
 
@@ -1150,6 +1187,15 @@ Deno.serve(async (req: Request) => {
     const updates: any = {};
     if (body.title && typeof body.title === 'string' && body.title.trim()) updates.title = body.title.trim();
     if (body.synopsis !== undefined) updates.synopsis = typeof body.synopsis === 'string' ? body.synopsis.trim() || null : null;
+    if (body.workClassification !== undefined || body.work_classification !== undefined) {
+      updates.work_classification = normalizeWorkClassification(body.workClassification ?? body.work_classification);
+    }
+    if (body.episodeCount !== undefined || body.episode_count !== undefined) {
+      updates.episode_count = normalizeEpisodeCount(body.episodeCount ?? body.episode_count);
+    }
+    if (body.receivedAt !== undefined || body.received_at !== undefined) {
+      updates.received_at = normalizeReceivedAt(body.receivedAt ?? body.received_at);
+    }
     if (body.status && typeof body.status === 'string') updates.status = normalizeStatus(body.status);
 
     // Handle currentVersionId (set after import/new version so workspace shows correct version).
@@ -1185,7 +1231,7 @@ Deno.serve(async (req: Request) => {
       .from("scripts")
       .update(updates)
       .eq("id", scriptId)
-      .select("id, client_id, company_id, title, type, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
       .single();
 
     if (updateErr) {
