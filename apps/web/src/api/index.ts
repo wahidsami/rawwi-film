@@ -364,20 +364,54 @@ export const lexiconApi = {
     httpClient.post('/lexicon/generate-conjugations', { term }),
 };
 
+let reportsEndpointUnavailable = false;
+
+function isHttp404(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'status' in error && (error as { status?: unknown }).status === 404;
+}
+
+function createReportsUnavailableError(): Error & { status?: number } {
+  const error = new Error('Reports service is unavailable in this environment.') as Error & { status?: number };
+  error.status = 404;
+  return error;
+}
+
+async function requestReports<T>(request: () => Promise<T>, fallbackValue?: T): Promise<T> {
+  if (reportsEndpointUnavailable) {
+    if (fallbackValue !== undefined) return fallbackValue;
+    throw createReportsUnavailableError();
+  }
+  try {
+    return await request();
+  } catch (error) {
+    if (isHttp404(error)) {
+      reportsEndpointUnavailable = true;
+      if (fallbackValue !== undefined) return fallbackValue;
+      throw createReportsUnavailableError();
+    }
+    throw error;
+  }
+}
+
 export const reportsApi = {
   /** List ALL reports visible to current user (RLS-filtered: users see own reports, admins see all). */
-  listAll: (): Promise<ReportListItem[]> => httpClient.get('/reports'),
+  listAll: (): Promise<ReportListItem[]> => requestReports(() => httpClient.get('/reports'), []),
   /** List reports for a script (newest first). */
-  listByScript: (scriptId: string): Promise<ReportListItem[]> => httpClient.get(`/reports?scriptId=${encodeURIComponent(scriptId)}`),
+  listByScript: (scriptId: string): Promise<ReportListItem[]> =>
+    requestReports(() => httpClient.get(`/reports?scriptId=${encodeURIComponent(scriptId)}`), []),
   /** Get full report by report id. */
-  getById: (id: string): Promise<Report> => httpClient.get(`/reports?id=${encodeURIComponent(id)}`),
+  getById: (id: string): Promise<Report> =>
+    requestReports(() => httpClient.get(`/reports?id=${encodeURIComponent(id)}`)),
   /** Get full report by job id. */
-  getByJob: (jobId: string): Promise<Report> => httpClient.get(`/reports?jobId=${encodeURIComponent(jobId)}`),
+  getByJob: (jobId: string): Promise<Report> =>
+    requestReports(() => httpClient.get(`/reports?jobId=${encodeURIComponent(jobId)}`)),
   /** Update review status on a report. If updateScriptStatus is true, also updates parent script status. */
   review: (id: string, reviewStatus: string, reviewNotes?: string, updateScriptStatus?: boolean): Promise<{ ok: boolean }> =>
-    httpClient.post('/reports', { id, review_status: reviewStatus, review_notes: reviewNotes ?? '', update_script_status: updateScriptStatus }),
+    requestReports(() =>
+      httpClient.post('/reports', { id, review_status: reviewStatus, review_notes: reviewNotes ?? '', update_script_status: updateScriptStatus })),
   /** Delete a report by id. */
-  deleteReport: (id: string): Promise<{ ok: boolean }> => httpClient.delete(`/reports?id=${encodeURIComponent(id)}`),
+  deleteReport: (id: string): Promise<{ ok: boolean }> =>
+    requestReports(() => httpClient.delete(`/reports?id=${encodeURIComponent(id)}`)),
 };
 
 export interface UserListItem {
