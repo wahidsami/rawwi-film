@@ -186,6 +186,105 @@ function sanitizeDisplayFontStack(input: unknown): string | null {
   return t;
 }
 
+function detectProbableTableFromText(text: string): {
+  detected: boolean;
+  confidence: "low" | "medium" | "high";
+  rowCount: number;
+  dominantColumns: number;
+  reasons: string[];
+} {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length >= 6 && line.length <= 240);
+
+  if (lines.length < 2) {
+    return {
+      detected: false,
+      confidence: "low",
+      rowCount: 0,
+      dominantColumns: 0,
+      reasons: [],
+    };
+  }
+
+  let tabRows = 0;
+  let pipeRows = 0;
+  let wideGapRows = 0;
+  let numericRows = 0;
+  const columnCounts = new Map<number, number>();
+
+  for (const line of lines) {
+    const tabCols = line.split(/\t+/).map((part) => part.trim()).filter(Boolean).length;
+    const pipeCols = line.split(/\s*\|\s*/).map((part) => part.trim()).filter(Boolean).length;
+    const wideGapCols = line.split(/\s{2,}/).map((part) => part.trim()).filter(Boolean).length;
+    const bestCols = Math.max(tabCols, pipeCols, wideGapCols);
+
+    if (tabCols >= 2) tabRows += 1;
+    if (pipeCols >= 2) pipeRows += 1;
+    if (wideGapCols >= 3) wideGapRows += 1;
+    if (bestCols >= 2) {
+      columnCounts.set(bestCols, (columnCounts.get(bestCols) ?? 0) + 1);
+      if (/\d/.test(line)) numericRows += 1;
+    }
+  }
+
+  const dominantEntry = [...columnCounts.entries()].sort((a, b) => b[1] - a[1])[0] ?? [0, 0];
+  const dominantColumns = dominantEntry[0];
+  const dominantRows = dominantEntry[1];
+  const reasons: string[] = [];
+  if (tabRows >= 2) reasons.push("tab_aligned_rows");
+  if (pipeRows >= 2) reasons.push("pipe_delimited_rows");
+  if (wideGapRows >= 3) reasons.push("multi_gap_aligned_rows");
+  if (dominantRows >= 2 && dominantColumns >= 2) reasons.push("consistent_column_count");
+  if (numericRows >= 2) reasons.push("numeric_cells");
+
+  const detected =
+    pipeRows >= 2 ||
+    tabRows >= 2 ||
+    (wideGapRows >= 3 && dominantRows >= 2 && dominantColumns >= 2);
+
+  const confidence: "low" | "medium" | "high" =
+    detected && dominantRows >= 3 && dominantColumns >= 3
+      ? "high"
+      : detected && reasons.length >= 2
+        ? "medium"
+        : "low";
+
+  return {
+    detected,
+    confidence,
+    rowCount: detected ? Math.max(dominantRows, tabRows, pipeRows, wideGapRows) : 0,
+    dominantColumns: detected ? dominantColumns : 0,
+    reasons,
+  };
+}
+
+function summarizeDocumentCases(
+  pagesInput: Array<{ text?: string; html?: string | null }>,
+  contentHtml?: string | null,
+): { flags: string[]; probableTablePages: number[]; probableTableCount: number; htmlTableDetected: boolean } {
+  const flags = new Set<string>();
+  const probableTablePages: number[] = [];
+
+  pagesInput.forEach((page, index) => {
+    const probableTable = detectProbableTableFromText(String(page.text ?? ""));
+    if (!probableTable.detected) return;
+    flags.add("probable_table_detected");
+    probableTablePages.push(index + 1);
+  });
+
+  const htmlTableDetected = typeof contentHtml === "string" && /<table\b/i.test(contentHtml);
+  if (htmlTableDetected) flags.add("docx_html_table_detected");
+
+  return {
+    flags: [...flags],
+    probableTablePages,
+    probableTableCount: probableTablePages.length,
+    htmlTableDetected,
+  };
+}
+
 async function persistMultipageExtract(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   correlationId: string,
@@ -201,6 +300,7 @@ async function persistMultipageExtract(
   const canonicalContent = pageContents.join(PAGE_JOIN);
   const contentHash = await sha256Hash(canonicalContent);
   const extractedTextHash = await sha256Hash(canonicalContent);
+  const documentCases = summarizeDocumentCases(sorted);
 
   await supabase
     .from("script_versions")
@@ -218,7 +318,15 @@ async function persistMultipageExtract(
 
   const norm = (s: string) => (s ?? "").trim().normalize("NFC");
   const offsets = computePageGlobalOffsets(pageContents);
-  const pageRows = sorted.map((p, i) => ({
+  const pageRows = sorted.map((p, i) => {
+    const probableTable = detectProbableTableFromText(pageContents[i] ?? "");
+    const meta: Record<string, unknown> = probableTable.detected
+      ? {
+          documentFlags: ["probable_table_detected"],
+          probableTable,
+        }
+      : {};
+    return ({
     version_id: versionId,
     page_number: p.pageNumber ?? i + 1,
     content: pageContents[i] ?? "",
@@ -229,8 +337,9 @@ async function persistMultipageExtract(
     start_offset_global: offsets[i]?.start_offset_global ?? 0,
     end_offset_global: offsets[i]?.end_offset_global ?? 0,
     display_font_stack: sanitizeDisplayFontStack(p.displayFontStack),
-    meta: {},
-  }));
+    meta,
+  });
+  });
 
   const { error: insErr } = await supabase.from("script_pages").insert(pageRows);
   if (insErr) {
@@ -245,7 +354,7 @@ async function persistMultipageExtract(
       extracted_text: canonicalContent,
       extracted_text_hash: extractedTextHash,
       extraction_status: "done",
-      extraction_progress: { phase: "done", pageCount: pageRows.length },
+      extraction_progress: { phase: "done", pageCount: pageRows.length, documentCases },
       extraction_error: null,
     })
     .eq("id", versionId);
@@ -550,6 +659,10 @@ Deno.serve(async (req: Request) => {
   );
   const contentHash = await sha256Hash(normalized);
   const extractedTextHash = await sha256Hash(extractedText);
+  const documentCases = summarizeDocumentCases(
+    [{ text: extractedText, html: contentHtml ?? null }],
+    contentHtml ?? null,
+  );
 
   const { error: updateErr } = await supabase
     .from("script_versions")
@@ -557,7 +670,7 @@ Deno.serve(async (req: Request) => {
       extracted_text: extractedText,
       extracted_text_hash: extractedTextHash,
       extraction_status: "done",
-      extraction_progress: { phase: "done" },
+      extraction_progress: { phase: "done", documentCases },
       extraction_error: null,
     })
     .eq("id", versionId);

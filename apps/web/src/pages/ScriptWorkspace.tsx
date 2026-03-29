@@ -140,6 +140,49 @@ function formatExtractionProgressMessage(
   return null;
 }
 
+type ImportDocumentCases = {
+  flags: string[];
+  probableTablePages: number[];
+  probableTableCount: number;
+  htmlTableDetected: boolean;
+};
+
+function parseImportDocumentCases(progress: Record<string, unknown> | undefined): ImportDocumentCases | null {
+  const raw = progress?.documentCases;
+  if (!raw || typeof raw !== 'object') return null;
+  const value = raw as Record<string, unknown>;
+  const flags = Array.isArray(value.flags) ? value.flags.filter((flag): flag is string => typeof flag === 'string') : [];
+  const probableTablePages = Array.isArray(value.probableTablePages)
+    ? value.probableTablePages.filter((page): page is number => typeof page === 'number')
+    : [];
+  const probableTableCount =
+    typeof value.probableTableCount === 'number' ? value.probableTableCount : probableTablePages.length;
+  const htmlTableDetected = value.htmlTableDetected === true;
+  if (!flags.length && probableTablePages.length === 0 && !htmlTableDetected) return null;
+  return {
+    flags,
+    probableTablePages,
+    probableTableCount,
+    htmlTableDetected,
+  };
+}
+
+function formatImportDocumentCaseSummary(cases: ImportDocumentCases, lang: 'ar' | 'en'): string {
+  if (cases.probableTableCount > 0) {
+    return lang === 'ar'
+      ? `رصد النظام ${cases.probableTableCount} صفحة قد تحتوي على جدول أو تنسيق أعمدة. قد تحتاج هذه الصفحات إلى مراجعة يدوية لأن الاستيراد يحافظ على النص أكثر من بنية الجدول.`
+      : `The importer detected ${cases.probableTableCount} page(s) that may contain tables or column layouts. Review them manually because extraction preserves text better than full table structure.`;
+  }
+  if (cases.htmlTableDetected) {
+    return lang === 'ar'
+      ? 'رصد النظام جداول داخل ملف Word. قد لا تبقى كل الخلايا بنفس البنية الأصلية بعد التحويل إلى النص التحليلي.'
+      : 'The importer detected tables in the Word document. Not every cell will keep its original structure after conversion to analysis text.';
+  }
+  return lang === 'ar'
+    ? 'رصد النظام بنية مستندية تحتاج إلى مراجعة يدوية.'
+    : 'The importer detected document structure that may need manual review.';
+}
+
 function createImportAbortError(): Error {
   const error = new Error('Import aborted by user');
   error.name = 'AbortError';
@@ -826,6 +869,7 @@ export function ScriptWorkspace() {
   const [uploadElapsedMs, setUploadElapsedMs] = useState(0);
   const [uploadVersionId, setUploadVersionId] = useState<string | null>(null);
   const [uploadDuplicateInfo, setUploadDuplicateInfo] = useState<DuplicateScriptCheckResponse | null>(null);
+  const [uploadDocumentCases, setUploadDocumentCases] = useState<ImportDocumentCases | null>(null);
   const uploadAbortControllerRef = useRef<AbortController | null>(null);
   const uploadSessionIdRef = useRef(0);
   const uploadAutoCloseTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
@@ -904,6 +948,7 @@ export function ScriptWorkspace() {
     setUploadElapsedMs(0);
     setUploadVersionId(null);
     setUploadDuplicateInfo(null);
+    setUploadDocumentCases(null);
     setUploadPhaseLabel('');
     setUploadStatusMessage('');
   }, [clearImportAutoClose]);
@@ -919,6 +964,7 @@ export function ScriptWorkspace() {
     setIsUploading(false);
     setUploadVersionId(null);
     setUploadDuplicateInfo(null);
+    setUploadDocumentCases(null);
     if (shouldCancelBackend && versionIdToCancel) {
       void scriptsApi.cancelVersionExtraction(versionIdToCancel).catch((error) => {
         const message = error instanceof Error ? error.message : String(error);
@@ -931,6 +977,7 @@ export function ScriptWorkspace() {
       setUploadStartedAt(null);
       setUploadElapsedMs(0);
       setUploadDuplicateInfo(null);
+      setUploadDocumentCases(null);
       setUploadPhaseLabel('');
       setUploadStatusMessage('');
       return;
@@ -2049,10 +2096,13 @@ export function ScriptWorkspace() {
             : 'Extracting and preparing the document text for the workspace.',
       );
       let textToShow = '';
+      let detectedDocumentCases: ImportDocumentCases | null = null;
       if (ext === 'txt') {
         const fileText = await file.text();
         ensureImportActive();
         const res = await scriptsApi.extractText(version.id, fileText, { enqueueAnalysis: false });
+        detectedDocumentCases = parseImportDocumentCases((res as { extraction_progress?: Record<string, unknown> }).extraction_progress);
+        setUploadDocumentCases(detectedDocumentCases);
         textToShow = (res as { extracted_text?: string })?.extracted_text ?? fileText;
       } else if (ext === 'pdf') {
         try {
@@ -2075,12 +2125,16 @@ export function ScriptWorkspace() {
               if (progressMessage) {
                 setUploadStatusMessage(progressMessage);
               }
+              detectedDocumentCases = parseImportDocumentCases(currentVersion.extraction_progress);
+              setUploadDocumentCases(detectedDocumentCases);
               if (currentVersion.extraction_status === 'failed' && currentVersion.extraction_error) {
                 setUploadError(currentVersion.extraction_error);
               }
             },
           });
           ensureImportActive();
+          detectedDocumentCases = parseImportDocumentCases(extractedVersion.extraction_progress);
+          setUploadDocumentCases(detectedDocumentCases);
           textToShow = extractedVersion.extracted_text ?? '';
           if (!textToShow.trim()) {
             toast.error(lang === 'ar' ? 'لم يتم العثور على نص في الملف' : 'No text found in document');
@@ -2113,6 +2167,8 @@ export function ScriptWorkspace() {
             signal: controller.signal,
           });
           ensureImportActive();
+          detectedDocumentCases = parseImportDocumentCases((res as { extraction_progress?: Record<string, unknown> }).extraction_progress);
+          setUploadDocumentCases(detectedDocumentCases);
           const err = (res as { error?: string })?.error;
           if (err) throw new Error(err);
           textToShow = (res as { extracted_text?: string })?.extracted_text ?? plain;
@@ -2171,6 +2227,8 @@ export function ScriptWorkspace() {
           ? lang === 'ar'
             ? `اكتمل الاستيراد، لكن النظام وجد ${duplicateInfo.duplicateCount} ${duplicateInfo.duplicateCount === 1 ? 'نسخة مطابقة' : 'نسخ مطابقة'} بالمحتوى نفسه في السجلات الحالية.`
             : `Import completed, but the system found ${duplicateInfo.duplicateCount} exact content duplicate${duplicateInfo.duplicateCount === 1 ? '' : 's'} in existing records.`
+          : detectedDocumentCases
+            ? formatImportDocumentCaseSummary(detectedDocumentCases, lang)
           : lang === 'ar'
             ? 'تم استيراد الملف واستخراج النص بنجاح. يمكنك الآن مراجعة المحتوى أو بدء التحليل.'
             : 'Import finished successfully. You can now review the text or start analysis.',
@@ -2183,6 +2241,11 @@ export function ScriptWorkspace() {
             : 'An exact content duplicate was found. Review the warning details before closing the window.',
           { duration: 6000 },
         );
+      } else if (detectedDocumentCases) {
+        toast(
+          formatImportDocumentCaseSummary(detectedDocumentCases, lang),
+          { duration: 6500 },
+        );
       } else {
         uploadAutoCloseTimeoutRef.current = window.setTimeout(() => {
           setUploadStatus('idle');
@@ -2190,6 +2253,7 @@ export function ScriptWorkspace() {
           setUploadStartedAt(null);
           setUploadElapsedMs(0);
           setUploadDuplicateInfo(null);
+          setUploadDocumentCases(null);
           setUploadPhaseLabel('');
           setUploadStatusMessage('');
           uploadAutoCloseTimeoutRef.current = null;
@@ -3318,6 +3382,25 @@ export function ScriptWorkspace() {
                     {lang === 'ar'
                       ? `وهناك أيضاً ${uploadDuplicateInfo.matches.length - 3} سجل/سجلات إضافية مطابقة بنفس المحتوى.`
                       : `There are also ${uploadDuplicateInfo.matches.length - 3} more matching record(s).`}
+                  </p>
+                )}
+              </div>
+            )}
+            {uploadDocumentCases && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 space-y-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-primary">
+                    {lang === 'ar' ? 'تنبيهات بنية المستند' : 'Document structure warnings'}
+                  </p>
+                  <p className="text-sm text-text-main leading-6">
+                    {formatImportDocumentCaseSummary(uploadDocumentCases, lang)}
+                  </p>
+                </div>
+                {uploadDocumentCases.probableTablePages.length > 0 && (
+                  <p className="text-xs text-text-muted">
+                    {lang === 'ar'
+                      ? `صفحات محتملة الجداول: ${uploadDocumentCases.probableTablePages.join('، ')}`
+                      : `Probable table pages: ${uploadDocumentCases.probableTablePages.join(', ')}`}
                   </p>
                 )}
               </div>

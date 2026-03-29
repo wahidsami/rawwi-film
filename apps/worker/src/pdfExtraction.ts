@@ -590,6 +590,92 @@ function collectPdfQualityFlags(text: string): string[] {
   return [...flags];
 }
 
+function uniqueStringList(values: string[]): string[] {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function appendMetaFlag(meta: PageMeta, key: string, flag: string): PageMeta {
+  const existing = Array.isArray(meta[key]) ? (meta[key] as string[]) : [];
+  return {
+    ...meta,
+    [key]: uniqueStringList([...existing, flag]),
+  };
+}
+
+function detectProbableTableStructure(text: string): {
+  detected: boolean;
+  confidence: "low" | "medium" | "high";
+  rowCount: number;
+  dominantColumns: number;
+  reasons: string[];
+} {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => normalizePdfTextRun(line).trim())
+    .filter((line) => line.length >= 6 && line.length <= 240);
+
+  if (lines.length < 2) {
+    return {
+      detected: false,
+      confidence: "low",
+      rowCount: 0,
+      dominantColumns: 0,
+      reasons: [],
+    };
+  }
+
+  let tabRows = 0;
+  let pipeRows = 0;
+  let wideGapRows = 0;
+  let numericRows = 0;
+  const columnCounts = new Map<number, number>();
+
+  for (const line of lines) {
+    const tabCols = line.split(/\t+/).map((part) => part.trim()).filter(Boolean).length;
+    const pipeCols = line.split(/\s*\|\s*/).map((part) => part.trim()).filter(Boolean).length;
+    const wideGapCols = line.split(/\s{2,}/).map((part) => part.trim()).filter(Boolean).length;
+    const bestCols = Math.max(tabCols, pipeCols, wideGapCols);
+
+    if (tabCols >= 2) tabRows += 1;
+    if (pipeCols >= 2) pipeRows += 1;
+    if (wideGapCols >= 3) wideGapRows += 1;
+    if (bestCols >= 2) {
+      columnCounts.set(bestCols, (columnCounts.get(bestCols) ?? 0) + 1);
+      if (/\d/.test(line)) numericRows += 1;
+    }
+  }
+
+  const dominantEntry = [...columnCounts.entries()].sort((a, b) => b[1] - a[1])[0] ?? [0, 0];
+  const dominantColumns = dominantEntry[0];
+  const dominantRows = dominantEntry[1];
+  const reasons: string[] = [];
+  if (tabRows >= 2) reasons.push("tab_aligned_rows");
+  if (pipeRows >= 2) reasons.push("pipe_delimited_rows");
+  if (wideGapRows >= 3) reasons.push("multi_gap_aligned_rows");
+  if (dominantRows >= 2 && dominantColumns >= 2) reasons.push("consistent_column_count");
+  if (numericRows >= 2) reasons.push("numeric_cells");
+
+  const detected =
+    pipeRows >= 2 ||
+    tabRows >= 2 ||
+    (wideGapRows >= 3 && dominantRows >= 2 && dominantColumns >= 2);
+
+  const confidence: "low" | "medium" | "high" =
+    detected && dominantRows >= 3 && dominantColumns >= 3
+      ? "high"
+      : detected && reasons.length >= 2
+        ? "medium"
+        : "low";
+
+  return {
+    detected,
+    confidence,
+    rowCount: detected ? Math.max(dominantRows, tabRows, pipeRows, wideGapRows) : 0,
+    dominantColumns: detected ? dominantColumns : 0,
+    reasons,
+  };
+}
+
 function shouldRunStrikeDetectionForPdfPage(
   text: string,
   pageNumber: number,
@@ -1256,6 +1342,15 @@ async function extractPdfPagesWithPoppler(
         };
       }
 
+      const probableTable = detectProbableTableStructure(selectedText);
+      if (probableTable.detected) {
+        selectedMeta = appendMetaFlag(selectedMeta, "documentFlags", "probable_table_detected");
+        selectedMeta = {
+          ...selectedMeta,
+          probableTable,
+        };
+      }
+
       if (strikeDetectionAvailable && shouldRunStrikeDetectionForPdfPage(selectedText, i + 1, mergedPages.length)) {
         try {
           const strikeSpans = await detectStrikeSpans(pdfPath, i + 1, selectedText, tempDir);
@@ -1337,6 +1432,34 @@ async function persistScriptEditorContent(
   if (insErr) throw new Error(insErr.message);
 }
 
+function summarizePdfDocumentCases(pages: ExtractedPdfPage[]): Record<string, unknown> {
+  const flags = new Set<string>();
+  const probableTablePages: number[] = [];
+  const crossedOutPages: number[] = [];
+  const ocrPages: number[] = [];
+
+  pages.forEach((page, index) => {
+    const meta = page.meta ?? {};
+    const documentFlags = Array.isArray(meta.documentFlags) ? (meta.documentFlags as string[]) : [];
+    const editorialFlags = Array.isArray(meta.editorialFlags) ? (meta.editorialFlags as string[]) : [];
+    documentFlags.forEach((flag) => flags.add(flag));
+    editorialFlags.forEach((flag) => flags.add(flag));
+    if (documentFlags.includes("probable_table_detected")) probableTablePages.push(index + 1);
+    if (editorialFlags.includes("crossed_out_text_detected")) crossedOutPages.push(index + 1);
+    if (meta.ocrSelected === true || meta.ocrUsed === true) ocrPages.push(index + 1);
+  });
+
+  return {
+    flags: [...flags],
+    probableTablePages,
+    crossedOutPages,
+    ocrPages,
+    probableTableCount: probableTablePages.length,
+    crossedOutCount: crossedOutPages.length,
+    ocrPageCount: ocrPages.length,
+  };
+}
+
 async function persistPdfPages(version: ExtractionVersion, pageTexts: string[]): Promise<void> {
   const canonicalPages = pageTexts.map((page) => sanitizePageText(page));
   const canonicalContent = canonicalPages.join(PAGE_JOIN);
@@ -1386,6 +1509,7 @@ async function persistPdfPagesWithMeta(version: ExtractionVersion, pages: Extrac
   const canonicalContent = canonicalPages.join(PAGE_JOIN);
   const extractedTextHash = sha256Hash(canonicalContent);
   const offsets = computePageGlobalOffsets(canonicalPages);
+  const documentCases = summarizePdfDocumentCases(pages);
 
   const { error: deletePagesErr } = await supabase
     .from("script_pages")
@@ -1414,6 +1538,12 @@ async function persistPdfPagesWithMeta(version: ExtractionVersion, pages: Extrac
       extracted_text: canonicalContent,
       extracted_text_hash: extractedTextHash,
       extraction_status: "done",
+      extraction_progress: {
+        phase: "done",
+        pageCount: canonicalPages.length,
+        documentCases,
+      },
+      extraction_error: null,
     })
     .eq("id", version.id);
   if (updateVersionErr) throw new Error(updateVersionErr.message);

@@ -20,6 +20,33 @@ For large scripts, especially around 400 pages, the current runtime is dominated
 
 The most important finding is that the router currently adds cost but provides almost no reduction in downstream work, because `ALWAYS_CHECK_ARTICLES` is set to all scannable articles.
 
+## Document Intake Coverage
+
+The client can provide more than plain script pages. The importer should explicitly detect and surface these cases instead of silently flattening them:
+
+- probable tables or column layouts
+- struck-through / crossed-out text
+- scanned pages that required OCR
+- mixed Arabic/English layout drift
+- fragmented or obfuscated words that need review
+- repeated headers / footers
+- form-like pages, checklists, and stamp-heavy pages
+- multi-column or side-note layouts
+
+Current implemented awareness:
+
+- probable table detection warnings during import
+- struck-through text detection metadata on PDF pages
+- OCR usage metadata on PDF pages
+- fragmented Arabic words routed to manual review notes
+
+Still worth adding next:
+
+- repeated header/footer detection
+- multi-column page detection
+- stamp / seal / handwritten annotation hints
+- structured preservation for DOCX/PDF tables instead of text-only flattening
+
 ## Architecture Map
 
 ### Frontend
