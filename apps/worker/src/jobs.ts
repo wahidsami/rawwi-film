@@ -76,19 +76,21 @@ async function fetchCandidateJobsBase(): Promise<AnalysisJob[]> {
 
 async function fetchJobControlState(jobId: string): Promise<{
   started_at: string | null;
+  status?: string | null;
   created_by?: string | null;
   pause_requested?: boolean | null;
   partial_finalize_requested?: boolean | null;
 } | null> {
   const { data, error } = await supabase
     .from("analysis_jobs")
-    .select("started_at, created_by, pause_requested, partial_finalize_requested")
+    .select("started_at, status, created_by, pause_requested, partial_finalize_requested")
     .eq("id", jobId)
     .single();
 
   if (!error) {
     return data as {
       started_at: string | null;
+      status?: string | null;
       created_by?: string | null;
       pause_requested?: boolean | null;
       partial_finalize_requested?: boolean | null;
@@ -247,6 +249,7 @@ export async function claimChunk(chunkId: string): Promise<AnalysisChunk | null>
   const job = await fetchJobControlState(jobId);
 
   if (job && (
+    String((job as { status?: string | null }).status ?? "").toLowerCase() === "cancelled" ||
     (job as { pause_requested?: boolean | null }).pause_requested === true ||
     (job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested === true
   )) {
@@ -346,6 +349,21 @@ export async function setJobFailed(jobId: string, errorMessage: string): Promise
   }
 
   return !!data;
+}
+
+export async function isJobCancelled(jobId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("analysis_jobs")
+    .select("status")
+    .eq("id", jobId)
+    .maybeSingle();
+
+  if (error) {
+    logger.warn("Failed to read job cancel state", { jobId, error: error.message });
+    return false;
+  }
+
+  return String((data as { status?: string | null } | null)?.status ?? "").toLowerCase() === "cancelled";
 }
 
 export async function notifyAdminAiOverload(job: {

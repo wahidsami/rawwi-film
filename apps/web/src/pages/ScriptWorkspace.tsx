@@ -2093,6 +2093,11 @@ export function ScriptWorkspace() {
         ? (lang === 'ar' ? 'تم حفظ التقدم الحالي وتحويله إلى تقرير جزئي جاهز للمراجعة.' : 'The saved progress has been turned into a partial report ready for review.')
         : (lang === 'ar' ? 'اكتمل الفحص ويمكنك الآن فتح التقرير النهائي.' : 'The analysis is complete and the final report is ready.');
     }
+    if ((analysisJob?.status ?? '').toLowerCase() === 'cancelled') {
+      return lang === 'ar'
+        ? 'تم إيقاف التحليل بالكامل. لن تتم متابعة أي أجزاء جديدة ولن يتم إنشاء تقرير جزئي لهذه الجلسة.'
+        : 'The analysis was cancelled completely. No new chunks will be processed and no partial report will be created for this run.';
+    }
     if (isStoppingJobStatus(analysisJob?.status)) {
       return lang === 'ar'
         ? 'لن يبدأ النظام أجزاء جديدة الآن. سيُنهي الجزء الجاري فقط ثم يبني تقريراً جزئياً سريعاً من النتائج المكتملة بدون تشغيل التحسينات الثقيلة.'
@@ -2170,6 +2175,27 @@ export function ScriptWorkspace() {
       setAnalysisControlBusy(null);
     }
   }, [analysisJobId, analysisControlBusy, lang]);
+
+  const handleCancelAnalysis = useCallback(async () => {
+    if (!analysisJobId || analysisControlBusy) return;
+    const confirmed = window.confirm(
+      lang === 'ar'
+        ? 'سيتم إيقاف التحليل بالكامل وإغلاقه دون إنشاء تقرير جزئي. هل تريد المتابعة؟'
+        : 'This will cancel the analysis completely without generating a partial report. Continue?',
+    );
+    if (!confirmed) return;
+    setAnalysisControlBusy('cancel');
+    try {
+      const job = await tasksApi.cancelJob(analysisJobId);
+      setAnalysisJob(job);
+      stopPolling();
+      toast.success(lang === 'ar' ? 'تم إيقاف التحليل بالكامل.' : 'Analysis cancelled completely.');
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذر إيقاف التحليل بالكامل' : 'Failed to cancel analysis completely'));
+    } finally {
+      setAnalysisControlBusy(null);
+    }
+  }, [analysisJobId, analysisControlBusy, lang, stopPolling]);
 
   const canReplaceFile = user?.role === 'Super Admin' || user?.role === 'Admin';
   const hasVersionForAnalysis = Boolean(script?.currentVersionId);
@@ -5197,11 +5223,11 @@ export function ScriptWorkspace() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
               <div className="text-[11px] text-text-muted">
                 {lang === 'ar'
-                  ? 'يمكنك الإيقاف المؤقت أو إنهاء التحليل بتقرير جزئي بدون فقد التقدم الحالي.'
-                  : 'You can pause or stop the analysis into a partial report without losing the current progress.'}
+                  ? 'يمكنك الإيقاف المؤقت، أو إنهاء التحليل بتقرير جزئي، أو إيقافه بالكامل من هذه النافذة.'
+                  : 'You can pause the analysis, end it with a partial report, or cancel it completely from this panel.'}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                {analysisJob && !isSuccessfulJobStatus(analysisJob.status) && analysisJob.status !== 'failed' && !isPausedJobStatus(analysisJob.status) && (
+                {analysisJob && !isSuccessfulJobStatus(analysisJob.status) && analysisJob.status !== 'failed' && analysisJob.status !== 'cancelled' && !isPausedJobStatus(analysisJob.status) && (
                   <Button size="sm" variant="outline" onClick={handlePauseAnalysis} disabled={analysisControlBusy != null}>
                     <Pause className="w-4 h-4 mr-1" />
                     {analysisControlBusy === 'pause'
@@ -5217,12 +5243,20 @@ export function ScriptWorkspace() {
                       : (lang === 'ar' ? 'استئناف' : 'Resume')}
                   </Button>
                 )}
-                {analysisJob && !isSuccessfulJobStatus(analysisJob.status) && analysisJob.status !== 'failed' && !isStoppingJobStatus(analysisJob.status) && (
+                {analysisJob && !isSuccessfulJobStatus(analysisJob.status) && analysisJob.status !== 'failed' && analysisJob.status !== 'cancelled' && !isStoppingJobStatus(analysisJob.status) && (
                   <Button size="sm" variant="outline" onClick={handleStopAnalysis} disabled={analysisControlBusy != null} className="border-warning/30 text-warning hover:bg-warning/10">
                     <Square className="w-4 h-4 mr-1" />
                     {analysisControlBusy === 'stop'
                       ? (lang === 'ar' ? 'جارٍ الإيقاف…' : 'Stopping…')
-                      : (lang === 'ar' ? 'إيقاف وإنشاء تقرير جزئي' : 'Stop + Partial Report')}
+                      : (lang === 'ar' ? 'إنهاء مع تقرير جزئي' : 'End with Partial Report')}
+                  </Button>
+                )}
+                {analysisJob && !isSuccessfulJobStatus(analysisJob.status) && analysisJob.status !== 'failed' && analysisJob.status !== 'cancelled' && (
+                  <Button size="sm" variant="danger" onClick={handleCancelAnalysis} disabled={analysisControlBusy != null}>
+                    <Square className="w-4 h-4 mr-1" />
+                    {analysisControlBusy === 'cancel'
+                      ? (lang === 'ar' ? 'جارٍ الإيقاف الكامل…' : 'Cancelling…')
+                      : (lang === 'ar' ? 'إيقاف كامل' : 'Cancel Completely')}
                   </Button>
                 )}
                 {isSuccessfulJobStatus(analysisJob?.status) && (

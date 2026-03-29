@@ -4,6 +4,7 @@ import { evidenceHash, lexiconEvidenceHash, computeChunkRunKey } from "./hash.js
 import type { AnalysisChunk, AnalysisJob } from "./jobs.js";
 import {
   incrementJobProgress,
+  isJobCancelled,
   setChunkDone,
   setChunkFailed,
   setChunkPhase,
@@ -69,6 +70,13 @@ async function isPartialFinalizeRequested(jobId: string): Promise<boolean> {
   }
 
   return Boolean((data as { partial_finalize_requested?: boolean | null } | null)?.partial_finalize_requested);
+}
+
+class JobCancelledError extends Error {
+  constructor() {
+    super("Analysis cancelled by user.");
+    this.name = "JobCancelledError";
+  }
 }
 
 function compactEvidenceText(s: string): string {
@@ -323,6 +331,11 @@ export async function processChunkJudge(
   const chunkText = chunk.text;
   const chunkStart = chunk.start_offset;
   const chunkEnd = chunk.end_offset;
+
+  if (await isJobCancelled(jobId)) {
+    await setChunkFailed(chunk.id, "Cancelled by user");
+    throw new JobCancelledError();
+  }
 
   if (!chunkText?.trim()) {
     await setChunkDone(chunk.id);
@@ -938,6 +951,11 @@ export async function processChunkJudge(
     hybridMode: config.ANALYSIS_HYBRID_MODE,
   });
 
+  if (await isJobCancelled(jobId)) {
+    await setChunkFailed(chunk.id, "Cancelled by user");
+    throw new JobCancelledError();
+  }
+
   // 7) Resolve article_id/atom_id from canonical_atom when missing; compute severity from factors when present.
   const resolvedFindings = sortFindingsStable(persistedFindings.map((f) => {
     let article_id = f.article_id;
@@ -986,6 +1004,10 @@ export async function processChunkJudge(
   setChunkPhase(chunk.id, "aggregating");
 
   // 8) Insert findings (batch upsert with logging). Derive excerpt from canonical when available.
+  if (await isJobCancelled(jobId)) {
+    await setChunkFailed(chunk.id, "Cancelled by user");
+    throw new JobCancelledError();
+  }
   if (resolvedFindings.length > 0) {
     const insertStartedAt = Date.now();
       const rows = resolvedFindings.map((f) => {

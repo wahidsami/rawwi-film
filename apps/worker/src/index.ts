@@ -86,6 +86,13 @@ async function processClaimedChunk(
     return { ok: true, retryable: false };
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : String(e);
+    if (e instanceof Error && e.name === "JobCancelledError") {
+      logger.info("Chunk processing cancelled by user", {
+        jobId: job.id,
+        chunkId: claimed.id,
+      });
+      return { ok: false, retryable: false, error: errMsg };
+    }
     if (isAiOverloadIssue(errMsg)) {
       const retryCount = getAiOverloadRetryCount(claimed.last_error) + 1;
       if (retryCount <= config.AI_OVERLOAD_MAX_RETRIES) {

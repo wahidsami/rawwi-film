@@ -237,7 +237,7 @@ async function cloneManualReviewFindingsToJob(
 
 function toCamel(job: JobRow) {
   const normalizedStatus = String(job.status ?? "").toLowerCase();
-  const isTerminal = ["completed", "failed", "done", "succeeded"].includes(normalizedStatus);
+  const isTerminal = ["completed", "failed", "done", "succeeded", "cancelled", "canceled"].includes(normalizedStatus);
   const isStopping = Boolean(job.partial_finalize_requested) && !isTerminal;
   const isPaused = !isStopping && Boolean(job.pause_requested) && !isTerminal;
   return {
@@ -281,6 +281,31 @@ async function clearPendingChunksForPartialStop(
 
   if (error) {
     console.warn("[tasks] failed to clear pending chunks for partial stop:", {
+      jobId,
+      error: error.message,
+    });
+  }
+}
+
+async function clearChunksForHardCancel(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  jobId: string,
+): Promise<void> {
+  const message = "Cancelled by user";
+  const { error } = await supabase
+    .from("analysis_chunks")
+    .update({
+      status: "failed",
+      processing_phase: null,
+      judging_started_at: null,
+      passes_completed: 0,
+      last_error: message,
+    })
+    .eq("job_id", jobId)
+    .in("status", ["pending", "judging"]);
+
+  if (error) {
+    console.warn("[tasks] failed to clear chunks for hard cancel:", {
       jobId,
       error: error.message,
     });
@@ -482,8 +507,8 @@ Deno.serve(async (req: Request) => {
       const action = typeof body?.action === "string" ? body.action.trim().toLowerCase() : "";
 
       if (!jobId) return json({ error: "jobId is required" }, 400);
-      if (action !== "pause" && action !== "resume" && action !== "stop") {
-        return json({ error: "action must be pause, resume, or stop" }, 400);
+      if (action !== "pause" && action !== "resume" && action !== "stop" && action !== "cancel") {
+        return json({ error: "action must be pause, resume, stop, or cancel" }, 400);
       }
 
       const { data: jobRow, error: jobErr } = await supabase
@@ -497,10 +522,10 @@ Deno.serve(async (req: Request) => {
       if (!isAdmin && (jobRow as any).created_by !== uid) return json({ error: "Job not found" }, 404);
 
       const normalizedStatus = String((jobRow as any).status ?? "").toLowerCase();
-      if (["completed", "failed", "done", "succeeded"].includes(normalizedStatus)) {
+      if (["completed", "failed", "done", "succeeded", "cancelled", "canceled"].includes(normalizedStatus)) {
         return json({ error: "Cannot control a completed job" }, 400);
       }
-      if (action !== "resume" && (jobRow as any).partial_finalize_requested) {
+      if (action !== "resume" && action !== "cancel" && (jobRow as any).partial_finalize_requested) {
         return json({ error: "Partial finalization already requested" }, 400);
       }
       if (action === "pause" && (jobRow as any).partial_finalize_requested) {
@@ -515,6 +540,16 @@ Deno.serve(async (req: Request) => {
           ? { pause_requested: true, paused_at: new Date().toISOString(), partial_finalize_requested: false, partial_finalize_requested_at: null }
           : action === "resume"
             ? { pause_requested: false, paused_at: null }
+            : action === "cancel"
+              ? {
+                  status: "cancelled",
+                  completed_at: new Date().toISOString(),
+                  pause_requested: false,
+                  paused_at: null,
+                  partial_finalize_requested: false,
+                  partial_finalize_requested_at: null,
+                  error_message: "Analysis cancelled by user.",
+                }
             : {
                 pause_requested: false,
                 paused_at: null,
@@ -535,12 +570,14 @@ Deno.serve(async (req: Request) => {
 
       if (action === "stop") {
         await clearPendingChunksForPartialStop(supabase, jobId);
+      } else if (action === "cancel") {
+        await clearChunksForHardCancel(supabase, jobId);
       }
 
       return json(toCamel(updated as JobRow));
     }
     if (req.method === "PATCH") {
-      return json({ error: "action must be pause, resume, or stop" }, 400);
+      return json({ error: "action must be pause, resume, stop, or cancel" }, 400);
     }
   }
 

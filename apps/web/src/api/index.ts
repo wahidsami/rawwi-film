@@ -230,7 +230,7 @@ export interface DuplicateScriptCheckResponse {
 
 export type GetTasksParams = { scriptId?: string; versionId?: string; limit?: number };
 
-async function controlAnalysisJob(jobId: string, action: 'pause' | 'resume' | 'stop'): Promise<AnalysisJob> {
+async function controlAnalysisJob(jobId: string, action: 'pause' | 'resume' | 'stop' | 'cancel'): Promise<AnalysisJob> {
   try {
     // Prefer POST for job control because Supabase Edge deployments have shown
     // more reliable request-body handling on POST than PATCH in production.
@@ -261,6 +261,7 @@ export const tasksApi = {
   pauseJob: (jobId: string): Promise<AnalysisJob> => controlAnalysisJob(jobId, 'pause'),
   resumeJob: (jobId: string): Promise<AnalysisJob> => controlAnalysisJob(jobId, 'resume'),
   stopJob: (jobId: string): Promise<AnalysisJob> => controlAnalysisJob(jobId, 'stop'),
+  cancelJob: (jobId: string): Promise<AnalysisJob> => controlAnalysisJob(jobId, 'cancel'),
   addTask: (task: Task): Promise<Task> => httpClient.post('/tasks', task),
 };
 

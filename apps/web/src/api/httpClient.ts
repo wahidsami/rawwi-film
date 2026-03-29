@@ -229,18 +229,18 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
         id: body?.jobId ?? 'mock-job',
         scriptId: 'mock-script',
         versionId: 'mock-version',
-        status: action === 'pause' ? 'paused' : action === 'stop' ? 'stopping' : 'running',
+        status: action === 'pause' ? 'paused' : action === 'stop' ? 'stopping' : action === 'cancel' ? 'cancelled' : 'running',
         analysisMode: body?.analysisProfile ?? 'balanced',
         progressTotal: 10,
         progressDone: 4,
         progressPercent: 40,
         createdAt: new Date().toISOString(),
         startedAt: new Date(Date.now() - 120000).toISOString(),
-        completedAt: null,
+        completedAt: action === 'cancel' ? new Date().toISOString() : null,
         pausedAt: action === 'pause' ? new Date().toISOString() : null,
         partialFinalizeRequestedAt: action === 'stop' ? new Date().toISOString() : null,
         isPartialReport: false,
-        errorMessage: null,
+        errorMessage: action === 'cancel' ? 'Analysis cancelled by user.' : null,
       };
     }
   }
