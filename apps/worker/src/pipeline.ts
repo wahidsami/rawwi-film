@@ -46,6 +46,8 @@ export type FindingWithGlobal = JudgeFinding & {
 const MAX_EVIDENCE_SPAN = 280;
 const PIPELINE_LOGIC_VERSION = "v2.4";
 const MAX_EVIDENCE_LEN = 260;
+const NON_CRITICAL_DB_TIMEOUT_MS = 30_000;
+const CRITICAL_DB_TIMEOUT_MS = 60_000;
 const HARD_FALLBACK_INSULTS = [
   { term: "نصاب", articleId: 5, atomId: "5-2", severity: "high" as const },
   { term: "حرامي", articleId: 5, atomId: "5-2", severity: "high" as const },
@@ -55,27 +57,67 @@ const HARD_FALLBACK_INSULTS = [
 ] as const;
 
 async function isPartialFinalizeRequested(jobId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("analysis_jobs")
-    .select("partial_finalize_requested")
-    .eq("id", jobId)
-    .maybeSingle();
+  try {
+    const { data, error } = await withOperationTimeout(
+      "Read job partial finalize state",
+      NON_CRITICAL_DB_TIMEOUT_MS,
+      supabase
+        .from("analysis_jobs")
+        .select("partial_finalize_requested")
+        .eq("id", jobId)
+        .maybeSingle()
+    );
 
-  if (error) {
-    logger.warn("Failed to read job partial finalize state during chunk processing", {
+    if (error) {
+      logger.warn("Failed to read job partial finalize state during chunk processing", {
+        jobId,
+        error: error.message,
+      });
+      return false;
+    }
+
+    return Boolean((data as { partial_finalize_requested?: boolean | null } | null)?.partial_finalize_requested);
+  } catch (error) {
+    logger.warn("Timed out reading job partial finalize state during chunk processing", {
       jobId,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
+      timeoutMs: NON_CRITICAL_DB_TIMEOUT_MS,
     });
     return false;
   }
-
-  return Boolean((data as { partial_finalize_requested?: boolean | null } | null)?.partial_finalize_requested);
 }
 
 class JobCancelledError extends Error {
   constructor() {
     super("Analysis cancelled by user.");
     this.name = "JobCancelledError";
+  }
+}
+
+class OperationTimeoutError extends Error {
+  constructor(operation: string, timeoutMs: number) {
+    super(`${operation} timed out after ${timeoutMs}ms`);
+    this.name = "OperationTimeoutError";
+  }
+}
+
+async function withOperationTimeout<T>(
+  operation: string,
+  timeoutMs: number,
+  promise: PromiseLike<T>
+): Promise<T> {
+  let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timeoutHandle = setTimeout(() => {
+          reject(new OperationTimeoutError(operation, timeoutMs));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutHandle) clearTimeout(timeoutHandle);
   }
 }
 
@@ -874,12 +916,35 @@ export async function processChunkJudge(
     });
 
     // CACHE PURGE / PERSIST
-    const { error: runErr } = await supabase.from("analysis_chunk_runs").insert({
-      run_key: runKey,
-      job_id: jobId,
-      router_candidates: routerOutputJson,
-      ai_findings: allFindings
+    logger.info("Persisting analysis_chunk_run started", {
+      jobId,
+      chunkId: chunk.id,
+      runKey,
+      findingsCount: allFindings.length,
+      timeoutMs: NON_CRITICAL_DB_TIMEOUT_MS,
     });
+    let runErr: { message: string } | null = null;
+    try {
+      const result = await withOperationTimeout(
+        "Persist analysis_chunk_run",
+        NON_CRITICAL_DB_TIMEOUT_MS,
+        supabase.from("analysis_chunk_runs").insert({
+          run_key: runKey,
+          job_id: jobId,
+          router_candidates: routerOutputJson,
+          ai_findings: allFindings
+        })
+      );
+      runErr = result.error;
+    } catch (error) {
+      logger.warn("Timed out persisting analysis_chunk_run", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        error: error instanceof Error ? error.message : String(error),
+        timeoutMs: NON_CRITICAL_DB_TIMEOUT_MS,
+      });
+    }
     throwIfAborted(signal);
 
     if (runErr) {
@@ -907,6 +972,15 @@ export async function processChunkJudge(
     setChunkPhase(chunk.id, "hybrid");
     const hybridStartedAt = Date.now();
     let hybridTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
+    logger.info("Hybrid context pipeline starting", {
+      jobId,
+      chunkId: chunk.id,
+      runKey,
+      baselineFindings: baselineFindings.length,
+      deepAuditorEnabled,
+      hybridMode: config.ANALYSIS_HYBRID_MODE,
+      hardTimeoutMs: config.HYBRID_HARD_TIMEOUT_MS,
+    });
     try {
       const hybrid = await Promise.race([
         runHybridContextPipeline({
@@ -938,6 +1012,14 @@ export async function processChunkJudge(
         // Shadow: persist hybrid so the report shows auditor rationale and primary article; eval log still compares baseline vs hybrid.
         persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
       }
+      logger.info("Hybrid context pipeline completed", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        hybridDurationMs: Date.now() - hybridStartedAt,
+        baselineCount: baselineFindings.length,
+        persistedCount: persistedFindings.length,
+      });
       if (config.ANALYSIS_EVAL_LOG) {
         const evalPayload = {
           job_id: jobId,
@@ -953,7 +1035,21 @@ export async function processChunkJudge(
           hybrid_needs_review: hybrid.metrics.needsReviewCount,
           hybrid_violation: hybrid.metrics.violationCount,
         };
-        await supabase.from("analysis_engine_evaluations").insert(evalPayload);
+        try {
+          await withOperationTimeout(
+            "Persist analysis_engine_evaluation",
+            NON_CRITICAL_DB_TIMEOUT_MS,
+            supabase.from("analysis_engine_evaluations").insert(evalPayload)
+          );
+        } catch (error) {
+          logger.warn("Failed to persist analysis engine evaluation", {
+            jobId,
+            chunkId: chunk.id,
+            runKey,
+            error: error instanceof Error ? error.message : String(error),
+            timeoutMs: NON_CRITICAL_DB_TIMEOUT_MS,
+          });
+        }
       }
     } catch (error) {
       if (
@@ -1146,10 +1242,21 @@ export async function processChunkJudge(
     // Log first row shape for debugging column mismatch
     /* logger.info("AI findings upsert payload sample", ... ); */
 
-    const { data, error } = await supabase
-      .from("analysis_findings")
-      .upsert(rows, { onConflict: "job_id,evidence_hash", ignoreDuplicates: true })
-      .select("id,article_id,atom_id,confidence");
+    logger.info("AI findings upsert starting", {
+      jobId,
+      chunkId: chunk.id,
+      runKey,
+      rows: rows.length,
+      timeoutMs: CRITICAL_DB_TIMEOUT_MS,
+    });
+    const { data, error } = await withOperationTimeout(
+      "Upsert analysis_findings",
+      CRITICAL_DB_TIMEOUT_MS,
+      supabase
+        .from("analysis_findings")
+        .upsert(rows, { onConflict: "job_id,evidence_hash", ignoreDuplicates: true })
+        .select("id,article_id,atom_id,confidence")
+    );
     throwIfAborted(signal);
 
     logger.info("AI findings upsert result", {
