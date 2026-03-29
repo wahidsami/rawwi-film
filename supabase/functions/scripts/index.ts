@@ -648,14 +648,19 @@ Deno.serve(async (req: Request) => {
 
     const { data: textRow } = await supabase
       .from("script_text")
-      .select("content_hash")
+      .select("content_hash, content")
       .eq("version_id", versionId)
       .maybeSingle();
-    const contentHash = (textRow as { content_hash?: string | null } | null)?.content_hash
+    const currentTextRow = textRow as { content_hash?: string | null; content?: string | null } | null;
+    const contentHash = currentTextRow?.content_hash
       ?? versionRow.extracted_text_hash
       ?? null;
+    const normalizedCurrentContent =
+      currentTextRow?.content != null && String(currentTextRow.content).trim() !== ""
+        ? normalizeText(String(currentTextRow.content))
+        : null;
 
-    if (!contentHash) {
+    if (!contentHash && !normalizedCurrentContent) {
       return json({
         exactMatch: false,
         contentHash: null,
@@ -664,54 +669,14 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const { data: duplicateTextRows, error: duplicateTextErr } = await supabase
-      .from("script_text")
-      .select("version_id")
-      .eq("content_hash", contentHash)
-      .neq("version_id", versionId)
-      .limit(25);
-    if (duplicateTextErr) return json({ error: duplicateTextErr.message }, 500);
-
-    const duplicateVersionIds = [...new Set((duplicateTextRows ?? []).map((row) => (row as { version_id?: string | null }).version_id).filter((value): value is string => typeof value === "string" && value.length > 0))];
-    if (duplicateVersionIds.length === 0) {
-      return json({
-        exactMatch: false,
-        contentHash,
-        duplicateCount: 0,
-        matches: [],
-      });
-    }
-
-    const { data: duplicateVersions, error: duplicateVersionsErr } = await supabase
-      .from("script_versions")
-      .select("id, script_id, version_number, source_file_name, created_at")
-      .in("id", duplicateVersionIds);
-    if (duplicateVersionsErr) return json({ error: duplicateVersionsErr.message }, 500);
-
-    const versionRows = (duplicateVersions ?? []) as Array<{
+    const versionRowShape = (row: unknown) => row as {
       id: string;
       script_id: string;
       version_number: number;
       source_file_name: string | null;
       created_at: string;
-    }>;
-    const duplicateScriptIds = [...new Set(versionRows.map((row) => row.script_id))];
-    if (duplicateScriptIds.length === 0) {
-      return json({
-        exactMatch: false,
-        contentHash,
-        duplicateCount: 0,
-        matches: [],
-      });
-    }
-
-    const { data: duplicateScripts, error: duplicateScriptsErr } = await supabase
-      .from("scripts")
-      .select("id, title, status, client_id, company_id, current_version_id, created_by, assignee_id")
-      .in("id", duplicateScriptIds);
-    if (duplicateScriptsErr) return json({ error: duplicateScriptsErr.message }, 500);
-
-    const visibleScripts = ((duplicateScripts ?? []) as Array<{
+    };
+    const scriptRowShape = (row: unknown) => row as {
       id: string;
       title: string;
       status: string;
@@ -720,14 +685,121 @@ Deno.serve(async (req: Request) => {
       current_version_id: string | null;
       created_by: string | null;
       assignee_id: string | null;
-    }>).filter((row) => isAdmin || row.created_by === uid || row.assignee_id === uid);
+    };
+
+    let exactDuplicateVersionIds: string[] = [];
+    if (contentHash) {
+      const { data: duplicateTextRows, error: duplicateTextErr } = await supabase
+        .from("script_text")
+        .select("version_id")
+        .eq("content_hash", contentHash)
+        .neq("version_id", versionId)
+        .limit(50);
+      if (duplicateTextErr) return json({ error: duplicateTextErr.message }, 500);
+      exactDuplicateVersionIds = [...new Set((duplicateTextRows ?? []).map((row) => (row as { version_id?: string | null }).version_id).filter((value): value is string => typeof value === "string" && value.length > 0))];
+    }
+
+    let versionRows: Array<{
+      id: string;
+      script_id: string;
+      version_number: number;
+      source_file_name: string | null;
+      created_at: string;
+    }> = [];
+    let visibleScripts: Array<{
+      id: string;
+      title: string;
+      status: string;
+      client_id: string | null;
+      company_id: string | null;
+      current_version_id: string | null;
+      created_by: string | null;
+      assignee_id: string | null;
+    }> = [];
+
+    if (exactDuplicateVersionIds.length > 0) {
+      const { data: duplicateVersions, error: duplicateVersionsErr } = await supabase
+        .from("script_versions")
+        .select("id, script_id, version_number, source_file_name, created_at")
+        .in("id", exactDuplicateVersionIds);
+      if (duplicateVersionsErr) return json({ error: duplicateVersionsErr.message }, 500);
+
+      versionRows = (duplicateVersions ?? []).map(versionRowShape);
+      const duplicateScriptIds = [...new Set(versionRows.map((row) => row.script_id))];
+      if (duplicateScriptIds.length > 0) {
+        const { data: duplicateScripts, error: duplicateScriptsErr } = await supabase
+          .from("scripts")
+          .select("id, title, status, client_id, company_id, current_version_id, created_by, assignee_id")
+          .in("id", duplicateScriptIds);
+        if (duplicateScriptsErr) return json({ error: duplicateScriptsErr.message }, 500);
+        visibleScripts = (duplicateScripts ?? []).map(scriptRowShape).filter((row) => isAdmin || row.created_by === uid || row.assignee_id === uid);
+      }
+    }
+
+    if (versionRows.length === 0 && normalizedCurrentContent) {
+      let visibleScriptsQuery = supabase
+        .from("scripts")
+        .select("id, title, status, client_id, company_id, current_version_id, created_by, assignee_id");
+      if (!isAdmin) {
+        visibleScriptsQuery = visibleScriptsQuery.or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
+      }
+      const { data: accessibleScripts, error: accessibleScriptsErr } = await visibleScriptsQuery.limit(500);
+      if (accessibleScriptsErr) return json({ error: accessibleScriptsErr.message }, 500);
+
+      visibleScripts = (accessibleScripts ?? []).map(scriptRowShape).filter((row) => isAdmin || row.created_by === uid || row.assignee_id === uid);
+      const accessibleScriptIds = [...new Set(visibleScripts.map((row) => row.id))];
+      if (accessibleScriptIds.length === 0) {
+        return json({
+          exactMatch: false,
+          contentHash,
+          duplicateCount: 0,
+          matches: [],
+        });
+      }
+
+      const { data: candidateVersions, error: candidateVersionsErr } = await supabase
+        .from("script_versions")
+        .select("id, script_id, version_number, source_file_name, created_at")
+        .in("script_id", accessibleScriptIds)
+        .neq("id", versionId)
+        .limit(500);
+      if (candidateVersionsErr) return json({ error: candidateVersionsErr.message }, 500);
+
+      const candidateVersionRows = (candidateVersions ?? []).map(versionRowShape);
+      const candidateVersionIds = [...new Set(candidateVersionRows.map((row) => row.id))];
+      if (candidateVersionIds.length > 0) {
+        const { data: candidateTexts, error: candidateTextsErr } = await supabase
+          .from("script_text")
+          .select("version_id, content")
+          .in("version_id", candidateVersionIds);
+        if (candidateTextsErr) return json({ error: candidateTextsErr.message }, 500);
+
+        const normalizedDuplicateIds = new Set(
+          (candidateTexts ?? [])
+            .map((row) => row as { version_id?: string | null; content?: string | null })
+            .filter((row) => typeof row.version_id === "string" && typeof row.content === "string" && normalizeText(row.content) === normalizedCurrentContent)
+            .map((row) => row.version_id as string),
+        );
+        versionRows = candidateVersionRows.filter((row) => normalizedDuplicateIds.has(row.id));
+      }
+    }
+
+    if (versionRows.length === 0) {
+      return json({
+        exactMatch: false,
+        contentHash,
+        duplicateCount: 0,
+        matches: [],
+      });
+    }
+
     const visibleScriptById = new Map(visibleScripts.map((row) => [row.id, row]));
     const visibleVersions = versionRows.filter((row) => visibleScriptById.has(row.script_id));
     if (visibleVersions.length === 0) {
       return json({
         exactMatch: true,
         contentHash,
-        duplicateCount: duplicateVersionIds.length,
+        duplicateCount: versionRows.length,
         matches: [],
       });
     }
