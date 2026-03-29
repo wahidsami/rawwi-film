@@ -1256,24 +1256,18 @@ export function ScriptWorkspace() {
         if (versions.length > 0) {
           const latest = versions[0];
 
-          // If we have text and editor is empty, auto-load it
+          // If we have text and editor is empty, auto-load it silently.
+          // This should never re-open the import modal on refresh/navigation.
           if (latest.extraction_status === 'done' && latest.extracted_text && !extractedText) {
             // Only auto-load if text is reasonable size (< 500KB) to prevent widespread lag
             if (latest.extracted_text.length < 500000) {
               setExtractedText(latest.extracted_text);
-              setUploadStatus('done');
-              if (user?.id === script.assigneeId && user?.id !== script.created_by) {
-                toast.success(lang === 'ar' ? 'تم تحميل المستند تلقائياً' : 'Document loaded automatically', { id: 'auto-load' });
-              }
             } else {
               // Large file warning
               toast(lang === 'ar' ? 'المستند كبير. انقر لاستيراده.' : 'Large document found. Click to import.', {
                 icon: '📁',
               });
             }
-          } else if (latest.extraction_status === 'extracting') {
-            setUploadStatus('extracting');
-            // We could start polling here if we want real-time updates for assignments
           }
         }
       } catch (err) {
