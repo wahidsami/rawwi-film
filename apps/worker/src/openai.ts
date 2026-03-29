@@ -118,7 +118,7 @@ export async function callJudgeRaw(
     max_tokens: 4096,
     temperature: jobConfig.temperature,
     seed: jobConfig.seed,
-  }, { timeout: config.JUDGE_TIMEOUT_MS });
+  }, { timeout: config.JUDGE_TIMEOUT_MS, signal: options.signal });
 
   return resp.choices[0]?.message?.content ?? '{"findings":[]}';
 }

@@ -1,19 +1,34 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+
 /**
  * Basic logger with optional correlationId / jobId / chunkId context.
+ *
+ * The worker processes multiple chunks in parallel, so a single mutable global
+ * context can leak chunk IDs between concurrent async flows. AsyncLocalStorage
+ * keeps each chunk's log prefix isolated while preserving the existing API.
  */
 type Context = { correlationId?: string; jobId?: string; chunkId?: string };
 
-let context: Context = {};
+const contextStorage = new AsyncLocalStorage<Context>();
+let fallbackContext: Context = {};
+
+function getContext(): Context {
+  return contextStorage.getStore() ?? fallbackContext;
+}
 
 export function setContext(ctx: Partial<Context>) {
-  context = { ...context, ...ctx };
+  const next = { ...getContext(), ...ctx };
+  fallbackContext = next;
+  contextStorage.enterWith(next);
 }
 
 export function clearContext() {
-  context = {};
+  fallbackContext = {};
+  contextStorage.enterWith({});
 }
 
 function prefix(): string {
+  const context = getContext();
   const parts: string[] = [];
   if (context.correlationId) parts.push(`correlationId=${context.correlationId}`);
   if (context.jobId) parts.push(`jobId=${context.jobId}`);

@@ -616,6 +616,13 @@ function throwIfAborted(signal?: AbortSignal): void {
   throw error;
 }
 
+function buildAbortError(reason: unknown, fallbackMessage = "Operation aborted"): Error {
+  if (reason instanceof Error) return reason;
+  const error = new Error(typeof reason === "string" ? reason : fallbackMessage);
+  error.name = "AbortError";
+  return error;
+}
+
 export interface DetectionPassExecutionPlan {
   activePasses: PassDefinition[];
   skippedPasses: PlannedPassSkip[];
@@ -798,12 +805,41 @@ async function runSinglePassWithHardTimeout(
 ): Promise<PassResult> {
   return new Promise<PassResult>((resolve, reject) => {
     throwIfAborted(signal);
+    const passAbortController = new AbortController();
+    let settled = false;
+    const cleanup = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+    };
+    const resolveOnce = (result: PassResult) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(result);
+    };
+    const rejectOnce = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    };
+    const onAbort = () => {
+      const error = buildAbortError(signal?.reason);
+      passAbortController.abort(error);
+      rejectOnce(error);
+    };
+    if (signal) {
+      signal.addEventListener("abort", onAbort, { once: true });
+    }
     const timer = setTimeout(() => {
+      const error = new Error(`Pass ${pass.name} hard timeout`);
+      error.name = "PassTimeoutError";
+      passAbortController.abort(error);
       logger.error(`Pass ${pass.name} exceeded hard timeout`, {
         timeoutMs: config.PASS_HARD_TIMEOUT_MS,
         model: pass.model ?? "gpt-4.1",
       });
-      resolve({
+      resolveOnce({
         passName: pass.name,
         findings: [],
         duration: config.PASS_HARD_TIMEOUT_MS,
@@ -813,25 +849,24 @@ async function runSinglePassWithHardTimeout(
       });
     }, config.PASS_HARD_TIMEOUT_MS);
 
-    runSinglePass(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig, signal).then(
+    runSinglePass(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig, passAbortController.signal).then(
       (result) => {
-        clearTimeout(timer);
-        resolve(result);
+        resolveOnce(result);
       },
       (error) => {
-        clearTimeout(timer);
         if (
           (error instanceof Error && (error.name === "AbortError" || error.name === "ChunkTimeoutError")) ||
-          signal?.aborted
+          signal?.aborted ||
+          passAbortController.signal.aborted
         ) {
-          reject(error);
+          rejectOnce(error);
           return;
         }
         logger.error(`Pass ${pass.name} crashed unexpectedly`, {
           error: String(error),
           model: pass.model ?? "gpt-4.1",
         });
-        resolve({
+        resolveOnce({
           passName: pass.name,
           findings: [],
           duration: 0,
