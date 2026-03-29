@@ -334,6 +334,7 @@ export interface Report {
       end_offset_global?: number | null;
       start_line_chunk?: number | null;
       end_line_chunk?: number | null;
+      page_numbers?: number[];
     }>;
     /** Words/phrases from glossary that appeared in script — for "كلمات/عبارات للمراجعة" only. */
     words_to_revisit?: Array<{

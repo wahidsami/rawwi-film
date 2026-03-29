@@ -1361,6 +1361,19 @@ export function ScriptWorkspace() {
     return dedupeAnalysisFindings(violations);
   }, [reportFindings, workspaceCanonicalHintIds]);
 
+  const workspaceDocumentCaseHints = useMemo(
+    () =>
+      ((selectedReportSummary?.summaryJson?.report_hints ?? []) as Array<{
+        canonical_finding_id?: string;
+        title_ar?: string;
+        evidence_snippet?: string;
+        rationale?: string | null;
+        page_numbers?: number[];
+      }>)
+        .filter((hint) => typeof hint.canonical_finding_id === 'string' && hint.canonical_finding_id.startsWith('DOC-')),
+    [selectedReportSummary]
+  );
+
   useEffect(() => {
     const visibleIds = new Set(workspaceVisibleReportFindings.map((f) => f.id));
     setSelectedReportFindingIds((prev) => prev.filter((id) => visibleIds.has(id)));
@@ -4224,6 +4237,67 @@ export function ScriptWorkspace() {
                   <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
                     {lang === 'ar' ? 'ملاحظات التقرير' : 'Report findings'}
                   </h3>
+                  {workspaceDocumentCaseHints.length > 0 && (
+                    <>
+                      <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                        {lang === 'ar' ? 'تنبيهات بنية المستند' : 'Document structure notes'}
+                      </h3>
+                      {workspaceDocumentCaseHints.map((hint) => (
+                        <div
+                          key={hint.canonical_finding_id}
+                          className="bg-surface border border-primary/20 rounded-xl p-3 shadow-sm space-y-2"
+                        >
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-[10px]">
+                                {lang === 'ar' ? 'مراجعة بنية' : 'Structure review'}
+                              </Badge>
+                              <p className="text-sm font-medium text-text-main" dir="rtl">
+                                {hint.title_ar ?? (lang === 'ar' ? 'تنبيه بنية مستند' : 'Document structure note')}
+                              </p>
+                            </div>
+                            {Array.isArray(hint.page_numbers) && hint.page_numbers.length > 0 && (
+                              <div className="flex items-center gap-1 flex-wrap">
+                                {hint.page_numbers.slice(0, 5).map((pageNumber) => (
+                                  <Button
+                                    key={`${hint.canonical_finding_id}-${pageNumber}`}
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-[10px] px-2"
+                                    onClick={() => {
+                                      setWorkspaceViewMode('text');
+                                      setCurrentPage(pageNumber);
+                                      setSidebarTab('findings');
+                                    }}
+                                  >
+                                    {lang === 'ar' ? `صفحة ${pageNumber}` : `Page ${pageNumber}`}
+                                  </Button>
+                                ))}
+                                {hint.page_numbers.length > 5 && (
+                                  <span className="text-[10px] text-text-muted">
+                                    {lang === 'ar'
+                                      ? `+${hint.page_numbers.length - 5}`
+                                      : `+${hint.page_numbers.length - 5}`}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          {hint.evidence_snippet && (
+                            <p className="text-xs text-text-muted bg-surface-hover/50 p-2 rounded" dir="rtl">
+                              {hint.evidence_snippet}
+                            </p>
+                          )}
+                          {hint.rationale && (
+                            <p className="text-xs text-text-main leading-6" dir="rtl">
+                              {hint.rationale}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  )}
                   <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-surface/70 p-2.5">
                     <Button
                       type="button"

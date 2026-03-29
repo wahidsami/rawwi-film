@@ -136,6 +136,7 @@ export type SummaryJson = {
     end_offset_global?: number | null;
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
+    page_numbers?: number[];
   }>;
   /** Separate light pass: words/phrases from glossary that appeared in the script — for "كلمات/عبارات للمراجعة" only. Does not affect violations. */
   words_to_revisit?: Array<{
@@ -288,6 +289,7 @@ function buildDocumentStructureHints(pageRows: ScriptPageMetaRow[]): DocumentRev
       end_offset_global: null,
       start_line_chunk: null,
       end_line_chunk: null,
+      page_numbers: uniquePages,
     });
   }
 
