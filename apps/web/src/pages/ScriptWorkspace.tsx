@@ -1371,10 +1371,25 @@ export function ScriptWorkspace() {
   const [manualOffsets, setManualOffsets] = useState<{ startOffsetGlobal: number; endOffsetGlobal: number } | null>(null);
   const [persistentSelection, setPersistentSelection] = useState<{ rects: DOMRect[] } | null>(null);
 
+  const safeDateFromValue = useCallback((value: string | null | undefined): Date | null => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }, []);
+
+  const formatOptionalReportDate = useCallback((value: string | null | undefined) => {
+    const parsed = safeDateFromValue(value);
+    return parsed ? formatDate(parsed, { lang, format: dateFormat }) : '—';
+  }, [dateFormat, lang, safeDateFromValue]);
+
   const previousReviewInsight = useMemo(() => {
     if (reportHistory.length === 0) return null;
     const latest = [...reportHistory].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) => {
+        const left = safeDateFromValue(a.createdAt)?.getTime() ?? 0;
+        const right = safeDateFromValue(b.createdAt)?.getTime() ?? 0;
+        return right - left;
+      }
     )[0];
     const latestActor =
       latest.reportCreatorName ??
@@ -1383,7 +1398,7 @@ export function ScriptWorkspace() {
         : latest.createdBy
           ? `${latest.createdBy.slice(0, 8)}…`
           : (lang === 'ar' ? 'غير معروف' : 'Unknown'));
-    const latestDate = latest.createdAt ? formatDate(new Date(latest.createdAt), { lang, format: dateFormat }) : null;
+    const latestDate = formatOptionalReportDate(latest.createdAt);
     const clientLabel =
       latest.clientName ??
       latest.companyNameAr ??
@@ -1396,7 +1411,7 @@ export function ScriptWorkspace() {
       clientLabel,
       hasExternalReview: reportHistory.some((r) => (r.reportCreatorId ?? r.createdBy ?? null) !== (user?.id ?? null)),
     };
-  }, [reportHistory, user?.id, lang, dateFormat]);
+  }, [reportHistory, user?.id, lang, formatOptionalReportDate, safeDateFromValue]);
 
   const workspaceCanonicalHintIds = useMemo(
     () =>
@@ -1449,7 +1464,9 @@ export function ScriptWorkspace() {
     try {
       const list = await reportsApi.listByScript(id);
       setReportHistory(list);
-    } catch (_) { /* ignore */ }
+    } catch (_) {
+      setReportHistory([]);
+    }
     // setReportHistoryLoading(false);
   }, [id]);
 
@@ -4066,7 +4083,7 @@ export function ScriptWorkspace() {
                     options={[
                       { label: lang === 'ar' ? 'اختر...' : 'Select...', value: '' },
                       ...reportHistory.map(r => ({
-                        label: `${formatDate(new Date(r.createdAt), { lang, format: dateFormat })} - ${r.findingsCount} findings`,
+                        label: `${formatOptionalReportDate(r.createdAt)} - ${r.findingsCount} findings`,
                         value: r.id
                       }))
                     ]}
@@ -4479,7 +4496,7 @@ export function ScriptWorkspace() {
                     >
                       {/* Header: created_at, status */}
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-text-muted font-mono">{formatDate(new Date(r.createdAt), { lang, format: dateFormat })}</span>
+                        <span className="text-[10px] text-text-muted font-mono">{formatOptionalReportDate(r.createdAt)}</span>
                         <Badge variant={reviewColor as any} className="text-[10px]">{reviewLabel}</Badge>
                       </div>
                       {/* created_by (audit) */}
@@ -4599,7 +4616,7 @@ export function ScriptWorkspace() {
             value={formData.reportId}
             onChange={(e) => setFormData({ ...formData, reportId: e.target.value })}
             options={reportHistory.map((r) => ({
-              label: `${formatDate(new Date(r.createdAt), { lang, format: dateFormat })} — ${r.findingsCount ?? 0} findings`,
+              label: `${formatOptionalReportDate(r.createdAt)} — ${r.findingsCount ?? 0} findings`,
               value: r.id,
             }))}
           />
