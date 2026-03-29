@@ -67,6 +67,22 @@ type ScriptVersionRow = {
   created_at: string;
 };
 
+type DuplicateMatchRow = {
+  scriptId: string;
+  versionId: string;
+  versionNumber: number;
+  scriptTitle: string;
+  scriptStatus: string;
+  sourceFileName: string | null;
+  createdAt: string;
+  companyName: string | null;
+  sameScript: boolean;
+  isCurrentVersion: boolean;
+  analyzedBefore: boolean;
+  latestAnalysisAt: string | null;
+  latestReviewerName: string | null;
+};
+
 function toVersionFrontend(row: ScriptVersionRow) {
   return {
     id: row.id,
@@ -567,6 +583,194 @@ Deno.serve(async (req: Request) => {
       return json({ error: upsertErr.message }, 500);
     }
     return json({ jobId });
+  }
+
+  // GET /scripts/duplicates?versionId=...
+  if (method === "GET" && rest === "duplicates") {
+    const url = new URL(req.url);
+    const versionId = url.searchParams.get("versionId")?.trim();
+    if (!versionId) return json({ error: "versionId query param is required" }, 400);
+
+    const { data: version, error: versionErr } = await supabase
+      .from("script_versions")
+      .select("id, script_id, extracted_text_hash")
+      .eq("id", versionId)
+      .maybeSingle();
+    if (versionErr || !version) return json({ error: "Version not found" }, 404);
+
+    const versionRow = version as { id: string; script_id: string; extracted_text_hash?: string | null };
+    const { data: currentScript, error: currentScriptErr } = await supabase
+      .from("scripts")
+      .select("id, created_by, assignee_id")
+      .eq("id", versionRow.script_id)
+      .maybeSingle();
+    if (currentScriptErr || !currentScript) return json({ error: "Script not found" }, 404);
+
+    const currentScriptRow = currentScript as { id: string; created_by: string | null; assignee_id: string | null };
+    const isAdmin = await isUserAdmin(supabase, uid);
+    if (!isAdmin && currentScriptRow.created_by !== uid && currentScriptRow.assignee_id !== uid) {
+      return json({ error: "Forbidden" }, 403);
+    }
+
+    const { data: textRow } = await supabase
+      .from("script_text")
+      .select("content_hash")
+      .eq("version_id", versionId)
+      .maybeSingle();
+    const contentHash = (textRow as { content_hash?: string | null } | null)?.content_hash
+      ?? versionRow.extracted_text_hash
+      ?? null;
+
+    if (!contentHash) {
+      return json({
+        exactMatch: false,
+        contentHash: null,
+        duplicateCount: 0,
+        matches: [],
+      });
+    }
+
+    const { data: duplicateTextRows, error: duplicateTextErr } = await supabase
+      .from("script_text")
+      .select("version_id")
+      .eq("content_hash", contentHash)
+      .neq("version_id", versionId)
+      .limit(25);
+    if (duplicateTextErr) return json({ error: duplicateTextErr.message }, 500);
+
+    const duplicateVersionIds = [...new Set((duplicateTextRows ?? []).map((row) => (row as { version_id?: string | null }).version_id).filter((value): value is string => typeof value === "string" && value.length > 0))];
+    if (duplicateVersionIds.length === 0) {
+      return json({
+        exactMatch: false,
+        contentHash,
+        duplicateCount: 0,
+        matches: [],
+      });
+    }
+
+    const { data: duplicateVersions, error: duplicateVersionsErr } = await supabase
+      .from("script_versions")
+      .select("id, script_id, version_number, source_file_name, created_at")
+      .in("id", duplicateVersionIds);
+    if (duplicateVersionsErr) return json({ error: duplicateVersionsErr.message }, 500);
+
+    const versionRows = (duplicateVersions ?? []) as Array<{
+      id: string;
+      script_id: string;
+      version_number: number;
+      source_file_name: string | null;
+      created_at: string;
+    }>;
+    const duplicateScriptIds = [...new Set(versionRows.map((row) => row.script_id))];
+    if (duplicateScriptIds.length === 0) {
+      return json({
+        exactMatch: false,
+        contentHash,
+        duplicateCount: 0,
+        matches: [],
+      });
+    }
+
+    const { data: duplicateScripts, error: duplicateScriptsErr } = await supabase
+      .from("scripts")
+      .select("id, title, status, client_id, company_id, current_version_id, created_by, assignee_id")
+      .in("id", duplicateScriptIds);
+    if (duplicateScriptsErr) return json({ error: duplicateScriptsErr.message }, 500);
+
+    const visibleScripts = ((duplicateScripts ?? []) as Array<{
+      id: string;
+      title: string;
+      status: string;
+      client_id: string | null;
+      company_id: string | null;
+      current_version_id: string | null;
+      created_by: string | null;
+      assignee_id: string | null;
+    }>).filter((row) => isAdmin || row.created_by === uid || row.assignee_id === uid);
+    const visibleScriptById = new Map(visibleScripts.map((row) => [row.id, row]));
+    const visibleVersions = versionRows.filter((row) => visibleScriptById.has(row.script_id));
+    if (visibleVersions.length === 0) {
+      return json({
+        exactMatch: true,
+        contentHash,
+        duplicateCount: duplicateVersionIds.length,
+        matches: [],
+      });
+    }
+
+    const clientIds = [...new Set(visibleScripts.map((row) => row.company_id ?? row.client_id).filter((value): value is string => typeof value === "string" && value.length > 0))];
+    const { data: clients } = clientIds.length > 0
+      ? await supabase
+          .from("clients")
+          .select("id, name_ar, name_en")
+          .in("id", clientIds)
+      : { data: [], error: null };
+    const clientNameById = new Map(
+      ((clients ?? []) as Array<{ id: string; name_ar?: string | null; name_en?: string | null }>).map((row) => [
+        row.id,
+        row.name_ar?.trim() || row.name_en?.trim() || null,
+      ]),
+    );
+
+    const { data: jobs } = await supabase
+      .from("analysis_jobs")
+      .select("script_id, completed_at, created_by, status")
+      .in("script_id", [...visibleScriptById.keys()])
+      .in("status", ["completed"]);
+    const latestJobByScript = new Map<string, { completed_at: string | null; created_by: string | null }>();
+    for (const row of (jobs ?? []) as Array<{ script_id: string; completed_at: string | null; created_by: string | null }>) {
+      const existing = latestJobByScript.get(row.script_id);
+      const nextTime = row.completed_at ? new Date(row.completed_at).getTime() : 0;
+      const existingTime = existing?.completed_at ? new Date(existing.completed_at).getTime() : 0;
+      if (!existing || nextTime > existingTime) {
+        latestJobByScript.set(row.script_id, { completed_at: row.completed_at, created_by: row.created_by });
+      }
+    }
+
+    const reviewerIds = [...new Set([...latestJobByScript.values()].map((row) => row.created_by).filter((value): value is string => typeof value === "string" && value.length > 0))];
+    const { data: reviewerProfiles } = reviewerIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("user_id, name")
+          .in("user_id", reviewerIds)
+      : { data: [], error: null };
+    const reviewerNameById = new Map(
+      ((reviewerProfiles ?? []) as Array<{ user_id: string; name?: string | null }>).map((row) => [row.user_id, row.name?.trim() || null]),
+    );
+
+    const matches: DuplicateMatchRow[] = visibleVersions
+      .map((row) => {
+        const scriptRow = visibleScriptById.get(row.script_id)!;
+        const latestJob = latestJobByScript.get(row.script_id);
+        const companyId = scriptRow.company_id ?? scriptRow.client_id ?? null;
+        return {
+          scriptId: row.script_id,
+          versionId: row.id,
+          versionNumber: row.version_number,
+          scriptTitle: scriptRow.title,
+          scriptStatus: scriptRow.status,
+          sourceFileName: row.source_file_name ?? null,
+          createdAt: row.created_at,
+          companyName: companyId ? clientNameById.get(companyId) ?? null : null,
+          sameScript: row.script_id === versionRow.script_id,
+          isCurrentVersion: scriptRow.current_version_id === row.id,
+          analyzedBefore: latestJob?.completed_at != null,
+          latestAnalysisAt: latestJob?.completed_at ?? null,
+          latestReviewerName: latestJob?.created_by ? reviewerNameById.get(latestJob.created_by) ?? null : null,
+        };
+      })
+      .sort((a, b) => {
+        if (a.sameScript !== b.sameScript) return a.sameScript ? -1 : 1;
+        if (a.analyzedBefore !== b.analyzedBefore) return a.analyzedBefore ? -1 : 1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+
+    return json({
+      exactMatch: matches.length > 0,
+      contentHash,
+      duplicateCount: matches.length,
+      matches,
+    });
   }
 
   // ═══════════════════════════════════════════════════════════════

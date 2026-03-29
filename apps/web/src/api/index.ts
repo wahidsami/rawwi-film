@@ -161,6 +161,9 @@ export const scriptsApi = {
   /** Get editor content and sections for a version. GET /scripts/editor?scriptId=...&versionId=... */
   getEditor: (scriptId: string, versionId: string): Promise<EditorContentResponse> =>
     httpClient.get(`/scripts/editor?scriptId=${encodeURIComponent(scriptId)}&versionId=${encodeURIComponent(versionId)}`),
+  /** Check whether another version already has the exact same canonical content. */
+  getDuplicateScripts: (versionId: string): Promise<DuplicateScriptCheckResponse> =>
+    httpClient.get(`/scripts/duplicates?versionId=${encodeURIComponent(versionId)}`),
   /** Get saved highlight report (job) for script. Returns { jobId: string | null }. */
   getHighlightPreference: (scriptId: string): Promise<{ jobId: string | null }> =>
     httpClient.get(`/scripts/highlight-preference?scriptId=${encodeURIComponent(scriptId)}`),
@@ -200,6 +203,29 @@ export interface EditorContentResponse {
   pages?: EditorPageResponse[];
   /** Time-limited URL to original PDF (page N matches viewer page N). */
   sourcePdfSignedUrl?: string | null;
+}
+
+export interface DuplicateScriptMatch {
+  scriptId: string;
+  versionId: string;
+  versionNumber: number;
+  scriptTitle: string;
+  scriptStatus: string;
+  sourceFileName?: string | null;
+  createdAt: string;
+  companyName?: string | null;
+  sameScript: boolean;
+  isCurrentVersion: boolean;
+  analyzedBefore: boolean;
+  latestAnalysisAt?: string | null;
+  latestReviewerName?: string | null;
+}
+
+export interface DuplicateScriptCheckResponse {
+  exactMatch: boolean;
+  contentHash?: string | null;
+  duplicateCount: number;
+  matches: DuplicateScriptMatch[];
 }
 
 export type GetTasksParams = { scriptId?: string; versionId?: string; limit?: number };

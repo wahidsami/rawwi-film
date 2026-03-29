@@ -72,6 +72,10 @@ function formatRelativeDuration(ms: number, lang: 'ar' | 'en'): string {
   return formatAnalysisElapsed(ms, lang);
 }
 
+function formatImportDuplicateDate(value: string, lang: 'ar' | 'en'): string {
+  return `${formatDate(value, lang)} • ${formatTime(value, lang)}`;
+}
+
 function formatExtractionProgressMessage(
   progress: Record<string, unknown> | undefined,
   lang: 'ar' | 'en',
@@ -202,7 +206,7 @@ function renderPreviewWithHighlight(preview: string, focusSnippet: string | null
 }
 
 import { scriptsApi, tasksApi, reportsApi, findingsApi } from '@/api';
-import type { AnalysisFinding, Report as AnalysisReport } from '@/api';
+import type { AnalysisFinding, DuplicateScriptCheckResponse, Report as AnalysisReport } from '@/api';
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
@@ -821,6 +825,7 @@ export function ScriptWorkspace() {
   const [uploadStartedAt, setUploadStartedAt] = useState<number | null>(null);
   const [uploadElapsedMs, setUploadElapsedMs] = useState(0);
   const [uploadVersionId, setUploadVersionId] = useState<string | null>(null);
+  const [uploadDuplicateInfo, setUploadDuplicateInfo] = useState<DuplicateScriptCheckResponse | null>(null);
   const uploadAbortControllerRef = useRef<AbortController | null>(null);
   const uploadSessionIdRef = useRef(0);
   const uploadAutoCloseTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
@@ -898,6 +903,7 @@ export function ScriptWorkspace() {
     setUploadStartedAt(null);
     setUploadElapsedMs(0);
     setUploadVersionId(null);
+    setUploadDuplicateInfo(null);
     setUploadPhaseLabel('');
     setUploadStatusMessage('');
   }, [clearImportAutoClose]);
@@ -912,6 +918,7 @@ export function ScriptWorkspace() {
     const shouldCancelBackend = uploadStatus === 'extracting' && !!versionIdToCancel;
     setIsUploading(false);
     setUploadVersionId(null);
+    setUploadDuplicateInfo(null);
     if (shouldCancelBackend && versionIdToCancel) {
       void scriptsApi.cancelVersionExtraction(versionIdToCancel).catch((error) => {
         const message = error instanceof Error ? error.message : String(error);
@@ -923,6 +930,7 @@ export function ScriptWorkspace() {
       setUploadError(null);
       setUploadStartedAt(null);
       setUploadElapsedMs(0);
+      setUploadDuplicateInfo(null);
       setUploadPhaseLabel('');
       setUploadStatusMessage('');
       return;
@@ -1995,6 +2003,7 @@ export function ScriptWorkspace() {
         : 'Preparing and uploading the document before extraction starts.',
     );
     setUploadError(null);
+    setUploadDuplicateInfo(null);
     setUploadStartedAt(Date.now());
     setUploadElapsedMs(0);
 
@@ -2137,6 +2146,15 @@ export function ScriptWorkspace() {
         return;
       }
       ensureImportActive();
+      let duplicateInfo: DuplicateScriptCheckResponse | null = null;
+      try {
+        duplicateInfo = await scriptsApi.getDuplicateScripts(version.id);
+        ensureImportActive();
+      } catch (duplicateErr) {
+        const message = duplicateErr instanceof Error ? duplicateErr.message : String(duplicateErr);
+        console.warn('[ScriptWorkspace] duplicate script check failed', { versionId: version.id, error: message });
+      }
+      setUploadDuplicateInfo(duplicateInfo?.exactMatch ? duplicateInfo : null);
       setExtractedText(textToShow);
       // The file/context was replaced: clear stale highlight/report state immediately in UI.
       setReportFindings([]);
@@ -2149,20 +2167,34 @@ export function ScriptWorkspace() {
       setUploadVersionId(null);
       setUploadPhaseLabel(lang === 'ar' ? 'اكتمل الاستيراد' : 'Import complete');
       setUploadStatusMessage(
-        lang === 'ar'
-          ? 'تم استيراد الملف واستخراج النص بنجاح. يمكنك الآن مراجعة المحتوى أو بدء التحليل.'
-          : 'Import finished successfully. You can now review the text or start analysis.',
+        duplicateInfo?.exactMatch
+          ? lang === 'ar'
+            ? `اكتمل الاستيراد، لكن النظام وجد ${duplicateInfo.duplicateCount} ${duplicateInfo.duplicateCount === 1 ? 'نسخة مطابقة' : 'نسخ مطابقة'} بالمحتوى نفسه في السجلات الحالية.`
+            : `Import completed, but the system found ${duplicateInfo.duplicateCount} exact content duplicate${duplicateInfo.duplicateCount === 1 ? '' : 's'} in existing records.`
+          : lang === 'ar'
+            ? 'تم استيراد الملف واستخراج النص بنجاح. يمكنك الآن مراجعة المحتوى أو بدء التحليل.'
+            : 'Import finished successfully. You can now review the text or start analysis.',
       );
       toast.success(lang === 'ar' ? 'تم استخراج النص بنجاح' : 'Text extracted successfully');
-      uploadAutoCloseTimeoutRef.current = window.setTimeout(() => {
-        setUploadStatus('idle');
-        setUploadError(null);
-        setUploadStartedAt(null);
-        setUploadElapsedMs(0);
-        setUploadPhaseLabel('');
-        setUploadStatusMessage('');
-        uploadAutoCloseTimeoutRef.current = null;
-      }, 1800);
+      if (duplicateInfo?.exactMatch) {
+        toast(
+          lang === 'ar'
+            ? 'تم العثور على نسخة مطابقة بالمحتوى نفسه. راجع تفاصيل التنبيه قبل إغلاق النافذة.'
+            : 'An exact content duplicate was found. Review the warning details before closing the window.',
+          { duration: 6000 },
+        );
+      } else {
+        uploadAutoCloseTimeoutRef.current = window.setTimeout(() => {
+          setUploadStatus('idle');
+          setUploadError(null);
+          setUploadStartedAt(null);
+          setUploadElapsedMs(0);
+          setUploadDuplicateInfo(null);
+          setUploadPhaseLabel('');
+          setUploadStatusMessage('');
+          uploadAutoCloseTimeoutRef.current = null;
+        }, 1800);
+      }
       await updateScript(script.id, { currentVersionId: version.id });
       ensureImportActive();
       try {
@@ -2178,6 +2210,7 @@ export function ScriptWorkspace() {
       }
       setUploadStatus('failed');
       setUploadVersionId(null);
+      setUploadDuplicateInfo(null);
       setUploadPhaseLabel(lang === 'ar' ? 'فشل الاستيراد' : 'Import failed');
       setUploadError(err?.message || 'Upload failed');
       setUploadStatusMessage(
@@ -3233,6 +3266,60 @@ export function ScriptWorkspace() {
               <div className="rounded-xl border border-error/25 bg-error/5 px-4 py-3">
                 <p className="text-xs font-semibold text-error mb-1">{lang === 'ar' ? 'رسالة الخطأ' : 'Error message'}</p>
                 <p className="text-sm text-text-main whitespace-pre-wrap break-words">{uploadError}</p>
+              </div>
+            )}
+            {uploadDuplicateInfo?.exactMatch && uploadDuplicateInfo.matches.length > 0 && (
+              <div className="rounded-xl border border-warning/25 bg-warning/5 px-4 py-3 space-y-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-warning">
+                    {lang === 'ar' ? 'تم العثور على نسخة مطابقة بالمحتوى نفسه' : 'Exact content duplicate found'}
+                  </p>
+                  <p className="text-sm text-text-main leading-6">
+                    {lang === 'ar'
+                      ? 'هذا النص موجود مسبقاً داخل النظام، حتى لو كان اسم الملف مختلفاً. راجع السجلات التالية قبل متابعة العمل عليه كنص جديد.'
+                      : 'This exact script content already exists in the system, even if the file name is different. Review these records before treating it as a new script.'}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {uploadDuplicateInfo.matches.slice(0, 3).map((match) => (
+                    <div key={match.versionId} className="rounded-xl border border-border bg-background px-3 py-3 space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-text-main">{match.scriptTitle}</p>
+                        <Badge variant="outline" className="text-[10px]">
+                          {match.sameScript
+                            ? (lang === 'ar' ? 'داخل نفس النص' : 'Same script')
+                            : (lang === 'ar' ? 'نص آخر' : 'Another script')}
+                        </Badge>
+                        {match.analyzedBefore && (
+                          <Badge variant="outline" className="text-[10px]">
+                            {lang === 'ar' ? 'محلل سابقاً' : 'Analyzed before'}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-text-muted">
+                        {[
+                          match.companyName,
+                          match.sourceFileName,
+                          formatImportDuplicateDate(match.createdAt, lang),
+                        ].filter(Boolean).join(' • ')}
+                      </p>
+                      {match.latestAnalysisAt && (
+                        <p className="text-xs text-text-muted">
+                          {lang === 'ar'
+                            ? `آخر تحليل: ${formatImportDuplicateDate(match.latestAnalysisAt, lang)}${match.latestReviewerName ? ` • ${match.latestReviewerName}` : ''}`
+                            : `Latest analysis: ${formatImportDuplicateDate(match.latestAnalysisAt, lang)}${match.latestReviewerName ? ` • ${match.latestReviewerName}` : ''}`}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {uploadDuplicateInfo.matches.length > 3 && (
+                  <p className="text-xs text-text-muted">
+                    {lang === 'ar'
+                      ? `وهناك أيضاً ${uploadDuplicateInfo.matches.length - 3} سجل/سجلات إضافية مطابقة بنفس المحتوى.`
+                      : `There are also ${uploadDuplicateInfo.matches.length - 3} more matching record(s).`}
+                  </p>
+                )}
               </div>
             )}
           </div>

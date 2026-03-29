@@ -18,6 +18,7 @@ const PDF_STRAY_LATIN_IN_ARABIC_RE =
   /(?<=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])[A-Za-z](?=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])/gu;
 const PDF_STRAY_LATIN_EDGE_RE =
   /(^|\s)[A-Za-z](?=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])|(?<=[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF])[A-Za-z](?=$|\s)/gu;
+const PDF_ARABIC_DIACRITIC_RE = /[\u064B-\u065F\u0670]/u;
 const OCR_SUSPICIOUS_MAX_TEXT_LENGTH = 1400;
 const OCR_SUSPICIOUS_MAX_LINE_COUNT = 28;
 const OCR_PAGE_DPI = 300;
@@ -330,6 +331,7 @@ function repairCollapsedArabicWordSpacing(line: string): string {
     .replace(/بينمايضع/gu, "بينما يضع")
     .replace(/وشالسالفة/gu, "وش السالفة")
     .replace(/وش الس الفة/gu, "وش السالفة")
+    .replace(/كييكون/gu, "كي يكون")
     .replace(/يدخلانإلى/gu, "يدخلان إلى")
     .replace(/يقولو/gu, "يقولوا")
     .replace(/بينماتنظرعزيزة/gu, "بينما تنظر عزيزة")
@@ -340,10 +342,114 @@ function repairCollapsedArabicWordSpacing(line: string): string {
     .replace(/لكنهاقلقة/gu, "لكنها قلقة")
     .replace(/[ّ]طيني بها يعني؟\s*وأنا ما داري أيش خلفها تشتي تور/gu, "وأنا ما داري أيش خلفها تشتي تورطيني بها يعني؟")
     .replace(/طيني بها يعني؟\s*وأنا ما داري أيش خلفها تشتي تور/gu, "وأنا ما داري أيش خلفها تشتي تورطيني بها يعني؟")
+    .replace(/^\)\s*([^()]{2,48})\($/u, "($1)")
+    .replace(/\)\s+\./gu, ").")
     .replace(/\s{2,}/g, " ")
     .trim();
 
   return out;
+}
+
+function isPdfSceneHeadingLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  return /^(?:[.٠-٩0-9]+\s+|(?:المشهد|مشهد|الفصل|الطريق|منزل|سيارة)\b)/u.test(trimmed) ||
+    /(?:-خارجي|-داخلي|\/ليلي|\/نهاري)/u.test(trimmed);
+}
+
+function isPdfSpeakerCueLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed || isPdfSceneHeadingLine(trimmed)) return false;
+  if (/[.!؟،؛:"«»]/u.test(trimmed)) return false;
+  if (/^[()]+|[()]$/u.test(trimmed)) return false;
+  const tokens = trimmed.split(/\s+/).filter(Boolean);
+  return tokens.length >= 1 &&
+    tokens.length <= 3 &&
+    trimmed.length <= 24 &&
+    /^[\u0600-\u06FF\s]+$/u.test(trimmed);
+}
+
+function isPdfParentheticalLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  return /^\(?[^:]{2,48}\)?$/u.test(trimmed) &&
+    (trimmed.startsWith("(") || trimmed.startsWith(")") || trimmed.endsWith(")") || trimmed.endsWith("("));
+}
+
+function isPdfStructuralLine(line: string): boolean {
+  return isPdfSceneHeadingLine(line) || isPdfSpeakerCueLine(line) || isPdfParentheticalLine(line);
+}
+
+function shouldJoinPdfLinesWithoutSpace(current: string, next: string): boolean {
+  const currentTrimmed = current.trim();
+  const nextTrimmed = next.trim();
+  if (!currentTrimmed || !nextTrimmed) return false;
+  if (!hasArabicPdfText(currentTrimmed) || !hasArabicPdfText(nextTrimmed)) return false;
+  if (isPdfStructuralLine(currentTrimmed) || isPdfStructuralLine(nextTrimmed)) return false;
+  if (/[:.!؟،؛]$/u.test(currentTrimmed)) return false;
+  if (currentTrimmed.length > 22 || nextTrimmed.length > 24) return false;
+
+  const currentLastToken = currentTrimmed.split(/\s+/).filter(Boolean).pop() ?? "";
+  const nextFirstToken = nextTrimmed.split(/\s+/).filter(Boolean)[0] ?? "";
+  const currentEndsWithDiacritic = PDF_ARABIC_DIACRITIC_RE.test(currentTrimmed.slice(-1));
+  const nextStartsWithDiacritic = PDF_ARABIC_DIACRITIC_RE.test(nextTrimmed.slice(0, 1));
+  const danglingShortTail = /^[\u0600-\u06FF]{1,3}[ًٌٍَُِّْ]*$/u.test(currentLastToken);
+
+  return currentEndsWithDiacritic ||
+    nextStartsWithDiacritic ||
+    (danglingShortTail && /^[\u0600-\u06FF]/u.test(nextFirstToken));
+}
+
+function shouldJoinPdfLinesWithSpace(current: string, next: string): boolean {
+  const currentTrimmed = current.trim();
+  const nextTrimmed = next.trim();
+  if (!currentTrimmed || !nextTrimmed) return false;
+  if (!hasArabicPdfText(currentTrimmed) || !hasArabicPdfText(nextTrimmed)) return false;
+  if (isPdfStructuralLine(currentTrimmed) || isPdfStructuralLine(nextTrimmed)) return false;
+  if (/[:.!؟،؛]$/u.test(currentTrimmed)) return false;
+  if (currentTrimmed.length > 18 || nextTrimmed.length > 30) return false;
+
+  const currentTokens = currentTrimmed.split(/\s+/).filter(Boolean);
+  const nextTokens = nextTrimmed.split(/\s+/).filter(Boolean);
+  if (currentTokens.length > 4 || nextTokens.length > 5) return false;
+  if (/^[\u0648\u0641]?$/.test(nextTokens[0] ?? "")) return false;
+
+  return true;
+}
+
+function repairPdfLineFormation(lines: string[]): string[] {
+  const merged: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    let current = lines[i]!.trim();
+    if (!current) continue;
+
+    while (i + 1 < lines.length) {
+      const next = lines[i + 1]!.trim();
+      if (!next) {
+        i += 1;
+        continue;
+      }
+
+      if (shouldJoinPdfLinesWithoutSpace(current, next)) {
+        current = repairCollapsedArabicWordSpacing(`${current}${next}`);
+        i += 1;
+        continue;
+      }
+
+      if (shouldJoinPdfLinesWithSpace(current, next)) {
+        current = repairCollapsedArabicWordSpacing(`${current} ${next}`);
+        i += 1;
+        continue;
+      }
+
+      break;
+    }
+
+    merged.push(current);
+  }
+
+  return merged;
 }
 
 function isLikelyGarbageTailLine(line: string): boolean {
@@ -635,6 +741,9 @@ function splitPdfPages(rawText: string): string[] {
           ),
         ].filter(Boolean);
       }
+      cleanedLines = repairPdfLineFormation(cleanedLines)
+        .map((line) => repairCollapsedArabicWordSpacing(postprocessPdfExtractedLine(line)))
+        .filter(Boolean);
       cleanedLines = trimGarbageTailLines(cleanedLines);
       return cleanedLines.join("\n").trim();
     })
@@ -957,10 +1066,12 @@ async function runTesseractArabic(imagePath: string): Promise<string> {
 
 function postprocessOcrPageText(text: string): string {
   const cleanedLines = trimGarbageTailLines(
-    text
-      .split(/\r?\n/)
-      .map((line) => repairCollapsedArabicWordSpacing(collapseSpacedArabicLetters(postprocessPdfExtractedLine(line))))
-      .filter(Boolean),
+    repairPdfLineFormation(
+      text
+        .split(/\r?\n/)
+        .map((line) => repairCollapsedArabicWordSpacing(collapseSpacedArabicLetters(postprocessPdfExtractedLine(line))))
+        .filter(Boolean),
+    ),
   );
   return cleanedLines.join("\n").trim();
 }
