@@ -4307,7 +4307,7 @@ export function ScriptWorkspace() {
                           {f.source === 'manual' ? (
                             <Badge variant="outline" className="text-[10px]">{lang === 'ar' ? 'يدوي' : 'Manual'}</Badge>
                           ) : (f.source === 'ai' || f.source === 'lexicon_mandatory') ? (
-                            <Badge variant="warning" className="text-[10px]">{f.source === 'lexicon_mandatory' ? (lang === 'ar' ? 'قاموس' : 'Lexicon') : 'AI'}</Badge>
+                            <Badge variant="warning" className="text-[10px]">{f.source === 'lexicon_mandatory' ? t('findingSourceGlossary') : 'AI'}</Badge>
                           ) : null}
                           <Badge variant={f.reviewStatus === 'approved' ? 'success' : 'error'} className="text-[10px]">{f.severity}</Badge>
                         </div>
@@ -4424,7 +4424,7 @@ export function ScriptWorkspace() {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <Badge variant="warning" className="text-[10px]">
-                          {f.source === 'lexicon_mandatory' ? (lang === 'ar' ? 'قاموس' : 'Lexicon') : 'AI Agent'}
+                          {f.source === 'lexicon_mandatory' ? t('findingSourceGlossary') : 'AI Agent'}
                         </Badge>
                         <span className={cn(
                           "text-xs font-semibold px-2 py-0.5 rounded-md",

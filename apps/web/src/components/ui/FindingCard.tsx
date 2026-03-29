@@ -104,7 +104,7 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick, scriptVi
               
               {/* Source Badge */}
               <Badge variant={finding.source === 'ai' ? 'default' : finding.source === 'lexicon_mandatory' ? 'error' : 'outline'} className="text-[10px]">
-                {finding.source === 'ai' ? 'AI' : finding.source === 'lexicon_mandatory' ? (lang === 'ar' ? 'مخالفة قاموس' : 'Lexicon') : t('manualFinding')}
+                {finding.source === 'ai' ? 'AI' : finding.source === 'lexicon_mandatory' ? t('findingSourceGlossary') : t('manualFinding')}
               </Badge>
 
               {/* Override Badges */}
