@@ -1382,6 +1382,11 @@ export function ScriptWorkspace() {
     return parsed ? formatDate(parsed, { lang, format: dateFormat }) : '—';
   }, [dateFormat, lang, safeDateFromValue]);
 
+  const formatOptionalTimeValue = useCallback((value: string | null | undefined) => {
+    const parsed = safeDateFromValue(value);
+    return parsed ? formatTime(parsed, { lang }) : '—';
+  }, [lang, safeDateFromValue]);
+
   const previousReviewInsight = useMemo(() => {
     if (reportHistory.length === 0) return null;
     const latest = [...reportHistory].sort(
@@ -5093,11 +5098,11 @@ export function ScriptWorkspace() {
                     <span className="text-text-muted">progress:</span>
                     <span className="text-text-main"><span dir="ltr">{progressDisplayDone}/{progressDisplayTotal}</span> ({analysisJob.progressPercent}%)</span>
                     <span className="text-text-muted">created:</span>
-                    <span className="text-text-main">{analysisJob.createdAt ? formatTime(new Date(analysisJob.createdAt), { lang }) : '-'}</span>
+                    <span className="text-text-main">{formatOptionalTimeValue(analysisJob.createdAt)}</span>
                     <span className="text-text-muted">started:</span>
-                    <span className="text-text-main">{analysisJob.startedAt ? formatTime(new Date(analysisJob.startedAt), { lang }) : '-'}</span>
+                    <span className="text-text-main">{formatOptionalTimeValue(analysisJob.startedAt)}</span>
                     <span className="text-text-muted">completed:</span>
-                    <span className="text-text-main">{analysisJob.completedAt ? formatTime(new Date(analysisJob.completedAt), { lang }) : '-'}</span>
+                    <span className="text-text-main">{formatOptionalTimeValue(analysisJob.completedAt)}</span>
                   </div>
                   <div className="text-text-muted pt-1 border-t border-border/50">Chunks:</div>
                   {chunkStatuses.length > 0 ? (
@@ -5129,7 +5134,7 @@ export function ScriptWorkspace() {
                           )}
                           {c.status === 'judging' && c.judgingStartedAt && (
                             <span className="text-[10px] text-text-muted">
-                              {lang === 'ar' ? 'منذ' : 'since'} {formatTime(new Date(c.judgingStartedAt), { lang })}
+                              {lang === 'ar' ? 'منذ' : 'since'} {formatOptionalTimeValue(c.judgingStartedAt)}
                             </span>
                           )}
                           {c.lastError && <span className="text-error truncate" title={c.lastError}>{c.lastError}</span>}
