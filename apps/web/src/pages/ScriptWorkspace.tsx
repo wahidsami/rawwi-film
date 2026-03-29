@@ -3632,6 +3632,16 @@ export function ScriptWorkspace() {
                 )}
               </div>
             )}
+            <div className="rounded-xl border border-info/20 bg-info/5 px-4 py-3 space-y-1">
+              <p className="text-xs font-semibold text-info">
+                {lang === 'ar' ? 'تنبيه تنسيقي' : 'Compatibility note'}
+              </p>
+              <p className="text-sm text-text-main leading-6">
+                {lang === 'ar'
+                  ? 'لأفضل توافقية وجودة تحليل، يُوصى باستخدام ملفات Word بصيغة DOC / DOCX متى ما كانت متاحة، لأنها تعطي نتائج أكثر استقرارًا من بعض ملفات PDF ذات البنية البصرية المعقدة.'
+                  : 'For best compatibility and analysis quality, Word documents in DOC / DOCX format are recommended when available, because they are often more stable than visually complex PDFs.'}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center justify-between gap-3">
