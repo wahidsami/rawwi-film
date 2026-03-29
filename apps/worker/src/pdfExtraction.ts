@@ -792,6 +792,50 @@ function detectProbableFormLayout(text: string): {
   };
 }
 
+function detectProbableScanAnnotationPage(
+  text: string,
+  meta: PageMeta,
+): {
+  detected: boolean;
+  confidence: "low" | "medium" | "high";
+  reasons: string[];
+} {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return { detected: false, confidence: "low", reasons: [] };
+  }
+
+  const qualityFlags = Array.isArray(meta.qualityFlags) ? (meta.qualityFlags as string[]) : [];
+  const lines = trimmed.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const veryShortLines = lines.filter((line) => line.length <= 14).length;
+  const shortPage = trimmed.length <= 260;
+  const ocrSelected = meta.ocrSelected === true;
+  const ocrUsed = meta.ocrUsed === true;
+  const lowQuality = typeof meta.qualityScore === "number" && meta.qualityScore <= OCR_QUALITY_THRESHOLD;
+
+  const reasons: string[] = [];
+  if (ocrSelected) reasons.push("ocr_selected");
+  if (ocrUsed && !ocrSelected) reasons.push("ocr_attempted");
+  if (shortPage) reasons.push("short_page_text");
+  if (veryShortLines >= 4) reasons.push("many_very_short_lines");
+  if (qualityFlags.includes("garbage_tail")) reasons.push("garbage_tail");
+  if (qualityFlags.includes("broken_arabic_spacing")) reasons.push("broken_spacing");
+  if (lowQuality) reasons.push("low_quality_score");
+
+  const detected =
+    (ocrSelected || ocrUsed) &&
+    ((shortPage && veryShortLines >= 3) || lowQuality || qualityFlags.includes("garbage_tail"));
+
+  const confidence: "low" | "medium" | "high" =
+    detected && ocrSelected && (lowQuality || reasons.length >= 4)
+      ? "high"
+      : detected
+        ? "medium"
+        : "low";
+
+  return { detected, confidence, reasons };
+}
+
 function normalizeHeaderFooterCandidate(value: string): string {
   return normalizePdfTextRun(value)
     .replace(/\d+/g, "#")
@@ -1534,6 +1578,14 @@ async function extractPdfPagesWithPoppler(
           probableFormLayout,
         };
       }
+      const probableScanAnnotation = detectProbableScanAnnotationPage(selectedText, selectedMeta);
+      if (probableScanAnnotation.detected) {
+        selectedMeta = appendMetaFlag(selectedMeta, "documentFlags", "probable_scan_annotation_page");
+        selectedMeta = {
+          ...selectedMeta,
+          probableScanAnnotation,
+        };
+      }
 
       if (strikeDetectionAvailable && shouldRunStrikeDetectionForPdfPage(selectedText, i + 1, mergedPages.length)) {
         try {
@@ -1621,6 +1673,7 @@ function summarizePdfDocumentCases(pages: ExtractedPdfPage[]): Record<string, un
   const probableTablePages: number[] = [];
   const multiColumnPages: number[] = [];
   const formLayoutPages: number[] = [];
+  const scanAnnotationPages: number[] = [];
   const repeatedHeaderFooterPages: number[] = [];
   const crossedOutPages: number[] = [];
   const ocrPages: number[] = [];
@@ -1634,6 +1687,7 @@ function summarizePdfDocumentCases(pages: ExtractedPdfPage[]): Record<string, un
     if (documentFlags.includes("probable_table_detected")) probableTablePages.push(index + 1);
     if (documentFlags.includes("probable_multi_column_layout")) multiColumnPages.push(index + 1);
     if (documentFlags.includes("probable_form_layout")) formLayoutPages.push(index + 1);
+    if (documentFlags.includes("probable_scan_annotation_page")) scanAnnotationPages.push(index + 1);
     if (documentFlags.includes("probable_repeated_header_footer")) repeatedHeaderFooterPages.push(index + 1);
     if (editorialFlags.includes("crossed_out_text_detected")) crossedOutPages.push(index + 1);
     if (meta.ocrSelected === true || meta.ocrUsed === true) ocrPages.push(index + 1);
@@ -1644,12 +1698,14 @@ function summarizePdfDocumentCases(pages: ExtractedPdfPage[]): Record<string, un
     probableTablePages,
     multiColumnPages,
     formLayoutPages,
+    scanAnnotationPages,
     repeatedHeaderFooterPages,
     crossedOutPages,
     ocrPages,
     probableTableCount: probableTablePages.length,
     multiColumnCount: multiColumnPages.length,
     formLayoutCount: formLayoutPages.length,
+    scanAnnotationCount: scanAnnotationPages.length,
     repeatedHeaderFooterCount: repeatedHeaderFooterPages.length,
     crossedOutCount: crossedOutPages.length,
     ocrPageCount: ocrPages.length,

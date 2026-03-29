@@ -148,6 +148,8 @@ type ImportDocumentCases = {
   multiColumnCount: number;
   formLayoutPages: number[];
   formLayoutCount: number;
+  scanAnnotationPages: number[];
+  scanAnnotationCount: number;
   repeatedHeaderFooterPages: number[];
   repeatedHeaderFooterCount: number;
   htmlTableDetected: boolean;
@@ -167,6 +169,9 @@ function parseImportDocumentCases(progress: Record<string, unknown> | undefined)
   const formLayoutPages = Array.isArray(value.formLayoutPages)
     ? value.formLayoutPages.filter((page): page is number => typeof page === 'number')
     : [];
+  const scanAnnotationPages = Array.isArray(value.scanAnnotationPages)
+    ? value.scanAnnotationPages.filter((page): page is number => typeof page === 'number')
+    : [];
   const repeatedHeaderFooterPages = Array.isArray(value.repeatedHeaderFooterPages)
     ? value.repeatedHeaderFooterPages.filter((page): page is number => typeof page === 'number')
     : [];
@@ -176,10 +181,12 @@ function parseImportDocumentCases(progress: Record<string, unknown> | undefined)
     typeof value.multiColumnCount === 'number' ? value.multiColumnCount : multiColumnPages.length;
   const formLayoutCount =
     typeof value.formLayoutCount === 'number' ? value.formLayoutCount : formLayoutPages.length;
+  const scanAnnotationCount =
+    typeof value.scanAnnotationCount === 'number' ? value.scanAnnotationCount : scanAnnotationPages.length;
   const repeatedHeaderFooterCount =
     typeof value.repeatedHeaderFooterCount === 'number' ? value.repeatedHeaderFooterCount : repeatedHeaderFooterPages.length;
   const htmlTableDetected = value.htmlTableDetected === true;
-  if (!flags.length && probableTablePages.length === 0 && multiColumnPages.length === 0 && formLayoutPages.length === 0 && repeatedHeaderFooterPages.length === 0 && !htmlTableDetected) return null;
+  if (!flags.length && probableTablePages.length === 0 && multiColumnPages.length === 0 && formLayoutPages.length === 0 && scanAnnotationPages.length === 0 && repeatedHeaderFooterPages.length === 0 && !htmlTableDetected) return null;
   return {
     flags,
     probableTablePages,
@@ -188,6 +195,8 @@ function parseImportDocumentCases(progress: Record<string, unknown> | undefined)
     multiColumnCount,
     formLayoutPages,
     formLayoutCount,
+    scanAnnotationPages,
+    scanAnnotationCount,
     repeatedHeaderFooterPages,
     repeatedHeaderFooterCount,
     htmlTableDetected,
@@ -195,7 +204,7 @@ function parseImportDocumentCases(progress: Record<string, unknown> | undefined)
 }
 
 function formatImportDocumentCaseSummary(cases: ImportDocumentCases, lang: 'ar' | 'en'): string {
-  if (cases.probableTableCount > 0 || cases.multiColumnCount > 0 || cases.formLayoutCount > 0) {
+  if (cases.probableTableCount > 0 || cases.multiColumnCount > 0 || cases.formLayoutCount > 0 || cases.scanAnnotationCount > 0) {
     const parts: string[] = [];
     if (cases.probableTableCount > 0) {
       parts.push(lang === 'ar' ? `${cases.probableTableCount} صفحة جدول/أعمدة` : `${cases.probableTableCount} table-layout page(s)`);
@@ -205,6 +214,9 @@ function formatImportDocumentCaseSummary(cases: ImportDocumentCases, lang: 'ar' 
     }
     if (cases.formLayoutCount > 0) {
       parts.push(lang === 'ar' ? `${cases.formLayoutCount} صفحة بنمط نموذج` : `${cases.formLayoutCount} form-like page(s)`);
+    }
+    if (cases.scanAnnotationCount > 0) {
+      parts.push(lang === 'ar' ? `${cases.scanAnnotationCount} صفحة ممسوحة/تعليقات بصرية` : `${cases.scanAnnotationCount} scan/annotation-heavy page(s)`);
     }
     return lang === 'ar'
       ? `رصد النظام ${parts.join('، ')}. قد تحتاج هذه الصفحات إلى مراجعة يدوية لأن الاستيراد يحافظ على النص أكثر من البنية الأصلية.`
@@ -254,6 +266,13 @@ const WORKSPACE_DOCUMENT_FLAG_MAP: Record<string, WorkspaceDocumentFlagInfo> = {
     labelEn: 'Form-like layout',
     descriptionAr: 'هذه الصفحة تشبه النماذج أو الحقول، وقد لا تبقى العلاقة بين العنوان والقيمة كما في الأصل.',
     descriptionEn: 'This page looks form-like, so label/value relationships may not survive exactly.',
+  },
+  probable_scan_annotation_page: {
+    flag: 'probable_scan_annotation_page',
+    labelAr: 'مسح/تعليق بصري',
+    labelEn: 'Scan/annotation heavy',
+    descriptionAr: 'هذه الصفحة تبدو ممسوحة ضوئياً أو مليئة بعناصر بصرية مثل الأختام أو الكتابات الجانبية، وقد تكون قراءتها الآلية أقل ثباتاً.',
+    descriptionEn: 'This page appears scan-heavy or visually annotated, so OCR and extracted text may be less stable.',
   },
   probable_repeated_header_footer: {
     flag: 'probable_repeated_header_footer',
@@ -3543,6 +3562,13 @@ export function ScriptWorkspace() {
                     {lang === 'ar'
                       ? `صفحات بنمط نموذج/حقول: ${uploadDocumentCases.formLayoutPages.join('، ')}`
                       : `Probable form-like pages: ${uploadDocumentCases.formLayoutPages.join(', ')}`}
+                  </p>
+                )}
+                {uploadDocumentCases.scanAnnotationPages.length > 0 && (
+                  <p className="text-xs text-text-muted">
+                    {lang === 'ar'
+                      ? `صفحات ممسوحة/تعليقات بصرية: ${uploadDocumentCases.scanAnnotationPages.join('، ')}`
+                      : `Probable scan/annotation-heavy pages: ${uploadDocumentCases.scanAnnotationPages.join(', ')}`}
                   </p>
                 )}
                 {uploadDocumentCases.repeatedHeaderFooterPages.length > 0 && (

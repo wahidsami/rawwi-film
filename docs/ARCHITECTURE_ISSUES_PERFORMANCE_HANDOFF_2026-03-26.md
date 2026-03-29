@@ -39,6 +39,7 @@ Current implemented awareness:
 - probable multi-column layout warnings during import
 - probable form-like / field-heavy page warnings during import
 - probable repeated header/footer detection
+- probable scan-heavy / visually annotated page warnings
 - conservative normalization of obvious PDF table rows into delimited text for better AI readability
 - struck-through text detection metadata on PDF pages
 - OCR usage metadata on PDF pages
