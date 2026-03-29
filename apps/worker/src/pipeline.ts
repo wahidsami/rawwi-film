@@ -860,40 +860,71 @@ export async function processChunkJudge(
   } else if (config.ANALYSIS_ENGINE === "hybrid") {
     setChunkPhase(chunk.id, "hybrid");
     const hybridStartedAt = Date.now();
-    const hybrid = await runHybridContextPipeline({
-      findings: baselineFindings.map((f) => ({
-        ...f,
-        severity: f.severity ?? "medium",
-        primary_article_id: f.primary_article_id ?? undefined,
-        canonical_finding_id: f.canonical_finding_id ?? undefined,
-        pillar_id: f.pillar_id ?? undefined,
-      })),
-      fullText: normalizedText,
-      deepAuditorEnabled,
-    });
-    hybridMetrics = hybrid.metrics;
-    if (config.ANALYSIS_HYBRID_MODE === "enforce") {
-      persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
-    } else {
-      // Shadow: persist hybrid so the report shows auditor rationale and primary article; eval log still compares baseline vs hybrid.
-      persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
-    }
-    if (config.ANALYSIS_EVAL_LOG) {
-      const evalPayload = {
-        job_id: jobId,
-        chunk_id: chunk.id,
-        run_key: runKey,
-        engine: config.ANALYSIS_ENGINE,
-        mode: config.ANALYSIS_HYBRID_MODE,
-        baseline_count: baselineFindings.length,
-        hybrid_count: hybrid.findings.length,
-        baseline_contradictions: baselineMetrics.contradictionGroups,
-        baseline_severe_disagreements: baselineMetrics.severeDisagreementGroups,
-        hybrid_context_ok: hybrid.metrics.contextOkCount,
-        hybrid_needs_review: hybrid.metrics.needsReviewCount,
-        hybrid_violation: hybrid.metrics.violationCount,
+    let hybridTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
+    try {
+      const hybrid = await Promise.race([
+        runHybridContextPipeline({
+          findings: baselineFindings.map((f) => ({
+            ...f,
+            severity: f.severity ?? "medium",
+            primary_article_id: f.primary_article_id ?? undefined,
+            canonical_finding_id: f.canonical_finding_id ?? undefined,
+            pillar_id: f.pillar_id ?? undefined,
+          })),
+          fullText: normalizedText,
+          deepAuditorEnabled,
+        }),
+        new Promise<never>((_, reject) => {
+          hybridTimeoutHandle = setTimeout(() => {
+            const error = new Error("Hybrid context pipeline hard timeout");
+            error.name = "HybridTimeoutError";
+            reject(error);
+          }, config.HYBRID_HARD_TIMEOUT_MS);
+        }),
+      ]);
+      if (hybridTimeoutHandle) clearTimeout(hybridTimeoutHandle);
+      hybridMetrics = hybrid.metrics;
+      if (config.ANALYSIS_HYBRID_MODE === "enforce") {
+        persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
+      } else {
+        // Shadow: persist hybrid so the report shows auditor rationale and primary article; eval log still compares baseline vs hybrid.
+        persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
+      }
+      if (config.ANALYSIS_EVAL_LOG) {
+        const evalPayload = {
+          job_id: jobId,
+          chunk_id: chunk.id,
+          run_key: runKey,
+          engine: config.ANALYSIS_ENGINE,
+          mode: config.ANALYSIS_HYBRID_MODE,
+          baseline_count: baselineFindings.length,
+          hybrid_count: hybrid.findings.length,
+          baseline_contradictions: baselineMetrics.contradictionGroups,
+          baseline_severe_disagreements: baselineMetrics.severeDisagreementGroups,
+          hybrid_context_ok: hybrid.metrics.contextOkCount,
+          hybrid_needs_review: hybrid.metrics.needsReviewCount,
+          hybrid_violation: hybrid.metrics.violationCount,
+        };
+        await supabase.from("analysis_engine_evaluations").insert(evalPayload);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.warn("Hybrid context pipeline failed or timed out; falling back to baseline findings", {
+        jobId,
+        chunkId: chunk.id,
+        error: message,
+        baselineFindings: baselineFindings.length,
+        hybridDurationMs: Date.now() - hybridStartedAt,
+        hybridHardTimeoutMs: config.HYBRID_HARD_TIMEOUT_MS,
+      });
+      hybridMetrics = {
+        skipped_reason: error instanceof Error && error.name === "HybridTimeoutError" ? "hard_timeout" : "hybrid_failed",
+        error: message,
+        fallback_to_baseline: true,
       };
-      await supabase.from("analysis_engine_evaluations").insert(evalPayload);
+      persistedFindings = baselineFindings;
+    } finally {
+      if (hybridTimeoutHandle) clearTimeout(hybridTimeoutHandle);
     }
   }
   logger.info("Analysis contradiction metrics", {

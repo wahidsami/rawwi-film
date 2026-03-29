@@ -15,6 +15,10 @@ export const config = {
     parseInt(process.env.PASS_HARD_TIMEOUT_MS ?? "180000", 10) || 180000,
     parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10) || 120000
   ),
+  HYBRID_HARD_TIMEOUT_MS: Math.max(
+    parseInt(process.env.HYBRID_HARD_TIMEOUT_MS ?? "240000", 10) || 240000,
+    parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10) || 120000
+  ),
   AI_OVERLOAD_MAX_RETRIES: Math.max(
     1,
     parseInt(process.env.AI_OVERLOAD_MAX_RETRIES ?? "3", 10) || 3
