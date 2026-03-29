@@ -262,6 +262,31 @@ function toCamel(job: JobRow) {
   };
 }
 
+async function clearPendingChunksForPartialStop(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  jobId: string,
+): Promise<void> {
+  const message = "Cleared after partial report stop request";
+  const { error } = await supabase
+    .from("analysis_chunks")
+    .update({
+      status: "failed",
+      processing_phase: null,
+      judging_started_at: null,
+      passes_completed: 0,
+      last_error: message,
+    })
+    .eq("job_id", jobId)
+    .eq("status", "pending");
+
+  if (error) {
+    console.warn("[tasks] failed to clear pending chunks for partial stop:", {
+      jobId,
+      error: error.message,
+    });
+  }
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? undefined;
   const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
@@ -506,6 +531,10 @@ Deno.serve(async (req: Request) => {
 
       if (updateErr || !updated) {
         return json({ error: updateErr?.message ?? "Failed to update job" }, 500);
+      }
+
+      if (action === "stop") {
+        await clearPendingChunksForPartialStop(supabase, jobId);
       }
 
       return json(toCamel(updated as JobRow));
