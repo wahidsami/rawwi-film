@@ -10,6 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
+import { DocumentImportModal } from '@/components/import/DocumentImportModal';
 import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getPolicyArticles } from '@/data/policyMap';
@@ -1075,8 +1076,6 @@ export function ScriptWorkspace() {
     [lang]
   );
   const isImportModalOpen = uploadStatus !== 'idle';
-  const uploadStatusTone =
-    uploadStatus === 'failed' ? 'error' : uploadStatus === 'done' ? 'success' : uploadStatus === 'aborted' ? 'outline' : 'info';
 
   useEffect(() => {
     if (!isImportModalOpen || uploadStartedAt == null) return;
@@ -3421,26 +3420,24 @@ export function ScriptWorkspace() {
     handlePinFindingInScript(f, undefined, { silent: true });
   };
 
-  const importStatusBadge =
+  const importStatusDescription =
+    uploadStatus === 'uploading'
+      ? (lang === 'ar' ? 'يتم رفع الملف إلى التخزين وربطه بالنص الحالي.' : 'Uploading the document and linking it to this script.')
+      : uploadStatus === 'extracting'
+        ? (lang === 'ar' ? 'يتم الآن استخراج النص في الخلفية. قد تستغرق ملفات PDF الكبيرة وقتاً أطول.' : 'The text is currently being extracted in the background. Large PDFs can take longer.')
+        : uploadStatus === 'aborted'
+          ? (lang === 'ar' ? 'تم إيقاف هذه العملية قبل اكتمالها. لن يتم تحديث النص الحالي من هذه الجلسة.' : 'This import was stopped before completion. The current text will not be updated from this session.')
+          : uploadStatus === 'done'
+            ? (lang === 'ar' ? 'انتهى الاستيراد بنجاح وتم تحديث النص المعروض.' : 'Import completed successfully and the displayed text was updated.')
+            : (lang === 'ar' ? 'توقف الاستيراد قبل اكتماله.' : 'The import stopped before completion.');
+  const importFooterHint =
     uploadStatus === 'failed'
-      ? lang === 'ar'
-        ? 'فشل'
-        : 'Failed'
+      ? (lang === 'ar' ? 'يمكنك إغلاق هذه النافذة ثم إعادة محاولة الاستيراد.' : 'You can close this window and try the import again.')
       : uploadStatus === 'aborted'
-        ? lang === 'ar'
-          ? 'متوقف'
-          : 'Stopped'
-      : uploadStatus === 'done'
-        ? lang === 'ar'
-          ? 'مكتمل'
-          : 'Done'
-        : uploadStatus === 'extracting'
-          ? lang === 'ar'
-            ? 'استخراج'
-            : 'Extracting'
-          : lang === 'ar'
-            ? 'رفع'
-            : 'Uploading';
+        ? (lang === 'ar' ? 'تم إيقاف الاستيراد يدوياً. يمكنك إغلاق النافذة أو بدء استيراد جديد.' : 'The import was stopped manually. You can close this window or start a new import.')
+        : uploadStatus === 'done'
+          ? (lang === 'ar' ? 'سيتم إغلاق هذه النافذة تلقائياً بعد لحظة قصيرة.' : 'This window will close automatically shortly.')
+          : (lang === 'ar' ? 'سيبقى هذا المؤشر مفتوحاً حتى نعرف أين وصلت عملية الاستيراد.' : 'This panel stays open so you can see where the import currently stands.');
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] -m-6 md:-m-8 bg-background overflow-hidden" onClick={handleClickOutside}>
@@ -3454,248 +3451,30 @@ export function ScriptWorkspace() {
           z-index: 50;
         }
       `}</style>
-      <Modal
-        isOpen={isImportModalOpen}
-        onClose={() => {
-          if (isUploading) {
-            stopImportProcess(true);
-            return;
-          }
-          resetImportState();
-        }}
-        title={lang === 'ar' ? 'استيراد المستند' : 'Document Import'}
-        className="max-w-2xl"
-      >
-        <div className="space-y-5" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-          <div className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-background px-4 py-4">
-            <div className="min-w-0 space-y-1">
-              <p className="text-sm font-semibold text-text-main">{uploadPhaseLabel || (lang === 'ar' ? 'جاري الاستيراد' : 'Import in progress')}</p>
-              <p className="text-sm text-text-muted leading-6">
-                {uploadStatusMessage || (lang === 'ar' ? 'يجري تجهيز الملف وعرض حالته هنا.' : 'The file is being processed and its status will appear here.')}
-              </p>
-            </div>
-            <Badge
-              variant={uploadStatusTone === 'error' ? 'error' : uploadStatusTone === 'success' ? 'success' : 'outline'}
-              className="shrink-0"
-            >
-              {importStatusBadge}
-            </Badge>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="rounded-2xl border border-border bg-background px-4 py-3">
-              <p className="text-xs text-text-muted">{lang === 'ar' ? 'الحالة' : 'Status'}</p>
-              <p className="mt-1 text-base font-semibold text-text-main">{uploadPhaseLabel || '—'}</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-background px-4 py-3">
-              <p className="text-xs text-text-muted">{lang === 'ar' ? 'المدة' : 'Elapsed'}</p>
-              <p className="mt-1 text-base font-semibold text-text-main">{formatImportElapsed(uploadElapsedMs, lang)}</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-background px-4 py-3">
-              <p className="text-xs text-text-muted">{lang === 'ar' ? 'نوع العملية' : 'Operation'}</p>
-              <p className="mt-1 text-base font-semibold text-text-main">
-                {uploadStatus === 'extracting'
-                  ? (lang === 'ar' ? 'استخراج ومعالجة' : 'Extraction')
-                  : uploadStatus === 'aborted'
-                    ? (lang === 'ar' ? 'تم الإيقاف' : 'Stopped')
-                  : uploadStatus === 'done'
-                    ? (lang === 'ar' ? 'اكتمل' : 'Completed')
-                    : uploadStatus === 'failed'
-                      ? (lang === 'ar' ? 'توقف' : 'Stopped')
-                      : (lang === 'ar' ? 'رفع وتجهيز' : 'Upload')}
-              </p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-surface px-4 py-4 space-y-3">
-            <div className="flex items-center gap-3">
-              {uploadStatus === 'failed' ? (
-                <XCircle className="w-5 h-5 text-error shrink-0" />
-              ) : uploadStatus === 'aborted' ? (
-                <Pause className="w-5 h-5 text-warning shrink-0" />
-              ) : uploadStatus === 'done' ? (
-                <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
-              ) : (
-                <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
-              )}
-              <p className="text-sm text-text-main">
-                {uploadStatus === 'uploading'
-                  ? (lang === 'ar' ? 'يتم رفع الملف إلى التخزين وربطه بالنص الحالي.' : 'Uploading the document and linking it to this script.')
-                  : uploadStatus === 'extracting'
-                    ? (lang === 'ar' ? 'يتم الآن استخراج النص في الخلفية. قد تستغرق ملفات PDF الكبيرة وقتاً أطول.' : 'The text is currently being extracted in the background. Large PDFs can take longer.')
-                    : uploadStatus === 'aborted'
-                      ? (lang === 'ar' ? 'تم إيقاف هذه العملية قبل اكتمالها. لن يتم تحديث النص الحالي من هذه الجلسة.' : 'This import was stopped before completion. The current text will not be updated from this session.')
-                    : uploadStatus === 'done'
-                      ? (lang === 'ar' ? 'انتهى الاستيراد بنجاح وتم تحديث النص المعروض.' : 'Import completed successfully and the displayed text was updated.')
-                      : (lang === 'ar' ? 'توقف الاستيراد قبل اكتماله.' : 'The import stopped before completion.')}
-              </p>
-            </div>
-            {uploadStatus === 'extracting' && (
-              <div className="h-2 rounded-full bg-border overflow-hidden">
-                <div className="h-full w-2/3 bg-primary animate-pulse rounded-full" />
-              </div>
-            )}
-            {uploadError && (
-              <div className="rounded-xl border border-error/25 bg-error/5 px-4 py-3">
-                <p className="text-xs font-semibold text-error mb-1">{lang === 'ar' ? 'رسالة الخطأ' : 'Error message'}</p>
-                <p className="text-sm text-text-main whitespace-pre-wrap break-words">{uploadError}</p>
-              </div>
-            )}
-            {uploadDuplicateInfo?.exactMatch && uploadDuplicateInfo.matches.length > 0 && (
-              <div className="rounded-xl border border-warning/25 bg-warning/5 px-4 py-3 space-y-3">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-warning">
-                    {lang === 'ar' ? 'تم العثور على نسخة مطابقة بالمحتوى نفسه' : 'Exact content duplicate found'}
-                  </p>
-                  <p className="text-sm text-text-main leading-6">
-                    {lang === 'ar'
-                      ? 'هذا النص موجود مسبقاً داخل النظام، حتى لو كان اسم الملف مختلفاً. راجع السجلات التالية قبل متابعة العمل عليه كنص جديد.'
-                      : 'This exact script content already exists in the system, even if the file name is different. Review these records before treating it as a new script.'}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  {uploadDuplicateInfo.matches.slice(0, 3).map((match) => (
-                    <div key={match.versionId} className="rounded-xl border border-border bg-background px-3 py-3 space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-text-main">{match.scriptTitle}</p>
-                        <Badge variant="outline" className="text-[10px]">
-                          {match.sameScript
-                            ? (lang === 'ar' ? 'داخل نفس النص' : 'Same script')
-                            : (lang === 'ar' ? 'نص آخر' : 'Another script')}
-                        </Badge>
-                        {match.analyzedBefore && (
-                          <Badge variant="outline" className="text-[10px]">
-                            {lang === 'ar' ? 'محلل سابقاً' : 'Analyzed before'}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-text-muted">
-                        {[
-                          match.companyName,
-                          match.sourceFileName,
-                          formatImportDuplicateDate(match.createdAt, lang),
-                        ].filter(Boolean).join(' • ')}
-                      </p>
-                      {match.latestAnalysisAt && (
-                        <p className="text-xs text-text-muted">
-                          {lang === 'ar'
-                            ? `آخر تحليل: ${formatImportDuplicateDate(match.latestAnalysisAt, lang)}${match.latestReviewerName ? ` • ${match.latestReviewerName}` : ''}`
-                            : `Latest analysis: ${formatImportDuplicateDate(match.latestAnalysisAt, lang)}${match.latestReviewerName ? ` • ${match.latestReviewerName}` : ''}`}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                {uploadDuplicateInfo.matches.length > 3 && (
-                  <p className="text-xs text-text-muted">
-                    {lang === 'ar'
-                      ? `وهناك أيضاً ${uploadDuplicateInfo.matches.length - 3} سجل/سجلات إضافية مطابقة بنفس المحتوى.`
-                      : `There are also ${uploadDuplicateInfo.matches.length - 3} more matching record(s).`}
-                  </p>
-                )}
-              </div>
-            )}
-            {uploadDocumentCases && (
-              <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 space-y-3">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-primary">
-                    {lang === 'ar' ? 'تنبيهات بنية المستند' : 'Document structure warnings'}
-                  </p>
-                  <p className="text-sm text-text-main leading-6">
-                    {formatImportDocumentCaseSummary(uploadDocumentCases, lang)}
-                  </p>
-                </div>
-                {uploadDocumentCases.probableTablePages.length > 0 && (
-                  <p className="text-xs text-text-muted">
-                    {lang === 'ar'
-                      ? `صفحات محتملة الجداول: ${uploadDocumentCases.probableTablePages.join('، ')}`
-                      : `Probable table pages: ${uploadDocumentCases.probableTablePages.join(', ')}`}
-                  </p>
-                )}
-                {uploadDocumentCases.multiColumnPages.length > 0 && (
-                  <p className="text-xs text-text-muted">
-                    {lang === 'ar'
-                      ? `صفحات متعددة الأعمدة: ${uploadDocumentCases.multiColumnPages.join('، ')}`
-                      : `Probable multi-column pages: ${uploadDocumentCases.multiColumnPages.join(', ')}`}
-                  </p>
-                )}
-                {uploadDocumentCases.formLayoutPages.length > 0 && (
-                  <p className="text-xs text-text-muted">
-                    {lang === 'ar'
-                      ? `صفحات بنمط نموذج/حقول: ${uploadDocumentCases.formLayoutPages.join('، ')}`
-                      : `Probable form-like pages: ${uploadDocumentCases.formLayoutPages.join(', ')}`}
-                  </p>
-                )}
-                {uploadDocumentCases.scanAnnotationPages.length > 0 && (
-                  <p className="text-xs text-text-muted">
-                    {lang === 'ar'
-                      ? `صفحات ممسوحة/تعليقات بصرية: ${uploadDocumentCases.scanAnnotationPages.join('، ')}`
-                      : `Probable scan/annotation-heavy pages: ${uploadDocumentCases.scanAnnotationPages.join(', ')}`}
-                  </p>
-                )}
-                {uploadDocumentCases.repeatedHeaderFooterPages.length > 0 && (
-                  <p className="text-xs text-text-muted">
-                    {lang === 'ar'
-                      ? formatPageListSummary(uploadDocumentCases.repeatedHeaderFooterPages, uploadDocumentCases.totalPages, lang, {
-                          almostAllAr: 'تكررت الترويسات/التذييلات في معظم الصفحات',
-                          almostAllEn: 'Repeated headers/footers on most pages',
-                          pagesAr: 'صفحات تحتوي على ترويسات/تذييلات متكررة',
-                          pagesEn: 'Pages with repeated headers/footers',
-                        })
-                      : formatPageListSummary(uploadDocumentCases.repeatedHeaderFooterPages, uploadDocumentCases.totalPages, lang, {
-                          almostAllAr: 'تكررت الترويسات/التذييلات في معظم الصفحات',
-                          almostAllEn: 'Repeated headers/footers on most pages',
-                          pagesAr: 'صفحات تحتوي على ترويسات/تذييلات متكررة',
-                          pagesEn: 'Pages with repeated headers/footers',
-                        })}
-                  </p>
-                )}
-              </div>
-            )}
-            <div className="rounded-xl border border-info/20 bg-info/5 px-4 py-3 space-y-1">
-              <p className="text-xs font-semibold text-info">
-                {lang === 'ar' ? 'تنبيه تنسيقي' : 'Compatibility note'}
-              </p>
-              <p className="text-sm text-text-main leading-6">
-                {lang === 'ar'
-                  ? 'لأفضل توافقية وجودة تحليل، يُوصى باستخدام ملفات Word بصيغة DOC / DOCX متى ما كانت متاحة، لأنها تعطي نتائج أكثر استقرارًا من بعض ملفات PDF ذات البنية البصرية المعقدة.'
-                  : 'For best compatibility and analysis quality, Word documents in DOC / DOCX format are recommended when available, because they are often more stable than visually complex PDFs.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-text-muted">
-              {uploadStatus === 'failed'
-                ? (lang === 'ar' ? 'يمكنك إغلاق هذه النافذة ثم إعادة محاولة الاستيراد.' : 'You can close this window and try the import again.')
-                : uploadStatus === 'aborted'
-                  ? (lang === 'ar' ? 'تم إيقاف الاستيراد يدوياً. يمكنك إغلاق النافذة أو بدء استيراد جديد.' : 'The import was stopped manually. You can close this window or start a new import.')
-                : uploadStatus === 'done'
-                  ? (lang === 'ar' ? 'سيتم إغلاق هذه النافذة تلقائياً بعد لحظة قصيرة.' : 'This window will close automatically shortly.')
-                  : (lang === 'ar' ? 'سيبقى هذا المؤشر مفتوحاً حتى نعرف أين وصلت عملية الاستيراد.' : 'This panel stays open so you can see where the import currently stands.')}
-            </p>
-            <div className="flex items-center gap-2">
-              {isUploading && (
-                <Button variant="danger" onClick={() => stopImportProcess(false)}>
-                  {lang === 'ar' ? 'إيقاف' : 'Stop'}
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  if (isUploading) {
-                    stopImportProcess(true);
-                    return;
-                  }
-                  resetImportState();
-                }}
-              >
-                {lang === 'ar' ? 'إغلاق' : 'Close'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Modal>
+      {isImportModalOpen && (
+        <DocumentImportModal
+          isOpen={isImportModalOpen}
+          lang={lang}
+          status={uploadStatus === 'idle' ? 'uploading' : uploadStatus}
+          phaseLabel={uploadPhaseLabel}
+          statusMessage={uploadStatusMessage}
+          elapsedMs={uploadElapsedMs}
+          error={uploadError}
+          duplicateInfo={uploadDuplicateInfo}
+          documentCases={uploadDocumentCases}
+          isBusy={isUploading}
+          onStop={() => stopImportProcess(false)}
+          onClose={() => {
+            if (isUploading) {
+              stopImportProcess(true);
+              return;
+            }
+            resetImportState();
+          }}
+          statusDescription={importStatusDescription}
+          footerHint={importFooterHint}
+        />
+      )}
       {/* Workspace Header */}
       <div className="h-16 flex-shrink-0 bg-surface border-b border-border flex items-center justify-between px-6 z-10 shadow-sm">
         <div className="flex items-center gap-4">
