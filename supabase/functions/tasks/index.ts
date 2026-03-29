@@ -490,7 +490,7 @@ Deno.serve(async (req: Request) => {
   const isControlRequest = (body: any) => {
     const jobId = typeof body?.jobId === "string" ? body.jobId.trim() : "";
     const action = typeof body?.action === "string" ? body.action.trim().toLowerCase() : "";
-    return Boolean(jobId) && (action === "pause" || action === "resume" || action === "stop");
+    return Boolean(jobId) && (action === "pause" || action === "resume" || action === "stop" || action === "cancel");
   };
 
   if (req.method === "PATCH" || req.method === "POST") {
