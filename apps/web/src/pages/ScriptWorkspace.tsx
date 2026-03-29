@@ -10,7 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
-import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Search, Pause, Play, Square } from 'lucide-react';
+import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getPolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
@@ -4220,8 +4220,8 @@ export function ScriptWorkspace() {
                 <span className="text-xs font-medium text-text-muted">
                   {selectedReportForHighlights
                     ? lang === 'ar'
-                      ? 'اضغط على أي ملاحظة ليجري تحديدها وتمييزها تلقائياً داخل النص. ويمكنك استخدام «إعادة التحديد في النص» إذا احتجت إلى إعادة المحاولة.'
-                      : 'Click any finding to automatically locate and highlight it in the script. Use “Retry highlight” if you need to run the match again.'
+                      ? 'اضغط على أي ملاحظة ليجري تحديدها وتمييزها تلقائياً داخل النص.'
+                      : 'Click any finding to automatically locate and highlight it in the script.'
                     : lang === 'ar'
                       ? 'اختر تقريراً لعرض الملاحظات.'
                       : 'Select a report to view findings.'}
@@ -4494,16 +4494,11 @@ export function ScriptWorkspace() {
                           "{f.evidenceSnippet}"
                         </p>
                       )}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        className="h-8 text-[11px] w-full mt-2 gap-1.5 font-medium"
-                        onClick={(e) => handlePinFindingInScript(f, e)}
-                      >
-                        <Search className="w-3.5 h-3.5 shrink-0" />
-                        {lang === 'ar' ? 'إعادة التحديد في النص' : 'Retry highlight'}
-                      </Button>
+                      <p className="mt-2 text-[11px] text-text-muted" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                        {lang === 'ar'
+                          ? 'اضغط على البطاقة للانتقال إلى موضعها وتمييزها داخل النص.'
+                          : 'Click the card to jump to and highlight its location in the script.'}
+                      </p>
                       {f.source !== 'manual' && (
                         <div className="flex flex-wrap gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
                           <Button
