@@ -15,8 +15,19 @@ export function formatImportElapsed(ms: number, lang: 'ar' | 'en'): string {
   return parts.join(' ');
 }
 
-export function formatImportDuplicateDate(value: string, lang: 'ar' | 'en'): string {
-  return `${formatDate(value, lang)} • ${formatTime(value, lang)}`;
+function safeImportDuplicateDate(value: unknown): Date | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value !== 'string' || value.trim() === '') return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+export function formatImportDuplicateDate(value: string | null | undefined, lang: 'ar' | 'en'): string {
+  const parsed = safeImportDuplicateDate(value);
+  if (!parsed) return '—';
+  return `${formatDate(parsed, { lang })} • ${formatTime(parsed, { lang })}`;
 }
 
 export function formatExtractionProgressMessage(

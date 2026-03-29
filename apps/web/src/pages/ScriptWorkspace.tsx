@@ -73,8 +73,11 @@ function formatRelativeDuration(ms: number, lang: 'ar' | 'en'): string {
   return formatAnalysisElapsed(ms, lang);
 }
 
-function formatImportDuplicateDate(value: string, lang: 'ar' | 'en'): string {
-  return `${formatDate(value, lang)} • ${formatTime(value, lang)}`;
+function formatImportDuplicateDate(value: string | null | undefined, lang: 'ar' | 'en'): string {
+  if (!value || !value.trim()) return '—';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '—';
+  return `${formatDate(parsed, { lang })} • ${formatTime(parsed, { lang })}`;
 }
 
 function formatExtractionProgressMessage(
