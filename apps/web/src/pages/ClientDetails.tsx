@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
 import { useDataStore, Script, Task, User as UserModel } from '@/store/dataStore';
@@ -56,8 +56,14 @@ export function ClientDetails() {
   const { companies, scripts, addScript, addTask } = useDataStore();
   const { user, hasPermission } = useAuthStore();
 
-  const company = companies.find(c => c.companyId === id);
-  const companyScripts = scripts.filter(s => s.companyId === id);
+  const company = useMemo(
+    () => companies.find(c => c.companyId === id),
+    [companies, id]
+  );
+  const companyScripts = useMemo(
+    () => scripts.filter(s => s.companyId === id),
+    [scripts, id]
+  );
 
   const [isEditScriptOpen, setIsEditScriptOpen] = useState<Script | null>(null);
   const [editScriptForm, setEditScriptForm] = useState<Partial<Script>>({});
