@@ -36,6 +36,37 @@ const CHUNK_TIMEOUT_RETRY_MARKER = "__chunk_timeout_retry:";
 
 let lastLexiconRefreshJobId: string | null = null;
 
+function getRuntimeConfigLogPayload() {
+  return {
+    routerModel: config.OPENAI_ROUTER_MODEL,
+    judgeModel: config.OPENAI_JUDGE_MODEL,
+    auditorModel: config.OPENAI_AUDITOR_MODEL,
+    rationaleModel: config.OPENAI_RATIONALE_MODEL,
+    judgeTimeoutMs: config.JUDGE_TIMEOUT_MS,
+    passHardTimeoutMs: config.PASS_HARD_TIMEOUT_MS,
+    hybridHardTimeoutMs: config.HYBRID_HARD_TIMEOUT_MS,
+    chunkHardTimeoutMs: config.CHUNK_HARD_TIMEOUT_MS,
+    chunkHardTimeoutMaxRetries: config.CHUNK_HARD_TIMEOUT_MAX_RETRIES,
+    aiOverloadMaxRetries: config.AI_OVERLOAD_MAX_RETRIES,
+    pollIntervalMs: config.POLL_INTERVAL_MS,
+    staleJudgingMs: config.STALE_JUDGING_MS,
+    chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
+    highRecall: config.HIGH_RECALL,
+    deterministicMode: config.DETERMINISTIC_MODE,
+    analysisEngine: config.ANALYSIS_ENGINE,
+    analysisHybridMode: config.ANALYSIS_HYBRID_MODE,
+    analysisEvalLog: config.ANALYSIS_EVAL_LOG,
+    analysisDeepAuditor: config.ANALYSIS_DEEP_AUDITOR,
+    largeJobChunkThreshold: config.ANALYSIS_LARGE_JOB_CHUNK_THRESHOLD,
+    largeJobTextLengthThreshold: config.ANALYSIS_LARGE_JOB_TEXT_LENGTH_THRESHOLD,
+    passGatingEnabled: config.ANALYSIS_PASS_GATING_ENABLED,
+    skipScriptSummaryOnLargeJobs: config.ANALYSIS_SKIP_SCRIPT_SUMMARY_ON_LARGE_JOBS,
+    skipRevisitOnLargeJobs: config.ANALYSIS_SKIP_REVISIT_ON_LARGE_JOBS,
+    skipDeepAuditorOnLargeJobs: config.ANALYSIS_SKIP_DEEP_AUDITOR_ON_LARGE_JOBS,
+    extractStripRepeatedHeaders: config.EXTRACT_STRIP_REPEATED_HEADERS,
+  };
+}
+
 function isAiOverloadIssue(errorMessage: string): boolean {
   return /429|rate limit|tokens per min|requests per min|insufficient[_\s-]?quota|quota|credit|billing|timeout|timed out|etimedout|fetch failed|socket hang up|connection error|overloaded|service unavailable|temporarily unavailable|server overloaded|api key|unauthorized|authentication/i.test(
     errorMessage,
@@ -261,6 +292,11 @@ async function processOneJob(): Promise<boolean> {
   const claimed = await claimChunkBatch(job.id, desiredConcurrency);
   if (claimed.length === 0) return false;
 
+  logger.info("Worker runtime config for claimed job", {
+    jobId: job.id,
+    mode: "poll",
+    ...getRuntimeConfigLogPayload(),
+  });
   logger.info("Claimed chunk batch", {
     jobId: job.id,
     desiredConcurrency,
@@ -336,6 +372,10 @@ async function runOnce(jobId: string | undefined): Promise<void> {
 
   await initializeLexiconCache(supabase);
   const staleSweep = startStaleJudgingSweep();
+  logger.info("Worker runtime config loaded", {
+    mode: jobId ? "once" : "single-run",
+    ...getRuntimeConfigLogPayload(),
+  });
 
   try {
     if (jobId) {
@@ -364,6 +404,11 @@ async function runOnce(jobId: string | undefined): Promise<void> {
           }
           break;
         }
+        logger.info("Worker runtime config for claimed job", {
+          jobId,
+          mode: "once",
+          ...getRuntimeConfigLogPayload(),
+        });
         const results = await Promise.all(
           claimed.map((chunk) =>
             processClaimedChunk(job as { id: string; script_id: string; version_id: string }, chunk, normalizedText)
@@ -408,6 +453,10 @@ async function runDev(): Promise<never> {
   logger.info("Worker dev loop started", {
     pollIntervalMs: config.POLL_INTERVAL_MS,
     chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
+  });
+  logger.info("Worker runtime config loaded", {
+    mode: "dev",
+    ...getRuntimeConfigLogPayload(),
   });
   const staleSweep = startStaleJudgingSweep();
 
