@@ -676,6 +676,130 @@ function detectProbableTableStructure(text: string): {
   };
 }
 
+function detectProbableMultiColumnLayout(text: string): {
+  detected: boolean;
+  confidence: "low" | "medium" | "high";
+  rowCount: number;
+  reasons: string[];
+} {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => normalizePdfTextRun(line).trim())
+    .filter((line) => line.length >= 10 && line.length <= 260);
+
+  if (lines.length < 4) {
+    return { detected: false, confidence: "low", rowCount: 0, reasons: [] };
+  }
+
+  let wideGapRows = 0;
+  let alphaHeavyRows = 0;
+  for (const line of lines) {
+    const parts = line.split(/\s{3,}/).map((part) => part.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      wideGapRows += 1;
+      if (parts.every((part) => !/\d/.test(part) && hasArabicPdfText(part))) alphaHeavyRows += 1;
+    }
+  }
+
+  const reasons: string[] = [];
+  if (wideGapRows >= 4) reasons.push("wide_gap_parallel_rows");
+  if (alphaHeavyRows >= 3) reasons.push("text_columns_without_numeric_cells");
+  const detected = wideGapRows >= 4 && alphaHeavyRows >= 2;
+  const confidence: "low" | "medium" | "high" =
+    detected && alphaHeavyRows >= 4 ? "high" : detected ? "medium" : "low";
+  return {
+    detected,
+    confidence,
+    rowCount: detected ? wideGapRows : 0,
+    reasons,
+  };
+}
+
+function detectProbableFormLayout(text: string): {
+  detected: boolean;
+  confidence: "low" | "medium" | "high";
+  fieldLineCount: number;
+  reasons: string[];
+} {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => normalizePdfTextRun(line).trim())
+    .filter((line) => line.length >= 3 && line.length <= 180);
+
+  if (lines.length < 3) {
+    return { detected: false, confidence: "low", fieldLineCount: 0, reasons: [] };
+  }
+
+  let colonRows = 0;
+  let checkboxRows = 0;
+  let dottedRows = 0;
+  for (const line of lines) {
+    if (/[:：]\s*\S/u.test(line)) colonRows += 1;
+    if (/[☐☑☒■□✓]\s*\S/u.test(line)) checkboxRows += 1;
+    if (/\.{3,}|_{3,}/u.test(line)) dottedRows += 1;
+  }
+
+  const reasons: string[] = [];
+  if (colonRows >= 3) reasons.push("label_value_rows");
+  if (checkboxRows >= 2) reasons.push("checkbox_rows");
+  if (dottedRows >= 2) reasons.push("fill_in_blank_rows");
+  const detected = colonRows >= 3 || checkboxRows >= 2 || (colonRows >= 2 && dottedRows >= 2);
+  const confidence: "low" | "medium" | "high" =
+    detected && (checkboxRows >= 3 || (colonRows >= 4 && dottedRows >= 2))
+      ? "high"
+      : detected
+        ? "medium"
+        : "low";
+  return {
+    detected,
+    confidence,
+    fieldLineCount: Math.max(colonRows, checkboxRows, dottedRows),
+    reasons,
+  };
+}
+
+function normalizeHeaderFooterCandidate(value: string): string {
+  return normalizePdfTextRun(value)
+    .replace(/\d+/g, "#")
+    .replace(/[.:،؛\-–—_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function applyRepeatedHeaderFooterFlags(pages: ExtractedPdfPage[]): ExtractedPdfPage[] {
+  if (pages.length < 4) return pages;
+
+  const topCounts = new Map<string, number>();
+  const bottomCounts = new Map<string, number>();
+
+  for (const page of pages) {
+    const lines = page.text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const top = normalizeHeaderFooterCandidate(lines[0] ?? "");
+    const bottom = normalizeHeaderFooterCandidate(lines[lines.length - 1] ?? "");
+    if (top.length >= 6 && top.length <= 80) topCounts.set(top, (topCounts.get(top) ?? 0) + 1);
+    if (bottom.length >= 6 && bottom.length <= 80) bottomCounts.set(bottom, (bottomCounts.get(bottom) ?? 0) + 1);
+  }
+
+  return pages.map((page) => {
+    const lines = page.text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const top = normalizeHeaderFooterCandidate(lines[0] ?? "");
+    const bottom = normalizeHeaderFooterCandidate(lines[lines.length - 1] ?? "");
+    const repeatedTop = top.length >= 6 && (topCounts.get(top) ?? 0) >= 3;
+    const repeatedBottom = bottom.length >= 6 && (bottomCounts.get(bottom) ?? 0) >= 3;
+    if (!repeatedTop && !repeatedBottom) return page;
+
+    let meta = appendMetaFlag(page.meta, "documentFlags", "probable_repeated_header_footer");
+    meta = {
+      ...meta,
+      repeatedHeaderFooter: {
+        top: repeatedTop ? top : null,
+        bottom: repeatedBottom ? bottom : null,
+      },
+    };
+    return { ...page, meta };
+  });
+}
+
 function shouldRunStrikeDetectionForPdfPage(
   text: string,
   pageNumber: number,
@@ -1350,6 +1474,22 @@ async function extractPdfPagesWithPoppler(
           probableTable,
         };
       }
+      const probableMultiColumn = detectProbableMultiColumnLayout(selectedText);
+      if (probableMultiColumn.detected) {
+        selectedMeta = appendMetaFlag(selectedMeta, "documentFlags", "probable_multi_column_layout");
+        selectedMeta = {
+          ...selectedMeta,
+          probableMultiColumn,
+        };
+      }
+      const probableFormLayout = detectProbableFormLayout(selectedText);
+      if (probableFormLayout.detected) {
+        selectedMeta = appendMetaFlag(selectedMeta, "documentFlags", "probable_form_layout");
+        selectedMeta = {
+          ...selectedMeta,
+          probableFormLayout,
+        };
+      }
 
       if (strikeDetectionAvailable && shouldRunStrikeDetectionForPdfPage(selectedText, i + 1, mergedPages.length)) {
         try {
@@ -1390,7 +1530,7 @@ async function extractPdfPagesWithPoppler(
       finalPages.push({ text: selectedText, meta: selectedMeta });
     }
 
-    return finalPages;
+    return applyRepeatedHeaderFooterFlags(finalPages);
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true }).catch(() => undefined);
   }
@@ -1435,6 +1575,9 @@ async function persistScriptEditorContent(
 function summarizePdfDocumentCases(pages: ExtractedPdfPage[]): Record<string, unknown> {
   const flags = new Set<string>();
   const probableTablePages: number[] = [];
+  const multiColumnPages: number[] = [];
+  const formLayoutPages: number[] = [];
+  const repeatedHeaderFooterPages: number[] = [];
   const crossedOutPages: number[] = [];
   const ocrPages: number[] = [];
 
@@ -1445,6 +1588,9 @@ function summarizePdfDocumentCases(pages: ExtractedPdfPage[]): Record<string, un
     documentFlags.forEach((flag) => flags.add(flag));
     editorialFlags.forEach((flag) => flags.add(flag));
     if (documentFlags.includes("probable_table_detected")) probableTablePages.push(index + 1);
+    if (documentFlags.includes("probable_multi_column_layout")) multiColumnPages.push(index + 1);
+    if (documentFlags.includes("probable_form_layout")) formLayoutPages.push(index + 1);
+    if (documentFlags.includes("probable_repeated_header_footer")) repeatedHeaderFooterPages.push(index + 1);
     if (editorialFlags.includes("crossed_out_text_detected")) crossedOutPages.push(index + 1);
     if (meta.ocrSelected === true || meta.ocrUsed === true) ocrPages.push(index + 1);
   });
@@ -1452,9 +1598,15 @@ function summarizePdfDocumentCases(pages: ExtractedPdfPage[]): Record<string, un
   return {
     flags: [...flags],
     probableTablePages,
+    multiColumnPages,
+    formLayoutPages,
+    repeatedHeaderFooterPages,
     crossedOutPages,
     ocrPages,
     probableTableCount: probableTablePages.length,
+    multiColumnCount: multiColumnPages.length,
+    formLayoutCount: formLayoutPages.length,
+    repeatedHeaderFooterCount: repeatedHeaderFooterPages.length,
     crossedOutCount: crossedOutPages.length,
     ocrPageCount: ocrPages.length,
   };

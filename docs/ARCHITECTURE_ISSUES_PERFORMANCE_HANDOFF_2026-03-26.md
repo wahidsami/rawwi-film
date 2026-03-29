@@ -36,14 +36,16 @@ The client can provide more than plain script pages. The importer should explici
 Current implemented awareness:
 
 - probable table detection warnings during import
+- probable multi-column layout warnings during import
+- probable form-like / field-heavy page warnings during import
+- probable repeated header/footer detection
 - struck-through text detection metadata on PDF pages
 - OCR usage metadata on PDF pages
 - fragmented Arabic words routed to manual review notes
+- document-structure hints injected into report special notes for human auditors
 
 Still worth adding next:
 
-- repeated header/footer detection
-- multi-column page detection
 - stamp / seal / handwritten annotation hints
 - structured preservation for DOCX/PDF tables instead of text-only flattening
 

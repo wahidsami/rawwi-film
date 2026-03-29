@@ -260,19 +260,142 @@ function detectProbableTableFromText(text: string): {
   };
 }
 
+function detectProbableMultiColumnFromText(text: string): {
+  detected: boolean;
+  confidence: "low" | "medium" | "high";
+  rowCount: number;
+  reasons: string[];
+} {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length >= 10 && line.length <= 260);
+
+  if (lines.length < 4) {
+    return { detected: false, confidence: "low", rowCount: 0, reasons: [] };
+  }
+
+  let wideGapRows = 0;
+  let alphaHeavyRows = 0;
+  for (const line of lines) {
+    const parts = line.split(/\s{3,}/).map((part) => part.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      wideGapRows += 1;
+      if (parts.every((part) => !/\d/.test(part))) alphaHeavyRows += 1;
+    }
+  }
+
+  const reasons: string[] = [];
+  if (wideGapRows >= 4) reasons.push("wide_gap_parallel_rows");
+  if (alphaHeavyRows >= 3) reasons.push("text_columns_without_numeric_cells");
+  const detected = wideGapRows >= 4 && alphaHeavyRows >= 2;
+  const confidence: "low" | "medium" | "high" =
+    detected && alphaHeavyRows >= 4 ? "high" : detected ? "medium" : "low";
+  return { detected, confidence, rowCount: detected ? wideGapRows : 0, reasons };
+}
+
+function detectProbableFormFromText(text: string): {
+  detected: boolean;
+  confidence: "low" | "medium" | "high";
+  fieldLineCount: number;
+  reasons: string[];
+} {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length >= 3 && line.length <= 180);
+
+  if (lines.length < 3) {
+    return { detected: false, confidence: "low", fieldLineCount: 0, reasons: [] };
+  }
+
+  let colonRows = 0;
+  let checkboxRows = 0;
+  let dottedRows = 0;
+  for (const line of lines) {
+    if (/[:：]\s*\S/u.test(line)) colonRows += 1;
+    if (/[☐☑☒■□✓]\s*\S/u.test(line)) checkboxRows += 1;
+    if (/\.{3,}|_{3,}/u.test(line)) dottedRows += 1;
+  }
+  const reasons: string[] = [];
+  if (colonRows >= 3) reasons.push("label_value_rows");
+  if (checkboxRows >= 2) reasons.push("checkbox_rows");
+  if (dottedRows >= 2) reasons.push("fill_in_blank_rows");
+  const detected = colonRows >= 3 || checkboxRows >= 2 || (colonRows >= 2 && dottedRows >= 2);
+  const confidence: "low" | "medium" | "high" =
+    detected && (checkboxRows >= 3 || (colonRows >= 4 && dottedRows >= 2))
+      ? "high"
+      : detected
+        ? "medium"
+        : "low";
+  return { detected, confidence, fieldLineCount: Math.max(colonRows, checkboxRows, dottedRows), reasons };
+}
+
+function normalizeHeaderFooterCandidate(value: string): string {
+  return value
+    .replace(/\d+/g, "#")
+    .replace(/[.:،؛\-–—_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function summarizeDocumentCases(
   pagesInput: Array<{ text?: string; html?: string | null }>,
   contentHtml?: string | null,
-): { flags: string[]; probableTablePages: number[]; probableTableCount: number; htmlTableDetected: boolean } {
+): {
+  flags: string[];
+  probableTablePages: number[];
+  probableTableCount: number;
+  multiColumnPages: number[];
+  multiColumnCount: number;
+  formLayoutPages: number[];
+  formLayoutCount: number;
+  repeatedHeaderFooterPages: number[];
+  repeatedHeaderFooterCount: number;
+  htmlTableDetected: boolean;
+} {
   const flags = new Set<string>();
   const probableTablePages: number[] = [];
+  const multiColumnPages: number[] = [];
+  const formLayoutPages: number[] = [];
+  const repeatedHeaderFooterPages: number[] = [];
+
+  const topCounts = new Map<string, number>();
+  const bottomCounts = new Map<string, number>();
 
   pagesInput.forEach((page, index) => {
-    const probableTable = detectProbableTableFromText(String(page.text ?? ""));
-    if (!probableTable.detected) return;
-    flags.add("probable_table_detected");
-    probableTablePages.push(index + 1);
+    const text = String(page.text ?? "");
+    const probableTable = detectProbableTableFromText(text);
+    const probableMultiColumn = detectProbableMultiColumnFromText(text);
+    const probableForm = detectProbableFormFromText(text);
+    if (probableTable.detected) {
+      flags.add("probable_table_detected");
+      probableTablePages.push(index + 1);
+    }
+    if (probableMultiColumn.detected) {
+      flags.add("probable_multi_column_layout");
+      multiColumnPages.push(index + 1);
+    }
+    if (probableForm.detected) {
+      flags.add("probable_form_layout");
+      formLayoutPages.push(index + 1);
+    }
+
+    const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const top = normalizeHeaderFooterCandidate(lines[0] ?? "");
+    const bottom = normalizeHeaderFooterCandidate(lines[lines.length - 1] ?? "");
+    if (top.length >= 6 && top.length <= 80) topCounts.set(top, (topCounts.get(top) ?? 0) + 1);
+    if (bottom.length >= 6 && bottom.length <= 80) bottomCounts.set(bottom, (bottomCounts.get(bottom) ?? 0) + 1);
   });
+
+  pagesInput.forEach((page, index) => {
+    const lines = String(page.text ?? "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const top = normalizeHeaderFooterCandidate(lines[0] ?? "");
+    const bottom = normalizeHeaderFooterCandidate(lines[lines.length - 1] ?? "");
+    const repeated = (top.length >= 6 && (topCounts.get(top) ?? 0) >= 3) || (bottom.length >= 6 && (bottomCounts.get(bottom) ?? 0) >= 3);
+    if (repeated) repeatedHeaderFooterPages.push(index + 1);
+  });
+  if (repeatedHeaderFooterPages.length > 0) flags.add("probable_repeated_header_footer");
 
   const htmlTableDetected = typeof contentHtml === "string" && /<table\b/i.test(contentHtml);
   if (htmlTableDetected) flags.add("docx_html_table_detected");
@@ -281,6 +404,12 @@ function summarizeDocumentCases(
     flags: [...flags],
     probableTablePages,
     probableTableCount: probableTablePages.length,
+    multiColumnPages,
+    multiColumnCount: multiColumnPages.length,
+    formLayoutPages,
+    formLayoutCount: formLayoutPages.length,
+    repeatedHeaderFooterPages,
+    repeatedHeaderFooterCount: repeatedHeaderFooterPages.length,
     htmlTableDetected,
   };
 }
@@ -320,10 +449,23 @@ async function persistMultipageExtract(
   const offsets = computePageGlobalOffsets(pageContents);
   const pageRows = sorted.map((p, i) => {
     const probableTable = detectProbableTableFromText(pageContents[i] ?? "");
-    const meta: Record<string, unknown> = probableTable.detected
+    const probableMultiColumn = detectProbableMultiColumnFromText(pageContents[i] ?? "");
+    const probableForm = detectProbableFormFromText(pageContents[i] ?? "");
+    const documentFlags = [
+      ...(probableTable.detected ? ["probable_table_detected"] : []),
+      ...(probableMultiColumn.detected ? ["probable_multi_column_layout"] : []),
+      ...(probableForm.detected ? ["probable_form_layout"] : []),
+      ...(documentCases.repeatedHeaderFooterPages.includes(i + 1) ? ["probable_repeated_header_footer"] : []),
+    ];
+    const meta: Record<string, unknown> = documentFlags.length > 0
       ? {
-          documentFlags: ["probable_table_detected"],
-          probableTable,
+          documentFlags,
+          ...(probableTable.detected ? { probableTable } : {}),
+          ...(probableMultiColumn.detected ? { probableMultiColumn } : {}),
+          ...(probableForm.detected ? { probableFormLayout: probableForm } : {}),
+          ...(documentCases.repeatedHeaderFooterPages.includes(i + 1)
+            ? { repeatedHeaderFooter: { detected: true } }
+            : {}),
         }
       : {};
     return ({

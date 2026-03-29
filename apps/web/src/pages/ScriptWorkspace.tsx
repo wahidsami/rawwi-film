@@ -144,6 +144,12 @@ type ImportDocumentCases = {
   flags: string[];
   probableTablePages: number[];
   probableTableCount: number;
+  multiColumnPages: number[];
+  multiColumnCount: number;
+  formLayoutPages: number[];
+  formLayoutCount: number;
+  repeatedHeaderFooterPages: number[];
+  repeatedHeaderFooterCount: number;
   htmlTableDetected: boolean;
 };
 
@@ -155,23 +161,59 @@ function parseImportDocumentCases(progress: Record<string, unknown> | undefined)
   const probableTablePages = Array.isArray(value.probableTablePages)
     ? value.probableTablePages.filter((page): page is number => typeof page === 'number')
     : [];
+  const multiColumnPages = Array.isArray(value.multiColumnPages)
+    ? value.multiColumnPages.filter((page): page is number => typeof page === 'number')
+    : [];
+  const formLayoutPages = Array.isArray(value.formLayoutPages)
+    ? value.formLayoutPages.filter((page): page is number => typeof page === 'number')
+    : [];
+  const repeatedHeaderFooterPages = Array.isArray(value.repeatedHeaderFooterPages)
+    ? value.repeatedHeaderFooterPages.filter((page): page is number => typeof page === 'number')
+    : [];
   const probableTableCount =
     typeof value.probableTableCount === 'number' ? value.probableTableCount : probableTablePages.length;
+  const multiColumnCount =
+    typeof value.multiColumnCount === 'number' ? value.multiColumnCount : multiColumnPages.length;
+  const formLayoutCount =
+    typeof value.formLayoutCount === 'number' ? value.formLayoutCount : formLayoutPages.length;
+  const repeatedHeaderFooterCount =
+    typeof value.repeatedHeaderFooterCount === 'number' ? value.repeatedHeaderFooterCount : repeatedHeaderFooterPages.length;
   const htmlTableDetected = value.htmlTableDetected === true;
-  if (!flags.length && probableTablePages.length === 0 && !htmlTableDetected) return null;
+  if (!flags.length && probableTablePages.length === 0 && multiColumnPages.length === 0 && formLayoutPages.length === 0 && repeatedHeaderFooterPages.length === 0 && !htmlTableDetected) return null;
   return {
     flags,
     probableTablePages,
     probableTableCount,
+    multiColumnPages,
+    multiColumnCount,
+    formLayoutPages,
+    formLayoutCount,
+    repeatedHeaderFooterPages,
+    repeatedHeaderFooterCount,
     htmlTableDetected,
   };
 }
 
 function formatImportDocumentCaseSummary(cases: ImportDocumentCases, lang: 'ar' | 'en'): string {
-  if (cases.probableTableCount > 0) {
+  if (cases.probableTableCount > 0 || cases.multiColumnCount > 0 || cases.formLayoutCount > 0) {
+    const parts: string[] = [];
+    if (cases.probableTableCount > 0) {
+      parts.push(lang === 'ar' ? `${cases.probableTableCount} صفحة جدول/أعمدة` : `${cases.probableTableCount} table-layout page(s)`);
+    }
+    if (cases.multiColumnCount > 0) {
+      parts.push(lang === 'ar' ? `${cases.multiColumnCount} صفحة متعددة الأعمدة` : `${cases.multiColumnCount} multi-column page(s)`);
+    }
+    if (cases.formLayoutCount > 0) {
+      parts.push(lang === 'ar' ? `${cases.formLayoutCount} صفحة بنمط نموذج` : `${cases.formLayoutCount} form-like page(s)`);
+    }
     return lang === 'ar'
-      ? `رصد النظام ${cases.probableTableCount} صفحة قد تحتوي على جدول أو تنسيق أعمدة. قد تحتاج هذه الصفحات إلى مراجعة يدوية لأن الاستيراد يحافظ على النص أكثر من بنية الجدول.`
-      : `The importer detected ${cases.probableTableCount} page(s) that may contain tables or column layouts. Review them manually because extraction preserves text better than full table structure.`;
+      ? `رصد النظام ${parts.join('، ')}. قد تحتاج هذه الصفحات إلى مراجعة يدوية لأن الاستيراد يحافظ على النص أكثر من البنية الأصلية.`
+      : `The importer detected ${parts.join(', ')}. Review these pages manually because extraction preserves text better than full original structure.`;
+  }
+  if (cases.repeatedHeaderFooterCount > 0) {
+    return lang === 'ar'
+      ? `رصد النظام ترويسات أو تذييلات متكررة في ${cases.repeatedHeaderFooterCount} صفحة، وقد تظهر داخل النص المستخرج وتحتاج إلى تجاهل أو مراجعة.`
+      : `The importer detected repeated headers or footers on ${cases.repeatedHeaderFooterCount} page(s). They may appear in extracted text and need review.`;
   }
   if (cases.htmlTableDetected) {
     return lang === 'ar'
@@ -3401,6 +3443,27 @@ export function ScriptWorkspace() {
                     {lang === 'ar'
                       ? `صفحات محتملة الجداول: ${uploadDocumentCases.probableTablePages.join('، ')}`
                       : `Probable table pages: ${uploadDocumentCases.probableTablePages.join(', ')}`}
+                  </p>
+                )}
+                {uploadDocumentCases.multiColumnPages.length > 0 && (
+                  <p className="text-xs text-text-muted">
+                    {lang === 'ar'
+                      ? `صفحات متعددة الأعمدة: ${uploadDocumentCases.multiColumnPages.join('، ')}`
+                      : `Probable multi-column pages: ${uploadDocumentCases.multiColumnPages.join(', ')}`}
+                  </p>
+                )}
+                {uploadDocumentCases.formLayoutPages.length > 0 && (
+                  <p className="text-xs text-text-muted">
+                    {lang === 'ar'
+                      ? `صفحات بنمط نموذج/حقول: ${uploadDocumentCases.formLayoutPages.join('، ')}`
+                      : `Probable form-like pages: ${uploadDocumentCases.formLayoutPages.join(', ')}`}
+                  </p>
+                )}
+                {uploadDocumentCases.repeatedHeaderFooterPages.length > 0 && (
+                  <p className="text-xs text-text-muted">
+                    {lang === 'ar'
+                      ? `صفحات تحتوي على ترويسات/تذييلات متكررة: ${uploadDocumentCases.repeatedHeaderFooterPages.join('، ')}`
+                      : `Pages with repeated headers/footers: ${uploadDocumentCases.repeatedHeaderFooterPages.join(', ')}`}
                   </p>
                 )}
               </div>

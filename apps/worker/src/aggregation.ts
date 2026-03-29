@@ -173,6 +173,12 @@ const FRAGMENTED_ARABIC_TOKEN_RE =
   /[\u0621-\u064A]{1,2}(?:(?:\s+|[-ـ])[\u0621-\u064A]{1,3}){1,4}/gu;
 
 type RevisitMention = NonNullable<SummaryJson["words_to_revisit"]>[number];
+type ScriptPageMetaRow = {
+  page_number: number;
+  meta?: Record<string, unknown> | null;
+};
+
+type DocumentReviewHint = NonNullable<SummaryJson["report_hints"]>[number];
 
 function scriptSuggestsNeutralContext(scriptSummary: SummaryJson["script_summary"]): boolean {
   if (!scriptSummary?.compliance_posture_ar && !scriptSummary?.narrative_stance_ar) return false;
@@ -221,6 +227,71 @@ function findFragmentedArabicMentions(text: string): RevisitMention[] {
   }
 
   return mentions;
+}
+
+function buildDocumentStructureHints(pageRows: ScriptPageMetaRow[]): DocumentReviewHint[] {
+  const byFlag = new Map<string, number[]>();
+
+  for (const row of pageRows) {
+    const meta = row.meta ?? {};
+    const documentFlags = Array.isArray(meta.documentFlags) ? (meta.documentFlags as string[]) : [];
+    const editorialFlags = Array.isArray(meta.editorialFlags) ? (meta.editorialFlags as string[]) : [];
+    for (const flag of [...documentFlags, ...editorialFlags]) {
+      if (!flag) continue;
+      if (!byFlag.has(flag)) byFlag.set(flag, []);
+      byFlag.get(flag)!.push(row.page_number);
+    }
+  }
+
+  const specs: Record<string, { title: string; rationale: string }> = {
+    probable_table_detected: {
+      title: "تنبيه بنية المستند: جدول أو أعمدة محتملة",
+      rationale: "رصد النظام صفحة أو أكثر تبدو كجدول أو تنسيق أعمدة. قد يحافظ الاستيراد على النص بينما يفقد جزءاً من بنية الصفوف والخلايا، لذا يلزم تحقق بشري من هذه الصفحات.",
+    },
+    probable_multi_column_layout: {
+      title: "تنبيه بنية المستند: تخطيط متعدد الأعمدة",
+      rationale: "رصد النظام تخطيطاً متعدد الأعمدة قد يغيّر ترتيب القراءة في النص المستخرج. يوصى بمراجعة هذه الصفحات بصرياً قبل الاعتماد الكامل على التحليل الآلي.",
+    },
+    probable_form_layout: {
+      title: "تنبيه بنية المستند: صفحة بنمط نموذج أو حقول",
+      rationale: "رصد النظام صفحة بنمط نموذج أو حقول تعبئة، وقد لا تُحفظ العلاقات بين العناوين والقيم بنفس الشكل الأصلي داخل النص التحليلي.",
+    },
+    probable_repeated_header_footer: {
+      title: "تنبيه بنية المستند: ترويسات أو تذييلات متكررة",
+      rationale: "رصد النظام ترويسات أو تذييلات متكررة قد تدخل ضمن النص المستخرج. ينبغي على المدقق تجاهلها أو التحقق من أنها ليست جزءاً من المتن الأصلي.",
+    },
+    crossed_out_text_detected: {
+      title: "تنبيه سلامة النص: نص مشطوب أو مشطوب عليه",
+      rationale: "رصد النظام مقاطع مشطوبة في المستند الأصلي. قد تكون هذه المقاطع مقصودة للحذف أو التعديل، لذلك يجب على المدقق حسم ما إذا كانت معتمدة ضمن النص أم لا.",
+    },
+  };
+
+  const hints: DocumentReviewHint[] = [];
+  for (const [flag, pages] of byFlag.entries()) {
+    const spec = specs[flag];
+    if (!spec || pages.length === 0) continue;
+    const uniquePages = [...new Set(pages)].sort((a, b) => a - b);
+    const pageLabel = uniquePages.length === 1 ? `صفحة ${uniquePages[0]}` : `الصفحات ${uniquePages.join("، ")}`;
+    hints.push({
+      canonical_finding_id: `DOC-${flag}`,
+      title_ar: spec.title,
+      evidence_snippet: `${pageLabel}`,
+      severity: "low",
+      confidence: 0.7,
+      final_ruling: "needs_review",
+      rationale: spec.rationale,
+      pillar_id: null,
+      primary_article_id: null,
+      related_article_ids: [],
+      policy_links: [],
+      start_offset_global: null,
+      end_offset_global: null,
+      start_line_chunk: null,
+      end_line_chunk: null,
+    });
+  }
+
+  return hints.sort((a, b) => String(a.title_ar).localeCompare(String(b.title_ar), "ar"));
 }
 
 /**
@@ -1210,6 +1281,12 @@ export async function runAggregation(jobId: string): Promise<void> {
     queryError: findingsErr ?? null,
   });
 
+  const { data: pageMetaRows } = await supabase
+    .from("script_pages")
+    .select("page_number, meta")
+    .eq("version_id", job.version_id)
+    .order("page_number", { ascending: true });
+
   const fullScriptText = ((job as { normalized_text?: string | null }).normalized_text ?? "").trim();
 
   const rawAnalysisOptions = (job as { config_snapshot?: { analysisOptions?: { mergeStrategy?: string } } }).config_snapshot?.analysisOptions;
@@ -1248,6 +1325,10 @@ export async function runAggregation(jobId: string): Promise<void> {
       source_job_ids: manualReviewContext.source_job_ids ?? [],
       items: manualReviewContext.items ?? [],
     };
+  }
+  const documentStructureHints = buildDocumentStructureHints((pageMetaRows ?? []) as ScriptPageMetaRow[]);
+  if (documentStructureHints.length > 0) {
+    summary.report_hints = [...(summary.report_hints ?? []), ...documentStructureHints];
   }
   const isPartialReport = Boolean(summary.partial_report?.is_partial);
   const largeJobSize = {
