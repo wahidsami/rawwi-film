@@ -937,7 +937,7 @@ export async function runMultiPassDetection(
 
   if (plan.activePasses.length === 0) {
     if (progressOpts?.chunkId) {
-      flushChunkPassProgress(progressOpts.chunkId, 0, 0);
+      await flushChunkPassProgress(progressOpts.chunkId, 0, 0);
     }
     return {
       findings: [],
@@ -976,7 +976,7 @@ export async function runMultiPassDetection(
   throwIfAborted(signal);
 
   if (progressOpts?.chunkId) {
-    flushChunkPassProgress(progressOpts.chunkId, totalPasses, totalPasses);
+    await flushChunkPassProgress(progressOpts.chunkId, totalPasses, totalPasses);
   }
 
   const passResults = sortPassResultsStable([

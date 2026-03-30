@@ -733,7 +733,7 @@ export async function processChunkJudge(
 
   if (cachedRun) {
     logger.info("Idempotency HIT: Using cached run results", { chunkId: chunk.id, runKey });
-    setChunkPhase(chunk.id, "cached");
+    await setChunkPhase(chunk.id, "cached");
     allFindings = sortFindingsStable(((cachedRun.ai_findings as any[]) || []) as FindingWithGlobal[]);
   } else {
     logger.info("Idempotency MISS: Executing AI pipeline", { chunkId: chunk.id, runKey });
@@ -746,7 +746,7 @@ export async function processChunkJudge(
       selectedIds = Array.from({ length: 25 }, (_, i) => i + 1);
       logger.info("HIGH_RECALL mode: bypassing router, using all 25 articles", { chunkId: chunk.id });
     } else {
-      setChunkPhase(chunk.id, "router");
+      await setChunkPhase(chunk.id, "router");
       const articleList = getScriptStandardRouterList();
       const routerArticleIds = articleList.map((a) => a.id);
       if (articleListsAreEquivalent(ALWAYS_CHECK_ARTICLES, routerArticleIds)) {
@@ -810,7 +810,7 @@ export async function processChunkJudge(
     allFindings = [];
     try {
       const passExecutionPlan = planDetectionPassExecution(chunkText, selectedArticles, terms);
-      setChunkMultipassStart(chunk.id, Math.max(1, passExecutionPlan.activePasses.length));
+      await setChunkMultipassStart(chunk.id, Math.max(1, passExecutionPlan.activePasses.length));
       const multiPassStartedAt = Date.now();
       throwIfAborted(signal);
       const multiPassResult = await runMultiPassDetection(
@@ -969,7 +969,7 @@ export async function processChunkJudge(
     });
     hybridMetrics = { skipped_reason: "partial_finalize_requested" };
   } else if (config.ANALYSIS_ENGINE === "hybrid") {
-    setChunkPhase(chunk.id, "hybrid");
+    await setChunkPhase(chunk.id, "hybrid");
     const hybridStartedAt = Date.now();
     let hybridTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
     logger.info("Hybrid context pipeline starting", {
@@ -1141,7 +1141,7 @@ export async function processChunkJudge(
   }));
 
   throwIfAborted(signal);
-  setChunkPhase(chunk.id, "aggregating");
+  await setChunkPhase(chunk.id, "aggregating");
 
   // 8) Insert findings (batch upsert with logging). Derive excerpt from canonical when available.
   throwIfAborted(signal);

@@ -426,33 +426,53 @@ export async function notifyAdminAiOverload(job: {
   }
 }
 
-/** Fire-and-forget UI phase label (does not block LLM work). */
-export function setChunkPhase(chunkId: string, phase: string): void {
-  void supabase
-    .from("analysis_chunks")
-    .update({ processing_phase: phase })
-    .eq("id", chunkId)
-    .then(({ error }) => {
-      if (error) logger.warn("setChunkPhase failed", { chunkId, phase, err: error.message });
+const passProgressDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const chunkStateUpdateChains = new Map<string, Promise<void>>();
+
+function queueChunkStateUpdate(
+  chunkId: string,
+  label: string,
+  operation: () => PromiseLike<{ error: { message: string } | null }>
+): Promise<void> {
+  const previous = chunkStateUpdateChains.get(chunkId) ?? Promise.resolve();
+  const next = previous
+    .catch(() => {})
+    .then(async () => {
+      const { error } = await operation();
+      if (error) logger.warn(`${label} failed`, { chunkId, err: error.message });
     });
+  const tracked = next.finally(() => {
+    if (chunkStateUpdateChains.get(chunkId) === tracked) {
+      chunkStateUpdateChains.delete(chunkId);
+    }
+  });
+  chunkStateUpdateChains.set(chunkId, tracked);
+  return tracked;
+}
+
+/** Ordered UI phase label update so chunk states cannot race each other. */
+export function setChunkPhase(chunkId: string, phase: string): Promise<void> {
+  return queueChunkStateUpdate(chunkId, "setChunkPhase", () =>
+    supabase
+      .from("analysis_chunks")
+      .update({ processing_phase: phase })
+      .eq("id", chunkId)
+  );
 }
 
 /** Reset pass counters when entering multi-pass detection. */
-export function setChunkMultipassStart(chunkId: string, totalPasses: number): void {
-  void supabase
-    .from("analysis_chunks")
-    .update({
-      processing_phase: "multipass",
-      passes_completed: 0,
-      passes_total: totalPasses,
-    })
-    .eq("id", chunkId)
-    .then(({ error }) => {
-      if (error) logger.warn("setChunkMultipassStart failed", { chunkId, err: error.message });
-    });
+export function setChunkMultipassStart(chunkId: string, totalPasses: number): Promise<void> {
+  return queueChunkStateUpdate(chunkId, "setChunkMultipassStart", () =>
+    supabase
+      .from("analysis_chunks")
+      .update({
+        processing_phase: "multipass",
+        passes_completed: 0,
+        passes_total: totalPasses,
+      })
+      .eq("id", chunkId)
+  );
 }
-
-const passProgressDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 /** Debounced pass counter for parallel detectors (~280ms coalesce). */
 export function reportChunkPassProgressDebounced(chunkId: string, completed: number, total: number): void {
@@ -460,29 +480,27 @@ export function reportChunkPassProgressDebounced(chunkId: string, completed: num
   if (prev) clearTimeout(prev);
   const t = setTimeout(() => {
     passProgressDebounceTimers.delete(chunkId);
-    void supabase
-      .from("analysis_chunks")
-      .update({ passes_completed: completed, passes_total: total })
-      .eq("id", chunkId)
-      .then(({ error }) => {
-        if (error) logger.warn("reportChunkPassProgress failed", { chunkId, err: error.message });
-      });
+    void queueChunkStateUpdate(chunkId, "reportChunkPassProgress", () =>
+      supabase
+        .from("analysis_chunks")
+        .update({ passes_completed: completed, passes_total: total })
+        .eq("id", chunkId)
+    );
   }, 280);
   passProgressDebounceTimers.set(chunkId, t);
 }
 
 /** Final flush so UI shows 10/10 before chunk completes. */
-export function flushChunkPassProgress(chunkId: string, completed: number, total: number): void {
+export function flushChunkPassProgress(chunkId: string, completed: number, total: number): Promise<void> {
   const prev = passProgressDebounceTimers.get(chunkId);
   if (prev) clearTimeout(prev);
   passProgressDebounceTimers.delete(chunkId);
-  void supabase
-    .from("analysis_chunks")
-    .update({ passes_completed: completed, passes_total: total })
-    .eq("id", chunkId)
-    .then(({ error }) => {
-      if (error) logger.warn("flushChunkPassProgress failed", { chunkId, err: error.message });
-    });
+  return queueChunkStateUpdate(chunkId, "flushChunkPassProgress", () =>
+    supabase
+      .from("analysis_chunks")
+      .update({ passes_completed: completed, passes_total: total })
+      .eq("id", chunkId)
+  );
 }
 
 /**
