@@ -11,6 +11,19 @@ function hasArabicChars(value: string): boolean {
   return ARABIC_CHAR_RE.test(value);
 }
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function shouldUseFlexibleArabicMatcher(rawNeedle: string): boolean {
+  const trimmed = rawNeedle.trim();
+  if (!trimmed || !hasArabicChars(trimmed)) return false;
+  const tokenCount = trimmed.split(/\s+/).filter(Boolean).length;
+  // Flexible regex matching is useful for short lexicon-style phrases, but it becomes
+  // disproportionately expensive for longer model-generated evidence snippets.
+  return trimmed.length <= 48 && tokenCount <= 6;
+}
+
 export function normalizeDetectionText(value: string, options: NormalizeOptions = {}): string {
   const input = value ?? "";
   let normalized = hasArabicChars(input)
@@ -35,6 +48,23 @@ export function includesNormalizedNeedle(
   const rawNeedle = needle ?? "";
   if (hasArabicChars(rawNeedle)) {
     const termType = rawNeedle.trim().includes(" ") ? "phrase" : "word";
+    const normalizedNeedle = normalizeDetectionText(needle, options);
+    if (!normalizedNeedle) return false;
+    const normalizedSource = normalizeDetectionText(sourceText, options);
+    if (termType === "word") {
+      const boundaryRegex = new RegExp(
+        `(^|[^\\p{L}\\p{N}_])(${escapeRegex(normalizedNeedle)})(?=[^\\p{L}\\p{N}_]|$)`,
+        "u"
+      );
+      if (boundaryRegex.test(normalizedSource)) return true;
+    } else if (normalizedSource.includes(normalizedNeedle)) {
+      return true;
+    }
+
+    if (!shouldUseFlexibleArabicMatcher(rawNeedle)) {
+      return false;
+    }
+
     const matched = findStringMatches(sourceText, rawNeedle, termType).length > 0;
     if (matched) return true;
     if (termType === "word") return false;
