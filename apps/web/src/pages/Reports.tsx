@@ -162,12 +162,13 @@ function Reports() {
     try {
       const fullReport = await reportsApi.getById(report.id!);
       const scriptMeta = fullReport.scriptId ? await scriptsApi.getScript(fullReport.scriptId).catch(() => null) : null;
-      const pageCount = fullReport.scriptId && fullReport.versionId
+      const viewerPages = fullReport.scriptId && fullReport.versionId
         ? await scriptsApi
             .getEditor(fullReport.scriptId, fullReport.versionId)
-            .then((editor) => editor.pages?.length ?? null)
+            .then((editor) => editor.pages?.map((page) => ({ pageNumber: page.pageNumber, content: page.content ?? '' })) ?? null)
             .catch(() => null)
         : null;
+      const pageCount = viewerPages?.length ?? null;
       let findings: AnalysisFinding[] = [];
       if (fullReport.jobId) {
         try {
@@ -178,13 +179,14 @@ function Reports() {
         scriptTitle: fullReport.scriptTitle || (lang === 'ar' ? 'تحليل النص' : 'Script Analysis'),
         clientName: fullReport.clientName || (lang === 'ar' ? 'عميل' : 'Client'),
         createdAt: fullReport.createdAt,
-        logoUrl: '/loginlogo.png',
+        logoUrl: '/fclogo.png',
         scriptType: scriptMeta?.type ?? null,
         workClassification: scriptMeta?.workClassification ?? null,
         pageCount,
         episodeCount: scriptMeta?.episodeCount ?? null,
         receivedAt: scriptMeta?.receivedAt ?? null,
         deliveredAt: fullReport.createdAt,
+        viewerPages,
         findings,
         findingsByArticle: fullReport.summaryJson?.findings_by_article,
         canonicalFindings: fullReport.summaryJson?.canonical_findings,

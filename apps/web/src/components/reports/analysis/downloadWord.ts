@@ -1,5 +1,6 @@
 import type { AnalysisFinding } from "@/api";
 import { mapAnalysisFindingsForPdf } from "./mapper";
+import { displayPageForFinding, type ViewerPageSlice } from "@/utils/viewerPageFromOffset";
 
 type ReportHint = {
   canonical_finding_id: string;
@@ -30,6 +31,7 @@ export interface DownloadAnalysisWordParams {
   episodeCount?: number | null;
   receivedAt?: string | null;
   deliveredAt?: string | null;
+  viewerPages?: ViewerPageSlice[] | null;
   findings?: AnalysisFinding[] | null;
   findingsByArticle?: Array<{ article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }> }> | null;
   canonicalFindings?: Array<{
@@ -172,18 +174,26 @@ function buildOverallRecommendations(args: {
 }
 
 export function downloadAnalysisWord(params: DownloadAnalysisWordParams): void {
-  const findings = mapAnalysisFindingsForPdf(params.findings, params.findingsByArticle, params.canonicalFindings);
+  const findings = mapAnalysisFindingsForPdf(
+    params.findings,
+    params.findingsByArticle,
+    params.findings && params.findings.length > 0 ? undefined : params.canonicalFindings
+  );
   const reportHints = params.reportHints ?? [];
   const recommendations = buildOverallRecommendations({ findings, reportHints, lang: params.lang });
   const dir = params.lang === "ar" ? "rtl" : "ltr";
-  const rawLogo = params.logoUrl?.trim() || `${window.location.origin}/loginlogo.png`;
+  const rawLogo = params.logoUrl?.trim() || `${window.location.origin}/fclogo.png`;
   const logoUrl = rawLogo.startsWith("/") ? `${window.location.origin}${rawLogo}` : rawLogo;
 
   const findingsRowsHtml = findings.length === 0
     ? `<tr><td colspan="3" class="empty-cell">${escapeHtml(params.lang === "ar" ? "لا توجد ملاحظات نهائية في هذا التقرير." : "There are no final findings in this report.")}</td></tr>`
     : findings.map((finding) => `
       <tr>
-        <td class="page-cell">${escapeHtml(formatNullableValue(finding.pageNumber ?? "—"))}</td>
+        <td class="page-cell">${escapeHtml(formatNullableValue(displayPageForFinding(
+          finding.startOffsetGlobal ?? null,
+          params.viewerPages ?? null,
+          finding.pageNumber ?? null
+        )))}</td>
         <td class="text-cell">
           <div class="finding-title">${escapeHtml(finding.titleAr || (params.lang === "ar" ? "ملاحظة" : "Finding"))}</div>
           <div class="finding-snippet">${escapeHtml(plainText(finding.evidenceSnippet) || "—")}</div>
@@ -220,32 +230,32 @@ export function downloadAnalysisWord(params: DownloadAnalysisWordParams): void {
     <meta charset="utf-8" />
     <title>${escapeHtml(params.scriptTitle)}</title>
     <style>
-      @page { size: A4; margin: 22mm 16mm 18mm 16mm; }
-      body { font-family: Tahoma, Arial, sans-serif; direction: ${dir}; color: #111827; margin: 0; font-size: 12pt; line-height: 1.7; }
-      .cover-page { min-height: 260mm; page-break-after: always; }
-      .cover-logo-wrap { text-align: center; margin-top: 10mm; margin-bottom: 14mm; }
-      .cover-logo { max-width: 190px; max-height: 88px; object-fit: contain; }
-      .cover-title { text-align: center; font-size: 18pt; font-weight: 700; margin: 0 0 12mm; }
-      .cover-grid { width: 100%; border-collapse: collapse; margin-top: 8mm; }
-      .cover-grid td { padding: 8px 0; vertical-align: top; }
+      @page { size: A4; margin: 16mm 14mm 16mm 14mm; }
+      body { font-family: Cairo, Tahoma, Arial, sans-serif; direction: ${dir}; color: #111827; margin: 0; font-size: 10.5pt; line-height: 1.55; }
+      .cover-page { page-break-after: always; break-after: page; }
+      .cover-logo-wrap { text-align: center; margin-top: 2mm; margin-bottom: 8mm; }
+      .cover-logo { max-width: 140px; max-height: 64px; object-fit: contain; }
+      .cover-title { text-align: center; font-size: 15pt; font-weight: 700; margin: 0 0 8mm; }
+      .cover-grid { width: 100%; border-collapse: collapse; margin-top: 4mm; }
+      .cover-grid td { padding: 5px 0; vertical-align: top; font-size: 10.5pt; }
       .cover-label { width: 28%; font-weight: 700; }
-      .cover-value { border-bottom: 1px solid #111827; min-height: 20px; padding-inline-start: 8px; }
-      .table-page { min-height: 260mm; }
-      .section-title { font-size: 16pt; font-weight: 700; margin: 0 0 10mm; text-align: center; }
+      .cover-value { border-bottom: 1px solid #111827; min-height: 16px; padding-inline-start: 8px; }
+      .table-page { page-break-before: always; break-before: page; }
+      .section-title { font-size: 13pt; font-weight: 700; margin: 0 0 6mm; text-align: center; }
       table.report-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-      .report-table th, .report-table td { border: 1px solid #111827; padding: 10px 8px; vertical-align: top; }
-      .report-table th { background: #ffffff; font-size: 13pt; font-weight: 700; text-align: center; }
+      .report-table th, .report-table td { border: 1px solid #111827; padding: 7px 6px; vertical-align: top; font-size: 10pt; }
+      .report-table th { background: #ffffff; font-size: 10.5pt; font-weight: 700; text-align: center; }
       .page-cell { width: 16%; text-align: center; }
       .text-cell { width: 54%; }
       .action-cell { width: 30%; }
       .finding-title { font-weight: 700; margin-bottom: 4px; }
       .finding-snippet { white-space: pre-wrap; word-break: break-word; }
       .empty-cell { text-align: center; color: #6b7280; padding: 18px 8px; }
-      .recommendations-wrap { margin-top: 20mm; }
-      .recommendations-title { font-size: 14pt; font-weight: 700; margin-bottom: 8mm; }
-      .recommendation-item, .note-item { margin-bottom: 6px; }
-      .notes-block { margin-top: 10mm; }
-      .notes-title { font-weight: 700; margin-bottom: 6mm; }
+      .recommendations-wrap { margin-top: 12mm; font-size: 10pt; }
+      .recommendations-title { font-size: 11.5pt; font-weight: 700; margin-bottom: 5mm; }
+      .recommendation-item, .note-item { margin-bottom: 5px; }
+      .notes-block { margin-top: 7mm; }
+      .notes-title { font-weight: 700; margin-bottom: 4mm; }
     </style>
   </head>
   <body>

@@ -37,6 +37,7 @@ export type AnalysisPdfFinding = {
   severity: string;
   confidence: number;
   evidenceSnippet: string;
+  startOffsetGlobal?: number | null;
   source?: string;
   primaryArticleId?: number;
   relatedArticleIds?: number[];
@@ -65,6 +66,7 @@ export function mapAnalysisFindingsForPdf(
       severity: f.severity ?? "info",
       confidence: f.confidence ?? 0,
       evidenceSnippet: f.evidence_snippet ?? "",
+      startOffsetGlobal: null,
       source:
         f.source === "lexicon_mandatory"
           ? "lexicon_mandatory"
@@ -95,6 +97,7 @@ export function mapAnalysisFindingsForPdf(
       severity: f.severity ?? "info",
       confidence: f.confidence ?? 0,
       evidenceSnippet: f.evidenceSnippet ?? "",
+      startOffsetGlobal: f.startOffsetGlobal ?? null,
       source: f.source,
       primaryArticleId: Number(v3.primary_article_id),
       relatedArticleIds: (v3.related_article_ids as number[] | undefined) ?? [],
@@ -137,6 +140,7 @@ export function mapAnalysisFindingsForPdf(
       severity: f.severity ?? "info",
       confidence: f.confidence ?? 0,
       evidenceSnippet: f.evidence_snippet ?? "",
+      startOffsetGlobal: null,
       source: "ai",
     }));
   });
