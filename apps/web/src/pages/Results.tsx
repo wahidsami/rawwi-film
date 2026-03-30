@@ -212,7 +212,7 @@ export function Results() {
   const [groupFindingsByAtom, setGroupFindingsByAtom] = useState(false);
   /** false = deduped list (default); true = every DB row (duplicates visible). */
   const [showAllFindingRows, setShowAllFindingRows] = useState(false);
-  const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'high' | 'medium' | 'low' | 'manual'>('all');
+  const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'high' | 'medium' | 'low' | 'manual' | 'special'>('all');
   /** script_pages slices for viewer-accurate page labels (same model as workspace). */
   const [reportViewerPages, setReportViewerPages] = useState<Array<{ pageNumber: number; content: string }> | null>(null);
 
@@ -497,6 +497,7 @@ export function Results() {
   const filteredViolationsCount = hasRealFindings
     ? filteredDisplayViolations.length
     : filteredCanonicalSummaryFindings.length;
+  const showOnlySpecialNotes = severityFilter === 'special';
 
   const decision: 'PASS' | 'REJECT' | 'REVIEW_REQUIRED' =
     (displaySc.critical > 0 || displaySc.high > 0) ? 'REJECT' :
@@ -1561,10 +1562,17 @@ export function Results() {
               </div>
             )}
             {displaySpecialNotes > 0 && (
-              <div className="bg-info/5 border border-info/20 p-3 rounded-xl text-info">
+              <button
+                type="button"
+                onClick={() => setSeverityFilter((v) => (v === 'special' ? 'all' : 'special'))}
+                className={cn(
+                  "bg-info/5 border border-info/20 p-3 rounded-xl text-info text-start transition-colors",
+                  severityFilter === 'special' ? 'ring-2 ring-info border-info' : 'hover:border-info/40'
+                )}
+              >
                 <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'ملاحظات خاصة' : 'Special notes'}</div>
                 <div className="font-bold text-lg">{displaySpecialNotes}</div>
-              </div>
+              </button>
             )}
           </div>
         </div>
@@ -1627,11 +1635,19 @@ export function Results() {
         <div className="lg:col-span-8 space-y-8">
           {/* Violations section */}
           <h3 className="font-bold text-xl text-text-main border-b border-border pb-2 flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-primary" />
-            {lang === 'ar' ? 'المخالفات' : 'Violations'}
+            {showOnlySpecialNotes ? (
+              <Info className="w-5 h-5 text-info" />
+            ) : (
+              <ShieldAlert className="w-5 h-5 text-primary" />
+            )}
+            {showOnlySpecialNotes
+              ? (lang === 'ar' ? 'ملاحظات خاصة' : 'Special notes')
+              : (lang === 'ar' ? 'المخالفات' : 'Violations')}
             <Badge variant="outline" className="ms-2">
               {severityFilter === 'all'
                 ? displayTotal
+                : severityFilter === 'special'
+                  ? displaySpecialNotes
                 : severityFilter === 'manual'
                   ? `${filteredViolationsCount} / ${manualFindingsCount}`
                   : `${filteredViolationsCount} / ${displayTotal}`}
@@ -1653,6 +1669,8 @@ export function Results() {
               <h4 className="text-lg font-bold text-text-main">
                 {severityFilter === 'all'
                   ? (lang === 'ar' ? 'النص سليم' : 'Script Is Compliant')
+                  : severityFilter === 'special'
+                    ? (lang === 'ar' ? 'لا توجد ملاحظات خاصة' : 'No special notes')
                   : severityFilter === 'manual'
                     ? (lang === 'ar' ? 'لا توجد ملاحظات يدوية' : 'No manual findings')
                     : (lang === 'ar' ? 'لا توجد مخالفات بهذه الدرجة' : 'No violations at this severity')}
@@ -1662,6 +1680,10 @@ export function Results() {
                   ? (lang === 'ar'
                     ? 'لم يتم رصد أي مخالفات في هذا النص وفق قواعد التحليل الحالية.'
                     : 'No violations were detected in this script under the current analysis policy.')
+                  : severityFilter === 'special'
+                    ? (lang === 'ar'
+                      ? 'لا توجد ملاحظات خاصة في هذا التقرير.'
+                      : 'There are no special notes in this report.')
                   : severityFilter === 'manual'
                     ? (lang === 'ar'
                       ? 'لا توجد ملاحظات يدوية في هذا التقرير، أو أنها غير ضمن النتائج المعروضة حالياً.'
@@ -1671,7 +1693,9 @@ export function Results() {
                       : 'Try another severity or clear the filter to view all violations.')}
               </p>
             </div>
-          ) : hasRealFindings && filteredDisplayViolations.length > 0
+          ) : showOnlySpecialNotes
+            ? null
+            : hasRealFindings && filteredDisplayViolations.length > 0
             ? renderFindingsFromReal(filteredDisplayViolations)
             : filteredCanonicalSummaryFindings.length > 0
               ? renderFindingsFromCanonicalSummary(filteredCanonicalSummaryFindings)
@@ -1682,7 +1706,10 @@ export function Results() {
           {/* Report hints: not violations but notes for director (e.g. Islamic rules when filming) */}
           {reportHints.length > 0 && (
             <>
-              <h3 className="font-bold text-xl text-text-main border-b border-info/40 pb-2 flex items-center gap-2 mt-12">
+              <h3 className={cn(
+                "font-bold text-xl text-text-main border-b border-info/40 pb-2 flex items-center gap-2",
+                showOnlySpecialNotes ? '' : 'mt-12'
+              )}>
                 <Info className="w-5 h-5 text-info" />
                 {lang === 'ar' ? 'ملاحظات خاصة' : 'Special notes'}
                 <Badge variant="outline" className="ms-2 bg-info/10 text-info border-info/30">{reportHints.length}</Badge>
@@ -1716,7 +1743,7 @@ export function Results() {
           )}
 
           {/* Words/sentences to revisit (separate light pass — glossary terms that appeared; not violations) */}
-          {wordsToRevisit.length > 0 && (
+          {!showOnlySpecialNotes && wordsToRevisit.length > 0 && (
             <>
               <h3 className="font-bold text-xl text-text-main border-b border-border pb-2 flex items-center gap-2 mt-12">
                 <FileSearch className="w-5 h-5 text-muted-foreground" />
@@ -1740,7 +1767,7 @@ export function Results() {
           )}
 
           {/* Approved section */}
-          {hasRealFindings && displayApprovedFindings.length > 0 && (
+          {!showOnlySpecialNotes && hasRealFindings && displayApprovedFindings.length > 0 && (
             <>
               <h3 className="font-bold text-xl text-text-main border-b border-success/30 pb-2 flex items-center gap-2 mt-12">
                 <Shield className="w-5 h-5 text-success" />
