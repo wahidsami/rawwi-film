@@ -1,6 +1,8 @@
 /**
- * GCAM Severity Rulebook (v1): deterministic severity from factors.
+ * GCAM Severity Rulebook (v2): deterministic severity from factors.
  * AI outputs factors (1-4 each); backend computes severity and applies overrides.
+ * This version is intentionally conservative so borderline findings do not
+ * over-escalate into HIGH unless the content or risk profile clearly supports it.
  */
 
 export type Severity = "low" | "medium" | "high" | "critical";
@@ -54,8 +56,8 @@ function clamp(n: number, min: number, max: number): number {
 }
 
 function scoreToSeverity(score: number): Severity {
-  if (score >= 13) return "critical";
-  if (score >= 10) return "high";
+  if (score >= 14) return "critical";
+  if (score >= 11) return "high";
   if (score >= 7) return "medium";
   return "low";
 }
@@ -74,7 +76,7 @@ export type CalculateSeverityInput = {
 };
 
 /**
- * Compute severity from factors per GCAM Severity Rulebook (v1).
+ * Compute severity from factors per GCAM Severity Rulebook (v2).
  * Applies per-atom defaults, base score mapping, then global and per-atom overrides.
  */
 export function calculateSeverity(input: CalculateSeverityInput): Severity {
@@ -104,31 +106,34 @@ export function calculateSeverity(input: CalculateSeverityInput): Severity {
   if (atom === "CHILD_SAFETY" && (i >= 4 || audience >= 4)) {
     return "critical"; // Child abuse
   }
-  if (atom === "SEXUAL" && i >= 4) {
+  if (atom === "SEXUAL" && i >= 4 && (ctx >= 3 || audience >= 3)) {
     return "critical"; // Sexual violence / graphic coercive
   }
-  if (atom === "SEXUAL" && audience >= 3) {
+  if (atom === "SEXUAL" && audience >= 4) {
     return "critical"; // Minors involved → CRITICAL
   }
   if (atom === "EXTREMISM" && i >= 4) {
     return "critical"; // Promotion → CRITICAL
   }
-  if (atom === "PUBLIC_ORDER" && i >= 4) {
+  if (atom === "PUBLIC_ORDER" && i >= 4 && ctx >= 3) {
     return "critical"; // Explicit incitement to violence / chaos
   }
-  if (atom === "DISCRIMINATION" && i >= 4) {
+  if (atom === "DISCRIMINATION" && i >= 4 && (ctx >= 3 || audience >= 3)) {
     return "critical"; // Call to harm → CRITICAL (hate speech)
   }
 
   // Always ≥ HIGH
-  if (atom === "VIOLENCE" && i >= 3) {
+  if (atom === "VIOLENCE" && (i >= 4 || (i >= 3 && (ctx >= 3 || audience >= 3)))) {
     if (severityRank(severity) < severityRank("high")) severity = "high"; // Weapon violence
   }
-  if (atom === "EXTREMISM") {
+  if (atom === "EXTREMISM" && (i >= 3 || ctx >= 3)) {
     if (severityRank(severity) < severityRank("high")) severity = "high"; // Always ≥ HIGH
   }
-  if (atom === "WOMEN" && i >= 4) {
+  if (atom === "WOMEN" && i >= 4 && (ctx >= 3 || audience >= 3)) {
     if (severityRank(severity) < severityRank("high")) severity = "high"; // Harassment with coercion
+  }
+  if (atom === "PUBLIC_ORDER" && i >= 3 && ctx >= 3) {
+    if (severityRank(severity) < severityRank("high")) severity = "high";
   }
 
   return severity;

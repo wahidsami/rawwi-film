@@ -8,6 +8,12 @@ function clampSeverity(level: number): string {
   return invRank[n] ?? "medium";
 }
 
+function capSeverityAtMost(current: string, max: "low" | "medium" | "high" | "critical"): string {
+  const currentRank = rank[current] ?? 2;
+  const maxRank = rank[max] ?? 2;
+  return clampSeverity(Math.min(currentRank, maxRank));
+}
+
 /**
  * Deterministic policy merge:
  * - endorsement + rewarded narrative can escalate by 1
@@ -29,7 +35,7 @@ export function applyDecisionPolicy(findings: HybridFindingLike[]): HybridFindin
     if (!hardBlacklist && f.depiction_type === "mention" && f.narrative_consequence === "neutralized") next -= 1;
     if (likelyNarrativeMention) next -= 1;
 
-    const finalSeverity = clampSeverity(next);
+    let finalSeverity = clampSeverity(next);
     const final_ruling =
       hardBlacklist ? "violation"
       : f.depiction_type === "condemnation" && f.narrative_consequence === "punished" ? "context_ok"
@@ -37,6 +43,12 @@ export function applyDecisionPolicy(findings: HybridFindingLike[]): HybridFindin
       : f.depiction_type === "mention" ? "needs_review"
       : (f.context_confidence ?? 0) < 0.5 ? "needs_review"
       : "violation";
+
+    if (!hardBlacklist && final_ruling === "context_ok") {
+      finalSeverity = capSeverityAtMost(finalSeverity, "low");
+    } else if (!hardBlacklist && final_ruling === "needs_review") {
+      finalSeverity = capSeverityAtMost(finalSeverity, "medium");
+    }
 
     return {
       ...f,
