@@ -952,6 +952,10 @@ function isCancelledJobStatus(status?: string | null): boolean {
   return s === 'cancelled' || s === 'canceled';
 }
 
+function isQueuedJobStatus(status?: string | null): boolean {
+  return (status ?? '').toLowerCase() === 'queued';
+}
+
 export function ScriptWorkspace() {
 
   const { id } = useParams<{ id: string }>();
@@ -2210,6 +2214,11 @@ export function ScriptWorkspace() {
         ? 'توقف التحليل بسبب خطأ. يمكنك الإغلاق أو إعادة المحاولة بعد مراجعة الرسالة.'
         : 'The analysis stopped because of an error. You can close this dialog or retry after reviewing the message.';
     }
+    if (isQueuedJobStatus(analysisJob?.status)) {
+      return lang === 'ar'
+        ? 'تمت جدولة المهمة وهي بانتظار أن يلتقطها العامل. سيبدأ عرض الجزء الجاري فور بدء التنفيذ الفعلي.'
+        : 'The job is queued and waiting for the worker to pick it up. The active chunk will appear as soon as execution starts.';
+    }
     return lang === 'ar'
       ? 'يعمل النظام على تحليل النص جزءاً بعد جزء مع تحديثات مباشرة عن المرحلة الحالية.'
       : 'The system is analyzing the script chunk by chunk and updating this panel live.';
@@ -2219,6 +2228,8 @@ export function ScriptWorkspace() {
     ? 'text-success'
     : isCancelledJobStatus(analysisJob?.status)
       ? 'text-warning'
+    : isQueuedJobStatus(analysisJob?.status)
+      ? 'text-text-muted'
     : isStoppingJobStatus(analysisJob?.status)
       ? 'text-warning'
       : isPausedJobStatus(analysisJob?.status)
@@ -4900,6 +4911,8 @@ export function ScriptWorkspace() {
               <div className="flex items-center gap-3">
                 {isSuccessfulJobStatus(analysisJob?.status) ? (
                   <CheckCircle2 className="w-8 h-8 text-success flex-shrink-0" />
+                ) : isQueuedJobStatus(analysisJob?.status) ? (
+                  <Loader2 className="w-8 h-8 text-text-muted flex-shrink-0" />
                 ) : isCancelledJobStatus(analysisJob?.status) ? (
                   <XCircle className="w-8 h-8 text-warning flex-shrink-0" />
                 ) : isStoppingJobStatus(analysisJob?.status) ? (
@@ -4917,6 +4930,8 @@ export function ScriptWorkspace() {
                       ? (analysisJob?.isPartialReport
                           ? (lang === 'ar' ? 'اكتمل التقرير الجزئي' : 'Partial Report Ready')
                           : (lang === 'ar' ? 'اكتمل التحليل' : 'Analysis Complete'))
+                      : isQueuedJobStatus(analysisJob?.status)
+                        ? (lang === 'ar' ? 'بانتظار بدء التحليل' : 'Queued for Analysis')
                       : isCancelledJobStatus(analysisJob?.status)
                         ? (lang === 'ar' ? 'تم إلغاء التحليل' : 'Analysis Cancelled')
                       : isStoppingJobStatus(analysisJob?.status)
@@ -4952,6 +4967,7 @@ export function ScriptWorkspace() {
                   className={cn(
                     "h-full rounded-full transition-all duration-300",
                     isSuccessfulJobStatus(analysisJob?.status) ? 'bg-success' :
+                      isQueuedJobStatus(analysisJob?.status) ? 'bg-slate-300' :
                       isCancelledJobStatus(analysisJob?.status) ? 'bg-warning' :
                       isStoppingJobStatus(analysisJob?.status) ? 'bg-warning' :
                       isPausedJobStatus(analysisJob?.status) ? 'bg-warning' :
@@ -4973,7 +4989,9 @@ export function ScriptWorkspace() {
                 <div className="rounded-xl border border-border bg-background/60 p-3">
                   <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الحالة الخلفية' : 'Backend stage'}</p>
                   <p className="text-sm font-medium text-text-main">
-                    {isCancelledJobStatus(analysisJob?.status)
+                    {isQueuedJobStatus(analysisJob?.status)
+                      ? (lang === 'ar' ? 'بانتظار العامل' : 'Waiting for worker')
+                      : isCancelledJobStatus(analysisJob?.status)
                       ? (lang === 'ar' ? 'تم الإلغاء بالكامل' : 'Cancelled completely')
                       : isStoppingJobStatus(analysisJob?.status)
                       ? (activePhaseLabel ?? (lang === 'ar' ? 'إنهاء الجزء الجاري' : 'Finishing current chunk'))
@@ -5006,7 +5024,7 @@ export function ScriptWorkspace() {
                 <p className="text-xs text-text-muted">
                   {lang === 'ar' ? 'تفاصيل التنفيذ الحالية' : 'Current execution details'}
                 </p>
-                {isAnalysisRunning && !isPausedJobStatus(analysisJob?.status) && !isStoppingJobStatus(analysisJob?.status) && (
+                {isAnalysisRunning && !isQueuedJobStatus(analysisJob?.status) && !isPausedJobStatus(analysisJob?.status) && !isStoppingJobStatus(analysisJob?.status) && !isCancelledJobStatus(analysisJob?.status) && (
                   <div className="flex items-center gap-2 text-xs font-medium text-primary">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     <span>
