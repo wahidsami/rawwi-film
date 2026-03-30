@@ -42,6 +42,16 @@ for (const art of policyArticlesForForm) {
   ];
 }
 
+function getArticleAtomOptions(articleId: string): { value: string; label: string }[] {
+  return ARTICLE_ATOMS[articleId] ?? ARTICLE_ATOMS['1'] ?? [{ value: '', label: '—' }];
+}
+
+function sanitizeAtomSelection(articleId: string, atomId: string | null | undefined): string | null {
+  const raw = atomId?.trim() ?? '';
+  if (!raw) return null;
+  return getArticleAtomOptions(articleId).some((option) => option.value === raw) ? raw : null;
+}
+
 /**
  * Display atom code for UI: PolicyMap style "X-Y" or legacy "X.Y".
  */
@@ -1706,15 +1716,23 @@ export function ScriptWorkspace() {
     if (!editReportFindingModal) return;
     setEditReportFindingSaving(true);
     try {
+      const normalizedAtomId = sanitizeAtomSelection(editReportFindingForm.articleId, editReportFindingForm.atomId);
       const res = await findingsApi.reclassifyFinding({
         findingId: editReportFindingModal.id,
         articleId: parseInt(editReportFindingForm.articleId, 10) || 1,
-        atomId: editReportFindingForm.atomId?.trim() ? editReportFindingForm.atomId.trim() : null,
+        atomId: normalizedAtomId,
         severity: editReportFindingForm.severity,
         manualComment: editReportFindingForm.manualComment?.trim() || null,
       });
       if (res.finding) {
         setReportFindings((prev) => prev.map((f) => (f.id === res.finding!.id ? res.finding! : f)));
+      }
+      if ((editReportFindingForm.atomId?.trim() ?? '') && !normalizedAtomId) {
+        toast(
+          lang === 'ar'
+            ? 'تمت إعادة ضبط البند الفرعي لأنه لا ينتمي إلى المادة المختارة.'
+            : 'The atom was reset because it does not belong to the selected article.',
+        );
       }
       if (res.atomMappingWarning) {
         toast((t) => (
@@ -2720,6 +2738,7 @@ export function ScriptWorkspace() {
       excerpt: text,
       reportId: defaultReportId || prev.reportId,
       articleId: '1',
+      atomId: '',
       severity: 'medium',
       comment: '',
     }));
@@ -2734,6 +2753,7 @@ export function ScriptWorkspace() {
     }
     setManualSaving(true);
     try {
+      const normalizedAtomId = sanitizeAtomSelection(formData.articleId, formData.atomId);
       const created = await findingsApi.createManual({
         reportId: formData.reportId,
         scriptId: script.id,
@@ -2741,11 +2761,18 @@ export function ScriptWorkspace() {
         startOffsetGlobal: manualOffsets.startOffsetGlobal,
         endOffsetGlobal: manualOffsets.endOffsetGlobal,
         articleId: parseInt(formData.articleId, 10) || 1,
-        atomId: formData.atomId?.trim() ? formData.atomId.trim() : null,
+        atomId: normalizedAtomId,
         severity: formData.severity,
         manualComment: formData.comment?.trim() || undefined,
       });
       toast.success(lang === 'ar' ? 'تمت إضافة الملاحظة اليدوية' : 'Manual finding added');
+      if ((formData.atomId?.trim() ?? '') && !normalizedAtomId) {
+        toast(
+          lang === 'ar'
+            ? 'تمت إعادة ضبط البند الفرعي لأنه لا ينتمي إلى المادة المختارة.'
+            : 'The atom was reset because it does not belong to the selected article.',
+        );
+      }
       if (created.atomMappingWarning) {
         toast((t) => (
           <div className="max-w-sm text-sm leading-6" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -2808,6 +2835,8 @@ export function ScriptWorkspace() {
   /** Canonical text for offset-based highlights: script_text.content only. Offsets from AI are relative to this. */
   const canonicalContentForHighlights =
     (editorData?.content != null && editorData.content.trim() !== '') ? editorData.content : null;
+  const manualAtomOptions = getArticleAtomOptions(formData.articleId);
+  const editAtomOptions = getArticleAtomOptions(editReportFindingForm.articleId);
   const sections: EditorSectionResponse[] = editorData?.sections ?? [];
   const hasEditorContent = (editorData?.content != null && editorData.content.trim() !== '') || !!extractedText;
 
@@ -4734,7 +4763,7 @@ export function ScriptWorkspace() {
             label={lang === 'ar' ? 'البند الفرعي (اختياري)' : 'Atom (optional)'}
             value={formData.atomId}
             onChange={(e) => setFormData({ ...formData, atomId: e.target.value })}
-            options={ARTICLE_ATOMS[formData.articleId] ?? ARTICLE_ATOMS['1']}
+            options={manualAtomOptions}
           />
           <p className="text-[11px] text-text-muted" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
             {lang === 'ar'
@@ -5430,7 +5459,7 @@ export function ScriptWorkspace() {
             label={lang === 'ar' ? 'البند الفرعي (اختياري)' : 'Atom (optional)'}
             value={editReportFindingForm.atomId}
             onChange={(e) => setEditReportFindingForm((prev) => ({ ...prev, atomId: e.target.value }))}
-            options={ARTICLE_ATOMS[editReportFindingForm.articleId] ?? ARTICLE_ATOMS['1']}
+            options={editAtomOptions}
           />
 
           <Select

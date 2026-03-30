@@ -4,6 +4,46 @@ type AdminClient = {
   };
 };
 
+function buildAtomMatchCandidates(articleId: number, normalizedAtomId: string): Set<string> {
+  const candidates = new Set<string>();
+  const trimmed = normalizedAtomId.trim();
+  if (!trimmed) return candidates;
+
+  candidates.add(trimmed);
+
+  const suffixMatch = trimmed.match(/-(\d+)$/);
+  if (suffixMatch) {
+    const suffix = String(parseInt(suffixMatch[1], 10));
+    candidates.add(suffix);
+    candidates.add(`${articleId}-${suffix}`);
+    candidates.add(`${articleId}.${suffix}`);
+  }
+
+  return candidates;
+}
+
+function normalizeMappedAtomCode(articleId: number, rawCode: string | null | undefined): string | null {
+  const raw = String(rawCode ?? "").trim();
+  if (!raw) return null;
+
+  if (/^\d+$/.test(raw)) {
+    return String(parseInt(raw, 10));
+  }
+
+  if (/^\d+-\d+$/.test(raw)) {
+    const [mappedArticle, mappedAtom] = raw.split("-");
+    return `${parseInt(mappedArticle, 10)}-${parseInt(mappedAtom, 10)}`;
+  }
+
+  if (/^\d+\.\d+$/.test(raw)) {
+    const [mappedArticle, mappedAtom] = raw.split(".");
+    return `${parseInt(mappedArticle, 10)}-${parseInt(mappedAtom, 10)}`;
+  }
+
+  const normalizedForArticle = normalizeAtomIdForArticle(articleId, raw);
+  return normalizedForArticle || raw;
+}
+
 export function normalizeAtomIdForArticle(articleId: number, atomId: string | null | undefined): string | null {
   if (!atomId) return null;
   const raw = String(atomId).trim();
@@ -32,7 +72,7 @@ export async function validateArticleAtomLink(
   const normalizedAtomId = normalizeAtomIdForArticle(articleId, atomId);
   if (!normalizedAtomId) return { ok: true, normalizedAtomId: null };
 
-  const localAtomCode = normalizedAtomId.split("-")[1] ?? null;
+  const matchCandidates = buildAtomMatchCandidates(articleId, normalizedAtomId);
   const { data: rows, error } = await supabase
     .from("policy_article_atom_map")
     .select("id, local_atom_code")
@@ -45,7 +85,21 @@ export async function validateArticleAtomLink(
   if (!list.length) {
     return { ok: true, normalizedAtomId };
   }
-  const matched = list.some((r) => String(r.local_atom_code ?? "") === String(localAtomCode ?? ""));
+
+  const mappedCodes = list
+    .map((r) => normalizeMappedAtomCode(articleId, r.local_atom_code))
+    .filter((value): value is string => Boolean(value));
+
+  if (!mappedCodes.length) {
+    return { ok: true, normalizedAtomId };
+  }
+
+  const matched = mappedCodes.some((mappedCode) => {
+    if (matchCandidates.has(mappedCode)) return true;
+    const normalizedMapped = normalizeMappedAtomCode(articleId, mappedCode);
+    return normalizedMapped ? matchCandidates.has(normalizedMapped) : false;
+  });
+
   if (!matched) {
     return { ok: false, normalizedAtomId, reason: `Atom ${normalizedAtomId} is not mapped to article ${articleId}` };
   }
