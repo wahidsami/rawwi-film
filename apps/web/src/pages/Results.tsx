@@ -842,7 +842,7 @@ export function Results() {
         scriptSummary: summary.script_summary ?? undefined,
         lang: isAr ? 'ar' : 'en' as const,
       };
-      downloadAnalysisWord(basePayload);
+      await downloadAnalysisWord(basePayload);
       toast.success(isAr ? 'تم تنزيل ملف Word' : 'Word document downloaded');
     } catch (err: unknown) {
       console.error('[Results] Word download failed', err);

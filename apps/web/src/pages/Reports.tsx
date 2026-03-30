@@ -175,7 +175,7 @@ function Reports() {
           findings = await findingsApi.getByJob(fullReport.jobId);
         } catch { /* ignore */ }
       }
-      downloadAnalysisWord({
+      await downloadAnalysisWord({
         scriptTitle: fullReport.scriptTitle || (lang === 'ar' ? 'تحليل النص' : 'Script Analysis'),
         clientName: fullReport.clientName || (lang === 'ar' ? 'عميل' : 'Client'),
         createdAt: fullReport.createdAt,
