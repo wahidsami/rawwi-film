@@ -473,8 +473,17 @@ async function runDev(): Promise<never> {
   try {
     while (true) {
       setContext({});
-      await processOneJob();
-      await new Promise((r) => setTimeout(r, config.POLL_INTERVAL_MS));
+      let didWork = false;
+      try {
+        didWork = await processOneJob();
+      } catch (error) {
+        logger.error("Worker loop iteration failed", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      if (!didWork) {
+        await new Promise((r) => setTimeout(r, config.POLL_INTERVAL_MS));
+      }
     }
   } finally {
     clearInterval(staleSweep);
@@ -485,7 +494,19 @@ const mode = process.argv[2];
 const jobId = process.argv[3] === "--job" ? process.argv[4] : undefined;
 
 if (mode === "once") {
+  if (!jobId) {
+    logger.error("worker:once requires --job <jobId>");
+    process.exit(1);
+  }
   runOnce(jobId).then(
+    () => process.exit(0),
+    (e) => {
+      logger.error("Fatal", { error: String(e) });
+      process.exit(1);
+    }
+  );
+} else if (mode === "single") {
+  runOnce(undefined).then(
     () => process.exit(0),
     (e) => {
       logger.error("Fatal", { error: String(e) });
@@ -498,6 +519,6 @@ if (mode === "once") {
     process.exit(1);
   });
 } else {
-  console.log("Usage: pnpm worker:dev | pnpm worker:once [--job <jobId>]");
+  console.log("Usage: pnpm worker:dev | pnpm worker:once --job <jobId> | pnpm worker single");
   process.exit(1);
 }

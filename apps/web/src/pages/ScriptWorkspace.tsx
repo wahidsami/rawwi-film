@@ -1180,7 +1180,20 @@ export function ScriptWorkspace() {
     lastFailedAnalysisAlertRef.current = null;
     const poll = async () => {
       try {
-        const job = await tasksApi.getJob(jobId);
+        const [jobResult, chunksResult] = await Promise.allSettled([
+          tasksApi.getJob(jobId),
+          tasksApi.getJobChunks(jobId),
+        ]);
+
+        if (chunksResult.status === 'fulfilled') {
+          setChunkStatuses(chunksResult.value);
+        }
+
+        if (jobResult.status !== 'fulfilled') {
+          throw jobResult.reason;
+        }
+
+        const job = jobResult.value;
         setAnalysisJob(job);
         if (isTerminalJobStatus(job.status)) {
           stopPolling();
@@ -1294,29 +1307,21 @@ export function ScriptWorkspace() {
         // Filter out "assigned tasks" (which are just script pointers) and keep only real analysis jobs
         const analysisJobs = jobs.filter(j => j.versionId);
         if (analysisJobs.length > 0) {
-          setAnalysisJobId(analysisJobs[0].id);
-          setAnalysisJob(analysisJobs[0]);
+          const latestJob = analysisJobs[0];
+          setAnalysisJobId(latestJob.id);
+          setAnalysisJob(latestJob);
+          if (!isTerminalJobStatus(latestJob.status)) {
+            startPolling(latestJob.id);
+          } else {
+            tasksApi.getJobChunks(latestJob.id).then((chunks) => {
+              setChunkStatuses(chunks);
+            }).catch(() => { /* ignore */ });
+          }
           // Also try to get report id
         }
       })
       .catch(() => { /* ignore — no jobs yet */ });
-  }, [script?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Keep chunk statuses updated while analysis is running (used by modal + debug panel).
-  useEffect(() => {
-    const isRunning = analysisJob != null && !isTerminalJobStatus(analysisJob.status);
-    if (!analysisJobId || !isRunning) return;
-    let cancelled = false;
-    const fetchChunks = async () => {
-      try {
-        const chunks = await tasksApi.getJobChunks(analysisJobId);
-        if (!cancelled) setChunkStatuses(chunks);
-      } catch (_) { /* ignore */ }
-    };
-    fetchChunks();
-    const iv = setInterval(fetchChunks, 2000);
-    return () => { cancelled = true; clearInterval(iv); };
-  }, [analysisJobId, analysisJob?.status]);
+  }, [script?.id, startPolling]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Report history ──
   const [sidebarTab, setSidebarTab] = useState<'findings' | 'reports'>('findings');
