@@ -1298,6 +1298,10 @@ export async function processChunkJudge(
   }
 
   throwIfAborted(signal);
+  if (await isJobCancelled(jobId)) {
+    await setChunkFailed(chunk.id, "Cancelled by user");
+    throw new JobCancelledError();
+  }
   await setChunkDone(chunk.id);
   await incrementJobProgress(jobId);
   logger.info("Chunk processed", {

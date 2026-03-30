@@ -816,6 +816,13 @@ Deno.serve(async (req: Request) => {
   const { error: chunksErr } = await supabase.from("analysis_chunks").insert(chunkRows);
   if (chunksErr) {
     console.error(`[tasks] correlationId=${correlationId} chunks insert error=`, chunksErr.message);
+    const { error: cleanupErr } = await supabase
+      .from("analysis_jobs")
+      .delete()
+      .eq("id", job.id);
+    if (cleanupErr) {
+      console.error(`[tasks] correlationId=${correlationId} failed to clean up orphaned analysis job ${job.id}:`, cleanupErr.message);
+    }
     return json({ error: chunksErr.message }, 500);
   }
 

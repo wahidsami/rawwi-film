@@ -192,6 +192,16 @@ async function processClaimedChunk(
       await setJobFailed(job.id, CHUNK_TIMEOUT_FAILED_PUBLIC_MESSAGE);
       return { ok: false, retryable: false, error: CHUNK_TIMEOUT_FAILED_PUBLIC_MESSAGE };
     }
+    if (e instanceof Error && e.name === "OperationTimeoutError") {
+      logger.error("Chunk processing hit internal operation timeout", {
+        jobId: job.id,
+        chunkId: claimed.id,
+        error: errMsg,
+      });
+      await setChunkFailed(claimed.id, errMsg);
+      await setJobFailed(job.id, errMsg);
+      return { ok: false, retryable: false, error: errMsg };
+    }
     if (isAiOverloadIssue(errMsg)) {
       const retryCount = getAiOverloadRetryCount(claimed.last_error) + 1;
       if (retryCount <= config.AI_OVERLOAD_MAX_RETRIES) {
