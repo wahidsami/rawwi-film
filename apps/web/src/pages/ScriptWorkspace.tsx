@@ -3184,44 +3184,69 @@ export function ScriptWorkspace() {
     return pagesSortedForViewer.map((p) => p.content ?? '').join('\n\n');
   }, [editorData?.pages, editorData?.content, pagesSortedForViewer]);
 
-  /** Per-finding: where evidence actually appears in the workspace (page + local offsets). */
+  /** Per-finding: where evidence actually appears in the workspace (page + local/global offsets). */
   const findingWorkspaceResolve = useMemo(() => {
-    const map = new Map<string, { pageNumber: number; localStart: number; localEnd: number }>();
+    const map = new Map<string, { pageNumber: number; localStart: number; localEnd: number; globalStart: number; globalEnd: number }>();
     if (!workspacePlainFull.trim() || !workspaceVisibleReportFindings.length) return map;
-    const pages =
-      pagesSortedForViewer.length > 0
-        ? pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
-        : [{ pageNumber: 1, content: workspacePlainFull }];
+    const hasPagedViewer = pagesSortedForViewer.length > 0;
+    const pages = hasPagedViewer
+      ? pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
+      : [{ pageNumber: 1, content: workspacePlainFull }];
     for (const f of workspaceVisibleReportFindings) {
       const globalSpan = resolveFindingSpanInText(workspacePlainFull, f, locateFindingInContent);
       const hit =
         (globalSpan ? workspaceGlobalSpanToPageLocal(globalSpan.start, globalSpan.end, pages) : null) ??
         resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
       if (hit) {
-        map.set(f.id, hit);
+        const pageIndex = Math.max(0, pages.findIndex((p) => p.pageNumber === hit.pageNumber));
+        const pageGlobalStart = hasPagedViewer ? globalStartOfViewerPage(pages, pageIndex) : 0;
+        map.set(f.id, {
+          ...hit,
+          globalStart: pageGlobalStart + hit.localStart,
+          globalEnd: pageGlobalStart + hit.localEnd,
+        });
       }
     }
     return map;
   }, [workspacePlainFull, workspaceVisibleReportFindings, pagesSortedForViewer, locateFindingInContent]);
 
+  const activeWorkspaceHighlights = useMemo((): AnalysisFinding[] => {
+    if (!selectedReportForHighlights || !workspaceVisibleReportFindings.length) return [];
+    const activeIds = selectedReportFindingIds.length > 0 ? new Set(selectedReportFindingIds) : null;
+    return workspaceVisibleReportFindings.filter((f) => !activeIds || activeIds.has(f.id));
+  }, [selectedReportForHighlights, workspaceVisibleReportFindings, selectedReportFindingIds]);
+
   const highlightTargetsForPageView = useMemo((): AnalysisFinding[] => {
-    if (!pinnedHighlight || !workspaceVisibleReportFindings.length) return [];
-    const f = workspaceVisibleReportFindings.find((x) => x.id === pinnedHighlight.findingId);
-    if (!f) return [];
-    const pages = pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }));
-    if (!pages.length) return [];
-    const hit = workspaceGlobalSpanToPageLocal(pinnedHighlight.globalStart, pinnedHighlight.globalEnd, pages);
-    if (!hit || hit.pageNumber !== safeCurrentPage) return [];
-    return [{ ...f, startOffsetGlobal: hit.localStart, endOffsetGlobal: hit.localEnd }];
-  }, [pinnedHighlight, workspaceVisibleReportFindings, pagesSortedForViewer, safeCurrentPage]);
+    if (!workspaceVisibleReportFindings.length || pagesSortedForViewer.length === 0) return [];
+    if (pinnedHighlight) {
+      const f = workspaceVisibleReportFindings.find((x) => x.id === pinnedHighlight.findingId);
+      if (!f) return [];
+      const pages = pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }));
+      const hit = workspaceGlobalSpanToPageLocal(pinnedHighlight.globalStart, pinnedHighlight.globalEnd, pages);
+      if (!hit || hit.pageNumber !== safeCurrentPage) return [];
+      return [{ ...f, startOffsetGlobal: hit.localStart, endOffsetGlobal: hit.localEnd }];
+    }
+    return activeWorkspaceHighlights.flatMap((f) => {
+      const hit = findingWorkspaceResolve.get(f.id);
+      if (!hit || hit.pageNumber !== safeCurrentPage) return [];
+      return [{ ...f, startOffsetGlobal: hit.localStart, endOffsetGlobal: hit.localEnd }];
+    });
+  }, [pinnedHighlight, workspaceVisibleReportFindings, pagesSortedForViewer, safeCurrentPage, activeWorkspaceHighlights, findingWorkspaceResolve]);
 
   const highlightTargetsForScrollView = useMemo((): AnalysisFinding[] => {
-    if (!pinnedHighlight || !workspaceVisibleReportFindings.length) return [];
+    if (!workspaceVisibleReportFindings.length) return [];
     if ((editorData?.pages?.length ?? 0) > 0) return [];
-    const f = workspaceVisibleReportFindings.find((x) => x.id === pinnedHighlight.findingId);
-    if (!f) return [];
-    return [{ ...f, startOffsetGlobal: pinnedHighlight.globalStart, endOffsetGlobal: pinnedHighlight.globalEnd }];
-  }, [pinnedHighlight, workspaceVisibleReportFindings, editorData?.pages?.length]);
+    if (pinnedHighlight) {
+      const f = workspaceVisibleReportFindings.find((x) => x.id === pinnedHighlight.findingId);
+      if (!f) return [];
+      return [{ ...f, startOffsetGlobal: pinnedHighlight.globalStart, endOffsetGlobal: pinnedHighlight.globalEnd }];
+    }
+    return activeWorkspaceHighlights.flatMap((f) => {
+      const hit = findingWorkspaceResolve.get(f.id);
+      if (!hit) return [];
+      return [{ ...f, startOffsetGlobal: hit.globalStart, endOffsetGlobal: hit.globalEnd }];
+    });
+  }, [pinnedHighlight, workspaceVisibleReportFindings, editorData?.pages?.length, activeWorkspaceHighlights, findingWorkspaceResolve]);
 
   const findingSegments = useMemo(
     () =>
@@ -3414,6 +3439,7 @@ export function ScriptWorkspace() {
   useEffect(() => {
     const container = editorRef.current;
     if (container) unwrapFindingMarks(container);
+    const inPageMode = (editorData?.pages?.length ?? 0) > 0;
 
     if (blockHighlightsCompletely || workspaceViewMode === 'pdf') {
       setHighlightExpectedCount(0);
@@ -3422,34 +3448,33 @@ export function ScriptWorkspace() {
       return;
     }
 
-    if (!pinnedHighlight) {
+    const expectedCount = inPageMode ? highlightTargetsForPageView.length : highlightTargetsForScrollView.length;
+
+    if (!selectedReportForHighlights && !pinnedHighlight) {
       setHighlightExpectedCount(0);
       setHighlightLocatableCount(0);
       setHighlightRenderedCount(0);
       return;
     }
 
-    const inPageMode = (editorData?.pages?.length ?? 0) > 0;
-    const pagePlain = currentPageData?.content ?? '';
-
     if (inPageMode && !currentPageData?.contentHtml) {
       const n = highlightTargetsForPageView.length;
-      setHighlightExpectedCount(n ? 1 : 0);
+      setHighlightExpectedCount(n);
       setHighlightLocatableCount(n);
-      setHighlightRenderedCount(n ? 1 : 0);
+      setHighlightRenderedCount(n);
       return;
     }
 
     if (!inPageMode && !editorData?.contentHtml) {
       const n = highlightTargetsForScrollView.length;
-      setHighlightExpectedCount(n ? 1 : 0);
+      setHighlightExpectedCount(n);
       setHighlightLocatableCount(n);
-      setHighlightRenderedCount(n ? 1 : 0);
+      setHighlightRenderedCount(n);
       return;
     }
 
     if (!container || !domTextIndex || !canonicalContentForHighlights) {
-      setHighlightExpectedCount(1);
+      setHighlightExpectedCount(expectedCount);
       setHighlightLocatableCount(0);
       setHighlightRenderedCount(0);
       return;
@@ -3459,13 +3484,13 @@ export function ScriptWorkspace() {
 
     if (inPageMode && currentPageData?.contentHtml) {
       const resolved = highlightTargetsForPageView;
-      setHighlightExpectedCount(resolved.length ? 1 : 0);
+      setHighlightExpectedCount(resolved.length);
       if (!resolved.length) {
         setHighlightLocatableCount(0);
         setHighlightRenderedCount(0);
         return;
       }
-      setHighlightLocatableCount(1);
+      setHighlightLocatableCount(resolved.length);
       const applied = applyHighlightMarks(container, domTextIndex, resolved, {
         pageSlice: true,
         sliceGlobalStart: 0,
@@ -3475,19 +3500,20 @@ export function ScriptWorkspace() {
     }
 
     const resolved = highlightTargetsForScrollView;
-    setHighlightExpectedCount(resolved.length ? 1 : 0);
+    setHighlightExpectedCount(resolved.length);
     if (!resolved.length) {
       setHighlightLocatableCount(0);
       setHighlightRenderedCount(0);
       return;
     }
-    setHighlightLocatableCount(1);
+    setHighlightLocatableCount(resolved.length);
     const applied = applyHighlightMarks(container, domTextIndex, resolved);
     setHighlightRenderedCount(applied);
   }, [
     domTextIndex,
     canonicalContentForHighlights,
     pinnedHighlight,
+    selectedReportForHighlights,
     blockHighlightsCompletely,
     editorData?.contentHtml,
     editorData?.pages,
@@ -4164,8 +4190,8 @@ export function ScriptWorkspace() {
                 <span className="text-xs font-medium text-text-muted">
                   {selectedReportForHighlights
                     ? lang === 'ar'
-                      ? 'اضغط على أي ملاحظة ليجري تحديدها وتمييزها تلقائياً داخل النص.'
-                      : 'Click any finding to automatically locate and highlight it in the script.'
+                      ? 'تُميَّز الملاحظات القابلة للتحديد تلقائياً داخل النص، ويمكنك الضغط على أي بطاقة للتركيز عليها.'
+                      : 'Resolvable findings are highlighted automatically in the script, and you can click any card to focus it.'
                     : lang === 'ar'
                       ? 'اختر تقريراً لعرض الملاحظات.'
                       : 'Select a report to view findings.'}

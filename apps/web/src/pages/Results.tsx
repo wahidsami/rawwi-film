@@ -212,7 +212,7 @@ export function Results() {
   const [groupFindingsByAtom, setGroupFindingsByAtom] = useState(false);
   /** false = deduped list (default); true = every DB row (duplicates visible). */
   const [showAllFindingRows, setShowAllFindingRows] = useState(false);
-  const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'high' | 'medium' | 'low'>('all');
+  const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'high' | 'medium' | 'low' | 'manual'>('all');
   /** script_pages slices for viewer-accurate page labels (same model as workspace). */
   const [reportViewerPages, setReportViewerPages] = useState<Array<{ pageNumber: number; content: string }> | null>(null);
 
@@ -481,12 +481,19 @@ export function Results() {
   })();
   const displayApproved = report.approvedCount ?? 0;
   const displaySpecialNotes = reportHints.length;
-  const matchesSeverityFilter = (severity?: string | null) =>
-    severityFilter === 'all' || (severity ?? '').toLowerCase() === severityFilter;
+  const manualFindingsCount = hasRealFindings
+    ? dedupeRealFindings(violations.filter((f) => f.source === 'manual')).length
+    : 0;
+
+  const matchesSeverityFilter = (finding: Pick<AnalysisFinding, 'severity' | 'source'> | Pick<CanonicalSummaryFinding, 'severity' | 'source'>) => {
+    if (severityFilter === 'all') return true;
+    if (severityFilter === 'manual') return (finding.source ?? 'ai') === 'manual';
+    return (finding.severity ?? '').toLowerCase() === severityFilter;
+  };
   const filteredDisplayViolations = hasRealFindings
-    ? displayViolations.filter((f) => matchesSeverityFilter(f.severity))
+    ? displayViolations.filter((f) => matchesSeverityFilter(f))
     : [];
-  const filteredCanonicalSummaryFindings = canonicalSummaryFindings.filter((f) => matchesSeverityFilter(f.severity));
+  const filteredCanonicalSummaryFindings = canonicalSummaryFindings.filter((f) => matchesSeverityFilter(f));
   const filteredViolationsCount = hasRealFindings
     ? filteredDisplayViolations.length
     : filteredCanonicalSummaryFindings.length;
@@ -875,6 +882,32 @@ export function Results() {
     return t('findingSourceAi');
   }
 
+  function displayFindingTitle(params: {
+    title: string | null | undefined;
+    source?: string | null;
+    evidenceSnippet?: string | null;
+    articleId: number;
+  }): string {
+    const title = (params.title ?? '').trim();
+    const source = params.source ?? 'ai';
+    const evidenceSnippet = (params.evidenceSnippet ?? '').trim();
+
+    if (source === 'lexicon_mandatory') {
+      const term = evidenceSnippet || title.replace(/^.*?:\s*/, '').trim();
+      return term
+        ? `${lang === 'ar' ? 'مطابقة من قاموس المصطلحات' : 'Glossary match'}: ${term}`
+        : (lang === 'ar' ? 'مطابقة من قاموس المصطلحات' : 'Glossary match');
+    }
+
+    if (/^(مخالفة\s+معجمية|مطابقة\s+من\s+قاموس\s+المصطلحات)\s*:/u.test(title)) {
+      return lang === 'ar'
+        ? `مخالفة المحتوى الإعلامي — المادة ${params.articleId}`
+        : `Content finding — Article ${params.articleId}`;
+    }
+
+    return title || (lang === 'ar' ? 'ملاحظة' : 'Finding');
+  }
+
   function renderFindingCard(f: AnalysisFinding) {
     const isApproved = f.reviewStatus === 'approved';
     const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
@@ -884,10 +917,16 @@ export function Results() {
     const rationale = pickFindingRationale(f);
     const pillarId = (v3.pillar_id as string | undefined) ?? null;
     const displayPage = displayPageForFinding(f.startOffsetGlobal, reportViewerPages, f.pageNumber ?? null);
+    const displayTitle = displayFindingTitle({
+      title: f.titleAr,
+      source: f.source ?? 'ai',
+      evidenceSnippet: f.evidenceSnippet,
+      articleId: primaryArticle,
+    });
     return (
       <div key={f.id} className={cn("border rounded-lg p-4", isApproved ? "bg-success/5 border-success/20" : "bg-surface border-border")}>
         <div className="flex items-center justify-between mb-2">
-          <span className="font-semibold text-text-main text-sm">{f.titleAr}</span>
+          <span className="font-semibold text-text-main text-sm">{displayTitle}</span>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] text-text-muted border-border/60">{findingSourceLabel(f.source ?? 'ai')}</Badge>
             {isApproved && (
@@ -998,7 +1037,14 @@ export function Results() {
                 {list.map(({ art, f, idx }) => (
                   <div key={`${art.article_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-text-main text-sm">{f.title_ar}</span>
+                      <span className="font-semibold text-text-main text-sm">
+                        {displayFindingTitle({
+                          title: f.title_ar,
+                          source: f.source ?? 'ai',
+                          evidenceSnippet: f.evidence_snippet,
+                          articleId: art.article_id,
+                        })}
+                      </span>
                       <div className="flex items-center gap-2">
                         <Badge className={cn("text-[10px] border", sevColor(f.severity ?? ""))}>{f.severity}</Badge>
                         <span className="text-[10px] text-text-muted">
@@ -1062,7 +1108,14 @@ export function Results() {
                   return (
                         <div key={`${f.canonical_finding_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-text-main text-sm">{f.title_ar}</span>
+                            <span className="font-semibold text-text-main text-sm">
+                              {displayFindingTitle({
+                                title: f.title_ar,
+                                source: f.source ?? 'ai',
+                                evidenceSnippet: f.evidence_snippet,
+                                articleId,
+                              })}
+                            </span>
                             <div className="flex items-center gap-2">
                               <Badge className={cn("text-[10px] border", sevColor(f.severity))}>{f.severity}</Badge>
                               <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
@@ -1488,6 +1541,19 @@ export function Results() {
               <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'منخفضة' : 'Low'}</div>
               <div className="font-bold text-lg">{displaySc.low}</div>
             </button>
+            {manualFindingsCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setSeverityFilter((v) => (v === 'manual' ? 'all' : 'manual'))}
+                className={cn(
+                  "bg-surface/50 border border-border p-3 rounded-xl text-start transition-colors text-primary",
+                  severityFilter === 'manual' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/40'
+                )}
+              >
+                <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'ملاحظات يدوية' : 'Manual findings'}</div>
+                <div className="font-bold text-lg">{manualFindingsCount}</div>
+              </button>
+            )}
             {displayApproved > 0 && (
               <div className="bg-success/5 border border-success/20 p-3 rounded-xl text-success">
                 <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'معتمد آمن' : 'Approved'}</div>
@@ -1564,7 +1630,11 @@ export function Results() {
             <ShieldAlert className="w-5 h-5 text-primary" />
             {lang === 'ar' ? 'المخالفات' : 'Violations'}
             <Badge variant="outline" className="ms-2">
-              {severityFilter === 'all' ? displayTotal : `${filteredViolationsCount} / ${displayTotal}`}
+              {severityFilter === 'all'
+                ? displayTotal
+                : severityFilter === 'manual'
+                  ? `${filteredViolationsCount} / ${manualFindingsCount}`
+                  : `${filteredViolationsCount} / ${displayTotal}`}
             </Badge>
             {severityFilter !== 'all' && (
               <button
@@ -1583,16 +1653,22 @@ export function Results() {
               <h4 className="text-lg font-bold text-text-main">
                 {severityFilter === 'all'
                   ? (lang === 'ar' ? 'النص سليم' : 'Script Is Compliant')
-                  : (lang === 'ar' ? 'لا توجد مخالفات بهذه الدرجة' : 'No violations at this severity')}
+                  : severityFilter === 'manual'
+                    ? (lang === 'ar' ? 'لا توجد ملاحظات يدوية' : 'No manual findings')
+                    : (lang === 'ar' ? 'لا توجد مخالفات بهذه الدرجة' : 'No violations at this severity')}
               </h4>
               <p className="text-text-muted mt-2">
                 {severityFilter === 'all'
                   ? (lang === 'ar'
                     ? 'لم يتم رصد أي مخالفات في هذا النص وفق قواعد التحليل الحالية.'
                     : 'No violations were detected in this script under the current analysis policy.')
-                  : (lang === 'ar'
-                    ? 'جرّب درجة أخرى أو ألغِ التصفية لعرض جميع المخالفات.'
-                    : 'Try another severity or clear the filter to view all violations.')}
+                  : severityFilter === 'manual'
+                    ? (lang === 'ar'
+                      ? 'لا توجد ملاحظات يدوية في هذا التقرير، أو أنها غير ضمن النتائج المعروضة حالياً.'
+                      : 'There are no manual findings in this report, or none match the current result set.')
+                    : (lang === 'ar'
+                      ? 'جرّب درجة أخرى أو ألغِ التصفية لعرض جميع المخالفات.'
+                      : 'Try another severity or clear the filter to view all violations.')}
               </p>
             </div>
           ) : hasRealFindings && filteredDisplayViolations.length > 0
