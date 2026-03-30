@@ -234,7 +234,7 @@ export function downloadAnalysisWord(params: DownloadAnalysisWordParams): void {
       body { font-family: Cairo, Tahoma, Arial, sans-serif; direction: ${dir}; color: #111827; margin: 0; font-size: 10.5pt; line-height: 1.55; }
       .cover-page { page-break-after: always; break-after: page; }
       .cover-logo-wrap { text-align: center; margin-top: 2mm; margin-bottom: 8mm; }
-      .cover-logo { max-width: 140px; max-height: 64px; object-fit: contain; }
+      .cover-logo { max-width: 110px; max-height: 50px; object-fit: contain; }
       .cover-title { text-align: center; font-size: 15pt; font-weight: 700; margin: 0 0 8mm; }
       .cover-grid { width: 100%; border-collapse: collapse; margin-top: 4mm; }
       .cover-grid td { padding: 5px 0; vertical-align: top; font-size: 10.5pt; }
