@@ -7,7 +7,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate, formatDateLong, formatDateTime } from '@/utils/dateFormat';
 import { type AnalysisReport } from '@/services/reportService';
 import { reportsApi, findingsApi, scriptsApi, type AnalysisFinding } from '@/api';
-import type { ReviewStatus } from '@/api/models';
+import type { ReviewStatus, Script } from '@/api/models';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -208,6 +208,7 @@ export function Results() {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isDownloadingWord, setIsDownloadingWord] = useState(false);
   const [isQuickAnalysisReport, setIsQuickAnalysisReport] = useState(quickFromQuery);
+  const [reportScriptMeta, setReportScriptMeta] = useState<Script | null>(null);
   const [groupFindingsByAtom, setGroupFindingsByAtom] = useState(false);
   /** false = deduped list (default); true = every DB row (duplicates visible). */
   const [showAllFindingRows, setShowAllFindingRows] = useState(false);
@@ -289,6 +290,7 @@ export function Results() {
         }
         if (!cancelled) {
           setReport(r);
+          setReportScriptMeta(null);
           setReportViewerPages(null);
           if (r.scriptId && r.versionId) {
             scriptsApi
@@ -310,11 +312,18 @@ export function Results() {
           } else if (r.scriptId) {
             try {
               const script = await scriptsApi.getScript(r.scriptId);
-              if (!cancelled) setIsQuickAnalysisReport(Boolean(script?.isQuickAnalysis));
+              if (!cancelled) {
+                setReportScriptMeta(script ?? null);
+                setIsQuickAnalysisReport(Boolean(script?.isQuickAnalysis));
+              }
             } catch {
-              if (!cancelled) setIsQuickAnalysisReport(false);
+              if (!cancelled) {
+                setReportScriptMeta(null);
+                setIsQuickAnalysisReport(false);
+              }
             }
           } else {
+            setReportScriptMeta(null);
             setIsQuickAnalysisReport(false);
           }
           setLoading(false);
@@ -818,7 +827,13 @@ export function Results() {
         scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
         clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
         createdAt: report.createdAt,
-        logoUrl: settings?.branding?.logoUrl,
+        logoUrl: '/loginlogo.png',
+        scriptType: reportScriptMeta?.type ?? null,
+        workClassification: reportScriptMeta?.workClassification ?? null,
+        pageCount: reportViewerPages?.length ?? null,
+        episodeCount: reportScriptMeta?.episodeCount ?? null,
+        receivedAt: reportScriptMeta?.receivedAt ?? null,
+        deliveredAt: report.createdAt,
         findings,
         findingsByArticle: summary.findings_by_article,
         canonicalFindings: canonicalSummaryFindings,

@@ -9,7 +9,7 @@ import { formatDate } from '@/utils/dateFormat';
 import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
 import { downloadAnalysisWord } from '@/components/reports/analysis/downloadWord';
 import toast from 'react-hot-toast';
-import { reportsApi, findingsApi, type AnalysisFinding } from '@/api';
+import { reportsApi, findingsApi, scriptsApi, type AnalysisFinding } from '@/api';
 import { usersApi } from '@/api';
 import { ReportListItem } from '@/api/models';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -161,6 +161,13 @@ function Reports() {
     setDownloadingWordReportId(report.id || null);
     try {
       const fullReport = await reportsApi.getById(report.id!);
+      const scriptMeta = fullReport.scriptId ? await scriptsApi.getScript(fullReport.scriptId).catch(() => null) : null;
+      const pageCount = fullReport.scriptId && fullReport.versionId
+        ? await scriptsApi
+            .getEditor(fullReport.scriptId, fullReport.versionId)
+            .then((editor) => editor.pages?.length ?? null)
+            .catch(() => null)
+        : null;
       let findings: AnalysisFinding[] = [];
       if (fullReport.jobId) {
         try {
@@ -171,7 +178,13 @@ function Reports() {
         scriptTitle: fullReport.scriptTitle || (lang === 'ar' ? 'تحليل النص' : 'Script Analysis'),
         clientName: fullReport.clientName || (lang === 'ar' ? 'عميل' : 'Client'),
         createdAt: fullReport.createdAt,
-        logoUrl: settings?.branding?.logoUrl,
+        logoUrl: '/loginlogo.png',
+        scriptType: scriptMeta?.type ?? null,
+        workClassification: scriptMeta?.workClassification ?? null,
+        pageCount,
+        episodeCount: scriptMeta?.episodeCount ?? null,
+        receivedAt: scriptMeta?.receivedAt ?? null,
+        deliveredAt: fullReport.createdAt,
         findings,
         findingsByArticle: fullReport.summaryJson?.findings_by_article,
         canonicalFindings: fullReport.summaryJson?.canonical_findings,

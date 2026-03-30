@@ -1,6 +1,5 @@
 import type { AnalysisFinding } from "@/api";
 import { mapAnalysisFindingsForPdf } from "./mapper";
-import { resolveStorageUrl } from "@/utils/storage";
 
 type ReportHint = {
   canonical_finding_id: string;
@@ -25,6 +24,12 @@ export interface DownloadAnalysisWordParams {
   clientName: string;
   createdAt: string;
   logoUrl?: string | null;
+  scriptType?: string | null;
+  workClassification?: string | null;
+  pageCount?: number | null;
+  episodeCount?: number | null;
+  receivedAt?: string | null;
+  deliveredAt?: string | null;
   findings?: AnalysisFinding[] | null;
   findingsByArticle?: Array<{ article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }> }> | null;
   canonicalFindings?: Array<{
@@ -57,22 +62,6 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function severityLabel(severity: string, lang: "ar" | "en"): string {
-  const s = severity.toLowerCase();
-  if (lang === "ar") {
-    if (s === "critical") return "حرجة";
-    if (s === "high") return "عالية";
-    if (s === "medium") return "متوسطة";
-    if (s === "low") return "منخفضة";
-    return "ملاحظة";
-  }
-  if (s === "critical") return "Critical";
-  if (s === "high") return "High";
-  if (s === "medium") return "Medium";
-  if (s === "low") return "Low";
-  return "Note";
-}
-
 function formatDate(value: string, lang: "ar" | "en"): string {
   try {
     return new Intl.DateTimeFormat(lang === "ar" ? "ar-EG" : "en-US", {
@@ -85,41 +74,144 @@ function formatDate(value: string, lang: "ar" | "en"): string {
   }
 }
 
+function plainText(value: string | null | undefined): string {
+  return (value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function formatNullableDate(value: string | null | undefined, lang: "ar" | "en"): string {
+  const text = plainText(value);
+  return text ? formatDate(text, lang) : "—";
+}
+
+function formatNullableValue(value: string | number | null | undefined): string {
+  if (value == null) return "—";
+  const text = String(value).trim();
+  return text || "—";
+}
+
+function normalizeScriptType(value: string | null | undefined, lang: "ar" | "en"): string {
+  const raw = plainText(value).toLowerCase();
+  if (!raw) return "—";
+  if (lang === "ar") {
+    if (raw === "film") return "فلم";
+    if (raw === "series") return "مسلسل";
+  } else {
+    if (raw === "film") return "Film";
+    if (raw === "series") return "Series";
+  }
+  return plainText(value);
+}
+
+function buildFindingAction(params: {
+  severity: string;
+  source?: string | null;
+  lang: "ar" | "en";
+}): string {
+  const severity = (params.severity ?? "").toLowerCase();
+  if (params.lang === "ar") {
+    if (params.source === "manual") return "مراجعة يدوية واتخاذ الإجراء المناسب";
+    if (severity === "critical" || severity === "high") return "تعديل جوهري أو حذف قبل الاعتماد";
+    if (severity === "medium") return "تعديل الصياغة أو تخفيف المعالجة";
+    if (severity === "low") return "مراجعة المشهد والتأكد من ملاءمته";
+    return "مراجعة واتخاذ الإجراء المناسب";
+  }
+  if (params.source === "manual") return "Manual review and appropriate action";
+  if (severity === "critical" || severity === "high") return "Major edit or removal before approval";
+  if (severity === "medium") return "Adjust wording or soften treatment";
+  if (severity === "low") return "Review the scene and confirm suitability";
+  return "Review and take the appropriate action";
+}
+
+function buildOverallRecommendations(args: {
+  findings: ReturnType<typeof mapAnalysisFindingsForPdf>;
+  reportHints: ReportHint[];
+  lang: "ar" | "en";
+}): string[] {
+  const severityCounts = { low: 0, medium: 0, high: 0, critical: 0 };
+  for (const finding of args.findings) {
+    const key = (finding.severity ?? "").toLowerCase() as keyof typeof severityCounts;
+    if (key in severityCounts) severityCounts[key]++;
+  }
+
+  const recommendations: string[] = [];
+  if (args.lang === "ar") {
+    if (severityCounts.critical > 0 || severityCounts.high > 0) {
+      recommendations.push("إعادة معالجة الملاحظات عالية الأولوية قبل اعتماد النص أو رفعه بصيغته النهائية.");
+    }
+    if (severityCounts.medium > 0) {
+      recommendations.push("مراجعة المقاطع متوسطة الخطورة وتخفيف الصياغات أو المعالجة الدرامية حيث يلزم.");
+    }
+    if (severityCounts.low > 0 && recommendations.length === 0) {
+      recommendations.push("مراجعة الملاحظات الواردة والتأكد من ملاءمتها قبل التنفيذ أو المشاركة.");
+    }
+    if (args.reportHints.length > 0) {
+      recommendations.push("مراعاة الملاحظات الخاصة والتنبيهات السياقية أثناء التنفيذ حتى لو لم تُصنف كمخالفة مباشرة.");
+    }
+    if (recommendations.length === 0) {
+      recommendations.push("لا توجد توصيات إضافية بخلاف الاستمرار في المراجعة النهائية قبل الاعتماد.");
+    }
+  } else {
+    if (severityCounts.critical > 0 || severityCounts.high > 0) {
+      recommendations.push("Address high-priority findings before final approval or submission.");
+    }
+    if (severityCounts.medium > 0) {
+      recommendations.push("Review medium-severity findings and soften wording or treatment where needed.");
+    }
+    if (severityCounts.low > 0 && recommendations.length === 0) {
+      recommendations.push("Review the listed findings and confirm they remain suitable before execution.");
+    }
+    if (args.reportHints.length > 0) {
+      recommendations.push("Keep the special notes in mind during production even when they are not direct violations.");
+    }
+    if (recommendations.length === 0) {
+      recommendations.push("No additional recommendations beyond final editorial review.");
+    }
+  }
+
+  return recommendations;
+}
+
 export function downloadAnalysisWord(params: DownloadAnalysisWordParams): void {
   const findings = mapAnalysisFindingsForPdf(params.findings, params.findingsByArticle, params.canonicalFindings);
   const reportHints = params.reportHints ?? [];
+  const recommendations = buildOverallRecommendations({ findings, reportHints, lang: params.lang });
   const dir = params.lang === "ar" ? "rtl" : "ltr";
-  const rawLogo = params.logoUrl?.trim() || "";
-  const logoUrl = rawLogo
-    ? (rawLogo.startsWith("/") ? `${window.location.origin}${rawLogo}` : resolveStorageUrl(rawLogo))
-    : `${window.location.origin}/dashboardlogo.png`;
-  const findingsHtml = findings.length === 0
-    ? `<p class="empty">${params.lang === "ar" ? "لا توجد مخالفات نهائية في هذا التقرير." : "There are no final violations in this report."}</p>`
+  const rawLogo = params.logoUrl?.trim() || `${window.location.origin}/loginlogo.png`;
+  const logoUrl = rawLogo.startsWith("/") ? `${window.location.origin}${rawLogo}` : rawLogo;
+
+  const findingsRowsHtml = findings.length === 0
+    ? `<tr><td colspan="3" class="empty-cell">${escapeHtml(params.lang === "ar" ? "لا توجد ملاحظات نهائية في هذا التقرير." : "There are no final findings in this report.")}</td></tr>`
     : findings.map((finding) => `
-      <div class="finding">
-        <div class="finding-head">
-          <span class="badge severity-${escapeHtml(finding.severity.toLowerCase())}">${escapeHtml(severityLabel(finding.severity, params.lang))}</span>
-          <span class="meta">${params.lang === "ar" ? "مادة" : "Article"} ${escapeHtml(String(finding.primaryArticleId ?? finding.articleId ?? 0))}</span>
-          ${finding.pageNumber ? `<span class="meta">${params.lang === "ar" ? "صفحة" : "Page"} ${escapeHtml(String(finding.pageNumber))}</span>` : ""}
-        </div>
-        <h3>${escapeHtml(finding.titleAr || (params.lang === "ar" ? "مخالفة" : "Finding"))}</h3>
-        <p class="snippet">${escapeHtml(finding.evidenceSnippet || "")}</p>
-        ${finding.rationale ? `<p class="rationale"><strong>${params.lang === "ar" ? "السبب:" : "Reason:"}</strong> ${escapeHtml(finding.rationale)}</p>` : ""}
-      </div>
+      <tr>
+        <td class="page-cell">${escapeHtml(formatNullableValue(finding.pageNumber ?? "—"))}</td>
+        <td class="text-cell">
+          <div class="finding-title">${escapeHtml(finding.titleAr || (params.lang === "ar" ? "ملاحظة" : "Finding"))}</div>
+          <div class="finding-snippet">${escapeHtml(plainText(finding.evidenceSnippet) || "—")}</div>
+        </td>
+        <td class="action-cell">${escapeHtml(buildFindingAction({
+          severity: finding.severity,
+          source: finding.source ?? null,
+          lang: params.lang,
+        }))}</td>
+      </tr>
     `).join("");
-  const hintsHtml = reportHints.length === 0
+
+  const recommendationsHtml = recommendations.map((item, index) => `
+    <div class="recommendation-item">${escapeHtml(String(index + 1))}- ${escapeHtml(item)}</div>
+  `).join("");
+
+  const specialNotesHtml = reportHints.length === 0
     ? ""
     : `
-      <section>
-        <h2>${params.lang === "ar" ? "ملاحظات خاصة" : "Special Notes"}</h2>
-        ${reportHints.map((hint) => `
-          <div class="hint">
-            <h3>${escapeHtml(hint.title_ar)}</h3>
-            <p class="snippet">${escapeHtml(hint.evidence_snippet || "")}</p>
-            ${hint.rationale ? `<p>${escapeHtml(hint.rationale)}</p>` : ""}
+      <div class="notes-block">
+        <div class="notes-title">${params.lang === "ar" ? "ملاحظات خاصة:" : "Special Notes:"}</div>
+        ${reportHints.map((hint, index) => `
+          <div class="note-item">
+            ${escapeHtml(String(index + 1))}. ${escapeHtml(plainText(hint.evidence_snippet) || hint.title_ar || "")}
+            ${hint.rationale ? ` - ${escapeHtml(plainText(hint.rationale))}` : ""}
           </div>
         `).join("")}
-      </section>
+      </div>
     `;
 
   const html = `
@@ -128,50 +220,70 @@ export function downloadAnalysisWord(params: DownloadAnalysisWordParams): void {
     <meta charset="utf-8" />
     <title>${escapeHtml(params.scriptTitle)}</title>
     <style>
-      body { font-family: Tahoma, Arial, sans-serif; direction: ${dir}; color: #1f2937; margin: 24px; }
-      .header { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 24px; }
-      .logo { max-width: 150px; max-height: 48px; object-fit: contain; }
-      h1 { font-size: 26px; margin: 0 0 8px; }
-      h2 { font-size: 20px; margin: 24px 0 12px; color: #0f172a; }
-      h3 { font-size: 16px; margin: 12px 0 8px; }
-      .meta-grid { width: 100%; border-collapse: collapse; margin-top: 8px; }
-      .meta-grid td { border: 1px solid #e5e7eb; padding: 8px 10px; }
-      .finding, .hint { border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; margin-bottom: 12px; background: #fff; }
-      .finding-head { margin-bottom: 8px; }
-      .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: bold; margin-inline-end: 8px; }
-      .severity-critical, .severity-high { background: #fee2e2; color: #b91c1c; }
-      .severity-medium { background: #fef3c7; color: #b45309; }
-      .severity-low { background: #dbeafe; color: #1d4ed8; }
-      .meta { color: #475569; font-size: 12px; margin-inline-end: 8px; }
-      .snippet { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 10px; line-height: 1.8; }
-      .rationale { margin-top: 10px; line-height: 1.8; }
-      .summary { line-height: 1.9; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; }
-      .empty { padding: 12px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #64748b; }
+      @page { size: A4; margin: 22mm 16mm 18mm 16mm; }
+      body { font-family: Tahoma, Arial, sans-serif; direction: ${dir}; color: #111827; margin: 0; font-size: 12pt; line-height: 1.7; }
+      .cover-page { min-height: 260mm; page-break-after: always; }
+      .cover-logo-wrap { text-align: center; margin-top: 10mm; margin-bottom: 14mm; }
+      .cover-logo { max-width: 190px; max-height: 88px; object-fit: contain; }
+      .cover-title { text-align: center; font-size: 18pt; font-weight: 700; margin: 0 0 12mm; }
+      .cover-grid { width: 100%; border-collapse: collapse; margin-top: 8mm; }
+      .cover-grid td { padding: 8px 0; vertical-align: top; }
+      .cover-label { width: 28%; font-weight: 700; }
+      .cover-value { border-bottom: 1px solid #111827; min-height: 20px; padding-inline-start: 8px; }
+      .table-page { min-height: 260mm; }
+      .section-title { font-size: 16pt; font-weight: 700; margin: 0 0 10mm; text-align: center; }
+      table.report-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      .report-table th, .report-table td { border: 1px solid #111827; padding: 10px 8px; vertical-align: top; }
+      .report-table th { background: #ffffff; font-size: 13pt; font-weight: 700; text-align: center; }
+      .page-cell { width: 16%; text-align: center; }
+      .text-cell { width: 54%; }
+      .action-cell { width: 30%; }
+      .finding-title { font-weight: 700; margin-bottom: 4px; }
+      .finding-snippet { white-space: pre-wrap; word-break: break-word; }
+      .empty-cell { text-align: center; color: #6b7280; padding: 18px 8px; }
+      .recommendations-wrap { margin-top: 20mm; }
+      .recommendations-title { font-size: 14pt; font-weight: 700; margin-bottom: 8mm; }
+      .recommendation-item, .note-item { margin-bottom: 6px; }
+      .notes-block { margin-top: 10mm; }
+      .notes-title { font-weight: 700; margin-bottom: 6mm; }
     </style>
   </head>
   <body>
-    <div class="header">
-      <div>
-        <h1>${escapeHtml(params.lang === "ar" ? "تقرير التحليل" : "Analysis Report")}</h1>
-        <table class="meta-grid">
-          <tr><td>${escapeHtml(params.lang === "ar" ? "النص" : "Script")}</td><td>${escapeHtml(params.scriptTitle)}</td></tr>
-          <tr><td>${escapeHtml(params.lang === "ar" ? "العميل" : "Client")}</td><td>${escapeHtml(params.clientName)}</td></tr>
-          <tr><td>${escapeHtml(params.lang === "ar" ? "التاريخ" : "Date")}</td><td>${escapeHtml(formatDate(params.createdAt, params.lang))}</td></tr>
-        </table>
+    <div class="cover-page">
+      <div class="cover-logo-wrap">
+        <img class="cover-logo" src="${escapeHtml(logoUrl)}" alt="Saudi Film Commission Logo" />
       </div>
-      <img class="logo" src="${escapeHtml(logoUrl)}" alt="Logo" />
+      <div class="cover-title">${escapeHtml(params.lang === "ar" ? "تقرير الملاحظات" : "Findings Report")}</div>
+      <table class="cover-grid">
+        <tr><td class="cover-label">${escapeHtml(params.lang === "ar" ? "اسم العمل:" : "Work Title:")}</td><td class="cover-value">${escapeHtml(formatNullableValue(params.scriptTitle))}</td></tr>
+        <tr><td class="cover-label">${escapeHtml(params.lang === "ar" ? "نوع العمل:" : "Work Type:")}</td><td class="cover-value">${escapeHtml(normalizeScriptType(params.scriptType, params.lang))}</td></tr>
+        <tr><td class="cover-label">${escapeHtml(params.lang === "ar" ? "تصنيف العمل:" : "Work Classification:")}</td><td class="cover-value">${escapeHtml(formatNullableValue(params.workClassification))}</td></tr>
+        <tr><td class="cover-label">${escapeHtml(params.lang === "ar" ? "عدد الصفحات:" : "Page Count:")}</td><td class="cover-value">${escapeHtml(formatNullableValue(params.pageCount))}</td></tr>
+        <tr><td class="cover-label">${escapeHtml(params.lang === "ar" ? "عدد الحلقات:" : "Episode Count:")}</td><td class="cover-value">${escapeHtml(formatNullableValue(params.episodeCount))}</td></tr>
+        <tr><td class="cover-label">${escapeHtml(params.lang === "ar" ? "تاريخ الاستلام:" : "Received Date:")}</td><td class="cover-value">${escapeHtml(formatNullableDate(params.receivedAt, params.lang))}</td></tr>
+        <tr><td class="cover-label">${escapeHtml(params.lang === "ar" ? "تاريخ التسليم:" : "Delivery Date:")}</td><td class="cover-value">${escapeHtml(formatNullableDate(params.deliveredAt ?? params.createdAt, params.lang))}</td></tr>
+      </table>
     </div>
-    ${params.scriptSummary?.synopsis_ar ? `
-      <section>
-        <h2>${params.lang === "ar" ? "ملخص النص" : "Script Summary"}</h2>
-        <div class="summary">${escapeHtml(params.scriptSummary.synopsis_ar)}</div>
-      </section>
-    ` : ""}
-    <section>
-      <h2>${params.lang === "ar" ? "المخالفات النهائية" : "Final Findings"}</h2>
-      ${findingsHtml}
-    </section>
-    ${hintsHtml}
+    <div class="table-page">
+      <div class="section-title">${escapeHtml(params.lang === "ar" ? "جدول الملاحظات" : "Findings Table")}</div>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>${escapeHtml(params.lang === "ar" ? "الصفحة" : "Page")}</th>
+            <th>${escapeHtml(params.lang === "ar" ? "النص" : "Text")}</th>
+            <th>${escapeHtml(params.lang === "ar" ? "الإجراء" : "Action")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${findingsRowsHtml}
+        </tbody>
+      </table>
+    </div>
+    <div class="recommendations-wrap">
+      <div class="recommendations-title">${escapeHtml(params.lang === "ar" ? "التوصيات والتوجيهات/" : "Recommendations / Guidance")}</div>
+      ${recommendationsHtml}
+      ${specialNotesHtml}
+    </div>
   </body>
   </html>`;
 
