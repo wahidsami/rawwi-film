@@ -88,6 +88,14 @@ function plainText(value: string | null | undefined): string {
   return (value ?? "").replace(/\s+/g, " ").trim();
 }
 
+function applyRtlMarks(text: string, rtl?: boolean): string {
+  if (!rtl) return text;
+  return text
+    .split("\n")
+    .map((line) => (line ? `\u200F${line}` : line))
+    .join("\n");
+}
+
 function formatNullableDate(value: string | null | undefined, lang: "ar" | "en"): string {
   const text = plainText(value);
   return text ? formatDate(text, lang) : "—";
@@ -212,6 +220,7 @@ function makeParagraph(text: string, options: {
   spacingAfter?: number;
   rtl?: boolean;
 }): string {
+  const paragraphText = applyRtlMarks(text, options.rtl);
   return `<w:p>
     <w:pPr>
       ${options.bidi ? "<w:bidi/>" : ""}
@@ -228,7 +237,7 @@ function makeParagraph(text: string, options: {
         ${options.rtl ? "<w:rtl/>" : ""}
       </w:rPr>
     </w:pPr>
-    ${text.split("\n").map((line, index) => `${index > 0 ? '<w:r><w:br/></w:r>' : ""}${makeRun(line, {
+    ${paragraphText.split("\n").map((line, index) => `${index > 0 ? '<w:r><w:br/></w:r>' : ""}${makeRun(line, {
       font: options.font,
       size: options.size,
       bold: options.bold,
