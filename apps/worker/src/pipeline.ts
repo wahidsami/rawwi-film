@@ -825,6 +825,15 @@ export async function processChunkJudge(
         signal
       );
       throwIfAborted(signal);
+      await setChunkPhase(chunk.id, "postprocess");
+      logger.info("Post-multipass refinement starting", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        rawFindings: multiPassResult.findings.length,
+        executedPassCount: multiPassResult.executedPassCount,
+        skippedPassCount: multiPassResult.skippedPassCount,
+      });
       
       // Enforce atom_ids and prefer literal local evidence from chunk offsets.
       const enforced = multiPassResult.findings.map(f => enforceAtomIds([f])[0]);
@@ -840,9 +849,24 @@ export async function processChunkJudge(
         return { ...f, evidence_snippet: fallback };
       });
       const withGlobal = enriched.map((f) => toGlobalFinding(f, chunkStart));
+      logger.info("Post-multipass refinement completed", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        enforcedCount: enforced.length,
+        precisionRefinedCount: precisionRefined.length,
+        enrichedCount: enriched.length,
+        globalizedCount: withGlobal.length,
+      });
       
       // Final guardrail: keep only findings anchored to literal script text.
       const beforeVerbatimCount = withGlobal.length;
+      logger.info("Verbatim guardrail starting", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        findingsToCheck: beforeVerbatimCount,
+      });
       allFindings = withGlobal.filter((f) => {
         const isExact = isDetectionVerbatim(chunkText, f.evidence_snippet);
         if (!isExact) {
@@ -856,6 +880,14 @@ export async function processChunkJudge(
         return isExact;
       });
       allFindings = sortFindingsStable(allFindings);
+      logger.info("Verbatim guardrail completed", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        beforeVerbatim: beforeVerbatimCount,
+        afterVerbatim: allFindings.length,
+        dropped: beforeVerbatimCount - allFindings.length,
+      });
       
       logger.info("Multi-pass detection stats", {
         chunkId: chunk.id,
