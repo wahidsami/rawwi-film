@@ -961,7 +961,7 @@ export function ScriptWorkspace() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { lang } = useLangStore();
+  const { lang, t } = useLangStore();
   const { settings } = useSettingsStore();
   const { scripts, findings, updateFindingStatus, updateScript, fetchInitialData, isLoading, error: dataError } = useDataStore();
   const { user, hasPermission } = useAuthStore();
