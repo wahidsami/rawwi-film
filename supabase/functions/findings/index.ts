@@ -336,9 +336,10 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // ── POST /findings/reclassify ──
-    if (method === "POST" && rest === "reclassify") {
+    // ── POST /findings/reclassify (or POST /findings with { action: "reclassify" }) ──
+    if (method === "POST" && (rest === "reclassify" || rest === "")) {
       let body: {
+        action?: string;
         findingId?: string;
         articleId?: number;
         atomId?: string | null;
@@ -349,6 +350,10 @@ Deno.serve(async (req: Request) => {
         body = await req.json();
       } catch {
         return json({ error: "Invalid JSON" }, 400);
+      }
+
+      if (rest === "" && body.action !== "reclassify") {
+        return json({ error: "Not found" }, 404);
       }
 
       const findingId = body.findingId?.trim();

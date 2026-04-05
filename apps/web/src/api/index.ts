@@ -344,8 +344,17 @@ export const findingsApi = {
   /** Approve (mark safe) or revert a finding. */
   reviewFinding: (findingId: string, toStatus: 'approved' | 'violation', reason: string): Promise<FindingReviewResponse> =>
     httpClient.post('/findings/review', { findingId, toStatus, reason }),
-  reclassifyFinding: (body: ReclassifyFindingBody): Promise<ReclassifyFindingResponse> =>
-    httpClient.post('/findings/reclassify', body),
+  reclassifyFinding: async (body: ReclassifyFindingBody): Promise<ReclassifyFindingResponse> => {
+    try {
+      return await httpClient.post('/findings/reclassify', body);
+    } catch (error) {
+      const status = (error as Error & { status?: number } | null)?.status;
+      if (status === 404 || status === 405) {
+        return httpClient.post('/findings', { action: 'reclassify', ...body });
+      }
+      throw error;
+    }
+  },
   /** Create a manual finding (POST /findings/manual). */
   createManual: (body: CreateManualFindingBody): Promise<ManualFindingResponse> =>
     httpClient.post('/findings/manual', body),
