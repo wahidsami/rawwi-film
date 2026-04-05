@@ -11,6 +11,7 @@ import type { ReviewStatus, Script } from '@/api/models';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { Select } from '@/components/ui/Select';
 import { Switch } from '@/components/ui/Switch';
 import { Textarea } from '@/components/ui/Textarea';
 import { cn } from '@/utils/cn';
@@ -43,6 +44,32 @@ const policyArticles = getPolicyArticles().map((a) => ({
   titleAr: a.title_ar,
   titleEn: `Article ${a.articleId}`,
 }));
+
+const policyArticlesForForm = getPolicyArticles().filter((a) => a.articleId !== 26);
+const RESULTS_ARTICLES_CHECKLIST = policyArticlesForForm.map((a) => ({
+  id: String(a.articleId),
+  label: `Art ${a.articleId} - ${a.title_ar}`,
+  value: String(a.articleId),
+}));
+
+const RESULTS_ARTICLE_ATOMS: Record<string, { value: string; label: string }[]> = {};
+for (const art of policyArticlesForForm) {
+  const id = String(art.articleId);
+  RESULTS_ARTICLE_ATOMS[id] = [
+    { value: '', label: '—' },
+    ...(art.atoms ?? []).map((atom) => ({ value: atom.atomId, label: `${atom.atomId} ${atom.title_ar}` })),
+  ];
+}
+
+function getResultsArticleAtomOptions(articleId: string): { value: string; label: string }[] {
+  return RESULTS_ARTICLE_ATOMS[articleId] ?? RESULTS_ARTICLE_ATOMS['1'] ?? [{ value: '', label: '—' }];
+}
+
+function sanitizeResultsAtomSelection(articleId: string, atomId: string | null | undefined): string | null {
+  const raw = atomId?.trim() ?? '';
+  if (!raw) return null;
+  return getResultsArticleAtomOptions(articleId).some((option) => option.value === raw) ? raw : null;
+}
 
 function formatAtomDisplayR(articleId: number, atomId: string | null): string {
   if (!atomId?.trim()) return String(articleId);
@@ -219,6 +246,24 @@ export function Results() {
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
   const [reviewReason, setReviewReason] = useState('');
+  const [editFindingModal, setEditFindingModal] = useState<AnalysisFinding | null>(null);
+  const [editFindingSaving, setEditFindingSaving] = useState(false);
+  const [editFindingForm, setEditFindingForm] = useState({
+    articleId: '1',
+    atomId: '',
+    severity: 'medium',
+    manualComment: '',
+  });
+
+  useEffect(() => {
+    if (!editFindingModal) return;
+    setEditFindingForm({
+      articleId: String(editFindingModal.articleId || 1),
+      atomId: editFindingModal.atomId ?? '',
+      severity: (editFindingModal.severity || 'medium').toLowerCase(),
+      manualComment: editFindingModal.manualComment ?? '',
+    });
+  }, [editFindingModal]);
 
   // Report-level review
   const handleReportReview = async (status: ReviewStatus) => {
@@ -481,6 +526,7 @@ export function Results() {
   })();
   const displayApproved = report.approvedCount ?? 0;
   const displaySpecialNotes = reportHints.length;
+  const editFindingAtomOptions = getResultsArticleAtomOptions(editFindingForm.articleId);
   const manualFindingsCount = hasRealFindings
     ? dedupeRealFindings(violations.filter((f) => f.source === 'manual')).length
     : 0;
@@ -827,6 +873,63 @@ export function Results() {
     }
   };
 
+  const handleEditFindingSubmit = async () => {
+    if (!editFindingModal || !report) return;
+    setEditFindingSaving(true);
+    try {
+      const normalizedAtomId = sanitizeResultsAtomSelection(editFindingForm.articleId, editFindingForm.atomId);
+      const res = await findingsApi.reclassifyFinding({
+        findingId: editFindingModal.id,
+        articleId: parseInt(editFindingForm.articleId, 10) || 1,
+        atomId: normalizedAtomId,
+        severity: editFindingForm.severity,
+        manualComment: editFindingForm.manualComment?.trim() || null,
+      });
+
+      if (res.finding) {
+        setFindings((prev) => prev.map((f) => (f.id === res.finding!.id ? res.finding! : f)));
+      }
+
+      if (res.reportAggregates) {
+        const agg = res.reportAggregates;
+        setReport((prev) => prev ? {
+          ...prev,
+          findingsCount: agg.findingsCount,
+          severityCounts: agg.severityCounts,
+          approvedCount: agg.approvedCount,
+          lastReviewedAt: new Date().toISOString(),
+          lastReviewedBy: user?.id ?? prev.lastReviewedBy ?? null,
+          lastReviewedRole: 'user',
+        } : prev);
+      }
+
+      if ((editFindingForm.atomId?.trim() ?? '') && !normalizedAtomId) {
+        toast(
+          lang === 'ar'
+            ? 'تمت إعادة ضبط البند الفرعي لأنه لا ينتمي إلى المادة المختارة.'
+            : 'The atom was reset because it does not belong to the selected article.',
+        );
+      }
+
+      if (res.atomMappingWarning) {
+        toast((t) => (
+          <div className="max-w-sm text-sm">
+            <p className="font-semibold mb-1">{lang === 'ar' ? 'تم الحفظ مع ملاحظة' : 'Saved with note'}</p>
+            <p>{res.atomMappingWarning}</p>
+          </div>
+        ));
+      } else {
+        toast.success(lang === 'ar' ? 'تم تحديث التصنيف' : 'Finding classification updated');
+      }
+
+      setEditFindingModal(null);
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذر تحديث التصنيف' : 'Failed to update finding'));
+    } finally {
+      setEditFindingSaving(false);
+    }
+  };
+
   const handleDownloadWord = async () => {
     if (!report) return;
     setIsDownloadingWord(true);
@@ -985,6 +1088,14 @@ export function Results() {
               {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert to Violation'}
             </Button>
           )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px] gap-1"
+            onClick={() => setEditFindingModal(f)}
+          >
+            {lang === 'ar' ? 'تعديل التصنيف' : 'Edit classification'}
+          </Button>
         </div>
       </div>
     );
@@ -1812,6 +1923,57 @@ export function Results() {
               {reviewModal?.toStatus === 'approved'
                 ? (lang === 'ar' ? 'اعتماد' : 'Approve')
                 : (lang === 'ar' ? 'إعادة كمخالفة' : 'Revert')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!editFindingModal}
+        onClose={() => setEditFindingModal(null)}
+        title={lang === 'ar' ? 'تعديل تصنيف الملاحظة' : 'Edit finding classification'}
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-background rounded-md border border-border text-sm text-text-main font-medium" dir="rtl">
+            {editFindingModal?.titleAr}
+          </div>
+          <Select
+            label={lang === 'ar' ? 'المادة' : 'Article'}
+            value={editFindingForm.articleId}
+            onChange={(e) => setEditFindingForm((prev) => ({ ...prev, articleId: e.target.value, atomId: '' }))}
+            options={RESULTS_ARTICLES_CHECKLIST}
+          />
+          <Select
+            label={lang === 'ar' ? 'البند الفرعي' : 'Atom'}
+            value={editFindingForm.atomId}
+            onChange={(e) => setEditFindingForm((prev) => ({ ...prev, atomId: e.target.value }))}
+            options={editFindingAtomOptions}
+          />
+          <Select
+            label={lang === 'ar' ? 'مستوى الخطورة' : 'Severity'}
+            value={editFindingForm.severity}
+            onChange={(e) => setEditFindingForm((prev) => ({ ...prev, severity: e.target.value }))}
+            options={[
+              { value: 'low', label: lang === 'ar' ? 'منخفضة' : 'Low' },
+              { value: 'medium', label: lang === 'ar' ? 'متوسطة' : 'Medium' },
+              { value: 'high', label: lang === 'ar' ? 'عالية' : 'High' },
+              { value: 'critical', label: lang === 'ar' ? 'حرجة' : 'Critical' },
+            ]}
+          />
+          <Textarea
+            label={lang === 'ar' ? 'ملاحظة المراجع' : 'Reviewer note'}
+            value={editFindingForm.manualComment}
+            onChange={(e) => setEditFindingForm((prev) => ({ ...prev, manualComment: e.target.value }))}
+            placeholder={lang === 'ar' ? 'أضف ملاحظة توضيحية اختيارية…' : 'Add an optional reviewer note…'}
+          />
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button variant="outline" onClick={() => setEditFindingModal(null)}>
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button onClick={handleEditFindingSubmit} disabled={editFindingSaving}>
+              {editFindingSaving
+                ? (lang === 'ar' ? 'جارٍ الحفظ…' : 'Saving…')
+                : (lang === 'ar' ? 'حفظ التعديل' : 'Save changes')}
             </Button>
           </div>
         </div>
