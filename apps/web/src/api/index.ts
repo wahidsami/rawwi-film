@@ -305,6 +305,7 @@ export interface CreateManualFindingBody {
   versionId: string;
   startOffsetGlobal: number;
   endOffsetGlobal: number;
+  excerpt?: string;
   articleId: number;
   atomId?: string | null;
   severity: string;

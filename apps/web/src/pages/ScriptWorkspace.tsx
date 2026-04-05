@@ -2645,12 +2645,15 @@ export function ScriptWorkspace() {
         editorData?.contentHtml && domTextIndex && editorRef.current
           ? selectionToNormalizedOffsets(domTextIndex, selection, editorRef.current)
           : getSelectionOffsets(editorRef.current);
+      const globalOffsets = mapSelectionOffsetsToGlobal(
+        offsets ? { start: (offsets as { start: number; end: number }).start, end: (offsets as { start: number; end: number }).end } : null
+      );
       setContextMenu({
         x: e.pageX,
         y: e.pageY,
         text,
-        startOffsetGlobal: offsets ? (offsets as { start: number; end: number }).start : undefined,
-        endOffsetGlobal: offsets ? (offsets as { start: number; end: number }).end : undefined,
+        startOffsetGlobal: globalOffsets?.start,
+        endOffsetGlobal: globalOffsets?.end,
       });
     } else {
       setContextMenu(null);
@@ -2690,14 +2693,19 @@ export function ScriptWorkspace() {
           ? selectionToNormalizedOffsets(domTextIndex, selection, editorRef.current)
           : getSelectionOffsets(editorRef.current)
         : null;
+    const globalOffsets = mapSelectionOffsetsToGlobal(
+      offsets && 'start' in offsets && 'end' in offsets
+        ? { start: offsets.start, end: offsets.end }
+        : (offsets as { start: number; end: number } | null)
+    );
     const floatingPayload =
       hasSelection && rect
         ? {
           x: rect.left + rect.width / 2,
           y: rect.bottom + window.scrollY + 10,
           text,
-          startOffsetGlobal: offsets && 'start' in offsets ? offsets.start : (offsets as { start: number; end: number } | null)?.start,
-          endOffsetGlobal: offsets && 'end' in offsets ? offsets.end : (offsets as { start: number; end: number } | null)?.end,
+          startOffsetGlobal: globalOffsets?.start,
+          endOffsetGlobal: globalOffsets?.end,
         }
         : null;
     setTimeout(() => {
@@ -2719,6 +2727,17 @@ export function ScriptWorkspace() {
   };
 
   const displayContentForOffsets = (editorData?.content != null && editorData.content !== '') ? editorData.content : extractedText;
+  const mapSelectionOffsetsToGlobal = useCallback(
+    (offsets: { start: number; end: number } | null | undefined): { start: number; end: number } | null => {
+      if (!offsets) return null;
+      if (!isPageMode || !currentPageData) return offsets;
+      return {
+        start: pageStart + offsets.start,
+        end: pageStart + offsets.end,
+      };
+    },
+    [isPageMode, currentPageData, pageStart]
+  );
 
   const handleMarkViolation = () => {
     const text = contextMenu?.text ?? '';
@@ -2760,6 +2779,7 @@ export function ScriptWorkspace() {
         versionId: script.currentVersionId,
         startOffsetGlobal: manualOffsets.startOffsetGlobal,
         endOffsetGlobal: manualOffsets.endOffsetGlobal,
+        excerpt: formData.excerpt,
         articleId: parseInt(formData.articleId, 10) || 1,
         atomId: normalizedAtomId,
         severity: formData.severity,

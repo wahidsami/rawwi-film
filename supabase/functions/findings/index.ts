@@ -75,6 +75,30 @@ function camelFinding(r: Record<string, unknown>, createdBy: string | null = nul
   };
 }
 
+function compactWhitespace(value: string | null | undefined): string {
+  return (value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function findNearestRawOccurrence(content: string, needle: string, hintStart: number): number | null {
+  const target = needle.trim();
+  if (!target) return null;
+  let bestIndex: number | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  let searchFrom = 0;
+  while (searchFrom <= content.length) {
+    const idx = content.indexOf(target, searchFrom);
+    if (idx === -1) break;
+    const distance = Math.abs(idx - hintStart);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestIndex = idx;
+      if (distance === 0) break;
+    }
+    searchFrom = idx + Math.max(1, target.length);
+  }
+  return bestIndex;
+}
+
 async function resolveManualAtomId(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   articleId: number,
@@ -470,6 +494,7 @@ Deno.serve(async (req: Request) => {
         versionId?: string;
         startOffsetGlobal?: number;
         endOffsetGlobal?: number;
+        excerpt?: string;
         articleId?: number;
         atomId?: string | null;
         severity?: string;
@@ -489,6 +514,7 @@ Deno.serve(async (req: Request) => {
       const atomId = body.atomId?.trim() || null;
       const severity = body.severity?.trim();
       const manualComment = body.manualComment?.trim() ?? "";
+      const excerpt = body.excerpt?.trim() ?? "";
 
       if (!reportId || !scriptId || !versionId) {
         return json({ error: "reportId, scriptId, versionId required" }, 400);
@@ -544,7 +570,23 @@ Deno.serve(async (req: Request) => {
         return json({ error: "Script text not found for version" }, 404);
       }
       const content = (textRow as { content: string }).content ?? "";
-      const evidenceSnippet = content.slice(startOffsetGlobal, endOffsetGlobal) || body.manualComment?.slice(0, 500) || "—";
+      let resolvedStartOffsetGlobal = startOffsetGlobal;
+      let resolvedEndOffsetGlobal = endOffsetGlobal;
+      if (excerpt) {
+        const sliced = content.slice(startOffsetGlobal, endOffsetGlobal);
+        if (compactWhitespace(sliced) !== compactWhitespace(excerpt)) {
+          const nearest = findNearestRawOccurrence(content, excerpt, startOffsetGlobal);
+          if (nearest != null) {
+            resolvedStartOffsetGlobal = nearest;
+            resolvedEndOffsetGlobal = nearest + excerpt.length;
+          }
+        }
+      }
+      const evidenceSnippet =
+        content.slice(resolvedStartOffsetGlobal, resolvedEndOffsetGlobal) ||
+        excerpt ||
+        body.manualComment?.slice(0, 500) ||
+        "—";
 
       const evidenceHash = "manual-" + crypto.randomUUID();
       const titleAr = "ملاحظة يدوية";
@@ -557,9 +599,9 @@ Deno.serve(async (req: Request) => {
         .order("page_number", { ascending: true });
       const { offsetToPageNumber, computePageLocalSpan } = await import("../_shared/offsetToPage.ts");
       const pr = (pageRows ?? []) as { page_number: number; content: string }[];
-      const pageNumber = pr.length > 0 ? offsetToPageNumber(startOffsetGlobal, pr) : null;
+      const pageNumber = pr.length > 0 ? offsetToPageNumber(resolvedStartOffsetGlobal, pr) : null;
       const pageLocal =
-        pr.length > 0 ? computePageLocalSpan(startOffsetGlobal, endOffsetGlobal, pr) : { start_offset_page: null, end_offset_page: null };
+        pr.length > 0 ? computePageLocalSpan(resolvedStartOffsetGlobal, resolvedEndOffsetGlobal, pr) : { start_offset_page: null, end_offset_page: null };
 
       const insertPayload: Record<string, unknown> = {
         job_id: jobId,
@@ -574,8 +616,8 @@ Deno.serve(async (req: Request) => {
         title_ar: titleAr,
         description_ar: descriptionAr,
         evidence_snippet: evidenceSnippet,
-        start_offset_global: startOffsetGlobal,
-        end_offset_global: endOffsetGlobal,
+        start_offset_global: resolvedStartOffsetGlobal,
+        end_offset_global: resolvedEndOffsetGlobal,
         evidence_hash: evidenceHash,
         manual_comment: manualComment || null,
       };
