@@ -1924,8 +1924,36 @@ export function ScriptWorkspace() {
   }, [searchParams, isPageMode, totalPages]);
 
   useEffect(() => {
-    if (!editorData?.sourcePdfSignedUrl) setWorkspaceViewMode('text');
-  }, [editorData?.sourcePdfSignedUrl]);
+    if (!editorData?.sourcePdfSignedUrl) {
+      setWorkspaceViewMode('text');
+      return;
+    }
+    if (!script?.id || !script?.currentVersionId) {
+      setWorkspaceViewMode('pdf');
+      return;
+    }
+    const key = `workspace-view-mode:${script.id}:${script.currentVersionId}`;
+    try {
+      const saved = window.localStorage.getItem(key);
+      if (saved === 'pdf' || saved === 'text') {
+        setWorkspaceViewMode(saved);
+      } else {
+        setWorkspaceViewMode('pdf');
+      }
+    } catch {
+      setWorkspaceViewMode('pdf');
+    }
+  }, [editorData?.sourcePdfSignedUrl, script?.id, script?.currentVersionId]);
+
+  useEffect(() => {
+    if (!editorData?.sourcePdfSignedUrl || !script?.id || !script?.currentVersionId) return;
+    const key = `workspace-view-mode:${script.id}:${script.currentVersionId}`;
+    try {
+      window.localStorage.setItem(key, workspaceViewMode);
+    } catch {
+      // Ignore persistence issues.
+    }
+  }, [workspaceViewMode, editorData?.sourcePdfSignedUrl, script?.id, script?.currentVersionId]);
 
   const loadEditor = useCallback(async () => {
     if (!script?.id || !script?.currentVersionId) {
@@ -3523,9 +3551,6 @@ export function ScriptWorkspace() {
       if (resolvedHit?.resolved && resolvedHit.globalStart != null && resolvedHit.globalEnd != null) {
         setPinnedHighlight({ findingId: f.id, globalStart: resolvedHit.globalStart, globalEnd: resolvedHit.globalEnd });
         setSelectedFindingId(f.id);
-        if (workspaceViewMode === 'pdf') {
-          setWorkspaceViewMode('text');
-        }
         if (resolvedHit.pageNumber != null && pagesSortedForViewer.length > 0) {
           setCurrentPage(resolvedHit.pageNumber);
           setSearchParams(
@@ -3539,7 +3564,11 @@ export function ScriptWorkspace() {
         }
         setHighlightRetryTick((n) => n + 1);
         if (!opts?.silent) {
-          toast.success(lang === 'ar' ? 'تم العثور على النص وتمييزه' : 'Found and highlighted in script');
+          toast.success(
+            workspaceViewMode === 'pdf'
+              ? (lang === 'ar' ? 'تم الانتقال إلى الصفحة الأصلية ذات الصلة.' : 'Moved to the relevant original page.')
+              : (lang === 'ar' ? 'تم العثور على النص وتمييزه' : 'Found and highlighted in script')
+          );
         }
         return;
       }
@@ -3579,14 +3608,6 @@ export function ScriptWorkspace() {
       }
       setPinnedHighlight({ findingId: f.id, globalStart: gs, globalEnd: ge });
       setSelectedFindingId(f.id);
-      if (workspaceViewMode === 'pdf') {
-        setWorkspaceViewMode('text');
-        if (!opts?.silent) {
-          toast(lang === 'ar'
-            ? 'تم التحويل إلى وضع النص لضمان تمييز دقيق داخل المستند.'
-            : 'Switched to text view for accurate in-document highlighting.');
-        }
-      }
       if (pagesSortedForViewer.length > 0 && hit.pageNumber >= 1 && hit.pageNumber <= pagesSortedForViewer.length) {
         setCurrentPage(hit.pageNumber);
         setSearchParams(
@@ -3600,7 +3621,11 @@ export function ScriptWorkspace() {
       }
       setHighlightRetryTick((n) => n + 1);
       if (!opts?.silent) {
-        toast.success(lang === 'ar' ? 'تم العثور على النص وتمييزه' : 'Found and highlighted in script');
+        toast.success(
+          workspaceViewMode === 'pdf'
+            ? (lang === 'ar' ? 'تم الانتقال إلى الصفحة الأصلية ذات الصلة.' : 'Moved to the relevant original page.')
+            : (lang === 'ar' ? 'تم العثور على النص وتمييزه' : 'Found and highlighted in script')
+        );
       }
     },
     [workspacePlainFull, pagesSortedForViewer, locateFindingInContent, lang, setSearchParams, setCurrentPage, findingWorkspaceResolve, workspaceViewMode]
@@ -4166,10 +4191,50 @@ export function ScriptWorkspace() {
                     )}
                     {workspaceViewMode === 'pdf' && editorData?.sourcePdfSignedUrl ? (
                       <div className="w-full">
+                        {selectedFindingId && (() => {
+                          const focusedFinding = workspaceVisibleReportFindings.find((item) => item.id === selectedFindingId) ?? null;
+                          if (!focusedFinding) return null;
+                          const focusedHit = findingWorkspaceResolve.get(focusedFinding.id);
+                          return (
+                            <div className="mb-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 space-y-2" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                              <div className="flex items-center justify-between gap-3 flex-wrap">
+                                <div className="space-y-1">
+                                  <p className="text-xs font-semibold text-primary">
+                                    {lang === 'ar' ? 'المرجع الحالي في الأصل البصري' : 'Current reference in visual original'}
+                                  </p>
+                                  <p className="text-sm text-text-main leading-6" dir="rtl">
+                                    {focusedFinding.evidenceSnippet || focusedFinding.descriptionAr}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {focusedHit?.pageNumber != null && (
+                                    <Badge variant="outline" className="text-[11px]">
+                                      {lang === 'ar' ? `صفحة ${focusedHit.pageNumber}` : `Page ${focusedHit.pageNumber}`}
+                                    </Badge>
+                                  )}
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 text-[11px]"
+                                    onClick={() => setWorkspaceViewMode('text')}
+                                  >
+                                    {lang === 'ar' ? 'فتح النص المستخرج للتمييز الدقيق' : 'Open extracted text for exact highlight'}
+                                  </Button>
+                                </div>
+                              </div>
+                              <p className="text-[11px] text-text-muted">
+                                {lang === 'ar'
+                                  ? 'هذا العرض يطابق الملف الأصلي بصريًا. إذا احتجت تمييز الكلمة أو الجملة نفسها حرفيًا، افتح النص المستخرج.'
+                                  : 'This view matches the original file visually. If you need exact word/sentence highlighting, open the extracted text view.'}
+                              </p>
+                            </div>
+                          );
+                        })()}
                         <p className="text-[11px] text-text-muted mb-2 text-center" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                           {lang === 'ar'
-                            ? 'عرض بصري يطابق الملف الأصلي. التمييز والتحليل يعملان على النص المستخرج.'
-                            : 'Visual match to source file. Highlights and analysis use extracted text.'}
+                            ? 'هذا هو الأصل البصري المرجعي للملف. التمييز الحرفي والتحليل يعملان على النص المستخرج.'
+                            : 'This is the visual source of truth for the file. Exact highlighting and analysis operate on extracted text.'}
                         </p>
                         <PdfOriginalViewer
                           signedUrl={editorData.sourcePdfSignedUrl}
