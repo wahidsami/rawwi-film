@@ -4082,6 +4082,27 @@ export function ScriptWorkspace() {
               return workspaceGlobalSpanToPageLocal(pinnedHighlight.globalStart, pinnedHighlight.globalEnd, pages);
             })();
       if (!hit || hit.pageNumber !== safeCurrentPage) return [];
+      const pageScopedFinding: AnalysisFinding = {
+        ...f,
+        startOffsetGlobal: hit.localStart,
+        endOffsetGlobal: hit.localEnd,
+        startOffsetPage: hit.localStart,
+        endOffsetPage: hit.localEnd,
+        anchorStartOffsetPage: hit.localStart,
+        anchorEndOffsetPage: hit.localEnd,
+        anchorStartOffsetGlobal: hit.localStart,
+        anchorEndOffsetGlobal: hit.localEnd,
+      };
+      const visibleSpan =
+        currentPageData?.content
+          ? resolveFindingSpanInText(currentPageData.content, pageScopedFinding, locateFindingInContent, {
+              pageSlice: true,
+              sliceGlobalStart: 0,
+            })
+          : null;
+      if (visibleSpan && visibleSpan.end > visibleSpan.start) {
+        return [{ ...f, startOffsetGlobal: visibleSpan.start, endOffsetGlobal: visibleSpan.end }];
+      }
       return [{ ...f, startOffsetGlobal: hit.localStart, endOffsetGlobal: hit.localEnd }];
     }
     return activeWorkspaceHighlights.flatMap((f) => {
@@ -4089,7 +4110,7 @@ export function ScriptWorkspace() {
       if (!hit?.resolved || hit.pageNumber !== safeCurrentPage || hit.localStart == null || hit.localEnd == null) return [];
       return [{ ...f, startOffsetGlobal: hit.localStart, endOffsetGlobal: hit.localEnd }];
     });
-  }, [pinnedHighlight, workspaceVisibleReportFindings, pagesSortedForViewer, safeCurrentPage, activeWorkspaceHighlights, findingWorkspaceResolve]);
+  }, [pinnedHighlight, workspaceVisibleReportFindings, pagesSortedForViewer, safeCurrentPage, activeWorkspaceHighlights, findingWorkspaceResolve, currentPageData?.content, locateFindingInContent]);
 
   const highlightTargetsForScrollView = useMemo((): AnalysisFinding[] => {
     if (!workspaceVisibleReportFindings.length) return [];
