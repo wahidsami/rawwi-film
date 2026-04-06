@@ -9,7 +9,7 @@ import { formatDate } from '@/utils/dateFormat';
 import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
 import { downloadAnalysisWord } from '@/components/reports/analysis/downloadWord';
 import toast from 'react-hot-toast';
-import { reportsApi, findingsApi, scriptsApi, type AnalysisFinding } from '@/api';
+import { reportsApi, findingsApi, scriptsApi, type AnalysisFinding, type AnalysisReviewFinding } from '@/api';
 import { usersApi } from '@/api';
 import { ReportListItem } from '@/api/models';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -117,14 +117,17 @@ function Reports() {
     try {
       const fullReport = await reportsApi.getById(report.id!);
       let findings: AnalysisFinding[] = [];
+      let reviewFindings: AnalysisReviewFinding[] = [];
       if (fullReport.jobId) {
         try {
           findings = await findingsApi.getByJob(fullReport.jobId);
         } catch { /* proceed with summary if findings fail */ }
       }
+      try {
+        reviewFindings = await findingsApi.getReviewByReport(fullReport.id);
+      } catch { /* export can fall back to raw/summary */ }
 
       const isAr = lang === 'ar';
-      const hasRealFindings = findings.length > 0;
 
       await downloadAnalysisPdf({
         scriptTitle: fullReport.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
@@ -132,6 +135,7 @@ function Reports() {
         createdAt: fullReport.createdAt,
         logoUrl: settings?.branding?.logoUrl,
         findings,
+        reviewFindings,
         findingsByArticle: fullReport.summaryJson?.findings_by_article,
         canonicalFindings: fullReport.summaryJson?.canonical_findings,
         reportHints: fullReport.summaryJson?.report_hints ?? undefined,
@@ -170,11 +174,15 @@ function Reports() {
         : null;
       const pageCount = viewerPages?.length ?? null;
       let findings: AnalysisFinding[] = [];
+      let reviewFindings: AnalysisReviewFinding[] = [];
       if (fullReport.jobId) {
         try {
           findings = await findingsApi.getByJob(fullReport.jobId);
         } catch { /* ignore */ }
       }
+      try {
+        reviewFindings = await findingsApi.getReviewByReport(fullReport.id);
+      } catch { /* export can fall back to raw/summary */ }
       await downloadAnalysisWord({
         scriptTitle: fullReport.scriptTitle || (lang === 'ar' ? 'تحليل النص' : 'Script Analysis'),
         clientName: fullReport.clientName || (lang === 'ar' ? 'عميل' : 'Client'),
@@ -188,6 +196,7 @@ function Reports() {
         deliveredAt: fullReport.createdAt,
         viewerPages,
         findings,
+        reviewFindings,
         findingsByArticle: fullReport.summaryJson?.findings_by_article,
         canonicalFindings: fullReport.summaryJson?.canonical_findings,
         reportHints: fullReport.summaryJson?.report_hints ?? undefined,

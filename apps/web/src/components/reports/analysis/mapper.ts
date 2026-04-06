@@ -1,4 +1,4 @@
-import type { AnalysisFinding } from "@/api";
+import type { AnalysisFinding, AnalysisReviewFinding } from "@/api";
 import { normalizeAtomId } from "@/data/policyMap";
 
 type SummaryFinding = {
@@ -51,6 +51,63 @@ export type AnalysisPdfFinding = {
   /** Policy atom e.g. 4-1 for semantic grouping */
   policyAtomId?: string;
 };
+
+function reviewSourceToPdfSource(sourceKind: AnalysisReviewFinding["sourceKind"]): string {
+  if (sourceKind === "manual") return "manual";
+  if (sourceKind === "glossary") return "glossary";
+  if (sourceKind === "special") return "ai";
+  return "ai";
+}
+
+export function splitAnalysisReviewFindingsForPdf(
+  reviewFindings: AnalysisReviewFinding[] | null | undefined
+): { findings: AnalysisPdfFinding[]; reportHints: AnalysisPdfFinding[] } {
+  const visible = (reviewFindings || []).filter((row): row is AnalysisReviewFinding => Boolean(row) && !row.isHidden);
+
+  const findings = visible
+    .filter((row) => row.sourceKind !== "special" && row.reviewStatus !== "approved")
+    .map((row) => ({
+      id: row.canonicalFindingId?.trim() || row.id,
+      articleId: Number.isFinite(row.primaryArticleId) ? row.primaryArticleId : 0,
+      titleAr: row.titleAr ?? "—",
+      severity: row.severity ?? "info",
+      confidence: row.anchorConfidence ?? 1,
+      evidenceSnippet: row.evidenceSnippet ?? "",
+      startOffsetGlobal: row.startOffsetGlobal ?? null,
+      source: reviewSourceToPdfSource(row.sourceKind),
+      primaryArticleId: Number.isFinite(row.primaryArticleId) ? row.primaryArticleId : 0,
+      relatedArticleIds: [],
+      rationale: row.rationaleAr ?? row.descriptionAr ?? null,
+      pillarId: null,
+      pageNumber: row.pageNumber ?? undefined,
+      reviewStatus: row.reviewStatus,
+      reviewedAt: row.reviewedAt ?? undefined,
+      policyAtomId: row.primaryAtomId?.trim() || undefined,
+    }));
+
+  const reportHints = visible
+    .filter((row) => row.sourceKind === "special")
+    .map((row) => ({
+      id: row.canonicalFindingId?.trim() || row.id,
+      articleId: Number.isFinite(row.primaryArticleId) ? row.primaryArticleId : 0,
+      titleAr: row.titleAr ?? "—",
+      severity: "info",
+      confidence: row.anchorConfidence ?? 1,
+      evidenceSnippet: row.evidenceSnippet ?? "",
+      startOffsetGlobal: row.startOffsetGlobal ?? null,
+      source: "ai",
+      primaryArticleId: Number.isFinite(row.primaryArticleId) ? row.primaryArticleId : 0,
+      relatedArticleIds: [],
+      rationale: row.rationaleAr ?? row.descriptionAr ?? null,
+      pillarId: null,
+      pageNumber: row.pageNumber ?? undefined,
+      reviewStatus: row.reviewStatus,
+      reviewedAt: row.reviewedAt ?? undefined,
+      policyAtomId: row.primaryAtomId?.trim() || undefined,
+    }));
+
+  return { findings, reportHints };
+}
 
 function sourcePriority(source?: string | null): number {
   if (source === "manual") return 3;

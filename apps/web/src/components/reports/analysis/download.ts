@@ -1,8 +1,8 @@
 import React from "react";
 import { pdf } from "@react-pdf/renderer";
 import { AnalysisSectionPdf } from "./Pdf";
-import { mapAnalysisFindingsForPdf } from "./mapper";
-import type { AnalysisFinding } from "@/api";
+import { mapAnalysisFindingsForPdf, splitAnalysisReviewFindingsForPdf } from "./mapper";
+import type { AnalysisFinding, AnalysisReviewFinding } from "@/api";
 
 async function toDataUrl(url: string): Promise<string | null> {
   try {
@@ -26,6 +26,7 @@ export interface DownloadAnalysisPdfParams {
   createdAt: string;
   logoUrl?: string | null;
   findings?: AnalysisFinding[] | null;
+  reviewFindings?: AnalysisReviewFinding[] | null;
   findingsByArticle?: Array<{ article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }> }> | null;
   canonicalFindings?: Array<{
     canonical_finding_id: string;
@@ -68,22 +69,28 @@ export interface DownloadAnalysisPdfParams {
 
 export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Promise<void> {
   const origin = window.location.origin;
-  const findings = mapAnalysisFindingsForPdf(params.findings, params.findingsByArticle, params.canonicalFindings);
-  const reportHintsMapped = (params.reportHints || []).map((f, idx) => ({
-    id: f.canonical_finding_id ?? `hint-${idx}`,
-    articleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
-    titleAr: f.title_ar ?? "—",
-    severity: "info" as const,
-    confidence: f.confidence ?? 0,
-    evidenceSnippet: f.evidence_snippet ?? "",
-    source: "ai" as const,
-    primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
-    relatedArticleIds: f.related_article_ids ?? [],
-    rationale: f.rationale ?? null,
-    pillarId: f.pillar_id ?? null,
-    startLineChunk: f.start_line_chunk ?? undefined,
-    endLineChunk: f.end_line_chunk ?? undefined,
-  }));
+  const hasReviewLayer = (params.reviewFindings?.length ?? 0) > 0;
+  const reviewLayer = splitAnalysisReviewFindingsForPdf(params.reviewFindings);
+  const findings = hasReviewLayer
+    ? reviewLayer.findings
+    : mapAnalysisFindingsForPdf(params.findings, params.findingsByArticle, params.canonicalFindings);
+  const reportHintsMapped = hasReviewLayer
+    ? reviewLayer.reportHints
+    : (params.reportHints || []).map((f, idx) => ({
+        id: f.canonical_finding_id ?? `hint-${idx}`,
+        articleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
+        titleAr: f.title_ar ?? "—",
+        severity: "info" as const,
+        confidence: f.confidence ?? 0,
+        evidenceSnippet: f.evidence_snippet ?? "",
+        source: "ai" as const,
+        primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
+        relatedArticleIds: f.related_article_ids ?? [],
+        rationale: f.rationale ?? null,
+        pillarId: f.pillar_id ?? null,
+        startLineChunk: f.start_line_chunk ?? undefined,
+        endLineChunk: f.end_line_chunk ?? undefined,
+      }));
   const [coverImageDataUrl, logoDataUrl] = await Promise.all([
     toDataUrl(`${origin}/cover.jpg`),
     toDataUrl(params.logoUrl || `${origin}/dashboardlogo.png`),

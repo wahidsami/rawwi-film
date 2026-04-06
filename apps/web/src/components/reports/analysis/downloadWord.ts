@@ -1,6 +1,6 @@
 import JSZip from "jszip";
-import type { AnalysisFinding } from "@/api";
-import { mapAnalysisFindingsForPdf } from "./mapper";
+import type { AnalysisFinding, AnalysisReviewFinding } from "@/api";
+import { mapAnalysisFindingsForPdf, splitAnalysisReviewFindingsForPdf } from "./mapper";
 import { displayPageForFinding, type ViewerPageSlice } from "@/utils/viewerPageFromOffset";
 
 type ReportHint = {
@@ -21,6 +21,30 @@ type ScriptSummary = {
   confidence: number;
 };
 
+function resolveWordExportFindingData(params: DownloadAnalysisWordParams) {
+  const hasReviewLayer = (params.reviewFindings?.length ?? 0) > 0;
+  const reviewLayer = splitAnalysisReviewFindingsForPdf(params.reviewFindings);
+  const findings = hasReviewLayer
+    ? reviewLayer.findings
+    : mapAnalysisFindingsForPdf(
+        params.findings,
+        params.findingsByArticle,
+        params.findings && params.findings.length > 0 ? undefined : params.canonicalFindings
+      );
+  const reportHints = hasReviewLayer
+    ? reviewLayer.reportHints.map((hint) => ({
+        canonical_finding_id: hint.id,
+        title_ar: hint.titleAr,
+        evidence_snippet: hint.evidenceSnippet,
+        severity: hint.severity,
+        confidence: hint.confidence,
+        rationale: hint.rationale ?? null,
+        primary_article_id: hint.primaryArticleId ?? hint.articleId ?? null,
+      }))
+    : (params.reportHints ?? []);
+  return { findings, reportHints };
+}
+
 export interface DownloadAnalysisWordParams {
   scriptTitle: string;
   clientName: string;
@@ -34,6 +58,7 @@ export interface DownloadAnalysisWordParams {
   deliveredAt?: string | null;
   viewerPages?: ViewerPageSlice[] | null;
   findings?: AnalysisFinding[] | null;
+  reviewFindings?: AnalysisReviewFinding[] | null;
   findingsByArticle?: Array<{ article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string }> }> | null;
   canonicalFindings?: Array<{
     canonical_finding_id: string;
@@ -394,11 +419,7 @@ function makeTableCell(text: string, widthPct: number, options?: {
 }
 
 function buildFindingsTable(params: DownloadAnalysisWordParams): string {
-  const findings = mapAnalysisFindingsForPdf(
-    params.findings,
-    params.findingsByArticle,
-    params.findings && params.findings.length > 0 ? undefined : params.canonicalFindings
-  );
+  const { findings } = resolveWordExportFindingData(params);
   const rows = findings.length === 0
     ? [`
       <w:tr>
@@ -445,12 +466,7 @@ function buildFindingsTable(params: DownloadAnalysisWordParams): string {
 }
 
 function buildRecommendationsBlock(params: DownloadAnalysisWordParams): string {
-  const findings = mapAnalysisFindingsForPdf(
-    params.findings,
-    params.findingsByArticle,
-    params.findings && params.findings.length > 0 ? undefined : params.canonicalFindings
-  );
-  const reportHints = params.reportHints ?? [];
+  const { findings, reportHints } = resolveWordExportFindingData(params);
   const recommendations = buildOverallRecommendations({ findings, reportHints, lang: params.lang });
   const recTitle = params.lang === "ar" ? "التوصيات والتوجيهات/" : "Recommendations / Guidance";
   const recParagraphs = recommendations.map((item, index) =>

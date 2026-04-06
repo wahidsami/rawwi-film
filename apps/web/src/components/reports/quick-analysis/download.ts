@@ -1,6 +1,7 @@
 import React from "react";
 import { pdf } from "@react-pdf/renderer";
-import type { AnalysisFinding } from "@/api";
+import type { AnalysisFinding, AnalysisReviewFinding } from "@/api";
+import { splitAnalysisReviewFindingsForPdf } from "../analysis/mapper";
 import { mapQuickAnalysisFindingsForPdf, type CanonicalFindingForQuickPdf } from "./mapper";
 import { QuickAnalysisPdf } from "./Pdf";
 
@@ -36,6 +37,7 @@ export async function downloadQuickAnalysisPdf(params: {
   clientName?: string;
   createdAt: string;
   findings?: AnalysisFinding[] | null;
+  reviewFindings?: AnalysisReviewFinding[] | null;
   findingsByArticle?: Array<{ article_id: number; top_findings?: Array<{ title_ar?: string; severity?: string; confidence?: number; evidence_snippet?: string; rationale?: string | null }> }> | null;
   canonicalFindings?: CanonicalFindingForQuickPdf[] | null;
   reportHints?: ReportHintForQuickPdf[] | null;
@@ -47,25 +49,55 @@ export async function downloadQuickAnalysisPdf(params: {
     toDataUrl(`${origin}/cover.jpg`),
     toDataUrl(`${origin}/dashboardlogo.png`),
   ]);
-  const findings = mapQuickAnalysisFindingsForPdf(
-    params.findings,
-    params.findingsByArticle,
-    params.canonicalFindings
-  );
-  // Normalize so ملاحظات خاصة section always receives an array (never undefined)
-  const hintsSource = Array.isArray(params.reportHints) ? params.reportHints : [];
-  const reportHintsMapped = hintsSource.map((f, idx) => ({
-    id: f.canonical_finding_id ?? `hint-${idx}`,
-    articleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
-    titleAr: f.title_ar ?? "—",
-    severity: "info" as const,
-    confidence: f.confidence ?? 0,
-    evidenceSnippet: f.evidence_snippet ?? "",
-    source: "ai" as const,
-    primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : undefined,
-    relatedArticleIds: f.related_article_ids ?? [],
-    rationale: f.rationale ?? null,
-  }));
+  const hasReviewLayer = (params.reviewFindings?.length ?? 0) > 0;
+  const reviewLayer = splitAnalysisReviewFindingsForPdf(params.reviewFindings);
+  const findings = hasReviewLayer
+    ? reviewLayer.findings.map((f) => ({
+        id: f.id,
+        articleId: f.articleId,
+        titleAr: f.titleAr,
+        severity: f.severity,
+        confidence: f.confidence,
+        evidenceSnippet: f.evidenceSnippet,
+        source: f.source,
+        startLineChunk: f.startLineChunk,
+        endLineChunk: f.endLineChunk,
+        rationale: f.rationale ?? null,
+        primaryArticleId: f.primaryArticleId,
+        relatedArticleIds: f.relatedArticleIds,
+        pillarId: f.pillarId ?? undefined,
+        pageNumber: f.pageNumber ?? undefined,
+      }))
+    : mapQuickAnalysisFindingsForPdf(
+        params.findings,
+        params.findingsByArticle,
+        params.canonicalFindings
+      );
+  const reportHintsMapped = hasReviewLayer
+    ? reviewLayer.reportHints.map((f) => ({
+        id: f.id,
+        articleId: f.articleId,
+        titleAr: f.titleAr,
+        severity: "info" as const,
+        confidence: f.confidence,
+        evidenceSnippet: f.evidenceSnippet,
+        source: "ai" as const,
+        primaryArticleId: f.primaryArticleId,
+        relatedArticleIds: f.relatedArticleIds ?? [],
+        rationale: f.rationale ?? null,
+      }))
+    : (Array.isArray(params.reportHints) ? params.reportHints : []).map((f, idx) => ({
+        id: f.canonical_finding_id ?? `hint-${idx}`,
+        articleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
+        titleAr: f.title_ar ?? "—",
+        severity: "info" as const,
+        confidence: f.confidence ?? 0,
+        evidenceSnippet: f.evidence_snippet ?? "",
+        source: "ai" as const,
+        primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : undefined,
+        relatedArticleIds: f.related_article_ids ?? [],
+        rationale: f.rationale ?? null,
+      }));
   const doc = React.createElement(QuickAnalysisPdf, {
     scriptTitle: params.scriptTitle,
     createdAt: params.createdAt,
