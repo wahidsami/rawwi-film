@@ -2126,10 +2126,6 @@ export function ScriptWorkspace() {
   }, [workspaceVisibleReportFindings]);
 
   useEffect(() => {
-    setPageNoticesOpen(false);
-  }, [safeCurrentPage, workspaceViewMode]);
-
-  useEffect(() => {
     if (!editReportFindingModal) return;
     setEditReportFindingForm({
       articleId: String(editReportFindingModal.articleId || DEFAULT_ACTIONABLE_ARTICLE_ID),
@@ -2486,6 +2482,10 @@ export function ScriptWorkspace() {
   const safeCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
   const strictImportedAnchoring = !editorData?.sourcePdfSignedUrl;
   const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    setPageNoticesOpen(false);
+  }, [safeCurrentPage, workspaceViewMode]);
 
   useEffect(() => {
     const p = searchParams.get('page');
