@@ -1256,6 +1256,30 @@ function workspaceGlobalSpanToPageLocal(
   return { pageNumber: pn, localStart: ls, localEnd: Math.min(pageLen, le) };
 }
 
+function workspaceGlobalSpanOverlapWithViewerPage(
+  globalStart: number,
+  globalEnd: number,
+  viewerPageNumber: number,
+  pages: Array<{ pageNumber: number; content: string }>
+): { pageNumber: number; localStart: number; localEnd: number } | null {
+  if (globalEnd <= globalStart || !pages.length) return null;
+  const sorted = [...pages].sort((a, b) => a.pageNumber - b.pageNumber);
+  const idx = sorted.findIndex((p) => p.pageNumber === viewerPageNumber);
+  if (idx < 0) return null;
+  const pageLen = (sorted[idx]?.content ?? '').length;
+  if (pageLen <= 0) return null;
+  const g0 = globalStartOfViewerPage(sorted, idx);
+  const g1 = g0 + pageLen;
+  const overlapStart = Math.max(globalStart, g0);
+  const overlapEnd = Math.min(globalEnd, g1);
+  if (overlapEnd <= overlapStart) return null;
+  return {
+    pageNumber: viewerPageNumber,
+    localStart: overlapStart - g0,
+    localEnd: overlapEnd - g0,
+  };
+}
+
 function viewerPageLocalSpanToGlobal(
   pageNumber: number,
   localStart: number,
@@ -4075,7 +4099,8 @@ export function ScriptWorkspace() {
     if (pinnedHighlight) {
       const f = workspaceVisibleReportFindings.find((x) => x.id === pinnedHighlight.findingId);
       if (!f) return [];
-      const hit =
+      const pages = pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }));
+      const pinnedPageHit =
         pinnedHighlight.pageNumber != null &&
         pinnedHighlight.localStart != null &&
         pinnedHighlight.localEnd != null
@@ -4084,11 +4109,17 @@ export function ScriptWorkspace() {
               localStart: pinnedHighlight.localStart,
               localEnd: pinnedHighlight.localEnd,
             }
-          : (() => {
-              const pages = pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }));
-              return workspaceGlobalSpanToPageLocal(pinnedHighlight.globalStart, pinnedHighlight.globalEnd, pages);
-            })();
-      if (!hit || hit.pageNumber !== safeCurrentPage) return [];
+          : workspaceGlobalSpanToPageLocal(pinnedHighlight.globalStart, pinnedHighlight.globalEnd, pages);
+      const hit =
+        pinnedPageHit?.pageNumber === safeCurrentPage
+          ? pinnedPageHit
+          : workspaceGlobalSpanOverlapWithViewerPage(
+              pinnedHighlight.globalStart,
+              pinnedHighlight.globalEnd,
+              safeCurrentPage,
+              pages,
+            );
+      if (!hit) return [];
       const pageScopedFinding: AnalysisFinding = {
         ...f,
         startOffsetGlobal: hit.localStart,
