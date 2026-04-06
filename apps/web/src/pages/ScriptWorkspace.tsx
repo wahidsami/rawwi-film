@@ -869,6 +869,80 @@ function workspaceGlobalSpanToPageLocal(
   return { pageNumber: pn, localStart: ls, localEnd: Math.min(pageLen, le) };
 }
 
+function viewerPageLocalSpanToGlobal(
+  pageNumber: number,
+  localStart: number,
+  localEnd: number,
+  pages: Array<{ pageNumber: number; content: string }>
+): { globalStart: number; globalEnd: number } | null {
+  if (localEnd <= localStart || !pages.length) return null;
+  const sorted = [...pages].sort((a, b) => a.pageNumber - b.pageNumber);
+  const idx = sorted.findIndex((p) => p.pageNumber === pageNumber);
+  if (idx < 0) return null;
+  const pageLen = (sorted[idx]?.content ?? '').length;
+  if (pageLen <= 0 || localStart >= pageLen) return null;
+  const g0 = globalStartOfViewerPage(sorted, idx);
+  return {
+    globalStart: g0 + Math.max(0, Math.min(pageLen, localStart)),
+    globalEnd: g0 + Math.max(localStart + 1, Math.min(pageLen, localEnd)),
+  };
+}
+
+function resolveFindingViaStoredPageData(
+  finding: AnalysisFinding,
+  pages: Array<{ pageNumber: number; content: string }>
+): { pageNumber: number; localStart: number; localEnd: number; globalStart: number; globalEnd: number; method: 'stored_offsets' | 'stored_page_search' } | null {
+  if (!pages.length || finding.pageNumber == null || finding.pageNumber < 1) return null;
+  const page = pages.find((p) => p.pageNumber === finding.pageNumber);
+  if (!page) return null;
+  const pageLen = (page.content ?? '').length;
+  if (pageLen <= 0) return null;
+
+  const evidenceNorm = normalizeEvidenceForSearch(finding.evidenceSnippet ?? '');
+  const startOffsetPage = finding.startOffsetPage;
+  const endOffsetPage = finding.endOffsetPage;
+  if (
+    typeof startOffsetPage === 'number' &&
+    typeof endOffsetPage === 'number' &&
+    startOffsetPage >= 0 &&
+    endOffsetPage > startOffsetPage
+  ) {
+    const localStart = Math.max(0, Math.min(pageLen, startOffsetPage));
+    const localEnd = Math.max(localStart + 1, Math.min(pageLen, endOffsetPage));
+    if (localStart < pageLen) {
+      const slice = page.content.slice(localStart, localEnd);
+      const sliceNorm = canonicalNormalize(slice);
+      const evidenceCanonical = canonicalNormalize(evidenceNorm);
+      const lenRatio =
+        evidenceCanonical.length > 0
+          ? Math.min(sliceNorm.length, evidenceCanonical.length) / Math.max(sliceNorm.length, evidenceCanonical.length)
+          : 0;
+      const looksReasonable =
+        !evidenceCanonical ||
+        sliceNorm === evidenceCanonical ||
+        (sliceNorm && evidenceCanonical && lenRatio >= 0.55 && (sliceNorm.includes(evidenceCanonical) || evidenceCanonical.includes(sliceNorm)));
+      if (looksReasonable) {
+        const globalSpan = viewerPageLocalSpanToGlobal(page.pageNumber, localStart, localEnd, pages);
+        if (globalSpan) {
+          return { pageNumber: page.pageNumber, localStart, localEnd, ...globalSpan, method: 'stored_offsets' };
+        }
+      }
+    }
+  }
+
+  const searched = locateSpanByEvidenceSearch(page.content ?? '', finding, { pageSlice: true, sliceGlobalStart: 0 });
+  if (!searched) return null;
+  const globalSpan = viewerPageLocalSpanToGlobal(page.pageNumber, searched.start, searched.end, pages);
+  if (!globalSpan) return null;
+  return {
+    pageNumber: page.pageNumber,
+    localStart: searched.start,
+    localEnd: searched.end,
+    ...globalSpan,
+    method: 'stored_page_search',
+  };
+}
+
 /** Ctrl+F the full workspace text (all pages), then map hit to viewer page. */
 function resolveFindingViaWorkspaceSearch(
   f: AnalysisFinding,
@@ -3211,26 +3285,61 @@ export function ScriptWorkspace() {
 
   /** Per-finding: where evidence actually appears in the workspace (page + local/global offsets). */
   const findingWorkspaceResolve = useMemo(() => {
-    const map = new Map<string, { pageNumber: number; localStart: number; localEnd: number; globalStart: number; globalEnd: number }>();
+    const map = new Map<
+      string,
+      {
+        resolved: boolean;
+        pageNumber: number | null;
+        localStart: number | null;
+        localEnd: number | null;
+        globalStart: number | null;
+        globalEnd: number | null;
+        method: 'stored_offsets' | 'stored_page_search' | 'global_search' | 'workspace_search' | 'unresolved';
+      }
+    >();
     if (!workspacePlainFull.trim() || !workspaceVisibleReportFindings.length) return map;
     const hasPagedViewer = pagesSortedForViewer.length > 0;
     const pages = hasPagedViewer
       ? pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
       : [{ pageNumber: 1, content: workspacePlainFull }];
     for (const f of workspaceVisibleReportFindings) {
+      const storedHit = resolveFindingViaStoredPageData(f, pages);
+      if (storedHit) {
+        map.set(f.id, { resolved: true, ...storedHit });
+        continue;
+      }
       const globalSpan = resolveFindingSpanInText(workspacePlainFull, f, locateFindingInContent);
-      const hit =
-        (globalSpan ? workspaceGlobalSpanToPageLocal(globalSpan.start, globalSpan.end, pages) : null) ??
-        resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
+      const hit = globalSpan
+        ? workspaceGlobalSpanToPageLocal(globalSpan.start, globalSpan.end, pages)
+        : resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
       if (hit) {
         const pageIndex = Math.max(0, pages.findIndex((p) => p.pageNumber === hit.pageNumber));
         const pageGlobalStart = hasPagedViewer ? globalStartOfViewerPage(pages, pageIndex) : 0;
         map.set(f.id, {
+          resolved: true,
           ...hit,
           globalStart: pageGlobalStart + hit.localStart,
           globalEnd: pageGlobalStart + hit.localEnd,
+          method: globalSpan ? 'global_search' : 'workspace_search',
         });
+        continue;
       }
+      const fallbackPage =
+        f.pageNumber ??
+        displayPageForFinding(
+          f.startOffsetGlobal,
+          pages.map((p) => ({ pageNumber: p.pageNumber, content: p.content })),
+          null,
+        );
+      map.set(f.id, {
+        resolved: false,
+        pageNumber: fallbackPage,
+        localStart: null,
+        localEnd: null,
+        globalStart: null,
+        globalEnd: null,
+        method: 'unresolved',
+      });
     }
     return map;
   }, [workspacePlainFull, workspaceVisibleReportFindings, pagesSortedForViewer, locateFindingInContent]);
@@ -3253,7 +3362,7 @@ export function ScriptWorkspace() {
     }
     return activeWorkspaceHighlights.flatMap((f) => {
       const hit = findingWorkspaceResolve.get(f.id);
-      if (!hit || hit.pageNumber !== safeCurrentPage) return [];
+      if (!hit?.resolved || hit.pageNumber !== safeCurrentPage || hit.localStart == null || hit.localEnd == null) return [];
       return [{ ...f, startOffsetGlobal: hit.localStart, endOffsetGlobal: hit.localEnd }];
     });
   }, [pinnedHighlight, workspaceVisibleReportFindings, pagesSortedForViewer, safeCurrentPage, activeWorkspaceHighlights, findingWorkspaceResolve]);
@@ -3268,10 +3377,24 @@ export function ScriptWorkspace() {
     }
     return activeWorkspaceHighlights.flatMap((f) => {
       const hit = findingWorkspaceResolve.get(f.id);
-      if (!hit) return [];
+      if (!hit?.resolved || hit.globalStart == null || hit.globalEnd == null) return [];
       return [{ ...f, startOffsetGlobal: hit.globalStart, endOffsetGlobal: hit.globalEnd }];
     });
   }, [pinnedHighlight, workspaceVisibleReportFindings, editorData?.pages?.length, activeWorkspaceHighlights, findingWorkspaceResolve]);
+
+  const activeWorkspaceHighlightStats = useMemo(() => {
+    const activeIds = new Set(activeWorkspaceHighlights.map((f) => f.id));
+    let total = 0;
+    let resolved = 0;
+    let unresolved = 0;
+    for (const id of activeIds) {
+      total += 1;
+      const hit = findingWorkspaceResolve.get(id);
+      if (hit?.resolved) resolved += 1;
+      else unresolved += 1;
+    }
+    return { total, resolved, unresolved };
+  }, [activeWorkspaceHighlights, findingWorkspaceResolve]);
 
   const findingSegments = useMemo(
     () =>
@@ -3301,12 +3424,50 @@ export function ScriptWorkspace() {
       const pages = pagesSortedForViewer.length
         ? pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
         : [{ pageNumber: 1, content: workspacePlainFull }];
+      const resolvedHit = findingWorkspaceResolve.get(f.id);
+      if (resolvedHit?.resolved && resolvedHit.globalStart != null && resolvedHit.globalEnd != null) {
+        setPinnedHighlight({ findingId: f.id, globalStart: resolvedHit.globalStart, globalEnd: resolvedHit.globalEnd });
+        setSelectedFindingId(f.id);
+        if (workspaceViewMode === 'pdf') {
+          setWorkspaceViewMode('text');
+        }
+        if (resolvedHit.pageNumber != null && pagesSortedForViewer.length > 0) {
+          setCurrentPage(resolvedHit.pageNumber);
+          setSearchParams(
+            (prev) => {
+              const n = new URLSearchParams(prev);
+              n.set('page', String(resolvedHit.pageNumber));
+              return n;
+            },
+            { replace: true }
+          );
+        }
+        setHighlightRetryTick((n) => n + 1);
+        if (!opts?.silent) {
+          toast.success(lang === 'ar' ? 'تم العثور على النص وتمييزه' : 'Found and highlighted in script');
+        }
+        return;
+      }
       const resolvedSpan = resolveFindingSpanInText(workspacePlainFull, f, locateFindingInContent);
       if (!resolvedSpan) {
-        toast.error(
+        const fallbackPage =
+          findingWorkspaceResolve.get(f.id)?.pageNumber ??
+          displayPageForFinding(f.startOffsetGlobal, pages, f.pageNumber ?? null);
+        if (fallbackPage != null && pagesSortedForViewer.length > 0) {
+          setCurrentPage(fallbackPage);
+          setSearchParams(
+            (prev) => {
+              const n = new URLSearchParams(prev);
+              n.set('page', String(fallbackPage));
+              return n;
+            },
+            { replace: true }
+          );
+        }
+        toast(
           lang === 'ar'
-            ? 'لم يُعثر على النص في المستند. جرّب اقتباساً أطول في حقل الدليل.'
-            : 'Could not find this text in the document. Try a longer evidence quote.'
+            ? 'تعذر تحديد موضع هذه الملاحظة بدقة داخل العرض الحالي. ستبقى البطاقة ظاهرة كعنصر يحتاج تحققًا يدويًا.'
+            : 'Could not place this finding precisely in the current viewer. The card will remain marked for manual verification.'
         );
         return;
       }
@@ -3347,7 +3508,7 @@ export function ScriptWorkspace() {
         toast.success(lang === 'ar' ? 'تم العثور على النص وتمييزه' : 'Found and highlighted in script');
       }
     },
-    [workspacePlainFull, pagesSortedForViewer, locateFindingInContent, lang, setSearchParams, setCurrentPage]
+    [workspacePlainFull, pagesSortedForViewer, locateFindingInContent, lang, setSearchParams, setCurrentPage, findingWorkspaceResolve, workspaceViewMode]
   );
 
   // Apply finding highlights in formatted HTML by wrapping DOM ranges (no innerHTML replace).
@@ -4285,6 +4446,22 @@ export function ScriptWorkspace() {
               )}
               {workspaceVisibleReportFindings.length > 0 && (
                 <div className="space-y-2 mb-4">
+                  {selectedReportForHighlights && activeWorkspaceHighlightStats.total > 0 && (
+                    <div className="rounded-md border border-border/60 bg-surface/80 p-2.5 text-[11px] text-text-main">
+                      <span dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                        {lang === 'ar'
+                          ? `تغطية التمييز: ${activeWorkspaceHighlightStats.resolved} من ${activeWorkspaceHighlightStats.total}`
+                          : `Highlight coverage: ${activeWorkspaceHighlightStats.resolved} of ${activeWorkspaceHighlightStats.total}`}
+                      </span>
+                      {activeWorkspaceHighlightStats.unresolved > 0 && (
+                        <p className="mt-1 text-warning" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                          {lang === 'ar'
+                            ? `${activeWorkspaceHighlightStats.unresolved} ملاحظة لم تُحل بصريًا بعد، وستبقى ظاهرة في القائمة مع حاجة لتحقق يدوي.`
+                            : `${activeWorkspaceHighlightStats.unresolved} findings are not yet visually anchored and remain listed for manual verification.`}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   {!blockHighlightsCompletely &&
                     pinnedHighlight &&
                     highlightExpectedCount > 0 &&
@@ -4480,6 +4657,11 @@ export function ScriptWorkspace() {
                           ) : (f.source === 'ai' || f.source === 'lexicon_mandatory') ? (
                             <Badge variant="warning" className="text-[10px]">{f.source === 'lexicon_mandatory' ? t('findingSourceGlossary') : 'AI'}</Badge>
                           ) : null}
+                          {findingWorkspaceResolve.get(f.id)?.resolved === false && (
+                            <Badge variant="outline" className="text-[10px] border-warning/40 text-warning">
+                              {lang === 'ar' ? 'يتطلب تموضعًا يدويًا' : 'Needs manual anchoring'}
+                            </Badge>
+                          )}
                           <Badge variant={f.reviewStatus === 'approved' ? 'success' : 'error'} className="text-[10px]">
                             {f.reviewStatus === 'approved' ? (lang === 'ar' ? 'آمن' : 'Safe') : (lang === 'ar' ? 'مخالفة' : 'Violation')}
                           </Badge>
@@ -4492,9 +4674,13 @@ export function ScriptWorkspace() {
                         </p>
                       )}
                       <p className="mt-2 text-[11px] text-text-muted" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                        {lang === 'ar'
-                          ? 'اضغط على البطاقة للانتقال إلى موضعها وتمييزها داخل النص.'
-                          : 'Click the card to jump to and highlight its location in the script.'}
+                        {findingWorkspaceResolve.get(f.id)?.resolved === false
+                          ? lang === 'ar'
+                            ? 'هذه الملاحظة لم تُحل بصريًا بعد. الضغط عليها سينقلك لأقرب صفحة مع إبقائها ظاهرة للمراجعة اليدوية.'
+                            : 'This finding is not visually anchored yet. Clicking it will take you to the closest page and keep it flagged for manual verification.'
+                          : lang === 'ar'
+                            ? 'اضغط على البطاقة للانتقال إلى موضعها وتمييزها داخل النص.'
+                            : 'Click the card to jump to and highlight its location in the script.'}
                       </p>
                       {f.source !== 'manual' && (
                         <div className="flex flex-wrap gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
