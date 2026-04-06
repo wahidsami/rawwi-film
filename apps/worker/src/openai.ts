@@ -106,7 +106,7 @@ export async function callJudgeRaw(
   const payload = buildJudgeArticlesPayload(selectedArticles);
   const textSlice = chunkText.slice(0, 30_000);
   const allowedArticleIds = selectedArticles.map((a) => a.id).join(", ");
-  const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nقواعد تنسيق إلزامية:\n- article_id (اختياري): إذا استخدمته فيجب أن يكون رقماً صحيحاً من المواد المعروضة فقط: [${allowedArticleIds}]. إذا لم تُحدده استخدم canonical_atom.\n- canonical_atom مطلوب: واحدة من INSULT, VIOLENCE, SEXUAL, SUBSTANCES, DISCRIMINATION, CHILD_SAFETY, WOMEN, MISINFORMATION, PUBLIC_ORDER, EXTREMISM, INTERNATIONAL, ECONOMIC, PRIVACY, APPEARANCE.\n- intensity, context_impact, legal_sensitivity, audience_risk مطلوبة وكل واحدة رقماً بين 1 و 4.\n- rationale_ar مطلوبة: جملة أو جملتان بالعربية تشرح أين يظهر المقتطف، ما الذي تم رصده، ولماذا يندرج تحت المادة. امنع الشرح العام مثل "وجود لفظ مخالف" دون توضيح.\n- يجب أن يطابق rationale_ar المادة الأساسية المختارة، ولا تذكر مادة مختلفة عنها في الشرح.\n- لا تُرجع severity — تُحسب في الخلفية.\n- location.start_offset و location.end_offset يجب أن يكونا أرقاماً (لا تُرجع null).\n- confidence رقماً بين 0 و 1.\n- evidence_snippet نصاً غير null.\nأرجع JSON بمصفوفة findings فقط.`;
+  const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nقواعد تنسيق إلزامية:\n- article_id (اختياري): إذا استخدمته فيجب أن يكون رقماً صحيحاً من المواد المعروضة فقط: [${allowedArticleIds}]. إذا لم تُحدده استخدم canonical_atom.\n- canonical_atom مطلوب: واحدة من INSULT, VIOLENCE, SEXUAL, SUBSTANCES, DISCRIMINATION, CHILD_SAFETY, WOMEN, MISINFORMATION, PUBLIC_ORDER, EXTREMISM, INTERNATIONAL, ECONOMIC, PRIVACY, APPEARANCE.\n- intensity, context_impact, legal_sensitivity, audience_risk مطلوبة وكل واحدة رقماً بين 1 و 4.\n- rationale_ar مطلوبة: جملة أو جملتان بالعربية تشرح أين يظهر المقتطف، ما الذي تم رصده، ولماذا يندرج تحت المادة. امنع الشرح العام مثل "وجود لفظ مخالف" دون توضيح.\n- يجب أن يطابق rationale_ar المادة الأساسية المختارة، ولا تذكر مادة مختلفة عنها في الشرح.\n- لا تُرجع severity — تُحسب في الخلفية.\n- evidence_snippet يجب أن يكون أصغر اقتباس حرفي ممكن يثبت المخالفة، وليس فقرة واسعة إلا إذا تعذر غير ذلك.\n- location.start_offset و location.end_offset يجب أن يحددا نفس المقتطف القصير داخل chunk الحالي (لا تُرجع null ولا نافذة واسعة بلا حاجة).\n- confidence رقماً بين 0 و 1.\n- evidence_snippet نصاً غير null.\nأرجع JSON بمصفوفة findings فقط.`;
 
   const resp = await openai.chat.completions.create({
     model: jobConfig.judge_model,
@@ -209,17 +209,26 @@ export async function callAuditorRaw(
   fullText: string,
   model: string,
   auditorSystemPrompt?: string,
+  auditorContext?: string | null,
   options: OpenAiCallOptions = {}
 ): Promise<string> {
   const clippedPayload = canonicalPayload.slice(0, 45_000);
   const clippedText = fullText.slice(0, 35_000);
+  const clippedAuditorContext =
+    typeof auditorContext === "string" && auditorContext.trim().length > 0
+      ? auditorContext.trim().slice(0, 12_000)
+      : null;
   const resp = await openai.chat.completions.create({
     model,
     messages: [
       { role: "system", content: auditorSystemPrompt || AUDITOR_SYSTEM_MSG },
       {
         role: "user",
-        content: `المرشحات القانونية canonical:\n${clippedPayload}\n\nمقتطف النص الكامل:\n${clippedText}\n\nأرجع JSON فقط. كل assessment يجب أن يحتوي حقل rationale_ar مملوءاً (جملة أو جملتان بالعربية: أين في النص، ماذا يعني في السياق، ولماذا اعتُبرت مخالفة أو تحتاج مراجعة). مثال: "المقتطف من مشهد حلم يصف ضحية طعن؛ السياق درامي ولا يروّج للعنف لكن الوصف يتجاوز ضوابط مادة 9."`,
+        content: `المرشحات القانونية canonical:\n${clippedPayload}\n\n${
+          clippedAuditorContext
+            ? `سياق إضافي للمراجع (Pipeline V2):\n${clippedAuditorContext}\n\n`
+            : ""
+        }مقتطف النص الكامل:\n${clippedText}\n\nأرجع JSON فقط. كل assessment يجب أن يحتوي حقل rationale_ar مملوءاً (جملة أو جملتان بالعربية: أين في النص، ماذا يعني في السياق، ولماذا اعتُبرت مخالفة أو تحتاج مراجعة). إذا وُجد سياق إضافي للمراجع فاستخدمه فقط لفهم الحبكة، نبرة المشهد، وموقف السرد؛ ولا تعتمد عليه كدليل حرفي ما لم يكن النص الحرفي موجوداً أيضاً في المقتطف الحالي. مثال: "المقتطف من مشهد حلم يصف ضحية طعن؛ السياق درامي ولا يروّج للعنف لكن الوصف يتجاوز ضوابط مادة 9."`,
       },
     ],
     response_format: { type: "json_object" },

@@ -67,6 +67,12 @@ export const config = {
    */
   ANALYSIS_ENGINE: ((process.env.ANALYSIS_ENGINE ?? "v2").toLowerCase() === "hybrid" ? "hybrid" : "v2") as "v2" | "hybrid",
   /**
+   * Pipeline version:
+   * - v1: current production-safe pipeline
+   * - v2: next-generation pipeline with staged rollout via job config
+   */
+  ANALYSIS_PIPELINE_VERSION: ((process.env.ANALYSIS_PIPELINE_VERSION ?? "v1").toLowerCase() === "v2" ? "v2" : "v1") as "v1" | "v2",
+  /**
    * Hybrid run mode:
    * - enforce: hybrid output is persisted
    * - shadow: run hybrid for evaluation, persist baseline v2 output

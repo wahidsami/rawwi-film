@@ -8,6 +8,7 @@
     "once": "tsx src/index.ts once",
     "worker:dev": "tsx src/index.ts dev",
     "worker:once": "tsx src/index.ts once",
+    "compare:v2": "tsx src/pipelineV2.compare.ts",
     "test:aggregation": "tsx src/aggregation.test.ts",
     "test:atom-enforcement": "tsx src/pipeline.atom-enforcement.test.ts",
     "test:audit": "tsx src/audit.test.ts",

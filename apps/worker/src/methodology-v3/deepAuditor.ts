@@ -19,6 +19,12 @@ type CanonicalCandidate = {
   primary_article_id: number;
   related_article_ids: number[];
   pillar_id?: string;
+  depiction_type?: string | null;
+  speaker_role?: string | null;
+  narrative_consequence?: string | null;
+  final_ruling_hint?: string | null;
+  context_confidence?: number | null;
+  policy_hint_rationale?: string | null;
 };
 
 function uniqueNums(values: Array<number | null | undefined>): number[] {
@@ -129,6 +135,12 @@ function buildCanonicalCandidates(findings: HybridFindingLike[]): CanonicalCandi
       primary_article_id: primaryArticle,
       related_article_ids: related,
       pillar_id: primary.pillar_id,
+      depiction_type: primary.depiction_type ?? null,
+      speaker_role: primary.speaker_role ?? null,
+      narrative_consequence: primary.narrative_consequence ?? null,
+      final_ruling_hint: primary.final_ruling ?? null,
+      context_confidence: primary.context_confidence ?? null,
+      policy_hint_rationale: primary.rationale_ar ?? null,
     });
   }
   return out;
@@ -138,6 +150,7 @@ export async function runDeepAuditorPass(args: {
   findings: HybridFindingLike[];
   fullText: string | null;
   enabled?: boolean;
+  auditorContext?: string | null;
   signal?: AbortSignal;
 }): Promise<HybridFindingLike[]> {
   const { findings, fullText } = args;
@@ -157,6 +170,7 @@ export async function runDeepAuditorPass(args: {
     fullText ?? "",
     config.OPENAI_AUDITOR_MODEL,
     undefined,
+    args.auditorContext,
     { signal: args.signal }
   );
   const parsed = await parseAuditorWithRepair(raw, config.OPENAI_AUDITOR_MODEL, {

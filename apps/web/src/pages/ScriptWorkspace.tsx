@@ -427,7 +427,7 @@ import type { AnalysisFinding, AnalysisReviewFinding, DuplicateScriptCheckRespon
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
-import type { AnalysisJob, AnalysisModeProfile, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
+import type { AnalysisJob, AnalysisModeProfile, AnalysisPipelineVersion, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
 import { sanitizeFormattedHtml } from '@/utils/sanitizeHtml';
 import { PdfOriginalViewer } from '@/components/script/PdfOriginalViewer';
 import {
@@ -485,6 +485,29 @@ const ANALYSIS_MODE_OPTIONS: Array<{
     labelEn: 'Turbo',
     hintAr: 'أسرع، مع تقليل بعض العمق لخفض الزمن.',
     hintEn: 'Fastest mode, with some depth reduced to save time.',
+  },
+];
+
+const ANALYSIS_PIPELINE_OPTIONS: Array<{
+  value: AnalysisPipelineVersion;
+  labelAr: string;
+  labelEn: string;
+  hintAr: string;
+  hintEn: string;
+}> = [
+  {
+    value: 'v1',
+    labelAr: 'V1 المستقر',
+    labelEn: 'V1 Stable',
+    hintAr: 'المسار الحالي المستقر للإنتاج.',
+    hintEn: 'Current stable production pipeline.',
+  },
+  {
+    value: 'v2',
+    labelAr: 'V2 التجريبي',
+    labelEn: 'V2 Beta',
+    hintAr: 'ذاكرة سياقية أفضل وتضييق أدق للدليل.',
+    hintEn: 'Improved context memory and tighter evidence pinning.',
   },
 ];
 
@@ -1638,6 +1661,7 @@ export function ScriptWorkspace() {
   const [reportIdWhenJobCompleted, setReportIdWhenJobCompleted] = useState<string | null>(null);
   const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
   const [analysisModeProfile, setAnalysisModeProfile] = useState<AnalysisModeProfile>('balanced');
+  const [analysisPipelineVersion, setAnalysisPipelineVersion] = useState<AnalysisPipelineVersion>('v1');
   const [analysisControlBusy, setAnalysisControlBusy] = useState<'pause' | 'resume' | 'stop' | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
@@ -2689,6 +2713,7 @@ export function ScriptWorkspace() {
       const { jobId, manualReviewContextCount } = await scriptsApi.createTask(script.currentVersionId, {
         forceFresh: true,
         analysisProfile: analysisModeProfile,
+        pipelineVersion: analysisPipelineVersion,
       });
       setAnalysisJobId(jobId);
       setAnalysisJob(null);
@@ -2968,6 +2993,63 @@ export function ScriptWorkspace() {
     () => ANALYSIS_MODE_OPTIONS.find((option) => option.value === (analysisJob?.analysisMode ?? analysisModeProfile)) ?? ANALYSIS_MODE_OPTIONS[1],
     [analysisJob?.analysisMode, analysisModeProfile]
   );
+  const selectedPipelineMeta = useMemo(
+    () => ANALYSIS_PIPELINE_OPTIONS.find((option) => option.value === (analysisJob?.pipelineVersion ?? analysisPipelineVersion)) ?? ANALYSIS_PIPELINE_OPTIONS[0],
+    [analysisJob?.pipelineVersion, analysisPipelineVersion]
+  );
+  const selectedMethodologyMeta = useMemo(() => {
+    const pipeline = analysisJob?.pipelineVersion ?? analysisPipelineVersion;
+    const mode = analysisJob?.analysisMode ?? analysisModeProfile;
+    const engine =
+      analysisJob?.analysisEngine ??
+      (pipeline === 'v2' ? (mode === 'turbo' ? 'v2' : 'hybrid') : null);
+    const hybridMode =
+      analysisJob?.hybridMode ??
+      (pipeline === 'v2'
+        ? (mode === 'quality' ? 'enforce' : mode === 'balanced' ? 'shadow' : 'off')
+        : null);
+
+    if (pipeline !== 'v2') {
+      return {
+        labelAr: 'الوضع الحالي',
+        labelEn: 'Current stable flow',
+        hintAr: 'يعتمد على إعدادات العامل الحالية في الإنتاج.',
+        hintEn: 'Uses the worker’s current production-safe behavior.',
+      };
+    }
+
+    if (engine !== 'hybrid' || hybridMode === 'off') {
+      return {
+        labelAr: 'كاشف فقط',
+        labelEn: 'Detector only',
+        hintAr: 'يمر على الكشف والتثبيت دون مراجعة هجينة إضافية.',
+        hintEn: 'Runs detection and pinning without extra hybrid review.',
+      };
+    }
+
+    if (hybridMode === 'enforce') {
+      return {
+        labelAr: 'هجين مفروض',
+        labelEn: 'Hybrid enforce',
+        hintAr: 'يطبّق مراجعة السياق والمدقق على النتيجة النهائية.',
+        hintEn: 'Applies context review and auditor output to the final result.',
+      };
+    }
+
+    return {
+      labelAr: 'هجين ظلّي',
+      labelEn: 'Hybrid shadow',
+      hintAr: 'يشغّل المراجعة الهجينة للمقارنة مع إبقاء النتيجة الأساسية هي المعروضة.',
+      hintEn: 'Runs hybrid review for comparison while keeping the baseline output persisted.',
+    };
+  }, [
+    analysisJob?.analysisEngine,
+    analysisJob?.analysisMode,
+    analysisJob?.hybridMode,
+    analysisJob?.pipelineVersion,
+    analysisModeProfile,
+    analysisPipelineVersion,
+  ]);
 
   const handlePauseAnalysis = useCallback(async () => {
     if (!analysisJobId || analysisControlBusy) return;
@@ -5069,6 +5151,29 @@ export function ScriptWorkspace() {
               ))}
             </select>
           </div>
+          <div className="hidden sm:flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold text-text-main">
+                {lang === 'ar' ? 'مسار التحليل' : 'Pipeline'}
+              </p>
+              <p className="text-[10px] text-text-muted truncate max-w-[11rem]">
+                {lang === 'ar' ? selectedPipelineMeta.hintAr : selectedPipelineMeta.hintEn}
+              </p>
+            </div>
+            <select
+              value={analysisPipelineVersion}
+              onChange={(e) => setAnalysisPipelineVersion(e.target.value as AnalysisPipelineVersion)}
+              className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm text-text-main focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              disabled={isAnalyzing || isAnalysisRunning}
+              title={lang === 'ar' ? 'اختر مسار التحليل قبل بدء الفحص' : 'Choose the analysis pipeline before starting'}
+            >
+              {ANALYSIS_PIPELINE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {lang === 'ar' ? option.labelAr : option.labelEn}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="relative hidden sm:block">
             <Button
               variant="outline"
@@ -6542,6 +6647,18 @@ export function ScriptWorkspace() {
                   <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'نمط التحليل' : 'Analysis mode'}</p>
                   <p className="text-sm font-medium text-text-main">
                     {lang === 'ar' ? selectedAnalysisModeMeta.labelAr : selectedAnalysisModeMeta.labelEn}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border bg-background/60 p-3">
+                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'مسار التحليل' : 'Pipeline'}</p>
+                  <p className="text-sm font-medium text-text-main">
+                    {lang === 'ar' ? selectedPipelineMeta.labelAr : selectedPipelineMeta.labelEn}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border bg-background/60 p-3">
+                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المنهجية' : 'Methodology'}</p>
+                  <p className="text-sm font-medium text-text-main">
+                    {lang === 'ar' ? selectedMethodologyMeta.labelAr : selectedMethodologyMeta.labelEn}
                   </p>
                 </div>
                 <div className="rounded-xl border border-border bg-background/60 p-3">

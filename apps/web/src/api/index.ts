@@ -149,6 +149,7 @@ export const scriptsApi = {
     options?: {
       forceFresh?: boolean;
       analysisProfile?: AnalysisModeProfile;
+      pipelineVersion?: 'v1' | 'v2';
       analysisOptions?: { mergeStrategy?: 'same_location_only' | 'every_occurrence' };
     }
   ): Promise<{ jobId: string; manualReviewContextCount?: number }> =>
@@ -156,6 +157,7 @@ export const scriptsApi = {
       versionId,
       ...(options?.forceFresh ? { forceFresh: true } : {}),
       ...(options?.analysisProfile ? { analysisProfile: options.analysisProfile } : {}),
+      ...(options?.pipelineVersion ? { pipelineVersion: options.pipelineVersion } : {}),
       ...(options?.analysisOptions ? { analysisOptions: options.analysisOptions } : {}),
     }),
   /** Get editor content and sections for a version. GET /scripts/editor?scriptId=...&versionId=... */

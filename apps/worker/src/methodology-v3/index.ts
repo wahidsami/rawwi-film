@@ -20,6 +20,7 @@ export async function runHybridContextPipeline(args: {
   findings: HybridFindingLike[];
   fullText: string | null;
   deepAuditorEnabled?: boolean;
+  auditorContext?: string | null;
   signal?: AbortSignal;
 }): Promise<HybridPipelineResult> {
   const spans = args.findings.map((f) => ({
@@ -36,6 +37,7 @@ export async function runHybridContextPipeline(args: {
     findings: withLegal,
     fullText: args.fullText,
     enabled: args.deepAuditorEnabled,
+    auditorContext: args.auditorContext,
     signal: args.signal,
   });
   const contextOkCount = final.filter((f) => f.final_ruling === "context_ok").length;

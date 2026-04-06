@@ -19,7 +19,7 @@ import {
 } from "./jobs.js";
 import { setContext, logger } from "./logger.js";
 import { initializeLexiconCache, getLexiconCache } from "./lexiconCache.js";
-import { processChunkJudge } from "./pipeline.js";
+import { processChunkForJob } from "./pipelineRunner.js";
 import { processPdfExtraction } from "./pdfExtraction.js";
 
 type ChunkProcessResult = {
@@ -53,6 +53,7 @@ function getRuntimeConfigLogPayload() {
     chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
     highRecall: config.HIGH_RECALL,
     deterministicMode: config.DETERMINISTIC_MODE,
+    analysisPipelineVersion: config.ANALYSIS_PIPELINE_VERSION,
     analysisEngine: config.ANALYSIS_ENGINE,
     analysisHybridMode: config.ANALYSIS_HYBRID_MODE,
     analysisEvalLog: config.ANALYSIS_EVAL_LOG,
@@ -147,7 +148,7 @@ async function processClaimedChunk(
       }, config.CHUNK_HARD_TIMEOUT_MS);
     });
     await Promise.race([
-      processChunkJudge(job as any, claimed as any, normalizedText, abortController.signal),
+      processChunkForJob(job as any, claimed as any, normalizedText, abortController.signal),
       timeoutPromise,
     ]);
     return { ok: true, retryable: false };

@@ -30,6 +30,10 @@ import { offsetToPageNumber, computePageLocalSpan, globalOffsetForPageStart, SCR
 import { getCachedJobResources } from "./jobAnalysisCache.js";
 import { refineAtomPrecision } from "./atomPrecision.js";
 import { isDetectionVerbatim } from "./textDetectionNormalize.js";
+import { PIPELINE_V2_EVIDENCE_PINNING_VERSION, pinFindingEvidenceToChunk } from "./pipelineV2/evidencePinning.js";
+import { PIPELINE_V2_MEMORY_VERSION } from "./pipelineV2/contextMemory.js";
+import { PIPELINE_V2_SCENE_MEMORY_VERSION } from "./pipelineV2/sceneMemory.js";
+import { PIPELINE_V2_SCRIPT_MEMORY_VERSION } from "./pipelineV2/scriptMemory.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
@@ -42,6 +46,9 @@ export type FindingWithGlobal = JudgeFinding & {
   pillar_id?: string | null;
   secondary_pillar_ids?: string[];
 };
+
+type AnalysisEngineMode = "v2" | "hybrid";
+type HybridRunMode = "off" | "shadow" | "enforce";
 
 const MAX_EVIDENCE_SPAN = 280;
 const PIPELINE_LOGIC_VERSION = "v2.4";
@@ -445,6 +452,33 @@ function compareFindingsStable(a: FindingWithGlobal, b: FindingWithGlobal): numb
   );
 }
 
+function resolveAnalysisEngineForJob(
+  jobConfig: Record<string, unknown>,
+  pipelineVersion: "v1" | "v2",
+): AnalysisEngineMode {
+  if (pipelineVersion === "v2") {
+    const requested = jobConfig.analysis_engine;
+    if (requested === "hybrid") return "hybrid";
+    if (requested === "v2") return "v2";
+  }
+  return config.ANALYSIS_ENGINE;
+}
+
+function resolveHybridModeForJob(
+  jobConfig: Record<string, unknown>,
+  pipelineVersion: "v1" | "v2",
+  analysisEngine: AnalysisEngineMode,
+): HybridRunMode {
+  if (analysisEngine !== "hybrid") return "off";
+  if (pipelineVersion === "v2") {
+    const requested = jobConfig.hybrid_mode;
+    if (requested === "enforce" || requested === "shadow" || requested === "off") {
+      return requested;
+    }
+  }
+  return config.ANALYSIS_HYBRID_MODE;
+}
+
 function compareFindingPreference(a: FindingWithGlobal, b: FindingWithGlobal): number {
   const severityDiff = severityRank(b.severity) - severityRank(a.severity);
   if (severityDiff !== 0) return severityDiff;
@@ -561,6 +595,14 @@ export async function processChunkJudge(
 ): Promise<void> {
   const chunkStartedAt = Date.now();
   const { id: jobId, script_id: scriptId, version_id: versionId } = job;
+  const jobConfig = (job.config_snapshot as any) || {};
+  const analysisProfile =
+    jobConfig.analysis_profile === "quality" || jobConfig.analysis_profile === "turbo" || jobConfig.analysis_profile === "balanced"
+      ? jobConfig.analysis_profile
+      : "balanced";
+  const pipelineVersion = jobConfig.pipeline_version === "v2" ? "v2" : "v1";
+  const analysisEngine = resolveAnalysisEngineForJob(jobConfig, pipelineVersion);
+  const hybridMode = resolveHybridModeForJob(jobConfig, pipelineVersion, analysisEngine);
   const chunkText = chunk.text;
   const chunkStart = chunk.start_offset;
   const chunkEnd = chunk.end_offset;
@@ -710,7 +752,7 @@ export async function processChunkJudge(
         documentContent: normalizedText,
       }),
     };
-    if (config.ANALYSIS_ENGINE === "hybrid") {
+    if (analysisEngine === "hybrid") {
       deferredLexiconCandidates.push({
         source: "lexicon_mandatory",
         article_id: lexRow.article_id,
@@ -826,7 +868,7 @@ export async function processChunkJudge(
         }),
       };
 
-      if (config.ANALYSIS_ENGINE === "hybrid") {
+      if (analysisEngine === "hybrid") {
         deferredLexiconCandidates.push({
           source: "lexicon_mandatory",
           article_id: fallbackRow.article_id,
@@ -883,17 +925,33 @@ export async function processChunkJudge(
   // 1b) Idempotency Check & Config Setup
   // Build logicVersion dynamically so cache invalidates automatically when prompts/passes change.
   const passSignature = DETECTION_PASSES.map((p) => `${p.name}:${p.model ?? "default"}`).join("|");
-  const jobConfig = (job.config_snapshot as any) || {};
-  const analysisProfile = jobConfig.analysis_profile || "balanced";
-  const deepAuditorEnabled = jobConfig.deep_auditor_enabled ?? config.ANALYSIS_DEEP_AUDITOR;
+  const v2PromptContext =
+    pipelineVersion === "v2" && typeof jobConfig.v2_prompt_context === "string" && jobConfig.v2_prompt_context.trim().length > 0
+      ? jobConfig.v2_prompt_context.trim()
+      : null;
+  const v2FeatureSignature = pipelineVersion === "v2"
+    ? `|v2ChunkMemory:${PIPELINE_V2_MEMORY_VERSION}|v2SceneMemory:${PIPELINE_V2_SCENE_MEMORY_VERSION}|v2ScriptMemory:${PIPELINE_V2_SCRIPT_MEMORY_VERSION}|v2Evidence:${PIPELINE_V2_EVIDENCE_PINNING_VERSION}`
+    : "";
+  const deepAuditorEnabled =
+    typeof jobConfig.deep_auditor_enabled === "boolean" ? jobConfig.deep_auditor_enabled : config.ANALYSIS_DEEP_AUDITOR;
   const rationaleModel = config.OPENAI_RATIONALE_MODEL;
-  const logicVersion = `pipeline:${PIPELINE_LOGIC_VERSION}|profile:${analysisProfile}|engine:${config.ANALYSIS_ENGINE}|mode:${config.ANALYSIS_HYBRID_MODE}|deepAuditor:${deepAuditorEnabled}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}|passGating:${config.ANALYSIS_PASS_GATING_ENABLED ? PASS_GATING_VERSION : "off"}`;
+  const logicVersion = `pipeline:${PIPELINE_LOGIC_VERSION}|version:${pipelineVersion}${v2FeatureSignature}|profile:${analysisProfile}|engine:${analysisEngine}|mode:${hybridMode}|deepAuditor:${deepAuditorEnabled}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}|passGating:${config.ANALYSIS_PASS_GATING_ENABLED ? PASS_GATING_VERSION : "off"}`;
   const forceFresh = jobConfig.force_fresh === true;
-  const routerModel = jobConfig.router_model || config.OPENAI_ROUTER_MODEL;
-  const judgeModel = jobConfig.judge_model || config.OPENAI_JUDGE_MODEL;
-  const temperature = jobConfig.temperature ?? (config.DETERMINISTIC_MODE ? 0 : 0.4);
-  const seed = jobConfig.seed ?? (config.DETERMINISTIC_MODE ? 12345 : undefined);
-  const maxRouter = jobConfig.max_router_candidates || 8;
+  const routerModel = typeof jobConfig.router_model === "string" && jobConfig.router_model.trim().length > 0
+    ? jobConfig.router_model
+    : config.OPENAI_ROUTER_MODEL;
+  const judgeModel = typeof jobConfig.judge_model === "string" && jobConfig.judge_model.trim().length > 0
+    ? jobConfig.judge_model
+    : config.OPENAI_JUDGE_MODEL;
+  const temperature = typeof jobConfig.temperature === "number"
+    ? jobConfig.temperature
+    : (config.DETERMINISTIC_MODE ? 0 : 0.4);
+  const seed = typeof jobConfig.seed === "number"
+    ? jobConfig.seed
+    : (config.DETERMINISTIC_MODE ? 12345 : undefined);
+  const maxRouter = typeof jobConfig.max_router_candidates === "number"
+    ? jobConfig.max_router_candidates
+    : 8;
 
   const runKey = computeChunkRunKey(chunkText, {
     router_model: routerModel,
@@ -1021,6 +1079,7 @@ export async function processChunkJudge(
         { temperature, seed },
         { chunkId: chunk.id },
         passExecutionPlan,
+        v2PromptContext ?? undefined,
         signal
       );
       throwIfAborted(signal);
@@ -1037,10 +1096,16 @@ export async function processChunkJudge(
       // Enforce atom_ids and prefer literal local evidence from chunk offsets.
       const enforced = multiPassResult.findings.map(f => enforceAtomIds([f])[0]);
       const precisionRefined = enforced.map((f) => refineAtomPrecision(f));
-      const enriched = precisionRefined.map((f) => {
+      const evidencePinned = pipelineVersion === "v2"
+        ? precisionRefined.map((f) => pinFindingEvidenceToChunk(f, chunkText))
+        : precisionRefined;
+      const enriched = evidencePinned.map((f) => {
         const localStart = Math.max(0, f.location?.start_offset ?? 0);
         const localEnd = Math.min(chunkText.length, f.location?.end_offset ?? localStart);
         const fallback = localEnd > localStart ? chunkText.slice(localStart, localEnd) : "";
+        if (pipelineVersion === "v2" && f.evidence_snippet && isDetectionVerbatim(chunkText, f.evidence_snippet)) {
+          return f;
+        }
         if (fallback && isDetectionVerbatim(chunkText, fallback)) {
           return { ...f, evidence_snippet: fallback };
         }
@@ -1054,6 +1119,7 @@ export async function processChunkJudge(
         runKey,
         enforcedCount: enforced.length,
         precisionRefinedCount: precisionRefined.length,
+        evidencePinnedCount: evidencePinned.length,
         enrichedCount: enriched.length,
         globalizedCount: withGlobal.length,
       });
@@ -1199,7 +1265,7 @@ export async function processChunkJudge(
       baselineFindings: baselineFindings.length,
     });
     hybridMetrics = { skipped_reason: "partial_finalize_requested" };
-  } else if (config.ANALYSIS_ENGINE === "hybrid") {
+  } else if (analysisEngine === "hybrid" && hybridMode !== "off") {
     await setChunkPhase(chunk.id, "hybrid");
     const hybridStartedAt = Date.now();
     let hybridTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
@@ -1209,7 +1275,7 @@ export async function processChunkJudge(
       runKey,
       baselineFindings: baselineFindings.length,
       deepAuditorEnabled,
-      hybridMode: config.ANALYSIS_HYBRID_MODE,
+      hybridMode,
       hardTimeoutMs: config.HYBRID_HARD_TIMEOUT_MS,
     });
     try {
@@ -1224,6 +1290,7 @@ export async function processChunkJudge(
           })),
           fullText: normalizedText,
           deepAuditorEnabled,
+          auditorContext: pipelineVersion === "v2" ? v2PromptContext : null,
           signal,
         }),
         new Promise<never>((_, reject) => {
@@ -1237,11 +1304,11 @@ export async function processChunkJudge(
       if (hybridTimeoutHandle) clearTimeout(hybridTimeoutHandle);
       throwIfAborted(signal);
       hybridMetrics = hybrid.metrics;
-      if (config.ANALYSIS_HYBRID_MODE === "enforce") {
+      if (hybridMode === "enforce") {
         persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
       } else {
-        // Shadow: persist hybrid so the report shows auditor rationale and primary article; eval log still compares baseline vs hybrid.
-        persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
+        // True shadow mode: evaluate hybrid output, but keep persisting baseline results.
+        persistedFindings = baselineFindings;
       }
       logger.info("Hybrid context pipeline completed", {
         jobId,
@@ -1256,8 +1323,8 @@ export async function processChunkJudge(
           job_id: jobId,
           chunk_id: chunk.id,
           run_key: runKey,
-          engine: config.ANALYSIS_ENGINE,
-          mode: config.ANALYSIS_HYBRID_MODE,
+          engine: analysisEngine,
+          mode: hybridMode,
           baseline_count: baselineFindings.length,
           hybrid_count: hybrid.findings.length,
           baseline_contradictions: baselineMetrics.contradictionGroups,
@@ -1316,8 +1383,8 @@ export async function processChunkJudge(
     baselineMetrics,
     hybridMetrics,
     persistedCount: persistedFindings.length,
-    engine: config.ANALYSIS_ENGINE,
-    hybridMode: config.ANALYSIS_HYBRID_MODE,
+    engine: analysisEngine,
+    hybridMode,
   });
 
   throwIfAborted(signal);

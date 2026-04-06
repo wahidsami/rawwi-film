@@ -24,6 +24,9 @@ export enum OverrideEventType {
 }
 
 export type AnalysisModeProfile = 'quality' | 'balanced' | 'turbo';
+export type AnalysisPipelineVersion = 'v1' | 'v2';
+export type AnalysisEngine = 'v2' | 'hybrid';
+export type AnalysisHybridMode = 'off' | 'shadow' | 'enforce';
 
 export interface User {
   id: string;
@@ -107,6 +110,9 @@ export interface AnalysisJob {
   versionId: string;
   status: string;
   analysisMode?: AnalysisModeProfile | null;
+  pipelineVersion?: AnalysisPipelineVersion | null;
+  analysisEngine?: AnalysisEngine | null;
+  hybridMode?: AnalysisHybridMode | null;
   manualReviewContextCount?: number;
   progressTotal: number;
   progressDone: number;

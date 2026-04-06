@@ -53,7 +53,10 @@ type JobRow = {
   partial_finalize_requested?: boolean | null;
   partial_finalize_requested_at?: string | null;
   config_snapshot?: {
+    pipeline_version?: "v1" | "v2";
     analysis_profile?: "quality" | "balanced" | "turbo";
+    analysis_engine?: "v2" | "hybrid";
+    hybrid_mode?: "off" | "shadow" | "enforce";
     manual_review_context?: {
       carried_forward_count?: number;
       source_job_ids?: string[];
@@ -79,18 +82,24 @@ const ANALYSIS_PROFILE_PRESETS = {
     mergeStrategy: "every_occurrence" as const,
     maxRouterCandidates: 10,
     deepAuditorEnabled: true,
+    analysisEngine: "hybrid" as const,
+    hybridMode: "enforce" as const,
   },
   balanced: {
     analysisProfile: "balanced" as const,
     mergeStrategy: "same_location_only" as const,
     maxRouterCandidates: 8,
     deepAuditorEnabled: true,
+    analysisEngine: "hybrid" as const,
+    hybridMode: "shadow" as const,
   },
   turbo: {
     analysisProfile: "turbo" as const,
     mergeStrategy: "same_location_only" as const,
     maxRouterCandidates: 6,
     deepAuditorEnabled: false,
+    analysisEngine: "v2" as const,
+    hybridMode: "off" as const,
   },
 };
 
@@ -268,6 +277,9 @@ function toCamel(job: JobRow) {
     versionId: job.version_id,
     status: isStopping ? "stopping" : (isPaused ? "paused" : job.status),
     analysisMode: job.config_snapshot?.analysis_profile ?? "balanced",
+    pipelineVersion: job.config_snapshot?.pipeline_version ?? "v1",
+    analysisEngine: job.config_snapshot?.analysis_engine ?? null,
+    hybridMode: job.config_snapshot?.hybrid_mode ?? null,
     progressTotal: job.progress_total,
     progressDone: job.progress_done,
     progressPercent: job.progress_percent,
@@ -623,6 +635,10 @@ Deno.serve(async (req: Request) => {
 
   const versionId = body?.versionId;
   const forceFresh = body?.forceFresh === true;
+  const defaultPipelineVersion = (Deno.env.get("ANALYSIS_PIPELINE_VERSION") ?? "v1").toLowerCase() === "v2" ? "v2" : "v1";
+  const requestedPipelineVersion = body?.pipelineVersion === "v2" || body?.pipelineVersion === "v1"
+    ? body.pipelineVersion
+    : defaultPipelineVersion;
   const requestedAnalysisProfile =
     body?.analysisProfile === "quality" || body?.analysisProfile === "turbo" || body?.analysisProfile === "balanced"
       ? body.analysisProfile
@@ -765,8 +781,15 @@ Deno.serve(async (req: Request) => {
       canonical_length,
       config_snapshot: {
         ...DEFAULT_DETERMINISTIC_CONFIG,
+        pipeline_version: requestedPipelineVersion,
         force_fresh: forceFresh,
         analysis_profile: analysisProfilePreset.analysisProfile,
+        ...(requestedPipelineVersion === "v2"
+          ? {
+              analysis_engine: analysisProfilePreset.analysisEngine,
+              hybrid_mode: analysisProfilePreset.hybridMode,
+            }
+          : {}),
         max_router_candidates: analysisProfilePreset.maxRouterCandidates,
         deep_auditor_enabled: analysisProfilePreset.deepAuditorEnabled,
         router_prompt_version: PROMPT_VERSIONS.router,
