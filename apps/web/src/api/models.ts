@@ -213,6 +213,7 @@ export interface FindingReviewResponse {
   reportAggregates?: {
     findingsCount: number;
     severityCounts: { low: number; medium: number; high: number; critical: number };
+    typeCounts?: { ai: number; manual: number; glossary: number; special: number };
     approvedCount: number;
     rejectedCount?: number;
   };
@@ -226,6 +227,7 @@ export interface ReportListItem {
   versionId: string | null;
   findingsCount: number;
   severityCounts: { low: number; medium: number; high: number; critical: number };
+  typeCounts?: { ai: number; manual: number; glossary: number; special: number };
   approvedCount: number;
   rejectedCount?: number;
   totalFindings?: number;
@@ -261,6 +263,7 @@ export interface Report {
     totals: {
       findings_count: number;
       severity_counts: { low: number; medium: number; high: number; critical: number };
+      type_counts?: { ai: number; manual: number; glossary: number; special: number };
     };
     checklist_articles: Array<{
       article_id: number;
@@ -372,6 +375,7 @@ export interface Report {
   reportHtml: string;
   findingsCount: number;
   severityCounts: { low: number; medium: number; high: number; critical: number };
+  typeCounts?: { ai: number; manual: number; glossary: number; special: number };
   approvedCount: number;
   createdAt: string;
   reviewStatus: ReviewStatus;

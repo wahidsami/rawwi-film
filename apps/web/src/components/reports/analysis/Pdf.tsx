@@ -80,25 +80,21 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
   }, {});
   const categoryOrder = getSemanticCategoriesForChecklist();
 
-  const sevCount = safeFindings.reduce<Record<string, number>>((acc, f) => {
-    const k = (f.severity || "info").toLowerCase();
-    acc[k] = (acc[k] || 0) + 1;
-    return acc;
-  }, {});
+  const typeCounts = safeFindings.reduce(
+    (acc, f) => {
+      if (f.source === "manual") acc.manual++;
+      else if (f.source === "lexicon_mandatory" || f.source === "glossary") acc.glossary++;
+      else acc.ai++;
+      return acc;
+    },
+    { ai: 0, manual: 0, glossary: 0 },
+  );
+  const specialNotesCount = (data.reportHints ?? []).length;
 
   const sourceLabel = (source?: string) => {
     if (source === "manual") return isAr ? "يدوي" : "Manual";
     if (source === "lexicon_mandatory" || source === "glossary") return isAr ? "معجم" : "Glossary";
     return isAr ? "تحليل آلي" : "AI Analysis";
-  };
-
-  const severityBadgeStyle = (severity?: string) => {
-    const sKey = (severity || "info").toLowerCase();
-    if (sKey === "critical") return s.chipSeverityCritical;
-    if (sKey === "high") return s.chipSeverityHigh;
-    if (sKey === "medium") return s.chipSeverityMedium;
-    if (sKey === "low") return s.chipSeverityLow;
-    return s.chipInfo;
   };
 
   const articleLabel = (articleId: number) => {
@@ -136,10 +132,10 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
         <Text style={[s.subtitle, rtl]}>{isAr ? `إجمالي الملاحظات: ${safeFindings.length}` : `Total findings: ${safeFindings.length}`}</Text>
 
         <View style={s.row}>
-          <View style={s.stat}><Text style={s.statValue}>{sevCount.critical || 0}</Text><Text style={s.statLabel}>{isAr ? "حرجة" : "Critical"}</Text></View>
-          <View style={s.stat}><Text style={s.statValue}>{sevCount.high || 0}</Text><Text style={s.statLabel}>{isAr ? "عالية" : "High"}</Text></View>
-          <View style={s.stat}><Text style={s.statValue}>{sevCount.medium || 0}</Text><Text style={s.statLabel}>{isAr ? "متوسطة" : "Medium"}</Text></View>
-          <View style={s.stat}><Text style={s.statValue}>{sevCount.low || 0}</Text><Text style={s.statLabel}>{isAr ? "منخفضة" : "Low"}</Text></View>
+          <View style={s.stat}><Text style={s.statValue}>{typeCounts.ai}</Text><Text style={s.statLabel}>{isAr ? "ملاحظات آلية" : "AI findings"}</Text></View>
+          <View style={s.stat}><Text style={s.statValue}>{typeCounts.glossary}</Text><Text style={s.statLabel}>{isAr ? "مطابقات القاموس" : "Glossary findings"}</Text></View>
+          <View style={s.stat}><Text style={s.statValue}>{typeCounts.manual}</Text><Text style={s.statLabel}>{isAr ? "ملاحظات يدوية" : "Manual findings"}</Text></View>
+          <View style={s.stat}><Text style={s.statValue}>{specialNotesCount}</Text><Text style={s.statLabel}>{isAr ? "ملاحظات خاصة" : "Special notes"}</Text></View>
         </View>
 
         {data.scriptSummary && (
@@ -193,7 +189,6 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                   </Text>
                   <View style={[s.findingChipsRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
                     <Text style={[s.chip, s.chipInfo]}>{sourceLabel(f.source)}</Text>
-                    <Text style={[s.chip, severityBadgeStyle(f.severity)]}>{(f.severity || "info").toUpperCase()}</Text>
                     <Text style={[s.chip, s.chipInfo]}>
                       {isAr ? "الثقة" : "Confidence"} {Math.round((f.confidence || 0) * 100)}%
                     </Text>

@@ -52,6 +52,12 @@ export type AnalysisPdfFinding = {
   policyAtomId?: string;
 };
 
+function sourcePriority(source?: string | null): number {
+  if (source === "manual") return 3;
+  if (source === "lexicon_mandatory" || source === "glossary") return 2;
+  return 1;
+}
+
 export function mapAnalysisFindingsForPdf(
   findings: AnalysisFinding[] | null | undefined,
   findingsByArticle: SummaryArticle[] | null | undefined,
@@ -120,8 +126,8 @@ export function mapAnalysisFindingsForPdf(
       if (!ex) {
         deduped.set(key, f);
       } else {
-        const currentRank = ex.severity === "critical" ? 4 : ex.severity === "high" ? 3 : ex.severity === "medium" ? 2 : 1;
-        const nextRank = f.severity === "critical" ? 4 : f.severity === "high" ? 3 : f.severity === "medium" ? 2 : 1;
+        const currentRank = sourcePriority(ex.source);
+        const nextRank = sourcePriority(f.source);
         if (nextRank > currentRank || (nextRank === currentRank && f.confidence > ex.confidence)) {
           deduped.set(key, f);
         }

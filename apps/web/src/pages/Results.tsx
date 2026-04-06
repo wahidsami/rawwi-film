@@ -207,6 +207,14 @@ function countFindingKinds<T extends { source?: string | null }>(list: T[]) {
   return counts;
 }
 
+function findingSourcePriority(source: string | null | undefined): number {
+  return findingKindFromSource(source) === 'manual'
+    ? 3
+    : findingKindFromSource(source) === 'glossary'
+      ? 2
+      : 1;
+}
+
 /** One card per logical violation (same canonical_finding_id → strongest severity/confidence). */
 function dedupeRealFindings(list: AnalysisFinding[]): AnalysisFinding[] {
   const byCanonical = new Map<string, AnalysisFinding>();
@@ -223,8 +231,8 @@ function dedupeRealFindings(list: AnalysisFinding[]): AnalysisFinding[] {
     if (!existing) {
       byCanonical.set(canonicalId, normalized);
     } else {
-      const currentRank = existing.severity === 'critical' ? 4 : existing.severity === 'high' ? 3 : existing.severity === 'medium' ? 2 : 1;
-      const nextRank = normalized.severity === 'critical' ? 4 : normalized.severity === 'high' ? 3 : normalized.severity === 'medium' ? 2 : 1;
+      const currentRank = findingSourcePriority(existing.source);
+      const nextRank = findingSourcePriority(normalized.source);
       if (nextRank > currentRank || (nextRank === currentRank && (normalized.confidence ?? 0) > (existing.confidence ?? 0))) {
         byCanonical.set(canonicalId, normalized);
       }
@@ -431,6 +439,7 @@ export function Results() {
           ...report,
           findingsCount: agg.findingsCount,
           severityCounts: agg.severityCounts,
+          typeCounts: agg.typeCounts,
           approvedCount: agg.approvedCount,
           lastReviewedAt: new Date().toISOString(),
           lastReviewedBy: user?.id ?? null,
@@ -911,6 +920,7 @@ export function Results() {
           ...prev,
           findingsCount: agg.findingsCount,
           severityCounts: agg.severityCounts,
+          typeCounts: agg.typeCounts,
           approvedCount: agg.approvedCount,
           lastReviewedAt: new Date().toISOString(),
           lastReviewedBy: user?.id ?? prev.lastReviewedBy ?? null,

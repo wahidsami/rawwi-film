@@ -30,6 +30,8 @@ const ENRICH_COLS = "scripts(title, clients(name_ar, name_en))";
 const LIST_COLS = "id, job_id, script_id, version_id, findings_count, severity_counts, created_at";
 
 function camelReport(r: Record<string, unknown>, full = false) {
+  const summaryJson = (r.summary_json as Record<string, unknown> | null | undefined) ?? {};
+  const totals = (summaryJson.totals as Record<string, unknown> | null | undefined) ?? {};
   const out: Record<string, unknown> = {
     id: r.id,
     jobId: r.job_id,
@@ -37,6 +39,7 @@ function camelReport(r: Record<string, unknown>, full = false) {
     versionId: r.version_id,
     findingsCount: r.findings_count ?? 0,
     severityCounts: r.severity_counts ?? { low: 0, medium: 0, high: 0, critical: 0 },
+    typeCounts: totals.type_counts ?? undefined,
     approvedCount: r.approved_count ?? 0,
     createdAt: r.created_at,
     createdBy: r.created_by ?? null,

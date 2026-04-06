@@ -27,6 +27,7 @@ export type SummaryJson = {
   totals: {
     findings_count: number;
     severity_counts: { low: number; medium: number; high: number; critical: number };
+    type_counts?: { ai: number; manual: number; glossary: number; special: number };
     /** Number of unique incidents (canonical findings). Use for main report count. */
     unique_incidents_count?: number;
   };
@@ -76,6 +77,7 @@ export type SummaryJson = {
     evidence_snippet: string;
     severity: string;
     confidence: number;
+    source?: string | null;
     final_ruling?: string | null;
     rationale?: string | null;
     pillar_id?: string | null;
@@ -126,6 +128,7 @@ export type SummaryJson = {
     evidence_snippet: string;
     severity: string;
     confidence: number;
+    source?: string | null;
     final_ruling?: string | null;
     rationale?: string | null;
     pillar_id?: string | null;
@@ -580,6 +583,7 @@ function applyReportGate(summary: SummaryJson): void {
   summary.totals.findings_count = violations.length;
   summary.totals.unique_incidents_count = violations.length;
   summary.totals.severity_counts = severity_counts;
+  summary.totals.type_counts = countFindingTypes(violations, hints.length);
 
   const byCanonicalAtom = new Map<string, CanonicalFindingItem[]>();
   for (const f of violations) {
@@ -641,6 +645,23 @@ type DbFinding = {
 const SEVERITIES = ["low", "medium", "high", "critical"] as const;
 const SEVERITY_ORDER: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 };
 const RATIONALE_FALLBACK = "يتطلب تقييم مراجع مختص.";
+
+function findingTypeKey(source: string | null | undefined): "ai" | "manual" | "glossary" {
+  if (source === "manual") return "manual";
+  if (source === "lexicon_mandatory" || source === "glossary") return "glossary";
+  return "ai";
+}
+
+function countFindingTypes(
+  list: Array<{ source?: string | null }>,
+  specialCount = 0,
+): { ai: number; manual: number; glossary: number; special: number } {
+  const counts = { ai: 0, manual: 0, glossary: 0, special: Math.max(0, specialCount) };
+  for (const finding of list) {
+    counts[findingTypeKey(finding.source)]++;
+  }
+  return counts;
+}
 
 function compareCanonicalItemsStable(
   a: {
@@ -1057,6 +1078,7 @@ export function buildSummaryJson(
     totals: {
       findings_count: canonical_findings.length,
       severity_counts,
+      type_counts: countFindingTypes(canonical_findings, 0),
       unique_incidents_count: canonical_findings.length,
     },
     context_metrics: {
@@ -1074,14 +1096,15 @@ export function buildSummaryJson(
 
 export function buildReportHtml(summary: SummaryJson): string {
   const s = summary;
-  const severityRow = (label: string, count: number) =>
+  const typeCounts = s.totals.type_counts ?? { ai: 0, manual: 0, glossary: 0, special: (s.report_hints?.length ?? 0) };
+  const typeRow = (label: string, count: number) =>
     `<tr><td>${label}</td><td>${count}</td></tr>`;
-  const severityTable = `
+  const typeTable = `
     <table border="1" cellpadding="4"><tbody>
-      ${severityRow("منخفضة", s.totals.severity_counts.low)}
-      ${severityRow("متوسطة", s.totals.severity_counts.medium)}
-      ${severityRow("عالية", s.totals.severity_counts.high)}
-      ${severityRow("حرجة", s.totals.severity_counts.critical)}
+      ${typeRow("ملاحظات آلية", typeCounts.ai)}
+      ${typeRow("ملاحظات يدوية", typeCounts.manual)}
+      ${typeRow("مطابقات القاموس", typeCounts.glossary)}
+      ${typeRow("ملاحظات خاصة", typeCounts.special)}
     </tbody></table>`;
 
   const checklistRows = s.checklist_articles
@@ -1115,7 +1138,7 @@ export function buildReportHtml(summary: SummaryJson): string {
     for (const f of art.top_findings) {
       detailsHtml += `
         <div style="margin:1em 0; padding:0.5em; border:1px solid #ccc;">
-          <strong>${f.title_ar}</strong> (${f.severity}, ثقة: ${f.confidence})<br/>
+          <strong>${f.title_ar}</strong> (ملاحظة، ثقة: ${f.confidence})<br/>
           <em>الدليل:</em> "${f.evidence_snippet}"
         </div>`;
     }
@@ -1172,7 +1195,7 @@ export function buildReportHtml(summary: SummaryJson): string {
   <section>
     <h2>٢ ملخص تنفيذي</h2>
     <p>إجمالي المخالفات: ${s.totals.findings_count}</p>
-    ${severityTable}
+    ${typeTable}
   </section>
   <section>
     <h2>٣ مصفوفة الالتزام</h2>

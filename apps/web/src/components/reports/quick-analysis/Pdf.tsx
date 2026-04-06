@@ -47,26 +47,19 @@ export const QuickAnalysisPdf: React.FC<{
     acc[f.articleId].push(f);
     return acc;
   }, {});
-  const sevCount = safeFindings.reduce<Record<string, number>>((acc, f) => {
-    const k = (f.severity || "info").toLowerCase();
-    acc[k] = (acc[k] || 0) + 1;
+  const typeCounts = safeFindings.reduce((acc, f) => {
+    if (f.source === "manual") acc.manual++;
+    else if (f.source === "lexicon_mandatory" || f.source === "glossary") acc.glossary++;
+    else acc.ai++;
     return acc;
-  }, {});
+  }, { ai: 0, manual: 0, glossary: 0 });
+  const specialNotesCount = reportHints.length;
   const sourceLabel = (source?: string) => source === "manual" ? (isAr ? "يدوي" : "Manual") : source === "lexicon_mandatory" || source === "glossary" ? (isAr ? "معجم" : "Glossary") : (isAr ? "تحليل آلي" : "AI Analysis");
   const articleLabel = (articleId: number) => {
     const art = getPolicyArticle(articleId);
     if (!art) return isAr ? `مادة ${articleId}` : `Article ${articleId}`;
     return isAr ? `مادة ${articleId}: ${art.title_ar}` : `Article ${articleId}: ${art.title_ar}`;
   };
-  const sevStyle = (sev?: string) => {
-    const k = (sev || "info").toLowerCase();
-    if (k === "critical") return s.chipSeverityCritical;
-    if (k === "high") return s.chipSeverityHigh;
-    if (k === "medium") return s.chipSeverityMedium;
-    if (k === "low") return s.chipSeverityLow;
-    return s.chipInfo;
-  };
-
   return (
     <Document>
       <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
@@ -89,10 +82,10 @@ export const QuickAnalysisPdf: React.FC<{
         <Text style={[s.subtitle, rtl]}>{isAr ? `النص: ${scriptTitle}` : `Script: ${scriptTitle}`}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? `إجمالي الملاحظات: ${safeFindings.length}` : `Total findings: ${safeFindings.length}`}</Text>
         <View style={s.statRow}>
-          <View style={s.statCard}><Text style={s.statValue}>{sevCount.critical || 0}</Text><Text style={s.statLabel}>{isAr ? "حرجة" : "Critical"}</Text></View>
-          <View style={s.statCard}><Text style={s.statValue}>{sevCount.high || 0}</Text><Text style={s.statLabel}>{isAr ? "عالية" : "High"}</Text></View>
-          <View style={s.statCard}><Text style={s.statValue}>{sevCount.medium || 0}</Text><Text style={s.statLabel}>{isAr ? "متوسطة" : "Medium"}</Text></View>
-          <View style={s.statCard}><Text style={s.statValue}>{sevCount.low || 0}</Text><Text style={s.statLabel}>{isAr ? "منخفضة" : "Low"}</Text></View>
+          <View style={s.statCard}><Text style={s.statValue}>{typeCounts.ai}</Text><Text style={s.statLabel}>{isAr ? "ملاحظات آلية" : "AI findings"}</Text></View>
+          <View style={s.statCard}><Text style={s.statValue}>{typeCounts.glossary}</Text><Text style={s.statLabel}>{isAr ? "مطابقات القاموس" : "Glossary findings"}</Text></View>
+          <View style={s.statCard}><Text style={s.statValue}>{typeCounts.manual}</Text><Text style={s.statLabel}>{isAr ? "ملاحظات يدوية" : "Manual findings"}</Text></View>
+          <View style={s.statCard}><Text style={s.statValue}>{specialNotesCount}</Text><Text style={s.statLabel}>{isAr ? "ملاحظات خاصة" : "Special notes"}</Text></View>
         </View>
         <Text style={[s.sectionTitle, rtl]}>{isAr ? "تفاصيل القضايا" : "Findings Details"}</Text>
         {Object.keys(groups).length === 0 ? (
@@ -116,7 +109,6 @@ export const QuickAnalysisPdf: React.FC<{
                   <Text style={[s.findingSnippet, rtl]}>{isAr ? "النص المخالف: " : "Violation text: "}"{f.evidenceSnippet || "—"}"</Text>
                   <View style={[s.findingChipsRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
                     <Text style={[s.chip, s.chipInfo]}>{sourceLabel(f.source)}</Text>
-                    <Text style={[s.chip, sevStyle(f.severity)]}>{(f.severity || "info").toUpperCase()}</Text>
                     <Text style={[s.chip, s.chipInfo]}>{isAr ? "الثقة" : "Confidence"} {Math.round((f.confidence || 0) * 100)}%</Text>
                   </View>
                   <Text style={[s.findingMeta, rtl]}>

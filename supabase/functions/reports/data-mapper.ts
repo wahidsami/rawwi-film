@@ -33,7 +33,9 @@ function getFindingSourceLabel(source: string | undefined, lang: 'en' | 'ar'): s
   const labels: Record<string, { en: string; ar: string }> = {
     ai: { en: 'AI', ar: 'الذكاء الاصطناعي' },
     manual: { en: 'Manual', ar: 'يدوي' },
-    lexicon: { en: 'Lexicon', ar: 'المعجم' },
+    lexicon: { en: 'Glossary', ar: 'القاموس' },
+    lexicon_mandatory: { en: 'Glossary', ar: 'القاموس' },
+    glossary: { en: 'Glossary', ar: 'القاموس' },
   };
   const key = source?.toLowerCase() ?? 'ai';
   return labels[key]?.[lang] ?? (lang === 'ar' ? 'آخر' : 'Other');
@@ -111,7 +113,7 @@ export async function prepareReportData(
             return `
               <div class="finding-card">
                 <div class="card-header">
-                  <span class="severity-badge sev-${f.severity.toLowerCase()}">${f.severity}</span>
+                  <span class="severity-badge sev-medium">${sourceLabel}</span>
                   <span class="finding-title">${f.title_ar}</span>
                 </div>
                 <div class="card-meta">
@@ -134,10 +136,10 @@ export async function prepareReportData(
     client: isAr ? 'العميل' : 'Client',
     date: isAr ? 'التاريخ' : 'Date',
     executiveSummary: isAr ? 'ملخص التقرير' : 'Executive Summary',
-    critical: isAr ? 'حرجة' : 'Critical',
-    high: isAr ? 'عالية' : 'High',
-    medium: isAr ? 'متوسطة' : 'Medium',
-    low: isAr ? 'منخفضة' : 'Low',
+    critical: isAr ? 'ملاحظات آلية' : 'AI findings',
+    high: isAr ? 'مطابقات القاموس' : 'Glossary findings',
+    medium: isAr ? 'ملاحظات يدوية' : 'Manual findings',
+    low: isAr ? 'ملاحظات خاصة' : 'Special notes',
     findingsDetails: isAr ? 'تفاصيل القضايا' : 'Findings Details',
     issues: isAr ? 'قضايا' : 'Issues',
     confidence: isAr ? 'ثقة' : 'Conf',
@@ -146,15 +148,22 @@ export async function prepareReportData(
     status: isAr ? 'الحالة' : 'Status',
   };
   
+  const typeCounts = report.summary_json?.totals?.type_counts ?? {
+    ai: 0,
+    manual: 0,
+    glossary: 0,
+    special: Array.isArray(report.summary_json?.report_hints) ? report.summary_json.report_hints.length : 0,
+  };
+
   return {
     scriptTitle,
     clientName: 'Client Name', // TODO: Fetch from scripts table or clients table
     formattedDate,
     stats: {
-      critical: report.severity_counts?.critical ?? 0,
-      high: report.severity_counts?.high ?? 0,
-      medium: report.severity_counts?.medium ?? 0,
-      low: report.severity_counts?.low ?? 0,
+      critical: typeCounts.ai ?? 0,
+      high: typeCounts.glossary ?? 0,
+      medium: typeCounts.manual ?? 0,
+      low: typeCounts.special ?? 0,
     },
     labels,
     lang,

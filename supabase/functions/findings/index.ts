@@ -142,11 +142,12 @@ async function recomputeReportAggregates(
   // 1) Count violations (exclude approved)
   const { data: allFindings } = await supabase
     .from("analysis_findings")
-    .select("severity, review_status")
+    .select("severity, source, review_status")
     .eq("job_id", jobId);
 
-  const rows = (allFindings ?? []) as { severity: string; review_status?: string }[];
+  const rows = (allFindings ?? []) as { severity: string; source?: string | null; review_status?: string }[];
   const sc = { low: 0, medium: 0, high: 0, critical: 0 };
+  const tc = { ai: 0, manual: 0, glossary: 0, special: 0 };
   let approvedCount = 0;
   for (const r of rows) {
     if ((r.review_status ?? "violation") === "approved") {
@@ -154,6 +155,10 @@ async function recomputeReportAggregates(
     } else {
       const s = r.severity as keyof typeof sc;
       if (s in sc) sc[s]++;
+      const source = (r.source ?? "ai").toLowerCase();
+      if (source === "manual") tc.manual++;
+      else if (source === "lexicon_mandatory" || source === "glossary") tc.glossary++;
+      else tc.ai++;
     }
   }
   const findingsCount = sc.low + sc.medium + sc.high + sc.critical;
@@ -175,6 +180,8 @@ async function recomputeReportAggregates(
   if (!summaryJson.totals) summaryJson.totals = {};
   summaryJson.totals.findings_count = findingsCount;
   summaryJson.totals.severity_counts = sc;
+  const specialCount = Array.isArray(summaryJson.report_hints) ? summaryJson.report_hints.length : 0;
+  summaryJson.totals.type_counts = { ...tc, special: specialCount };
   summaryJson.approved_count = approvedCount;
   summaryJson.last_reviewed_at = new Date().toISOString();
 
@@ -199,7 +206,7 @@ async function recomputeReportAggregates(
     return null;
   }
 
-  return { findingsCount, severityCounts: sc, approvedCount };
+  return { findingsCount, severityCounts: sc, typeCounts: summaryJson.totals.type_counts, approvedCount };
 }
 
 Deno.serve(async (req: Request) => {

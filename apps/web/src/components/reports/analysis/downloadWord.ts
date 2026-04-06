@@ -121,22 +121,18 @@ function normalizeScriptType(value: string | null | undefined, lang: "ar" | "en"
 }
 
 function buildFindingAction(params: {
-  severity: string;
   source?: string | null;
   lang: "ar" | "en";
 }): string {
-  const severity = (params.severity ?? "").toLowerCase();
   if (params.lang === "ar") {
     if (params.source === "manual") return "مراجعة يدوية واتخاذ الإجراء المناسب";
-    if (severity === "critical" || severity === "high") return "تعديل جوهري أو حذف قبل الاعتماد";
-    if (severity === "medium") return "تعديل الصياغة أو تخفيف المعالجة";
-    if (severity === "low") return "مراجعة المشهد والتأكد من ملاءمته";
+    if (params.source === "lexicon_mandatory" || params.source === "glossary") return "التحقق من الاستخدام والسياق واتخاذ الإجراء المناسب";
+    if (params.source === "ai") return "مراجعة الملاحظة آلياً وتعديل النص أو المعالجة عند الحاجة";
     return "مراجعة واتخاذ الإجراء المناسب";
   }
   if (params.source === "manual") return "Manual review and appropriate action";
-  if (severity === "critical" || severity === "high") return "Major edit or removal before approval";
-  if (severity === "medium") return "Adjust wording or soften treatment";
-  if (severity === "low") return "Review the scene and confirm suitability";
+  if (params.source === "lexicon_mandatory" || params.source === "glossary") return "Review glossary usage, context, and take the appropriate action";
+  if (params.source === "ai") return "Review the AI finding and adjust the wording or treatment if needed";
   return "Review and take the appropriate action";
 }
 
@@ -145,22 +141,23 @@ function buildOverallRecommendations(args: {
   reportHints: ReportHint[];
   lang: "ar" | "en";
 }): string[] {
-  const severityCounts = { low: 0, medium: 0, high: 0, critical: 0 };
+  const typeCounts = { ai: 0, manual: 0, glossary: 0 };
   for (const finding of args.findings) {
-    const key = (finding.severity ?? "").toLowerCase() as keyof typeof severityCounts;
-    if (key in severityCounts) severityCounts[key]++;
+    if (finding.source === "manual") typeCounts.manual++;
+    else if (finding.source === "lexicon_mandatory" || finding.source === "glossary") typeCounts.glossary++;
+    else typeCounts.ai++;
   }
 
   const recommendations: string[] = [];
   if (args.lang === "ar") {
-    if (severityCounts.critical > 0 || severityCounts.high > 0) {
-      recommendations.push("إعادة معالجة الملاحظات عالية الأولوية قبل اعتماد النص أو رفعه بصيغته النهائية.");
+    if (typeCounts.ai > 0) {
+      recommendations.push("مراجعة الملاحظات الآلية والتأكد من ملاءمة المعالجة الدرامية أو الصياغة قبل الاعتماد.");
     }
-    if (severityCounts.medium > 0) {
-      recommendations.push("مراجعة المقاطع متوسطة الخطورة وتخفيف الصياغات أو المعالجة الدرامية حيث يلزم.");
+    if (typeCounts.glossary > 0) {
+      recommendations.push("التحقق من الكلمات والمصطلحات المطابقة للقاموس ومراجعة سياق استخدامها داخل النص.");
     }
-    if (severityCounts.low > 0 && recommendations.length === 0) {
-      recommendations.push("مراجعة الملاحظات الواردة والتأكد من ملاءمتها قبل التنفيذ أو المشاركة.");
+    if (typeCounts.manual > 0) {
+      recommendations.push("أخذ الملاحظات اليدوية بعين الاعتبار ضمن قرار المراجع النهائي قبل التنفيذ أو المشاركة.");
     }
     if (args.reportHints.length > 0) {
       recommendations.push("مراعاة الملاحظات الخاصة والتنبيهات السياقية أثناء التنفيذ حتى لو لم تُصنف كمخالفة مباشرة.");
@@ -169,14 +166,14 @@ function buildOverallRecommendations(args: {
       recommendations.push("لا توجد توصيات إضافية بخلاف الاستمرار في المراجعة النهائية قبل الاعتماد.");
     }
   } else {
-    if (severityCounts.critical > 0 || severityCounts.high > 0) {
-      recommendations.push("Address high-priority findings before final approval or submission.");
+    if (typeCounts.ai > 0) {
+      recommendations.push("Review the AI findings and adjust wording or treatment where needed before final approval.");
     }
-    if (severityCounts.medium > 0) {
-      recommendations.push("Review medium-severity findings and soften wording or treatment where needed.");
+    if (typeCounts.glossary > 0) {
+      recommendations.push("Review glossary matches carefully and confirm their usage and context in the script.");
     }
-    if (severityCounts.low > 0 && recommendations.length === 0) {
-      recommendations.push("Review the listed findings and confirm they remain suitable before execution.");
+    if (typeCounts.manual > 0) {
+      recommendations.push("Take manual findings into account in the final reviewer decision before execution or sharing.");
     }
     if (args.reportHints.length > 0) {
       recommendations.push("Keep the special notes in mind during production even when they are not direct violations.");
@@ -424,7 +421,6 @@ function buildFindingsTable(params: DownloadAnalysisWordParams): string {
           ${makeTableCell(formatNullableValue(page), 800, { align: "center", rtl: false })}
           ${makeTableCell(findingText, 2800)}
           ${makeTableCell(buildFindingAction({
-            severity: finding.severity,
             source: finding.source ?? null,
             lang: params.lang,
           }), 1400)}
