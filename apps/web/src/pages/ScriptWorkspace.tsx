@@ -946,6 +946,111 @@ function findingPreferredAnchorText(f: AnalysisFinding): string {
   return normalizeEvidenceForSearch(f.anchorText ?? f.evidenceSnippet ?? '');
 }
 
+type AnchorTokenSpan = { norm: string; start: number; end: number };
+
+const ANCHOR_TOKEN_REGEX = /[\p{L}\p{N}\p{M}]+/gu;
+
+function tokenizeAnchorText(text: string): AnchorTokenSpan[] {
+  const out: AnchorTokenSpan[] = [];
+  if (!text) return out;
+  for (const match of text.matchAll(ANCHOR_TOKEN_REGEX)) {
+    const raw = match[0] ?? '';
+    const start = match.index ?? -1;
+    if (!raw || start < 0) continue;
+    const norm = canonicalNormalize(raw);
+    if (!norm) continue;
+    out.push({ norm, start, end: start + raw.length });
+  }
+  return out;
+}
+
+function buildTokenNeedleVariants(texts: Array<string | null | undefined>): string[][] {
+  const variants: string[][] = [];
+  const seen = new Set<string>();
+  const pushVariant = (tokens: string[]) => {
+    if (tokens.length === 0) return;
+    if (tokens.length === 1 && tokens[0].length < 4) return;
+    const key = tokens.join('\u0001');
+    if (seen.has(key)) return;
+    seen.add(key);
+    variants.push(tokens);
+  };
+
+  for (const raw of texts) {
+    const trimmed = normalizeEvidenceForSearch(raw ?? '');
+    if (!trimmed) continue;
+    const tokens = tokenizeAnchorText(trimmed).map((token) => token.norm);
+    if (!tokens.length) continue;
+    pushVariant(tokens);
+    if (tokens.length >= 4) {
+      pushVariant(tokens.slice(0, Math.min(tokens.length, 6)));
+      pushVariant(tokens.slice(-Math.min(tokens.length, 6)));
+    }
+    if (tokens.length >= 7) {
+      const middleSize = Math.min(tokens.length, 5);
+      const start = Math.max(0, Math.floor((tokens.length - middleSize) / 2));
+      pushVariant(tokens.slice(start, start + middleSize));
+    }
+  }
+
+  return variants.sort((a, b) => {
+    if (b.length !== a.length) return b.length - a.length;
+    return b.join('').length - a.join('').length;
+  });
+}
+
+function locateSpanByTokenAnchoring(
+  plain: string,
+  needleTexts: Array<string | null | undefined>,
+  opts?: { hintStart?: number | null }
+): { start: number; end: number } | null {
+  if (!plain) return null;
+  const haystackTokens = tokenizeAnchorText(plain);
+  if (!haystackTokens.length) return null;
+  const needleVariants = buildTokenNeedleVariants(needleTexts);
+  if (!needleVariants.length) return null;
+
+  const hintStart = typeof opts?.hintStart === 'number' && Number.isFinite(opts.hintStart)
+    ? opts.hintStart
+    : null;
+
+  let best: { start: number; end: number; tokenCount: number; charLen: number; distance: number } | null = null;
+
+  for (const needle of needleVariants) {
+    const needleLen = needle.length;
+    if (needleLen <= 0 || needleLen > haystackTokens.length) continue;
+    for (let i = 0; i <= haystackTokens.length - needleLen; i++) {
+      let matched = true;
+      for (let j = 0; j < needleLen; j++) {
+        if (haystackTokens[i + j]?.norm !== needle[j]) {
+          matched = false;
+          break;
+        }
+      }
+      if (!matched) continue;
+      const start = haystackTokens[i]!.start;
+      const end = haystackTokens[i + needleLen - 1]!.end;
+      const charLen = end - start;
+      const distance = hintStart == null ? 0 : Math.abs(start - hintStart);
+      if (
+        !best ||
+        needleLen > best.tokenCount ||
+        (needleLen === best.tokenCount && charLen > best.charLen) ||
+        (needleLen === best.tokenCount && charLen === best.charLen && distance < best.distance) ||
+        (needleLen === best.tokenCount && charLen === best.charLen && distance === best.distance && start < best.start)
+      ) {
+        best = { start, end, tokenCount: needleLen, charLen, distance };
+      }
+    }
+    if (best && best.tokenCount >= needleLen && needleLen >= 3) {
+      // Prefer the longest confident token match early to keep resolution deterministic.
+      break;
+    }
+  }
+
+  return best ? { start: best.start, end: best.end } : null;
+}
+
 function pickClosestSpan(
   matches: { start: number; end: number }[],
   hintStart?: number | null
@@ -997,6 +1102,12 @@ function locateSpanByStrictExactSearch(
       if (collapsedHit) return collapsedHit;
     }
   }
+  const tokenAnchored = locateSpanByTokenAnchoring(
+    plain,
+    [findingPreferredAnchorText(f), ...orderedEvidenceNeedles(f.evidenceSnippet ?? '')],
+    { hintStart: opts?.hintStart },
+  );
+  if (tokenAnchored) return tokenAnchored;
   return null;
 }
 
@@ -1027,6 +1138,11 @@ function locateSpanByEvidenceSearch(
     const best = findBestMatch(matches as Parameters<typeof findBestMatch>[0], L * 0.42);
     return best ? { start: best.start, end: best.end } : { start: matches[0].start, end: matches[0].end };
   };
+
+  const tokenAnchored = locateSpanByTokenAnchoring(plain, needles, {
+    hintStart: hintG > 0 ? (pageSlice ? hintL : hintG) : null,
+  });
+  if (tokenAnchored) return tokenAnchored;
 
   for (const needle of needles) {
     let matches = gatherExactOccurrences(plain, needle);
