@@ -210,6 +210,7 @@ type ReviewFindingInsertRow = {
   anchor_confidence: number | null;
   is_manual: boolean;
   is_hidden: boolean;
+  include_in_report: boolean;
   created_from_job_id: string | null;
   approved_reason?: string | null;
   reviewed_by?: string | null;
@@ -233,6 +234,7 @@ type ExistingReviewFindingRow = {
   evidence_snippet: string;
   manual_comment: string | null;
   approved_reason: string | null;
+  include_in_report: boolean;
   reviewed_by: string | null;
   reviewed_at: string | null;
   edited_by: string | null;
@@ -418,6 +420,7 @@ function buildReviewFindingRows(
     anchor_confidence: finding.confidence ?? null,
     is_manual: false,
     is_hidden: false,
+    include_in_report: true,
     created_from_job_id: summary.job_id,
   }));
 
@@ -457,6 +460,7 @@ function buildReviewFindingRows(
     anchor_confidence: finding.confidence ?? null,
     is_manual: false,
     is_hidden: false,
+    include_in_report: true,
     created_from_job_id: summary.job_id,
   }));
 
@@ -470,7 +474,7 @@ async function loadPriorReviewFindingRows(
 ): Promise<ExistingReviewFindingRow[]> {
   const { data, error } = await supabase
     .from("analysis_review_findings")
-    .select("id, report_id, script_id, version_id, canonical_finding_id, source_kind, primary_article_id, primary_atom_id, severity, review_status, evidence_snippet, manual_comment, approved_reason, reviewed_by, reviewed_at, edited_by, edited_at, is_hidden, is_manual, created_at, updated_at")
+    .select("id, report_id, script_id, version_id, canonical_finding_id, source_kind, primary_article_id, primary_atom_id, severity, review_status, evidence_snippet, manual_comment, approved_reason, include_in_report, reviewed_by, reviewed_at, edited_by, edited_at, is_hidden, is_manual, created_at, updated_at")
     .eq("script_id", scriptId)
     .eq("version_id", versionId)
     .neq("report_id", reportId)
@@ -498,6 +502,7 @@ function applyPriorReviewState(
     review_status: prior.review_status || row.review_status,
     manual_comment: prior.manual_comment ?? row.manual_comment,
     approved_reason: prior.approved_reason ?? null,
+    include_in_report: prior.include_in_report ?? row.include_in_report,
     reviewed_by: prior.reviewed_by ?? null,
     reviewed_at: prior.reviewed_at ?? null,
     edited_by: prior.edited_by ?? null,
@@ -576,6 +581,7 @@ async function buildManualReviewRowsForJob(
     anchor_confidence: 1,
     is_manual: true,
     is_hidden: false,
+    include_in_report: true,
     created_from_job_id: summary.job_id,
     approved_reason: (finding.review_reason as string | null | undefined) ?? null,
     reviewed_by: (finding.reviewed_by as string | null | undefined) ?? null,
@@ -591,7 +597,9 @@ async function materializeReviewFindings(
   const priorRows = await loadPriorReviewFindingRows(reportId, summary.script_id, versionId);
   const baseRows = buildReviewFindingRows(reportId, summary, versionId);
   const carriedRows = baseRows.map((row) => applyPriorReviewState(row, pickPriorReviewFindingMatch(row, priorRows)));
-  const manualRows = await buildManualReviewRowsForJob(reportId, summary, versionId);
+  const manualRows = (await buildManualReviewRowsForJob(reportId, summary, versionId)).map((row) =>
+    applyPriorReviewState(row, pickPriorReviewFindingMatch(row, priorRows))
+  );
   const rows = [...carriedRows, ...manualRows];
   logger.info("Materializing reviewer findings", {
     reportId,

@@ -299,6 +299,7 @@ export function Results() {
   const [reviewReason, setReviewReason] = useState('');
   const [editFindingModal, setEditFindingModal] = useState<AnalysisFinding | null>(null);
   const [editFindingSaving, setEditFindingSaving] = useState(false);
+  const [reportVisibilitySavingId, setReportVisibilitySavingId] = useState<string | null>(null);
   const [editFindingForm, setEditFindingForm] = useState({
     articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
     atomId: '',
@@ -1097,6 +1098,30 @@ export function Results() {
     }
   };
 
+  const handleToggleReviewFindingReportVisibility = async (reviewFinding: AnalysisReviewFinding) => {
+    const nextIncludeInReport = reviewFinding.includeInReport === false;
+    setReportVisibilitySavingId(reviewFinding.id);
+    try {
+      const res = await findingsApi.setReviewFindingReportVisibility({
+        reviewFindingId: reviewFinding.id,
+        includeInReport: nextIncludeInReport,
+      });
+      setReviewFindings((prev) =>
+        prev.map((item) => (item.id === reviewFinding.id ? res.reviewFinding : item))
+      );
+      toast.success(
+        nextIncludeInReport
+          ? (lang === 'ar' ? 'سيتم تضمين هذه الملاحظة في التقارير المصدّرة' : 'This finding will be included in exported reports')
+          : (lang === 'ar' ? 'تم استبعاد هذه الملاحظة من التقارير المصدّرة' : 'This finding was excluded from exported reports')
+      );
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : null;
+      toast.error(message || (lang === 'ar' ? 'تعذر تحديث حالة التضمين في التقرير' : 'Failed to update report inclusion'));
+    } finally {
+      setReportVisibilitySavingId(null);
+    }
+  };
+
   const handleDownloadWord = async () => {
     if (!report) return;
     setIsDownloadingWord(true);
@@ -1297,6 +1322,8 @@ export function Results() {
     const manualCommentLabel = isEdited
       ? (lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:')
       : (f.sourceKind === 'manual' ? (lang === 'ar' ? 'تعليق يدوي:' : 'Manual comment:') : (lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:'));
+    const isExcludedFromReport = f.includeInReport === false;
+    const isReportVisibilitySaving = reportVisibilitySavingId === f.id;
 
     return (
       <div key={f.id} className={cn("border rounded-lg p-4", isApproved ? "bg-success/5 border-success/20" : "bg-surface border-border")}>
@@ -1348,6 +1375,25 @@ export function Results() {
         )}
         {matchedRaw ? (
           <div className="flex items-center gap-2 mt-2 print:hidden">
+            <Button
+              size="sm"
+              variant="outline"
+              className={cn(
+                "h-7 text-[11px] gap-1 border text-white",
+                isExcludedFromReport
+                  ? "bg-error border-error hover:bg-error/90"
+                  : "bg-success border-success hover:bg-success/90"
+              )}
+              onClick={() => handleToggleReviewFindingReportVisibility(f)}
+              disabled={isReportVisibilitySaving}
+            >
+              {isReportVisibilitySaving ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : null}
+              {isExcludedFromReport
+                ? (lang === 'ar' ? 'مستبعد' : 'Excluded')
+                : (lang === 'ar' ? 'ضمن التقرير' : 'In Report')}
+            </Button>
             {!isApproved && (
               <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 text-success border-success/30 hover:bg-success/10"
                 onClick={() => { setReviewModal({ findingId: matchedRaw.id, toStatus: 'approved', titleAr: f.titleAr }); setReviewReason(''); }}>
@@ -1372,11 +1418,32 @@ export function Results() {
             </Button>
           </div>
         ) : (
-          <p className="text-[10px] text-text-muted mt-2 print:hidden">
-            {lang === 'ar'
-              ? 'ستظهر إجراءات الاعتماد والتعديل عندما يتوفر ربط مباشر مع سجل الملاحظة الخام.'
-              : 'Review actions will appear once this card is linked to a raw finding row.'}
-          </p>
+          <div className="flex items-center gap-2 mt-2 print:hidden">
+            <Button
+              size="sm"
+              variant="outline"
+              className={cn(
+                "h-7 text-[11px] gap-1 border text-white",
+                isExcludedFromReport
+                  ? "bg-error border-error hover:bg-error/90"
+                  : "bg-success border-success hover:bg-success/90"
+              )}
+              onClick={() => handleToggleReviewFindingReportVisibility(f)}
+              disabled={isReportVisibilitySaving}
+            >
+              {isReportVisibilitySaving ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : null}
+              {isExcludedFromReport
+                ? (lang === 'ar' ? 'مستبعد' : 'Excluded')
+                : (lang === 'ar' ? 'ضمن التقرير' : 'In Report')}
+            </Button>
+            <p className="text-[10px] text-text-muted">
+              {lang === 'ar'
+                ? 'ستظهر إجراءات الاعتماد والتعديل عندما يتوفر ربط مباشر مع سجل الملاحظة الخام.'
+                : 'Review actions will appear once this card is linked to a raw finding row.'}
+            </p>
+          </div>
         )}
       </div>
     );

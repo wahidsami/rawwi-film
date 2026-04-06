@@ -369,6 +369,7 @@ export interface AnalysisReviewFinding {
   anchorConfidence?: number | null;
   isManual: boolean;
   isHidden: boolean;
+  includeInReport: boolean;
   approvedReason?: string | null;
   reviewedBy?: string | null;
   reviewedAt?: string | null;
@@ -385,6 +386,16 @@ export interface ReclassifyFindingResponse {
   finding?: AnalysisFinding;
   atomMappingWarning?: string | null;
   reportAggregates?: FindingReviewResponse['reportAggregates'];
+}
+
+export interface SetReviewFindingReportVisibilityBody {
+  reviewFindingId: string;
+  includeInReport: boolean;
+}
+
+export interface SetReviewFindingReportVisibilityResponse {
+  ok: true;
+  reviewFinding: AnalysisReviewFinding;
 }
 
 export const findingsApi = {
@@ -407,6 +418,8 @@ export const findingsApi = {
   /** Approve (mark safe) or revert a finding. */
   reviewFinding: (findingId: string, toStatus: 'approved' | 'violation', reason: string): Promise<FindingReviewResponse> =>
     httpClient.post('/findings/review', { findingId, toStatus, reason }),
+  setReviewFindingReportVisibility: (body: SetReviewFindingReportVisibilityBody): Promise<SetReviewFindingReportVisibilityResponse> =>
+    httpClient.post('/findings/report-visibility', body),
   reclassifyFinding: async (body: ReclassifyFindingBody): Promise<ReclassifyFindingResponse> => {
     try {
       return await httpClient.post('/findings/reclassify', body);

@@ -62,7 +62,9 @@ function reviewSourceToPdfSource(sourceKind: AnalysisReviewFinding["sourceKind"]
 export function splitAnalysisReviewFindingsForPdf(
   reviewFindings: AnalysisReviewFinding[] | null | undefined
 ): { findings: AnalysisPdfFinding[]; reportHints: AnalysisPdfFinding[] } {
-  const visible = (reviewFindings || []).filter((row): row is AnalysisReviewFinding => Boolean(row) && !row.isHidden);
+  const visible = (reviewFindings || []).filter(
+    (row): row is AnalysisReviewFinding => Boolean(row) && !row.isHidden && row.includeInReport !== false
+  );
 
   const findings = visible
     .filter((row) => row.sourceKind !== "special" && row.reviewStatus !== "approved")

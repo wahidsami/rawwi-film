@@ -22,7 +22,7 @@ function pathAfter(base: string, url: string): string {
 const FINDING_COLS =
   "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, rationale_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, anchor_status, anchor_method, anchor_page_number, anchor_start_offset_page, anchor_end_offset_page, anchor_start_offset_global, anchor_end_offset_global, anchor_text, anchor_confidence, anchor_updated_at, created_at, created_by, manual_comment";
 const REVIEW_FINDING_COLS =
-  "id, job_id, report_id, script_id, version_id, canonical_finding_id, source_kind, primary_article_id, primary_atom_id, severity, review_status, title_ar, description_ar, rationale_ar, evidence_snippet, manual_comment, page_number, start_offset_global, end_offset_global, start_offset_page, end_offset_page, anchor_status, anchor_method, anchor_text, anchor_confidence, is_manual, is_hidden, approved_reason, reviewed_by, reviewed_at, edited_by, edited_at, created_from_job_id, supersedes_review_finding_id, created_at, updated_at";
+  "id, job_id, report_id, script_id, version_id, canonical_finding_id, source_kind, primary_article_id, primary_atom_id, severity, review_status, title_ar, description_ar, rationale_ar, evidence_snippet, manual_comment, page_number, start_offset_global, end_offset_global, start_offset_page, end_offset_page, anchor_status, anchor_method, anchor_text, anchor_confidence, is_manual, is_hidden, include_in_report, approved_reason, reviewed_by, reviewed_at, edited_by, edited_at, created_from_job_id, supersedes_review_finding_id, created_at, updated_at";
 
 async function selectFindings(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -128,6 +128,7 @@ function camelReviewFinding(r: Record<string, unknown>) {
     anchorConfidence: r.anchor_confidence ?? null,
     isManual: Boolean(r.is_manual),
     isHidden: Boolean(r.is_hidden),
+    includeInReport: r.include_in_report !== false,
     approvedReason: r.approved_reason ?? null,
     reviewedBy: r.reviewed_by ?? null,
     reviewedAt: r.reviewed_at ?? null,
@@ -660,6 +661,76 @@ Deno.serve(async (req: Request) => {
         fromStatus,
         toStatus,
         reportAggregates: agg,
+      });
+    }
+
+    // ── POST /findings/reclassify (or POST /findings with { action: "reclassify" }) ──
+    if (method === "POST" && rest === "report-visibility") {
+      let body: {
+        reviewFindingId?: string;
+        includeInReport?: boolean;
+      };
+      try {
+        body = await req.json();
+      } catch {
+        return json({ error: "Invalid JSON" }, 400);
+      }
+
+      const reviewFindingId = body.reviewFindingId?.trim();
+      if (!reviewFindingId) return json({ error: "reviewFindingId required" }, 400);
+      if (typeof body.includeInReport !== "boolean") {
+        return json({ error: "includeInReport must be boolean" }, 400);
+      }
+
+      const { data: reviewFinding } = await supabase
+        .from("analysis_review_findings")
+        .select("id, job_id, include_in_report")
+        .eq("id", reviewFindingId)
+        .maybeSingle();
+      if (!reviewFinding) return json({ error: "Review finding not found" }, 404);
+
+      const reviewRow = reviewFinding as { id: string; job_id: string; include_in_report?: boolean | null };
+      const { data: job } = await supabase
+        .from("analysis_jobs")
+        .select("created_by")
+        .eq("id", reviewRow.job_id)
+        .maybeSingle();
+      if (!job) return json({ error: "Job not found" }, 404);
+      const isOwner = (job as { created_by?: string | null }).created_by === uid;
+      if (!isAdmin && !isOwner) return json({ error: "Forbidden" }, 403);
+
+      const nowIso = new Date().toISOString();
+      const { data: updatedRow, error: updateErr } = await supabase
+        .from("analysis_review_findings")
+        .update({
+          include_in_report: body.includeInReport,
+          updated_at: nowIso,
+        })
+        .eq("id", reviewFindingId)
+        .select(REVIEW_FINDING_COLS)
+        .maybeSingle();
+      if (updateErr || !updatedRow) {
+        return json({ error: updateErr?.message ?? "Could not update report visibility" }, 500);
+      }
+
+      await logAuditCanonical(supabase, {
+        event_type: body.includeInReport ? "FINDING_INCLUDED_IN_REPORT" : "FINDING_EXCLUDED_FROM_REPORT",
+        actor_user_id: uid,
+        actor_role: "user",
+        target_type: "report",
+        target_id: reviewRow.job_id,
+        target_label: reviewFindingId,
+        result_status: "success",
+        metadata: {
+          reviewFindingId,
+          fromIncludeInReport: reviewRow.include_in_report !== false,
+          toIncludeInReport: body.includeInReport,
+        },
+      }).catch((e) => console.warn("[findings] report visibility audit canonical:", e));
+
+      return json({
+        ok: true,
+        reviewFinding: camelReviewFinding(updatedRow as Record<string, unknown>),
       });
     }
 
