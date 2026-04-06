@@ -4148,87 +4148,6 @@ export function ScriptWorkspace() {
     return { total, resolved, unresolved };
   }, [activeWorkspaceHighlights, findingWorkspaceResolve]);
 
-  const selectedWorkspaceFinding = useMemo(
-    () => workspaceVisibleReportFindings.find((item) => item.id === selectedFindingId) ?? null,
-    [workspaceVisibleReportFindings, selectedFindingId],
-  );
-
-  const selectedFindingDebugInfo = useMemo(() => {
-    if (!selectedWorkspaceFinding) return null;
-    const resolved = findingWorkspaceResolve.get(selectedWorkspaceFinding.id) ?? null;
-    const pageText = currentPageData?.content ?? '';
-    const evidence = selectedWorkspaceFinding.evidenceSnippet ?? '';
-    const anchorText = selectedWorkspaceFinding.anchorText ?? '';
-    const evidenceExactIndex = evidence ? pageText.indexOf(evidence) : -1;
-    const anchorExactIndex = anchorText ? pageText.indexOf(anchorText) : -1;
-    const pageScopedFinding: AnalysisFinding =
-      resolved?.resolved && resolved.localStart != null && resolved.localEnd != null
-        ? {
-            ...selectedWorkspaceFinding,
-            startOffsetGlobal: resolved.localStart,
-            endOffsetGlobal: resolved.localEnd,
-            startOffsetPage: resolved.localStart,
-            endOffsetPage: resolved.localEnd,
-            anchorStartOffsetPage: resolved.localStart,
-            anchorEndOffsetPage: resolved.localEnd,
-            anchorStartOffsetGlobal: resolved.localStart,
-            anchorEndOffsetGlobal: resolved.localEnd,
-          }
-        : selectedWorkspaceFinding;
-    const visibleSpan =
-      pageText && safeCurrentPage === (resolved?.pageNumber ?? safeCurrentPage)
-        ? resolveFindingSpanInText(pageText, pageScopedFinding, locateFindingInContent, {
-            pageSlice: true,
-            sliceGlobalStart: 0,
-          })
-        : null;
-    const matchingSegments = (pageFindingSegments ?? [])
-      .filter((segment) => segment.finding?.id === selectedWorkspaceFinding.id)
-      .map((segment) => ({
-        start: segment.start,
-        end: segment.end,
-        text: (currentPageData?.content ?? '').slice(segment.start, segment.end),
-      }));
-
-    return {
-      findingId: selectedWorkspaceFinding.id,
-      currentPage: safeCurrentPage,
-      strictImportedAnchoring,
-      workspaceViewMode,
-      resolved,
-      pinnedHighlight,
-      selectedFindingId,
-      pageUsesFormattedHtml,
-      pageTextLength: pageText.length,
-      evidenceSnippet: evidence,
-      anchorText,
-      evidenceExactIndex,
-      anchorExactIndex,
-      visibleSpan,
-      matchingSegments,
-      domMarkCount: selectedFindingDomMarkCount,
-      pagePreview:
-        pageText && visibleSpan
-          ? pageText.slice(Math.max(0, visibleSpan.start - 40), Math.min(pageText.length, visibleSpan.end + 40))
-          : pageText
-            ? pageText.slice(0, 220)
-            : '',
-    };
-  }, [
-    selectedWorkspaceFinding,
-    findingWorkspaceResolve,
-    currentPageData?.content,
-    pageFindingSegments,
-    safeCurrentPage,
-    strictImportedAnchoring,
-    workspaceViewMode,
-    pinnedHighlight,
-    selectedFindingId,
-    pageUsesFormattedHtml,
-    selectedFindingDomMarkCount,
-    locateFindingInContent,
-  ]);
-
   const annotatedWorkspaceExport = useMemo(() => {
     if (!strictImportedAnchoring || !pagesSortedForViewer.length || !activeWorkspaceHighlights.length) {
       return {
@@ -4328,6 +4247,87 @@ export function ScriptWorkspace() {
           : null,
     [isPageMode, currentPageData?.content, highlightTargetsForPageView, buildFindingSegments]
   );
+
+  const selectedWorkspaceFinding = useMemo(
+    () => workspaceVisibleReportFindings.find((item) => item.id === selectedFindingId) ?? null,
+    [workspaceVisibleReportFindings, selectedFindingId],
+  );
+
+  const selectedFindingDebugInfo = useMemo(() => {
+    if (!selectedWorkspaceFinding) return null;
+    const resolved = findingWorkspaceResolve.get(selectedWorkspaceFinding.id) ?? null;
+    const pageText = currentPageData?.content ?? '';
+    const evidence = selectedWorkspaceFinding.evidenceSnippet ?? '';
+    const anchorText = selectedWorkspaceFinding.anchorText ?? '';
+    const evidenceExactIndex = evidence ? pageText.indexOf(evidence) : -1;
+    const anchorExactIndex = anchorText ? pageText.indexOf(anchorText) : -1;
+    const pageScopedFinding: AnalysisFinding =
+      resolved?.resolved && resolved.localStart != null && resolved.localEnd != null
+        ? {
+            ...selectedWorkspaceFinding,
+            startOffsetGlobal: resolved.localStart,
+            endOffsetGlobal: resolved.localEnd,
+            startOffsetPage: resolved.localStart,
+            endOffsetPage: resolved.localEnd,
+            anchorStartOffsetPage: resolved.localStart,
+            anchorEndOffsetPage: resolved.localEnd,
+            anchorStartOffsetGlobal: resolved.localStart,
+            anchorEndOffsetGlobal: resolved.localEnd,
+          }
+        : selectedWorkspaceFinding;
+    const visibleSpan =
+      pageText && safeCurrentPage === (resolved?.pageNumber ?? safeCurrentPage)
+        ? resolveFindingSpanInText(pageText, pageScopedFinding, locateFindingInContent, {
+            pageSlice: true,
+            sliceGlobalStart: 0,
+          })
+        : null;
+    const matchingSegments = (pageFindingSegments ?? [])
+      .filter((segment) => segment.finding?.id === selectedWorkspaceFinding.id)
+      .map((segment) => ({
+        start: segment.start,
+        end: segment.end,
+        text: (currentPageData?.content ?? '').slice(segment.start, segment.end),
+      }));
+
+    return {
+      findingId: selectedWorkspaceFinding.id,
+      currentPage: safeCurrentPage,
+      strictImportedAnchoring,
+      workspaceViewMode,
+      resolved,
+      pinnedHighlight,
+      selectedFindingId,
+      pageUsesFormattedHtml,
+      pageTextLength: pageText.length,
+      evidenceSnippet: evidence,
+      anchorText,
+      evidenceExactIndex,
+      anchorExactIndex,
+      visibleSpan,
+      matchingSegments,
+      domMarkCount: selectedFindingDomMarkCount,
+      pagePreview:
+        pageText && visibleSpan
+          ? pageText.slice(Math.max(0, visibleSpan.start - 40), Math.min(pageText.length, visibleSpan.end + 40))
+          : pageText
+            ? pageText.slice(0, 220)
+            : '',
+    };
+  }, [
+    selectedWorkspaceFinding,
+    findingWorkspaceResolve,
+    currentPageData?.content,
+    pageFindingSegments,
+    safeCurrentPage,
+    strictImportedAnchoring,
+    workspaceViewMode,
+    pinnedHighlight,
+    selectedFindingId,
+    pageUsesFormattedHtml,
+    selectedFindingDomMarkCount,
+    locateFindingInContent,
+  ]);
 
   const handlePinFindingInScript = useCallback(
     (f: AnalysisFinding, e?: React.MouseEvent, opts?: { silent?: boolean }) => {
