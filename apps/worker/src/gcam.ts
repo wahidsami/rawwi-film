@@ -34,7 +34,7 @@ export function getScriptStandardArticle(id: number): GCAMArticle {
   };
 }
 
-/** Scannable articles only (1–24); excludes 25 admin, 26 out-of-scope. */
+/** Scannable articles only with actionable atom definitions. */
 export function getScriptStandardRouterList(): GCAMArticle[] {
   return getScannableArticleIds().map((id) => getScriptStandardArticle(id));
 }

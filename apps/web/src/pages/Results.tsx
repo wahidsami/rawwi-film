@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 
 import {
+  getActionablePolicyArticles,
   getPolicyArticles,
   normalizeAtomId,
   atomIdNumeric,
@@ -45,7 +46,8 @@ const policyArticles = getPolicyArticles().map((a) => ({
   titleEn: `Article ${a.articleId}`,
 }));
 
-const policyArticlesForForm = getPolicyArticles().filter((a) => a.articleId !== 26);
+const policyArticlesForForm = getActionablePolicyArticles();
+const DEFAULT_ACTIONABLE_ARTICLE_ID = policyArticlesForForm[0]?.articleId ?? 4;
 const RESULTS_ARTICLES_CHECKLIST = policyArticlesForForm.map((a) => ({
   id: String(a.articleId),
   label: `Art ${a.articleId} - ${a.title_ar}`,
@@ -62,7 +64,8 @@ for (const art of policyArticlesForForm) {
 }
 
 function getResultsArticleAtomOptions(articleId: string): { value: string; label: string }[] {
-  return RESULTS_ARTICLE_ATOMS[articleId] ?? RESULTS_ARTICLE_ATOMS['1'] ?? [{ value: '', label: '—' }];
+  const fallbackKey = String(DEFAULT_ACTIONABLE_ARTICLE_ID);
+  return RESULTS_ARTICLE_ATOMS[articleId] ?? RESULTS_ARTICLE_ATOMS[fallbackKey] ?? [{ value: '', label: '—' }];
 }
 
 function sanitizeResultsAtomSelection(articleId: string, atomId: string | null | undefined): string | null {
@@ -188,6 +191,22 @@ type CanonicalSummaryFinding = {
   source?: 'ai' | 'lexicon_mandatory' | 'manual';
 };
 
+type FindingKindFilter = 'all' | 'ai' | 'manual' | 'glossary' | 'special';
+
+function findingKindFromSource(source: string | null | undefined): Exclude<FindingKindFilter, 'all' | 'special'> {
+  if (source === 'manual') return 'manual';
+  if (source === 'lexicon_mandatory') return 'glossary';
+  return 'ai';
+}
+
+function countFindingKinds<T extends { source?: string | null }>(list: T[]) {
+  const counts = { ai: 0, manual: 0, glossary: 0 };
+  for (const finding of list) {
+    counts[findingKindFromSource(finding.source)]++;
+  }
+  return counts;
+}
+
 /** One card per logical violation (same canonical_finding_id → strongest severity/confidence). */
 function dedupeRealFindings(list: AnalysisFinding[]): AnalysisFinding[] {
   const byCanonical = new Map<string, AnalysisFinding>();
@@ -239,7 +258,7 @@ export function Results() {
   const [groupFindingsByAtom, setGroupFindingsByAtom] = useState(false);
   /** false = deduped list (default); true = every DB row (duplicates visible). */
   const [showAllFindingRows, setShowAllFindingRows] = useState(false);
-  const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'high' | 'medium' | 'low' | 'manual' | 'special'>('all');
+  const [findingFilter, setFindingFilter] = useState<FindingKindFilter>('all');
   /** script_pages slices for viewer-accurate page labels (same model as workspace). */
   const [reportViewerPages, setReportViewerPages] = useState<Array<{ pageNumber: number; content: string }> | null>(null);
 
@@ -249,7 +268,7 @@ export function Results() {
   const [editFindingModal, setEditFindingModal] = useState<AnalysisFinding | null>(null);
   const [editFindingSaving, setEditFindingSaving] = useState(false);
   const [editFindingForm, setEditFindingForm] = useState({
-    articleId: '1',
+    articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
     atomId: '',
     severity: 'medium',
     manualComment: '',
@@ -258,7 +277,7 @@ export function Results() {
   useEffect(() => {
     if (!editFindingModal) return;
     setEditFindingForm({
-      articleId: String(editFindingModal.articleId || 1),
+      articleId: String(editFindingModal.articleId || DEFAULT_ACTIONABLE_ARTICLE_ID),
       atomId: editFindingModal.atomId ?? '',
       severity: (editFindingModal.severity || 'medium').toLowerCase(),
       manualComment: editFindingModal.manualComment ?? '',
@@ -516,38 +535,29 @@ export function Results() {
 
   // Stats must match the violations list we render. Derive from canonical_findings so cards and list are always in sync.
   const displayTotal = canonicalSummaryFindings.length;
-  const displaySc = (() => {
-    const base = { low: 0, medium: 0, high: 0, critical: 0 };
-    for (const f of canonicalSummaryFindings) {
-      const s = (f.severity ?? "").toLowerCase();
-      if (s in base) (base as Record<string, number>)[s]++;
-    }
-    return base;
-  })();
+  const displayTypeCounts = hasRealFindings
+    ? countFindingKinds(displayViolations)
+    : countFindingKinds(canonicalSummaryFindings);
   const displayApproved = report.approvedCount ?? 0;
   const displaySpecialNotes = reportHints.length;
   const editFindingAtomOptions = getResultsArticleAtomOptions(editFindingForm.articleId);
-  const manualFindingsCount = hasRealFindings
-    ? dedupeRealFindings(violations.filter((f) => f.source === 'manual')).length
-    : 0;
 
-  const matchesSeverityFilter = (finding: Pick<AnalysisFinding, 'severity' | 'source'> | Pick<CanonicalSummaryFinding, 'severity' | 'source'>) => {
-    if (severityFilter === 'all') return true;
-    if (severityFilter === 'manual') return (finding.source ?? 'ai') === 'manual';
-    return (finding.severity ?? '').toLowerCase() === severityFilter;
+  const matchesFindingFilter = (finding: Pick<AnalysisFinding, 'source'> | Pick<CanonicalSummaryFinding, 'source'>) => {
+    if (findingFilter === 'all') return true;
+    if (findingFilter === 'special') return false;
+    return findingKindFromSource(finding.source) === findingFilter;
   };
   const filteredDisplayViolations = hasRealFindings
-    ? displayViolations.filter((f) => matchesSeverityFilter(f))
+    ? displayViolations.filter((f) => matchesFindingFilter(f))
     : [];
-  const filteredCanonicalSummaryFindings = canonicalSummaryFindings.filter((f) => matchesSeverityFilter(f));
+  const filteredCanonicalSummaryFindings = canonicalSummaryFindings.filter((f) => matchesFindingFilter(f));
   const filteredViolationsCount = hasRealFindings
     ? filteredDisplayViolations.length
     : filteredCanonicalSummaryFindings.length;
-  const showOnlySpecialNotes = severityFilter === 'special';
+  const showOnlySpecialNotes = findingFilter === 'special';
 
   const decision: 'PASS' | 'REJECT' | 'REVIEW_REQUIRED' =
-    (displaySc.critical > 0 || displaySc.high > 0) ? 'REJECT' :
-      displaySc.medium > 0 ? 'REVIEW_REQUIRED' : 'PASS';
+    displayViolationsCount > 0 ? 'REVIEW_REQUIRED' : 'PASS';
 
   const decisionConfig = {
     PASS: { label: lang === 'ar' ? 'مقبول' : 'PASS', bg: 'bg-success/5', text: 'text-success', border: 'border-success/30', icon: CheckCircle },
@@ -683,8 +693,13 @@ export function Results() {
             articleTitle: isAr ? cat.titleAr : cat.titleEn,
             count: list.length,
             findings: list.map((f) => ({
-              severity: (f.severity ?? 'info').toLowerCase(),
-              severityLabel: f.severity,
+              severity:
+                findingKindFromSource(f.source ?? 'ai') === 'ai'
+                  ? 'critical'
+                  : findingKindFromSource(f.source ?? 'ai') === 'glossary'
+                    ? 'high'
+                    : 'medium',
+              severityLabel: findingSourceLabel(f.source ?? 'ai'),
               title: isAr ? f.titleAr : f.titleAr,
               confidence: Math.round((f.confidence ?? 0) * 100),
               source: findingSourceLabel(f.source ?? 'ai'),
@@ -720,20 +735,20 @@ export function Results() {
         '{{footerNoteEn}}': escapeHtmlSafe(settings?.branding?.footerNoteEn ?? ''),
 
         // Stats
-        '{{stats.critical}}': String(displaySc.critical),
-        '{{stats.high}}': String(displaySc.high),
-        '{{stats.medium}}': String(displaySc.medium),
-        '{{stats.low}}': String(displaySc.low),
+        '{{stats.critical}}': String(displayTypeCounts.ai),
+        '{{stats.high}}': String(displayTypeCounts.glossary),
+        '{{stats.medium}}': String(displayTypeCounts.manual),
+        '{{stats.low}}': String(displaySpecialNotes),
 
         // Labels
         '{{labels.reportTitle}}': isAr ? 'تقرير التحليل' : 'Analysis Report',
         '{{labels.client}}': isAr ? 'العميل' : 'Client',
         '{{labels.date}}': isAr ? 'التاريخ' : 'Date',
         '{{labels.executiveSummary}}': isAr ? 'ملخص التقرير' : 'Executive Summary',
-        '{{labels.critical}}': isAr ? 'حرجة' : 'Critical',
-        '{{labels.high}}': isAr ? 'عالية' : 'High',
-        '{{labels.medium}}': isAr ? 'متوسطة' : 'Medium',
-        '{{labels.low}}': isAr ? 'منخفضة' : 'Low',
+        '{{labels.critical}}': isAr ? 'ملاحظات آلية' : 'AI findings',
+        '{{labels.high}}': isAr ? 'مطابقات القاموس' : 'Glossary findings',
+        '{{labels.medium}}': isAr ? 'ملاحظات يدوية' : 'Manual findings',
+        '{{labels.low}}': isAr ? 'ملاحظات خاصة' : 'Special notes',
         '{{labels.findingsDetails}}': isAr ? 'تفاصيل القضايا' : 'Findings Details',
         '{{labels.issues}}': isAr ? 'قضايا' : 'Issues',
         '{{labels.confidence}}': isAr ? 'ثقة' : 'Conf',
@@ -880,7 +895,7 @@ export function Results() {
       const normalizedAtomId = sanitizeResultsAtomSelection(editFindingForm.articleId, editFindingForm.atomId);
       const res = await findingsApi.reclassifyFinding({
         findingId: editFindingModal.id,
-        articleId: parseInt(editFindingForm.articleId, 10) || 1,
+        articleId: parseInt(editFindingForm.articleId, 10) || DEFAULT_ACTIONABLE_ARTICLE_ID,
         atomId: normalizedAtomId,
         severity: editFindingForm.severity,
         manualComment: editFindingForm.manualComment?.trim() || null,
@@ -963,12 +978,6 @@ export function Results() {
     }
   };
 
-  const sevColor = (s: string) =>
-    s === 'critical' ? 'bg-error/10 text-error border-error/20' :
-      s === 'high' ? 'bg-error/5 text-error border-error/10' :
-        s === 'medium' ? 'bg-warning/10 text-warning border-warning/20' :
-          'bg-info/10 text-info border-info/20';
-
   const articleLabel = (articleId: number) => {
     if (!Number.isFinite(articleId) || articleId <= 0) {
       return lang === 'ar' ? 'مادة غير محددة' : 'Unresolved article';
@@ -1036,7 +1045,6 @@ export function Results() {
             {isApproved && (
               <Badge className="text-[10px] bg-success/10 text-success border-success/20 border">{lang === 'ar' ? 'آمن' : 'Safe'}</Badge>
             )}
-            <Badge className={cn("text-[10px] border", sevColor(f.severity))}>{f.severity}</Badge>
             <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
           </div>
         </div>
@@ -1158,7 +1166,6 @@ export function Results() {
                         })}
                       </span>
                       <div className="flex items-center gap-2">
-                        <Badge className={cn("text-[10px] border", sevColor(f.severity ?? ""))}>{f.severity}</Badge>
                         <span className="text-[10px] text-text-muted">
                           {lang === "ar" ? "ثقة" : "conf"} {Math.round((f.confidence ?? 0) * 100)}%
                         </span>
@@ -1229,7 +1236,6 @@ export function Results() {
                               })}
                             </span>
                             <div className="flex items-center gap-2">
-                              <Badge className={cn("text-[10px] border", sevColor(f.severity))}>{f.severity}</Badge>
                               <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
                             </div>
                           </div>
@@ -1600,10 +1606,10 @@ export function Results() {
           <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 w-full mt-4">
             <button
               type="button"
-              onClick={() => setSeverityFilter('all')}
+              onClick={() => setFindingFilter('all')}
               className={cn(
                 "bg-surface/50 border border-border p-3 rounded-xl text-start transition-colors",
-                severityFilter === 'all' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/40'
+                findingFilter === 'all' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/40'
               )}
             >
               <div className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'مخالفات نهائية' : 'Final violations'}</div>
@@ -1611,61 +1617,37 @@ export function Results() {
             </button>
             <button
               type="button"
-              onClick={() => setSeverityFilter((v) => (v === 'critical' ? 'all' : 'critical'))}
+              onClick={() => setFindingFilter((v) => (v === 'ai' ? 'all' : 'ai'))}
               className={cn(
-                "bg-error/5 border border-error/20 p-3 rounded-xl text-error text-start transition-colors",
-                severityFilter === 'critical' ? 'ring-2 ring-error border-error' : 'hover:border-error/50'
+                "bg-primary/5 border border-primary/20 p-3 rounded-xl text-primary text-start transition-colors",
+                findingFilter === 'ai' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'
               )}
             >
-              <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'حرجة' : 'Critical'}</div>
-              <div className="font-bold text-lg">{displaySc.critical}</div>
+              <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'ملاحظات آلية' : 'AI findings'}</div>
+              <div className="font-bold text-lg">{displayTypeCounts.ai}</div>
             </button>
             <button
               type="button"
-              onClick={() => setSeverityFilter((v) => (v === 'high' ? 'all' : 'high'))}
-              className={cn(
-                "bg-error/5 border border-error/10 p-3 rounded-xl text-error text-start transition-colors",
-                severityFilter === 'high' ? 'ring-2 ring-error border-error' : 'hover:border-error/40'
-              )}
-            >
-              <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'عالية' : 'High'}</div>
-              <div className="font-bold text-lg">{displaySc.high}</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSeverityFilter((v) => (v === 'medium' ? 'all' : 'medium'))}
+              onClick={() => setFindingFilter((v) => (v === 'glossary' ? 'all' : 'glossary'))}
               className={cn(
                 "bg-warning/5 border border-warning/20 p-3 rounded-xl text-warning text-start transition-colors",
-                severityFilter === 'medium' ? 'ring-2 ring-warning border-warning' : 'hover:border-warning/40'
+                findingFilter === 'glossary' ? 'ring-2 ring-warning border-warning' : 'hover:border-warning/40'
               )}
             >
-              <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'متوسطة' : 'Medium'}</div>
-              <div className="font-bold text-lg">{displaySc.medium}</div>
+              <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'مطابقات القاموس' : 'Glossary findings'}</div>
+              <div className="font-bold text-lg">{displayTypeCounts.glossary}</div>
             </button>
             <button
               type="button"
-              onClick={() => setSeverityFilter((v) => (v === 'low' ? 'all' : 'low'))}
+              onClick={() => setFindingFilter((v) => (v === 'manual' ? 'all' : 'manual'))}
               className={cn(
-                "bg-info/5 border border-info/20 p-3 rounded-xl text-info text-start transition-colors",
-                severityFilter === 'low' ? 'ring-2 ring-info border-info' : 'hover:border-info/40'
+                "bg-surface/50 border border-border p-3 rounded-xl text-primary text-start transition-colors",
+                findingFilter === 'manual' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/40'
               )}
             >
-              <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'منخفضة' : 'Low'}</div>
-              <div className="font-bold text-lg">{displaySc.low}</div>
+              <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'ملاحظات يدوية' : 'Manual findings'}</div>
+              <div className="font-bold text-lg">{displayTypeCounts.manual}</div>
             </button>
-            {manualFindingsCount > 0 && (
-              <button
-                type="button"
-                onClick={() => setSeverityFilter((v) => (v === 'manual' ? 'all' : 'manual'))}
-                className={cn(
-                  "bg-surface/50 border border-border p-3 rounded-xl text-start transition-colors text-primary",
-                  severityFilter === 'manual' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/40'
-                )}
-              >
-                <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'ملاحظات يدوية' : 'Manual findings'}</div>
-                <div className="font-bold text-lg">{manualFindingsCount}</div>
-              </button>
-            )}
             {displayApproved > 0 && (
               <div className="bg-success/5 border border-success/20 p-3 rounded-xl text-success">
                 <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'معتمد آمن' : 'Approved'}</div>
@@ -1675,10 +1657,10 @@ export function Results() {
             {displaySpecialNotes > 0 && (
               <button
                 type="button"
-                onClick={() => setSeverityFilter((v) => (v === 'special' ? 'all' : 'special'))}
+                onClick={() => setFindingFilter((v) => (v === 'special' ? 'all' : 'special'))}
                 className={cn(
                   "bg-info/5 border border-info/20 p-3 rounded-xl text-info text-start transition-colors",
-                  severityFilter === 'special' ? 'ring-2 ring-info border-info' : 'hover:border-info/40'
+                  findingFilter === 'special' ? 'ring-2 ring-info border-info' : 'hover:border-info/40'
                 )}
               >
                 <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'ملاحظات خاصة' : 'Special notes'}</div>
@@ -1755,18 +1737,18 @@ export function Results() {
               ? (lang === 'ar' ? 'ملاحظات خاصة' : 'Special notes')
               : (lang === 'ar' ? 'المخالفات' : 'Violations')}
             <Badge variant="outline" className="ms-2">
-              {severityFilter === 'all'
+              {findingFilter === 'all'
                 ? displayTotal
-                : severityFilter === 'special'
+                : findingFilter === 'special'
                   ? displaySpecialNotes
-                : severityFilter === 'manual'
-                  ? `${filteredViolationsCount} / ${manualFindingsCount}`
+                : findingFilter === 'manual'
+                  ? `${filteredViolationsCount} / ${displayTypeCounts.manual}`
                   : `${filteredViolationsCount} / ${displayTotal}`}
             </Badge>
-            {severityFilter !== 'all' && (
+            {findingFilter !== 'all' && (
               <button
                 type="button"
-                onClick={() => setSeverityFilter('all')}
+                onClick={() => setFindingFilter('all')}
                 className="text-xs text-primary hover:underline"
               >
                 {lang === 'ar' ? 'إلغاء التصفية' : 'Clear filter'}
@@ -1778,30 +1760,36 @@ export function Results() {
             <div className="text-center py-16 bg-surface border-2 border-dashed border-border rounded-2xl">
               <CheckCircle className="w-12 h-12 text-success mx-auto mb-4 opacity-50" />
               <h4 className="text-lg font-bold text-text-main">
-                {severityFilter === 'all'
+                {findingFilter === 'all'
                   ? (lang === 'ar' ? 'النص سليم' : 'Script Is Compliant')
-                  : severityFilter === 'special'
+                  : findingFilter === 'special'
                     ? (lang === 'ar' ? 'لا توجد ملاحظات خاصة' : 'No special notes')
-                  : severityFilter === 'manual'
+                  : findingFilter === 'manual'
                     ? (lang === 'ar' ? 'لا توجد ملاحظات يدوية' : 'No manual findings')
-                    : (lang === 'ar' ? 'لا توجد مخالفات بهذه الدرجة' : 'No violations at this severity')}
+                    : findingFilter === 'glossary'
+                      ? (lang === 'ar' ? 'لا توجد مطابقات قاموس' : 'No glossary findings')
+                      : (lang === 'ar' ? 'لا توجد ملاحظات آلية' : 'No AI findings')}
               </h4>
               <p className="text-text-muted mt-2">
-                {severityFilter === 'all'
+                {findingFilter === 'all'
                   ? (lang === 'ar'
                     ? 'لم يتم رصد أي مخالفات في هذا النص وفق قواعد التحليل الحالية.'
                     : 'No violations were detected in this script under the current analysis policy.')
-                  : severityFilter === 'special'
+                  : findingFilter === 'special'
                     ? (lang === 'ar'
                       ? 'لا توجد ملاحظات خاصة في هذا التقرير.'
                       : 'There are no special notes in this report.')
-                  : severityFilter === 'manual'
+                  : findingFilter === 'manual'
                     ? (lang === 'ar'
                       ? 'لا توجد ملاحظات يدوية في هذا التقرير، أو أنها غير ضمن النتائج المعروضة حالياً.'
                       : 'There are no manual findings in this report, or none match the current result set.')
+                  : findingFilter === 'glossary'
+                    ? (lang === 'ar'
+                      ? 'لا توجد مطابقات من قاموس المصطلحات في النتائج الحالية.'
+                      : 'There are no glossary findings in the current result set.')
                     : (lang === 'ar'
-                      ? 'جرّب درجة أخرى أو ألغِ التصفية لعرض جميع المخالفات.'
-                      : 'Try another severity or clear the filter to view all violations.')}
+                      ? 'لا توجد ملاحظات آلية ضمن النتائج الحالية.'
+                      : 'There are no AI findings in the current result set.')}
               </p>
             </div>
           ) : showOnlySpecialNotes
@@ -1948,17 +1936,6 @@ export function Results() {
             value={editFindingForm.atomId}
             onChange={(e) => setEditFindingForm((prev) => ({ ...prev, atomId: e.target.value }))}
             options={editFindingAtomOptions}
-          />
-          <Select
-            label={lang === 'ar' ? 'مستوى الخطورة' : 'Severity'}
-            value={editFindingForm.severity}
-            onChange={(e) => setEditFindingForm((prev) => ({ ...prev, severity: e.target.value }))}
-            options={[
-              { value: 'low', label: lang === 'ar' ? 'منخفضة' : 'Low' },
-              { value: 'medium', label: lang === 'ar' ? 'متوسطة' : 'Medium' },
-              { value: 'high', label: lang === 'ar' ? 'عالية' : 'High' },
-              { value: 'critical', label: lang === 'ar' ? 'حرجة' : 'Critical' },
-            ]}
           />
           <Textarea
             label={lang === 'ar' ? 'ملاحظة المراجع' : 'Reviewer note'}

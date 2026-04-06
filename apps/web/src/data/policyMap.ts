@@ -22,6 +22,15 @@ export function getPolicyArticles(): PolicyArticle[] {
   return data.articles;
 }
 
+/** Reviewer/actionable articles only: excludes admin/out-of-scope/empty-definition rows. */
+export function getActionablePolicyArticles(): PolicyArticle[] {
+  return getPolicyArticles().filter((a) => !a.adminOnly && !a.outOfScope && (a.atoms?.length ?? 0) > 0);
+}
+
+export function getActionablePolicyArticleIds(): number[] {
+  return getActionablePolicyArticles().map((a) => a.articleId);
+}
+
 /** Article by id. */
 export function getPolicyArticle(articleId: number): PolicyArticle | undefined {
   return getPolicyArticles().find((a) => a.articleId === articleId);

@@ -71,6 +71,15 @@ export function getPolicyArticles(): PolicyArticle[] {
   return loadPolicyMap().articles;
 }
 
+/** Reviewer/actionable articles only: excludes admin/out-of-scope/empty-definition rows. */
+export function getActionablePolicyArticles(): PolicyArticle[] {
+  return getPolicyArticles().filter((a) => !a.adminOnly && !a.outOfScope && (a.atoms?.length ?? 0) > 0);
+}
+
+export function getActionablePolicyArticleIds(): number[] {
+  return getActionablePolicyArticles().map((a) => a.articleId);
+}
+
 /** Article by id; undefined if not found. */
 export function getPolicyArticle(articleId: number): PolicyArticle | undefined {
   return getPolicyArticles().find((a) => a.articleId === articleId);
@@ -127,9 +136,7 @@ export function isValidAtomForArticle(articleId: number, atomId: string | null |
 
 /** Article ids that can have AI/lexicon findings (excludes 25 admin, 26 out-of-scope). */
 export function getScannableArticleIds(): number[] {
-  return getPolicyArticles()
-    .filter((a) => !a.adminOnly && !a.outOfScope)
-    .map((a) => a.articleId);
+  return getActionablePolicyArticleIds();
 }
 
 export const ADMIN_ONLY_ARTICLE_ID = 25;

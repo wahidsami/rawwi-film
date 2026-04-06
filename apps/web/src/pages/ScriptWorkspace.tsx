@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/Badge';
 import { DocumentImportModal } from '@/components/import/DocumentImportModal';
 import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { getPolicyArticles } from '@/data/policyMap';
+import { getActionablePolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
 import { getScriptDecisionCapabilities } from '@/utils/scriptDecisionCapabilities';
 import { extractDocxWithPages } from '@/utils/documentExtract';
@@ -25,7 +25,8 @@ import {
 
 
 
-const policyArticlesForForm = getPolicyArticles().filter((a) => a.articleId !== 26);
+const policyArticlesForForm = getActionablePolicyArticles();
+const DEFAULT_ACTIONABLE_ARTICLE_ID = policyArticlesForForm[0]?.articleId ?? 4;
 const ARTICLES_CHECKLIST = policyArticlesForForm.map((a) => ({
   id: String(a.articleId),
   label: `Art ${a.articleId} - ${a.title_ar}`,
@@ -43,7 +44,8 @@ for (const art of policyArticlesForForm) {
 }
 
 function getArticleAtomOptions(articleId: string): { value: string; label: string }[] {
-  return ARTICLE_ATOMS[articleId] ?? ARTICLE_ATOMS['1'] ?? [{ value: '', label: '—' }];
+  const fallbackKey = String(DEFAULT_ACTIONABLE_ARTICLE_ID);
+  return ARTICLE_ATOMS[articleId] ?? ARTICLE_ATOMS[fallbackKey] ?? [{ value: '', label: '—' }];
 }
 
 function sanitizeAtomSelection(articleId: string, atomId: string | null | undefined): string | null {
@@ -1364,7 +1366,7 @@ export function ScriptWorkspace() {
   const [editReportFindingModal, setEditReportFindingModal] = useState<AnalysisFinding | null>(null);
   const [editReportFindingSaving, setEditReportFindingSaving] = useState(false);
   const [editReportFindingForm, setEditReportFindingForm] = useState({
-    articleId: '1',
+    articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
     atomId: '',
     severity: 'medium',
     manualComment: '',
@@ -1388,7 +1390,7 @@ export function ScriptWorkspace() {
 
   const [formData, setFormData] = useState({
     reportId: '',
-    articleId: '1',
+    articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
     atomId: '' as string,
     severity: 'medium' as string,
     comment: '',
@@ -1483,7 +1485,7 @@ export function ScriptWorkspace() {
   useEffect(() => {
     if (!editReportFindingModal) return;
     setEditReportFindingForm({
-      articleId: String(editReportFindingModal.articleId || 1),
+      articleId: String(editReportFindingModal.articleId || DEFAULT_ACTIONABLE_ARTICLE_ID),
       atomId: editReportFindingModal.atomId ?? '',
       severity: (editReportFindingModal.severity || 'medium').toLowerCase(),
       manualComment: editReportFindingModal.manualComment ?? '',
@@ -1719,7 +1721,7 @@ export function ScriptWorkspace() {
       const normalizedAtomId = sanitizeAtomSelection(editReportFindingForm.articleId, editReportFindingForm.atomId);
       const res = await findingsApi.reclassifyFinding({
         findingId: editReportFindingModal.id,
-        articleId: parseInt(editReportFindingForm.articleId, 10) || 1,
+        articleId: parseInt(editReportFindingForm.articleId, 10) || DEFAULT_ACTIONABLE_ARTICLE_ID,
         atomId: normalizedAtomId,
         severity: editReportFindingForm.severity,
         manualComment: editReportFindingForm.manualComment?.trim() || null,
@@ -2759,7 +2761,7 @@ export function ScriptWorkspace() {
       ...prev,
       excerpt: text,
       reportId: defaultReportId || prev.reportId,
-      articleId: '1',
+      articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
       atomId: '',
       severity: 'medium',
       comment: '',
@@ -2783,7 +2785,7 @@ export function ScriptWorkspace() {
         startOffsetGlobal: manualOffsets.startOffsetGlobal,
         endOffsetGlobal: manualOffsets.endOffsetGlobal,
         excerpt: formData.excerpt,
-        articleId: parseInt(formData.articleId, 10) || 1,
+        articleId: parseInt(formData.articleId, 10) || DEFAULT_ACTIONABLE_ARTICLE_ID,
         atomId: normalizedAtomId,
         severity: formData.severity,
         manualComment: formData.comment?.trim() || undefined,
@@ -4107,7 +4109,7 @@ export function ScriptWorkspace() {
                     style={{ left: tooltipPos.x + 12, top: tooltipPos.y + 8 }}
                   >
                     <div className="text-xs font-semibold text-text-muted mb-1">
-                      {lang === 'ar' ? 'مادة' : 'Art'} {formatAtomDisplay(tooltipFinding.articleId, tooltipFinding.atomId)} · {tooltipFinding.severity}
+                      {lang === 'ar' ? 'مادة' : 'Art'} {formatAtomDisplay(tooltipFinding.articleId, tooltipFinding.atomId)}
                     </div>
                     <p className="text-sm text-text-main line-clamp-3" dir="rtl">{tooltipFinding.descriptionAr || tooltipFinding.evidenceSnippet}</p>
                     <Badge variant={tooltipFinding.reviewStatus === 'approved' ? 'success' : 'error'} className="mt-1.5 text-[10px]">
@@ -4478,7 +4480,9 @@ export function ScriptWorkspace() {
                           ) : (f.source === 'ai' || f.source === 'lexicon_mandatory') ? (
                             <Badge variant="warning" className="text-[10px]">{f.source === 'lexicon_mandatory' ? t('findingSourceGlossary') : 'AI'}</Badge>
                           ) : null}
-                          <Badge variant={f.reviewStatus === 'approved' ? 'success' : 'error'} className="text-[10px]">{f.severity}</Badge>
+                          <Badge variant={f.reviewStatus === 'approved' ? 'success' : 'error'} className="text-[10px]">
+                            {f.reviewStatus === 'approved' ? (lang === 'ar' ? 'آمن' : 'Safe') : (lang === 'ar' ? 'مخالفة' : 'Violation')}
+                          </Badge>
                         </div>
                       </div>
                       <p className="text-sm text-text-main line-clamp-2 mb-1" dir="rtl">{f.descriptionAr}</p>
@@ -4560,13 +4564,6 @@ export function ScriptWorkspace() {
                     <Badge variant="error" className="text-[10px]">
                       {lang === 'ar' ? 'يدوي' : 'Manual'}
                   </Badge>
-                  <span className={cn(
-                    "text-xs font-semibold px-2 py-0.5 rounded-md",
-                    f.severity === 'Critical' ? 'bg-error/10 text-error' : 
-                    f.severity === 'High' ? 'bg-warning/20 text-warning-700' : 'bg-background text-text-muted'
-                  )}>
-                    {f.severity}
-                  </span>
                 </div>
                 <p className="text-sm font-medium text-text-main leading-snug mb-2 line-clamp-3 bg-background/50 p-2 rounded-md border border-border/50" dir="rtl">
                   "{f.excerpt}"
@@ -4595,13 +4592,6 @@ export function ScriptWorkspace() {
                         <Badge variant="warning" className="text-[10px]">
                           {f.source === 'lexicon_mandatory' ? t('findingSourceGlossary') : 'AI Agent'}
                         </Badge>
-                        <span className={cn(
-                          "text-xs font-semibold px-2 py-0.5 rounded-md",
-                          f.severity === 'Critical' ? 'bg-error/10 text-error' : 
-                          f.severity === 'High' ? 'bg-warning/20 text-warning-700' : 'bg-background text-text-muted'
-                        )}>
-                          {f.severity}
-                        </span>
                       </div>
                       <p className="text-sm font-medium text-text-main leading-snug mb-2 line-clamp-3 bg-background/50 p-2 rounded-md border border-border/50" dir="rtl">
                         "{f.excerpt}"
@@ -4652,7 +4642,6 @@ export function ScriptWorkspace() {
                 </div>
               ) : (
                 reportHistory.map((r) => {
-                  const sc = r.severityCounts ?? { low: 0, medium: 0, high: 0, critical: 0 };
                   const total = r.findingsCount ?? 0;
                   const approved = (r as any).approvedCount ?? 0;
                   const reviewColor = r.reviewStatus === 'approved' ? 'success' : r.reviewStatus === 'rejected' ? 'error' : 'warning';
@@ -4683,11 +4672,6 @@ export function ScriptWorkspace() {
                       {/* Counts */}
                       <div className="flex items-center gap-2 text-xs">
                         <span className="font-semibold text-text-main">{total} {lang === 'ar' ? 'ملاحظة' : 'findings'}</span>
-                        <span className="text-text-muted">—</span>
-                        {sc.critical > 0 && <span className="text-error font-bold">{sc.critical}C</span>}
-                        {sc.high > 0 && <span className="text-error">{sc.high}H</span>}
-                        {sc.medium > 0 && <span className="text-warning">{sc.medium}M</span>}
-                        {sc.low > 0 && <span className="text-info">{sc.low}L</span>}
                         {approved > 0 && <span className="text-success">{approved}{lang === 'ar' ? ' آمن' : ' safe'}</span>}
                         {total === 0 && approved === 0 && <span className="text-success">{lang === 'ar' ? 'نظيف' : 'Clean'}</span>}
                       </div>
@@ -4819,19 +4803,7 @@ export function ScriptWorkspace() {
               ? 'تُحمَّل البنود الفرعية من خريطة السياسة الحالية. إذا كانت قاعدة البيانات لم تُحدَّث بعد لبعض البنود، فسيُحفظ الإدخال على مستوى المادة فقط بدلاً من رفضه.'
               : 'Atoms are loaded from the current policy map. If the database mapping is still behind for a specific atom, the finding will be saved at article level instead of being rejected.'}
           </p>
-          
-          <Select 
-            label={lang === 'ar' ? 'درجة الخطورة' : 'Severity'}
-            value={formData.severity}
-            onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
-            options={[
-              { label: 'Low', value: 'low' },
-              { label: 'Medium', value: 'medium' },
-              { label: 'High', value: 'high' },
-              { label: 'Critical', value: 'critical' },
-            ]}
-          />
-          
+
           <Textarea 
             label={lang === 'ar' ? 'التعليق' : 'Comment'}
             value={formData.comment}
@@ -5509,18 +5481,6 @@ export function ScriptWorkspace() {
             value={editReportFindingForm.atomId}
             onChange={(e) => setEditReportFindingForm((prev) => ({ ...prev, atomId: e.target.value }))}
             options={editAtomOptions}
-          />
-
-          <Select
-            label={lang === 'ar' ? 'درجة الخطورة' : 'Severity'}
-            value={editReportFindingForm.severity}
-            onChange={(e) => setEditReportFindingForm((prev) => ({ ...prev, severity: e.target.value }))}
-            options={[
-              { label: 'Low', value: 'low' },
-              { label: 'Medium', value: 'medium' },
-              { label: 'High', value: 'high' },
-              { label: 'Critical', value: 'critical' },
-            ]}
           />
 
           <Textarea
