@@ -87,7 +87,7 @@ ALTER TABLE public.analysis_review_finding_sources ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins can view all analysis_review_findings"
 ON public.analysis_review_findings FOR SELECT
-USING (public.is_admin_user(auth.uid()));
+USING (public.is_admin_user());
 
 CREATE POLICY "Users can view own analysis_review_findings"
 ON public.analysis_review_findings FOR SELECT
@@ -102,8 +102,8 @@ USING (
 
 CREATE POLICY "Admins can manage all analysis_review_findings"
 ON public.analysis_review_findings FOR ALL
-USING (public.is_admin_user(auth.uid()))
-WITH CHECK (public.is_admin_user(auth.uid()));
+USING (public.is_admin_user())
+WITH CHECK (public.is_admin_user());
 
 CREATE POLICY "Users can insert own analysis_review_findings"
 ON public.analysis_review_findings FOR INSERT
@@ -148,7 +148,7 @@ USING (
 
 CREATE POLICY "Admins can view all analysis_review_finding_sources"
 ON public.analysis_review_finding_sources FOR SELECT
-USING (public.is_admin_user(auth.uid()));
+USING (public.is_admin_user());
 
 CREATE POLICY "Users can view own analysis_review_finding_sources"
 ON public.analysis_review_finding_sources FOR SELECT
@@ -161,4 +161,3 @@ USING (
       AND j.created_by = auth.uid()
   )
 );
-
