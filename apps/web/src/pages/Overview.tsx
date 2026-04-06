@@ -126,13 +126,13 @@ export function Overview() {
     ];
   };
 
-  const getSeverityChartData = () => {
+  const getFindingTypeChartData = () => {
     if (!stats) return [];
     return [
-      { name: t('critical'), value: stats.findingsBySeverity.critical ?? 0, fill: 'var(--color-error)' },
-      { name: t('high'), value: stats.findingsBySeverity.high ?? 0, fill: 'var(--color-error-hover)' },
-      { name: t('medium'), value: stats.findingsBySeverity.medium ?? 0, fill: 'var(--color-warning)' },
-      { name: t('low'), value: stats.findingsBySeverity.low ?? 0, fill: 'var(--color-info)' }
+      { name: lang === 'ar' ? 'آلية' : 'AI', value: stats.findingsByType?.ai ?? 0, fill: 'var(--color-primary)' },
+      { name: lang === 'ar' ? 'القاموس' : 'Glossary', value: stats.findingsByType?.glossary ?? 0, fill: 'var(--color-warning)' },
+      { name: lang === 'ar' ? 'يدوية' : 'Manual', value: stats.findingsByType?.manual ?? 0, fill: 'var(--color-success)' },
+      { name: lang === 'ar' ? 'خاصة' : 'Special', value: stats.findingsByType?.special ?? 0, fill: 'var(--color-info)' }
     ];
   };
 
@@ -209,11 +209,11 @@ export function Overview() {
         {!isRegulator && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-text-muted">{t('highCriticalFindings')}</CardTitle>
+              <CardTitle className="text-sm font-medium text-text-muted">{t('totalFindings')}</CardTitle>
               <AlertTriangle className="h-4 w-4 text-error" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-text-main">{stats?.highCriticalFindings || 0}</div>
+              <div className="text-3xl font-bold text-text-main">{stats?.totalFindings || 0}</div>
               {hasSection('reports') && (
                 <button onClick={() => navigate('/reports')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
                   {t('viewResults')} <ArrowIcon className="h-3 w-3" />
@@ -347,18 +347,18 @@ export function Overview() {
             {!isRegulator && (
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('findingsBySeverity')}</CardTitle>
+                  <CardTitle>{t('findingsByType')}</CardTitle>
                 </CardHeader>
                 <CardContent className="h-64 min-h-[200px]">
-                  {stats && Object.values(stats.findingsBySeverity).some(v => v > 0) ? (
+                  {stats && Object.values(stats.findingsByType ?? {}).some(v => v > 0) ? (
                     <div className="w-full h-full min-h-[200px]" style={{ minHeight: 200 }}>
                       <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={getSeverityChartData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <BarChart data={getFindingTypeChartData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--color-text-muted)' }} />
                           <YAxis tick={{ fontSize: 12, fill: 'var(--color-text-muted)' }} />
                           <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border-main)' }} />
                           <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                            {getSeverityChartData().map((entry, index) => (
+                            {getFindingTypeChartData().map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.fill} />
                             ))}
                           </Bar>

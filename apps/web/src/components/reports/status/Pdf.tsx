@@ -26,7 +26,7 @@ export const StatusSectionPdf: React.FC<StatusSectionPdfProps> = ({
   const isAr = lang === "ar";
   const rtl = isAr ? s.rtl : {};
   const totalScripts = Object.values(data.scriptsByStatus).reduce((a, b) => a + b, 0) || 1;
-  const totalFindings = Object.values(data.findingsBySeverity).reduce((a, b) => a + b, 0) || 1;
+  const totalFindings = Object.values(data.findingsByType).reduce((a, b) => a + b, 0) || 1;
   const pct = (v: number, t: number) => `${Math.round((v / t) * 100)}%`;
 
   return (
@@ -57,7 +57,7 @@ export const StatusSectionPdf: React.FC<StatusSectionPdfProps> = ({
           <View style={s.statCard}><Text style={s.statValue}>{data.pendingTasks}</Text><Text style={s.statLabel}>{isAr ? "مهام معلقة" : "Pending Tasks"}</Text></View>
           <View style={s.statCard}><Text style={s.statValue}>{data.scriptsInReview}</Text><Text style={s.statLabel}>{isAr ? "قيد المراجعة" : "In Review"}</Text></View>
           <View style={s.statCard}><Text style={s.statValue}>{data.reportsThisMonth}</Text><Text style={s.statLabel}>{isAr ? "تقارير الشهر" : "This Month"}</Text></View>
-          <View style={s.statCard}><Text style={s.statValue}>{data.highCriticalFindings}</Text><Text style={s.statLabel}>{isAr ? "حرج/عالي" : "Critical/High"}</Text></View>
+          <View style={s.statCard}><Text style={s.statValue}>{data.totalFindings}</Text><Text style={s.statLabel}>{isAr ? "إجمالي الملاحظات" : "Total Findings"}</Text></View>
         </View>
 
         <Text style={[s.sectionTitle, rtl]}>{isAr ? "توزيع حالات النصوص" : "Script Status"}</Text>
@@ -76,19 +76,19 @@ export const StatusSectionPdf: React.FC<StatusSectionPdfProps> = ({
           </View>
         </View>
 
-        <Text style={[s.sectionTitle, rtl]}>{isAr ? "تحليل المخاطر" : "Risk Analysis"}</Text>
+        <Text style={[s.sectionTitle, rtl]}>{isAr ? "أنواع الملاحظات" : "Finding Types"}</Text>
         <View style={s.table}>
           <View style={s.tr}>
-            <Text style={[s.th, rtl]}>{isAr ? "حرج" : "Critical"}</Text>
-            <Text style={[s.th, rtl]}>{isAr ? "عالي" : "High"}</Text>
-            <Text style={[s.th, rtl]}>{isAr ? "متوسط" : "Medium"}</Text>
-            <Text style={[s.th, rtl, { borderRightWidth: 0 }]}>{isAr ? "منخفض" : "Low"}</Text>
+            <Text style={[s.th, rtl]}>{isAr ? "آلية" : "AI"}</Text>
+            <Text style={[s.th, rtl]}>{isAr ? "قاموس" : "Glossary"}</Text>
+            <Text style={[s.th, rtl]}>{isAr ? "يدوية" : "Manual"}</Text>
+            <Text style={[s.th, rtl, { borderRightWidth: 0 }]}>{isAr ? "خاصة" : "Special"}</Text>
           </View>
           <View style={s.tr}>
-            <Text style={[s.td, rtl]}>{data.findingsBySeverity.critical} ({pct(data.findingsBySeverity.critical, totalFindings)})</Text>
-            <Text style={[s.td, rtl]}>{data.findingsBySeverity.high} ({pct(data.findingsBySeverity.high, totalFindings)})</Text>
-            <Text style={[s.td, rtl]}>{data.findingsBySeverity.medium} ({pct(data.findingsBySeverity.medium, totalFindings)})</Text>
-            <Text style={[s.td, rtl, { borderRightWidth: 0 }]}>{data.findingsBySeverity.low} ({pct(data.findingsBySeverity.low, totalFindings)})</Text>
+            <Text style={[s.td, rtl]}>{data.findingsByType.ai} ({pct(data.findingsByType.ai, totalFindings)})</Text>
+            <Text style={[s.td, rtl]}>{data.findingsByType.glossary} ({pct(data.findingsByType.glossary, totalFindings)})</Text>
+            <Text style={[s.td, rtl]}>{data.findingsByType.manual} ({pct(data.findingsByType.manual, totalFindings)})</Text>
+            <Text style={[s.td, rtl, { borderRightWidth: 0 }]}>{data.findingsByType.special} ({pct(data.findingsByType.special, totalFindings)})</Text>
           </View>
         </View>
 

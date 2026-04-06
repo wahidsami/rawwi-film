@@ -29,6 +29,7 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
       scriptsInReview: mockDb.scripts.filter(s => ['Draft', 'In Review', 'assigned', 'analysis_running'].includes(s.status)).length,
       reportsThisMonth: 5, // Mocked
       highCriticalFindings: mockDb.findings.filter(f => ['Critical', 'High'].includes(f.severity) && f.override?.eventType !== 'not_violation').length,
+      totalFindings: mockDb.findings.filter(f => f.override?.eventType !== 'not_violation').length,
       scriptsByStatus: {
         draft: mockDb.scripts.filter(s => s.status === 'draft').length,
         assigned: mockDb.scripts.filter(s => s.status === 'assigned').length,
@@ -41,7 +42,13 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
         high: mockDb.findings.filter(f => f.severity === 'high' && f.override?.eventType !== 'not_violation').length,
         medium: mockDb.findings.filter(f => f.severity === 'medium' && f.override?.eventType !== 'not_violation').length,
         low: mockDb.findings.filter(f => f.severity === 'low' && f.override?.eventType !== 'not_violation').length,
-      }
+      },
+      findingsByType: {
+        ai: mockDb.findings.filter(f => f.source === 'ai' && f.override?.eventType !== 'not_violation').length,
+        manual: mockDb.findings.filter(f => f.source === 'manual' && f.override?.eventType !== 'not_violation').length,
+        glossary: mockDb.findings.filter(f => f.source === 'lexicon_mandatory' && f.override?.eventType !== 'not_violation').length,
+        special: 0,
+      },
     };
   }
 

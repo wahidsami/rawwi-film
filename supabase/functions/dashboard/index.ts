@@ -104,7 +104,7 @@ Deno.serve(async (req: Request) => {
     if (seeAll) { /* no filter */ } else scriptsInReviewQuery = scriptsInReviewQuery.eq("assignee_id", uid);
     const { count: scriptsInReview } = await scriptsInReviewQuery;
 
-    // --- reportsThisMonth, highCriticalFindings, findingsBySeverity: seeAll = whole DB; else jobs on scripts assigned to uid ---
+    // --- reportsThisMonth and finding aggregates: seeAll = whole DB; else jobs on scripts assigned to uid ---
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     let jobIds: string[] = [];
@@ -142,6 +142,24 @@ Deno.serve(async (req: Request) => {
       highCriticalFindings = count ?? 0;
     }
 
+    let specialNotesCount = 0;
+    if (seeAll) {
+      const { data: reportRows } = await supabase.from("analysis_reports").select("summary_json");
+      for (const row of reportRows ?? []) {
+        const summary = (row as any).summary_json ?? {};
+        specialNotesCount += Array.isArray(summary.report_hints) ? summary.report_hints.length : 0;
+      }
+    } else if (jobIds.length > 0) {
+      const { data: reportRows } = await supabase
+        .from("analysis_reports")
+        .select("summary_json")
+        .in("job_id", jobIds);
+      for (const row of reportRows ?? []) {
+        const summary = (row as any).summary_json ?? {};
+        specialNotesCount += Array.isArray(summary.report_hints) ? summary.report_hints.length : 0;
+      }
+    }
+
     // --- scriptsByStatus: assignee-only for regulator, else created_by or assignee ---
     let statusQuery = supabase.from("scripts").select("status");
     if (!seeAll) statusQuery = statusQuery.eq("assignee_id", uid);
@@ -175,26 +193,35 @@ Deno.serve(async (req: Request) => {
 
     // --- findingsBySeverity ---
     const findingsBySeverity = { critical: 0, high: 0, medium: 0, low: 0 };
+    const findingsByType = { ai: 0, manual: 0, glossary: 0, special: specialNotesCount };
     if (seeAll) {
-      const { data: findingRows } = await supabase.from("analysis_findings").select("severity");
+      const { data: findingRows } = await supabase.from("analysis_findings").select("severity, source");
       for (const r of findingRows ?? []) {
         const sev = (r as any).severity as string;
+        const source = String((r as any).source ?? "ai").toLowerCase();
         if (sev === "critical") findingsBySeverity.critical++;
         else if (sev === "high") findingsBySeverity.high++;
         else if (sev === "medium") findingsBySeverity.medium++;
         else if (sev === "low") findingsBySeverity.low++;
+        if (source === "manual") findingsByType.manual++;
+        else if (source === "lexicon_mandatory" || source === "glossary") findingsByType.glossary++;
+        else findingsByType.ai++;
       }
     } else if (jobIds.length > 0) {
       const { data: findingRows } = await supabase
         .from("analysis_findings")
-        .select("severity")
+        .select("severity, source")
         .in("job_id", jobIds);
       for (const r of findingRows ?? []) {
         const sev = (r as any).severity as string;
+        const source = String((r as any).source ?? "ai").toLowerCase();
         if (sev === "critical") findingsBySeverity.critical++;
         else if (sev === "high") findingsBySeverity.high++;
         else if (sev === "medium") findingsBySeverity.medium++;
         else if (sev === "low") findingsBySeverity.low++;
+        if (source === "manual") findingsByType.manual++;
+        else if (source === "lexicon_mandatory" || source === "glossary") findingsByType.glossary++;
+        else findingsByType.ai++;
       }
     }
 
@@ -203,8 +230,10 @@ Deno.serve(async (req: Request) => {
       scriptsInReview: scriptsInReview ?? 0,
       reportsThisMonth,
       highCriticalFindings,
+      totalFindings: findingsByType.ai + findingsByType.manual + findingsByType.glossary + findingsByType.special,
       scriptsByStatus,
       findingsBySeverity,
+      findingsByType,
     });
   } catch (e) {
     console.error("[dashboard] UNHANDLED ERROR:", e);

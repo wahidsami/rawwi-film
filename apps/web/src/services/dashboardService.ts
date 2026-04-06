@@ -5,6 +5,7 @@ export interface DashboardStats {
   scriptsInReview: number;
   reportsThisMonth: number;
   highCriticalFindings: number;
+  totalFindings?: number;
   scriptsByStatus: {
     draft: number;
     assigned: number;
@@ -20,6 +21,12 @@ export interface DashboardStats {
     high: number;
     medium: number;
     low: number;
+  };
+  findingsByType?: {
+    ai: number;
+    manual: number;
+    glossary: number;
+    special: number;
   };
 }
 
