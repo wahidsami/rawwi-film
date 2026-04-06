@@ -1278,6 +1278,11 @@ function viewerPageLocalSpanToGlobal(
 function resolveFindingViaStoredPageData(
   finding: AnalysisFinding,
   pages: Array<{ pageNumber: number; content: string }>,
+  locateInText: (
+    content: string,
+    finding: AnalysisFinding,
+    opts?: { sliceGlobalStart?: number; pageSlice?: boolean }
+  ) => { start: number; end: number; matched: boolean } | null,
   opts?: { strictExactOnly?: boolean }
 ): { pageNumber: number; localStart: number; localEnd: number; globalStart: number; globalEnd: number; method: 'stored_offsets' | 'stored_page_search' | 'page_exact' } | null {
   const pageNumber = findingPreferredPageNumber(finding);
@@ -1304,7 +1309,7 @@ function resolveFindingViaStoredPageData(
     }
     const pageScopedHit =
       locateSpanByEvidenceSearch(page.content ?? '', finding, { pageSlice: true, sliceGlobalStart: 0 }) ??
-      locateFindingInContent(page.content ?? '', finding, { pageSlice: true, sliceGlobalStart: 0 });
+      locateInText(page.content ?? '', finding, { pageSlice: true, sliceGlobalStart: 0 });
     if (!pageScopedHit) return null;
     const globalSpan = viewerPageLocalSpanToGlobal(page.pageNumber, pageScopedHit.start, pageScopedHit.end, pages);
     if (!globalSpan) return null;
@@ -3950,7 +3955,7 @@ export function ScriptWorkspace() {
           continue;
         }
       }
-      const storedHit = resolveFindingViaStoredPageData(f, pages, { strictExactOnly: strictImportedAnchoring });
+      const storedHit = resolveFindingViaStoredPageData(f, pages, locateFindingInContent, { strictExactOnly: strictImportedAnchoring });
       if (storedHit) {
         map.set(f.id, { resolved: true, ...storedHit });
         continue;
