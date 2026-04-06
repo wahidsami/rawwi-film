@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate, formatDateLong, formatDateTime } from '@/utils/dateFormat';
 import { type AnalysisReport } from '@/services/reportService';
-import { reportsApi, findingsApi, scriptsApi, type AnalysisFinding } from '@/api';
+import { reportsApi, findingsApi, scriptsApi, type AnalysisFinding, type AnalysisReviewFinding } from '@/api';
 import type { ReviewStatus, Script } from '@/api/models';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -220,6 +220,20 @@ function findingSourcePriority(source: string | null | undefined): number {
       : 1;
 }
 
+function findingKindFromReviewSource(sourceKind: AnalysisReviewFinding['sourceKind'] | null | undefined): Exclude<FindingKindFilter, 'all' | 'special'> {
+  if (sourceKind === 'manual') return 'manual';
+  if (sourceKind === 'glossary') return 'glossary';
+  return 'ai';
+}
+
+function countReviewFindingKinds(list: AnalysisReviewFinding[]) {
+  const counts = { ai: 0, manual: 0, glossary: 0 };
+  for (const finding of list) {
+    counts[findingKindFromReviewSource(finding.sourceKind)]++;
+  }
+  return counts;
+}
+
 /** One card per logical violation (same canonical_finding_id → strongest severity/confidence). */
 function dedupeRealFindings(list: AnalysisFinding[]): AnalysisFinding[] {
   const byCanonical = new Map<string, AnalysisFinding>();
@@ -259,6 +273,7 @@ export function Results() {
   
   const [report, setReport] = useState<AnalysisReport | null>(null);
   const [findings, setFindings] = useState<AnalysisFinding[]>([]);
+  const [reviewFindings, setReviewFindings] = useState<AnalysisReviewFinding[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedArticles, setExpandedArticles] = useState<Record<string, boolean>>({});
@@ -345,6 +360,15 @@ export function Results() {
     } catch { /* findings endpoint may not exist yet, rely on summary */ }
   }, []);
 
+  const loadReviewFindings = useCallback(async (reportId: string) => {
+    try {
+      const rows = await findingsApi.getReviewByReport(reportId);
+      setReviewFindings(rows);
+    } catch {
+      setReviewFindings([]);
+    }
+  }, []);
+
   useEffect(() => {
     if (!paramId) return;
     let cancelled = false;
@@ -369,6 +393,7 @@ export function Results() {
           setReport(r);
           setReportScriptMeta(null);
           setReportViewerPages(null);
+          setReviewFindings([]);
           if (r.scriptId && r.versionId) {
             scriptsApi
               .getEditor(r.scriptId, r.versionId)
@@ -405,6 +430,7 @@ export function Results() {
           }
           setLoading(false);
           if (r.jobId) loadFindings(r.jobId);
+          if (r.id) loadReviewFindings(r.id);
         }
       } catch (e: unknown) {
         if (!cancelled) {
@@ -415,7 +441,7 @@ export function Results() {
     })();
 
     return () => { cancelled = true; };
-  }, [paramId, searchParams, quickFromQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [paramId, searchParams, quickFromQuery, loadFindings, loadReviewFindings]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Finding-level review
   const handleFindingReview = async () => {
@@ -437,6 +463,17 @@ export function Results() {
         reviewedAt: new Date().toISOString(),
         reviewedRole: 'user',
       } : f));
+      setReviewFindings(prev => prev.map(f => {
+        const matched = matchRawFindingForReview(f);
+        if (!matched || matched.id !== reviewModal.findingId) return f;
+        return {
+          ...f,
+          reviewStatus: reviewModal.toStatus,
+          approvedReason: reason,
+          reviewedBy: user?.id ?? null,
+          reviewedAt: new Date().toISOString(),
+        };
+      }));
       // Update local report state with persisted aggregates from backend
       if (res.reportAggregates && report) {
         const agg = res.reportAggregates;
@@ -493,6 +530,17 @@ export function Results() {
   const reportHints: CanonicalSummaryFinding[] = (summary.report_hints || []).filter(Boolean);
   const wordsToRevisit = (summary.words_to_revisit || []).filter(Boolean);
   const canonicalHintIds = new Set(reportHints.map((f) => f.canonical_finding_id).filter(Boolean));
+  const visibleReviewFindings = reviewFindings.filter((f) => !f.isHidden);
+  const hasReviewFindings = visibleReviewFindings.length > 0;
+  const reviewViolations = hasReviewFindings
+    ? visibleReviewFindings.filter((f) => f.reviewStatus !== 'approved' && f.sourceKind !== 'special')
+    : [];
+  const reviewApproved = hasReviewFindings
+    ? visibleReviewFindings.filter((f) => f.reviewStatus === 'approved' && f.sourceKind !== 'special')
+    : [];
+  const reviewSpecialNotes = hasReviewFindings
+    ? visibleReviewFindings.filter((f) => f.sourceKind === 'special')
+    : [];
 
   // Split real findings into violations vs approved for card rendering
   const hasRealFindings = findings.length > 0;
@@ -509,6 +557,12 @@ export function Results() {
     const add = (id: SemanticCategoryId) => {
       m.set(id, (m.get(id) ?? 0) + 1);
     };
+    if (hasReviewFindings) {
+      for (const f of reviewViolations) {
+        add(getPrimarySemanticCategory(f.primaryArticleId, f.primaryAtomId ?? null, f.primaryAtomId ?? undefined));
+      }
+      return m;
+    }
     if (hasRealFindings) {
       const rows = showAllFindingRows ? violations : violationsDeduped;
       for (const f of rows) {
@@ -532,10 +586,12 @@ export function Results() {
 
   const violationsUniqueCount = violationsDeduped.length;
   const preferCanonicalFindingsUi =
+    !hasReviewFindings &&
     canonicalSummaryFindings.length > 0 &&
     (violationsDeduped.length === 0 ||
       violationsDeduped.length < Math.max(2, Math.ceil(canonicalSummaryFindings.length * 0.6)));
-  const useRealFindingsUi = hasRealFindings && !preferCanonicalFindingsUi;
+  const useReviewFindingsUi = hasReviewFindings;
+  const useRealFindingsUi = !useReviewFindingsUi && hasRealFindings && !preferCanonicalFindingsUi;
   const displayViolations = hasRealFindings ? (showAllFindingRows ? violations : violationsDeduped) : [];
   const displayApprovedFindings = hasRealFindings
     ? showAllFindingRows
@@ -552,13 +608,16 @@ export function Results() {
       ? canonicalSummaryFindings.length
       : fallbackSummaryCount;
 
-  // Stats must match the violations list we render. Derive from canonical_findings so cards and list are always in sync.
-  const displayTotal = canonicalSummaryFindings.length;
-  const displayTypeCounts = useRealFindingsUi
+  const displayTotal = useReviewFindingsUi
+    ? reviewViolations.length
+    : canonicalSummaryFindings.length;
+  const displayTypeCounts = useReviewFindingsUi
+    ? countReviewFindingKinds(reviewViolations)
+    : useRealFindingsUi
     ? countFindingKinds(displayViolations)
     : countFindingKinds(canonicalSummaryFindings);
-  const displayApproved = report.approvedCount ?? 0;
-  const displaySpecialNotes = reportHints.length;
+  const displayApproved = useReviewFindingsUi ? reviewApproved.length : (report.approvedCount ?? 0);
+  const displaySpecialNotes = useReviewFindingsUi ? reviewSpecialNotes.length : reportHints.length;
   const editFindingAtomOptions = getResultsArticleAtomOptions(editFindingForm.articleId);
 
   const matchesFindingFilter = (finding: Pick<AnalysisFinding, 'source'> | Pick<CanonicalSummaryFinding, 'source'>) => {
@@ -566,22 +625,37 @@ export function Results() {
     if (findingFilter === 'special') return false;
     return findingKindFromSource(finding.source) === findingFilter;
   };
+  const matchesReviewFindingFilter = (finding: AnalysisReviewFinding) => {
+    if (findingFilter === 'all') return true;
+    if (findingFilter === 'special') return finding.sourceKind === 'special';
+    return findingKindFromReviewSource(finding.sourceKind) === findingFilter;
+  };
+  const filteredReviewViolations = useReviewFindingsUi
+    ? reviewViolations.filter((f) => matchesReviewFindingFilter(f))
+    : [];
+  const filteredReviewSpecialNotes = useReviewFindingsUi
+    ? reviewSpecialNotes.filter((f) => matchesReviewFindingFilter(f))
+    : [];
   const filteredDisplayViolations = hasRealFindings
     ? displayViolations.filter((f) => matchesFindingFilter(f))
     : [];
   const filteredCanonicalSummaryFindings = canonicalSummaryFindings.filter((f) => matchesFindingFilter(f));
-  const filteredViolationsCount = hasRealFindings
+  const showOnlySpecialNotes = findingFilter === 'special';
+  const filteredViolationsCount = useReviewFindingsUi
+    ? (showOnlySpecialNotes ? filteredReviewSpecialNotes.length : filteredReviewViolations.length)
+    : hasRealFindings
     ? filteredDisplayViolations.length
     : filteredCanonicalSummaryFindings.length;
-  const showOnlySpecialNotes = findingFilter === 'special';
-  const showEmptyFindingsState = showOnlySpecialNotes
-    ? reportHints.length === 0
-    : useRealFindingsUi
-      ? filteredDisplayViolations.length === 0
-      : filteredCanonicalSummaryFindings.length === 0;
+  const showEmptyFindingsState = useReviewFindingsUi
+    ? (showOnlySpecialNotes ? filteredReviewSpecialNotes.length === 0 : filteredReviewViolations.length === 0)
+    : showOnlySpecialNotes
+      ? reportHints.length === 0
+      : useRealFindingsUi
+        ? filteredDisplayViolations.length === 0
+        : filteredCanonicalSummaryFindings.length === 0;
 
   const decision: 'PASS' | 'REJECT' | 'REVIEW_REQUIRED' =
-    displayViolationsCount > 0 ? 'REVIEW_REQUIRED' : 'PASS';
+    (useReviewFindingsUi ? reviewViolations.length : displayViolationsCount) > 0 ? 'REVIEW_REQUIRED' : 'PASS';
 
   const decisionConfig = {
     PASS: { label: lang === 'ar' ? 'مقبول' : 'PASS', bg: 'bg-success/5', text: 'text-success', border: 'border-success/30', icon: CheckCircle },
@@ -611,6 +685,30 @@ export function Results() {
       if (es.includes(prefix) || (es.length >= 6 && sn.includes(es.slice(0, Math.min(80, es.length))))) return f;
     }
     return undefined;
+  }
+
+  function matchRawFindingForReview(rf: AnalysisReviewFinding): AnalysisFinding | undefined {
+    if (rf.canonicalFindingId) {
+      for (const f of findings) {
+        const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+        if (String(v3.canonical_finding_id ?? '') === rf.canonicalFindingId) return f;
+      }
+    }
+    const evidence = compactWhitespace(rf.evidenceSnippet);
+    if (evidence.length < 4) return undefined;
+    return findings.find((f) => {
+      const snippet = compactWhitespace(f.evidenceSnippet);
+      if (!snippet) return false;
+      const articleMatches = (f.articleId ?? 0) === (rf.primaryArticleId ?? 0);
+      return articleMatches && (snippet.includes(evidence) || evidence.includes(snippet));
+    });
+  }
+
+  function reviewFindingSourceLabel(sourceKind: AnalysisReviewFinding['sourceKind']): string {
+    if (sourceKind === 'manual') return t('findingSourceManual');
+    if (sourceKind === 'glossary') return t('findingSourceGlossary');
+    if (sourceKind === 'special') return lang === 'ar' ? 'ملاحظة خاصة' : 'Special note';
+    return t('findingSourceAi');
   }
 
 
@@ -927,6 +1025,19 @@ export function Results() {
 
       if (res.finding) {
         setFindings((prev) => prev.map((f) => (f.id === res.finding!.id ? res.finding! : f)));
+        setReviewFindings((prev) => prev.map((f) => {
+          const matched = matchRawFindingForReview(f);
+          if (!matched || matched.id !== res.finding!.id) return f;
+          return {
+            ...f,
+            primaryArticleId: res.finding!.articleId,
+            primaryAtomId: res.finding!.atomId ?? null,
+            severity: res.finding!.severity,
+            manualComment: res.finding!.manualComment ?? null,
+            editedBy: user?.id ?? null,
+            editedAt: new Date().toISOString(),
+          };
+        }));
       }
 
       if (res.reportAggregates) {
@@ -1133,6 +1244,95 @@ export function Results() {
             {lang === 'ar' ? 'تعديل التصنيف' : 'Edit classification'}
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  function renderReviewFindingCard(f: AnalysisReviewFinding) {
+    const matchedRaw = matchRawFindingForReview(f);
+    const isApproved = f.reviewStatus === 'approved';
+    const displayPage = displayPageForFinding(f.startOffsetGlobal ?? null, reportViewerPages, f.pageNumber ?? null);
+    const displayTitle = displayFindingTitle({
+      title: f.titleAr,
+      source: f.sourceKind === 'glossary' ? 'lexicon_mandatory' : f.sourceKind === 'manual' ? 'manual' : 'ai',
+      evidenceSnippet: f.evidenceSnippet,
+      articleId: f.primaryArticleId,
+    });
+    const rationale = !isWeakRationaleText(f.rationaleAr) ? f.rationaleAr?.trim() : null;
+    const confidence = matchedRaw ? Math.round((matchedRaw.confidence ?? 0) * 100) : null;
+
+    return (
+      <div key={f.id} className={cn("border rounded-lg p-4", isApproved ? "bg-success/5 border-success/20" : "bg-surface border-border")}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-semibold text-text-main text-sm">{displayTitle}</span>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px] text-text-muted border-border/60">{reviewFindingSourceLabel(f.sourceKind)}</Badge>
+            {isApproved && (
+              <Badge className="text-[10px] bg-success/10 text-success border-success/20 border">{lang === 'ar' ? 'آمن' : 'Safe'}</Badge>
+            )}
+            {confidence != null && (
+              <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {confidence}%</span>
+            )}
+          </div>
+        </div>
+        {displayPage != null && displayPage > 0 && (
+          <div className="text-[10px] text-primary font-medium mb-1">
+            {lang === 'ar' ? `صفحة ${displayPage}` : `Page ${displayPage}`}
+          </div>
+        )}
+        <div className={cn("p-3 rounded-md border text-sm font-medium text-text-main italic", isApproved ? "bg-success/5 border-success/10" : "bg-background/50 border-border/50")} dir="rtl">
+          "{f.evidenceSnippet}"
+        </div>
+        <div className="mt-2 text-xs text-text-muted space-y-1">
+          <div>{lang === 'ar' ? 'المادة الأساسية:' : 'Primary article:'} <span className="text-text-main">{articleLabel(f.primaryArticleId)}</span></div>
+          {f.primaryAtomId && (
+            <div>{lang === 'ar' ? 'البند:' : 'Atom:'} <span className="text-text-main">{f.primaryAtomId}</span></div>
+          )}
+          {rationale && (
+            <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{rationale}</span></div>
+          )}
+          {f.anchorStatus === 'unresolved' && (
+            <div className="text-warning">{lang === 'ar' ? 'التموضع البصري يحتاج تحققًا يدويًا.' : 'Visual placement still needs manual verification.'}</div>
+          )}
+        </div>
+        {isApproved && f.approvedReason && (
+          <div className="mt-2 p-2 bg-success/5 border border-success/10 rounded text-xs text-success">
+            <span className="font-semibold">{lang === 'ar' ? 'السبب:' : 'Reason:'}</span> {f.approvedReason}
+            {f.reviewedAt && <span className="text-text-muted ms-2">({formatDate(new Date(f.reviewedAt), { lang, format: dateFormat })})</span>}
+          </div>
+        )}
+        {matchedRaw ? (
+          <div className="flex items-center gap-2 mt-2 print:hidden">
+            {!isApproved && (
+              <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 text-success border-success/30 hover:bg-success/10"
+                onClick={() => { setReviewModal({ findingId: matchedRaw.id, toStatus: 'approved', titleAr: f.titleAr }); setReviewReason(''); }}>
+                <CheckCircle2 className="w-3 h-3" />
+                {lang === 'ar' ? 'اعتماد كآمن' : 'Mark Safe'}
+              </Button>
+            )}
+            {isApproved && (
+              <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 text-error border-error/30 hover:bg-error/10"
+                onClick={() => { setReviewModal({ findingId: matchedRaw.id, toStatus: 'violation', titleAr: f.titleAr }); setReviewReason(''); }}>
+                <ShieldAlert className="w-3 h-3" />
+                {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert to Violation'}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-[11px] gap-1"
+              onClick={() => setEditFindingModal(matchedRaw)}
+            >
+              {lang === 'ar' ? 'تعديل التصنيف' : 'Edit classification'}
+            </Button>
+          </div>
+        ) : (
+          <p className="text-[10px] text-text-muted mt-2 print:hidden">
+            {lang === 'ar'
+              ? 'ستظهر إجراءات الاعتماد والتعديل عندما يتوفر ربط مباشر مع سجل الملاحظة الخام.'
+              : 'Review actions will appear once this card is linked to a raw finding row.'}
+          </p>
+        )}
       </div>
     );
   }
@@ -1419,6 +1619,49 @@ export function Results() {
                 ) : (
                   artFindings.map((f) => renderFindingCard(f))
                 )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    });
+  }
+
+  function renderFindingsFromReview(list: AnalysisReviewFinding[]) {
+    const byCat = new Map<SemanticCategoryId, AnalysisReviewFinding[]>();
+    for (const f of list) {
+      const cat = getPrimarySemanticCategory(f.primaryArticleId, f.primaryAtomId ?? null, f.primaryAtomId ?? undefined);
+      if (!byCat.has(cat)) byCat.set(cat, []);
+      byCat.get(cat)!.push(f);
+    }
+
+    return semanticCategoriesOrdered.map((cat) => {
+      const artFindings = byCat.get(cat.id);
+      if (!artFindings?.length) return null;
+      const key = `sc-review-${cat.id}`;
+      const isExpanded = expandedArticles[key] ?? true;
+      return (
+        <div key={cat.id} className="mb-8">
+          <div className="border border-border rounded-xl bg-surface/50 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => toggleArticle(key)}
+              className="w-full flex items-center justify-between p-4 bg-surface hover:bg-background transition-colors border-b border-border"
+            >
+              <div className="flex items-center gap-3">
+                <span className="bg-primary/10 text-primary w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0">
+                  {semanticCategoriesOrdered.findIndex((c) => c.id === cat.id) + 1}
+                </span>
+                <span className="font-bold text-text-main text-start">{lang === "ar" ? cat.titleAr : cat.titleEn}</span>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <Badge variant="outline">{artFindings.length}</Badge>
+                {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+              </div>
+            </button>
+            {isExpanded && (
+              <div className="p-4 space-y-3">
+                {artFindings.map((f) => renderReviewFindingCard(f))}
               </div>
             )}
           </div>
@@ -1825,6 +2068,8 @@ export function Results() {
             </div>
           ) : showOnlySpecialNotes
             ? null
+            : useReviewFindingsUi && filteredReviewViolations.length > 0
+            ? renderFindingsFromReview(filteredReviewViolations)
             : useRealFindingsUi && filteredDisplayViolations.length > 0
             ? renderFindingsFromReal(filteredDisplayViolations)
             : filteredCanonicalSummaryFindings.length > 0
@@ -1834,7 +2079,7 @@ export function Results() {
                 : renderFindingsFromSummary(filteredCanonicalSummaryFindings)}
 
           {/* Report hints: not violations but notes for director (e.g. Islamic rules when filming) */}
-          {reportHints.length > 0 && (
+          {((useReviewFindingsUi && filteredReviewSpecialNotes.length > 0) || (!useReviewFindingsUi && reportHints.length > 0)) && (
             <>
               <h3 className={cn(
                 "font-bold text-xl text-text-main border-b border-info/40 pb-2 flex items-center gap-2",
@@ -1842,7 +2087,7 @@ export function Results() {
               )}>
                 <Info className="w-5 h-5 text-info" />
                 {lang === 'ar' ? 'ملاحظات خاصة' : 'Special notes'}
-                <Badge variant="outline" className="ms-2 bg-info/10 text-info border-info/30">{reportHints.length}</Badge>
+                <Badge variant="outline" className="ms-2 bg-info/10 text-info border-info/30">{useReviewFindingsUi ? filteredReviewSpecialNotes.length : reportHints.length}</Badge>
               </h3>
               <p className="text-text-muted text-sm mt-1 mb-4">
                 {lang === 'ar'
@@ -1850,24 +2095,42 @@ export function Results() {
                   : 'These are not violations; consider them when filming (e.g. modesty and Islamic guidelines).'}
               </p>
               <div className="space-y-4">
-                {reportHints.map((f, idx) => (
-                  <div key={`hint-${f.canonical_finding_id}-${idx}`} className="bg-info/5 border border-info/30 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-text-main text-sm">{lang === 'ar' ? 'ملاحظة' : 'Note'}</span>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px] bg-info/10 text-info border-info/30">{lang === 'ar' ? 'ملاحظة' : 'Note'}</Badge>
-                        <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
+                {useReviewFindingsUi ? (
+                  filteredReviewSpecialNotes.map((f) => (
+                    <div key={`hint-review-${f.id}`} className="bg-info/5 border border-info/30 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold text-text-main text-sm">{lang === 'ar' ? 'ملاحظة' : 'Note'}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px] bg-info/10 text-info border-info/30">{lang === 'ar' ? 'ملاحظة' : 'Note'}</Badge>
+                        </div>
+                      </div>
+                      <div className="bg-background/50 p-3 rounded-md border border-info/20 text-sm text-text-main italic" dir="rtl">"{f.evidenceSnippet}"</div>
+                      <div className="mt-2 text-xs text-text-muted space-y-1">
+                        <div>{lang === 'ar' ? 'المادة:' : 'Article:'} <span className="text-text-main">{articleLabel(f.primaryArticleId)}</span></div>
+                        <div>{lang === 'ar' ? 'لماذا ليست مخالفة:' : 'Why not a violation:'} <span className="text-text-main">{f.rationaleAr ?? '—'}</span></div>
                       </div>
                     </div>
-                    <div className="bg-background/50 p-3 rounded-md border border-info/20 text-sm text-text-main italic" dir="rtl">"{f.evidence_snippet}"</div>
-                    <div className="mt-2 text-xs text-text-muted space-y-1">
-                      {f.primary_article_id && (
-                        <div>{lang === 'ar' ? 'المادة:' : 'Article:'} <span className="text-text-main">{articleLabel(f.primary_article_id)}</span></div>
-                      )}
-                      <div>{lang === 'ar' ? 'لماذا ليست مخالفة:' : 'Why not a violation:'} <span className="text-text-main">{f.rationale ?? '—'}</span></div>
+                  ))
+                ) : (
+                  reportHints.map((f, idx) => (
+                    <div key={`hint-${f.canonical_finding_id}-${idx}`} className="bg-info/5 border border-info/30 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold text-text-main text-sm">{lang === 'ar' ? 'ملاحظة' : 'Note'}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px] bg-info/10 text-info border-info/30">{lang === 'ar' ? 'ملاحظة' : 'Note'}</Badge>
+                          <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
+                        </div>
+                      </div>
+                      <div className="bg-background/50 p-3 rounded-md border border-info/20 text-sm text-text-main italic" dir="rtl">"{f.evidence_snippet}"</div>
+                      <div className="mt-2 text-xs text-text-muted space-y-1">
+                        {f.primary_article_id && (
+                          <div>{lang === 'ar' ? 'المادة:' : 'Article:'} <span className="text-text-main">{articleLabel(f.primary_article_id)}</span></div>
+                        )}
+                        <div>{lang === 'ar' ? 'لماذا ليست مخالفة:' : 'Why not a violation:'} <span className="text-text-main">{f.rationale ?? '—'}</span></div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </>
           )}
@@ -1897,7 +2160,17 @@ export function Results() {
           )}
 
           {/* Approved section */}
-          {!showOnlySpecialNotes && useRealFindingsUi && displayApprovedFindings.length > 0 && (
+          {!showOnlySpecialNotes && useReviewFindingsUi && reviewApproved.length > 0 && (
+            <>
+              <h3 className="font-bold text-xl text-text-main border-b border-success/30 pb-2 flex items-center gap-2 mt-12">
+                <Shield className="w-5 h-5 text-success" />
+                {lang === 'ar' ? 'معتمد كآمن' : 'Approved as Safe'}
+                <Badge className="ms-2 text-[10px] bg-success/10 text-success border-success/20 border">{reviewApproved.length}</Badge>
+              </h3>
+              {renderFindingsFromReview(reviewApproved)}
+            </>
+          )}
+          {!showOnlySpecialNotes && !useReviewFindingsUi && useRealFindingsUi && displayApprovedFindings.length > 0 && (
             <>
               <h3 className="font-bold text-xl text-text-main border-b border-success/30 pb-2 flex items-center gap-2 mt-12">
                 <Shield className="w-5 h-5 text-success" />
