@@ -12,13 +12,14 @@ export type TextSegment = { node: Text; text: string };
  * Collect text nodes in DOM order (TreeWalker SHOW_TEXT).
  */
 /**
- * Unwrap all [data-finding-id] marks inside container (replace each with its children).
+ * Unwrap only imperatively injected highlight marks inside container (replace each with its children).
+ * Declarative page-text spans also use data-finding-id and must survive normal React rendering.
  * Call before building the DOM index so the index is built on clean DOM only.
  */
 export function unwrapFindingMarks(container: Node): void {
   const root = container instanceof Document ? container.body : container;
   if (!root || !('querySelectorAll' in root)) return;
-  (root as Element).querySelectorAll('[data-finding-id]').forEach((el) => {
+  (root as Element).querySelectorAll('.ap-highlight[data-finding-id]').forEach((el) => {
     const parent = el.parentNode;
     if (!parent) return;
     while (el.firstChild) parent.insertBefore(el.firstChild, el);
