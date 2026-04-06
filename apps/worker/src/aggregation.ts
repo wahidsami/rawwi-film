@@ -211,6 +211,36 @@ type ReviewFindingInsertRow = {
   is_manual: boolean;
   is_hidden: boolean;
   created_from_job_id: string | null;
+  approved_reason?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  edited_by?: string | null;
+  edited_at?: string | null;
+  supersedes_review_finding_id?: string | null;
+};
+
+type ExistingReviewFindingRow = {
+  id: string;
+  report_id: string;
+  script_id: string;
+  version_id: string;
+  canonical_finding_id: string | null;
+  source_kind: "ai" | "glossary" | "manual" | "special";
+  primary_article_id: number;
+  primary_atom_id: string | null;
+  severity: string;
+  review_status: "violation" | "approved" | "needs_review";
+  evidence_snippet: string;
+  manual_comment: string | null;
+  approved_reason: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  edited_by: string | null;
+  edited_at: string | null;
+  is_hidden: boolean;
+  is_manual: boolean;
+  created_at: string;
+  updated_at: string;
 };
 
 function scriptSuggestsNeutralContext(scriptSummary: SummaryJson["script_summary"]): boolean {
@@ -346,6 +376,10 @@ function toReviewStatus(finalRuling: string | null | undefined, isSpecial = fals
   return "violation";
 }
 
+function compactReviewText(value: string | null | undefined): string {
+  return (value ?? "").replace(/\s+/g, " ").trim();
+}
+
 function buildReviewFindingRows(
   reportId: string,
   summary: SummaryJson,
@@ -429,16 +463,142 @@ function buildReviewFindingRows(
   return [...canonical, ...hints].filter((row) => row.primary_article_id > 0 && Boolean(row.canonical_finding_id));
 }
 
+async function loadPriorReviewFindingRows(
+  reportId: string,
+  scriptId: string,
+  versionId: string,
+): Promise<ExistingReviewFindingRow[]> {
+  const { data, error } = await supabase
+    .from("analysis_review_findings")
+    .select("id, report_id, script_id, version_id, canonical_finding_id, source_kind, primary_article_id, primary_atom_id, severity, review_status, evidence_snippet, manual_comment, approved_reason, reviewed_by, reviewed_at, edited_by, edited_at, is_hidden, is_manual, created_at, updated_at")
+    .eq("script_id", scriptId)
+    .eq("version_id", versionId)
+    .neq("report_id", reportId)
+    .eq("is_hidden", false)
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    logger.warn("Could not load prior review findings", { reportId, scriptId, versionId, error });
+    return [];
+  }
+
+  return (data ?? []) as ExistingReviewFindingRow[];
+}
+
+function applyPriorReviewState(
+  row: ReviewFindingInsertRow,
+  prior: ExistingReviewFindingRow | null | undefined,
+): ReviewFindingInsertRow {
+  if (!prior) return row;
+  return {
+    ...row,
+    primary_article_id: prior.primary_article_id || row.primary_article_id,
+    primary_atom_id: prior.primary_atom_id ?? row.primary_atom_id,
+    severity: prior.severity || row.severity,
+    review_status: prior.review_status || row.review_status,
+    manual_comment: prior.manual_comment ?? row.manual_comment,
+    approved_reason: prior.approved_reason ?? null,
+    reviewed_by: prior.reviewed_by ?? null,
+    reviewed_at: prior.reviewed_at ?? null,
+    edited_by: prior.edited_by ?? null,
+    edited_at: prior.edited_at ?? null,
+    supersedes_review_finding_id: prior.id,
+  };
+}
+
+function pickPriorReviewFindingMatch(
+  row: ReviewFindingInsertRow,
+  priorRows: ExistingReviewFindingRow[],
+): ExistingReviewFindingRow | null {
+  if (row.canonical_finding_id) {
+    const exact = priorRows.find(
+      (candidate) =>
+        candidate.canonical_finding_id === row.canonical_finding_id &&
+        candidate.source_kind === row.source_kind,
+    );
+    if (exact) return exact;
+  }
+
+  const evidence = compactReviewText(row.evidence_snippet);
+  if (!evidence) return null;
+
+  return (
+    priorRows.find((candidate) => {
+      if (candidate.source_kind !== row.source_kind) return false;
+      if (candidate.primary_article_id !== row.primary_article_id) return false;
+      const candidateEvidence = compactReviewText(candidate.evidence_snippet);
+      return candidateEvidence.includes(evidence) || evidence.includes(candidateEvidence);
+    }) ?? null
+  );
+}
+
+async function buildManualReviewRowsForJob(
+  reportId: string,
+  summary: SummaryJson,
+  versionId: string,
+): Promise<ReviewFindingInsertRow[]> {
+  const { data, error } = await supabase
+    .from("analysis_findings")
+    .select("id, job_id, script_id, version_id, article_id, atom_id, severity, review_status, review_reason, reviewed_by, reviewed_at, evidence_snippet, manual_comment, page_number, start_offset_global, end_offset_global, start_offset_page, end_offset_page")
+    .eq("job_id", summary.job_id)
+    .eq("source", "manual")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    logger.warn("Could not load manual findings for review-layer materialization", { reportId, jobId: summary.job_id, error });
+    return [];
+  }
+
+  return ((data ?? []) as Array<Record<string, unknown>>).map((finding) => ({
+    job_id: summary.job_id,
+    report_id: reportId,
+    script_id: summary.script_id,
+    version_id: versionId,
+    canonical_finding_id: null,
+    source_kind: "manual",
+    primary_article_id: Number(finding.article_id ?? 4),
+    primary_atom_id: (finding.atom_id as string | null | undefined) ?? null,
+    severity: String(finding.severity ?? "medium"),
+    review_status: (String(finding.review_status ?? "violation") === "approved" ? "approved" : "violation"),
+    title_ar: "ملاحظة يدوية",
+    description_ar: (finding.manual_comment as string | null | undefined) ?? (finding.evidence_snippet as string | null | undefined) ?? null,
+    rationale_ar: null,
+    evidence_snippet: String(finding.evidence_snippet ?? "—"),
+    manual_comment: (finding.manual_comment as string | null | undefined) ?? null,
+    page_number: (finding.page_number as number | null | undefined) ?? null,
+    start_offset_global: (finding.start_offset_global as number | null | undefined) ?? null,
+    end_offset_global: (finding.end_offset_global as number | null | undefined) ?? null,
+    start_offset_page: (finding.start_offset_page as number | null | undefined) ?? null,
+    end_offset_page: (finding.end_offset_page as number | null | undefined) ?? null,
+    anchor_status: "exact",
+    anchor_method: "stored_offsets",
+    anchor_text: String(finding.evidence_snippet ?? "—"),
+    anchor_confidence: 1,
+    is_manual: true,
+    is_hidden: false,
+    created_from_job_id: summary.job_id,
+    approved_reason: (finding.review_reason as string | null | undefined) ?? null,
+    reviewed_by: (finding.reviewed_by as string | null | undefined) ?? null,
+    reviewed_at: (finding.reviewed_at as string | null | undefined) ?? null,
+  }));
+}
+
 async function materializeReviewFindings(
   reportId: string,
   summary: SummaryJson,
   versionId: string,
 ): Promise<void> {
-  const rows = buildReviewFindingRows(reportId, summary, versionId);
+  const priorRows = await loadPriorReviewFindingRows(reportId, summary.script_id, versionId);
+  const baseRows = buildReviewFindingRows(reportId, summary, versionId);
+  const carriedRows = baseRows.map((row) => applyPriorReviewState(row, pickPriorReviewFindingMatch(row, priorRows)));
+  const manualRows = await buildManualReviewRowsForJob(reportId, summary, versionId);
+  const rows = [...carriedRows, ...manualRows];
   logger.info("Materializing reviewer findings", {
     reportId,
     jobId: summary.job_id,
     rows: rows.length,
+    priorRows: priorRows.length,
+    manualRows: manualRows.length,
   });
 
   if (rows.length === 0) {

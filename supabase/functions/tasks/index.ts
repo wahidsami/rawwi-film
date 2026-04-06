@@ -100,6 +100,8 @@ type ManualReviewSnapshotItem = {
   severity: string;
   evidence_snippet: string;
   manual_comment?: string | null;
+  review_status?: string | null;
+  review_reason?: string | null;
   start_offset_global?: number | null;
   end_offset_global?: number | null;
   start_offset_page?: number | null;
@@ -107,6 +109,9 @@ type ManualReviewSnapshotItem = {
   page_number?: number | null;
   job_id?: string | null;
   created_by?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  reviewed_role?: string | null;
 };
 
 async function loadManualReviewSnapshot(
@@ -121,7 +126,7 @@ async function loadManualReviewSnapshot(
   const { data, error } = await supabase
     .from("analysis_findings")
     .select(
-      "job_id, article_id, atom_id, severity, evidence_snippet, manual_comment, start_offset_global, end_offset_global, start_offset_page, end_offset_page, page_number, created_at, created_by"
+      "job_id, article_id, atom_id, severity, evidence_snippet, manual_comment, review_status, review_reason, reviewed_by, reviewed_at, reviewed_role, start_offset_global, end_offset_global, start_offset_page, end_offset_page, page_number, created_at, created_by"
     )
     .eq("script_id", scriptId)
     .eq("version_id", versionId)
@@ -155,11 +160,18 @@ async function loadManualReviewSnapshot(
       typeof row.end_offset_page === "number" ? row.end_offset_page : row.end_offset_page == null ? null : Number(row.end_offset_page);
     const jobId = typeof row.job_id === "string" && row.job_id.trim() ? row.job_id.trim() : null;
     const createdBy = typeof row.created_by === "string" && row.created_by.trim() ? row.created_by.trim() : null;
+    const reviewStatus = typeof row.review_status === "string" && row.review_status.trim() ? row.review_status.trim() : "violation";
+    const reviewReason = typeof row.review_reason === "string" && row.review_reason.trim() ? row.review_reason.trim() : null;
+    const reviewedBy = typeof row.reviewed_by === "string" && row.reviewed_by.trim() ? row.reviewed_by.trim() : null;
+    const reviewedAt = typeof row.reviewed_at === "string" && row.reviewed_at.trim() ? row.reviewed_at.trim() : null;
+    const reviewedRole = typeof row.reviewed_role === "string" && row.reviewed_role.trim() ? row.reviewed_role.trim() : null;
     if (jobId) sourceJobIds.add(jobId);
     const key = [
       articleId,
       atomId ?? "",
       severity,
+      reviewStatus,
+      reviewReason ?? "",
       startOffsetGlobal ?? "",
       endOffsetGlobal ?? "",
       evidenceSnippet,
@@ -172,6 +184,8 @@ async function loadManualReviewSnapshot(
         severity,
         evidence_snippet: evidenceSnippet,
         manual_comment: manualComment,
+        review_status: reviewStatus,
+        review_reason: reviewReason,
         start_offset_global: Number.isFinite(startOffsetGlobal as number) ? startOffsetGlobal : null,
         end_offset_global: Number.isFinite(endOffsetGlobal as number) ? endOffsetGlobal : null,
         start_offset_page: Number.isFinite(startOffsetPage as number) ? startOffsetPage : null,
@@ -179,6 +193,9 @@ async function loadManualReviewSnapshot(
         page_number: Number.isFinite(pageNumber as number) ? pageNumber : null,
         job_id: jobId,
         created_by: createdBy,
+        reviewed_by: reviewedBy,
+        reviewed_at: reviewedAt,
+        reviewed_role: reviewedRole,
       });
     }
   }
@@ -220,6 +237,11 @@ async function cloneManualReviewFindingsToJob(
     page_number: item.page_number ?? null,
     evidence_hash: `manual-carry-${crypto.randomUUID()}`,
     manual_comment: item.manual_comment ?? null,
+    review_status: item.review_status ?? "violation",
+    review_reason: item.review_reason ?? null,
+    reviewed_by: item.reviewed_by ?? null,
+    reviewed_at: item.reviewed_at ?? null,
+    reviewed_role: item.reviewed_role ?? null,
   }));
 
   const { data, error } = await supabase
