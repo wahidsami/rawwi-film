@@ -1180,10 +1180,25 @@ function resolveFindingViaStoredPageData(
     const strictHit = locateSpanByStrictExactSearch(page.content ?? '', finding, {
       hintStart: startOffsetPage,
     });
-    if (!strictHit) return null;
-    const globalSpan = viewerPageLocalSpanToGlobal(page.pageNumber, strictHit.start, strictHit.end, pages);
+    if (strictHit) {
+      const globalSpan = viewerPageLocalSpanToGlobal(page.pageNumber, strictHit.start, strictHit.end, pages);
+      if (globalSpan) {
+        return { pageNumber: page.pageNumber, localStart: strictHit.start, localEnd: strictHit.end, ...globalSpan, method: 'page_exact' };
+      }
+    }
+    const pageScopedHit =
+      locateSpanByEvidenceSearch(page.content ?? '', finding, { pageSlice: true, sliceGlobalStart: 0 }) ??
+      locateFindingInContent(page.content ?? '', finding, { pageSlice: true, sliceGlobalStart: 0 });
+    if (!pageScopedHit) return null;
+    const globalSpan = viewerPageLocalSpanToGlobal(page.pageNumber, pageScopedHit.start, pageScopedHit.end, pages);
     if (!globalSpan) return null;
-    return { pageNumber: page.pageNumber, localStart: strictHit.start, localEnd: strictHit.end, ...globalSpan, method: 'page_exact' };
+    return {
+      pageNumber: page.pageNumber,
+      localStart: pageScopedHit.start,
+      localEnd: pageScopedHit.end,
+      ...globalSpan,
+      method: 'stored_page_search',
+    };
   }
 
   if (
@@ -3827,22 +3842,20 @@ export function ScriptWorkspace() {
           map.set(f.id, { resolved: true, ...strictHit });
           continue;
         }
-        if (isWorkspaceActionDisabledFinding(f)) {
-          const softHit = resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
-          if (softHit) {
-            const pageIndex = Math.max(0, pages.findIndex((p) => p.pageNumber === softHit.pageNumber));
-            const pageGlobalStart = hasPagedViewer ? globalStartOfViewerPage(pages, pageIndex) : 0;
-            map.set(f.id, {
-              resolved: true,
-              pageNumber: softHit.pageNumber,
-              localStart: softHit.localStart,
-              localEnd: softHit.localEnd,
-              globalStart: pageGlobalStart + softHit.localStart,
-              globalEnd: pageGlobalStart + softHit.localEnd,
-              method: 'workspace_search',
-            });
-            continue;
-          }
+        const softHit = resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
+        if (softHit) {
+          const pageIndex = Math.max(0, pages.findIndex((p) => p.pageNumber === softHit.pageNumber));
+          const pageGlobalStart = hasPagedViewer ? globalStartOfViewerPage(pages, pageIndex) : 0;
+          map.set(f.id, {
+            resolved: true,
+            pageNumber: softHit.pageNumber,
+            localStart: softHit.localStart,
+            localEnd: softHit.localEnd,
+            globalStart: pageGlobalStart + softHit.localStart,
+            globalEnd: pageGlobalStart + softHit.localEnd,
+            method: 'workspace_search',
+          });
+          continue;
         }
       }
       if (strictImportedAnchoring) {
@@ -4118,7 +4131,7 @@ export function ScriptWorkspace() {
       let gs = resolvedSpan?.start ?? null;
       let ge = resolvedSpan?.end ?? null;
       if (gs == null || ge == null) {
-        if (strictImportedAnchoring && isWorkspaceActionDisabledFinding(f)) {
+        if (strictImportedAnchoring) {
           const syntheticHit = resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
           if (syntheticHit) {
             const pageIndex = Math.max(0, pages.findIndex((p) => p.pageNumber === syntheticHit.pageNumber));
