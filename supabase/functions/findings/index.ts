@@ -144,6 +144,194 @@ function compactWhitespace(value: string | null | undefined): string {
   return (value ?? "").replace(/\s+/g, " ").trim();
 }
 
+function canonicalIdFromFindingRow(row: Record<string, unknown> | null | undefined): string | null {
+  const v3 = (((row?.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {}) as Record<string, unknown>;
+  const raw = v3.canonical_finding_id;
+  return typeof raw === "string" && raw.trim() ? raw.trim() : null;
+}
+
+async function getReportIdForJob(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  jobId: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("analysis_reports")
+    .select("id")
+    .eq("job_id", jobId)
+    .maybeSingle();
+  return (data as { id?: string | null } | null)?.id ?? null;
+}
+
+async function findReviewFindingIdsForRawFinding(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  reportId: string,
+  row: Record<string, unknown>,
+): Promise<string[]> {
+  const canonicalId = canonicalIdFromFindingRow(row);
+  if (canonicalId) {
+    const { data } = await supabase
+      .from("analysis_review_findings")
+      .select("id")
+      .eq("report_id", reportId)
+      .eq("canonical_finding_id", canonicalId)
+      .eq("is_hidden", false);
+    const ids = ((data ?? []) as Array<{ id: string }>).map((item) => item.id).filter(Boolean);
+    if (ids.length > 0) return ids;
+  }
+
+  const articleId = Number(row.article_id ?? 0);
+  const source = String(row.source ?? "ai").toLowerCase();
+  const evidence = compactWhitespace(row.evidence_snippet as string | null | undefined);
+  const sourceKind =
+    source === "manual"
+      ? "manual"
+      : source === "lexicon_mandatory" || source === "glossary"
+        ? "glossary"
+        : "ai";
+
+  const { data } = await supabase
+    .from("analysis_review_findings")
+    .select("id, evidence_snippet")
+    .eq("report_id", reportId)
+    .eq("primary_article_id", articleId)
+    .eq("source_kind", sourceKind)
+    .eq("is_hidden", false);
+
+  return ((data ?? []) as Array<{ id: string; evidence_snippet?: string | null }>)
+    .filter((item) => {
+      const candidate = compactWhitespace(item.evidence_snippet);
+      if (!candidate || !evidence) return false;
+      return candidate.includes(evidence) || evidence.includes(candidate);
+    })
+    .map((item) => item.id)
+    .filter(Boolean);
+}
+
+async function syncReviewStatusFromRawFinding(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  row: Record<string, unknown>,
+  uid: string,
+  toStatus: "approved" | "violation",
+  reason: string,
+): Promise<void> {
+  const jobId = String(row.job_id ?? "").trim();
+  if (!jobId) return;
+  const reportId = await getReportIdForJob(supabase, jobId);
+  if (!reportId) return;
+  const ids = await findReviewFindingIdsForRawFinding(supabase, reportId, row);
+  if (ids.length === 0) return;
+  const nowIso = new Date().toISOString();
+  await supabase
+    .from("analysis_review_findings")
+    .update({
+      review_status: toStatus === "approved" ? "approved" : "violation",
+      approved_reason: reason,
+      reviewed_by: uid,
+      reviewed_at: nowIso,
+      updated_at: nowIso,
+    })
+    .in("id", ids);
+}
+
+async function syncReviewClassificationFromRawFinding(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  row: Record<string, unknown>,
+  uid: string,
+  updates: {
+    articleId: number;
+    atomId: string | null;
+    severity: string;
+    manualComment: string | null;
+  },
+): Promise<void> {
+  const jobId = String(row.job_id ?? "").trim();
+  if (!jobId) return;
+  const reportId = await getReportIdForJob(supabase, jobId);
+  if (!reportId) return;
+  const ids = await findReviewFindingIdsForRawFinding(supabase, reportId, row);
+  if (ids.length === 0) return;
+  const nowIso = new Date().toISOString();
+  await supabase
+    .from("analysis_review_findings")
+    .update({
+      primary_article_id: updates.articleId,
+      primary_atom_id: updates.atomId,
+      severity: updates.severity,
+      manual_comment: updates.manualComment,
+      edited_by: uid,
+      edited_at: nowIso,
+      updated_at: nowIso,
+    })
+    .in("id", ids);
+}
+
+async function createManualReviewFinding(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  payload: {
+    reportId: string;
+    jobId: string;
+    scriptId: string;
+    versionId: string;
+    articleId: number;
+    atomId: string | null;
+    severity: string;
+    evidenceSnippet: string;
+    manualComment: string | null;
+    pageNumber: number | null;
+    startOffsetGlobal: number;
+    endOffsetGlobal: number;
+    startOffsetPage: number | null;
+    endOffsetPage: number | null;
+    uid: string;
+  },
+): Promise<string | null> {
+  const nowIso = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("analysis_review_findings")
+    .insert({
+      job_id: payload.jobId,
+      report_id: payload.reportId,
+      script_id: payload.scriptId,
+      version_id: payload.versionId,
+      canonical_finding_id: null,
+      source_kind: "manual",
+      primary_article_id: payload.articleId,
+      primary_atom_id: payload.atomId,
+      severity: payload.severity,
+      review_status: "violation",
+      title_ar: "ملاحظة يدوية",
+      description_ar: payload.manualComment || payload.evidenceSnippet,
+      rationale_ar: null,
+      evidence_snippet: payload.evidenceSnippet,
+      manual_comment: payload.manualComment,
+      page_number: payload.pageNumber,
+      start_offset_global: payload.startOffsetGlobal,
+      end_offset_global: payload.endOffsetGlobal,
+      start_offset_page: payload.startOffsetPage,
+      end_offset_page: payload.endOffsetPage,
+      anchor_status: "exact",
+      anchor_method: "stored_offsets",
+      anchor_text: payload.evidenceSnippet,
+      anchor_confidence: 1,
+      is_manual: true,
+      is_hidden: false,
+      created_from_job_id: payload.jobId,
+      reviewed_by: payload.uid,
+      reviewed_at: nowIso,
+      created_at: nowIso,
+      updated_at: nowIso,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("[findings] manual review-layer insert error:", error.message);
+    return null;
+  }
+
+  return (data as { id?: string | null } | null)?.id ?? null;
+}
+
 function findNearestRawOccurrence(content: string, needle: string, hintStart: number): number | null {
   const target = needle.trim();
   if (!target) return null;
@@ -389,7 +577,7 @@ Deno.serve(async (req: Request) => {
       // Load finding
       const { data: finding } = await supabase
         .from("analysis_findings")
-        .select("id, job_id, review_status")
+        .select("id, job_id, review_status, location, article_id, source, evidence_snippet")
         .eq("id", findingId)
         .maybeSingle();
       if (!finding) return json({ error: "Finding not found" }, 404);
@@ -426,6 +614,14 @@ Deno.serve(async (req: Request) => {
         console.error("[findings] review update error:", updErr.message);
         return json({ error: updErr.message }, 500);
       }
+
+      await syncReviewStatusFromRawFinding(
+        supabase,
+        finding as Record<string, unknown>,
+        uid,
+        toStatus as "approved" | "violation",
+        reason,
+      );
 
       // b) Insert audit row
       const { error: auditErr } = await supabase
@@ -508,7 +704,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: finding } = await supabase
         .from("analysis_findings")
-        .select("id, job_id, script_id, article_id, atom_id, severity, manual_comment")
+        .select("id, job_id, script_id, article_id, atom_id, severity, manual_comment, location, source, evidence_snippet")
         .eq("id", findingId)
         .maybeSingle();
       if (!finding) return json({ error: "Finding not found" }, 404);
@@ -550,6 +746,18 @@ Deno.serve(async (req: Request) => {
         console.error("[findings] reclassify update error:", updErr.message);
         return json({ error: updErr.message }, 500);
       }
+
+      await syncReviewClassificationFromRawFinding(
+        supabase,
+        finding as Record<string, unknown>,
+        uid,
+        {
+          articleId,
+          atomId: atomResolution.normalizedAtomId,
+          severity,
+          manualComment,
+        },
+      );
 
       await logAuditCanonical(supabase, {
         event_type: "FINDING_RECLASSIFIED",
@@ -753,6 +961,23 @@ Deno.serve(async (req: Request) => {
         return json({ error: insertErr.message }, 500);
       }
       const insertedRow = inserted as { id: string; article_id: number; atom_id: string | null; confidence?: number | null };
+      const reviewFindingId = await createManualReviewFinding(supabase, {
+        reportId,
+        jobId,
+        scriptId,
+        versionId,
+        articleId,
+        atomId: atomResolution.normalizedAtomId,
+        severity: severity!.toLowerCase(),
+        evidenceSnippet,
+        manualComment: manualComment || null,
+        pageNumber,
+        startOffsetGlobal: resolvedStartOffsetGlobal,
+        endOffsetGlobal: resolvedEndOffsetGlobal,
+        startOffsetPage: pageLocal.start_offset_page,
+        endOffsetPage: pageLocal.end_offset_page,
+        uid,
+      });
       // Dual-write adapter: populate policy link table if mapping tables are available.
       const conceptCode = insertedRow.atom_id ? `ART${insertedRow.article_id}_ATOM_${insertedRow.atom_id.replace(/[^\d-]/g, "")}` : `ART${insertedRow.article_id}_GENERIC`;
       const { data: concept } = await supabase
@@ -801,6 +1026,18 @@ Deno.serve(async (req: Request) => {
               created_by_model: "manual",
             },
             { onConflict: "finding_id,article_id,atom_concept_id" }
+          );
+      }
+      if (reviewFindingId) {
+        await supabase
+          .from("analysis_review_finding_sources")
+          .upsert(
+            {
+              review_finding_id: reviewFindingId,
+              analysis_finding_id: insertedRow.id,
+              link_role: "primary",
+            },
+            { onConflict: "review_finding_id,analysis_finding_id" },
           );
       }
 
