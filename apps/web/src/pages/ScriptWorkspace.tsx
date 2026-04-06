@@ -724,6 +724,26 @@ function synthesizeWorkspaceFindingFromCanonical(
   };
 }
 
+function matchWorkspaceFindingForCanonical(
+  canonicalFinding: WorkspaceCanonicalSummaryFinding,
+  findings: AnalysisFinding[]
+): AnalysisFinding | undefined {
+  const canonicalId = (canonicalFinding.canonical_finding_id ?? '').trim();
+  if (canonicalId) {
+    const direct = findings.find((finding) => findingCanonicalId(finding) === canonicalId);
+    if (direct) return direct;
+  }
+  const articleId = Number.isFinite(canonicalFinding.primary_article_id) ? Number(canonicalFinding.primary_article_id) : null;
+  const snippet = (canonicalFinding.evidence_snippet ?? '').replace(/\s+/g, ' ').trim();
+  if (!snippet || snippet.length < 6) return undefined;
+  const prefix = snippet.slice(0, Math.min(80, snippet.length));
+  return findings.find((finding) => {
+    if (articleId != null && finding.articleId !== articleId) return false;
+    const evidence = (finding.evidenceSnippet ?? '').replace(/\s+/g, ' ').trim();
+    return evidence.includes(prefix) || prefix.includes(evidence.slice(0, Math.min(80, evidence.length)));
+  });
+}
+
 function expandHighlightRangeToSentence(
   plain: string,
   start: number,
@@ -1773,15 +1793,9 @@ export function ScriptWorkspace() {
 
   const workspaceVisibleReportFindings = useMemo(() => {
     if (!workspaceUseCanonicalFallback) return workspaceRealViolationFindings;
-    const realByCanonical = new Map<string, AnalysisFinding>();
-    for (const finding of workspaceRealViolationFindings) {
-      const canonicalId = findingCanonicalId(finding);
-      if (canonicalId) realByCanonical.set(canonicalId, finding);
-    }
     return workspaceCanonicalSummaryFindings.map((finding) => {
-      const canonicalId = (finding.canonical_finding_id ?? '').trim();
       return (
-        (canonicalId ? realByCanonical.get(canonicalId) : undefined) ??
+        matchWorkspaceFindingForCanonical(finding, workspaceRealViolationFindings) ??
         synthesizeWorkspaceFindingFromCanonical(
           finding,
           script?.id,
@@ -3665,6 +3679,23 @@ export function ScriptWorkspace() {
         if (strictHit) {
           map.set(f.id, { resolved: true, ...strictHit });
           continue;
+        }
+        if (isSyntheticWorkspaceFinding(f)) {
+          const softHit = resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
+          if (softHit) {
+            const pageIndex = Math.max(0, pages.findIndex((p) => p.pageNumber === softHit.pageNumber));
+            const pageGlobalStart = hasPagedViewer ? globalStartOfViewerPage(pages, pageIndex) : 0;
+            map.set(f.id, {
+              resolved: true,
+              pageNumber: softHit.pageNumber,
+              localStart: softHit.localStart,
+              localEnd: softHit.localEnd,
+              globalStart: pageGlobalStart + softHit.localStart,
+              globalEnd: pageGlobalStart + softHit.localEnd,
+              method: 'workspace_search',
+            });
+            continue;
+          }
         }
       }
       if (strictImportedAnchoring) {

@@ -554,7 +554,7 @@ export function Results() {
 
   // Stats must match the violations list we render. Derive from canonical_findings so cards and list are always in sync.
   const displayTotal = canonicalSummaryFindings.length;
-  const displayTypeCounts = hasRealFindings
+  const displayTypeCounts = useRealFindingsUi
     ? countFindingKinds(displayViolations)
     : countFindingKinds(canonicalSummaryFindings);
   const displayApproved = report.approvedCount ?? 0;
