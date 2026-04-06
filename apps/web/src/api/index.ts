@@ -288,6 +288,16 @@ export interface AnalysisFinding {
   /** Offsets within script_pages.content for page_number (when set). */
   startOffsetPage?: number | null;
   endOffsetPage?: number | null;
+  anchorStatus?: 'exact' | 'fuzzy' | 'unresolved' | null;
+  anchorMethod?: string | null;
+  anchorPageNumber?: number | null;
+  anchorStartOffsetPage?: number | null;
+  anchorEndOffsetPage?: number | null;
+  anchorStartOffsetGlobal?: number | null;
+  anchorEndOffsetGlobal?: number | null;
+  anchorText?: string | null;
+  anchorConfidence?: number | null;
+  anchorUpdatedAt?: string | null;
   location: Record<string, unknown>;
   createdAt: string;
   reviewStatus: 'violation' | 'approved';

@@ -135,6 +135,49 @@ function compactEvidenceText(s: string): string {
   return cleaned.length > MAX_EVIDENCE_LEN ? `${cleaned.slice(0, MAX_EVIDENCE_LEN)}…` : cleaned;
 }
 
+function buildCanonicalAnchorPayload(args: {
+  startGlobal: number | null | undefined;
+  endGlobal: number | null | undefined;
+  pageNumber?: number | null;
+  pageRows: Array<{ page_number: number; content: string }>;
+  anchorText?: string | null;
+  method?: string;
+}): Record<string, unknown> {
+  const startGlobal = typeof args.startGlobal === "number" ? args.startGlobal : null;
+  const endGlobal = typeof args.endGlobal === "number" ? args.endGlobal : null;
+  const anchorText = typeof args.anchorText === "string" ? args.anchorText.trim() : "";
+  const anchorUpdatedAt = new Date().toISOString();
+
+  if (startGlobal == null || endGlobal == null || endGlobal <= startGlobal) {
+    return {
+      anchor_status: "unresolved",
+      anchor_method: "unresolved",
+      anchor_page_number: null,
+      anchor_start_offset_page: null,
+      anchor_end_offset_page: null,
+      anchor_start_offset_global: null,
+      anchor_end_offset_global: null,
+      anchor_text: anchorText || null,
+      anchor_confidence: 0,
+      anchor_updated_at: anchorUpdatedAt,
+    };
+  }
+
+  const pageLocal = computePageLocalSpan(startGlobal, endGlobal, args.pageRows);
+  return {
+    anchor_status: "exact",
+    anchor_method: args.method ?? "stored_offsets",
+    anchor_page_number: args.pageNumber ?? null,
+    anchor_start_offset_page: pageLocal.start_offset_page,
+    anchor_end_offset_page: pageLocal.end_offset_page,
+    anchor_start_offset_global: startGlobal,
+    anchor_end_offset_global: endGlobal,
+    anchor_text: anchorText || null,
+    anchor_confidence: 1,
+    anchor_updated_at: anchorUpdatedAt,
+  };
+}
+
 function buildLexiconMandatoryRationale(args: {
   term: string;
   evidence: string;
@@ -491,6 +534,7 @@ export async function processChunkJudge(
       articleTitleAr: m.term.gcam_article_title_ar ?? null,
     });
 
+    const lexPageNumber = pageNumAt(startGlobal);
     const lexRow = {
       job_id: jobId,
       script_id: scriptId,
@@ -511,7 +555,7 @@ export async function processChunkJudge(
       location,
       evidence_hash: hash,
       canonical_atom: getPrimaryCanonicalAtomForGcam(m.articleId, m.atomId) ?? null,
-      page_number: pageNumAt(startGlobal),
+      page_number: lexPageNumber,
       ...(() => {
         const pl = computePageLocalSpan(startGlobal, endGlobal, pageRows);
         return {
@@ -519,6 +563,13 @@ export async function processChunkJudge(
           end_offset_page: pl.end_offset_page,
         };
       })(),
+      ...buildCanonicalAnchorPayload({
+        startGlobal,
+        endGlobal,
+        pageNumber: lexPageNumber,
+        pageRows,
+        anchorText: evidence_snippet,
+      }),
     };
     if (config.ANALYSIS_ENGINE === "hybrid") {
       deferredLexiconCandidates.push({
@@ -597,6 +648,7 @@ export async function processChunkJudge(
         atomId: rule.atomId,
       });
 
+      const fallbackPageNumber = pageNumAt(startGlobal);
       const fallbackRow = {
         job_id: jobId,
         script_id: scriptId,
@@ -617,7 +669,7 @@ export async function processChunkJudge(
         end_line_chunk: line,
         location: {},
         evidence_hash: hash,
-        page_number: pageNumAt(startGlobal),
+        page_number: fallbackPageNumber,
         ...(() => {
           const pl = computePageLocalSpan(startGlobal, endGlobal, pageRows);
           return {
@@ -625,6 +677,13 @@ export async function processChunkJudge(
             end_offset_page: pl.end_offset_page,
           };
         })(),
+        ...buildCanonicalAnchorPayload({
+          startGlobal,
+          endGlobal,
+          pageNumber: fallbackPageNumber,
+          pageRows,
+          anchorText: evidence,
+        }),
       };
 
       if (config.ANALYSIS_ENGINE === "hybrid") {
@@ -1213,6 +1272,7 @@ export async function processChunkJudge(
         f.end_offset_global,
         excerpt
       );
+      const findingPageNumber = pageNumAt(f.start_offset_global ?? 0);
       return {
         job_id: jobId,
         script_id: scriptId,
@@ -1258,7 +1318,7 @@ export async function processChunkJudge(
         context_impact: f.context_impact ?? null,
         legal_sensitivity: f.legal_sensitivity ?? null,
         audience_risk: f.audience_risk ?? null,
-        page_number: pageNumAt(f.start_offset_global ?? 0),
+        page_number: findingPageNumber,
         ...(() => {
           const s = f.start_offset_global ?? 0;
           const e = f.end_offset_global ?? s;
@@ -1268,6 +1328,13 @@ export async function processChunkJudge(
             end_offset_page: pl.end_offset_page,
           };
         })(),
+        ...buildCanonicalAnchorPayload({
+          startGlobal: f.start_offset_global,
+          endGlobal: f.end_offset_global,
+          pageNumber: findingPageNumber,
+          pageRows,
+          anchorText: excerpt,
+        }),
       };
     });
 

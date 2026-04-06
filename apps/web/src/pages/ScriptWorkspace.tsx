@@ -729,6 +729,84 @@ function gatherExactOccurrences(plain: string, needle: string): { start: number;
   return out;
 }
 
+function findingPreferredPageNumber(f: AnalysisFinding): number | null {
+  return f.anchorPageNumber ?? f.pageNumber ?? null;
+}
+
+function findingPreferredStartOffsetPage(f: AnalysisFinding): number | null {
+  return f.anchorStartOffsetPage ?? f.startOffsetPage ?? null;
+}
+
+function findingPreferredEndOffsetPage(f: AnalysisFinding): number | null {
+  return f.anchorEndOffsetPage ?? f.endOffsetPage ?? null;
+}
+
+function findingPreferredStartOffsetGlobal(f: AnalysisFinding): number | null {
+  return f.anchorStartOffsetGlobal ?? f.startOffsetGlobal ?? null;
+}
+
+function findingPreferredEndOffsetGlobal(f: AnalysisFinding): number | null {
+  return f.anchorEndOffsetGlobal ?? f.endOffsetGlobal ?? null;
+}
+
+function findingPreferredAnchorText(f: AnalysisFinding): string {
+  return normalizeEvidenceForSearch(f.anchorText ?? f.evidenceSnippet ?? '');
+}
+
+function pickClosestSpan(
+  matches: { start: number; end: number }[],
+  hintStart?: number | null
+): { start: number; end: number } | null {
+  if (matches.length === 0) return null;
+  if (matches.length === 1) return matches[0];
+  if (typeof hintStart === 'number' && Number.isFinite(hintStart)) {
+    return (
+      [...matches].sort((a, b) => {
+        const da = Math.abs(a.start - hintStart);
+        const db = Math.abs(b.start - hintStart);
+        if (da !== db) return da - db;
+        return a.start - b.start;
+      })[0] ?? null
+    );
+  }
+  return [...matches].sort((a, b) => a.start - b.start)[0] ?? null;
+}
+
+function locateSpanByStrictExactSearch(
+  plain: string,
+  f: AnalysisFinding,
+  opts?: { hintStart?: number | null }
+): { start: number; end: number } | null {
+  if (!plain) return null;
+  const needles = Array.from(
+    new Set(
+      [findingPreferredAnchorText(f), ...orderedEvidenceNeedles(f.evidenceSnippet ?? '')]
+        .map((value) => normalizeEvidenceForSearch(value))
+        .filter((value) => value.length >= 2),
+    ),
+  );
+  for (const needle of needles) {
+    const direct = pickClosestSpan(gatherExactOccurrences(plain, needle), opts?.hintStart);
+    if (direct) return direct;
+
+    const canonicalNeedle = canonicalNormalize(needle);
+    if (canonicalNeedle && canonicalNeedle !== needle) {
+      const canonicalExact = findTextOccurrences(plain, needle, { minConfidence: 1.0 }).filter(
+        (match) => canonicalNormalize(plain.slice(match.start, match.end)) === canonicalNeedle,
+      );
+      const canonicalHit = pickClosestSpan(canonicalExact, opts?.hintStart);
+      if (canonicalHit) return canonicalHit;
+    }
+
+    const collapsed = needle.replace(/\s+/g, ' ').trim();
+    if (collapsed && collapsed !== needle) {
+      const collapsedHit = pickClosestSpan(gatherExactOccurrences(plain, collapsed), opts?.hintStart);
+      if (collapsedHit) return collapsedHit;
+    }
+  }
+  return null;
+}
+
 function locateSpanByEvidenceSearch(
   plain: string,
   f: Pick<AnalysisFinding, 'evidenceSnippet' | 'startOffsetGlobal' | 'endOffsetGlobal'>,
@@ -890,17 +968,31 @@ function viewerPageLocalSpanToGlobal(
 
 function resolveFindingViaStoredPageData(
   finding: AnalysisFinding,
-  pages: Array<{ pageNumber: number; content: string }>
-): { pageNumber: number; localStart: number; localEnd: number; globalStart: number; globalEnd: number; method: 'stored_offsets' | 'stored_page_search' } | null {
-  if (!pages.length || finding.pageNumber == null || finding.pageNumber < 1) return null;
-  const page = pages.find((p) => p.pageNumber === finding.pageNumber);
+  pages: Array<{ pageNumber: number; content: string }>,
+  opts?: { strictExactOnly?: boolean }
+): { pageNumber: number; localStart: number; localEnd: number; globalStart: number; globalEnd: number; method: 'stored_offsets' | 'stored_page_search' | 'page_exact' } | null {
+  const pageNumber = findingPreferredPageNumber(finding);
+  if (!pages.length || pageNumber == null || pageNumber < 1) return null;
+  const page = pages.find((p) => p.pageNumber === pageNumber);
   if (!page) return null;
   const pageLen = (page.content ?? '').length;
   if (pageLen <= 0) return null;
 
-  const evidenceNorm = normalizeEvidenceForSearch(finding.evidenceSnippet ?? '');
-  const startOffsetPage = finding.startOffsetPage;
-  const endOffsetPage = finding.endOffsetPage;
+  const evidenceNorm = findingPreferredAnchorText(finding);
+  const startOffsetPage = findingPreferredStartOffsetPage(finding);
+  const endOffsetPage = findingPreferredEndOffsetPage(finding);
+  const strictExactOnly = opts?.strictExactOnly === true;
+
+  if (strictExactOnly) {
+    const strictHit = locateSpanByStrictExactSearch(page.content ?? '', finding, {
+      hintStart: startOffsetPage,
+    });
+    if (!strictHit) return null;
+    const globalSpan = viewerPageLocalSpanToGlobal(page.pageNumber, strictHit.start, strictHit.end, pages);
+    if (!globalSpan) return null;
+    return { pageNumber: page.pageNumber, localStart: strictHit.start, localEnd: strictHit.end, ...globalSpan, method: 'page_exact' };
+  }
+
   if (
     typeof startOffsetPage === 'number' &&
     typeof endOffsetPage === 'number' &&
@@ -950,7 +1042,7 @@ type WorkspaceFindingResolution = {
   localEnd: number | null;
   globalStart: number | null;
   globalEnd: number | null;
-  method: 'stored_offsets' | 'stored_page_search' | 'global_search' | 'workspace_search' | 'unresolved';
+  method: 'stored_offsets' | 'stored_page_search' | 'page_exact' | 'document_exact' | 'global_search' | 'workspace_search' | 'unresolved';
 };
 
 function isValidWorkspaceFindingResolution(
@@ -984,6 +1076,28 @@ function resolveFindingViaWorkspaceSearch(
   const span = resolveFindingSpanInText(workspacePlain, f, locateInFullDoc);
   if (!span || span.end <= span.start) return null;
   return workspaceGlobalSpanToPageLocal(span.start, span.end, pages);
+}
+
+function resolveFindingViaStrictWorkspaceSearch(
+  f: AnalysisFinding,
+  workspacePlain: string,
+  pages: Array<{ pageNumber: number; content: string }>
+): { pageNumber: number; localStart: number; localEnd: number; globalStart: number; globalEnd: number; method: 'document_exact' } | null {
+  if (!workspacePlain.trim() || !pages.length) return null;
+  const span = locateSpanByStrictExactSearch(workspacePlain, f, {
+    hintStart: findingPreferredStartOffsetGlobal(f),
+  });
+  if (!span || span.end <= span.start) return null;
+  const hit = workspaceGlobalSpanToPageLocal(span.start, span.end, pages);
+  if (!hit) return null;
+  return {
+    pageNumber: hit.pageNumber,
+    localStart: hit.localStart,
+    localEnd: hit.localEnd,
+    globalStart: span.start,
+    globalEnd: span.end,
+    method: 'document_exact',
+  };
 }
 
 function resolveFindingSpanInText(
@@ -1914,6 +2028,7 @@ export function ScriptWorkspace() {
   const totalPages = editorData?.pages?.length ?? 0;
   const isPageMode = totalPages > 0;
   const safeCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+  const strictImportedAnchoring = !editorData?.sourcePdfSignedUrl;
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -3390,9 +3505,17 @@ export function ScriptWorkspace() {
     for (const f of workspaceVisibleReportFindings) {
       const cached = workspaceHighlightCache[f.id];
       if (cached) {
-        if (
+        const cacheAllowedInCurrentMode =
+          !strictImportedAnchoring ||
           !cached.resolved ||
-          (cached.pageNumber != null &&
+          cached.method === 'stored_offsets' ||
+          cached.method === 'page_exact' ||
+          cached.method === 'document_exact';
+        if (
+          cacheAllowedInCurrentMode &&
+          !cached.resolved ||
+          (cacheAllowedInCurrentMode &&
+            cached.pageNumber != null &&
             cached.localStart != null &&
             cached.localEnd != null &&
             pages.some((p) => p.pageNumber === cached.pageNumber && (p.content ?? '').length >= cached.localEnd))
@@ -3401,9 +3524,35 @@ export function ScriptWorkspace() {
           continue;
         }
       }
-      const storedHit = resolveFindingViaStoredPageData(f, pages);
+      const storedHit = resolveFindingViaStoredPageData(f, pages, { strictExactOnly: strictImportedAnchoring });
       if (storedHit) {
         map.set(f.id, { resolved: true, ...storedHit });
+        continue;
+      }
+      if (strictImportedAnchoring) {
+        const strictHit = resolveFindingViaStrictWorkspaceSearch(f, workspacePlainFull, pages);
+        if (strictHit) {
+          map.set(f.id, { resolved: true, ...strictHit });
+          continue;
+        }
+      }
+      if (strictImportedAnchoring) {
+        const fallbackPage =
+          findingPreferredPageNumber(f) ??
+          displayPageForFinding(
+            findingPreferredStartOffsetGlobal(f),
+            pages.map((p) => ({ pageNumber: p.pageNumber, content: p.content })),
+            null,
+          );
+        map.set(f.id, {
+          resolved: false,
+          pageNumber: fallbackPage,
+          localStart: null,
+          localEnd: null,
+          globalStart: null,
+          globalEnd: null,
+          method: 'unresolved',
+        });
         continue;
       }
       const globalSpan = resolveFindingSpanInText(workspacePlainFull, f, locateFindingInContent);
@@ -3423,9 +3572,9 @@ export function ScriptWorkspace() {
         continue;
       }
       const fallbackPage =
-        f.pageNumber ??
+        findingPreferredPageNumber(f) ??
         displayPageForFinding(
-          f.startOffsetGlobal,
+          findingPreferredStartOffsetGlobal(f),
           pages.map((p) => ({ pageNumber: p.pageNumber, content: p.content })),
           null,
         );
@@ -3440,7 +3589,7 @@ export function ScriptWorkspace() {
       });
     }
     return map;
-  }, [workspacePlainFull, workspaceVisibleReportFindings, pagesSortedForViewer, locateFindingInContent, workspaceHighlightCache]);
+  }, [workspacePlainFull, workspaceVisibleReportFindings, pagesSortedForViewer, locateFindingInContent, workspaceHighlightCache, strictImportedAnchoring]);
 
   useEffect(() => {
     if (!workspaceHighlightCacheKey || !workspaceVisibleReportFindings.length) return;
@@ -3572,11 +3721,13 @@ export function ScriptWorkspace() {
         }
         return;
       }
-      const resolvedSpan = resolveFindingSpanInText(workspacePlainFull, f, locateFindingInContent);
+      const resolvedSpan = strictImportedAnchoring
+        ? null
+        : resolveFindingSpanInText(workspacePlainFull, f, locateFindingInContent);
       if (!resolvedSpan) {
         const fallbackPage =
           findingWorkspaceResolve.get(f.id)?.pageNumber ??
-          displayPageForFinding(f.startOffsetGlobal, pages, f.pageNumber ?? null);
+          displayPageForFinding(findingPreferredStartOffsetGlobal(f), pages, findingPreferredPageNumber(f));
         if (fallbackPage != null && pagesSortedForViewer.length > 0) {
           setCurrentPage(fallbackPage);
           setSearchParams(
@@ -3628,7 +3779,7 @@ export function ScriptWorkspace() {
         );
       }
     },
-    [workspacePlainFull, pagesSortedForViewer, locateFindingInContent, lang, setSearchParams, setCurrentPage, findingWorkspaceResolve, workspaceViewMode]
+    [workspacePlainFull, pagesSortedForViewer, locateFindingInContent, lang, setSearchParams, setCurrentPage, findingWorkspaceResolve, workspaceViewMode, strictImportedAnchoring]
   );
 
   // Apply finding highlights in formatted HTML by wrapping DOM ranges (no innerHTML replace).
@@ -3663,20 +3814,34 @@ export function ScriptWorkspace() {
       let appliedCount = 0;
       const domRaw = idx.segments.map((s) => s.text).join('');
       for (const f of sorted) {
-        const resolvedInDom =
-          resolveFindingSpanInText(domRaw, f, locateFindingInContent, locateOpts) ??
-          (currentPageData?.content
-            ? resolveFindingSpanInText(currentPageData.content, f, locateFindingInContent, locateOpts)
-            : null);
         let rawStart: number;
         let rawEnd: number;
-        if (resolvedInDom) {
-          rawStart = resolvedInDom.start;
-          rawEnd = resolvedInDom.end;
+        if (strictImportedAnchoring) {
+          const resolved = findingWorkspaceResolve.get(f.id);
+          if (!resolved?.resolved) continue;
+          if (locateOpts?.pageSlice) {
+            if (resolved.pageNumber !== safeCurrentPage || resolved.localStart == null || resolved.localEnd == null) continue;
+            rawStart = resolved.localStart;
+            rawEnd = resolved.localEnd;
+          } else {
+            if (resolved.globalStart == null || resolved.globalEnd == null) continue;
+            rawStart = resolved.globalStart;
+            rawEnd = resolved.globalEnd;
+          }
         } else {
-          rawStart = f.startOffsetGlobal ?? -1;
-          rawEnd = f.endOffsetGlobal ?? -1;
-          if (rawStart < 0 || rawEnd <= rawStart) continue;
+          const resolvedInDom =
+            resolveFindingSpanInText(domRaw, f, locateFindingInContent, locateOpts) ??
+            (currentPageData?.content
+              ? resolveFindingSpanInText(currentPageData.content, f, locateFindingInContent, locateOpts)
+              : null);
+          if (resolvedInDom) {
+            rawStart = resolvedInDom.start;
+            rawEnd = resolvedInDom.end;
+          } else {
+            rawStart = f.startOffsetGlobal ?? -1;
+            rawEnd = f.endOffsetGlobal ?? -1;
+            if (rawStart < 0 || rawEnd <= rawStart) continue;
+          }
         }
         const maxRaw = Math.max(0, idx.rawToNorm.length - 1);
         rawStart = Math.max(0, Math.min(rawStart, maxRaw));
@@ -3739,7 +3904,7 @@ export function ScriptWorkspace() {
       }
       return appliedCount;
     },
-    [locateFindingInContent, currentPageData?.content]
+    [locateFindingInContent, currentPageData?.content, findingWorkspaceResolve, safeCurrentPage, strictImportedAnchoring]
   );
 
   useEffect(() => {

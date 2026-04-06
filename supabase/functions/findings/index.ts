@@ -20,7 +20,7 @@ function pathAfter(base: string, url: string): string {
 }
 
 const FINDING_COLS =
-  "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, rationale_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, created_at, created_by, manual_comment";
+  "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, rationale_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, anchor_status, anchor_method, anchor_page_number, anchor_start_offset_page, anchor_end_offset_page, anchor_start_offset_global, anchor_end_offset_global, anchor_text, anchor_confidence, anchor_updated_at, created_at, created_by, manual_comment";
 
 async function selectFindings(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -64,6 +64,16 @@ function camelFinding(r: Record<string, unknown>, createdBy: string | null = nul
     pageNumber: r.page_number ?? null,
     startOffsetPage: r.start_offset_page ?? null,
     endOffsetPage: r.end_offset_page ?? null,
+    anchorStatus: r.anchor_status ?? null,
+    anchorMethod: r.anchor_method ?? null,
+    anchorPageNumber: r.anchor_page_number ?? null,
+    anchorStartOffsetPage: r.anchor_start_offset_page ?? null,
+    anchorEndOffsetPage: r.anchor_end_offset_page ?? null,
+    anchorStartOffsetGlobal: r.anchor_start_offset_global ?? null,
+    anchorEndOffsetGlobal: r.anchor_end_offset_global ?? null,
+    anchorText: r.anchor_text ?? null,
+    anchorConfidence: r.anchor_confidence ?? null,
+    anchorUpdatedAt: r.anchor_updated_at ?? null,
     createdAt: r.created_at,
     reviewStatus: r.review_status ?? "violation",
     reviewReason: r.review_reason ?? null,
@@ -627,15 +637,25 @@ Deno.serve(async (req: Request) => {
         end_offset_global: resolvedEndOffsetGlobal,
         evidence_hash: evidenceHash,
         manual_comment: manualComment || null,
+        anchor_status: "exact",
+        anchor_method: "stored_offsets",
+        anchor_start_offset_global: resolvedStartOffsetGlobal,
+        anchor_end_offset_global: resolvedEndOffsetGlobal,
+        anchor_text: evidenceSnippet,
+        anchor_confidence: 1,
+        anchor_updated_at: new Date().toISOString(),
       };
       if (pageNumber != null) insertPayload.page_number = pageNumber;
       if (pageLocal.start_offset_page != null) insertPayload.start_offset_page = pageLocal.start_offset_page;
       if (pageLocal.end_offset_page != null) insertPayload.end_offset_page = pageLocal.end_offset_page;
+      if (pageNumber != null) insertPayload.anchor_page_number = pageNumber;
+      if (pageLocal.start_offset_page != null) insertPayload.anchor_start_offset_page = pageLocal.start_offset_page;
+      if (pageLocal.end_offset_page != null) insertPayload.anchor_end_offset_page = pageLocal.end_offset_page;
 
       const { data: inserted, error: insertErr } = await supabase
         .from("analysis_findings")
         .insert(insertPayload)
-        .select("id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, page_number, created_at, review_status, created_by, manual_comment")
+        .select("id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, page_number, anchor_status, anchor_method, anchor_page_number, anchor_start_offset_page, anchor_end_offset_page, anchor_start_offset_global, anchor_end_offset_global, anchor_text, anchor_confidence, anchor_updated_at, created_at, review_status, created_by, manual_comment")
         .single();
 
       if (insertErr) {
