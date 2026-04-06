@@ -526,6 +526,11 @@ export function Results() {
   })();
 
   const violationsUniqueCount = violationsDeduped.length;
+  const preferCanonicalFindingsUi =
+    canonicalSummaryFindings.length > 0 &&
+    (violationsDeduped.length === 0 ||
+      violationsDeduped.length < Math.max(2, Math.ceil(canonicalSummaryFindings.length * 0.6)));
+  const useRealFindingsUi = hasRealFindings && !preferCanonicalFindingsUi;
   const displayViolations = hasRealFindings ? (showAllFindingRows ? violations : violationsDeduped) : [];
   const displayApprovedFindings = hasRealFindings
     ? showAllFindingRows
@@ -564,6 +569,11 @@ export function Results() {
     ? filteredDisplayViolations.length
     : filteredCanonicalSummaryFindings.length;
   const showOnlySpecialNotes = findingFilter === 'special';
+  const showEmptyFindingsState = showOnlySpecialNotes
+    ? reportHints.length === 0
+    : useRealFindingsUi
+      ? filteredDisplayViolations.length === 0
+      : filteredCanonicalSummaryFindings.length === 0;
 
   const decision: 'PASS' | 'REJECT' | 'REVIEW_REQUIRED' =
     displayViolationsCount > 0 ? 'REVIEW_REQUIRED' : 'PASS';
@@ -1422,7 +1432,7 @@ export function Results() {
           </div>
         </div>
         <div className="flex items-center gap-3 print:hidden flex-wrap">
-          {hasRealFindings && violations.length > 0 && (
+          {useRealFindingsUi && violations.length > 0 && (
             <div className="flex flex-col gap-0.5 items-end sm:items-center sm:flex-row sm:gap-2 border border-border/60 rounded-lg px-3 py-2 bg-surface/50">
               <div
                 className="flex items-center gap-2 cursor-pointer select-none"
@@ -1461,7 +1471,7 @@ export function Results() {
               )}
             </div>
           )}
-          {hasRealFindings && (
+          {useRealFindingsUi && (
             <label className="flex items-center gap-2 text-sm text-text-muted cursor-pointer">
               <input
                 type="checkbox"
@@ -1766,7 +1776,7 @@ export function Results() {
             )}
           </h3>
 
-          {(hasRealFindings ? filteredDisplayViolations.length === 0 : filteredViolationsCount === 0) ? (
+          {showEmptyFindingsState ? (
             <div className="text-center py-16 bg-surface border-2 border-dashed border-border rounded-2xl">
               <CheckCircle className="w-12 h-12 text-success mx-auto mb-4 opacity-50" />
               <h4 className="text-lg font-bold text-text-main">
@@ -1804,11 +1814,11 @@ export function Results() {
             </div>
           ) : showOnlySpecialNotes
             ? null
-            : hasRealFindings && filteredDisplayViolations.length > 0
+            : useRealFindingsUi && filteredDisplayViolations.length > 0
             ? renderFindingsFromReal(filteredDisplayViolations)
             : filteredCanonicalSummaryFindings.length > 0
               ? renderFindingsFromCanonicalSummary(filteredCanonicalSummaryFindings)
-              : hasRealFindings
+              : useRealFindingsUi
                 ? renderFindingsFromReal(filteredDisplayViolations)
                 : renderFindingsFromSummary(filteredCanonicalSummaryFindings)}
 
@@ -1876,7 +1886,7 @@ export function Results() {
           )}
 
           {/* Approved section */}
-          {!showOnlySpecialNotes && hasRealFindings && displayApprovedFindings.length > 0 && (
+          {!showOnlySpecialNotes && useRealFindingsUi && displayApprovedFindings.length > 0 && (
             <>
               <h3 className="font-bold text-xl text-text-main border-b border-success/30 pb-2 flex items-center gap-2 mt-12">
                 <Shield className="w-5 h-5 text-success" />

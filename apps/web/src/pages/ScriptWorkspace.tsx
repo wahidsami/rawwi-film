@@ -646,6 +646,79 @@ function dedupeAnalysisFindings(list: AnalysisFinding[]): AnalysisFinding[] {
   return [...byCanonical.values()];
 }
 
+type WorkspaceCanonicalSummaryFinding = {
+  canonical_finding_id: string;
+  title_ar?: string | null;
+  evidence_snippet?: string | null;
+  severity?: string | null;
+  confidence?: number | null;
+  rationale?: string | null;
+  source?: string | null;
+  primary_article_id?: number | null;
+  primary_policy_atom_id?: string | null;
+};
+
+function isSyntheticWorkspaceFinding(f: AnalysisFinding): boolean {
+  return f.source === 'canonical_summary';
+}
+
+function synthesizeWorkspaceFindingFromCanonical(
+  finding: WorkspaceCanonicalSummaryFinding,
+  scriptId: string | undefined,
+  versionId: string | undefined,
+  jobId: string | undefined
+): AnalysisFinding {
+  const articleId = Number.isFinite(finding.primary_article_id) ? Number(finding.primary_article_id) : DEFAULT_ACTIONABLE_ARTICLE_ID;
+  const canonicalId = (finding.canonical_finding_id || '').trim() || `canonical-${articleId}-${(finding.evidence_snippet ?? '').slice(0, 24)}`;
+  return {
+    id: `canonical:${canonicalId}`,
+    jobId: jobId ?? '',
+    scriptId: scriptId ?? '',
+    versionId: versionId ?? '',
+    source: 'canonical_summary',
+    articleId,
+    atomId: null,
+    severity: (finding.severity ?? 'medium') || 'medium',
+    confidence: typeof finding.confidence === 'number' ? finding.confidence : 0,
+    titleAr: (finding.title_ar ?? '').trim(),
+    descriptionAr: (finding.rationale ?? finding.title_ar ?? finding.evidence_snippet ?? '').trim() || '—',
+    rationaleAr: (finding.rationale ?? null) as string | null,
+    evidenceSnippet: (finding.evidence_snippet ?? '').trim(),
+    startOffsetGlobal: null,
+    endOffsetGlobal: null,
+    startLineChunk: null,
+    endLineChunk: null,
+    pageNumber: null,
+    startOffsetPage: null,
+    endOffsetPage: null,
+    anchorStatus: 'unresolved',
+    anchorMethod: 'canonical_summary',
+    anchorPageNumber: null,
+    anchorStartOffsetPage: null,
+    anchorEndOffsetPage: null,
+    anchorStartOffsetGlobal: null,
+    anchorEndOffsetGlobal: null,
+    anchorText: (finding.evidence_snippet ?? '').trim(),
+    anchorConfidence: null,
+    anchorUpdatedAt: null,
+    location: {
+      v3: {
+        canonical_finding_id: canonicalId,
+        primary_article_id: articleId,
+        primary_policy_atom_id: finding.primary_policy_atom_id ?? null,
+      },
+    },
+    createdAt: new Date(0).toISOString(),
+    reviewStatus: 'violation',
+    reviewReason: null,
+    reviewedBy: null,
+    reviewedAt: null,
+    reviewedRole: null,
+    createdBy: null,
+    manualComment: null,
+  };
+}
+
 function expandHighlightRangeToSentence(
   plain: string,
   start: number,
@@ -1671,12 +1744,60 @@ export function ScriptWorkspace() {
     [selectedReportSummary]
   );
 
-  const workspaceVisibleReportFindings = useMemo(() => {
+  const workspaceCanonicalSummaryFindings = useMemo(
+    () =>
+      (((selectedReportSummary?.summaryJson?.canonical_findings ?? []) as WorkspaceCanonicalSummaryFinding[]) ?? []).filter(
+        (finding) => Boolean(finding?.canonical_finding_id)
+      ),
+    [selectedReportSummary]
+  );
+
+  const workspaceRealViolationFindings = useMemo(() => {
     const violations = reportFindings.filter(
       (f) => f.reviewStatus !== 'approved' && !shouldTreatFindingAsSpecialNote(f, workspaceCanonicalHintIds)
     );
     return dedupeAnalysisFindings(violations);
   }, [reportFindings, workspaceCanonicalHintIds]);
+
+  const workspaceUseCanonicalFallback = useMemo(
+    () =>
+      workspaceCanonicalSummaryFindings.length > 0 &&
+      workspaceRealViolationFindings.length < Math.max(2, Math.ceil(workspaceCanonicalSummaryFindings.length * 0.6)),
+    [workspaceCanonicalSummaryFindings.length, workspaceRealViolationFindings.length]
+  );
+
+  const workspaceVisibleReportFindings = useMemo(() => {
+    if (!workspaceUseCanonicalFallback) return workspaceRealViolationFindings;
+    const realByCanonical = new Map<string, AnalysisFinding>();
+    for (const finding of workspaceRealViolationFindings) {
+      const canonicalId = findingCanonicalId(finding);
+      if (canonicalId) realByCanonical.set(canonicalId, finding);
+    }
+    return workspaceCanonicalSummaryFindings.map((finding) => {
+      const canonicalId = (finding.canonical_finding_id ?? '').trim();
+      return (
+        (canonicalId ? realByCanonical.get(canonicalId) : undefined) ??
+        synthesizeWorkspaceFindingFromCanonical(
+          finding,
+          script?.id,
+          script?.currentVersionId ?? undefined,
+          selectedReportForHighlights?.jobId ?? undefined
+        )
+      );
+    });
+  }, [
+    workspaceUseCanonicalFallback,
+    workspaceRealViolationFindings,
+    workspaceCanonicalSummaryFindings,
+    script?.id,
+    script?.currentVersionId,
+    selectedReportForHighlights?.jobId,
+  ]);
+
+  const workspaceActionableFindings = useMemo(
+    () => workspaceVisibleReportFindings.filter((finding) => !isSyntheticWorkspaceFinding(finding)),
+    [workspaceVisibleReportFindings]
+  );
 
   const workspaceDocumentCaseHints = useMemo(
     () =>
@@ -4915,6 +5036,13 @@ export function ScriptWorkspace() {
               )}
               {workspaceVisibleReportFindings.length > 0 && (
                 <div className="space-y-2 mb-4">
+                  {workspaceUseCanonicalFallback && (
+                    <div className="rounded-md border border-primary/20 bg-primary/5 p-2.5 text-[11px] text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                      {lang === 'ar'
+                        ? 'يعرض هذا التبويب بطاقات التقرير النهائي كنسخة احتياطية لأن صفوف الملاحظات التفصيلية المحمّلة أقل من المتوقع. ستبقى البطاقات ظاهرة للمراجعة، لكن الاعتماد والتعديل متاحان فقط عندما تتوفر صفوف DB الحقيقية.'
+                        : 'This tab is showing final-report cards as a fallback because the loaded detailed finding rows are fewer than expected. Cards stay visible for review, but approve/edit actions are only available when the real DB rows are present.'}
+                    </div>
+                  )}
                   {selectedReportForHighlights && activeWorkspaceHighlightStats.total > 0 && (
                     <div className="rounded-md border border-border/60 bg-surface/80 p-2.5 text-[11px] text-text-main">
                       <span dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -5033,7 +5161,8 @@ export function ScriptWorkspace() {
                       size="sm"
                       variant="outline"
                       className="h-7 text-[10px] px-2"
-                      onClick={() => setSelectedReportFindingIds(workspaceVisibleReportFindings.map((f) => f.id))}
+                      onClick={() => setSelectedReportFindingIds(workspaceActionableFindings.map((f) => f.id))}
+                      disabled={workspaceActionableFindings.length === 0}
                     >
                       {lang === 'ar' ? 'تحديد الكل' : 'Select all'}
                     </Button>
@@ -5092,6 +5221,7 @@ export function ScriptWorkspace() {
                             type="checkbox"
                             className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
                             checked={selectedReportFindingIds.includes(f.id)}
+                            disabled={isSyntheticWorkspaceFinding(f)}
                             onClick={(e) => e.stopPropagation()}
                             onChange={(e) => {
                               const checked = e.target.checked;
@@ -5125,6 +5255,10 @@ export function ScriptWorkspace() {
                             <Badge variant="outline" className="text-[10px]">{lang === 'ar' ? 'يدوي' : 'Manual'}</Badge>
                           ) : (f.source === 'ai' || f.source === 'lexicon_mandatory') ? (
                             <Badge variant="warning" className="text-[10px]">{f.source === 'lexicon_mandatory' ? t('findingSourceGlossary') : 'AI'}</Badge>
+                          ) : isSyntheticWorkspaceFinding(f) ? (
+                            <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
+                              {lang === 'ar' ? 'من التقرير النهائي' : 'From final report'}
+                            </Badge>
                           ) : null}
                           {findingWorkspaceResolve.get(f.id)?.resolved === false && (
                             <Badge variant="outline" className="text-[10px] border-warning/40 text-warning">
@@ -5143,7 +5277,11 @@ export function ScriptWorkspace() {
                         </p>
                       )}
                       <p className="mt-2 text-[11px] text-text-muted" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                        {findingWorkspaceResolve.get(f.id)?.resolved === false
+                        {isSyntheticWorkspaceFinding(f)
+                          ? lang === 'ar'
+                            ? 'هذه البطاقة جاءت من التقرير النهائي لأن صف الملاحظة التفصيلي لم يُحمّل بعد. ستبقى ظاهرة للمراجعة ولن تتيح إجراءات الاعتماد حتى تتوفر البيانات التفصيلية.'
+                            : 'This card comes from the final report because the detailed finding row is not available yet. It remains visible for review, but action buttons stay disabled until the detailed record is available.'
+                          : findingWorkspaceResolve.get(f.id)?.resolved === false
                           ? lang === 'ar'
                             ? 'هذه الملاحظة لم تُحل بصريًا بعد. الضغط عليها سينقلك لأقرب صفحة مع إبقائها ظاهرة للمراجعة اليدوية.'
                             : 'This finding is not visually anchored yet. Clicking it will take you to the closest page and keep it flagged for manual verification.'
@@ -5151,7 +5289,7 @@ export function ScriptWorkspace() {
                             ? 'اضغط على البطاقة للانتقال إلى موضعها وتمييزها داخل النص.'
                             : 'Click the card to jump to and highlight its location in the script.'}
                       </p>
-                      {f.source !== 'manual' && (
+                      {f.source !== 'manual' && !isSyntheticWorkspaceFinding(f) && (
                         <div className="flex flex-wrap gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             type="button"
