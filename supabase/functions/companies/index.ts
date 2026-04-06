@@ -99,8 +99,8 @@ function normalizeMobile(value: string | null | undefined): string | null {
 
 function validateMobile(value: string | null): string | null {
   if (!value) return "mobile is required";
-  if (!/^\d{10,15}$/.test(value)) {
-    return "mobile must contain 10 to 15 digits";
+  if (!/^05\d{8}$/.test(value)) {
+    return "mobile must match Saudi format 05XXXXXXXX";
   }
   return null;
 }
@@ -109,6 +109,14 @@ function normalizeEmail(value: string | null | undefined): string | null {
   if (typeof value !== "string") return null;
   const trimmed = toAsciiDigits(value).trim().toLowerCase();
   return trimmed || null;
+}
+
+function containsArabicLetters(value: string): boolean {
+  return /[\u0600-\u06FF]/.test(value);
+}
+
+function containsEnglishLetters(value: string): boolean {
+  return /[A-Za-z]/.test(value);
 }
 
 function validateEmail(value: string | null): string | null {
@@ -265,8 +273,10 @@ Deno.serve(async (req: Request) => {
       }
       const nameArErr = validateSafeClientText("nameAr", nameAr);
       if (nameArErr) return jsonResponse({ error: nameArErr }, 400);
+      if (containsEnglishLetters(nameAr)) return jsonResponse({ error: "nameAr must use Arabic letters" }, 400);
       const nameEnErr = validateSafeClientText("nameEn", nameEn);
       if (nameEnErr) return jsonResponse({ error: nameEnErr }, 400);
+      if (containsArabicLetters(nameEn)) return jsonResponse({ error: "nameEn must use English letters" }, 400);
       const repName = typeof body.representativeName === "string" ? body.representativeName.trim() : "";
       if (repName) {
         const repErr = validateSafeClientText("representativeName", repName);
@@ -417,6 +427,7 @@ Deno.serve(async (req: Request) => {
         }
         const err = validateSafeClientText("nameAr", v);
         if (err) return jsonResponse({ error: err }, 400);
+        if (containsEnglishLetters(v)) return jsonResponse({ error: "nameAr must use Arabic letters" }, 400);
         updates.name_ar = v;
       }
       if (body.nameEn !== undefined) {
@@ -426,6 +437,7 @@ Deno.serve(async (req: Request) => {
         }
         const err = validateSafeClientText("nameEn", v);
         if (err) return jsonResponse({ error: err }, 400);
+        if (containsArabicLetters(v)) return jsonResponse({ error: "nameEn must use English letters" }, 400);
         updates.name_en = v;
       }
       if (body.representativeName !== undefined) {

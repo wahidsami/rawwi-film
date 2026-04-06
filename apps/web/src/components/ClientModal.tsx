@@ -25,6 +25,14 @@ function normalizeEmail(value: string): string {
   return toAsciiDigits(value).trim().toLowerCase();
 }
 
+function containsArabicLetters(value: string): boolean {
+  return /[\u0600-\u06FF]/.test(value);
+}
+
+function containsEnglishLetters(value: string): boolean {
+  return /[A-Za-z]/.test(value);
+}
+
 interface ClientModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -146,14 +154,16 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
       company.nameEn.trim().toLowerCase() === formData.nameEn.trim().toLowerCase()
     );
     if (!formData.nameAr.trim()) newErrors.nameAr = lang === 'ar' ? 'الاسم بالعربية مطلوب' : 'Arabic name is required';
+    else if (containsEnglishLetters(formData.nameAr)) newErrors.nameAr = lang === 'ar' ? 'الرجاء استخدام حروف عربية في حقل الاسم العربي' : 'Use Arabic letters in the Arabic name field';
     else if (duplicateNameAr) newErrors.nameAr = lang === 'ar' ? 'اسم الشركة العربي مستخدم بالفعل' : 'Arabic company name already exists';
     if (!formData.nameEn.trim()) newErrors.nameEn = lang === 'ar' ? 'الاسم بالإنجليزية مطلوب' : 'English name is required';
+    else if (containsArabicLetters(formData.nameEn)) newErrors.nameEn = lang === 'ar' ? 'الرجاء استخدام حروف إنجليزية في حقل الاسم الإنجليزي' : 'Use English letters in the English name field';
     else if (duplicateNameEn) newErrors.nameEn = lang === 'ar' ? 'اسم الشركة الإنجليزي مستخدم بالفعل' : 'English company name already exists';
     if (!formData.repName.trim()) newErrors.repName = lang === 'ar' ? 'اسم الممثل مطلوب' : 'Representative name is required';
     if (!normalizedPhone) {
       newErrors.phone = lang === 'ar' ? 'الجوال مطلوب' : 'Mobile is required';
-    } else if (!/^\d{10,15}$/.test(normalizedPhone)) {
-      newErrors.phone = lang === 'ar' ? 'أدخل رقماً صالحاً من 10 إلى 15 رقماً' : 'Enter a valid mobile number with 10 to 15 digits';
+    } else if (!/^05\d{8}$/.test(normalizedPhone)) {
+      newErrors.phone = lang === 'ar' ? 'أدخل رقم جوال سعودي بصيغة 05XXXXXXXX' : 'Enter a Saudi mobile number in the format 05XXXXXXXX';
     }
     if (!normalizedEmail) {
       newErrors.email = lang === 'ar' ? 'البريد الإلكتروني مطلوب' : 'Email is required';

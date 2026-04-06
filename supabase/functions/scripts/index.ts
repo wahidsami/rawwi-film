@@ -82,6 +82,9 @@ type DuplicateMatchRow = {
   sourceFileName: string | null;
   createdAt: string;
   companyName: string | null;
+  importedByName: string | null;
+  contextType: "client" | "quick_analysis";
+  contextLabel: string | null;
   sameScript: boolean;
   isCurrentVersion: boolean;
   analyzedBefore: boolean;
@@ -141,6 +144,11 @@ function normalizeReceivedAt(value: unknown): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
   return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : null;
+}
+
+function normalizeScriptTitleComparable(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value.trim().normalize("NFC").replace(/\s+/g, " ").toLowerCase();
 }
 
 async function ensureQuickAnalysisClientId(
@@ -685,6 +693,7 @@ Deno.serve(async (req: Request) => {
       current_version_id: string | null;
       created_by: string | null;
       assignee_id: string | null;
+      is_quick_analysis?: boolean | null;
     };
 
     let exactDuplicateVersionIds: string[] = [];
@@ -729,7 +738,7 @@ Deno.serve(async (req: Request) => {
       if (duplicateScriptIds.length > 0) {
         const { data: duplicateScripts, error: duplicateScriptsErr } = await supabase
           .from("scripts")
-          .select("id, title, status, client_id, company_id, current_version_id, created_by, assignee_id")
+          .select("id, title, status, client_id, company_id, current_version_id, created_by, assignee_id, is_quick_analysis")
           .in("id", duplicateScriptIds);
         if (duplicateScriptsErr) return json({ error: duplicateScriptsErr.message }, 500);
         visibleScripts = (duplicateScripts ?? []).map(scriptRowShape).filter((row) => isAdmin || row.created_by === uid || row.assignee_id === uid);
@@ -739,7 +748,7 @@ Deno.serve(async (req: Request) => {
     if (versionRows.length === 0 && normalizedCurrentContent) {
       let visibleScriptsQuery = supabase
         .from("scripts")
-        .select("id, title, status, client_id, company_id, current_version_id, created_by, assignee_id");
+        .select("id, title, status, client_id, company_id, current_version_id, created_by, assignee_id, is_quick_analysis");
       if (!isAdmin) {
         visibleScriptsQuery = visibleScriptsQuery.or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
       }
@@ -818,6 +827,45 @@ Deno.serve(async (req: Request) => {
       ]),
     );
 
+    const versionIds = visibleVersions.map((row) => row.id);
+    const { data: versionAuditRows } = versionIds.length > 0
+      ? await supabase
+          .from("audit_events")
+          .select("target_id, actor_user_id, actor_name, occurred_at, created_at, event_type")
+          .eq("target_type", "script_version")
+          .eq("event_type", "SCRIPT_VERSION_CREATED")
+          .in("target_id", versionIds)
+      : { data: [], error: null };
+    const versionAuditById = new Map<string, { actor_user_id: string | null; actor_name: string | null; occurred_at: string | null }>();
+    for (const row of (versionAuditRows ?? []) as Array<{ target_id?: string | null; actor_user_id?: string | null; actor_name?: string | null; occurred_at?: string | null; created_at?: string | null }>) {
+      if (!row.target_id) continue;
+      const timestamp = row.occurred_at ?? row.created_at ?? null;
+      const existing = versionAuditById.get(row.target_id);
+      const nextTime = timestamp ? new Date(timestamp).getTime() : 0;
+      const existingTime = existing?.occurred_at ? new Date(existing.occurred_at).getTime() : 0;
+      if (!existing || nextTime > existingTime) {
+        versionAuditById.set(row.target_id, {
+          actor_user_id: row.actor_user_id ?? null,
+          actor_name: row.actor_name?.trim() || null,
+          occurred_at: timestamp,
+        });
+      }
+    }
+
+    const profileLookupIds = [...new Set([
+      ...visibleScripts.map((row) => row.created_by),
+      ...Array.from(versionAuditById.values()).map((row) => row.actor_user_id),
+    ].filter((value): value is string => typeof value === "string" && value.length > 0))];
+    const { data: creatorProfiles } = profileLookupIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("user_id, name")
+          .in("user_id", profileLookupIds)
+      : { data: [], error: null };
+    const creatorNameById = new Map(
+      ((creatorProfiles ?? []) as Array<{ user_id: string; name?: string | null }>).map((row) => [row.user_id, row.name?.trim() || null]),
+    );
+
     const { data: jobs } = await supabase
       .from("analysis_jobs")
       .select("script_id, completed_at, created_by, status")
@@ -849,6 +897,12 @@ Deno.serve(async (req: Request) => {
         const scriptRow = visibleScriptById.get(row.script_id)!;
         const latestJob = latestJobByScript.get(row.script_id);
         const companyId = scriptRow.company_id ?? scriptRow.client_id ?? null;
+        const versionAudit = versionAuditById.get(row.id);
+        const importedByName =
+          versionAudit?.actor_name
+          ?? (versionAudit?.actor_user_id ? creatorNameById.get(versionAudit.actor_user_id) ?? null : null)
+          ?? (scriptRow.created_by ? creatorNameById.get(scriptRow.created_by) ?? null : null);
+        const isQuickAnalysis = scriptRow.is_quick_analysis === true;
         return {
           scriptId: row.script_id,
           versionId: row.id,
@@ -858,6 +912,11 @@ Deno.serve(async (req: Request) => {
           sourceFileName: row.source_file_name ?? null,
           createdAt: row.created_at,
           companyName: companyId ? clientNameById.get(companyId) ?? null : null,
+          importedByName,
+          contextType: isQuickAnalysis ? "quick_analysis" : "client",
+          contextLabel: isQuickAnalysis
+            ? "Quick Analysis"
+            : (companyId ? clientNameById.get(companyId) ?? null : null),
           sameScript: row.script_id === versionRow.script_id,
           isCurrentVersion: scriptRow.current_version_id === row.id,
           analyzedBefore: latestJob?.completed_at != null,
@@ -920,6 +979,7 @@ Deno.serve(async (req: Request) => {
     const title = body.title;
     const type = body.type;
     const status = body.status;
+    const workClassification = normalizeWorkClassification(body.workClassification ?? body.work_classification);
     if (companyId == null || typeof companyId !== "string" || !companyId.trim()) {
       return json({ error: "companyId is required" }, 400);
     }
@@ -929,16 +989,60 @@ Deno.serve(async (req: Request) => {
     if (type == null || typeof type !== "string" || !String(type).trim()) {
       return json({ error: "type is required" }, 400);
     }
+    if (!workClassification) {
+      return json({ error: "workClassification is required" }, 400);
+    }
     if (status == null || typeof status !== "string" || !String(status).trim()) {
       return json({ error: "status is required" }, 400);
     }
     const clientId = companyId.trim();
+    const normalizedTitle = String(title).trim().normalize("NFC");
+    const comparableTitle = normalizeScriptTitleComparable(normalizedTitle);
+    const { data: duplicateTitleRows, error: duplicateTitleErr } = await supabase
+      .from("scripts")
+      .select("id, title, created_at, client_id, company_id, is_quick_analysis")
+      .ilike("title", normalizedTitle)
+      .limit(20);
+    if (duplicateTitleErr) return json({ error: duplicateTitleErr.message }, 500);
+    const duplicateTitleMatches = ((duplicateTitleRows ?? []) as Array<{
+      id: string;
+      title: string;
+      created_at: string;
+      client_id?: string | null;
+      company_id?: string | null;
+      is_quick_analysis?: boolean | null;
+    }>).filter((row) => normalizeScriptTitleComparable(row.title) === comparableTitle);
+    if (duplicateTitleMatches.length > 0) {
+      const duplicateClientIds = [...new Set(duplicateTitleMatches.map((row) => row.company_id ?? row.client_id).filter((value): value is string => typeof value === "string" && value.length > 0))];
+      const { data: duplicateClients } = duplicateClientIds.length > 0
+        ? await supabase.from("clients").select("id, name_ar, name_en").in("id", duplicateClientIds)
+        : { data: [], error: null };
+      const duplicateClientNameById = new Map(
+        ((duplicateClients ?? []) as Array<{ id: string; name_ar?: string | null; name_en?: string | null }>).map((row) => [
+          row.id,
+          row.name_ar?.trim() || row.name_en?.trim() || null,
+        ]),
+      );
+      const matches = duplicateTitleMatches.map((row) => {
+        const duplicateCompanyId = row.company_id ?? row.client_id ?? null;
+        return {
+          scriptId: row.id,
+          scriptTitle: row.title,
+          createdAt: row.created_at,
+          contextType: row.is_quick_analysis === true ? "quick_analysis" : "client",
+          contextLabel: row.is_quick_analysis === true
+            ? "Quick Analysis"
+            : (duplicateCompanyId ? duplicateClientNameById.get(duplicateCompanyId) ?? null : null),
+        };
+      });
+      return json({ error: "title already exists", matches }, 409);
+    }
     const insert = {
       client_id: clientId,
       company_id: clientId,
-      title: String(title).trim().normalize("NFC"),
+      title: normalizedTitle,
       type: normalizeType(type),
-      work_classification: normalizeWorkClassification(body.workClassification ?? body.work_classification),
+      work_classification: workClassification,
       episode_count: normalizeEpisodeCount(body.episodeCount ?? body.episode_count),
       received_at: normalizeReceivedAt(body.receivedAt ?? body.received_at),
       status: normalizeStatus(status),

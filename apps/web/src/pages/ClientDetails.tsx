@@ -48,6 +48,10 @@ function parseEpisodeCountInput(value: string): number | null {
   return parsed;
 }
 
+function normalizeScriptTitleForCheck(value: string): string {
+  return value.trim().normalize('NFC').replace(/\s+/g, ' ').toLowerCase();
+}
+
 export function ClientDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -110,13 +114,14 @@ export function ClientDetails() {
   const canAddScript = isAdmin && hasPermission('upload_scripts');
   const [formData, setFormData] = useState({
     title: '',
-    type: 'Film' as 'Film' | 'Series',
+    type: '' as '' | 'Film' | 'Series',
     workClassification: '',
     episodeCount: '' as string,
     receivedAt: new Date().toISOString().split('T')[0],
     synopsis: '',
     assigneeId: user?.id || '',
   });
+  const [newScriptErrors, setNewScriptErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [reportCountByScriptId, setReportCountByScriptId] = useState<Record<string, number>>({});
@@ -125,6 +130,12 @@ export function ClientDetails() {
   const { fetchInitialData } = useDataStore();
 
   const [availableUsers, setAvailableUsers] = useState<UserModel[]>([]);
+
+  const duplicateTitleMatches = useMemo(() => {
+    const normalizedTitle = normalizeScriptTitleForCheck(formData.title);
+    if (!normalizedTitle) return [];
+    return scripts.filter((script) => normalizeScriptTitleForCheck(script.title) === normalizedTitle);
+  }, [formData.title, scripts]);
 
 
   useEffect(() => {
@@ -163,6 +174,21 @@ export function ClientDetails() {
   useEffect(() => {
     loadReportCounts();
   }, [loadReportCounts]);
+
+  const openNewScriptModal = () => {
+    setFormData({
+      title: '',
+      type: '',
+      workClassification: '',
+      episodeCount: '',
+      receivedAt: new Date().toISOString().split('T')[0],
+      synopsis: '',
+      assigneeId: user?.id || '',
+    });
+    setUploadFile(null);
+    setNewScriptErrors({});
+    setIsUploadOpen(true);
+  };
 
   const handleDeleteScript = async (scriptId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -244,7 +270,17 @@ export function ClientDetails() {
       toast.error(lang === 'ar' ? 'ليس لديك صلاحية رفع نص جديد' : 'You do not have permission to upload a new script');
       return;
     }
-    if (!formData.title) return;
+    const validationErrors: Record<string, string> = {};
+    if (!formData.title.trim()) validationErrors.title = lang === 'ar' ? 'عنوان النص مطلوب' : 'Script title is required';
+    if (!formData.type) validationErrors.type = lang === 'ar' ? 'نوع الإنتاج مطلوب' : 'Production type is required';
+    if (!formData.workClassification.trim()) validationErrors.workClassification = lang === 'ar' ? 'تصنيف العمل مطلوب' : 'Work classification is required';
+    if (duplicateTitleMatches.length > 0) {
+      validationErrors.title = lang === 'ar' ? 'عنوان النص مستخدم بالفعل في سجل آخر' : 'This script title is already used by another script';
+    }
+    if (Object.keys(validationErrors).length > 0) {
+      setNewScriptErrors(validationErrors);
+      return;
+    }
 
     const isAssigning = formData.assigneeId && formData.assigneeId !== user?.id;
 
@@ -266,8 +302,8 @@ export function ClientDetails() {
       const scriptPayload: Script = {
         id: '',
         companyId: company.companyId,
-        title: formData.title,
-        type: formData.type,
+        title: formData.title.trim(),
+        type: formData.type as 'Film' | 'Series',
         workClassification: formData.workClassification || undefined,
         episodeCount: parseEpisodeCountInput(formData.episodeCount),
         receivedAt: formData.receivedAt || null,
@@ -375,12 +411,14 @@ export function ClientDetails() {
       setFormData({
         ...formData,
         title: '',
+        type: '',
         synopsis: '',
         workClassification: '',
         episodeCount: '',
         receivedAt: new Date().toISOString().split('T')[0],
         assigneeId: user?.id || '',
       }); // Reset assignee too
+      setNewScriptErrors({});
       setUploadFile(null); // Reset file
 
       // Navigate to workspace only if not assigning to others
@@ -483,7 +521,7 @@ export function ClientDetails() {
       <div className="flex justify-between items-center pt-4">
         <h2 className="text-lg font-bold text-text-main">{lang === 'ar' ? 'النصوص' : 'Company Scripts'}</h2>
         {canAddScript && (
-          <Button onClick={() => setIsUploadOpen(true)} className="flex items-center gap-2">
+          <Button onClick={openNewScriptModal} className="flex items-center gap-2">
             <Upload className="w-4 h-4" />
             {lang === 'ar' ? 'رفع نص جديد' : 'Upload New Script'}
           </Button>
@@ -503,7 +541,7 @@ export function ClientDetails() {
               {lang === 'ar' ? 'قم برفع أول نص للبدء في عملية التحليل.' : 'Upload the first script to start the analysis process.'}
             </p>
             {canAddScript && (
-              <Button onClick={() => setIsUploadOpen(true)}>
+              <Button onClick={openNewScriptModal}>
                 {lang === 'ar' ? 'رفع أول نص' : 'Upload First Script'}
               </Button>
             )}
@@ -664,25 +702,60 @@ export function ClientDetails() {
           <Input
             label={lang === 'ar' ? 'عنوان النص *' : 'Script Title *'}
             value={formData.title}
-            onChange={e => setFormData({ ...formData, title: e.target.value })}
+            onChange={e => {
+              setFormData({ ...formData, title: e.target.value });
+              setNewScriptErrors((prev) => ({ ...prev, title: '' }));
+            }}
+            error={newScriptErrors.title}
           />
+          {duplicateTitleMatches.length > 0 && (
+            <div className="rounded-xl border border-warning/25 bg-warning/5 px-4 py-3">
+              <p className="text-sm font-semibold text-warning">
+                {lang === 'ar' ? 'تم العثور على عنوان نص مطابق' : 'A duplicate script title was found'}
+              </p>
+              <div className="mt-2 space-y-2">
+                {duplicateTitleMatches.slice(0, 3).map((script) => {
+                  const ownerCompany = companies.find((entry) => entry.companyId === script.companyId);
+                  const contextLabel = script.isQuickAnalysis
+                    ? (lang === 'ar' ? 'تحليل سريع' : 'Quick analysis')
+                    : ownerCompany
+                      ? (lang === 'ar' ? ownerCompany.nameAr : ownerCompany.nameEn)
+                      : (lang === 'ar' ? 'عميل غير معروف' : 'Unknown client');
+                  return (
+                    <div key={script.id} className="rounded-lg border border-border bg-background px-3 py-2 text-xs text-text-muted">
+                      {[script.title, contextLabel, formatDate(script.createdAt, lang === 'ar' ? 'ar' : 'en', settings?.platform?.dateFormat)].filter(Boolean).join(' • ')}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           <Select
-            label={lang === 'ar' ? 'نوع الإنتاج' : 'Production Type'}
+            label={lang === 'ar' ? 'نوع الإنتاج *' : 'Production Type *'}
             value={formData.type}
-            onChange={e => setFormData({ ...formData, type: e.target.value as 'Film' | 'Series' })}
+            onChange={e => {
+              setFormData({ ...formData, type: e.target.value as '' | 'Film' | 'Series' });
+              setNewScriptErrors((prev) => ({ ...prev, type: '' }));
+            }}
             options={[
+              { label: lang === 'ar' ? 'اختر نوع الإنتاج' : 'Select production type', value: '' },
               { label: 'Film', value: 'Film' },
               { label: 'Series', value: 'Series' }
             ]}
+            error={newScriptErrors.type}
           />
           <Select
-            label={lang === 'ar' ? 'تصنيف العمل' : 'Work Classification'}
+            label={lang === 'ar' ? 'تصنيف العمل *' : 'Work Classification *'}
             value={formData.workClassification}
-            onChange={e => setFormData({ ...formData, workClassification: e.target.value })}
+            onChange={e => {
+              setFormData({ ...formData, workClassification: e.target.value });
+              setNewScriptErrors((prev) => ({ ...prev, workClassification: '' }));
+            }}
             options={WORK_CLASSIFICATION_OPTIONS.map((option) => ({
               value: option.value,
               label: lang === 'ar' ? option.labelAr : option.labelEn,
             }))}
+            error={newScriptErrors.workClassification}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
@@ -733,7 +806,7 @@ export function ClientDetails() {
           </p>
           <div className="flex justify-end gap-3 pt-4 border-t border-border mt-6">
             <Button variant="outline" onClick={() => setIsUploadOpen(false)} disabled={isSaving}>{t('cancel')}</Button>
-            <Button onClick={handleSaveNewScript} disabled={isSaving || !formData.title.trim()}>
+            <Button onClick={handleSaveNewScript} disabled={isSaving}>
               {isSaving ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : (lang === 'ar' ? 'حفظ' : 'Save')}
             </Button>
           </div>

@@ -142,7 +142,7 @@ export function DocumentImportModal({
               <p className="whitespace-pre-wrap break-words text-sm text-text-main">{error}</p>
             </div>
           )}
-          {duplicateInfo?.exactMatch && duplicateInfo.matches.length > 0 && (
+          {duplicateInfo?.exactMatch && (
             <div className="space-y-3 rounded-xl border border-warning/25 bg-warning/5 px-4 py-3">
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-warning">
@@ -154,44 +154,70 @@ export function DocumentImportModal({
                     : 'This exact script content already exists in the system, even if the file name is different. Review these records before treating it as a new script.'}
                 </p>
               </div>
-              <div className="space-y-2">
-                {duplicateInfo.matches.slice(0, 3).map((match) => (
-                  <div key={match.versionId} className="space-y-1.5 rounded-xl border border-border bg-background px-3 py-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-text-main">{match.scriptTitle}</p>
-                      <Badge variant="outline" className="text-[10px]">
-                        {match.sameScript
-                          ? (lang === 'ar' ? 'داخل نفس النص' : 'Same script')
-                          : (lang === 'ar' ? 'نص آخر' : 'Another script')}
-                      </Badge>
-                      {match.analyzedBefore && (
-                        <Badge variant="outline" className="text-[10px]">
-                          {lang === 'ar' ? 'محلل سابقاً' : 'Analyzed before'}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-text-muted">
-                      {[
-                        match.companyName,
-                        match.sourceFileName,
-                        formatImportDuplicateDate(match.createdAt, lang),
-                      ].filter(Boolean).join(' • ')}
-                    </p>
-                    {match.latestAnalysisAt && (
-                      <p className="text-xs text-text-muted">
-                        {lang === 'ar'
-                          ? `آخر تحليل: ${formatImportDuplicateDate(match.latestAnalysisAt, lang)}${match.latestReviewerName ? ` • ${match.latestReviewerName}` : ''}`
-                          : `Latest analysis: ${formatImportDuplicateDate(match.latestAnalysisAt, lang)}${match.latestReviewerName ? ` • ${match.latestReviewerName}` : ''}`}
-                      </p>
-                    )}
+              {duplicateInfo.matches.length > 0 ? (
+                <>
+                  <div className="space-y-2">
+                    {duplicateInfo.matches.slice(0, 3).map((match) => (
+                      <div key={match.versionId} className="space-y-1.5 rounded-xl border border-border bg-background px-3 py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-text-main">{match.scriptTitle}</p>
+                          <Badge variant="outline" className="text-[10px]">
+                            {match.sameScript
+                              ? (lang === 'ar' ? 'داخل نفس النص' : 'Same script')
+                              : (lang === 'ar' ? 'نص آخر' : 'Another script')}
+                          </Badge>
+                          {match.analyzedBefore && (
+                            <Badge variant="outline" className="text-[10px]">
+                              {lang === 'ar' ? 'محلل سابقاً' : 'Analyzed before'}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-text-muted">
+                          {[
+                            match.contextType === 'quick_analysis'
+                              ? (lang === 'ar' ? 'تحليل سريع' : 'Quick analysis')
+                              : match.contextLabel || match.companyName,
+                            match.sourceFileName,
+                            `${lang === 'ar' ? 'تاريخ الاستيراد' : 'Imported'}: ${formatImportDuplicateDate(match.createdAt, lang)}`,
+                          ].filter(Boolean).join(' • ')}
+                        </p>
+                        {(match.importedByName || match.contextType) && (
+                          <p className="text-xs text-text-muted">
+                            {[
+                              match.importedByName
+                                ? (lang === 'ar' ? `بواسطة: ${match.importedByName}` : `Imported by: ${match.importedByName}`)
+                                : null,
+                              match.contextType === 'quick_analysis'
+                                ? (lang === 'ar' ? 'السياق: تحليل سريع' : 'Context: Quick analysis')
+                                : match.contextLabel
+                                  ? (lang === 'ar' ? `السياق: ${match.contextLabel}` : `Context: ${match.contextLabel}`)
+                                  : null,
+                            ].filter(Boolean).join(' • ')}
+                          </p>
+                        )}
+                        {match.latestAnalysisAt && (
+                          <p className="text-xs text-text-muted">
+                            {lang === 'ar'
+                              ? `آخر تحليل: ${formatImportDuplicateDate(match.latestAnalysisAt, lang)}${match.latestReviewerName ? ` • ${match.latestReviewerName}` : ''}`
+                              : `Latest analysis: ${formatImportDuplicateDate(match.latestAnalysisAt, lang)}${match.latestReviewerName ? ` • ${match.latestReviewerName}` : ''}`}
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              {duplicateInfo.matches.length > 3 && (
+                  {duplicateInfo.matches.length > 3 && (
+                    <p className="text-xs text-text-muted">
+                      {lang === 'ar'
+                        ? `وهناك أيضاً ${duplicateInfo.matches.length - 3} سجل/سجلات إضافية مطابقة بنفس المحتوى.`
+                        : `There are also ${duplicateInfo.matches.length - 3} more matching record(s).`}
+                    </p>
+                  )}
+                </>
+              ) : (
                 <p className="text-xs text-text-muted">
                   {lang === 'ar'
-                    ? `وهناك أيضاً ${duplicateInfo.matches.length - 3} سجل/سجلات إضافية مطابقة بنفس المحتوى.`
-                    : `There are also ${duplicateInfo.matches.length - 3} more matching record(s).`}
+                    ? 'رُصدت نسخة مطابقة في السجلات، لكن تفاصيلها غير متاحة لهذا المستخدم.'
+                    : 'An exact duplicate exists in the records, but its details are not visible to this user.'}
                 </p>
               )}
             </div>

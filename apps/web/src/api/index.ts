@@ -216,6 +216,9 @@ export interface DuplicateScriptMatch {
   sourceFileName?: string | null;
   createdAt: string;
   companyName?: string | null;
+  importedByName?: string | null;
+  contextType?: 'client' | 'quick_analysis';
+  contextLabel?: string | null;
   sameScript: boolean;
   isCurrentVersion: boolean;
   analyzedBefore: boolean;
