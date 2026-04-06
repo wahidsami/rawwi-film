@@ -21,6 +21,8 @@ function pathAfter(base: string, url: string): string {
 
 const FINDING_COLS =
   "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, rationale_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, anchor_status, anchor_method, anchor_page_number, anchor_start_offset_page, anchor_end_offset_page, anchor_start_offset_global, anchor_end_offset_global, anchor_text, anchor_confidence, anchor_updated_at, created_at, created_by, manual_comment";
+const REVIEW_FINDING_COLS =
+  "id, job_id, report_id, script_id, version_id, canonical_finding_id, source_kind, primary_article_id, primary_atom_id, severity, review_status, title_ar, description_ar, rationale_ar, evidence_snippet, manual_comment, page_number, start_offset_global, end_offset_global, start_offset_page, end_offset_page, anchor_status, anchor_method, anchor_text, anchor_confidence, is_manual, is_hidden, approved_reason, reviewed_by, reviewed_at, edited_by, edited_at, created_from_job_id, supersedes_review_finding_id, created_at, updated_at";
 
 async function selectFindings(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -39,6 +41,18 @@ async function selectFindings(
     .eq("job_id", jobId)
     .order("article_id", { ascending: true });
   return fb;
+}
+
+async function selectReviewFindings(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  jobId: string,
+) {
+  return await supabase
+    .from("analysis_review_findings")
+    .select(REVIEW_FINDING_COLS)
+    .eq("job_id", jobId)
+    .eq("is_hidden", false)
+    .order("created_at", { ascending: true });
 }
 
 function camelFinding(r: Record<string, unknown>, createdBy: string | null = null) {
@@ -82,6 +96,47 @@ function camelFinding(r: Record<string, unknown>, createdBy: string | null = nul
     reviewedRole: r.reviewed_role ?? null,
     createdBy: createdBy ?? (r.created_by as string | null) ?? null,
     manualComment: (r.manual_comment as string | null) ?? null,
+  };
+}
+
+function camelReviewFinding(r: Record<string, unknown>) {
+  return {
+    id: r.id,
+    jobId: r.job_id,
+    reportId: r.report_id,
+    scriptId: r.script_id,
+    versionId: r.version_id,
+    canonicalFindingId: r.canonical_finding_id ?? null,
+    sourceKind: r.source_kind,
+    primaryArticleId: r.primary_article_id,
+    primaryAtomId: r.primary_atom_id ?? null,
+    severity: r.severity,
+    reviewStatus: r.review_status ?? "violation",
+    titleAr: r.title_ar,
+    descriptionAr: r.description_ar ?? null,
+    rationaleAr: r.rationale_ar ?? null,
+    evidenceSnippet: r.evidence_snippet,
+    manualComment: r.manual_comment ?? null,
+    pageNumber: r.page_number ?? null,
+    startOffsetGlobal: r.start_offset_global ?? null,
+    endOffsetGlobal: r.end_offset_global ?? null,
+    startOffsetPage: r.start_offset_page ?? null,
+    endOffsetPage: r.end_offset_page ?? null,
+    anchorStatus: r.anchor_status ?? "unresolved",
+    anchorMethod: r.anchor_method ?? null,
+    anchorText: r.anchor_text ?? null,
+    anchorConfidence: r.anchor_confidence ?? null,
+    isManual: Boolean(r.is_manual),
+    isHidden: Boolean(r.is_hidden),
+    approvedReason: r.approved_reason ?? null,
+    reviewedBy: r.reviewed_by ?? null,
+    reviewedAt: r.reviewed_at ?? null,
+    editedBy: r.edited_by ?? null,
+    editedAt: r.edited_at ?? null,
+    createdFromJobId: r.created_from_job_id ?? null,
+    supersedesReviewFindingId: r.supersedes_review_finding_id ?? null,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
   };
 }
 
@@ -235,6 +290,41 @@ Deno.serve(async (req: Request) => {
 
     // Admin role check (Robust DB check)
     const isAdmin = await isUserAdmin(supabase, uid);
+
+    // ── GET /findings/review-layer?jobId=... or ?reportId=... ──
+    if (method === "GET" && rest === "review-layer") {
+      const url = new URL(req.url);
+      let jobId = url.searchParams.get("jobId")?.trim();
+      const reportId = url.searchParams.get("reportId")?.trim();
+
+      if (reportId && !jobId) {
+        const { data: report, error: reportErr } = await supabase
+          .from("analysis_reports")
+          .select("job_id")
+          .eq("id", reportId)
+          .maybeSingle();
+        if (reportErr || !report) {
+          return json({ error: "Report not found" }, 404);
+        }
+        jobId = (report as { job_id: string }).job_id;
+      }
+
+      if (!jobId) return json([]);
+
+      const { data: job, error: jobErr } = await supabase
+        .from("analysis_jobs")
+        .select("created_by")
+        .eq("id", jobId)
+        .maybeSingle();
+
+      if (jobErr || !job || (!isAdmin && (job as { created_by?: string | null }).created_by !== uid)) {
+        return json({ error: "Forbidden" }, 403);
+      }
+
+      const { data: rows, error } = await selectReviewFindings(supabase, jobId);
+      if (error) return json({ error: error.message }, 500);
+      return json((rows ?? []).map((r) => camelReviewFinding(r as Record<string, unknown>)));
+    }
 
     // ── GET /findings?jobId=... or GET /findings?reportId=... ──
     if (method === "GET") {

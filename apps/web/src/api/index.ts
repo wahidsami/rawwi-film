@@ -334,6 +334,45 @@ export interface ReclassifyFindingBody {
   manualComment?: string | null;
 }
 
+export interface AnalysisReviewFinding {
+  id: string;
+  jobId: string;
+  reportId: string;
+  scriptId: string;
+  versionId: string;
+  canonicalFindingId?: string | null;
+  sourceKind: 'ai' | 'glossary' | 'manual' | 'special';
+  primaryArticleId: number;
+  primaryAtomId?: string | null;
+  severity: string;
+  reviewStatus: 'violation' | 'approved' | 'needs_review';
+  titleAr: string;
+  descriptionAr?: string | null;
+  rationaleAr?: string | null;
+  evidenceSnippet: string;
+  manualComment?: string | null;
+  pageNumber?: number | null;
+  startOffsetGlobal?: number | null;
+  endOffsetGlobal?: number | null;
+  startOffsetPage?: number | null;
+  endOffsetPage?: number | null;
+  anchorStatus: 'exact' | 'unresolved';
+  anchorMethod?: string | null;
+  anchorText?: string | null;
+  anchorConfidence?: number | null;
+  isManual: boolean;
+  isHidden: boolean;
+  approvedReason?: string | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  editedBy?: string | null;
+  editedAt?: string | null;
+  createdFromJobId?: string | null;
+  supersedesReviewFindingId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ReclassifyFindingResponse {
   ok: true;
   finding?: AnalysisFinding;
@@ -347,6 +386,12 @@ export const findingsApi = {
   getByJob: (jobId: string): Promise<AnalysisFinding[]> => httpClient.get(`/findings?jobId=${encodeURIComponent(jobId)}`),
   /** List findings for a report (resolves report id to job). */
   getByReport: (reportId: string): Promise<AnalysisFinding[]> => httpClient.get(`/findings?reportId=${encodeURIComponent(reportId)}`),
+  /** List reviewer-facing finding cards for a specific job. */
+  getReviewByJob: (jobId: string): Promise<AnalysisReviewFinding[]> =>
+    httpClient.get(`/findings/review-layer?jobId=${encodeURIComponent(jobId)}`),
+  /** List reviewer-facing finding cards for a report (resolves report id to job). */
+  getReviewByReport: (reportId: string): Promise<AnalysisReviewFinding[]> =>
+    httpClient.get(`/findings/review-layer?reportId=${encodeURIComponent(reportId)}`),
   addFinding: (finding: Finding): Promise<Finding> => httpClient.post('/findings', finding),
   updateFindingStatus: (id: string, status: string, comment?: string, author?: string) =>
     httpClient.put(`/findings/${id}`, { status, comment, author }),
