@@ -2019,6 +2019,7 @@ export function ScriptWorkspace() {
   const [editorData, setEditorData] = useState<EditorContentResponse | null>(null);
   const [editorLoading, setEditorLoading] = useState(false);
   const [editorError, setEditorError] = useState<string | null>(null);
+  const [isDownloadingAnnotatedPdf, setIsDownloadingAnnotatedPdf] = useState(false);
 
   // Page-based view (when editorData.pages exists)
   const [currentPage, setCurrentPage] = useState(1);
@@ -3668,6 +3669,88 @@ export function ScriptWorkspace() {
     return { total, resolved, unresolved };
   }, [activeWorkspaceHighlights, findingWorkspaceResolve]);
 
+  const annotatedWorkspaceExport = useMemo(() => {
+    if (!strictImportedAnchoring || !pagesSortedForViewer.length || !activeWorkspaceHighlights.length) {
+      return {
+        pages: [] as Array<{
+          pageNumber: number;
+          segments: Array<{ text: string; highlighted?: boolean }>;
+          notes: Array<{ marker: number; title: string; articleLabel: string; evidenceSnippet: string; anchorMethod?: string | null }>;
+        }>,
+        unresolved: [] as Array<{ title: string; evidenceSnippet: string }>,
+      };
+    }
+
+    const exactResolved = activeWorkspaceHighlights.map((finding) => ({
+      finding,
+      resolved: findingWorkspaceResolve.get(finding.id),
+    }));
+
+    const pages = pagesSortedForViewer.map((page) => {
+      const pageHits = exactResolved
+        .filter(
+          (item) =>
+            item.resolved?.resolved &&
+            item.resolved.pageNumber === page.pageNumber &&
+            item.resolved.localStart != null &&
+            item.resolved.localEnd != null &&
+            item.resolved.localEnd > item.resolved.localStart,
+        )
+        .sort((a, b) => {
+          const sa = a.resolved?.localStart ?? 0;
+          const sb = b.resolved?.localStart ?? 0;
+          if (sa !== sb) return sa - sb;
+          return (a.resolved?.localEnd ?? 0) - (b.resolved?.localEnd ?? 0);
+        });
+
+      const segments: Array<{ text: string; highlighted?: boolean }> = [];
+      const notes: Array<{ marker: number; title: string; articleLabel: string; evidenceSnippet: string; anchorMethod?: string | null }> = [];
+      let cursor = 0;
+      let marker = 1;
+
+      for (const item of pageHits) {
+        const localStart = Math.max(0, Math.min(page.content.length, item.resolved?.localStart ?? 0));
+        const localEnd = Math.max(localStart + 1, Math.min(page.content.length, item.resolved?.localEnd ?? localStart + 1));
+        if (localStart < cursor) continue;
+        if (localStart > cursor) {
+          segments.push({ text: page.content.slice(cursor, localStart) });
+        }
+        segments.push({ text: page.content.slice(localStart, localEnd), highlighted: true });
+        const atomDisplay = item.finding.atomId ? ` • ${formatAtomDisplay(item.finding.articleId, item.finding.atomId)}` : "";
+        notes.push({
+          marker,
+          title: item.finding.titleAr || item.finding.descriptionAr || item.finding.evidenceSnippet || "—",
+          articleLabel:
+            lang === "ar"
+              ? `المادة ${item.finding.articleId}${atomDisplay}`
+              : `Art ${item.finding.articleId}${atomDisplay}`,
+          evidenceSnippet: findingPreferredAnchorText(item.finding) || item.finding.evidenceSnippet || item.finding.descriptionAr || "—",
+          anchorMethod: item.resolved?.method ?? item.finding.anchorMethod ?? null,
+        });
+        marker += 1;
+        cursor = localEnd;
+      }
+
+      if (cursor < page.content.length) segments.push({ text: page.content.slice(cursor) });
+      if (segments.length === 0) segments.push({ text: page.content });
+
+      return {
+        pageNumber: page.pageNumber,
+        segments,
+        notes,
+      };
+    });
+
+    const unresolved = exactResolved
+      .filter((item) => !item.resolved?.resolved)
+      .map((item) => ({
+        title: item.finding.titleAr || item.finding.descriptionAr || "—",
+        evidenceSnippet: findingPreferredAnchorText(item.finding) || item.finding.evidenceSnippet || "—",
+      }));
+
+    return { pages, unresolved };
+  }, [strictImportedAnchoring, pagesSortedForViewer, activeWorkspaceHighlights, findingWorkspaceResolve, lang]);
+
   const findingSegments = useMemo(
     () =>
       highlightTargetsForScrollView.length > 0 && canonicalContentForHighlights
@@ -4062,6 +4145,38 @@ export function ScriptWorkspace() {
     handlePinFindingInScript(f, undefined, { silent: true });
   };
 
+  const handleDownloadAnnotatedWorkspacePdf = async () => {
+    if (!annotatedWorkspaceExport.pages.length) {
+      toast.error(
+        lang === "ar"
+          ? "لا توجد نسخة مستوردة جاهزة لهذا التصدير أو لا توجد ملاحظات مرتبطة بها بعد."
+          : "There is no imported working copy ready for this export yet.",
+      );
+      return;
+    }
+    setIsDownloadingAnnotatedPdf(true);
+    try {
+      const { downloadAnnotatedWorkspacePdf } = await import("@/components/reports/workspace-annotated/download");
+      await downloadAnnotatedWorkspacePdf({
+        scriptTitle: script.title || (lang === "ar" ? "نسخة عمل" : "Working copy"),
+        reportLabel: selectedReportForHighlights?.jobId ? `Job ${selectedReportForHighlights.jobId.slice(0, 8)}` : undefined,
+        lang,
+        pages: annotatedWorkspaceExport.pages,
+        unresolved: annotatedWorkspaceExport.unresolved,
+      });
+      toast.success(
+        lang === "ar"
+          ? "تم تنزيل النسخة المعلّقة من المستند"
+          : "Annotated working copy downloaded",
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || (lang === "ar" ? "تعذر تنزيل النسخة المعلّقة" : "Annotated export failed"));
+    } finally {
+      setIsDownloadingAnnotatedPdf(false);
+    }
+  };
+
   const importStatusDescription =
     uploadStatus === 'uploading'
       ? (lang === 'ar' ? 'يتم رفع الملف إلى التخزين وربطه بالنص الحالي.' : 'Uploading the document and linking it to this script.')
@@ -4200,6 +4315,23 @@ export function ScriptWorkspace() {
           >
             <FileText className="w-4 h-4" />
             {lang === 'ar' ? 'توليد التقرير' : 'Generate Report'}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex gap-2"
+            onClick={handleDownloadAnnotatedWorkspacePdf}
+            disabled={!strictImportedAnchoring || !selectedReportForHighlights || isDownloadingAnnotatedPdf || !annotatedWorkspaceExport.pages.length}
+            title={
+              !strictImportedAnchoring
+                ? (lang === 'ar' ? 'هذا التصدير مخصص للنسخة المستوردة داخل مساحة العمل.' : 'This export is for the imported working copy inside the workspace.')
+                : undefined
+            }
+          >
+            {isDownloadingAnnotatedPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {isDownloadingAnnotatedPdf
+              ? (lang === 'ar' ? 'جاري تجهيز النسخة المعلّقة...' : 'Preparing annotated copy...')
+              : (lang === 'ar' ? 'تنزيل النسخة المعلّقة' : 'Download annotated copy')}
           </Button>
         </div>
       </div>
