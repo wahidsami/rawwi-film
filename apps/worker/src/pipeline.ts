@@ -26,7 +26,7 @@ import { runHybridContextPipeline } from "./methodology-v3/index.js";
 import { upsertFindingPolicyLinks } from "./policyLinks.js";
 import { calculateSeverity } from "./severityRulebook.js";
 import { getPrimaryGcamForCanonicalAtom, getPrimaryCanonicalAtomForGcam } from "./canonicalAtomMapping.js";
-import { offsetToPageNumber, computePageLocalSpan } from "./offsetToPage.js";
+import { offsetToPageNumber, computePageLocalSpan, globalOffsetForPageStart, SCRIPT_PAGE_SEPARATOR } from "./offsetToPage.js";
 import { getCachedJobResources } from "./jobAnalysisCache.js";
 import { refineAtomPrecision } from "./atomPrecision.js";
 import { isDetectionVerbatim } from "./textDetectionNormalize.js";
@@ -141,6 +141,7 @@ function buildCanonicalAnchorPayload(args: {
   pageNumber?: number | null;
   pageRows: Array<{ page_number: number; content: string }>;
   anchorText?: string | null;
+  documentContent?: string | null;
   method?: string;
 }): Record<string, unknown> {
   const startGlobal = typeof args.startGlobal === "number" ? args.startGlobal : null;
@@ -163,11 +164,148 @@ function buildCanonicalAnchorPayload(args: {
     };
   }
 
+  const normalizeAnchorNeedle = (value: string): string =>
+    value
+      .replace(/^[\s"'“”«»„]+|[\s"'“”«»„]+$/gu, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const canonicalNormalize = (value: string): string =>
+    normalizeAnchorNeedle(value.normalize("NFC"));
+
+  const gatherExactOccurrences = (plain: string, needle: string): Array<{ start: number; end: number }> => {
+    const out: Array<{ start: number; end: number }> = [];
+    if (!plain || !needle) return out;
+    let pos = 0;
+    while (pos <= plain.length) {
+      const idx = plain.indexOf(needle, pos);
+      if (idx < 0) break;
+      out.push({ start: idx, end: idx + needle.length });
+      pos = idx + 1;
+    }
+    return out;
+  };
+
+  const pickClosest = (
+    matches: Array<{ start: number; end: number }>,
+    hintStart?: number | null,
+  ): { start: number; end: number } | null => {
+    if (matches.length === 0) return null;
+    if (matches.length === 1) return matches[0];
+    if (typeof hintStart === "number" && Number.isFinite(hintStart)) {
+      return (
+        [...matches].sort((a, b) => {
+          const da = Math.abs(a.start - hintStart);
+          const db = Math.abs(b.start - hintStart);
+          if (da !== db) return da - db;
+          return a.start - b.start;
+        })[0] ?? null
+      );
+    }
+    return [...matches].sort((a, b) => a.start - b.start)[0] ?? null;
+  };
+
+  const orderedNeedles = (raw: string): string[] => {
+    const trimmed = normalizeAnchorNeedle(raw);
+    if (!trimmed) return [];
+    const lines = raw
+      .split(/\r?\n/)
+      .map((line) => normalizeAnchorNeedle(line))
+      .filter(Boolean);
+    const unique = new Set<string>();
+    const out: string[] = [];
+    const add = (value: string) => {
+      const normalized = normalizeAnchorNeedle(value);
+      if (!normalized || unique.has(normalized)) return;
+      unique.add(normalized);
+      out.push(normalized);
+    };
+    for (let i = lines.length - 1; i >= 0; i--) add(lines[i]);
+    const colonTailIdx = Math.max(raw.lastIndexOf(":"), raw.lastIndexOf("："));
+    if (colonTailIdx >= 0 && colonTailIdx < raw.length - 2) add(raw.slice(colonTailIdx + 1));
+    add(trimmed);
+    return out;
+  };
+
+  const locateStrictExact = (
+    plain: string,
+    hintStart?: number | null,
+  ): { start: number; end: number } | null => {
+    for (const needle of orderedNeedles(anchorText)) {
+      const direct = pickClosest(gatherExactOccurrences(plain, needle), hintStart);
+      if (direct) return direct;
+
+      const collapsed = normalizeAnchorNeedle(needle);
+      if (collapsed && collapsed !== needle) {
+        const collapsedHit = pickClosest(gatherExactOccurrences(plain, collapsed), hintStart);
+        if (collapsedHit) return collapsedHit;
+      }
+
+      const canonicalNeedle = canonicalNormalize(needle);
+      if (canonicalNeedle) {
+        const canonicalMatches = gatherExactOccurrences(plain, needle).filter(
+          (match) => canonicalNormalize(plain.slice(match.start, match.end)) === canonicalNeedle,
+        );
+        const canonicalHit = pickClosest(canonicalMatches, hintStart);
+        if (canonicalHit) return canonicalHit;
+      }
+    }
+    return null;
+  };
+
+  const pageNumber = args.pageNumber ?? offsetToPageNumber(startGlobal, args.pageRows);
+  const pageStart = pageNumber != null ? globalOffsetForPageStart(pageNumber, args.pageRows) : null;
+  const page = pageNumber != null ? args.pageRows.find((row) => row.page_number === pageNumber) ?? null : null;
+  if (page && pageStart != null && anchorText) {
+    const hintLocal = Math.max(0, startGlobal - pageStart);
+    const pageHit = locateStrictExact(page.content ?? "", hintLocal);
+    if (pageHit) {
+      return {
+        anchor_status: "exact",
+        anchor_method: "page_exact",
+        anchor_page_number: page.page_number,
+        anchor_start_offset_page: pageHit.start,
+        anchor_end_offset_page: pageHit.end,
+        anchor_start_offset_global: pageStart + pageHit.start,
+        anchor_end_offset_global: pageStart + pageHit.end,
+        anchor_text: anchorText || null,
+        anchor_confidence: 1,
+        anchor_updated_at: anchorUpdatedAt,
+      };
+    }
+  }
+
+  const documentContent =
+    typeof args.documentContent === "string" && args.documentContent.length > 0
+      ? args.documentContent
+      : args.pageRows.length > 0
+        ? args.pageRows.map((row) => row.content ?? "").join(SCRIPT_PAGE_SEPARATOR)
+        : "";
+  if (documentContent && anchorText) {
+    const documentHit = locateStrictExact(documentContent, startGlobal);
+    if (documentHit) {
+      const hitPageNumber = offsetToPageNumber(documentHit.start, args.pageRows);
+      const pageLocal = computePageLocalSpan(documentHit.start, documentHit.end, args.pageRows);
+      return {
+        anchor_status: "exact",
+        anchor_method: "document_exact",
+        anchor_page_number: hitPageNumber,
+        anchor_start_offset_page: pageLocal.start_offset_page,
+        anchor_end_offset_page: pageLocal.end_offset_page,
+        anchor_start_offset_global: documentHit.start,
+        anchor_end_offset_global: documentHit.end,
+        anchor_text: anchorText || null,
+        anchor_confidence: 1,
+        anchor_updated_at: anchorUpdatedAt,
+      };
+    }
+  }
+
   const pageLocal = computePageLocalSpan(startGlobal, endGlobal, args.pageRows);
   return {
     anchor_status: "exact",
     anchor_method: args.method ?? "stored_offsets",
-    anchor_page_number: args.pageNumber ?? null,
+    anchor_page_number: pageNumber ?? null,
     anchor_start_offset_page: pageLocal.start_offset_page,
     anchor_end_offset_page: pageLocal.end_offset_page,
     anchor_start_offset_global: startGlobal,
@@ -569,6 +707,7 @@ export async function processChunkJudge(
         pageNumber: lexPageNumber,
         pageRows,
         anchorText: evidence_snippet,
+        documentContent: normalizedText,
       }),
     };
     if (config.ANALYSIS_ENGINE === "hybrid") {
@@ -683,6 +822,7 @@ export async function processChunkJudge(
           pageNumber: fallbackPageNumber,
           pageRows,
           anchorText: evidence,
+          documentContent: normalizedText,
         }),
       };
 
@@ -1334,6 +1474,7 @@ export async function processChunkJudge(
           pageNumber: findingPageNumber,
           pageRows,
           anchorText: excerpt,
+          documentContent: normalizedText,
         }),
       };
     });
