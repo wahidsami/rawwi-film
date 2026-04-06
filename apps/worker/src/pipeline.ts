@@ -34,6 +34,7 @@ import { PIPELINE_V2_EVIDENCE_PINNING_VERSION, pinFindingEvidenceToChunk } from 
 import { PIPELINE_V2_MEMORY_VERSION } from "./pipelineV2/contextMemory.js";
 import { PIPELINE_V2_SCENE_MEMORY_VERSION } from "./pipelineV2/sceneMemory.js";
 import { PIPELINE_V2_SCRIPT_MEMORY_VERSION } from "./pipelineV2/scriptMemory.js";
+import { PIPELINE_EVIDENCE_GROUNDING_VERSION, groundFindingEvidenceToChunk } from "./evidenceGrounding.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
@@ -51,7 +52,7 @@ type AnalysisEngineMode = "v2" | "hybrid";
 type HybridRunMode = "off" | "shadow" | "enforce";
 
 const MAX_EVIDENCE_SPAN = 280;
-const PIPELINE_LOGIC_VERSION = "v2.4";
+const PIPELINE_LOGIC_VERSION = "v2.5";
 const MAX_EVIDENCE_LEN = 260;
 const NON_CRITICAL_DB_TIMEOUT_MS = 30_000;
 const CRITICAL_DB_TIMEOUT_MS = 60_000;
@@ -935,7 +936,7 @@ export async function processChunkJudge(
   const deepAuditorEnabled =
     typeof jobConfig.deep_auditor_enabled === "boolean" ? jobConfig.deep_auditor_enabled : config.ANALYSIS_DEEP_AUDITOR;
   const rationaleModel = config.OPENAI_RATIONALE_MODEL;
-  const logicVersion = `pipeline:${PIPELINE_LOGIC_VERSION}|version:${pipelineVersion}${v2FeatureSignature}|profile:${analysisProfile}|engine:${analysisEngine}|mode:${hybridMode}|deepAuditor:${deepAuditorEnabled}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}|passGating:${config.ANALYSIS_PASS_GATING_ENABLED ? PASS_GATING_VERSION : "off"}`;
+  const logicVersion = `pipeline:${PIPELINE_LOGIC_VERSION}|version:${pipelineVersion}${v2FeatureSignature}|evidenceGrounding:${PIPELINE_EVIDENCE_GROUNDING_VERSION}|profile:${analysisProfile}|engine:${analysisEngine}|mode:${hybridMode}|deepAuditor:${deepAuditorEnabled}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}|passGating:${config.ANALYSIS_PASS_GATING_ENABLED ? PASS_GATING_VERSION : "off"}`;
   const forceFresh = jobConfig.force_fresh === true;
   const routerModel = typeof jobConfig.router_model === "string" && jobConfig.router_model.trim().length > 0
     ? jobConfig.router_model
@@ -1096,14 +1097,14 @@ export async function processChunkJudge(
       // Enforce atom_ids and prefer literal local evidence from chunk offsets.
       const enforced = multiPassResult.findings.map(f => enforceAtomIds([f])[0]);
       const precisionRefined = enforced.map((f) => refineAtomPrecision(f));
-      const evidencePinned = pipelineVersion === "v2"
-        ? precisionRefined.map((f) => pinFindingEvidenceToChunk(f, chunkText))
-        : precisionRefined;
-      const enriched = evidencePinned.map((f) => {
+      const evidencePinned = precisionRefined.map((f) => pinFindingEvidenceToChunk(f, chunkText));
+      const groundedResults = evidencePinned.map((f) => groundFindingEvidenceToChunk(f, chunkText));
+      const grounded = groundedResults.filter((result) => result.grounded).map((result) => result.finding);
+      const enriched = grounded.map((f) => {
         const localStart = Math.max(0, f.location?.start_offset ?? 0);
         const localEnd = Math.min(chunkText.length, f.location?.end_offset ?? localStart);
         const fallback = localEnd > localStart ? chunkText.slice(localStart, localEnd) : "";
-        if (pipelineVersion === "v2" && f.evidence_snippet && isDetectionVerbatim(chunkText, f.evidence_snippet)) {
+        if (f.evidence_snippet && isDetectionVerbatim(chunkText, f.evidence_snippet)) {
           return f;
         }
         if (fallback && isDetectionVerbatim(chunkText, fallback)) {
@@ -1120,6 +1121,12 @@ export async function processChunkJudge(
         enforcedCount: enforced.length,
         precisionRefinedCount: precisionRefined.length,
         evidencePinnedCount: evidencePinned.length,
+        groundedCount: grounded.length,
+        groundingDroppedCount: groundedResults.length - grounded.length,
+        groundingMethods: groundedResults.reduce<Record<string, number>>((acc, result) => {
+          acc[result.method] = (acc[result.method] ?? 0) + 1;
+          return acc;
+        }, {}),
         enrichedCount: enriched.length,
         globalizedCount: withGlobal.length,
       });
