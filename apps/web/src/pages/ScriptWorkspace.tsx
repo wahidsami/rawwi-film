@@ -2730,13 +2730,16 @@ export function ScriptWorkspace() {
   const mapSelectionOffsetsToGlobal = useCallback(
     (offsets: { start: number; end: number } | null | undefined): { start: number; end: number } | null => {
       if (!offsets) return null;
-      if (!isPageMode || !currentPageData) return offsets;
+      if (!isPageMode) return offsets;
+      const activePage = editorData?.pages?.[safeCurrentPage - 1];
+      if (!activePage) return offsets;
+      const activePageStart = activePage.startOffsetGlobal ?? 0;
       return {
-        start: pageStart + offsets.start,
-        end: pageStart + offsets.end,
+        start: activePageStart + offsets.start,
+        end: activePageStart + offsets.end,
       };
     },
-    [isPageMode, currentPageData, pageStart]
+    [isPageMode, editorData?.pages, safeCurrentPage]
   );
 
   const handleMarkViolation = () => {
