@@ -183,6 +183,35 @@ type ScriptPageMetaRow = {
 };
 
 type DocumentReviewHint = NonNullable<SummaryJson["report_hints"]>[number];
+type ReviewFindingInsertRow = {
+  job_id: string;
+  report_id: string;
+  script_id: string;
+  version_id: string;
+  canonical_finding_id: string | null;
+  source_kind: "ai" | "glossary" | "manual" | "special";
+  primary_article_id: number;
+  primary_atom_id: string | null;
+  severity: string;
+  review_status: "violation" | "approved" | "needs_review";
+  title_ar: string;
+  description_ar: string | null;
+  rationale_ar: string | null;
+  evidence_snippet: string;
+  manual_comment: string | null;
+  page_number: number | null;
+  start_offset_global: number | null;
+  end_offset_global: number | null;
+  start_offset_page: number | null;
+  end_offset_page: number | null;
+  anchor_status: "exact" | "unresolved";
+  anchor_method: string | null;
+  anchor_text: string | null;
+  anchor_confidence: number | null;
+  is_manual: boolean;
+  is_hidden: boolean;
+  created_from_job_id: string | null;
+};
 
 function scriptSuggestsNeutralContext(scriptSummary: SummaryJson["script_summary"]): boolean {
   if (!scriptSummary?.compliance_posture_ar && !scriptSummary?.narrative_stance_ar) return false;
@@ -301,6 +330,153 @@ function buildDocumentStructureHints(pageRows: ScriptPageMetaRow[]): DocumentRev
   }
 
   return hints.sort((a, b) => String(a.title_ar).localeCompare(String(b.title_ar), "ar"));
+}
+
+function toReviewSourceKind(source: string | null | undefined, isSpecial = false): ReviewFindingInsertRow["source_kind"] {
+  if (isSpecial) return "special";
+  const normalized = String(source ?? "ai").toLowerCase();
+  if (normalized === "manual") return "manual";
+  if (normalized === "lexicon_mandatory" || normalized === "glossary") return "glossary";
+  return "ai";
+}
+
+function toReviewStatus(finalRuling: string | null | undefined, isSpecial = false): ReviewFindingInsertRow["review_status"] {
+  const normalized = String(finalRuling ?? "").toLowerCase();
+  if (normalized === "needs_review" || isSpecial) return "needs_review";
+  return "violation";
+}
+
+function buildReviewFindingRows(
+  reportId: string,
+  summary: SummaryJson,
+  versionId: string
+): ReviewFindingInsertRow[] {
+  const canonical = (summary.canonical_findings ?? []).map((finding) => ({
+    job_id: summary.job_id,
+    report_id: reportId,
+    script_id: summary.script_id,
+    version_id: versionId,
+    canonical_finding_id: finding.canonical_finding_id ?? null,
+    source_kind: toReviewSourceKind(finding.source),
+    primary_article_id: Number.isFinite(finding.primary_article_id) ? Number(finding.primary_article_id) : 0,
+    primary_atom_id: finding.primary_policy_atom_id ?? null,
+    severity: finding.severity,
+    review_status: toReviewStatus(finding.final_ruling),
+    title_ar: finding.title_ar,
+    description_ar: null,
+    rationale_ar: finding.rationale ?? null,
+    evidence_snippet: finding.evidence_snippet,
+    manual_comment: null,
+    page_number: finding.page_number ?? null,
+    start_offset_global: finding.start_offset_global ?? null,
+    end_offset_global: finding.end_offset_global ?? null,
+    start_offset_page: null,
+    end_offset_page: null,
+    anchor_status:
+      finding.page_number != null && finding.start_offset_global != null && finding.end_offset_global != null
+        ? ("exact" as const)
+        : ("unresolved" as const),
+    anchor_method:
+      finding.page_number != null && finding.start_offset_global != null && finding.end_offset_global != null
+        ? "canonical_summary"
+        : null,
+    anchor_text: finding.evidence_snippet ?? null,
+    anchor_confidence: finding.confidence ?? null,
+    is_manual: false,
+    is_hidden: false,
+    created_from_job_id: summary.job_id,
+  }));
+
+  const hints = (summary.report_hints ?? []).map((finding) => ({
+    job_id: summary.job_id,
+    report_id: reportId,
+    script_id: summary.script_id,
+    version_id: versionId,
+    canonical_finding_id: finding.canonical_finding_id ?? null,
+    source_kind: toReviewSourceKind(finding.source, true),
+    primary_article_id: Number.isFinite(finding.primary_article_id) ? Number(finding.primary_article_id) : 0,
+    primary_atom_id: null,
+    severity: finding.severity,
+    review_status: toReviewStatus(finding.final_ruling, true),
+    title_ar: finding.title_ar,
+    description_ar: null,
+    rationale_ar: finding.rationale ?? null,
+    evidence_snippet: finding.evidence_snippet,
+    manual_comment: null,
+    page_number:
+      Array.isArray(finding.page_numbers) && finding.page_numbers.length > 0
+        ? Number(finding.page_numbers[0] ?? null)
+        : null,
+    start_offset_global: finding.start_offset_global ?? null,
+    end_offset_global: finding.end_offset_global ?? null,
+    start_offset_page: null,
+    end_offset_page: null,
+    anchor_status:
+      finding.start_offset_global != null && finding.end_offset_global != null
+        ? ("exact" as const)
+        : ("unresolved" as const),
+    anchor_method:
+      finding.start_offset_global != null && finding.end_offset_global != null
+        ? "report_hint_summary"
+        : null,
+    anchor_text: finding.evidence_snippet ?? null,
+    anchor_confidence: finding.confidence ?? null,
+    is_manual: false,
+    is_hidden: false,
+    created_from_job_id: summary.job_id,
+  }));
+
+  return [...canonical, ...hints].filter((row) => row.primary_article_id > 0 && Boolean(row.canonical_finding_id));
+}
+
+async function materializeReviewFindings(
+  reportId: string,
+  summary: SummaryJson,
+  versionId: string,
+): Promise<void> {
+  const rows = buildReviewFindingRows(reportId, summary, versionId);
+  logger.info("Materializing reviewer findings", {
+    reportId,
+    jobId: summary.job_id,
+    rows: rows.length,
+  });
+
+  if (rows.length === 0) {
+    await supabase
+      .from("analysis_review_findings")
+      .delete()
+      .eq("report_id", reportId)
+      .eq("is_manual", false);
+    return;
+  }
+
+  const { error: deleteErr } = await supabase
+    .from("analysis_review_findings")
+    .delete()
+    .eq("report_id", reportId)
+    .eq("is_manual", false);
+
+  if (deleteErr) {
+    logger.error("Materialize analysis_review_findings delete FAILED", {
+      reportId,
+      jobId: summary.job_id,
+      error: deleteErr,
+    });
+    throw deleteErr;
+  }
+
+  const { error } = await supabase
+    .from("analysis_review_findings")
+    .insert(rows);
+
+  if (error) {
+    logger.error("Materialize analysis_review_findings FAILED", {
+      reportId,
+      jobId: summary.job_id,
+      error,
+    });
+    throw error;
+  }
 }
 
 /**
@@ -1440,13 +1616,18 @@ export async function runAggregation(jobId: string): Promise<void> {
   const j = job as { created_by?: string | null };
   if (j.created_by != null) reportRow.created_by = j.created_by;
 
-  const { error: reportErr } = await supabase.from("analysis_reports").upsert(
-    reportRow,
-    { onConflict: "job_id" }
-  );
+  const { data: savedReport, error: reportErr } = await supabase
+    .from("analysis_reports")
+    .upsert(reportRow, { onConflict: "job_id" })
+    .select("id")
+    .single();
 
   if (reportErr) {
     logger.error("Aggregation: report upsert FAILED", { jobId, error: reportErr });
+  }
+  const reportId = (savedReport as { id?: string } | null)?.id ?? null;
+  if (reportId) {
+    await materializeReviewFindings(reportId, summary, job.version_id);
   }
 
   if (!isPartialReport) {
