@@ -1465,7 +1465,11 @@ function resolveFindingSpanInText(
 ): { start: number; end: number } | null {
   if (!plain.trim()) return null;
 
+  let matchedExactCardText = false;
   let span = tryExactEvidenceSpan(plain, finding.evidenceSnippet ?? '');
+  if (span) {
+    matchedExactCardText = true;
+  }
   if (!span) {
     span = locateSpanByEvidenceSearch(plain, finding, opts);
   }
@@ -1478,6 +1482,9 @@ function resolveFindingSpanInText(
   const evidence = normalizeEvidenceForSearch(finding.evidenceSnippet ?? '');
   if (evidence.length >= 4) {
     span = tightenHighlightRangeToEvidence(plain, span.start, span.end, evidence);
+  }
+  if (matchedExactCardText) {
+    return span.end > span.start ? span : null;
   }
   span = expandHighlightRangeToSentence(plain, span.start, span.end);
   return span.end > span.start ? span : null;
