@@ -312,6 +312,8 @@ export interface AnalysisFinding {
   reviewedRole: string | null;
   createdBy?: string | null;
   manualComment?: string | null;
+  editedBy?: string | null;
+  editedAt?: string | null;
 }
 
 export interface CreateManualFindingBody {

@@ -1171,6 +1171,12 @@ export function Results() {
     const relatedArticles = ((v3.related_article_ids as number[] | undefined) ?? []).filter((id) => id !== primaryArticle);
     const rationale = pickFindingRationale(f);
     const showRationale = !!rationale && !isWeakRationaleText(rationale) && rationale !== (f.evidenceSnippet ?? '').trim();
+    const manualComment = (f.manualComment ?? '').trim();
+    const isEdited = Boolean(f.editedAt || f.editedBy);
+    const showManualComment = !!manualComment && manualComment !== rationale;
+    const manualCommentLabel = isEdited
+      ? (lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:')
+      : (f.source === 'manual' ? (lang === 'ar' ? 'تعليق يدوي:' : 'Manual comment:') : (lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:'));
     const pillarId = (v3.pillar_id as string | undefined) ?? null;
     const displayPage = displayPageForFinding(f.startOffsetGlobal, reportViewerPages, f.pageNumber ?? null);
     const displayTitle = displayFindingTitle({
@@ -1185,6 +1191,11 @@ export function Results() {
           <span className="font-semibold text-text-main text-sm">{displayTitle}</span>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] text-text-muted border-border/60">{findingSourceLabel(f.source ?? 'ai')}</Badge>
+            {isEdited && (
+              <Badge variant="outline" className="text-[10px] bg-info/10 text-info border-info/30">
+                {lang === 'ar' ? 'معدّل' : 'Edited'}
+              </Badge>
+            )}
             {isApproved && (
               <Badge className="text-[10px] bg-success/10 text-success border-success/20 border">{lang === 'ar' ? 'آمن' : 'Safe'}</Badge>
             )}
@@ -1210,6 +1221,9 @@ export function Results() {
           {pillarId && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{pillarId}</span></div>}
           {showRationale && (
             <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{rationale}</span></div>
+          )}
+          {showManualComment && (
+            <div>{manualCommentLabel} <span className="text-text-main">{manualComment}</span></div>
           )}
         </div>
         {f.startLineChunk != null && (
@@ -1266,6 +1280,12 @@ export function Results() {
     });
     const rationale = !isWeakRationaleText(f.rationaleAr) ? f.rationaleAr?.trim() : null;
     const confidence = matchedRaw ? Math.round((matchedRaw.confidence ?? 0) * 100) : null;
+    const manualComment = (f.manualComment ?? '').trim();
+    const isEdited = Boolean(f.editedAt || f.editedBy);
+    const showManualComment = !!manualComment && manualComment !== rationale;
+    const manualCommentLabel = isEdited
+      ? (lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:')
+      : (f.sourceKind === 'manual' ? (lang === 'ar' ? 'تعليق يدوي:' : 'Manual comment:') : (lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:'));
 
     return (
       <div key={f.id} className={cn("border rounded-lg p-4", isApproved ? "bg-success/5 border-success/20" : "bg-surface border-border")}>
@@ -1273,6 +1293,11 @@ export function Results() {
           <span className="font-semibold text-text-main text-sm">{displayTitle}</span>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] text-text-muted border-border/60">{reviewFindingSourceLabel(f.sourceKind)}</Badge>
+            {isEdited && (
+              <Badge variant="outline" className="text-[10px] bg-info/10 text-info border-info/30">
+                {lang === 'ar' ? 'معدّل' : 'Edited'}
+              </Badge>
+            )}
             {isApproved && (
               <Badge className="text-[10px] bg-success/10 text-success border-success/20 border">{lang === 'ar' ? 'آمن' : 'Safe'}</Badge>
             )}
@@ -1296,6 +1321,9 @@ export function Results() {
           )}
           {rationale && (
             <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{rationale}</span></div>
+          )}
+          {showManualComment && (
+            <div>{manualCommentLabel} <span className="text-text-main">{manualComment}</span></div>
           )}
           {f.anchorStatus === 'unresolved' && (
             <div className="text-warning">{lang === 'ar' ? 'التموضع البصري يحتاج تحققًا يدويًا.' : 'Visual placement still needs manual verification.'}</div>
