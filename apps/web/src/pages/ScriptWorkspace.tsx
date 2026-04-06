@@ -1894,6 +1894,9 @@ export function ScriptWorkspace() {
     findingId: string;
     globalStart: number;
     globalEnd: number;
+    pageNumber?: number | null;
+    localStart?: number | null;
+    localEnd?: number | null;
   } | null>(null);
   const [tooltipFinding, setTooltipFinding] = useState<AnalysisFinding | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -4065,8 +4068,19 @@ export function ScriptWorkspace() {
     if (pinnedHighlight) {
       const f = workspaceVisibleReportFindings.find((x) => x.id === pinnedHighlight.findingId);
       if (!f) return [];
-      const pages = pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }));
-      const hit = workspaceGlobalSpanToPageLocal(pinnedHighlight.globalStart, pinnedHighlight.globalEnd, pages);
+      const hit =
+        pinnedHighlight.pageNumber != null &&
+        pinnedHighlight.localStart != null &&
+        pinnedHighlight.localEnd != null
+          ? {
+              pageNumber: pinnedHighlight.pageNumber,
+              localStart: pinnedHighlight.localStart,
+              localEnd: pinnedHighlight.localEnd,
+            }
+          : (() => {
+              const pages = pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }));
+              return workspaceGlobalSpanToPageLocal(pinnedHighlight.globalStart, pinnedHighlight.globalEnd, pages);
+            })();
       if (!hit || hit.pageNumber !== safeCurrentPage) return [];
       return [{ ...f, startOffsetGlobal: hit.localStart, endOffsetGlobal: hit.localEnd }];
     }
@@ -4218,7 +4232,14 @@ export function ScriptWorkspace() {
         : [{ pageNumber: 1, content: workspacePlainFull }];
       const resolvedHit = findingWorkspaceResolve.get(f.id);
       if (resolvedHit?.resolved && resolvedHit.globalStart != null && resolvedHit.globalEnd != null) {
-        setPinnedHighlight({ findingId: f.id, globalStart: resolvedHit.globalStart, globalEnd: resolvedHit.globalEnd });
+        setPinnedHighlight({
+          findingId: f.id,
+          globalStart: resolvedHit.globalStart,
+          globalEnd: resolvedHit.globalEnd,
+          pageNumber: resolvedHit.pageNumber,
+          localStart: resolvedHit.localStart,
+          localEnd: resolvedHit.localEnd,
+        });
         setSelectedFindingId(f.id);
         if (resolvedHit.pageNumber != null && pagesSortedForViewer.length > 0) {
           setCurrentPage(resolvedHit.pageNumber);
@@ -4288,7 +4309,14 @@ export function ScriptWorkspace() {
         toast.error(lang === 'ar' ? 'تعذر تحديد الصفحة' : 'Could not map to a page');
         return;
       }
-      setPinnedHighlight({ findingId: f.id, globalStart: gs, globalEnd: ge });
+      setPinnedHighlight({
+        findingId: f.id,
+        globalStart: gs,
+        globalEnd: ge,
+        pageNumber: hit.pageNumber,
+        localStart: hit.localStart,
+        localEnd: hit.localEnd,
+      });
       setSelectedFindingId(f.id);
       if (pagesSortedForViewer.length > 0 && hit.pageNumber >= 1 && hit.pageNumber <= pagesSortedForViewer.length) {
         setCurrentPage(hit.pageNumber);
