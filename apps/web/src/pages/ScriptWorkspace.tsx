@@ -2142,7 +2142,7 @@ export function ScriptWorkspace() {
     if (inPageMode) {
       // Per-page HTML: index is built in useLayoutEffect right after innerHTML (avoids React
       // wiping highlights and avoids re-indexing DOM that already contains highlight spans).
-      if (pageData?.contentHtml?.trim()) {
+      if (!strictImportedAnchoring && pageData?.contentHtml?.trim()) {
         return;
       }
       const timer = setTimeout(() => {
@@ -2159,7 +2159,7 @@ export function ScriptWorkspace() {
       return () => clearTimeout(timer);
     }
 
-    if (!editorData?.contentHtml) {
+    if (strictImportedAnchoring || !editorData?.contentHtml) {
       setDomTextIndex(null);
       return;
     }
@@ -2171,18 +2171,19 @@ export function ScriptWorkspace() {
       }
     }, 100);
     return () => clearTimeout(timer);
-  }, [editorData?.contentHtml, editorData?.pages, safeCurrentPage]);
+  }, [editorData?.contentHtml, editorData?.pages, safeCurrentPage, strictImportedAnchoring]);
 
   // Inject full-document HTML only in scroll mode (page mode uses React per-page content).
   useLayoutEffect(() => {
     if ((editorData?.pages?.length ?? 0) > 0) return;
+    if (strictImportedAnchoring) return;
     if (!editorRef.current || !editorData?.contentHtml) return;
     const newHtml = sanitizeFormattedHtml(editorData.contentHtml);
     if (editorRef.current.innerHTML !== newHtml) {
       editorRef.current.innerHTML = newHtml;
       if (IS_DEV) console.log('[ScriptWorkspace] innerHTML updated (scroll mode)');
     }
-  }, [editorData?.contentHtml, editorData?.pages?.length]);
+  }, [editorData?.contentHtml, editorData?.pages?.length, strictImportedAnchoring]);
 
   /**
    * Page mode + formatted HTML: set innerHTML on the viewer div imperatively.
@@ -2192,6 +2193,7 @@ export function ScriptWorkspace() {
   const pageHtmlForLayout = editorData?.pages?.[safeCurrentPage - 1]?.contentHtml;
   useLayoutEffect(() => {
     if ((editorData?.pages?.length ?? 0) === 0) return;
+    if (strictImportedAnchoring) return;
     // Editor div unmounts in PDF view; switching back must re-apply HTML (deps were unchanged).
     if (workspaceViewMode !== 'text') return;
     const el = editorRef.current;
@@ -2202,7 +2204,7 @@ export function ScriptWorkspace() {
       const idx = buildDomTextIndex(el);
       setDomTextIndex(idx ?? null);
     }
-  }, [editorData?.pages?.length, safeCurrentPage, pageHtmlForLayout, workspaceViewMode]);
+  }, [editorData?.pages?.length, safeCurrentPage, pageHtmlForLayout, workspaceViewMode, strictImportedAnchoring]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -3411,6 +3413,8 @@ export function ScriptWorkspace() {
 
   // Page-mode: current page data and findings scoped to this page (for toolbar + page view)
   const currentPageData = isPageMode && editorData?.pages?.[safeCurrentPage - 1] ? editorData.pages[safeCurrentPage - 1] : null;
+  const pageUsesFormattedHtml = Boolean(currentPageData?.contentHtml?.trim()) && !strictImportedAnchoring;
+  const fullViewerUsesFormattedHtml = Boolean(editorData?.contentHtml?.trim()) && !strictImportedAnchoring;
   const currentPageDocumentFlags = useMemo(
     () => getWorkspaceDocumentFlags((currentPageData?.meta as Record<string, unknown> | undefined) ?? undefined),
     [currentPageData?.meta]
@@ -4011,7 +4015,7 @@ export function ScriptWorkspace() {
       return;
     }
 
-    if (inPageMode && !currentPageData?.contentHtml) {
+    if (inPageMode && !pageUsesFormattedHtml) {
       const n = highlightTargetsForPageView.length;
       setHighlightExpectedCount(n);
       setHighlightLocatableCount(n);
@@ -4019,7 +4023,7 @@ export function ScriptWorkspace() {
       return;
     }
 
-    if (!inPageMode && !editorData?.contentHtml) {
+    if (!inPageMode && !fullViewerUsesFormattedHtml) {
       const n = highlightTargetsForScrollView.length;
       setHighlightExpectedCount(n);
       setHighlightLocatableCount(n);
@@ -4036,7 +4040,7 @@ export function ScriptWorkspace() {
 
     lastHighlightGuardLogFindingsRef.current = null;
 
-    if (inPageMode && currentPageData?.contentHtml) {
+    if (inPageMode && pageUsesFormattedHtml) {
       const resolved = highlightTargetsForPageView;
       setHighlightExpectedCount(resolved.length);
       if (!resolved.length) {
@@ -4071,7 +4075,6 @@ export function ScriptWorkspace() {
     blockHighlightsCompletely,
     editorData?.contentHtml,
     editorData?.pages,
-    currentPageData?.contentHtml,
     currentPageData?.content,
     safeCurrentPage,
     highlightRetryTick,
@@ -4079,6 +4082,8 @@ export function ScriptWorkspace() {
     workspaceViewMode,
     highlightTargetsForPageView,
     highlightTargetsForScrollView,
+    pageUsesFormattedHtml,
+    fullViewerUsesFormattedHtml,
   ]);
 
   /** After page switch + highlight paint, scroll to the selected finding (click handler's setTimeout often ran too early). */
@@ -4548,11 +4553,18 @@ export function ScriptWorkspace() {
                       }}
                     >
                       <article className="workspace-a4-sheet">
+                        {strictImportedAnchoring && currentPageData.contentHtml ? (
+                          <div className="mb-4 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3 text-xs text-text-muted leading-6">
+                            {lang === 'ar'
+                              ? 'وضع المراجعة الدقيقة مفعل لهذه الصفحة. يتم عرض النص المرجعي المخزن نفسه لضمان أن التمييز يطابق ما حلله النظام، حتى لو اختلف الشكل عن التنسيق الأصلي.'
+                              : 'Exact review mode is enabled for this page. The stored reference text is shown directly so highlights match what the system analyzed, even if the visual formatting differs from the original layout.'}
+                          </div>
+                        ) : null}
                         <div
                           ref={editorRef}
                           className={cn(
                             'script-import-body text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words text-right select-text',
-                            currentPageData.contentHtml ? '[&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm' : 'whitespace-pre-wrap'
+                            pageUsesFormattedHtml ? '[&_p]:mb-2 [&_*]:max-w-full [&_mark]:rounded-sm' : 'whitespace-pre-wrap'
                           )}
                           style={{ fontFamily: workspaceBodyFontFamily }}
                           dir="rtl"
@@ -4562,7 +4574,7 @@ export function ScriptWorkspace() {
                           onMouseUp={handleMouseUp}
                           onTouchEnd={() => handleMouseUp()}
                           onClick={(e) => {
-                            if (!currentPageData.contentHtml) return;
+                            if (!pageUsesFormattedHtml) return;
                             const mark = (e.target as HTMLElement).closest?.('[data-finding-id]');
                             if (mark) {
                               const id = mark.getAttribute('data-finding-id');
@@ -4576,7 +4588,7 @@ export function ScriptWorkspace() {
                           role="region"
                           aria-label={lang === 'ar' ? 'محتوى الصفحة' : 'Page content'}
                         >
-                          {currentPageData.contentHtml ? null : pageFindingSegments ? (
+                          {pageUsesFormattedHtml ? null : pageFindingSegments ? (
                             pageFindingSegments.map((seg) => {
                               const key = `page-seg-${seg.start}-${seg.end}-${seg.finding?.id ?? 'none'}`;
                               const text = (currentPageData.content ?? '').slice(seg.start, seg.end);
@@ -4613,7 +4625,7 @@ export function ScriptWorkspace() {
                     )}
                     </div>
                   </div>
-                ) : editorData?.contentHtml ? (
+                ) : fullViewerUsesFormattedHtml ? (
                   <div className="workspace-a4-stage workspace-a4-stage--fluid">
                     <div className="workspace-a4-sheet workspace-a4-sheet--scroll">
                   <div
