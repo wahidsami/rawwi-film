@@ -423,7 +423,7 @@ function renderPreviewWithHighlight(preview: string, focusSnippet: string | null
 }
 
 import { scriptsApi, tasksApi, reportsApi, findingsApi } from '@/api';
-import type { AnalysisFinding, DuplicateScriptCheckResponse, Report as AnalysisReport } from '@/api';
+import type { AnalysisFinding, AnalysisReviewFinding, DuplicateScriptCheckResponse, Report as AnalysisReport } from '@/api';
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
@@ -667,6 +667,14 @@ function isSyntheticWorkspaceFinding(f: AnalysisFinding): boolean {
   return f.source === 'canonical_summary';
 }
 
+function isReviewLayerOnlyWorkspaceFinding(f: AnalysisFinding): boolean {
+  return f.source === 'review_layer';
+}
+
+function isWorkspaceActionDisabledFinding(f: AnalysisFinding): boolean {
+  return isSyntheticWorkspaceFinding(f) || isReviewLayerOnlyWorkspaceFinding(f);
+}
+
 function synthesizeWorkspaceFindingFromCanonical(
   finding: WorkspaceCanonicalSummaryFinding,
   scriptId: string | undefined,
@@ -742,6 +750,93 @@ function matchWorkspaceFindingForCanonical(
     const evidence = (finding.evidenceSnippet ?? '').replace(/\s+/g, ' ').trim();
     return evidence.includes(prefix) || prefix.includes(evidence.slice(0, Math.min(80, evidence.length)));
   });
+}
+
+function matchWorkspaceRawFindingForReview(
+  reviewFinding: AnalysisReviewFinding,
+  findings: AnalysisFinding[]
+): AnalysisFinding | undefined {
+  const canonicalId = (reviewFinding.canonicalFindingId ?? '').trim();
+  if (canonicalId) {
+    const direct = findings.find((finding) => findingCanonicalId(finding) === canonicalId);
+    if (direct) return direct;
+  }
+  const articleId = Number.isFinite(reviewFinding.primaryArticleId) ? Number(reviewFinding.primaryArticleId) : null;
+  const snippet = (reviewFinding.evidenceSnippet ?? '').replace(/\s+/g, ' ').trim();
+  if (!snippet || snippet.length < 4) return undefined;
+  return findings.find((finding) => {
+    if (articleId != null && finding.articleId !== articleId) return false;
+    const evidence = (finding.evidenceSnippet ?? '').replace(/\s+/g, ' ').trim();
+    return evidence.includes(snippet) || snippet.includes(evidence);
+  });
+}
+
+function synthesizeWorkspaceFindingFromReview(
+  reviewFinding: AnalysisReviewFinding,
+  rawFinding: AnalysisFinding | undefined
+): AnalysisFinding {
+  const source =
+    reviewFinding.sourceKind === 'glossary'
+      ? 'lexicon_mandatory'
+      : reviewFinding.sourceKind === 'manual'
+        ? 'manual'
+        : rawFinding?.source ?? 'ai';
+  const baseId = rawFinding?.id ?? `review:${reviewFinding.id}`;
+  const articleId = Number.isFinite(reviewFinding.primaryArticleId)
+    ? Number(reviewFinding.primaryArticleId)
+    : (rawFinding?.articleId ?? DEFAULT_ACTIONABLE_ARTICLE_ID);
+  const atomId = reviewFinding.primaryAtomId ?? rawFinding?.atomId ?? null;
+
+  return {
+    ...(rawFinding ?? {}),
+    id: baseId,
+    jobId: reviewFinding.jobId,
+    scriptId: reviewFinding.scriptId,
+    versionId: reviewFinding.versionId,
+    source: rawFinding ? source : 'review_layer',
+    articleId,
+    atomId,
+    severity: reviewFinding.severity || rawFinding?.severity || 'medium',
+    confidence: rawFinding?.confidence ?? 0,
+    titleAr: (reviewFinding.titleAr ?? rawFinding?.titleAr ?? '').trim(),
+    descriptionAr: (reviewFinding.descriptionAr ?? rawFinding?.descriptionAr ?? reviewFinding.evidenceSnippet ?? '').trim(),
+    rationaleAr: reviewFinding.rationaleAr ?? rawFinding?.rationaleAr ?? null,
+    evidenceSnippet: (reviewFinding.evidenceSnippet ?? rawFinding?.evidenceSnippet ?? '').trim(),
+    startOffsetGlobal: reviewFinding.startOffsetGlobal ?? rawFinding?.startOffsetGlobal ?? null,
+    endOffsetGlobal: reviewFinding.endOffsetGlobal ?? rawFinding?.endOffsetGlobal ?? null,
+    startLineChunk: rawFinding?.startLineChunk ?? null,
+    endLineChunk: rawFinding?.endLineChunk ?? null,
+    pageNumber: reviewFinding.pageNumber ?? rawFinding?.pageNumber ?? null,
+    startOffsetPage: reviewFinding.startOffsetPage ?? rawFinding?.startOffsetPage ?? null,
+    endOffsetPage: reviewFinding.endOffsetPage ?? rawFinding?.endOffsetPage ?? null,
+    anchorStatus: (reviewFinding.anchorStatus ?? rawFinding?.anchorStatus ?? 'unresolved') as AnalysisFinding['anchorStatus'],
+    anchorMethod: reviewFinding.anchorMethod ?? rawFinding?.anchorMethod ?? null,
+    anchorPageNumber: reviewFinding.pageNumber ?? rawFinding?.anchorPageNumber ?? null,
+    anchorStartOffsetPage: reviewFinding.startOffsetPage ?? rawFinding?.anchorStartOffsetPage ?? null,
+    anchorEndOffsetPage: reviewFinding.endOffsetPage ?? rawFinding?.anchorEndOffsetPage ?? null,
+    anchorStartOffsetGlobal: reviewFinding.startOffsetGlobal ?? rawFinding?.anchorStartOffsetGlobal ?? null,
+    anchorEndOffsetGlobal: reviewFinding.endOffsetGlobal ?? rawFinding?.anchorEndOffsetGlobal ?? null,
+    anchorText: reviewFinding.anchorText ?? rawFinding?.anchorText ?? reviewFinding.evidenceSnippet ?? null,
+    anchorConfidence: reviewFinding.anchorConfidence ?? rawFinding?.anchorConfidence ?? null,
+    anchorUpdatedAt: rawFinding?.anchorUpdatedAt ?? reviewFinding.updatedAt ?? null,
+    location: {
+      ...(rawFinding?.location ?? {}),
+      v3: {
+        ...(((rawFinding?.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {}),
+        canonical_finding_id: reviewFinding.canonicalFindingId ?? null,
+        primary_article_id: articleId,
+        primary_policy_atom_id: atomId,
+      },
+    },
+    createdAt: rawFinding?.createdAt ?? reviewFinding.createdAt,
+    reviewStatus: reviewFinding.reviewStatus === 'approved' ? 'approved' : 'violation',
+    reviewReason: reviewFinding.approvedReason ?? rawFinding?.reviewReason ?? null,
+    reviewedBy: reviewFinding.reviewedBy ?? rawFinding?.reviewedBy ?? null,
+    reviewedAt: reviewFinding.reviewedAt ?? rawFinding?.reviewedAt ?? null,
+    reviewedRole: rawFinding?.reviewedRole ?? null,
+    createdBy: rawFinding?.createdBy ?? null,
+    manualComment: reviewFinding.manualComment ?? rawFinding?.manualComment ?? null,
+  };
 }
 
 function expandHighlightRangeToSentence(
@@ -1656,6 +1751,7 @@ export function ScriptWorkspace() {
   const [selectedReportSummary, setSelectedReportSummary] = useState<AnalysisReport | null>(null);
   const [selectedJobCanonicalHash, setSelectedJobCanonicalHash] = useState<string | null>(null);
   const [reportFindings, setReportFindings] = useState<AnalysisFinding[]>([]);
+  const [reportReviewFindings, setReportReviewFindings] = useState<AnalysisReviewFinding[]>([]);
   const [highlightExpectedCount, setHighlightExpectedCount] = useState(0);
   const [highlightLocatableCount, setHighlightLocatableCount] = useState(0);
   const [highlightRenderedCount, setHighlightRenderedCount] = useState(0);
@@ -1777,6 +1873,22 @@ export function ScriptWorkspace() {
     [selectedReportSummary]
   );
 
+  const workspaceReviewLayerViolations = useMemo(
+    () =>
+      reportReviewFindings
+        .filter((finding) => !finding.isHidden && finding.reviewStatus !== 'approved' && finding.sourceKind !== 'special')
+        .map((finding) => synthesizeWorkspaceFindingFromReview(finding, matchWorkspaceRawFindingForReview(finding, reportFindings))),
+    [reportReviewFindings, reportFindings]
+  );
+
+  const workspaceReviewLayerApproved = useMemo(
+    () =>
+      reportReviewFindings
+        .filter((finding) => !finding.isHidden && finding.reviewStatus === 'approved' && finding.sourceKind !== 'special')
+        .map((finding) => synthesizeWorkspaceFindingFromReview(finding, matchWorkspaceRawFindingForReview(finding, reportFindings))),
+    [reportReviewFindings, reportFindings]
+  );
+
   const workspaceRealViolationFindings = useMemo(() => {
     const violations = reportFindings.filter(
       (f) => f.reviewStatus !== 'approved' && !shouldTreatFindingAsSpecialNote(f, workspaceCanonicalHintIds)
@@ -1786,12 +1898,16 @@ export function ScriptWorkspace() {
 
   const workspaceUseCanonicalFallback = useMemo(
     () =>
+      workspaceReviewLayerViolations.length === 0 &&
       workspaceCanonicalSummaryFindings.length > 0 &&
       workspaceRealViolationFindings.length < Math.max(2, Math.ceil(workspaceCanonicalSummaryFindings.length * 0.6)),
-    [workspaceCanonicalSummaryFindings.length, workspaceRealViolationFindings.length]
+    [workspaceCanonicalSummaryFindings.length, workspaceRealViolationFindings.length, workspaceReviewLayerViolations.length]
   );
 
+  const workspaceUsesReviewLayer = workspaceReviewLayerViolations.length > 0 || workspaceReviewLayerApproved.length > 0;
+
   const workspaceVisibleReportFindings = useMemo(() => {
+    if (workspaceUsesReviewLayer) return workspaceReviewLayerViolations;
     if (!workspaceUseCanonicalFallback) return workspaceRealViolationFindings;
     return workspaceCanonicalSummaryFindings.map((finding) => {
       return (
@@ -1806,6 +1922,8 @@ export function ScriptWorkspace() {
     });
   }, [
     workspaceUseCanonicalFallback,
+    workspaceUsesReviewLayer,
+    workspaceReviewLayerViolations,
     workspaceRealViolationFindings,
     workspaceCanonicalSummaryFindings,
     script?.id,
@@ -1814,7 +1932,7 @@ export function ScriptWorkspace() {
   ]);
 
   const workspaceActionableFindings = useMemo(
-    () => workspaceVisibleReportFindings.filter((finding) => !isSyntheticWorkspaceFinding(finding)),
+    () => workspaceVisibleReportFindings.filter((finding) => !isWorkspaceActionDisabledFinding(finding)),
     [workspaceVisibleReportFindings]
   );
 
@@ -1857,6 +1975,18 @@ export function ScriptWorkspace() {
     }
     // setReportHistoryLoading(false);
   }, [id]);
+
+  const reloadSelectedReportReviewLayer = useCallback(async () => {
+    if (!selectedReportSummary?.id && !selectedReportForHighlights?.jobId) return;
+    try {
+      const rows = selectedReportForHighlights?.jobId
+        ? await findingsApi.getReviewByJob(selectedReportForHighlights.jobId)
+        : await findingsApi.getReviewByReport(selectedReportSummary!.id);
+      setReportReviewFindings(rows);
+    } catch {
+      // keep current layer if refresh fails
+    }
+  }, [selectedReportForHighlights?.jobId, selectedReportSummary?.id]);
 
   // Load report history on mount (so we can restore saved highlight) and when sidebar/modal
   useEffect(() => {
@@ -1917,6 +2047,7 @@ export function ScriptWorkspace() {
         setSelectedReportSummary(null);
         setSelectedJobCanonicalHash(null);
         setReportFindings([]);
+        setReportReviewFindings([]);
       }
       loadReportHistory();
     } catch (err: any) {
@@ -1939,30 +2070,35 @@ export function ScriptWorkspace() {
     setHighlightRenderedCount(0);
     try {
       if (jobId) {
-        const [job, list, fullReport] = await Promise.all([
+        const [job, list, reviewList, fullReport] = await Promise.all([
           tasksApi.getJob(jobId),
           findingsApi.getByJob(jobId),
+          findingsApi.getReviewByJob(jobId),
           reportsApi.getByJob(jobId),
         ]);
         setSelectedJobCanonicalHash((job as { scriptContentHash?: string | null }).scriptContentHash ?? null);
         setSelectedReportSummary(fullReport);
         setReportFindings(list);
+        setReportReviewFindings(reviewList);
         if (IS_DEV) console.log('[ScriptWorkspace] Findings loaded for highlights:', list.length);
         if (id) {
           scriptsApi.setHighlightPreference(id, jobId).catch(() => { });
         }
       } else {
         setSelectedJobCanonicalHash(null);
-        const [list, fullReport] = await Promise.all([
+        const [list, reviewList, fullReport] = await Promise.all([
           findingsApi.getByReport(reportId!),
+          findingsApi.getReviewByReport(reportId!),
           reportsApi.getById(reportId!),
         ]);
         setSelectedReportSummary(fullReport);
         setReportFindings(list);
+        setReportReviewFindings(reviewList);
         if (IS_DEV) console.log('[ScriptWorkspace] Findings loaded for highlights:', list.length);
       }
     } catch (_) {
       setReportFindings([]);
+      setReportReviewFindings([]);
       setSelectedReportSummary(null);
       setSelectedJobCanonicalHash(null);
       toast.error(lang === 'ar' ? 'فشل تحميل الملاحظات' : 'Failed to load findings');
@@ -1995,6 +2131,7 @@ export function ScriptWorkspace() {
             : f
         )
       );
+      await reloadSelectedReportReviewLayer();
       toast.success(
         reportFindingReviewModal.toStatus === 'approved'
           ? lang === 'ar'
@@ -2012,7 +2149,7 @@ export function ScriptWorkspace() {
     } finally {
       setReportFindingReviewSaving(false);
     }
-  }, [reportFindingReviewModal, reportFindingReviewReason, settings?.platform?.requireOverrideReason, lang, user?.id]);
+  }, [reportFindingReviewModal, reportFindingReviewReason, settings?.platform?.requireOverrideReason, lang, user?.id, reloadSelectedReportReviewLayer]);
 
   const handleBulkReportFindingReviewSubmit = useCallback(async () => {
     if (!bulkReportFindingReviewModal) return;
@@ -2043,6 +2180,7 @@ export function ScriptWorkspace() {
             : f
         )
       );
+      await reloadSelectedReportReviewLayer();
       setSelectedReportFindingIds([]);
       toast.success(
         bulkReportFindingReviewModal.toStatus === 'approved'
@@ -2066,6 +2204,7 @@ export function ScriptWorkspace() {
     settings?.platform?.requireOverrideReason,
     lang,
     user?.id,
+    reloadSelectedReportReviewLayer,
   ]);
 
   const handleEditReportFindingSubmit = useCallback(async () => {
@@ -2083,6 +2222,7 @@ export function ScriptWorkspace() {
       if (res.finding) {
         setReportFindings((prev) => prev.map((f) => (f.id === res.finding!.id ? res.finding! : f)));
       }
+      await reloadSelectedReportReviewLayer();
       if ((editReportFindingForm.atomId?.trim() ?? '') && !normalizedAtomId) {
         toast(
           lang === 'ar'
@@ -2106,7 +2246,7 @@ export function ScriptWorkspace() {
     } finally {
       setEditReportFindingSaving(false);
     }
-  }, [editReportFindingModal, editReportFindingForm, lang]);
+  }, [editReportFindingModal, editReportFindingForm, lang, reloadSelectedReportReviewLayer]);
 
   // Restore saved highlight preference when report list is ready (persists across logout/login)
   useEffect(() => {
@@ -2926,6 +3066,7 @@ export function ScriptWorkspace() {
       setExtractedText(textToShow);
       // The file/context was replaced: clear stale highlight/report state immediately in UI.
       setReportFindings([]);
+      setReportReviewFindings([]);
       setSelectedReportForHighlights(null);
       setSelectedReportSummary(null);
       setSelectedJobCanonicalHash(null);
@@ -3210,6 +3351,12 @@ export function ScriptWorkspace() {
       }
       const list = await findingsApi.getByJob(created.jobId);
       setReportFindings(list);
+      try {
+        const reviewRows = await findingsApi.getReviewByJob(created.jobId);
+        setReportReviewFindings(reviewRows);
+      } catch {
+        // keep existing review-layer state if refresh fails
+      }
       const reportForHighlights = reportHistory.find((r) => r.id === formData.reportId);
       if (reportForHighlights) {
         setSelectedReportForHighlights(reportForHighlights);
@@ -3680,7 +3827,7 @@ export function ScriptWorkspace() {
           map.set(f.id, { resolved: true, ...strictHit });
           continue;
         }
-        if (isSyntheticWorkspaceFinding(f)) {
+        if (isWorkspaceActionDisabledFinding(f)) {
           const softHit = resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
           if (softHit) {
             const pageIndex = Math.max(0, pages.findIndex((p) => p.pageNumber === softHit.pageNumber));
@@ -3971,7 +4118,7 @@ export function ScriptWorkspace() {
       let gs = resolvedSpan?.start ?? null;
       let ge = resolvedSpan?.end ?? null;
       if (gs == null || ge == null) {
-        if (strictImportedAnchoring && isSyntheticWorkspaceFinding(f)) {
+        if (strictImportedAnchoring && isWorkspaceActionDisabledFinding(f)) {
           const syntheticHit = resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
           if (syntheticHit) {
             const pageIndex = Math.max(0, pages.findIndex((p) => p.pageNumber === syntheticHit.pageNumber));
@@ -5038,6 +5185,7 @@ export function ScriptWorkspace() {
                       setSelectedReportForHighlights(null);
                       setSelectedReportSummary(null);
                       setReportFindings([]);
+                      setReportReviewFindings([]);
                       setSelectedFindingId(null);
                       setSelectedReportFindingIds([]);
                       setPinnedHighlight(null);
@@ -5083,11 +5231,18 @@ export function ScriptWorkspace() {
               )}
               {workspaceVisibleReportFindings.length > 0 && (
                 <div className="space-y-2 mb-4">
-                  {workspaceUseCanonicalFallback && (
+                  {workspaceUseCanonicalFallback && !workspaceUsesReviewLayer && (
                     <div className="rounded-md border border-primary/20 bg-primary/5 p-2.5 text-[11px] text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                       {lang === 'ar'
                         ? 'يعرض هذا التبويب بطاقات التقرير النهائي كنسخة احتياطية لأن صفوف الملاحظات التفصيلية المحمّلة أقل من المتوقع. ستبقى البطاقات ظاهرة للمراجعة، لكن الاعتماد والتعديل متاحان فقط عندما تتوفر صفوف DB الحقيقية.'
                         : 'This tab is showing final-report cards as a fallback because the loaded detailed finding rows are fewer than expected. Cards stay visible for review, but approve/edit actions are only available when the real DB rows are present.'}
+                    </div>
+                  )}
+                  {workspaceUsesReviewLayer && (
+                    <div className="rounded-md border border-success/20 bg-success/5 p-2.5 text-[11px] text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                      {lang === 'ar'
+                        ? 'تُعرض هذه البطاقات الآن من طبقة المراجعة الموحدة. ستتبع الأرقام والحالة الحالية للمراجعة نفسها، بينما تبقى بعض الإجراءات مرهونة بوجود صف الملاحظة الخام المرتبط.'
+                        : 'These cards are now reading from the unified review layer. Counts and review states follow the same source, while some actions still require a linked raw finding row.'}
                     </div>
                   )}
                   {selectedReportForHighlights && activeWorkspaceHighlightStats.total > 0 && (
@@ -5277,7 +5432,7 @@ export function ScriptWorkspace() {
                             type="checkbox"
                             className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
                             checked={selectedReportFindingIds.includes(f.id)}
-                            disabled={isSyntheticWorkspaceFinding(f)}
+                            disabled={isWorkspaceActionDisabledFinding(f)}
                             onClick={(e) => e.stopPropagation()}
                             onChange={(e) => {
                               const checked = e.target.checked;
@@ -5311,6 +5466,10 @@ export function ScriptWorkspace() {
                             <Badge variant="outline" className="text-[10px]">{lang === 'ar' ? 'يدوي' : 'Manual'}</Badge>
                           ) : (f.source === 'ai' || f.source === 'lexicon_mandatory') ? (
                             <Badge variant="warning" className="text-[10px]">{f.source === 'lexicon_mandatory' ? t('findingSourceGlossary') : 'AI'}</Badge>
+                          ) : isReviewLayerOnlyWorkspaceFinding(f) ? (
+                            <Badge variant="outline" className="text-[10px] border-success/30 text-success">
+                              {lang === 'ar' ? 'من طبقة المراجعة' : 'Review layer'}
+                            </Badge>
                           ) : isSyntheticWorkspaceFinding(f) ? (
                             <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
                               {lang === 'ar' ? 'من التقرير النهائي' : 'From final report'}
@@ -5337,7 +5496,11 @@ export function ScriptWorkspace() {
                         </p>
                       )}
                       <p className="mt-2 text-[11px] text-text-muted" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                        {isSyntheticWorkspaceFinding(f)
+                        {isReviewLayerOnlyWorkspaceFinding(f)
+                          ? lang === 'ar'
+                            ? 'هذه البطاقة موجودة في طبقة المراجعة الموحدة، لكن لم يُعثر بعد على صف الملاحظة الخام المرتبط بها لتنفيذ الاعتماد أو التعديل.'
+                            : 'This card exists in the unified review layer, but its linked raw finding row is not available yet for review actions.'
+                          : isSyntheticWorkspaceFinding(f)
                           ? lang === 'ar'
                             ? 'هذه البطاقة جاءت من التقرير النهائي لأن صف الملاحظة التفصيلي لم يُحمّل بعد. ستبقى ظاهرة للمراجعة ولن تتيح إجراءات الاعتماد حتى تتوفر البيانات التفصيلية.'
                             : 'This card comes from the final report because the detailed finding row is not available yet. It remains visible for review, but action buttons stay disabled until the detailed record is available.'
@@ -5349,7 +5512,7 @@ export function ScriptWorkspace() {
                             ? 'اضغط على البطاقة للانتقال إلى موضعها وتمييزها داخل النص.'
                             : 'Click the card to jump to and highlight its location in the script.'}
                       </p>
-                      {f.source !== 'manual' && !isSyntheticWorkspaceFinding(f) && (
+                      {f.source !== 'manual' && !isWorkspaceActionDisabledFinding(f) && (
                         <div className="flex flex-wrap gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             type="button"
