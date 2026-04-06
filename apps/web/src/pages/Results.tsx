@@ -85,6 +85,11 @@ function isWeakRationaleText(value: string | null | undefined): boolean {
   const text = (value ?? '').replace(/\s+/g, ' ').trim();
   if (!text) return true;
   if (text.length < 24) return true;
+  if (
+    text === 'السياق يعرض الفعل أو اللفظ مباشرة داخل المشهد ويحتاج وزناً سياساتياً كاملاً.' ||
+    text === 'يعرض الفعل أو اللفظ مباشرة داخل المشهد ويحتاج وزناً سياساتياً كاملاً.' ||
+    text === 'يحتاج وزناً سياساتياً كاملاً.'
+  ) return true;
   return [
     /^وجود /,
     /^مطابقة /,
@@ -1048,6 +1053,7 @@ export function Results() {
     const primaryArticle = Number.isFinite(primaryArticleId) ? primaryArticleId : f.articleId;
     const relatedArticles = ((v3.related_article_ids as number[] | undefined) ?? []).filter((id) => id !== primaryArticle);
     const rationale = pickFindingRationale(f);
+    const showRationale = !!rationale && !isWeakRationaleText(rationale) && rationale !== (f.evidenceSnippet ?? '').trim();
     const pillarId = (v3.pillar_id as string | undefined) ?? null;
     const displayPage = displayPageForFinding(f.startOffsetGlobal, reportViewerPages, f.pageNumber ?? null);
     const displayTitle = displayFindingTitle({
@@ -1073,7 +1079,7 @@ export function Results() {
             {lang === 'ar' ? `صفحة ${displayPage}` : `Page ${displayPage}`}
           </div>
         )}
-        <div className={cn("p-3 rounded-md border text-sm text-text-main italic", isApproved ? "bg-success/5 border-success/10" : "bg-background/50 border-border/50")} dir="rtl">
+        <div className={cn("p-3 rounded-md border text-sm font-medium text-text-main italic", isApproved ? "bg-success/5 border-success/10" : "bg-background/50 border-border/50")} dir="rtl">
           "{f.evidenceSnippet}"
         </div>
         <div className="mt-2 text-xs text-text-muted space-y-1">
@@ -1085,7 +1091,9 @@ export function Results() {
             </div>
           )}
           {pillarId && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{pillarId}</span></div>}
-          <div>{lang === 'ar' ? 'لماذا اعتُبرت مخالفة:' : 'Why considered a violation:'} <span className="text-text-main">{rationale ?? '—'}</span></div>
+          {showRationale && (
+            <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{rationale}</span></div>
+          )}
         </div>
         {f.startLineChunk != null && (
           <div className="text-[10px] text-text-muted mt-1 text-end">
@@ -1244,6 +1252,7 @@ export function Results() {
               <div className="p-4 space-y-3">
                 {artFindings.map((f, idx) => {
                   const articleId = Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0;
+                  const cardRationale = isWeakRationaleText(f.rationale) ? null : f.rationale;
                   return (
                         <div key={`${f.canonical_finding_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-2">
@@ -1277,7 +1286,9 @@ export function Results() {
                               </div>
                             )}
                             {f.pillar_id && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{f.pillar_id}</span></div>}
-                            <div>{lang === 'ar' ? 'لماذا اعتُبرت مخالفة:' : 'Why considered a violation:'} <span className="text-text-main">{f.rationale ?? '—'}</span></div>
+                            {cardRationale && (
+                              <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{cardRationale}</span></div>
+                            )}
                           </div>
                           {(() => {
                             const mf = matchFindingForCanonical(f);

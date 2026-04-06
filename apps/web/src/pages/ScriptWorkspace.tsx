@@ -572,6 +572,11 @@ function isWeakRationaleText(value: string | null | undefined): boolean {
   const text = (value ?? '').replace(/\s+/g, ' ').trim();
   if (!text) return true;
   if (text.length < 24) return true;
+  if (
+    text === 'السياق يعرض الفعل أو اللفظ مباشرة داخل المشهد ويحتاج وزناً سياساتياً كاملاً.' ||
+    text === 'يعرض الفعل أو اللفظ مباشرة داخل المشهد ويحتاج وزناً سياساتياً كاملاً.' ||
+    text === 'يحتاج وزناً سياساتياً كاملاً.'
+  ) return true;
   return [
     /^وجود /,
     /^مطابقة /,
@@ -3932,7 +3937,20 @@ export function ScriptWorkspace() {
       const resolvedSpan = strictImportedAnchoring
         ? null
         : resolveFindingSpanInText(workspacePlainFull, f, locateFindingInContent);
-      if (!resolvedSpan) {
+      let gs = resolvedSpan?.start ?? null;
+      let ge = resolvedSpan?.end ?? null;
+      if (gs == null || ge == null) {
+        if (strictImportedAnchoring && isSyntheticWorkspaceFinding(f)) {
+          const syntheticHit = resolveFindingViaWorkspaceSearch(f, workspacePlainFull, pages, locateFindingInContent);
+          if (syntheticHit) {
+            const pageIndex = Math.max(0, pages.findIndex((p) => p.pageNumber === syntheticHit.pageNumber));
+            const pageGlobalStart = pagesSortedForViewer.length > 0 ? globalStartOfViewerPage(pages, pageIndex) : 0;
+            gs = pageGlobalStart + syntheticHit.localStart;
+            ge = pageGlobalStart + syntheticHit.localEnd;
+          }
+        }
+      }
+      if (gs == null || ge == null) {
         const fallbackPage =
           findingWorkspaceResolve.get(f.id)?.pageNumber ??
           displayPageForFinding(findingPreferredStartOffsetGlobal(f), pages, findingPreferredPageNumber(f));
@@ -3954,8 +3972,6 @@ export function ScriptWorkspace() {
         );
         return;
       }
-      let gs = resolvedSpan.start;
-      let ge = resolvedSpan.end;
       if (ge <= gs) {
         toast.error(lang === 'ar' ? 'مدى غير صالح' : 'Invalid match range');
         return;
@@ -5215,6 +5231,15 @@ export function ScriptWorkspace() {
                         }
                       }}
                     >
+                      {(() => {
+                        const cardPrimaryText = (f.evidenceSnippet || f.titleAr || f.descriptionAr || '').trim();
+                        const cardSecondaryText = (() => {
+                          const rationale = pickFindingRationale(f);
+                          if (!rationale || rationale === cardPrimaryText) return '';
+                          return rationale;
+                        })();
+                        return (
+                          <>
                       <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
                         <div className="flex items-center gap-2">
                           <input
@@ -5270,10 +5295,14 @@ export function ScriptWorkspace() {
                           </Badge>
                         </div>
                       </div>
-                      <p className="text-sm text-text-main line-clamp-2 mb-1" dir="rtl">{f.descriptionAr}</p>
-                      {f.evidenceSnippet && (
-                        <p className="text-xs text-text-muted italic line-clamp-2 bg-surface-hover/50 p-1.5 rounded" dir="rtl">
-                          "{f.evidenceSnippet}"
+                      {cardPrimaryText && (
+                        <p className="text-sm font-medium text-text-main line-clamp-3 mb-1.5 bg-surface-hover/50 p-2 rounded" dir="rtl">
+                          "{cardPrimaryText}"
+                        </p>
+                      )}
+                      {cardSecondaryText && (
+                        <p className="text-[11px] text-text-muted line-clamp-2 mb-1" dir="rtl">
+                          {cardSecondaryText}
                         </p>
                       )}
                       <p className="mt-2 text-[11px] text-text-muted" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -5336,6 +5365,9 @@ export function ScriptWorkspace() {
                           {lang === 'ar' ? 'السبب:' : 'Reason:'} {f.reviewReason}
                         </p>
                       )}
+                          </>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>
