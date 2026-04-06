@@ -226,6 +226,10 @@ function findingKindFromReviewSource(sourceKind: AnalysisReviewFinding['sourceKi
   return 'ai';
 }
 
+function compactWhitespace(value: string | null | undefined): string {
+  return (value ?? '').replace(/\s+/g, ' ').trim();
+}
+
 function countReviewFindingKinds(list: AnalysisReviewFinding[]) {
   const counts = { ai: 0, manual: 0, glossary: 0 };
   for (const finding of list) {
