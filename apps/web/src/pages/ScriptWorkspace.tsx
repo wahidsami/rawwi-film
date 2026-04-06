@@ -1925,6 +1925,7 @@ export function ScriptWorkspace() {
   const [highlightRetryTick, setHighlightRetryTick] = useState(0);
   // const [reportFindingsLoading, setReportFindingsLoading] = useState(false);
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
+  const [pageNoticesOpen, setPageNoticesOpen] = useState(false);
   /** User clicked a finding card or retried highlight — only this finding is highlighted. */
   const [pinnedHighlight, setPinnedHighlight] = useState<{
     findingId: string;
@@ -2123,6 +2124,10 @@ export function ScriptWorkspace() {
     const visibleIds = new Set(workspaceVisibleReportFindings.map((f) => f.id));
     setSelectedReportFindingIds((prev) => prev.filter((id) => visibleIds.has(id)));
   }, [workspaceVisibleReportFindings]);
+
+  useEffect(() => {
+    setPageNoticesOpen(false);
+  }, [safeCurrentPage, workspaceViewMode]);
 
   useEffect(() => {
     if (!editReportFindingModal) return;
@@ -3890,6 +3895,47 @@ export function ScriptWorkspace() {
       used: meta.ocrUsed === true,
     };
   }, [currentPageData?.meta]);
+  const pageViewerNotices = useMemo(() => {
+    const notices: Array<{ id: string; label: string; description: string }> = [];
+    for (const item of currentPageDocumentFlags) {
+      notices.push({
+        id: `flag-${item.flag}`,
+        label: lang === 'ar' ? item.labelAr : item.labelEn,
+        description: lang === 'ar' ? item.descriptionAr : item.descriptionEn,
+      });
+    }
+    if (currentPageStrikeSpanCount > 0) {
+      notices.push({
+        id: 'strike-spans',
+        label: lang === 'ar' ? `شطب مرصود: ${currentPageStrikeSpanCount}` : `Crossed-out spans: ${currentPageStrikeSpanCount}`,
+        description:
+          lang === 'ar'
+            ? 'تم رصد نصوص مشطوبة في هذه الصفحة. راجع الأصل البصري إذا كانت حالة الشطب مؤثرة على التفسير.'
+            : 'Crossed-out text was detected on this page. Review the visual original if strike-through affects interpretation.',
+      });
+    }
+    if (currentPageOcrInfo?.selected) {
+      notices.push({
+        id: 'ocr-selected',
+        label: lang === 'ar' ? 'تم الاعتماد على OCR' : 'OCR selected',
+        description:
+          lang === 'ar'
+            ? 'تم اعتماد ناتج OCR لهذه الصفحة. قد تحتاج الصياغة أو الفواصل إلى تحقق بصري عند الحالات الحساسة.'
+            : 'OCR output was selected for this page. Wording or punctuation may need visual verification in sensitive cases.',
+      });
+    }
+    if (strictImportedAnchoring && currentPageData?.contentHtml) {
+      notices.push({
+        id: 'exact-review-mode',
+        label: lang === 'ar' ? 'وضع المراجعة الدقيقة' : 'Exact review mode',
+        description:
+          lang === 'ar'
+            ? 'يتم عرض النص المرجعي المخزن نفسه لضمان أن التمييز يطابق ما حلله النظام، حتى لو اختلف الشكل عن التنسيق الأصلي.'
+            : 'The stored reference text is shown so highlights match what the system analyzed, even if the visual formatting differs from the original layout.',
+      });
+    }
+    return notices;
+  }, [currentPageDocumentFlags, currentPageStrikeSpanCount, currentPageOcrInfo?.selected, strictImportedAnchoring, currentPageData?.contentHtml, lang]);
   /** PDF import can persist a font stack per page (see pdfDisplayFont + script_pages.display_font_stack). */
   const workspaceBodyFontFamily = useMemo(() => {
     if (isPageMode && currentPageData?.displayFontStack) {
@@ -4092,6 +4138,59 @@ export function ScriptWorkspace() {
       return changed ? next : prev;
     });
   }, [workspaceHighlightCacheKey, workspaceVisibleReportFindings, findingWorkspaceResolve]);
+
+  const sortedWorkspaceVisibleReportFindings = useMemo(() => {
+    const pages = pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }));
+    return workspaceVisibleReportFindings
+      .map((finding, index) => ({ finding, index }))
+      .sort((left, right) => {
+        const a = left.finding;
+        const b = right.finding;
+        const ra = findingWorkspaceResolve.get(a.id);
+        const rb = findingWorkspaceResolve.get(b.id);
+
+        const pageA =
+          ra?.pageNumber ??
+          displayPageForFinding(a.startOffsetGlobal, pages, a.pageNumber ?? null) ??
+          Number.MAX_SAFE_INTEGER;
+        const pageB =
+          rb?.pageNumber ??
+          displayPageForFinding(b.startOffsetGlobal, pages, b.pageNumber ?? null) ??
+          Number.MAX_SAFE_INTEGER;
+        if (pageA !== pageB) return pageA - pageB;
+
+        const localA =
+          ra?.localStart ??
+          a.anchorStartOffsetPage ??
+          a.startOffsetPage ??
+          a.anchorStartOffsetGlobal ??
+          a.startOffsetGlobal ??
+          Number.MAX_SAFE_INTEGER;
+        const localB =
+          rb?.localStart ??
+          b.anchorStartOffsetPage ??
+          b.startOffsetPage ??
+          b.anchorStartOffsetGlobal ??
+          b.startOffsetGlobal ??
+          Number.MAX_SAFE_INTEGER;
+        if (localA !== localB) return localA - localB;
+
+        const globalA =
+          ra?.globalStart ??
+          a.anchorStartOffsetGlobal ??
+          a.startOffsetGlobal ??
+          Number.MAX_SAFE_INTEGER;
+        const globalB =
+          rb?.globalStart ??
+          b.anchorStartOffsetGlobal ??
+          b.startOffsetGlobal ??
+          Number.MAX_SAFE_INTEGER;
+        if (globalA !== globalB) return globalA - globalB;
+
+        return left.index - right.index;
+      })
+      .map((item) => item.finding);
+  }, [workspaceVisibleReportFindings, pagesSortedForViewer, findingWorkspaceResolve]);
 
   const activeWorkspaceHighlights = useMemo((): AnalysisFinding[] => {
     if (!selectedReportForHighlights || !workspaceVisibleReportFindings.length) return [];
@@ -5048,7 +5147,8 @@ export function ScriptWorkspace() {
                   </div>
                 )}
                 {isPageMode && (
-                  <div className="mb-3 flex flex-wrap items-center gap-3 py-2 px-4 bg-surface border border-border rounded-xl">
+                  <div className="mb-3 space-y-2">
+                    <div className="flex flex-wrap items-center gap-3 py-2 px-4 bg-surface border border-border rounded-xl">
                     <span className="text-sm text-text-muted font-medium">
                       {lang === 'ar' ? 'صفحة' : 'Page'} {safeCurrentPage} / {totalPages}
                     </span>
@@ -5119,51 +5219,49 @@ export function ScriptWorkspace() {
                         </div>
                       </>
                     )}
+                    {pageViewerNotices.length > 0 && (
+                      <>
+                        <div className="h-4 w-px bg-border" />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-[11px]"
+                          onClick={() => setPageNoticesOpen((value) => !value)}
+                        >
+                          <span>{lang === 'ar' ? 'ملاحظات الصفحة' : 'Page notes'}</span>
+                          <Badge variant="outline" className="ms-1 text-[10px]">{pageViewerNotices.length}</Badge>
+                          {pageNoticesOpen ? <ChevronUp className="w-3.5 h-3.5 ms-1" /> : <ChevronDown className="w-3.5 h-3.5 ms-1" />}
+                        </Button>
+                      </>
+                    )}
+                    </div>
+                    {pageNoticesOpen && pageViewerNotices.length > 0 && (
+                      <div className="rounded-xl border border-warning/25 bg-warning/5 px-4 py-3 space-y-3" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                        <p className="text-xs font-semibold text-warning">
+                          {lang === 'ar' ? 'ملاحظات مرتبطة بهذه الصفحة' : 'Notes for this page'}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {pageViewerNotices.map((item) => (
+                            <Badge key={item.id} variant="outline" className="text-[11px]">
+                              {item.label}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="space-y-1.5">
+                          {pageViewerNotices.map((item) => (
+                            <p key={`${item.id}-desc`} className="text-xs text-text-muted leading-6">
+                              <span className="font-semibold text-text-main">{item.label}:</span> {item.description}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 {isPageMode && currentPageData ? (
                   <div className="workspace-a4-stage flex justify-center py-6 px-2 overflow-x-auto">
                     <div className="w-full max-w-4xl space-y-3">
-                    {(currentPageDocumentFlags.length > 0 || currentPageStrikeSpanCount > 0 || currentPageOcrInfo?.selected) && (
-                      <div className="rounded-2xl border border-warning/25 bg-warning/5 px-4 py-3 space-y-3" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                        <div className="space-y-1">
-                          <p className="text-xs font-semibold text-warning">
-                            {lang === 'ar' ? 'تنبيهات بنية الصفحة الحالية' : 'Current page structure warnings'}
-                          </p>
-                          <p className="text-sm text-text-main leading-6">
-                            {lang === 'ar'
-                              ? 'قد لا تطابق هذه الصفحة البنية الأصلية بالكامل داخل النص المستخرج. راجع الأصل البصري عند الحاجة قبل اتخاذ قرار نهائي.'
-                              : 'This page may not preserve the original document structure perfectly in extracted text. Review the visual original when needed before making a final decision.'}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {currentPageDocumentFlags.map((item) => (
-                            <Badge key={item.flag} variant="outline" className="text-[11px]">
-                              {lang === 'ar' ? item.labelAr : item.labelEn}
-                            </Badge>
-                          ))}
-                          {currentPageStrikeSpanCount > 0 && (
-                            <Badge variant="outline" className="text-[11px]">
-                              {lang === 'ar' ? `شطب مرصود: ${currentPageStrikeSpanCount}` : `Crossed-out spans: ${currentPageStrikeSpanCount}`}
-                            </Badge>
-                          )}
-                          {currentPageOcrInfo?.selected && (
-                            <Badge variant="outline" className="text-[11px]">
-                              {lang === 'ar' ? 'تم الاعتماد على OCR' : 'OCR selected'}
-                            </Badge>
-                          )}
-                        </div>
-                        {currentPageDocumentFlags.length > 0 && (
-                          <div className="space-y-1.5">
-                            {currentPageDocumentFlags.map((item) => (
-                              <p key={`${item.flag}-desc`} className="text-xs text-text-muted leading-6">
-                                {lang === 'ar' ? item.descriptionAr : item.descriptionEn}
-                              </p>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
                     {workspaceViewMode === 'pdf' && editorData?.sourcePdfSignedUrl ? (
                       <div className="w-full">
                         {selectedFindingId && (() => {
@@ -5226,13 +5324,6 @@ export function ScriptWorkspace() {
                       }}
                     >
                       <article className="workspace-a4-sheet">
-                        {strictImportedAnchoring && currentPageData.contentHtml ? (
-                          <div className="mb-4 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3 text-xs text-text-muted leading-6">
-                            {lang === 'ar'
-                              ? 'وضع المراجعة الدقيقة مفعل لهذه الصفحة. يتم عرض النص المرجعي المخزن نفسه لضمان أن التمييز يطابق ما حلله النظام، حتى لو اختلف الشكل عن التنسيق الأصلي.'
-                              : 'Exact review mode is enabled for this page. The stored reference text is shown directly so highlights match what the system analyzed, even if the visual formatting differs from the original layout.'}
-                          </div>
-                        ) : null}
                         <div
                           key={`page-editor-${safeCurrentPage}-${forcedPinnedFindingRender?.finding.id ?? 'none'}-${forcedPinnedFindingRender?.start ?? 'na'}-${forcedPinnedFindingRender?.end ?? 'na'}`}
                           ref={editorRef}
@@ -5771,7 +5862,7 @@ export function ScriptWorkspace() {
                       {lang === 'ar' ? 'اعتماد المحدد كآمن' : 'Mark selected safe'}
                     </Button>
                   </div>
-                  {workspaceVisibleReportFindings.map((f) => (
+                  {sortedWorkspaceVisibleReportFindings.map((f) => (
                     <div
                       key={f.id}
                       ref={(el) => { findingCardRefs.current[f.id] = el; }}
