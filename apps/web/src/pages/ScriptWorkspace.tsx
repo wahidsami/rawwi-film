@@ -943,6 +943,32 @@ function resolveFindingViaStoredPageData(
   };
 }
 
+type WorkspaceFindingResolution = {
+  resolved: boolean;
+  pageNumber: number | null;
+  localStart: number | null;
+  localEnd: number | null;
+  globalStart: number | null;
+  globalEnd: number | null;
+  method: 'stored_offsets' | 'stored_page_search' | 'global_search' | 'workspace_search' | 'unresolved';
+};
+
+function isValidWorkspaceFindingResolution(
+  value: unknown
+): value is WorkspaceFindingResolution {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return (
+    typeof row.resolved === 'boolean' &&
+    (row.pageNumber == null || typeof row.pageNumber === 'number') &&
+    (row.localStart == null || typeof row.localStart === 'number') &&
+    (row.localEnd == null || typeof row.localEnd === 'number') &&
+    (row.globalStart == null || typeof row.globalStart === 'number') &&
+    (row.globalEnd == null || typeof row.globalEnd === 'number') &&
+    typeof row.method === 'string'
+  );
+}
+
 /** Ctrl+F the full workspace text (all pages), then map hit to viewer page. */
 function resolveFindingViaWorkspaceSearch(
   f: AnalysisFinding,
@@ -3273,6 +3299,48 @@ export function ScriptWorkspace() {
     () => [...(editorData?.pages ?? [])].sort((a, b) => a.pageNumber - b.pageNumber),
     [editorData?.pages]
   );
+  const workspaceHighlightCacheKey = useMemo(() => {
+    const scriptId = script?.id;
+    const reportKey = selectedReportForHighlights?.jobId ?? selectedReportForHighlights?.id ?? null;
+    const versionKey = script?.currentVersionId ?? null;
+    const contentHash = editorData?.contentHash ?? null;
+    if (!scriptId || !reportKey || !versionKey || !contentHash) return null;
+    return `workspace-highlight-cache:${scriptId}:${versionKey}:${reportKey}:${contentHash}`;
+  }, [script?.id, script?.currentVersionId, selectedReportForHighlights?.jobId, selectedReportForHighlights?.id, editorData?.contentHash]);
+  const [workspaceHighlightCache, setWorkspaceHighlightCache] = useState<Record<string, WorkspaceFindingResolution>>({});
+
+  useEffect(() => {
+    if (!workspaceHighlightCacheKey) {
+      setWorkspaceHighlightCache({});
+      return;
+    }
+    try {
+      const raw = window.localStorage.getItem(workspaceHighlightCacheKey);
+      if (!raw) {
+        setWorkspaceHighlightCache({});
+        return;
+      }
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const next: Record<string, WorkspaceFindingResolution> = {};
+      for (const [findingId, value] of Object.entries(parsed ?? {})) {
+        if (isValidWorkspaceFindingResolution(value)) {
+          next[findingId] = value;
+        }
+      }
+      setWorkspaceHighlightCache(next);
+    } catch {
+      setWorkspaceHighlightCache({});
+    }
+  }, [workspaceHighlightCacheKey]);
+
+  useEffect(() => {
+    if (!workspaceHighlightCacheKey) return;
+    try {
+      window.localStorage.setItem(workspaceHighlightCacheKey, JSON.stringify(workspaceHighlightCache));
+    } catch {
+      // Ignore localStorage quota/availability issues; highlighting still works without cache.
+    }
+  }, [workspaceHighlightCacheKey, workspaceHighlightCache]);
 
   /** Full script as stored in workspace (page1 + \\n\\n + page2 + …) — same string search space as Ctrl+F across the doc. */
   const workspacePlainFull = useMemo(() => {
@@ -3285,24 +3353,26 @@ export function ScriptWorkspace() {
 
   /** Per-finding: where evidence actually appears in the workspace (page + local/global offsets). */
   const findingWorkspaceResolve = useMemo(() => {
-    const map = new Map<
-      string,
-      {
-        resolved: boolean;
-        pageNumber: number | null;
-        localStart: number | null;
-        localEnd: number | null;
-        globalStart: number | null;
-        globalEnd: number | null;
-        method: 'stored_offsets' | 'stored_page_search' | 'global_search' | 'workspace_search' | 'unresolved';
-      }
-    >();
+    const map = new Map<string, WorkspaceFindingResolution>();
     if (!workspacePlainFull.trim() || !workspaceVisibleReportFindings.length) return map;
     const hasPagedViewer = pagesSortedForViewer.length > 0;
     const pages = hasPagedViewer
       ? pagesSortedForViewer.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
       : [{ pageNumber: 1, content: workspacePlainFull }];
     for (const f of workspaceVisibleReportFindings) {
+      const cached = workspaceHighlightCache[f.id];
+      if (cached) {
+        if (
+          !cached.resolved ||
+          (cached.pageNumber != null &&
+            cached.localStart != null &&
+            cached.localEnd != null &&
+            pages.some((p) => p.pageNumber === cached.pageNumber && (p.content ?? '').length >= cached.localEnd))
+        ) {
+          map.set(f.id, cached);
+          continue;
+        }
+      }
       const storedHit = resolveFindingViaStoredPageData(f, pages);
       if (storedHit) {
         map.set(f.id, { resolved: true, ...storedHit });
@@ -3342,7 +3412,32 @@ export function ScriptWorkspace() {
       });
     }
     return map;
-  }, [workspacePlainFull, workspaceVisibleReportFindings, pagesSortedForViewer, locateFindingInContent]);
+  }, [workspacePlainFull, workspaceVisibleReportFindings, pagesSortedForViewer, locateFindingInContent, workspaceHighlightCache]);
+
+  useEffect(() => {
+    if (!workspaceHighlightCacheKey || !workspaceVisibleReportFindings.length) return;
+    const relevantIds = new Set(workspaceVisibleReportFindings.map((f) => f.id));
+    setWorkspaceHighlightCache((prev) => {
+      let changed = false;
+      const next: Record<string, WorkspaceFindingResolution> = {};
+      for (const [findingId, value] of Object.entries(prev)) {
+        if (relevantIds.has(findingId)) next[findingId] = value;
+        else changed = true;
+      }
+      for (const f of workspaceVisibleReportFindings) {
+        const hit = findingWorkspaceResolve.get(f.id);
+        if (!hit) continue;
+        const previous = next[f.id];
+        const serializedPrev = previous ? JSON.stringify(previous) : null;
+        const serializedNext = JSON.stringify(hit);
+        if (serializedPrev !== serializedNext) {
+          next[f.id] = hit;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [workspaceHighlightCacheKey, workspaceVisibleReportFindings, findingWorkspaceResolve]);
 
   const activeWorkspaceHighlights = useMemo((): AnalysisFinding[] => {
     if (!selectedReportForHighlights || !workspaceVisibleReportFindings.length) return [];
