@@ -4375,6 +4375,7 @@ export function ScriptWorkspace() {
       for (const f of sorted) {
         let rawStart: number;
         let rawEnd: number;
+        const isPinnedFinding = pinnedHighlight?.findingId === f.id || selectedFindingId === f.id;
         if (strictImportedAnchoring) {
           const resolved = findingWorkspaceResolve.get(f.id);
           if (!resolved?.resolved) continue;
@@ -4416,20 +4417,28 @@ export function ScriptWorkspace() {
         const el = document.createElement('span');
         el.setAttribute('data-finding-id', f.id);
         el.className = 'ap-highlight cursor-pointer';
-        el.style.backgroundColor =
-          f.severity === 'critical'
+        el.style.backgroundColor = isPinnedFinding
+          ? (f.reviewStatus === 'approved' ? 'rgba(22, 163, 74, 0.18)' : 'rgba(254, 240, 138, 0.95)')
+          : f.severity === 'critical'
             ? 'rgba(255, 0, 0, 0.35)'
             : f.severity === 'high'
               ? 'rgba(255, 0, 0, 0.28)'
               : 'rgba(255, 165, 0, 0.28)';
-        el.style.borderBottom =
-          f.severity === 'critical'
+        el.style.borderBottom = isPinnedFinding
+          ? (f.reviewStatus === 'approved' ? '3px solid rgb(22, 163, 74)' : '3px solid rgb(220, 38, 38)')
+          : f.severity === 'critical'
             ? '2px solid red'
             : f.severity === 'high'
               ? '2px solid rgba(255, 0, 0, 0.8)'
               : '2px solid orange';
         el.style.borderRadius = '2px';
         el.style.transition = 'background-color 0.2s';
+        if (isPinnedFinding) {
+          el.style.color = f.reviewStatus === 'approved' ? 'rgb(21, 128, 61)' : 'rgb(153, 27, 27)';
+          el.style.fontWeight = '800';
+          el.style.paddingInline = '2px';
+          el.style.boxShadow = '0 0 0 1px rgba(220, 38, 38, 0.18)';
+        }
         const baseBg = el.style.backgroundColor;
         el.onmouseenter = () => {
           el.style.backgroundColor = 'rgba(255, 255, 0, 0.45)';
@@ -4463,7 +4472,7 @@ export function ScriptWorkspace() {
       }
       return appliedCount;
     },
-    [locateFindingInContent, currentPageData?.content, findingWorkspaceResolve, safeCurrentPage, strictImportedAnchoring]
+    [locateFindingInContent, currentPageData?.content, findingWorkspaceResolve, safeCurrentPage, strictImportedAnchoring, pinnedHighlight?.findingId, selectedFindingId]
   );
 
   useEffect(() => {
@@ -5064,6 +5073,9 @@ export function ScriptWorkspace() {
                             pageFindingSegments.map((seg) => {
                               const key = `page-seg-${seg.start}-${seg.end}-${seg.finding?.id ?? 'none'}`;
                               const text = (currentPageData.content ?? '').slice(seg.start, seg.end);
+                              const isPinnedFinding =
+                                !!seg.finding &&
+                                (selectedFindingId === seg.finding.id || pinnedHighlight?.findingId === seg.finding.id);
                               return (
                                 <span key={key}>
                                   {seg.finding ? (
@@ -5073,7 +5085,11 @@ export function ScriptWorkspace() {
                                         'cursor-pointer border-b-2 transition-colors',
                                         seg.finding.reviewStatus === 'approved'
                                           ? 'bg-success/20 border-success/50 hover:bg-success/30'
-                                          : 'bg-error/20 border-error/50 hover:bg-error/30'
+                                          : 'bg-error/20 border-error/50 hover:bg-error/30',
+                                        isPinnedFinding &&
+                                          (seg.finding.reviewStatus === 'approved'
+                                            ? 'bg-success/15 text-success font-extrabold border-success shadow-[0_0_0_1px_rgba(22,163,74,0.18)] px-0.5 rounded-sm'
+                                            : 'bg-yellow-200 text-red-800 font-extrabold border-red-600 shadow-[0_0_0_1px_rgba(220,38,38,0.18)] px-0.5 rounded-sm')
                                       )}
                                       onClick={() => {
                                         setSelectedFindingId(seg.finding!.id);
