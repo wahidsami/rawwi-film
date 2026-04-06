@@ -4329,6 +4329,55 @@ export function ScriptWorkspace() {
     locateFindingInContent,
   ]);
 
+  const forcedPinnedFindingRender = useMemo(() => {
+    if (!isPageMode || pageUsesFormattedHtml || !currentPageData?.content || !selectedWorkspaceFinding) {
+      return null;
+    }
+
+    const resolved = findingWorkspaceResolve.get(selectedWorkspaceFinding.id) ?? null;
+    if (resolved?.pageNumber != null && resolved.pageNumber !== safeCurrentPage) {
+      return null;
+    }
+
+    const fallbackSegment = selectedFindingDebugInfo?.matchingSegments?.[0] ?? null;
+    const spanStart =
+      selectedFindingDebugInfo?.visibleSpan?.start ??
+      fallbackSegment?.start ??
+      (resolved?.localStart ?? null);
+    const spanEnd =
+      selectedFindingDebugInfo?.visibleSpan?.end ??
+      fallbackSegment?.end ??
+      (resolved?.localEnd ?? null);
+
+    if (spanStart == null || spanEnd == null || spanEnd <= spanStart) {
+      return null;
+    }
+
+    const pageText = currentPageData.content;
+    const safeStart = Math.max(0, Math.min(spanStart, pageText.length));
+    const safeEnd = Math.max(safeStart + 1, Math.min(spanEnd, pageText.length));
+    if (safeEnd <= safeStart) {
+      return null;
+    }
+
+    return {
+      finding: selectedWorkspaceFinding,
+      start: safeStart,
+      end: safeEnd,
+      before: pageText.slice(0, safeStart),
+      focus: pageText.slice(safeStart, safeEnd),
+      after: pageText.slice(safeEnd),
+    };
+  }, [
+    isPageMode,
+    pageUsesFormattedHtml,
+    currentPageData?.content,
+    selectedWorkspaceFinding,
+    findingWorkspaceResolve,
+    safeCurrentPage,
+    selectedFindingDebugInfo,
+  ]);
+
   const handlePinFindingInScript = useCallback(
     (f: AnalysisFinding, e?: React.MouseEvent, opts?: { silent?: boolean }) => {
       e?.stopPropagation();
@@ -5161,6 +5210,7 @@ export function ScriptWorkspace() {
                           </div>
                         ) : null}
                         <div
+                          key={`page-editor-${safeCurrentPage}-${forcedPinnedFindingRender?.finding.id ?? 'none'}-${forcedPinnedFindingRender?.start ?? 'na'}-${forcedPinnedFindingRender?.end ?? 'na'}`}
                           ref={editorRef}
                           className={cn(
                             'script-import-body text-text-main outline-none focus-visible:ring-2 focus-visible:ring-primary/20 break-words text-right select-text',
@@ -5188,7 +5238,27 @@ export function ScriptWorkspace() {
                           role="region"
                           aria-label={lang === 'ar' ? 'محتوى الصفحة' : 'Page content'}
                         >
-                          {pageUsesFormattedHtml ? null : pageFindingSegments ? (
+                          {pageUsesFormattedHtml ? null : forcedPinnedFindingRender ? (
+                            <>
+                              <span>{forcedPinnedFindingRender.before}</span>
+                              <span
+                                data-finding-id={forcedPinnedFindingRender.finding.id}
+                                className={cn(
+                                  'cursor-pointer border-b-2 transition-colors px-0.5 rounded-sm',
+                                  forcedPinnedFindingRender.finding.reviewStatus === 'approved'
+                                    ? 'bg-success/15 text-success font-extrabold border-success shadow-[0_0_0_1px_rgba(22,163,74,0.18)]'
+                                    : 'bg-yellow-200 text-red-800 font-extrabold border-red-600 shadow-[0_0_0_1px_rgba(220,38,38,0.18)]'
+                                )}
+                                onClick={() => {
+                                  setSelectedFindingId(forcedPinnedFindingRender.finding.id);
+                                  setSidebarTab('findings');
+                                }}
+                              >
+                                {forcedPinnedFindingRender.focus}
+                              </span>
+                              <span>{forcedPinnedFindingRender.after}</span>
+                            </>
+                          ) : pageFindingSegments ? (
                             pageFindingSegments.map((seg) => {
                               const key = `page-seg-${seg.start}-${seg.end}-${seg.finding?.id ?? 'none'}`;
                               const text = (currentPageData.content ?? '').slice(seg.start, seg.end);
