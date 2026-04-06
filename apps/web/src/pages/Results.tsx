@@ -196,7 +196,7 @@ type CanonicalSummaryFinding = {
   source?: 'ai' | 'lexicon_mandatory' | 'manual';
 };
 
-type FindingKindFilter = 'all' | 'ai' | 'manual' | 'glossary' | 'special';
+type FindingKindFilter = 'all' | 'ai' | 'manual' | 'glossary' | 'special' | 'approved';
 
 function findingKindFromSource(source: string | null | undefined): Exclude<FindingKindFilter, 'all' | 'special'> {
   if (source === 'manual') return 'manual';
@@ -627,15 +627,20 @@ export function Results() {
   const matchesFindingFilter = (finding: Pick<AnalysisFinding, 'source'> | Pick<CanonicalSummaryFinding, 'source'>) => {
     if (findingFilter === 'all') return true;
     if (findingFilter === 'special') return false;
+    if (findingFilter === 'approved') return false;
     return findingKindFromSource(finding.source) === findingFilter;
   };
   const matchesReviewFindingFilter = (finding: AnalysisReviewFinding) => {
     if (findingFilter === 'all') return true;
     if (findingFilter === 'special') return finding.sourceKind === 'special';
+    if (findingFilter === 'approved') return finding.reviewStatus === 'approved' && finding.sourceKind !== 'special';
     return findingKindFromReviewSource(finding.sourceKind) === findingFilter;
   };
   const filteredReviewViolations = useReviewFindingsUi
     ? reviewViolations.filter((f) => matchesReviewFindingFilter(f))
+    : [];
+  const filteredReviewApproved = useReviewFindingsUi
+    ? reviewApproved.filter((f) => matchesReviewFindingFilter(f))
     : [];
   const filteredReviewSpecialNotes = useReviewFindingsUi
     ? reviewSpecialNotes.filter((f) => matchesReviewFindingFilter(f))
@@ -643,17 +648,23 @@ export function Results() {
   const filteredDisplayViolations = hasRealFindings
     ? displayViolations.filter((f) => matchesFindingFilter(f))
     : [];
+  const filteredDisplayApproved = hasRealFindings
+    ? displayApprovedFindings.filter(() => findingFilter === 'approved' || findingFilter === 'all')
+    : [];
   const filteredCanonicalSummaryFindings = canonicalSummaryFindings.filter((f) => matchesFindingFilter(f));
   const showOnlySpecialNotes = findingFilter === 'special';
+  const showOnlyApproved = findingFilter === 'approved';
   const filteredViolationsCount = useReviewFindingsUi
-    ? (showOnlySpecialNotes ? filteredReviewSpecialNotes.length : filteredReviewViolations.length)
+    ? (showOnlySpecialNotes ? filteredReviewSpecialNotes.length : showOnlyApproved ? filteredReviewApproved.length : filteredReviewViolations.length)
     : hasRealFindings
-    ? filteredDisplayViolations.length
+    ? showOnlyApproved ? filteredDisplayApproved.length : filteredDisplayViolations.length
     : filteredCanonicalSummaryFindings.length;
   const showEmptyFindingsState = useReviewFindingsUi
-    ? (showOnlySpecialNotes ? filteredReviewSpecialNotes.length === 0 : filteredReviewViolations.length === 0)
+    ? (showOnlySpecialNotes ? filteredReviewSpecialNotes.length === 0 : showOnlyApproved ? filteredReviewApproved.length === 0 : filteredReviewViolations.length === 0)
     : showOnlySpecialNotes
       ? reportHints.length === 0
+      : showOnlyApproved
+        ? filteredDisplayApproved.length === 0
       : useRealFindingsUi
         ? filteredDisplayViolations.length === 0
         : filteredCanonicalSummaryFindings.length === 0;
@@ -1957,10 +1968,17 @@ export function Results() {
               <div className="font-bold text-lg">{displayTypeCounts.manual}</div>
             </button>
             {displayApproved > 0 && (
-              <div className="bg-success/5 border border-success/20 p-3 rounded-xl text-success">
-                <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'معتمد آمن' : 'Approved'}</div>
+              <button
+                type="button"
+                onClick={() => setFindingFilter((v) => (v === 'approved' ? 'all' : 'approved'))}
+                className={cn(
+                  "bg-success/5 border border-success/20 p-3 rounded-xl text-success text-start transition-colors",
+                  findingFilter === 'approved' ? 'ring-2 ring-success border-success' : 'hover:border-success/40'
+                )}
+              >
+                <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'معتمد كآمن' : 'Marked safe'}</div>
                 <div className="font-bold text-lg">{displayApproved}</div>
-              </div>
+              </button>
             )}
             {displaySpecialNotes > 0 && (
               <button
@@ -2038,17 +2056,23 @@ export function Results() {
           <h3 className="font-bold text-xl text-text-main border-b border-border pb-2 flex items-center gap-2">
             {showOnlySpecialNotes ? (
               <Info className="w-5 h-5 text-info" />
+            ) : showOnlyApproved ? (
+              <Shield className="w-5 h-5 text-success" />
             ) : (
               <ShieldAlert className="w-5 h-5 text-primary" />
             )}
             {showOnlySpecialNotes
               ? (lang === 'ar' ? 'ملاحظات خاصة' : 'Special notes')
+              : showOnlyApproved
+                ? (lang === 'ar' ? 'معتمد كآمن' : 'Marked safe')
               : (lang === 'ar' ? 'المخالفات' : 'Violations')}
             <Badge variant="outline" className="ms-2">
               {findingFilter === 'all'
                 ? displayTotal
                 : findingFilter === 'special'
                   ? displaySpecialNotes
+                : findingFilter === 'approved'
+                  ? `${filteredViolationsCount} / ${displayApproved}`
                 : findingFilter === 'manual'
                   ? `${filteredViolationsCount} / ${displayTypeCounts.manual}`
                   : `${filteredViolationsCount} / ${displayTotal}`}
@@ -2072,6 +2096,8 @@ export function Results() {
                   ? (lang === 'ar' ? 'النص سليم' : 'Script Is Compliant')
                   : findingFilter === 'special'
                     ? (lang === 'ar' ? 'لا توجد ملاحظات خاصة' : 'No special notes')
+                  : findingFilter === 'approved'
+                    ? (lang === 'ar' ? 'لا توجد ملاحظات معتمدة كآمنة' : 'No marked-safe findings')
                   : findingFilter === 'manual'
                     ? (lang === 'ar' ? 'لا توجد ملاحظات يدوية' : 'No manual findings')
                     : findingFilter === 'glossary'
@@ -2087,6 +2113,10 @@ export function Results() {
                     ? (lang === 'ar'
                       ? 'لا توجد ملاحظات خاصة في هذا التقرير.'
                       : 'There are no special notes in this report.')
+                  : findingFilter === 'approved'
+                    ? (lang === 'ar'
+                      ? 'لا توجد ملاحظات تم اعتمادها كآمنة في هذا التقرير بعد.'
+                      : 'There are no marked-safe findings in this report yet.')
                   : findingFilter === 'manual'
                     ? (lang === 'ar'
                       ? 'لا توجد ملاحظات يدوية في هذا التقرير، أو أنها غير ضمن النتائج المعروضة حالياً.'
@@ -2102,6 +2132,10 @@ export function Results() {
             </div>
           ) : showOnlySpecialNotes
             ? null
+            : showOnlyApproved
+              ? useReviewFindingsUi
+                ? renderFindingsFromReview(filteredReviewApproved)
+                : renderFindingsFromReal(filteredDisplayApproved)
             : useReviewFindingsUi && filteredReviewViolations.length > 0
             ? renderFindingsFromReview(filteredReviewViolations)
             : useRealFindingsUi && filteredDisplayViolations.length > 0
@@ -2113,7 +2147,7 @@ export function Results() {
                 : renderFindingsFromSummary(filteredCanonicalSummaryFindings)}
 
           {/* Report hints: not violations but notes for director (e.g. Islamic rules when filming) */}
-          {((useReviewFindingsUi && filteredReviewSpecialNotes.length > 0) || (!useReviewFindingsUi && reportHints.length > 0)) && (
+          {!showOnlyApproved && (((useReviewFindingsUi && filteredReviewSpecialNotes.length > 0) || (!useReviewFindingsUi && reportHints.length > 0))) && (
             <>
               <h3 className={cn(
                 "font-bold text-xl text-text-main border-b border-info/40 pb-2 flex items-center gap-2",
@@ -2170,7 +2204,7 @@ export function Results() {
           )}
 
           {/* Words/sentences to revisit (separate light pass — glossary terms that appeared; not violations) */}
-          {!showOnlySpecialNotes && wordsToRevisit.length > 0 && (
+          {!showOnlySpecialNotes && !showOnlyApproved && wordsToRevisit.length > 0 && (
             <>
               <h3 className="font-bold text-xl text-text-main border-b border-border pb-2 flex items-center gap-2 mt-12">
                 <FileSearch className="w-5 h-5 text-muted-foreground" />
@@ -2194,7 +2228,7 @@ export function Results() {
           )}
 
           {/* Approved section */}
-          {!showOnlySpecialNotes && useReviewFindingsUi && reviewApproved.length > 0 && (
+          {!showOnlySpecialNotes && !showOnlyApproved && useReviewFindingsUi && reviewApproved.length > 0 && (
             <>
               <h3 className="font-bold text-xl text-text-main border-b border-success/30 pb-2 flex items-center gap-2 mt-12">
                 <Shield className="w-5 h-5 text-success" />
@@ -2204,7 +2238,7 @@ export function Results() {
               {renderFindingsFromReview(reviewApproved)}
             </>
           )}
-          {!showOnlySpecialNotes && !useReviewFindingsUi && useRealFindingsUi && displayApprovedFindings.length > 0 && (
+          {!showOnlySpecialNotes && !showOnlyApproved && !useReviewFindingsUi && useRealFindingsUi && displayApprovedFindings.length > 0 && (
             <>
               <h3 className="font-bold text-xl text-text-main border-b border-success/30 pb-2 flex items-center gap-2 mt-12">
                 <Shield className="w-5 h-5 text-success" />
