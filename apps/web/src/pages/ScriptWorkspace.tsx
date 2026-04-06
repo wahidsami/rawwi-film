@@ -1894,6 +1894,7 @@ export function ScriptWorkspace() {
   const [highlightRetryTick, setHighlightRetryTick] = useState(0);
   // const [reportFindingsLoading, setReportFindingsLoading] = useState(false);
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
+  const [findingDebugOpen, setFindingDebugOpen] = useState(false);
   /** User clicked a finding card or retried highlight — only this finding is highlighted. */
   const [pinnedHighlight, setPinnedHighlight] = useState<{
     findingId: string;
@@ -1905,6 +1906,7 @@ export function ScriptWorkspace() {
   } | null>(null);
   const [tooltipFinding, setTooltipFinding] = useState<AnalysisFinding | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [selectedFindingDomMarkCount, setSelectedFindingDomMarkCount] = useState(0);
   const [reportFindingReviewModal, setReportFindingReviewModal] = useState<{
     findingId: string;
     toStatus: 'approved' | 'violation';
@@ -4146,6 +4148,87 @@ export function ScriptWorkspace() {
     return { total, resolved, unresolved };
   }, [activeWorkspaceHighlights, findingWorkspaceResolve]);
 
+  const selectedWorkspaceFinding = useMemo(
+    () => workspaceVisibleReportFindings.find((item) => item.id === selectedFindingId) ?? null,
+    [workspaceVisibleReportFindings, selectedFindingId],
+  );
+
+  const selectedFindingDebugInfo = useMemo(() => {
+    if (!selectedWorkspaceFinding) return null;
+    const resolved = findingWorkspaceResolve.get(selectedWorkspaceFinding.id) ?? null;
+    const pageText = currentPageData?.content ?? '';
+    const evidence = selectedWorkspaceFinding.evidenceSnippet ?? '';
+    const anchorText = selectedWorkspaceFinding.anchorText ?? '';
+    const evidenceExactIndex = evidence ? pageText.indexOf(evidence) : -1;
+    const anchorExactIndex = anchorText ? pageText.indexOf(anchorText) : -1;
+    const pageScopedFinding: AnalysisFinding =
+      resolved?.resolved && resolved.localStart != null && resolved.localEnd != null
+        ? {
+            ...selectedWorkspaceFinding,
+            startOffsetGlobal: resolved.localStart,
+            endOffsetGlobal: resolved.localEnd,
+            startOffsetPage: resolved.localStart,
+            endOffsetPage: resolved.localEnd,
+            anchorStartOffsetPage: resolved.localStart,
+            anchorEndOffsetPage: resolved.localEnd,
+            anchorStartOffsetGlobal: resolved.localStart,
+            anchorEndOffsetGlobal: resolved.localEnd,
+          }
+        : selectedWorkspaceFinding;
+    const visibleSpan =
+      pageText && safeCurrentPage === (resolved?.pageNumber ?? safeCurrentPage)
+        ? resolveFindingSpanInText(pageText, pageScopedFinding, locateFindingInContent, {
+            pageSlice: true,
+            sliceGlobalStart: 0,
+          })
+        : null;
+    const matchingSegments = (pageFindingSegments ?? [])
+      .filter((segment) => segment.finding?.id === selectedWorkspaceFinding.id)
+      .map((segment) => ({
+        start: segment.start,
+        end: segment.end,
+        text: (currentPageData?.content ?? '').slice(segment.start, segment.end),
+      }));
+
+    return {
+      findingId: selectedWorkspaceFinding.id,
+      currentPage: safeCurrentPage,
+      strictImportedAnchoring,
+      workspaceViewMode,
+      resolved,
+      pinnedHighlight,
+      selectedFindingId,
+      pageUsesFormattedHtml,
+      pageTextLength: pageText.length,
+      evidenceSnippet: evidence,
+      anchorText,
+      evidenceExactIndex,
+      anchorExactIndex,
+      visibleSpan,
+      matchingSegments,
+      domMarkCount: selectedFindingDomMarkCount,
+      pagePreview:
+        pageText && visibleSpan
+          ? pageText.slice(Math.max(0, visibleSpan.start - 40), Math.min(pageText.length, visibleSpan.end + 40))
+          : pageText
+            ? pageText.slice(0, 220)
+            : '',
+    };
+  }, [
+    selectedWorkspaceFinding,
+    findingWorkspaceResolve,
+    currentPageData?.content,
+    pageFindingSegments,
+    safeCurrentPage,
+    strictImportedAnchoring,
+    workspaceViewMode,
+    pinnedHighlight,
+    selectedFindingId,
+    pageUsesFormattedHtml,
+    selectedFindingDomMarkCount,
+    locateFindingInContent,
+  ]);
+
   const annotatedWorkspaceExport = useMemo(() => {
     if (!strictImportedAnchoring || !pagesSortedForViewer.length || !activeWorkspaceHighlights.length) {
       return {
@@ -4624,6 +4707,16 @@ export function ScriptWorkspace() {
       window.clearTimeout(t0);
     };
   }, [selectedFindingId, safeCurrentPage, highlightRenderedCount, highlightRetryTick, blockHighlightsCompletely]);
+
+  useEffect(() => {
+    if (!selectedFindingId || !editorRef.current) {
+      setSelectedFindingDomMarkCount(0);
+      return;
+    }
+    const escaped = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(selectedFindingId) : selectedFindingId.replace(/["\\]/g, '');
+    const count = editorRef.current.querySelectorAll(`[data-finding-id="${escaped}"]`).length;
+    setSelectedFindingDomMarkCount(count);
+  }, [selectedFindingId, safeCurrentPage, highlightRenderedCount, highlightRetryTick, workspaceViewMode, currentPageData?.content]);
 
   if (showLoading) {
     return (
@@ -5393,6 +5486,18 @@ export function ScriptWorkspace() {
                     {lang === 'ar' ? 'إخفاء التمييز' : 'Hide Highlights'}
                   </Button>
                 )}
+                {selectedReportForHighlights && selectedFindingId && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-[10px] self-start"
+                    onClick={() => setFindingDebugOpen((value) => !value)}
+                  >
+                    {findingDebugOpen
+                      ? (lang === 'ar' ? 'إخفاء تشخيص التحديد' : 'Hide highlight debug')
+                      : (lang === 'ar' ? 'إظهار تشخيص التحديد' : 'Show highlight debug')}
+                  </Button>
+                )}
               </div>
 
               {!selectedReportForHighlights && reportHistory.length > 0 && (
@@ -5489,6 +5594,47 @@ export function ScriptWorkspace() {
                             {lang === 'ar' ? 'إعادة تحميل ملاحظات التقرير' : 'Reload report findings'}
                           </Button>
                         )}
+                      </div>
+                    </div>
+                  )}
+                  {findingDebugOpen && selectedFindingDebugInfo && (
+                    <div className="rounded-md border border-primary/25 bg-primary/5 p-3 text-[11px] text-text-main space-y-2" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                      <p className="font-semibold text-primary">
+                        {lang === 'ar' ? 'تشخيص مؤقت للنقرة على الملاحظة' : 'Temporary finding-click debug'}
+                      </p>
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[10px]">
+                        <span className="text-text-muted">findingId</span>
+                        <span className="break-all">{selectedFindingDebugInfo.findingId}</span>
+                        <span className="text-text-muted">currentPage</span>
+                        <span>{selectedFindingDebugInfo.currentPage}</span>
+                        <span className="text-text-muted">resolved.page</span>
+                        <span>{selectedFindingDebugInfo.resolved?.pageNumber ?? '—'}</span>
+                        <span className="text-text-muted">resolved.local</span>
+                        <span>{selectedFindingDebugInfo.resolved?.localStart ?? '—'} → {selectedFindingDebugInfo.resolved?.localEnd ?? '—'}</span>
+                        <span className="text-text-muted">visibleSpan</span>
+                        <span>{selectedFindingDebugInfo.visibleSpan?.start ?? '—'} → {selectedFindingDebugInfo.visibleSpan?.end ?? '—'}</span>
+                        <span className="text-text-muted">evidenceExactIndex</span>
+                        <span>{selectedFindingDebugInfo.evidenceExactIndex}</span>
+                        <span className="text-text-muted">anchorExactIndex</span>
+                        <span>{selectedFindingDebugInfo.anchorExactIndex}</span>
+                        <span className="text-text-muted">dom marks</span>
+                        <span>{selectedFindingDebugInfo.domMarkCount}</span>
+                        <span className="text-text-muted">formatted html</span>
+                        <span>{selectedFindingDebugInfo.pageUsesFormattedHtml ? 'true' : 'false'}</span>
+                        <span className="text-text-muted">strict mode</span>
+                        <span>{selectedFindingDebugInfo.strictImportedAnchoring ? 'true' : 'false'}</span>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-text-muted font-semibold">{lang === 'ar' ? 'المقتطف من البطاقة' : 'Card evidence'}</p>
+                        <pre className="whitespace-pre-wrap break-words rounded bg-background/70 p-2 font-mono text-[10px]">{selectedFindingDebugInfo.evidenceSnippet || '—'}</pre>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-text-muted font-semibold">{lang === 'ar' ? 'المقطع المرئي الذي يحاول النظام التركيز عليه' : 'Viewer text window'}</p>
+                        <pre className="whitespace-pre-wrap break-words rounded bg-background/70 p-2 font-mono text-[10px]">{selectedFindingDebugInfo.pagePreview || '—'}</pre>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-text-muted font-semibold">{lang === 'ar' ? 'segments الخاصة بهذه الملاحظة في الصفحة' : 'Matching page segments'}</p>
+                        <pre className="whitespace-pre-wrap break-words rounded bg-background/70 p-2 font-mono text-[10px]">{JSON.stringify(selectedFindingDebugInfo.matchingSegments, null, 2)}</pre>
                       </div>
                     </div>
                   )}
