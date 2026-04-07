@@ -14,7 +14,6 @@ import { DocumentImportModal } from '@/components/import/DocumentImportModal';
 import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square, Search } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getActionablePolicyArticles } from '@/data/policyMap';
-import { DecisionBar } from '@/components/DecisionBar';
 import { getScriptDecisionCapabilities } from '@/utils/scriptDecisionCapabilities';
 import { extractDocxWithPages } from '@/utils/documentExtract';
 import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
@@ -5549,27 +5548,6 @@ export function ScriptWorkspace() {
 
         {/* Right: Sidebar Panel */}
         <div className="w-80 flex-shrink-0 bg-surface border-s border-border flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
-
-          {/* Decision Bar - only show when permission state is loaded for this script (avoids flicker) */}
-          {script && (
-            <div className="border-b border-border">
-              <DecisionBar
-                scriptId={script.id}
-                scriptTitle={script.title}
-                currentStatus={workspaceDecisionStatus}
-                relatedReportId={selectedReportForHighlights?.id}
-                compact
-                capabilities={finalDecisionCapabilities}
-                onDecisionMade={(newStatus) => {
-                  updateScript(script.id, { status: newStatus });
-                  if (scriptFetched && scriptFetched.id === script.id) setScriptFetched((s) => s ? { ...s, status: newStatus } : null);
-                  // Avoid full-store refetch here: it toggles global loading and briefly clears
-                  // workspace content. Dashboard can refresh via lightweight invalidation event.
-                  window.dispatchEvent(new CustomEvent('dashboard-invalidate'));
-                }}
-              />
-            </div>
-          )}
 
           {/* Sidebar tab bar */}
           <div className="flex border-b border-border bg-background/50">
