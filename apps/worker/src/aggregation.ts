@@ -506,12 +506,33 @@ function applyPriorReviewState(
   prior: ExistingReviewFindingRow | null | undefined,
 ): ReviewFindingInsertRow {
   if (!prior) return row;
-  return {
+
+  const hasPersistentReviewerEdit =
+    prior.source_kind === "manual" ||
+    Boolean(prior.edited_at) ||
+    Boolean(prior.edited_by);
+
+  const carried: ReviewFindingInsertRow = {
     ...row,
+    review_status: prior.review_status || row.review_status,
+    approved_reason: prior.approved_reason ?? null,
+    include_in_report: prior.include_in_report ?? row.include_in_report,
+    reviewed_by: prior.reviewed_by ?? null,
+    reviewed_at: prior.reviewed_at ?? null,
+    edited_by: prior.edited_by ?? null,
+    edited_at: prior.edited_at ?? null,
+    supersedes_review_finding_id: prior.id,
+  };
+
+  if (!hasPersistentReviewerEdit) {
+    return carried;
+  }
+
+  return {
+    ...carried,
     primary_article_id: prior.primary_article_id || row.primary_article_id,
     primary_atom_id: prior.primary_atom_id ?? row.primary_atom_id,
     severity: prior.severity || row.severity,
-    review_status: prior.review_status || row.review_status,
     title_ar: prior.title_ar || row.title_ar,
     description_ar: prior.description_ar ?? row.description_ar,
     rationale_ar: prior.rationale_ar ?? row.rationale_ar,
@@ -526,13 +547,6 @@ function applyPriorReviewState(
     anchor_method: prior.anchor_method ?? row.anchor_method,
     anchor_text: prior.anchor_text ?? row.anchor_text,
     anchor_confidence: prior.anchor_confidence ?? row.anchor_confidence,
-    approved_reason: prior.approved_reason ?? null,
-    include_in_report: prior.include_in_report ?? row.include_in_report,
-    reviewed_by: prior.reviewed_by ?? null,
-    reviewed_at: prior.reviewed_at ?? null,
-    edited_by: prior.edited_by ?? null,
-    edited_at: prior.edited_at ?? null,
-    supersedes_review_finding_id: prior.id,
   };
 }
 
