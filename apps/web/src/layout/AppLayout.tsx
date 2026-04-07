@@ -14,7 +14,9 @@ import {
   History,
   Award,
   Bell,
-  Wand2
+  Wand2,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { formatDateTime } from '@/utils/dateFormat';
@@ -32,10 +34,19 @@ export function AppLayout() {
   const navigate = useNavigate();
   const { fetchInitialData } = useDataStore();
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('dashboard-sidebar-collapsed') === '1';
+  });
 
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('dashboard-sidebar-collapsed', isSidebarCollapsed ? '1' : '0');
+  }, [isSidebarCollapsed]);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -174,28 +185,39 @@ export function AppLayout() {
   return (
     <div className="flex h-screen bg-background text-text-main overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 flex-shrink-0 border-e border-border bg-surface shadow-[0_0_15px_rgba(0,0,0,0.02)] flex flex-col z-10 transition-all">
-        <div className="h-16 flex items-center px-6 border-b border-border">
+      <aside
+        className={cn(
+          "hidden md:flex flex-shrink-0 border-e border-border bg-surface shadow-[0_0_15px_rgba(0,0,0,0.02)] flex-col z-10 transition-all duration-300",
+          isSidebarCollapsed ? "w-20" : "w-64"
+        )}
+      >
+        <div className={cn("h-16 flex items-center border-b border-border", isSidebarCollapsed ? "px-3 justify-center" : "px-6")}>
           <div className="flex items-center justify-center w-full">
-            <img src="/dashboardlogo.png" alt="Raawi Film" className="h-10 object-contain" />
+            <img
+              src="/dashboardlogo.png"
+              alt="Raawi Film"
+              className={cn("object-contain transition-all duration-300", isSidebarCollapsed ? "h-8" : "h-10")}
+            />
           </div>
         </div>
 
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        <nav className={cn("flex-1 py-4 space-y-1 overflow-y-auto", isSidebarCollapsed ? "px-2" : "px-3")}>
           {navLinks.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
+              title={isSidebarCollapsed ? link.label : undefined}
               className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium",
+                "flex items-center rounded-md transition-colors text-sm font-medium",
                 isActive
                   ? "bg-primary/10 text-primary"
                   : "text-text-muted hover:bg-background hover:text-text-main",
+                isSidebarCollapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-2.5",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
               )}
             >
               <link.icon className="w-5 h-5 flex-shrink-0" />
-              <span>{link.label}</span>
+              {!isSidebarCollapsed && <span>{link.label}</span>}
             </NavLink>
           ))}
         </nav>
@@ -205,8 +227,21 @@ export function AppLayout() {
       <div className="flex-1 flex flex-col min-w-0">
         <Toaster position="top-center" />
         {/* Topbar */}
-        <header className="relative h-16 bg-surface border-b border-border flex items-center justify-between px-6 z-[140]">
-          <div></div>
+        <header className="relative h-16 bg-surface border-b border-border flex items-center justify-between px-4 md:px-6 z-[140]">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsSidebarCollapsed((value) => !value)}
+              aria-label={isSidebarCollapsed
+                ? (lang === 'ar' ? 'توسيع الشريط الجانبي' : 'Expand sidebar')
+                : (lang === 'ar' ? 'طي الشريط الجانبي' : 'Collapse sidebar')}
+              title={isSidebarCollapsed
+                ? (lang === 'ar' ? 'توسيع الشريط الجانبي' : 'Expand sidebar')
+                : (lang === 'ar' ? 'طي الشريط الجانبي' : 'Collapse sidebar')}
+              className="hidden md:flex items-center justify-center w-9 h-9 rounded-md text-text-muted hover:text-text-main hover:bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              {isSidebarCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+            </button>
+          </div>
 
           <div className="flex items-center gap-4">
             <div className="relative z-[150]" ref={notifRef}>
