@@ -509,6 +509,73 @@ function compactNormalizedEvidence(value: string | null | undefined): string {
   return (value ?? "").normalize("NFC").replace(/\s+/g, " ").trim();
 }
 
+function isWordLikeChar(char: string | undefined): boolean {
+  return typeof char === "string" && /[\p{L}\p{N}]/u.test(char);
+}
+
+function isHeadingLikeEvidence(value: string | null | undefined): boolean {
+  const text = compactNormalizedEvidence(value);
+  if (!text) return false;
+  return (
+    /^(?:المشهد|مشهد)\s*[\d\u0660-\u0669]+/u.test(text) ||
+    (/^(?:داخلي|خارجي)\b/u.test(text) && text.length > 12) ||
+    (/[\u0600-\u06FF]/u.test(text) && /(داخلي|خارجي)/u.test(text) && text.length > 24)
+  );
+}
+
+function getEvidenceQualityIssue(finding: JudgeFinding, chunkText: string): string | null {
+  const evidence = compactNormalizedEvidence(finding.evidence_snippet);
+  if (!evidence) return "empty";
+  if (!/[\p{L}]/u.test(evidence)) return "non_text";
+  if (evidence.length < 2) return "too_short";
+
+  const start = finding.location?.start_offset ?? null;
+  const end = finding.location?.end_offset ?? null;
+  if (
+    typeof start === "number" &&
+    typeof end === "number" &&
+    start >= 0 &&
+    end > start &&
+    end <= chunkText.length
+  ) {
+    const before = start > 0 ? chunkText[start - 1] : undefined;
+    const first = chunkText[start];
+    const last = chunkText[end - 1];
+    const after = end < chunkText.length ? chunkText[end] : undefined;
+    if (isWordLikeChar(before) && isWordLikeChar(first)) return "starts_mid_word";
+    if (isWordLikeChar(last) && isWordLikeChar(after)) return "ends_mid_word";
+  }
+
+  const tinyFragments = evidence.split(/\s+/).filter(Boolean);
+  if (tinyFragments.length >= 3 && tinyFragments.some((fragment) => fragment.length === 1)) {
+    return "fragmented";
+  }
+
+  return null;
+}
+
+function isWeakArticleFourEvidence(candidate: FindingWithGlobal): boolean {
+  const evidence = compactNormalizedEvidence(candidate.evidence_snippet);
+  if (!evidence) return true;
+  if (isHeadingLikeEvidence(evidence)) return true;
+  if (evidence.length < 8 && /\s/.test(evidence)) return true;
+  return false;
+}
+
+function incidentsAreNearby(a: FindingWithGlobal, b: FindingWithGlobal, maxDistance = 1200): boolean {
+  const aStart = a.start_offset_global ?? 0;
+  const aEnd = a.end_offset_global ?? aStart;
+  const bStart = b.start_offset_global ?? 0;
+  const bEnd = b.end_offset_global ?? bStart;
+  const distance = Math.min(
+    Math.abs(aStart - bStart),
+    Math.abs(aStart - bEnd),
+    Math.abs(aEnd - bStart),
+    Math.abs(aEnd - bEnd),
+  );
+  return distance <= maxDistance;
+}
+
 function spansOverlapEnough(a: FindingWithGlobal, b: FindingWithGlobal, minRatio = 0.6): boolean {
   const aStart = a.start_offset_global ?? 0;
   const aEnd = a.end_offset_global ?? aStart;
@@ -542,7 +609,17 @@ function dropRedundantArticleFourFindings(findings: FindingWithGlobal[]): Findin
       if (candidateAtom && String(other.canonical_atom ?? "").toUpperCase() !== candidateAtom) return false;
       return severityRank(other.severity) >= severityRank(candidate.severity);
     });
-    return !duplicateOwner;
+    if (duplicateOwner) return false;
+
+    if (isWeakArticleFourEvidence(candidate)) {
+      const nearbySpecificOwner = specific.some((other) => {
+        if (!incidentsAreNearby(candidate, other)) return false;
+        return severityRank(other.severity) >= severityRank(candidate.severity);
+      });
+      if (nearbySpecificOwner) return false;
+    }
+
+    return true;
   });
 }
 
@@ -1169,7 +1246,20 @@ export async function processChunkJudge(
         if (f.evidence_snippet && f.evidence_snippet.trim().length > 0) return f;
         return { ...f, evidence_snippet: fallback };
       });
-      const withGlobal = enriched.map((f) => toGlobalFinding(f, chunkStart));
+      const qualityFiltered = enriched.filter((f) => {
+        const qualityIssue = getEvidenceQualityIssue(f, chunkText);
+        if (qualityIssue) {
+          logger.warn("Low-quality evidence snippet (dropping finding)", {
+            chunkId: chunk.id,
+            article: f.article_id,
+            issue: qualityIssue,
+            evidence: f.evidence_snippet?.slice(0, 80),
+          });
+          return false;
+        }
+        return true;
+      });
+      const withGlobal = qualityFiltered.map((f) => toGlobalFinding(f, chunkStart));
       logger.info("Post-multipass refinement completed", {
         jobId,
         chunkId: chunk.id,
@@ -1190,6 +1280,8 @@ export async function processChunkJudge(
           return acc;
         }, {}),
         enrichedCount: enriched.length,
+        qualityFilteredCount: qualityFiltered.length,
+        lowQualityDroppedCount: enriched.length - qualityFiltered.length,
         globalizedCount: withGlobal.length,
       });
       
