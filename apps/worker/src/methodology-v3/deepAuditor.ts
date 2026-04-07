@@ -112,6 +112,42 @@ function normalizeForCompare(value: string | null | undefined): string {
   return compactSpace(value).normalize("NFC");
 }
 
+function tokenizeEvidence(value: string | null | undefined): string[] {
+  return normalizeForCompare(value).split(/\s+/).filter(Boolean);
+}
+
+function hasWomenSpecificEvidence(value: string | null | undefined): boolean {
+  const text = normalizeForCompare(value);
+  if (!text) return false;
+  return (
+    /(امرأ|المرأة|نساء|زوجة|زوجتك|بنت|البنت|بنات|أنثى|مطبخ|السرير|البيت)/u.test(text) ||
+    /(ما\s+لك\s+كلمة|مالك\s+كلمة|ما\s+لها\s+كلمة|مكانك\s+المطبخ|مكان\s+البنت|مكانها\s+البيت|للمطبخ\s+والسرير|للمطبخ|السرير\s+وبس)/u.test(text)
+  );
+}
+
+function hasViolenceKeywordEvidence(value: string | null | undefined): boolean {
+  const text = normalizeForCompare(value);
+  if (!text) return false;
+  return /(ضرب|أضرب|بضرب|يضر|قتل|أقتل|بقتل|ذبح|طعن|ركل|صفع|دفع|عنف|يعنف|يعنفني|يضربني|بقتلك|جزمة|عصا|مسدس|سكين|دم)/u.test(text);
+}
+
+function hasPassSpecificEvidenceProblem(finding: HybridFindingLike): boolean {
+  const pass = String((finding as { detection_pass?: string }).detection_pass ?? "").trim().toLowerCase();
+  const atom = String((finding as { canonical_atom?: string | null }).canonical_atom ?? "").trim().toUpperCase();
+  const articleId = finding.article_id ?? 0;
+  const evidence = finding.evidence_snippet ?? "";
+
+  if ((pass === "women" || articleId === 7 || atom === "WOMEN") && !hasWomenSpecificEvidence(evidence)) {
+    return true;
+  }
+
+  if ((pass === "violence" || articleId === 9 || atom === "VIOLENCE") && tokenizeEvidence(evidence).length === 1 && !hasViolenceKeywordEvidence(evidence)) {
+    return true;
+  }
+
+  return false;
+}
+
 function extractQuotedNeedles(value: string | null | undefined): string[] {
   const source = String(value ?? "");
   const seen = new Set<string>();
@@ -409,6 +445,7 @@ export async function runDeepAuditorPass(args: {
     if (!exactEvidence) return false;
     if (isWeakRationaleText(finding.rationale_ar) && finding.final_ruling === "violation") return false;
     if (shouldDropArticleFourForSpecificOwner(finding, merged)) return false;
+    if (hasPassSpecificEvidenceProblem(finding)) return false;
     return true;
   });
 

@@ -509,6 +509,10 @@ function compactNormalizedEvidence(value: string | null | undefined): string {
   return (value ?? "").normalize("NFC").replace(/\s+/g, " ").trim();
 }
 
+function tokenizeEvidence(value: string | null | undefined): string[] {
+  return compactNormalizedEvidence(value).split(/\s+/).filter(Boolean);
+}
+
 function isWordLikeChar(char: string | undefined): boolean {
   return typeof char === "string" && /[\p{L}\p{N}]/u.test(char);
 }
@@ -521,6 +525,40 @@ function isHeadingLikeEvidence(value: string | null | undefined): boolean {
     (/^(?:داخلي|خارجي)\b/u.test(text) && text.length > 12) ||
     (/[\u0600-\u06FF]/u.test(text) && /(داخلي|خارجي)/u.test(text) && text.length > 24)
   );
+}
+
+function hasWomenSpecificEvidence(value: string | null | undefined): boolean {
+  const text = compactNormalizedEvidence(value);
+  if (!text) return false;
+  return (
+    /(امرأ|المرأة|نساء|زوجة|زوجتك|بنت|البنت|بنات|أنثى|مطبخ|السرير|البيت)/u.test(text) ||
+    /(ما\s+لك\s+كلمة|مالك\s+كلمة|ما\s+لها\s+كلمة|مكانك\s+المطبخ|مكان\s+البنت|مكانها\s+البيت|للمطبخ\s+والسرير|للمطبخ|السرير\s+وبس)/u.test(text)
+  );
+}
+
+function hasViolenceKeywordEvidence(value: string | null | undefined): boolean {
+  const text = compactNormalizedEvidence(value);
+  if (!text) return false;
+  return /(ضرب|أضرب|بضرب|يضر|قتل|أقتل|بقتل|ذبح|طعن|ركل|صفع|دفع|عنف|يعنف|يعنفني|يضربني|بقتلك|جزمة|عصا|مسدس|سكين|دم)/u.test(text);
+}
+
+function getPassSpecificEvidenceIssue(finding: FindingWithGlobal, excerpt: string): string | null {
+  const pass = String(finding.detection_pass ?? "").trim().toLowerCase();
+  const atom = String(finding.canonical_atom ?? "").trim().toUpperCase();
+  const articleId = finding.article_id ?? 0;
+  const source = String(finding.source ?? "ai").trim().toLowerCase();
+  if (source === "lexicon_mandatory" || source === "manual") return null;
+
+  if ((pass === "women" || articleId === 7 || atom === "WOMEN") && !hasWomenSpecificEvidence(excerpt)) {
+    return "women_not_self_proving";
+  }
+
+  const tokenCount = tokenizeEvidence(excerpt).length;
+  if ((pass === "violence" || articleId === 9 || atom === "VIOLENCE") && tokenCount === 1 && !hasViolenceKeywordEvidence(excerpt)) {
+    return "violence_single_word_non_violent";
+  }
+
+  return null;
 }
 
 function getEvidenceQualityIssue(finding: JudgeFinding, chunkText: string): string | null {
@@ -1809,8 +1847,8 @@ export async function processChunkJudge(
         hasSaneGlobalOffsets ? start : null,
         hasSaneGlobalOffsets ? end : null,
       );
-      if (finalEvidenceIssue) {
-        postCanonicalEvidenceDroppedCount++;
+        if (finalEvidenceIssue) {
+          postCanonicalEvidenceDroppedCount++;
         logger.warn("Low-quality final evidence excerpt (dropping finding before insert)", {
           jobId,
           chunkId: chunk.id,
@@ -1821,10 +1859,26 @@ export async function processChunkJudge(
           modelSnippet: modelSnippet.slice(0, 80),
           canonicalSnippet: canonicalSnippet.slice(0, 80),
         });
-        return [];
-      }
+          return [];
+        }
 
-      if (canonicalSnippet.length > 0 && modelSnippet.length > 0 && !snippetsReasonablyAlign(modelSnippet, canonicalSnippet)) {
+        const passSpecificEvidenceIssue = getPassSpecificEvidenceIssue(f, excerpt);
+        if (passSpecificEvidenceIssue) {
+          postCanonicalEvidenceDroppedCount++;
+          logger.warn("Pass-specific final evidence issue (dropping finding before insert)", {
+            jobId,
+            chunkId: chunk.id,
+            runKey,
+            article: f.article_id,
+            pass: f.detection_pass ?? null,
+            canonicalAtom: f.canonical_atom ?? null,
+            issue: passSpecificEvidenceIssue,
+            excerpt: excerpt.slice(0, 120),
+          });
+          return [];
+        }
+
+        if (canonicalSnippet.length > 0 && modelSnippet.length > 0 && !snippetsReasonablyAlign(modelSnippet, canonicalSnippet)) {
         canonicalModelMismatchDroppedCount++;
         logger.warn("Canonical/model evidence mismatch (dropping finding before insert)", {
           jobId,
