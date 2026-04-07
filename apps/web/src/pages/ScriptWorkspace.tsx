@@ -367,60 +367,12 @@ function isImportAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError';
 }
 
-const PREVIEW_FOCUS_PATTERNS = [
-  /"([^"]{8,160})"/,
-  /“([^”]{8,160})”/,
-  /«([^»]{8,160})»/,
-  /([اأإآء-ي]{2,}\s+(?:يضرب|يخنق|يطعن|يهدد|يلكم|سكران|يشرب|بيرة|مخدر|سيجارة|لعنة|حقير|معتوه|حمار|خاين)[^.!؟\n]{0,120})/i,
-  /([^.!؟\n]{18,140}[.!؟])/,
-];
-
 const SEVERITY_ORDER: Record<string, number> = {
   critical: 4,
   high: 3,
   medium: 2,
   low: 1,
 };
-
-function compactPreviewText(value: string | null | undefined): string {
-  return (value ?? '').replace(/\s+/g, ' ').trim();
-}
-
-function extractPreviewFocusSnippet(preview: string | null | undefined): string | null {
-  const text = compactPreviewText(preview);
-  if (!text) return null;
-  for (const pattern of PREVIEW_FOCUS_PATTERNS) {
-    const match = text.match(pattern);
-    const candidate = (match?.[1] ?? match?.[0] ?? '').trim();
-    if (candidate.length >= 12) return candidate;
-  }
-  if (text.length <= 120) return text;
-  const mid = Math.floor(text.length / 2);
-  const start = Math.max(0, mid - 55);
-  const end = Math.min(text.length, start + 110);
-  return text.slice(start, end).trim();
-}
-
-function renderPreviewWithHighlight(preview: string, focusSnippet: string | null) {
-  if (!focusSnippet) return preview;
-  const source = compactPreviewText(preview);
-  const focus = compactPreviewText(focusSnippet);
-  if (!source || !focus) return preview;
-  const idx = source.indexOf(focus);
-  if (idx < 0) return preview;
-  const before = source.slice(0, idx);
-  const match = source.slice(idx, idx + focus.length);
-  const after = source.slice(idx + focus.length);
-  return (
-    <>
-      {before}
-      <mark className="rounded-md bg-warning/20 px-1 py-0.5 text-text-main shadow-sm">
-        {match}
-      </mark>
-      {after}
-    </>
-  );
-}
 
 import { scriptsApi, tasksApi, reportsApi, findingsApi } from '@/api';
 import type { AnalysisFinding, AnalysisReviewFinding, DuplicateScriptCheckResponse, Report as AnalysisReport } from '@/api';
@@ -1670,35 +1622,6 @@ export function ScriptWorkspace() {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastFailedAnalysisAlertRef = useRef<string | null>(null);
   const [decisionCan, setDecisionCan] = useState<{ canApprove: boolean; canReject: boolean; reason?: string } | null>(null);
-  const analysisPasses = useMemo(
-    () =>
-      lang === 'ar'
-        ? [
-            'المعجم',
-            'الإهانات',
-            'العنف',
-            'المحتوى الجنسي',
-            'المخدرات والكحول',
-            'التمييز والتحريض',
-            'الأمن الوطني',
-            'التطرف والجماعات المحظورة',
-            'التضليل والمصداقية',
-            'العلاقات الدولية',
-          ]
-        : [
-            'Glossary',
-            'Insults',
-            'Violence',
-            'Sexual Content',
-            'Drugs & Alcohol',
-            'Discrimination & Incitement',
-            'National Security',
-            'Extremism & Banned Groups',
-            'Misinformation & Credibility',
-            'International Relations',
-          ],
-    [lang]
-  );
   const isImportModalOpen = uploadStatus !== 'idle';
 
   useEffect(() => {
@@ -2935,18 +2858,6 @@ export function ScriptWorkspace() {
       : 'This panel shows the active chunk text or the most recently completed one.';
   }, [activeChunkPageLabel, latestCompletedChunk, lang]);
 
-  const previewModeLabel = useMemo(() => {
-    if (activeChunk?.textPreview) return lang === 'ar' ? 'بث مباشر' : 'Live';
-    if (latestCompletedChunk?.textPreview) return lang === 'ar' ? 'آخر تقدم محفوظ' : 'Last saved progress';
-    return lang === 'ar' ? 'بانتظار المعاينة' : 'Waiting for preview';
-  }, [activeChunk?.textPreview, latestCompletedChunk?.textPreview, lang]);
-
-  const previewSourceText = activeChunk?.textPreview ?? latestCompletedChunk?.textPreview ?? null;
-  const previewFocusSnippet = useMemo(
-    () => extractPreviewFocusSnippet(previewSourceText),
-    [previewSourceText]
-  );
-
   const analysisStatusCaption = useMemo(() => {
     if (isSuccessfulJobStatus(analysisJob?.status)) {
       return analysisJob?.isPartialReport
@@ -3058,6 +2969,13 @@ export function ScriptWorkspace() {
     analysisModeProfile,
     analysisPipelineVersion,
   ]);
+  const activeChunkTimerValue = activeChunkAgeLabel
+    ? activeChunkAgeLabel.replace(/^زمن الجزء الجاري:\s*/, '').replace(/^Active chunk time:\s*/, '')
+    : '—';
+  const findingsCountSoFar = useMemo(() => {
+    const visibleReviewCount = reportReviewFindings.filter((finding) => !finding.isHidden).length;
+    return visibleReviewCount > 0 ? visibleReviewCount : reportFindings.length;
+  }, [reportReviewFindings, reportFindings]);
 
   const handlePauseAnalysis = useCallback(async () => {
     if (!analysisJobId || analysisControlBusy) return;
@@ -6378,162 +6296,31 @@ export function ScriptWorkspace() {
         isOpen={analysisModalOpen}
         onClose={() => setAnalysisModalOpen(false)}
         title={lang === 'ar' ? 'تقدم التحليل' : 'Analysis Progress'}
-        className="max-w-6xl"
+        className="max-w-[72rem]"
       >
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-          <section className="rounded-2xl border border-border bg-background/40 overflow-hidden min-h-[24rem] flex flex-col">
-            <div className="border-b border-border px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-              <div>
-                <p className="text-sm font-semibold text-text-main">
-                  {lang === 'ar' ? 'المقطع الجاري فحصه' : 'Live Chunk Preview'}
-                </p>
-                <p className="text-xs text-text-muted">{previewContextLabel}</p>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="text-[11px]">
-                  {previewModeLabel}
-                </Badge>
-                {activeChunkNumber != null && totalChunksTracked > 0 && (
-                  <Badge variant="outline" className="text-[11px]">
-                    {lang === 'ar'
-                      ? `الجزء ${activeChunkNumber} من ${totalChunksTracked}`
-                      : `Chunk ${activeChunkNumber} of ${totalChunksTracked}`}
-                  </Badge>
-                )}
-                {activePhaseLabel && (
-                  <Badge variant="warning" className="text-[11px]">
-                    {activePhaseLabel}
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            <div className="px-4 py-3 border-b border-border/70 bg-surface/50">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="text-xs text-text-muted">
-                  {lang === 'ar'
-                    ? 'هذه المساحة تعرض النص الذي يقرأه النظام الآن أو آخر تقدم محفوظ ليسهل عليك متابعة التحليل لحظة بلحظة.'
-                    : 'This panel shows the text the system is reading now, or the latest saved progress, so you can follow the analysis step by step.'}
-                </div>
-                {passProgressLine && (
-                  <div className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] text-primary font-medium">
-                    {passProgressLine}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-4 py-4 bg-surface">
-              {activeChunk?.textPreview ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-[11px] text-text-muted">
-                    <Badge variant="default" className="text-[10px]">
-                      {lang === 'ar' ? 'النص الجاري فحصه' : 'Active text'}
-                    </Badge>
-                    <span>
-                      {lang === 'ar'
-                        ? 'يتم تحديث هذه المعاينة أثناء انتقال النظام بين الأجزاء.'
-                        : 'This preview updates as the worker moves between chunks.'}
-                    </span>
-                  </div>
-                  {previewFocusSnippet && (
-                    <div className="rounded-xl border border-warning/20 bg-warning/5 p-3">
-                      <div className="flex items-center gap-2 text-[11px] text-warning mb-1.5">
-                        <Badge variant="warning" className="text-[10px]">
-                          {lang === 'ar' ? 'المقطع الأبرز الآن' : 'Current focus'}
-                        </Badge>
-                        <span>
-                          {lang === 'ar'
-                            ? 'هذا هو الجزء الأقرب لما يلفت انتباه التحليل داخل المعاينة الحالية.'
-                            : 'This is the most salient snippet inside the current live preview.'}
-                        </span>
-                      </div>
-                      <div className="text-sm leading-8 text-text-main whitespace-pre-wrap break-words" dir="rtl">
-                        {previewFocusSnippet}
-                      </div>
-                    </div>
+        <div className="space-y-5">
+          <section className="rounded-3xl border border-border bg-surface p-5 space-y-5 shadow-sm">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl border border-border bg-background/70 p-3">
+                  {isSuccessfulJobStatus(analysisJob?.status) ? (
+                    <CheckCircle2 className="w-8 h-8 text-success flex-shrink-0" />
+                  ) : isQueuedJobStatus(analysisJob?.status) ? (
+                    <Loader2 className="w-8 h-8 text-text-muted flex-shrink-0" />
+                  ) : isCancelledJobStatus(analysisJob?.status) ? (
+                    <XCircle className="w-8 h-8 text-warning flex-shrink-0" />
+                  ) : isStoppingJobStatus(analysisJob?.status) ? (
+                    <Loader2 className="w-8 h-8 text-warning flex-shrink-0 animate-spin" />
+                  ) : isPausedJobStatus(analysisJob?.status) ? (
+                    <Pause className="w-8 h-8 text-warning flex-shrink-0" />
+                  ) : (analysisJob?.status ?? '').toLowerCase() === 'failed' ? (
+                    <XCircle className="w-8 h-8 text-error flex-shrink-0" />
+                  ) : (
+                    <Loader2 className="w-8 h-8 text-primary animate-spin flex-shrink-0" />
                   )}
-                  <div
-                    className="rounded-xl border border-primary/15 bg-primary/5 p-4 text-sm leading-8 text-text-main whitespace-pre-wrap break-words shadow-sm"
-                    dir="rtl"
-                  >
-                    {renderPreviewWithHighlight(activeChunk.textPreview, previewFocusSnippet)}
-                  </div>
                 </div>
-              ) : latestCompletedChunk?.textPreview ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-[11px] text-text-muted">
-                    <Badge variant="outline" className="text-[10px]">
-                      {lang === 'ar' ? 'آخر جزء مكتمل' : 'Last completed chunk'}
-                    </Badge>
-                    <span>
-                      {lang === 'ar'
-                        ? 'لا يوجد جزء نشط الآن، لذا نعرض آخر مقطع اكتمل تحليله.'
-                        : 'No active chunk is running right now, so the last completed chunk is shown.'}
-                    </span>
-                  </div>
-                  {previewFocusSnippet && (
-                    <div className="rounded-xl border border-info/20 bg-info/5 p-3">
-                      <div className="flex items-center gap-2 text-[11px] text-info mb-1.5">
-                        <Badge variant="outline" className="text-[10px]">
-                          {lang === 'ar' ? 'أبرز ما تم حفظه' : 'Saved focus'}
-                        </Badge>
-                        <span>
-                          {lang === 'ar'
-                            ? 'يساعدك هذا السطر على تذكر آخر جزء كان التحليل قد وصل إليه.'
-                            : 'This line helps you quickly recall the last saved point in the analysis.'}
-                        </span>
-                      </div>
-                      <div className="text-sm leading-8 text-text-main whitespace-pre-wrap break-words" dir="rtl">
-                        {previewFocusSnippet}
-                      </div>
-                    </div>
-                  )}
-                  <div
-                    className="rounded-xl border border-border bg-background/70 p-4 text-sm leading-8 text-text-main whitespace-pre-wrap break-words"
-                    dir="rtl"
-                  >
-                    {renderPreviewWithHighlight(latestCompletedChunk.textPreview, previewFocusSnippet)}
-                  </div>
-                </div>
-              ) : (
-                <div className="h-full min-h-[16rem] rounded-xl border border-dashed border-border bg-background/60 flex items-center justify-center p-6 text-center text-sm text-text-muted">
-                  {isSuccessfulJobStatus(analysisJob?.status)
-                    ? (lang === 'ar'
-                      ? 'اكتمل التحليل. يمكنك الآن فتح التقرير لمراجعة النتائج.'
-                      : 'Analysis is complete. You can open the report now.')
-                    : (analysisJob?.status ?? '').toLowerCase() === 'failed'
-                      ? (lang === 'ar'
-                        ? 'توقف التحليل قبل إظهار معاينة مستقرة لهذا الجزء.'
-                        : 'The analysis stopped before a stable chunk preview was available.')
-                      : (lang === 'ar'
-                        ? 'سيظهر هنا النص الجاري فحصه بمجرد أن يبدأ العامل بمعالجة جزء فعّال.'
-                        : 'The active chunk text will appear here once the worker starts processing a live chunk.')}
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section className="space-y-4">
-            <div className="rounded-2xl border border-border bg-surface p-4 space-y-4">
-              <div className="flex items-center gap-3">
-                {isSuccessfulJobStatus(analysisJob?.status) ? (
-                  <CheckCircle2 className="w-8 h-8 text-success flex-shrink-0" />
-                ) : isQueuedJobStatus(analysisJob?.status) ? (
-                  <Loader2 className="w-8 h-8 text-text-muted flex-shrink-0" />
-                ) : isCancelledJobStatus(analysisJob?.status) ? (
-                  <XCircle className="w-8 h-8 text-warning flex-shrink-0" />
-                ) : isStoppingJobStatus(analysisJob?.status) ? (
-                  <Loader2 className="w-8 h-8 text-warning flex-shrink-0 animate-spin" />
-                ) : isPausedJobStatus(analysisJob?.status) ? (
-                  <Pause className="w-8 h-8 text-warning flex-shrink-0" />
-                ) : (analysisJob?.status ?? '').toLowerCase() === 'failed' ? (
-                  <XCircle className="w-8 h-8 text-error flex-shrink-0" />
-                ) : (
-                  <Loader2 className="w-8 h-8 text-primary animate-spin flex-shrink-0" />
-                )}
-                <div>
-                  <p className="font-semibold text-text-main">
+                <div className="space-y-2">
+                  <p className="text-lg font-semibold text-text-main">
                     {isSuccessfulJobStatus(analysisJob?.status)
                       ? (analysisJob?.isPartialReport
                           ? (lang === 'ar' ? 'اكتمل التقرير الجزئي' : 'Partial Report Ready')
@@ -6550,216 +6337,198 @@ export function ScriptWorkspace() {
                         ? (lang === 'ar' ? 'فشل التحليل' : 'Analysis Failed')
                         : (lang === 'ar' ? 'جاري التحليل…' : 'Analyzing…')}
                   </p>
-                  <p className={cn("text-xs leading-6", analysisStatusToneClass)}>
+                  <p className={cn("text-sm leading-7", analysisStatusToneClass)}>
                     {analysisStatusCaption}
                   </p>
-                  <div className="mt-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline" className="text-[11px]">
                       {lang === 'ar'
                         ? `نمط التحليل: ${selectedAnalysisModeMeta.labelAr}`
                         : `Mode: ${selectedAnalysisModeMeta.labelEn}`}
                     </Badge>
-                  </div>
-                  {analysisJob?.id && (
-                    <div className="mt-2">
+                    <Badge variant="outline" className="text-[11px]">
+                      {lang === 'ar'
+                        ? `المسار: ${selectedPipelineMeta.labelAr}`
+                        : `Pipeline: ${selectedPipelineMeta.labelEn}`}
+                    </Badge>
+                    {analysisJob?.id && (
                       <Badge variant="outline" className="text-[11px] font-mono max-w-full">
                         {lang === 'ar' ? `رقم المهمة: ${analysisJob.id}` : `Job ID: ${analysisJob.id}`}
                       </Badge>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="w-full bg-background rounded-full h-3 overflow-hidden border border-border">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-300",
-                    isSuccessfulJobStatus(analysisJob?.status) ? 'bg-success' :
-                      isQueuedJobStatus(analysisJob?.status) ? 'bg-slate-300' :
-                      isCancelledJobStatus(analysisJob?.status) ? 'bg-warning' :
-                      isStoppingJobStatus(analysisJob?.status) ? 'bg-warning' :
-                      isPausedJobStatus(analysisJob?.status) ? 'bg-warning' :
-                      (analysisJob?.status ?? '').toLowerCase() === 'failed' ? 'bg-error' : 'bg-primary'
-                  )}
-                  style={{ width: `${Math.min(100, analysisJob?.progressPercent ?? 0)}%` }}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-border bg-background/60 p-3">
-                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'التقدم' : 'Progress'}</p>
-                  <p className="text-base font-semibold text-text-main" dir="ltr">{analysisJob ? progressDisplayPair : '…'}</p>
-                </div>
-                <div className="rounded-xl border border-border bg-background/60 p-3">
-                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المدة' : 'Elapsed'}</p>
-                  <p className="text-base font-semibold text-text-main">{analysisElapsedLabel ? analysisElapsedLabel.replace(/^المدة:\s*/, '').replace(/^Elapsed:\s*/, '') : '—'}</p>
-                </div>
-                <div className="rounded-xl border border-border bg-background/60 p-3">
-                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الحالة الخلفية' : 'Backend stage'}</p>
-                  <p className="text-sm font-medium text-text-main">
-                    {isQueuedJobStatus(analysisJob?.status)
-                      ? (lang === 'ar' ? 'بانتظار العامل' : 'Waiting for worker')
-                      : isCancelledJobStatus(analysisJob?.status)
-                      ? (lang === 'ar' ? 'تم الإلغاء بالكامل' : 'Cancelled completely')
-                      : isStoppingJobStatus(analysisJob?.status)
-                      ? (activePhaseLabel ?? (lang === 'ar' ? 'إنهاء الجزء الجاري' : 'Finishing current chunk'))
-                      : isPausedJobStatus(analysisJob?.status)
-                      ? (lang === 'ar' ? 'متوقف مؤقتاً' : 'Paused')
-                      : activePhaseLabel ?? (lang === 'ar' ? 'قيد الانتظار' : 'Waiting')}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border bg-background/60 p-3">
-                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'نمط التحليل' : 'Analysis mode'}</p>
-                  <p className="text-sm font-medium text-text-main">
-                    {lang === 'ar' ? selectedAnalysisModeMeta.labelAr : selectedAnalysisModeMeta.labelEn}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border bg-background/60 p-3">
-                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'مسار التحليل' : 'Pipeline'}</p>
-                  <p className="text-sm font-medium text-text-main">
-                    {lang === 'ar' ? selectedPipelineMeta.labelAr : selectedPipelineMeta.labelEn}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border bg-background/60 p-3">
-                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المنهجية' : 'Methodology'}</p>
-                  <p className="text-sm font-medium text-text-main">
-                    {lang === 'ar' ? selectedMethodologyMeta.labelAr : selectedMethodologyMeta.labelEn}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border bg-background/60 p-3">
-                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الصفحات / الجزء' : 'Pages / chunk'}</p>
-                  <p className="text-sm font-medium text-text-main">
-                    {activeChunkNumber != null && totalChunksTracked > 0
-                      ? (lang === 'ar'
-                        ? `${activeChunkPageLabel ? `${activeChunkPageLabel} · ` : ''}الجزء ${activeChunkNumber}`
-                        : `${activeChunkPageLabel ? `${activeChunkPageLabel} · ` : ''}Chunk ${activeChunkNumber}`)
-                      : activeChunkPageLabel ?? (lang === 'ar' ? 'غير متاح بعد' : 'Not available yet')}
-                  </p>
-                </div>
+              <div className="min-w-[220px] rounded-2xl border border-border bg-background/60 px-4 py-3">
+                <p className="text-[11px] font-medium text-text-muted mb-1">
+                  {lang === 'ar' ? 'التقدم الكلي' : 'Overall progress'}
+                </p>
+                <p className="text-2xl font-semibold text-text-main" dir="ltr">
+                  {analysisJob?.progressPercent ?? 0}%
+                </p>
+                <p className="text-xs text-text-muted mt-1" dir="ltr">
+                  {analysisJob ? progressDisplayPair : '—'}
+                </p>
               </div>
             </div>
 
-            <div className="space-y-3 rounded-2xl border border-border bg-background/40 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs text-text-muted">
-                  {lang === 'ar' ? 'تفاصيل التنفيذ الحالية' : 'Current execution details'}
+            <div className="w-full bg-background rounded-full h-3.5 overflow-hidden border border-border">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-300",
+                  isSuccessfulJobStatus(analysisJob?.status) ? 'bg-success' :
+                    isQueuedJobStatus(analysisJob?.status) ? 'bg-slate-300' :
+                    isCancelledJobStatus(analysisJob?.status) ? 'bg-warning' :
+                    isStoppingJobStatus(analysisJob?.status) ? 'bg-warning' :
+                    isPausedJobStatus(analysisJob?.status) ? 'bg-warning' :
+                    (analysisJob?.status ?? '').toLowerCase() === 'failed' ? 'bg-error' : 'bg-primary'
+                )}
+                style={{ width: `${Math.min(100, analysisJob?.progressPercent ?? 0)}%` }}
+              />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <div className="rounded-2xl border border-border bg-background/60 p-4">
+                <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'نمط التحليل' : 'Analysis mode'}</p>
+                <p className="text-base font-semibold text-text-main">
+                  {lang === 'ar' ? selectedAnalysisModeMeta.labelAr : selectedAnalysisModeMeta.labelEn}
                 </p>
-                {isAnalysisRunning && !isQueuedJobStatus(analysisJob?.status) && !isPausedJobStatus(analysisJob?.status) && !isStoppingJobStatus(analysisJob?.status) && !isCancelledJobStatus(analysisJob?.status) && (
-                  <div className="flex items-center gap-2 text-xs font-medium text-primary">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>
+              </div>
+              <div className="rounded-2xl border border-border bg-background/60 p-4">
+                <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المدة' : 'Elapsed'}</p>
+                <p className="text-base font-semibold text-text-main">
+                  {analysisElapsedLabel ? analysisElapsedLabel.replace(/^المدة:\s*/, '').replace(/^Elapsed:\s*/, '') : '—'}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border bg-background/60 p-4">
+                <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المنهجية' : 'Methodology'}</p>
+                <p className="text-base font-semibold text-text-main">
+                  {lang === 'ar' ? selectedMethodologyMeta.labelAr : selectedMethodologyMeta.labelEn}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border bg-background/60 p-4">
+                <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الأجزاء / الصفحات' : 'Chunks / pages'}</p>
+                <p className="text-base font-semibold text-text-main" dir="ltr">
+                  {analysisJob ? progressDisplayPair : '—'}
+                </p>
+                {previewContextLabel && (
+                  <p className="mt-1 text-xs text-text-muted">{previewContextLabel}</p>
+                )}
+              </div>
+              <div className="rounded-2xl border border-border bg-background/60 p-4">
+                <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'زمن الجزء الحالي' : 'Current chunk timer'}</p>
+                <p className={cn("text-base font-semibold", activeChunkIsStalled ? "text-warning" : "text-text-main")}>
+                  {activeChunkTimerValue}
+                </p>
+                {activePhaseLabel && (
+                  <p className="mt-1 text-xs text-text-muted">{activePhaseLabel}</p>
+                )}
+              </div>
+              <div className="rounded-2xl border border-border bg-background/60 p-4">
+                <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'إجمالي الملاحظات حتى الآن' : 'Findings so far'}</p>
+                <p className="text-base font-semibold text-text-main" dir="ltr">{findingsCountSoFar}</p>
+                <p className="mt-1 text-xs text-text-muted">
+                  {lang === 'ar'
+                    ? 'يتحدث هذا الرقم عندما تتوفر طبقة التقرير الحالية داخل مساحة العمل.'
+                    : 'This updates when the current report layer is available in the workspace.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]">
+              <div className="rounded-2xl border border-border bg-background/50 p-4">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div>
+                    <p className="text-sm font-semibold text-text-main">
+                      {lang === 'ar' ? 'متابعة الجزء الحالي' : 'Current chunk follow-up'}
+                    </p>
+                    <p className="text-xs text-text-muted">
                       {activeChunkNumber != null && totalChunksTracked > 0
                         ? (lang === 'ar'
-                          ? `جاري فحص الجزء ${activeChunkNumber} من ${totalChunksTracked}`
-                          : `Processing chunk ${activeChunkNumber} of ${totalChunksTracked}`)
-                        : (lang === 'ar' ? 'جاري الفحص' : 'Processing')}
+                          ? `الجزء ${activeChunkNumber} من ${totalChunksTracked}`
+                          : `Chunk ${activeChunkNumber} of ${totalChunksTracked}`)
+                        : (lang === 'ar' ? 'بانتظار بدء التنفيذ الفعلي' : 'Waiting for active execution')}
+                    </p>
+                  </div>
+                  {passProgressLine && (
+                    <Badge variant="outline" className="text-[11px] max-w-full whitespace-normal text-center">
+                      {passProgressLine}
+                    </Badge>
+                  )}
+                </div>
+                <div className="mt-3 grid gap-2 text-sm text-text-main">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-text-muted">{lang === 'ar' ? 'الموقع الحالي' : 'Current location'}</span>
+                    <span className="text-end">
+                      {activeChunkPageLabel
+                        ? activeChunkPageLabel
+                        : latestCompletedChunk
+                          ? previewContextLabel
+                          : (lang === 'ar' ? 'غير متاح بعد' : 'Not available yet')}
                     </span>
                   </div>
-                )}
-              </div>
-              <div className="grid gap-2 text-[11px] text-text-muted">
-                <div className="flex items-start justify-between gap-3">
-                  <span>{lang === 'ar' ? 'الأجزاء المكتملة' : 'Completed chunks'}</span>
-                  <span className="font-medium text-text-main" dir="ltr">
-                    {progressDisplayDone} / {Math.max(progressDisplayTotal, progressDisplayDone)}
-                  </span>
-                </div>
-                <div className="flex items-start justify-between gap-3">
-                  <span>{lang === 'ar' ? 'أسلوب التنفيذ' : 'Execution mode'}</span>
-                  <span className="font-medium text-text-main">
-                    {lang === 'ar' ? 'كشف متوازي متعدد الماسحات' : 'Parallel multi-detector scan'}
-                  </span>
-                </div>
-                {activeChunkAgeLabel && (
-                  <div className="flex items-start justify-between gap-3">
-                    <span>{lang === 'ar' ? 'زمن الجزء الجاري' : 'Active chunk time'}</span>
-                    <span className={cn("font-medium", activeChunkIsStalled ? "text-warning" : "text-text-main")}>
-                      {activeChunkAgeLabel.replace(/^زمن الجزء الجاري:\s*/, '').replace(/^Active chunk time:\s*/, '')}
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-text-muted">{lang === 'ar' ? 'المرحلة الحالية' : 'Current stage'}</span>
+                    <span className="text-end">
+                      {activePhaseLabel ?? (lang === 'ar' ? 'قيد الانتظار' : 'Waiting')}
                     </span>
                   </div>
-                )}
-                <div className="flex items-start justify-between gap-3">
-                  <span>{lang === 'ar' ? 'المكشوفات المحتملة' : 'Potential detectors'}</span>
-                  <span className="font-medium text-text-main text-end">
-                    {analysisPasses.join(lang === 'ar' ? '، ' : ', ')}
-                  </span>
                 </div>
               </div>
-              {isPausedJobStatus(analysisJob?.status) && (
-                <p className="text-[11px] text-warning">
-                  {lang === 'ar'
-                    ? 'الإيقاف المؤقت يمنع العامل من أخذ أجزاء جديدة، لكنه يحافظ على التقدم الحالي حتى تستأنف التحليل.'
-                    : 'Pause stops the worker from claiming new chunks while preserving the current progress until you resume.'}
-                </p>
-              )}
-              {isStoppingJobStatus(analysisJob?.status) && (
-                <div className="space-y-2">
-                  <p className="text-[11px] text-warning">
-                    {lang === 'ar'
-                      ? 'سيُكمِل العامل الجزء الجاري فقط، ثم سيبني ويعرض تقريراً جزئياً سريعاً من النتائج المكتملة.'
-                      : 'The worker will finish only the current in-flight chunk, then build and show a faster partial report from the completed findings.'}
-                  </p>
-                  {activeChunkNumber != null && (
-                    <p className="text-[11px] text-text-muted">
-                      {lang === 'ar'
-                        ? `الجزء الجاري الآن: ${activeChunkNumber} من ${Math.max(totalChunksTracked, activeChunkNumber)}${activePhaseLabel ? ` • ${activePhaseLabel}` : ''}${activeChunkPageLabel ? ` • ${activeChunkPageLabel}` : ''}`
-                        : `Current chunk: ${activeChunkNumber} of ${Math.max(totalChunksTracked, activeChunkNumber)}${activePhaseLabel ? ` • ${activePhaseLabel}` : ''}${activeChunkPageLabel ? ` • ${activeChunkPageLabel}` : ''}`}
-                    </p>
-                  )}
-                  {activeChunkAgeLabel && (
-                    <p className={cn("text-[11px]", activeChunkIsStalled ? "text-warning" : "text-text-muted")}>
-                      {activeChunkAgeLabel}
-                    </p>
-                  )}
-                  {activeChunkIsStalled && (
-                    <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-[11px] text-warning">
-                      {lang === 'ar'
-                        ? 'لم يتغير الجزء الجاري منذ أكثر من 10 دقائق. قد يكون العامل معلّقاً أو بانتظار مهلة طويلة. إذا استمر هذا الوضع، أعد تشغيل العامل أو أعد جدولة الجزء العالق.'
-                        : 'The active chunk has not moved for more than 10 minutes. The worker may be stuck or waiting on a long timeout. If this continues, restart the worker or re-queue the stuck chunk.'}
-                    </div>
-                  )}
-                </div>
-              )}
-              {!isStoppingJobStatus(analysisJob?.status) && activeChunkIsStalled && (
-                <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-[11px] text-warning">
-                  {lang === 'ar'
-                    ? 'لم يتغير الجزء الجاري منذ أكثر من 10 دقائق. قد يكون التحليل عالقاً أو بانتظار مهلة طويلة. راقب السجلات أو أعد تشغيل العامل إذا استمرت هذه الحالة.'
-                    : 'The active chunk has not moved for more than 10 minutes. The analysis may be stuck or waiting on a long timeout. Check the logs or restart the worker if this continues.'}
-                </div>
-              )}
-              {isSuccessfulJobStatus(analysisJob?.status) && analysisJob?.isPartialReport && (
-                <p className="text-[11px] text-warning">
-                  {lang === 'ar'
-                    ? `هذا تقرير جزئي مبني على التقدم المحفوظ حتى لحظة الإيقاف (${progressDisplayPair}).`
-                    : `This is a partial report built from the saved progress at stop time (${progressDisplayPair}).`}
-                </p>
-              )}
-              {(analysisJob?.manualReviewContextCount ?? 0) > 0 && (
-                <p className="text-[11px] text-primary">
-                  {lang === 'ar'
-                    ? `تمت الاستفادة من ${(analysisJob?.manualReviewContextCount ?? 0)} ملاحظات يدوية محفوظة من جولات سابقة أثناء تجهيز هذا التحليل.`
-                    : `${analysisJob?.manualReviewContextCount ?? 0} saved manual review notes were carried into this analysis setup from earlier runs.`}
-                </p>
-              )}
-            </div>
 
-            {/* Error message */}
+              <div className="rounded-2xl border border-border bg-background/50 p-4 space-y-3">
+                <p className="text-sm font-semibold text-text-main">
+                  {lang === 'ar' ? 'ملاحظات سريعة' : 'Quick notes'}
+                </p>
+                <p className="text-xs leading-6 text-text-muted">
+                  {lang === 'ar'
+                    ? 'أزلنا العرض الحي للنص الحالي لتبسيط النافذة على فريق العميل. ستظهر هنا المؤشرات الأهم فقط: النمط، التقدم، المدة، والأجزاء المنجزة.'
+                    : 'The live text preview was removed to keep this dialog simpler for client-facing teams. Only the most useful indicators stay visible here: mode, progress, timing, and completed chunks.'}
+                </p>
+                {(analysisJob?.manualReviewContextCount ?? 0) > 0 && (
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-[11px] text-primary">
+                    {lang === 'ar'
+                      ? `تمت الاستفادة من ${(analysisJob?.manualReviewContextCount ?? 0)} ملاحظات يدوية محفوظة من جولات سابقة أثناء تجهيز هذا التحليل.`
+                      : `${analysisJob?.manualReviewContextCount ?? 0} saved manual review notes were carried into this analysis setup from earlier runs.`}
+                  </div>
+                )}
+                {activeChunkIsStalled && (
+                  <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-[11px] text-warning">
+                    {lang === 'ar'
+                      ? 'لم يتغير الجزء الجاري منذ أكثر من 10 دقائق. قد يكون العامل بانتظار مهلة طويلة أو يحتاج إلى متابعة من الفريق التقني.'
+                      : 'The active chunk has not moved for more than 10 minutes. The worker may be waiting on a long timeout or may need technical follow-up.'}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-4">
             {analysisJob?.errorMessage && (
               <div className="p-3 bg-error/5 border border-error/20 rounded-md text-sm text-error">
                 {analysisJob.errorMessage}
               </div>
             )}
 
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
-              <div className="text-[11px] text-text-muted">
-                {lang === 'ar'
-                  ? 'يمكنك الإيقاف المؤقت، أو إنهاء التحليل بتقرير جزئي، أو إيقافه بالكامل من هذه النافذة.'
-                  : 'You can pause the analysis, end it with a partial report, or cancel it completely from this panel.'}
+            <div className="rounded-2xl border border-border bg-background/40 p-4 space-y-4">
+              <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <div className="text-sm text-text-main">
+                  {lang === 'ar'
+                    ? 'يمكنك التحكم في سير التحليل من هنا، وسيظهر التقرير فور اكتمال الجولة أو إنهائها جزئياً.'
+                    : 'You can control the analysis from here, and the report will be available as soon as the run finishes or is ended partially.'}
+                </div>
+                {isSuccessfulJobStatus(analysisJob?.status) && (
+                  <Button size="sm" onClick={() => { setAnalysisModalOpen(false); const rid = reportIdWhenJobCompleted ?? analysisJobId; navigate(rid ? (reportIdWhenJobCompleted ? `/report/${rid}?by=id${reportQuickQuery}` : `/report/${rid}?by=job${reportQuickQuery}`) : '/reports'); }}>
+                    <FileText className="w-4 h-4 mr-1" />
+                    {lang === 'ar' ? 'عرض التقرير' : 'View Report'}
+                  </Button>
+                )}
               </div>
+
               <div className="flex flex-wrap items-center gap-2">
                 {analysisJob && !isSuccessfulJobStatus(analysisJob.status) && analysisJob.status !== 'failed' && analysisJob.status !== 'cancelled' && !isPausedJobStatus(analysisJob.status) && (
-                  <Button size="sm" variant="outline" onClick={handlePauseAnalysis} disabled={analysisControlBusy != null}>
+                  <Button size="sm" variant="outline" onClick={handlePauseAnalysis} disabled={analysisControlBusy != null} className="min-w-[12rem] justify-center">
                     <Pause className="w-4 h-4 mr-1" />
                     {analysisControlBusy === 'pause'
                       ? (lang === 'ar' ? 'جارٍ الإيقاف…' : 'Pausing…')
@@ -6767,7 +6536,7 @@ export function ScriptWorkspace() {
                   </Button>
                 )}
                 {analysisJob && isPausedJobStatus(analysisJob.status) && (
-                  <Button size="sm" onClick={handleResumeAnalysis} disabled={analysisControlBusy != null}>
+                  <Button size="sm" onClick={handleResumeAnalysis} disabled={analysisControlBusy != null} className="min-w-[12rem] justify-center">
                     <Play className="w-4 h-4 mr-1" />
                     {analysisControlBusy === 'resume'
                       ? (lang === 'ar' ? 'جارٍ الاستئناف…' : 'Resuming…')
@@ -6775,36 +6544,31 @@ export function ScriptWorkspace() {
                   </Button>
                 )}
                 {analysisJob && !isSuccessfulJobStatus(analysisJob.status) && analysisJob.status !== 'failed' && analysisJob.status !== 'cancelled' && !isStoppingJobStatus(analysisJob.status) && (
-                  <Button size="sm" variant="outline" onClick={handleStopAnalysis} disabled={analysisControlBusy != null} className="border-warning/30 text-warning hover:bg-warning/10">
+                  <Button size="sm" variant="outline" onClick={handleStopAnalysis} disabled={analysisControlBusy != null} className="min-w-[12rem] justify-center border-warning/30 text-warning hover:bg-warning/10">
                     <Square className="w-4 h-4 mr-1" />
                     {analysisControlBusy === 'stop'
-                      ? (lang === 'ar' ? 'جارٍ الإيقاف…' : 'Stopping…')
+                      ? (lang === 'ar' ? 'جارٍ الإنهاء…' : 'Finalizing…')
                       : (lang === 'ar' ? 'إنهاء مع تقرير جزئي' : 'End with Partial Report')}
                   </Button>
                 )}
                 {analysisJob && !isSuccessfulJobStatus(analysisJob.status) && analysisJob.status !== 'failed' && analysisJob.status !== 'cancelled' && (
-                  <Button size="sm" variant="danger" onClick={handleCancelAnalysis} disabled={analysisControlBusy != null}>
+                  <Button size="sm" variant="danger" onClick={handleCancelAnalysis} disabled={analysisControlBusy != null} className="min-w-[12rem] justify-center">
                     <Square className="w-4 h-4 mr-1" />
                     {analysisControlBusy === 'cancel'
                       ? (lang === 'ar' ? 'جارٍ الإيقاف الكامل…' : 'Cancelling…')
                       : (lang === 'ar' ? 'إيقاف كامل' : 'Cancel Completely')}
                   </Button>
                 )}
-                {isSuccessfulJobStatus(analysisJob?.status) && (
-                  <Button size="sm" onClick={() => { setAnalysisModalOpen(false); const rid = reportIdWhenJobCompleted ?? analysisJobId; navigate(rid ? (reportIdWhenJobCompleted ? `/report/${rid}?by=id${reportQuickQuery}` : `/report/${rid}?by=job${reportQuickQuery}`) : '/reports'); }}>
-                    <FileText className="w-4 h-4 mr-1" />
-                    {lang === 'ar' ? 'عرض التقرير' : 'View Report'}
-                  </Button>
-                )}
+                <Button variant="ghost" size="sm" onClick={() => setAnalysisModalOpen(false)} className="min-w-[10rem] justify-center">
+                  <XCircle className="w-4 h-4 mr-1" />
+                  {lang === 'ar' ? 'إغلاق' : 'Close'}
+                </Button>
                 {analysisJob?.status === 'failed' && (
-                  <Button size="sm" variant="outline" onClick={() => { setAnalysisModalOpen(false); handleStartAnalysis(); }}>
+                  <Button size="sm" variant="outline" onClick={() => { setAnalysisModalOpen(false); handleStartAnalysis(); }} className="min-w-[10rem] justify-center">
                     {lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}
                   </Button>
                 )}
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setAnalysisModalOpen(false)}>
-                {lang === 'ar' ? 'إغلاق' : 'Close'}
-              </Button>
             </div>
           </section>
 
