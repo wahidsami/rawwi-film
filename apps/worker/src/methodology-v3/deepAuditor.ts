@@ -8,6 +8,12 @@ import { shouldSkipDeepAuditorForJob } from "../performanceGating.js";
 
 const AUDITOR_RATIONALE_DEFAULT = "يتطلب تقييم مراجع مختص.";
 const RATIONALE_ONLY_BATCH_SIZE = 6;
+const QUOTE_PATTERNS = [
+  /"([^"\n]{2,220})"/gu,
+  /“([^”\n]{2,220})”/gu,
+  /‘([^’\n]{2,220})’/gu,
+  /«([^»\n]{2,220})»/gu,
+];
 
 type CanonicalCandidate = {
   canonical_finding_id: string;
@@ -28,6 +34,12 @@ type CanonicalCandidate = {
   final_ruling_hint?: string | null;
   context_confidence?: number | null;
   policy_hint_rationale?: string | null;
+};
+
+type SceneDescriptor = {
+  sceneIndex: number;
+  startOffset: number;
+  endOffset: number;
 };
 
 function uniqueNums(values: Array<number | null | undefined>): number[] {
@@ -90,6 +102,104 @@ function isExactEvidenceInText(fullText: string | null, evidenceSnippet: string 
   const evidence = (evidenceSnippet ?? "").trim();
   if (!text || !evidence) return false;
   return text.includes(evidence);
+}
+
+function compactSpace(value: string | null | undefined): string {
+  return (value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function normalizeForCompare(value: string | null | undefined): string {
+  return compactSpace(value).normalize("NFC");
+}
+
+function extractQuotedNeedles(value: string | null | undefined): string[] {
+  const source = String(value ?? "");
+  const seen = new Set<string>();
+  for (const pattern of QUOTE_PATTERNS) {
+    pattern.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(source)) !== null) {
+      const text = compactSpace(match[1] ?? "");
+      if (text.length >= 3) seen.add(text);
+    }
+  }
+  return [...seen];
+}
+
+function rationaleQuotesDifferentEvidence(rationale: string | null | undefined, evidenceSnippet: string | null | undefined): boolean {
+  const evidence = normalizeForCompare(evidenceSnippet);
+  if (!evidence) return false;
+  const quoted = extractQuotedNeedles(rationale);
+  if (quoted.length === 0) return false;
+  return quoted.some((needle) => {
+    const normalizedNeedle = normalizeForCompare(needle);
+    if (!normalizedNeedle) return false;
+    return !evidence.includes(normalizedNeedle) && !normalizedNeedle.includes(evidence);
+  });
+}
+
+function toAsciiDigits(value: string): string {
+  return value.replace(/[\u0660-\u0669]/g, (digit) => String(digit.charCodeAt(0) - 0x0660));
+}
+
+function buildSceneIndex(fullText: string | null): SceneDescriptor[] {
+  const text = (fullText ?? "").trim();
+  if (!text) return [];
+  const lines = text.split(/\r?\n/);
+  const headings: Array<{ startOffset: number; heading: string }> = [];
+  let cursor = 0;
+  for (const rawLine of lines) {
+    const heading = compactSpace(rawLine);
+    if (
+      heading &&
+      heading.length <= 96 &&
+      !/:/.test(heading) &&
+      (
+        /^(?:المشهد|مشهد)\s*[\d\u0660-\u0669]+/u.test(heading) ||
+        /^(?:INT\.|EXT\.|I\/E\.|INT\/EXT|\.INT|\.EXT)\b/i.test(heading) ||
+        /^(?:[.٠-٩0-9]+\s+)?(?:المشهد|مشهد|الفصل|الطريق|منزل|سيارة)\b/u.test(heading) ||
+        (
+          /(?:\bداخلي\b|\bخارجي\b|\/ليلي|\/نهاري|- خارجي|- داخلي|-خارجي|-داخلي)/u.test(heading) &&
+          !/[.!؟،؛]/u.test(heading)
+        )
+      )
+    ) {
+      headings.push({ startOffset: cursor, heading });
+    }
+    cursor += rawLine.length + 1;
+  }
+  return headings.map((heading, index) => ({
+    sceneIndex: index + 1,
+    startOffset: heading.startOffset,
+    endOffset: headings[index + 1]?.startOffset ?? text.length,
+  }));
+}
+
+function resolveSceneIndexAtOffset(fullText: string | null, offset: number | null | undefined): number | null {
+  if (offset == null || !Number.isFinite(offset) || offset < 0) return null;
+  const scenes = buildSceneIndex(fullText);
+  if (scenes.length === 0) return null;
+  return scenes.find((scene) => offset >= scene.startOffset && offset < scene.endOffset)?.sceneIndex ?? scenes[scenes.length - 1]?.sceneIndex ?? null;
+}
+
+function extractSceneNumbersFromRationale(value: string | null | undefined): number[] {
+  const text = toAsciiDigits(String(value ?? ""));
+  const matches = [...text.matchAll(/(?:المشهد|مشهد|scene)\s+(\d+)/giu)];
+  return matches
+    .map((match) => Number(match[1]))
+    .filter((num) => Number.isFinite(num));
+}
+
+function rationaleMentionsDifferentScene(
+  rationale: string | null | undefined,
+  fullText: string | null,
+  startOffsetGlobal: number | null | undefined,
+): boolean {
+  const mentioned = extractSceneNumbersFromRationale(rationale);
+  if (mentioned.length === 0) return false;
+  const resolved = resolveSceneIndexAtOffset(fullText, startOffsetGlobal);
+  if (resolved == null) return false;
+  return !mentioned.includes(resolved);
 }
 
 function applyGuardrails(a: AuditorAssessment): AuditorAssessment {
@@ -270,11 +380,27 @@ export async function runDeepAuditorPass(args: {
     primary_article_id: number;
     weak_rationale: string | null;
   }>();
+  let weakRationaleCount = 0;
+  let articleMismatchCount = 0;
+  let quotedEvidenceMismatchCount = 0;
+  let sceneMismatchCount = 0;
   for (const m of filteredMerged) {
     const id = m.canonical_finding_id ?? "";
     if (!id || needRationale.has(id)) continue;
     const primaryArticle = m.primary_article_id ?? m.article_id;
-    if (!isWeakRationaleText(m.rationale_ar) && !hasExplicitArticleMismatch(m.rationale_ar, primaryArticle)) continue;
+    const weakRationale = isWeakRationaleText(m.rationale_ar);
+    const articleMismatch = hasExplicitArticleMismatch(m.rationale_ar, primaryArticle);
+    const quotedEvidenceMismatch = rationaleQuotesDifferentEvidence(m.rationale_ar, m.evidence_snippet);
+    const sceneMismatch = rationaleMentionsDifferentScene(
+      m.rationale_ar,
+      fullText,
+      m.start_offset_global ?? null,
+    );
+    if (!weakRationale && !articleMismatch && !quotedEvidenceMismatch && !sceneMismatch) continue;
+    if (weakRationale) weakRationaleCount++;
+    if (articleMismatch) articleMismatchCount++;
+    if (quotedEvidenceMismatch) quotedEvidenceMismatchCount++;
+    if (sceneMismatch) sceneMismatchCount++;
     needRationale.set(id, {
       title_ar: m.title_ar || "مخالفة محتوى",
       evidence_snippet: m.evidence_snippet || "",
@@ -287,6 +413,13 @@ export async function runDeepAuditorPass(args: {
     canonical_finding_id,
     ...v,
   }));
+  logger.info("Rationale rewrite triggers", {
+    total: rationaleItems.length,
+    weakRationaleCount,
+    articleMismatchCount,
+    quotedEvidenceMismatchCount,
+    sceneMismatchCount,
+  });
 
   if (rationaleItems.length > 0) {
     const model = config.OPENAI_RATIONALE_MODEL;
