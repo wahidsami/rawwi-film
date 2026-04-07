@@ -52,6 +52,13 @@ function normalizeScriptTitleForCheck(value: string): string {
   return value.trim().normalize('NFC').replace(/\s+/g, ' ').toLowerCase();
 }
 
+function formatOptionalClientDate(value: string | null | undefined, lang: 'ar' | 'en', format?: string): string {
+  const text = (value ?? '').trim();
+  if (!text) return '—';
+  const parsed = new Date(text);
+  return formatDate(parsed, { lang, format });
+}
+
 export function ClientDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -723,7 +730,7 @@ export function ClientDetails() {
                       : (lang === 'ar' ? 'عميل غير معروف' : 'Unknown client');
                   return (
                     <div key={script.id} className="rounded-lg border border-border bg-background px-3 py-2 text-xs text-text-muted">
-                      {[script.title, contextLabel, formatDate(script.createdAt, lang === 'ar' ? 'ar' : 'en', settings?.platform?.dateFormat)].filter(Boolean).join(' • ')}
+                      {[script.title, contextLabel, formatOptionalClientDate(script.createdAt, lang === 'ar' ? 'ar' : 'en', settings?.platform?.dateFormat)].filter(Boolean).join(' • ')}
                     </div>
                   );
                 })}

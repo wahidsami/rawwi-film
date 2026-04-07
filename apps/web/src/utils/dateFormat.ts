@@ -4,6 +4,10 @@ function getLocale(lang: 'ar' | 'en'): string {
   return lang === 'ar' ? 'ar-SA' : 'en-GB';
 }
 
+function isValidDate(date: Date): boolean {
+  return date instanceof Date && !Number.isNaN(date.getTime());
+}
+
 function getDateParts(date: Date, lang: 'ar' | 'en'): Record<string, string> {
   const locale = getLocale(lang);
   const parts = new Intl.DateTimeFormat(locale, {
@@ -29,6 +33,7 @@ export function formatDate(
   date: Date,
   options?: { lang?: 'ar' | 'en'; format?: string }
 ): string {
+  if (!isValidDate(date)) return '—';
   const lang = options?.lang ?? 'en';
   const locale = getLocale(lang);
   const formatStr = options?.format?.trim();
@@ -57,6 +62,7 @@ export function formatDateLong(
   date: Date,
   options?: { lang?: 'ar' | 'en' }
 ): string {
+  if (!isValidDate(date)) return '—';
   const lang = options?.lang ?? 'en';
   const locale = getLocale(lang);
   return new Intl.DateTimeFormat(locale, {
@@ -72,6 +78,7 @@ export function formatDateTime(
   date: Date,
   options?: { lang?: 'ar' | 'en' }
 ): string {
+  if (!isValidDate(date)) return '—';
   const lang = options?.lang ?? 'en';
   const locale = getLocale(lang);
   return new Intl.DateTimeFormat(locale, {
@@ -85,6 +92,7 @@ export function formatTime(
   date: Date,
   options?: { lang?: 'ar' | 'en' }
 ): string {
+  if (!isValidDate(date)) return '—';
   const lang = options?.lang ?? 'en';
   const locale = getLocale(lang);
   return new Intl.DateTimeFormat(locale, {
