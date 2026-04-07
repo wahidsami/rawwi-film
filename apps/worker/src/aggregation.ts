@@ -399,42 +399,44 @@ function buildReviewFindingRows(
   summary: SummaryJson,
   versionId: string
 ): ReviewFindingInsertRow[] {
-  const canonical = (summary.canonical_findings ?? []).map((finding) => ({
-    job_id: summary.job_id,
-    report_id: reportId,
-    script_id: summary.script_id,
-    version_id: versionId,
-    canonical_finding_id: finding.canonical_finding_id ?? null,
-    source_kind: toReviewSourceKind(finding.source),
-    primary_article_id: Number.isFinite(finding.primary_article_id) ? Number(finding.primary_article_id) : 0,
-    primary_atom_id: finding.primary_policy_atom_id ?? null,
-    severity: finding.severity,
-    review_status: toReviewStatus(finding.final_ruling),
-    title_ar: finding.title_ar,
-    description_ar: null,
-    rationale_ar: finding.rationale ?? null,
-    evidence_snippet: finding.evidence_snippet,
-    manual_comment: null,
-    page_number: finding.page_number ?? null,
-    start_offset_global: finding.start_offset_global ?? null,
-    end_offset_global: finding.end_offset_global ?? null,
-    start_offset_page: null,
-    end_offset_page: null,
-    anchor_status:
-      finding.page_number != null && finding.start_offset_global != null && finding.end_offset_global != null
-        ? ("exact" as const)
-        : ("unresolved" as const),
-    anchor_method:
-      finding.page_number != null && finding.start_offset_global != null && finding.end_offset_global != null
-        ? "canonical_summary"
-        : null,
-    anchor_text: finding.evidence_snippet ?? null,
-    anchor_confidence: finding.confidence ?? null,
-    is_manual: false,
-    is_hidden: false,
-    include_in_report: true,
-    created_from_job_id: summary.job_id,
-  }));
+  const canonical = (summary.canonical_findings ?? [])
+    .filter((finding) => toReviewSourceKind(finding.source) !== "manual")
+    .map((finding) => ({
+      job_id: summary.job_id,
+      report_id: reportId,
+      script_id: summary.script_id,
+      version_id: versionId,
+      canonical_finding_id: finding.canonical_finding_id ?? null,
+      source_kind: toReviewSourceKind(finding.source),
+      primary_article_id: Number.isFinite(finding.primary_article_id) ? Number(finding.primary_article_id) : 0,
+      primary_atom_id: finding.primary_policy_atom_id ?? null,
+      severity: finding.severity,
+      review_status: toReviewStatus(finding.final_ruling),
+      title_ar: finding.title_ar,
+      description_ar: null,
+      rationale_ar: finding.rationale ?? null,
+      evidence_snippet: finding.evidence_snippet,
+      manual_comment: null,
+      page_number: finding.page_number ?? null,
+      start_offset_global: finding.start_offset_global ?? null,
+      end_offset_global: finding.end_offset_global ?? null,
+      start_offset_page: null,
+      end_offset_page: null,
+      anchor_status:
+        finding.page_number != null && finding.start_offset_global != null && finding.end_offset_global != null
+          ? ("exact" as const)
+          : ("unresolved" as const),
+      anchor_method:
+        finding.page_number != null && finding.start_offset_global != null && finding.end_offset_global != null
+          ? "canonical_summary"
+          : null,
+      anchor_text: finding.evidence_snippet ?? null,
+      anchor_confidence: finding.confidence ?? null,
+      is_manual: false,
+      is_hidden: false,
+      include_in_report: true,
+      created_from_job_id: summary.job_id,
+    }));
 
   const hints = (summary.report_hints ?? []).map((finding) => ({
     job_id: summary.job_id,
