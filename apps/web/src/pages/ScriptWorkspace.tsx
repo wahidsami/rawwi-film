@@ -1975,6 +1975,9 @@ export function ScriptWorkspace() {
   const missingReportReason = lang === 'ar'
     ? 'لا يمكن تنفيذ هذا الإجراء قبل تشغيل التحليل وإنشاء أول تقرير.'
     : 'You cannot do this before running the analysis and generating the first report.';
+  const lockedAcceptedReportReason = lang === 'ar'
+    ? 'تم قبول التقرير المحدد. أعده إلى المراجعة أولاً لتفعيل قراري القبول والرفض في مساحة العمل.'
+    : 'The selected report has been approved. Send it back to review first to re-enable approve and reject in the workspace.';
   const effectiveDecisionCapabilities = useMemo(() => {
     const baseCapabilities =
       showDecisionBar && decisionCan != null
@@ -1990,6 +1993,17 @@ export function ScriptWorkspace() {
       reasonIfDisabled: missingReportReason,
     };
   }, [showDecisionBar, decisionCan, user, script, hasPermission, hasGeneratedReport, missingReportReason]);
+  const selectedWorkspaceReportReviewStatus =
+    selectedReportSummary?.reviewStatus ?? selectedReportForHighlights?.reviewStatus ?? null;
+  const finalDecisionCapabilities = useMemo(() => {
+    if (!effectiveDecisionCapabilities) return null;
+    if (selectedWorkspaceReportReviewStatus !== 'approved') return effectiveDecisionCapabilities;
+    return {
+      canApprove: false,
+      canReject: false,
+      reasonIfDisabled: lockedAcceptedReportReason,
+    };
+  }, [effectiveDecisionCapabilities, selectedWorkspaceReportReviewStatus, lockedAcceptedReportReason]);
 
   const workspaceCanonicalHintIds = useMemo(
     () =>
@@ -2156,6 +2170,24 @@ export function ScriptWorkspace() {
     try {
       await reportsApi.review(reportId, status, resolvedNotes);
       toast.success(lang === 'ar' ? 'تم تحديث حالة المراجعة' : 'Review status updated');
+      if (selectedReportForHighlights?.id === reportId) {
+        setSelectedReportForHighlights((prev) =>
+          prev && prev.id === reportId
+            ? { ...prev, reviewStatus: status }
+            : prev
+        );
+        setSelectedReportSummary((prev) =>
+          prev && prev.id === reportId
+            ? {
+                ...prev,
+                reviewStatus: status,
+                reviewNotes: resolvedNotes || prev.reviewNotes,
+                reviewedAt: new Date().toISOString(),
+                reviewedBy: user?.id ?? prev.reviewedBy ?? null,
+              }
+            : prev
+        );
+      }
       loadReportHistory();
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to update review');
@@ -5526,7 +5558,7 @@ export function ScriptWorkspace() {
                 currentStatus={script.status || 'draft'}
                 relatedReportId={selectedReportForHighlights?.id}
                 compact
-                capabilities={effectiveDecisionCapabilities}
+                capabilities={finalDecisionCapabilities}
                 onDecisionMade={(newStatus) => {
                   updateScript(script.id, { status: newStatus });
                   if (scriptFetched && scriptFetched.id === script.id) setScriptFetched((s) => s ? { ...s, status: newStatus } : null);
