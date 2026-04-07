@@ -2962,67 +2962,9 @@ export function ScriptWorkspace() {
     () => ANALYSIS_PIPELINE_OPTIONS.find((option) => option.value === (analysisJob?.pipelineVersion ?? analysisPipelineVersion)) ?? ANALYSIS_PIPELINE_OPTIONS[0],
     [analysisJob?.pipelineVersion, analysisPipelineVersion]
   );
-  const selectedMethodologyMeta = useMemo(() => {
-    const pipeline = analysisJob?.pipelineVersion ?? analysisPipelineVersion;
-    const mode = analysisJob?.analysisMode ?? analysisModeProfile;
-    const engine =
-      analysisJob?.analysisEngine ??
-      (pipeline === 'v2' ? (mode === 'turbo' ? 'v2' : 'hybrid') : null);
-    const hybridMode =
-      analysisJob?.hybridMode ??
-      (pipeline === 'v2'
-        ? (mode === 'quality' ? 'enforce' : mode === 'balanced' ? 'shadow' : 'off')
-        : null);
-
-    if (pipeline !== 'v2') {
-      return {
-        labelAr: 'الوضع الحالي',
-        labelEn: 'Current stable flow',
-        hintAr: 'يعتمد على إعدادات العامل الحالية في الإنتاج.',
-        hintEn: 'Uses the worker’s current production-safe behavior.',
-      };
-    }
-
-    if (engine !== 'hybrid' || hybridMode === 'off') {
-      return {
-        labelAr: 'كاشف فقط',
-        labelEn: 'Detector only',
-        hintAr: 'يمر على الكشف والتثبيت دون مراجعة هجينة إضافية.',
-        hintEn: 'Runs detection and pinning without extra hybrid review.',
-      };
-    }
-
-    if (hybridMode === 'enforce') {
-      return {
-        labelAr: 'هجين مفروض',
-        labelEn: 'Hybrid enforce',
-        hintAr: 'يطبّق مراجعة السياق والمدقق على النتيجة النهائية.',
-        hintEn: 'Applies context review and auditor output to the final result.',
-      };
-    }
-
-    return {
-      labelAr: 'هجين ظلّي',
-      labelEn: 'Hybrid shadow',
-      hintAr: 'يشغّل المراجعة الهجينة للمقارنة مع إبقاء النتيجة الأساسية هي المعروضة.',
-      hintEn: 'Runs hybrid review for comparison while keeping the baseline output persisted.',
-    };
-  }, [
-    analysisJob?.analysisEngine,
-    analysisJob?.analysisMode,
-    analysisJob?.hybridMode,
-    analysisJob?.pipelineVersion,
-    analysisModeProfile,
-    analysisPipelineVersion,
-  ]);
   const activeChunkTimerValue = activeChunkAgeLabel
     ? activeChunkAgeLabel.replace(/^زمن الجزء الجاري:\s*/, '').replace(/^Active chunk time:\s*/, '')
     : '—';
-  const findingsCountSoFar = useMemo(() => {
-    const visibleReviewCount = reportReviewFindings.filter((finding) => !finding.isHidden).length;
-    return visibleReviewCount > 0 ? visibleReviewCount : reportFindings.length;
-  }, [reportReviewFindings, reportFindings]);
-
   const handlePauseAnalysis = useCallback(async () => {
     if (!analysisJobId || analysisControlBusy) return;
     setAnalysisControlBusy('pause');
@@ -6411,7 +6353,7 @@ export function ScriptWorkspace() {
               />
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-2xl border border-border bg-background/60 p-4">
                 <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'نمط التحليل' : 'Analysis mode'}</p>
                 <p className="text-base font-semibold text-text-main">
@@ -6422,12 +6364,6 @@ export function ScriptWorkspace() {
                 <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المدة' : 'Elapsed'}</p>
                 <p className="text-base font-semibold text-text-main">
                   {analysisElapsedLabel ? analysisElapsedLabel.replace(/^المدة:\s*/, '').replace(/^Elapsed:\s*/, '') : '—'}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border bg-background/60 p-4">
-                <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المنهجية' : 'Methodology'}</p>
-                <p className="text-base font-semibold text-text-main">
-                  {lang === 'ar' ? selectedMethodologyMeta.labelAr : selectedMethodologyMeta.labelEn}
                 </p>
               </div>
               <div className="rounded-2xl border border-border bg-background/60 p-4">
@@ -6447,15 +6383,6 @@ export function ScriptWorkspace() {
                 {activePhaseLabel && (
                   <p className="mt-1 text-xs text-text-muted">{activePhaseLabel}</p>
                 )}
-              </div>
-              <div className="rounded-2xl border border-border bg-background/60 p-4">
-                <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'إجمالي الملاحظات حتى الآن' : 'Findings so far'}</p>
-                <p className="text-base font-semibold text-text-main" dir="ltr">{findingsCountSoFar}</p>
-                <p className="mt-1 text-xs text-text-muted">
-                  {lang === 'ar'
-                    ? 'يتحدث هذا الرقم عندما تتوفر طبقة التقرير الحالية داخل مساحة العمل.'
-                    : 'This updates when the current report layer is available in the workspace.'}
-                </p>
               </div>
             </div>
 
