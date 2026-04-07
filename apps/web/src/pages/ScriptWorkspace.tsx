@@ -2734,18 +2734,9 @@ export function ScriptWorkspace() {
   const progressDisplayPair = `${progressDisplayDone} / ${progressDisplayTotal}`;
   const activeChunk = chunkStatuses.find((c) => c.status === 'judging') ?? null;
   const activeChunkNumber = activeChunk ? activeChunk.chunkIndex + 1 : null;
-  const activeChunkPageLabel =
-    activeChunk != null &&
-    (activeChunk.pageNumberMin != null || activeChunk.pageNumberMax != null)
-      ? activeChunk.pageNumberMin === activeChunk.pageNumberMax ||
-          activeChunk.pageNumberMax == null
-        ? lang === 'ar'
-          ? `صفحة ${activeChunk.pageNumberMin ?? activeChunk.pageNumberMax}`
-          : `Page ${activeChunk.pageNumberMin ?? activeChunk.pageNumberMax}`
-        : lang === 'ar'
-          ? `صفحات ${activeChunk.pageNumberMin}–${activeChunk.pageNumberMax}`
-          : `Pages ${activeChunk.pageNumberMin}–${activeChunk.pageNumberMax}`
-      : null;
+  const activeChunkLabel = activeChunkNumber != null
+    ? (lang === 'ar' ? `الجزء ${activeChunkNumber}` : `Chunk ${activeChunkNumber}`)
+    : null;
 
   const activePhaseLabel = useMemo(() => {
     const p = activeChunk?.processingPhase;
@@ -2888,21 +2879,16 @@ export function ScriptWorkspace() {
   }, [chunkStatuses]);
 
   const previewContextLabel = useMemo(() => {
-    if (activeChunkPageLabel) return activeChunkPageLabel;
-    if (latestCompletedChunk && (latestCompletedChunk.pageNumberMin != null || latestCompletedChunk.pageNumberMax != null)) {
-      if (latestCompletedChunk.pageNumberMin === latestCompletedChunk.pageNumberMax || latestCompletedChunk.pageNumberMax == null) {
-        return lang === 'ar'
-          ? `آخر جزء مكتمل: صفحة ${latestCompletedChunk.pageNumberMin ?? latestCompletedChunk.pageNumberMax}`
-          : `Last completed chunk: page ${latestCompletedChunk.pageNumberMin ?? latestCompletedChunk.pageNumberMax}`;
-      }
+    if (activeChunkLabel) return activeChunkLabel;
+    if (latestCompletedChunk) {
       return lang === 'ar'
-        ? `آخر جزء مكتمل: صفحات ${latestCompletedChunk.pageNumberMin}–${latestCompletedChunk.pageNumberMax}`
-        : `Last completed chunk: pages ${latestCompletedChunk.pageNumberMin}–${latestCompletedChunk.pageNumberMax}`;
+        ? `آخر جزء مكتمل: الجزء ${latestCompletedChunk.chunkIndex + 1}`
+        : `Last completed chunk: chunk ${latestCompletedChunk.chunkIndex + 1}`;
     }
     return lang === 'ar'
       ? 'يعرض هذا القسم النص الجاري فحصه أو آخر جزء اكتمل.'
       : 'This panel shows the active chunk text or the most recently completed one.';
-  }, [activeChunkPageLabel, latestCompletedChunk, lang]);
+  }, [activeChunkLabel, latestCompletedChunk, lang]);
 
   const analysisStatusCaption = useMemo(() => {
     if (isSuccessfulJobStatus(analysisJob?.status)) {
@@ -6367,7 +6353,7 @@ export function ScriptWorkspace() {
                 </p>
               </div>
               <div className="rounded-2xl border border-border bg-background/60 p-4">
-                <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الأجزاء / الصفحات' : 'Chunks / pages'}</p>
+                <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'تقدم الأجزاء' : 'Chunk progress'}</p>
                 <p className="text-base font-semibold text-text-main" dir="ltr">
                   {analysisJob ? progressDisplayPair : '—'}
                 </p>
@@ -6409,10 +6395,10 @@ export function ScriptWorkspace() {
                 </div>
                 <div className="mt-3 grid gap-2 text-sm text-text-main">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-text-muted">{lang === 'ar' ? 'الموقع الحالي' : 'Current location'}</span>
+                    <span className="text-text-muted">{lang === 'ar' ? 'الجزء الحالي' : 'Current chunk'}</span>
                     <span className="text-end">
-                      {activeChunkPageLabel
-                        ? activeChunkPageLabel
+                      {activeChunkLabel
+                        ? activeChunkLabel
                         : latestCompletedChunk
                           ? previewContextLabel
                           : (lang === 'ar' ? 'غير متاح بعد' : 'Not available yet')}
