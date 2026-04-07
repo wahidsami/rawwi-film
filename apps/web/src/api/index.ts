@@ -339,6 +339,26 @@ export interface ReclassifyFindingBody {
   atomId?: string | null;
   severity: string;
   manualComment?: string | null;
+  evidenceSnippet?: string | null;
+  rationaleAr?: string | null;
+}
+
+export interface ValidateFindingSnippetBody {
+  findingId: string;
+  snippet: string;
+}
+
+export interface ValidateFindingSnippetResponse {
+  ok: boolean;
+  found: boolean;
+  snippet?: string;
+  pageNumber?: number | null;
+  startOffsetGlobal?: number;
+  endOffsetGlobal?: number;
+  startOffsetPage?: number | null;
+  endOffsetPage?: number | null;
+  matchCount?: number;
+  error?: string;
 }
 
 export interface AnalysisReviewFinding {
@@ -431,6 +451,8 @@ export const findingsApi = {
       throw error;
     }
   },
+  validateFindingSnippet: (body: ValidateFindingSnippetBody): Promise<ValidateFindingSnippetResponse> =>
+    httpClient.post('/findings/validate-snippet', body),
   /** Create a manual finding (POST /findings/manual). */
   createManual: (body: CreateManualFindingBody): Promise<ManualFindingResponse> =>
     httpClient.post('/findings/manual', body),

@@ -231,8 +231,20 @@ type ExistingReviewFindingRow = {
   primary_atom_id: string | null;
   severity: string;
   review_status: "violation" | "approved" | "needs_review";
+  title_ar: string;
+  description_ar: string | null;
+  rationale_ar: string | null;
   evidence_snippet: string;
   manual_comment: string | null;
+  page_number: number | null;
+  start_offset_global: number | null;
+  end_offset_global: number | null;
+  start_offset_page: number | null;
+  end_offset_page: number | null;
+  anchor_status: "exact" | "unresolved";
+  anchor_method: string | null;
+  anchor_text: string | null;
+  anchor_confidence: number | null;
   approved_reason: string | null;
   include_in_report: boolean;
   reviewed_by: string | null;
@@ -474,7 +486,7 @@ async function loadPriorReviewFindingRows(
 ): Promise<ExistingReviewFindingRow[]> {
   const { data, error } = await supabase
     .from("analysis_review_findings")
-    .select("id, report_id, script_id, version_id, canonical_finding_id, source_kind, primary_article_id, primary_atom_id, severity, review_status, evidence_snippet, manual_comment, approved_reason, include_in_report, reviewed_by, reviewed_at, edited_by, edited_at, is_hidden, is_manual, created_at, updated_at")
+    .select("id, report_id, script_id, version_id, canonical_finding_id, source_kind, primary_article_id, primary_atom_id, severity, review_status, title_ar, description_ar, rationale_ar, evidence_snippet, manual_comment, page_number, start_offset_global, end_offset_global, start_offset_page, end_offset_page, anchor_status, anchor_method, anchor_text, anchor_confidence, approved_reason, include_in_report, reviewed_by, reviewed_at, edited_by, edited_at, is_hidden, is_manual, created_at, updated_at")
     .eq("script_id", scriptId)
     .eq("version_id", versionId)
     .neq("report_id", reportId)
@@ -500,7 +512,20 @@ function applyPriorReviewState(
     primary_atom_id: prior.primary_atom_id ?? row.primary_atom_id,
     severity: prior.severity || row.severity,
     review_status: prior.review_status || row.review_status,
+    title_ar: prior.title_ar || row.title_ar,
+    description_ar: prior.description_ar ?? row.description_ar,
+    rationale_ar: prior.rationale_ar ?? row.rationale_ar,
+    evidence_snippet: prior.evidence_snippet || row.evidence_snippet,
     manual_comment: prior.manual_comment ?? row.manual_comment,
+    page_number: prior.page_number ?? row.page_number,
+    start_offset_global: prior.start_offset_global ?? row.start_offset_global,
+    end_offset_global: prior.end_offset_global ?? row.end_offset_global,
+    start_offset_page: prior.start_offset_page ?? row.start_offset_page,
+    end_offset_page: prior.end_offset_page ?? row.end_offset_page,
+    anchor_status: prior.anchor_status ?? row.anchor_status,
+    anchor_method: prior.anchor_method ?? row.anchor_method,
+    anchor_text: prior.anchor_text ?? row.anchor_text,
+    anchor_confidence: prior.anchor_confidence ?? row.anchor_confidence,
     approved_reason: prior.approved_reason ?? null,
     include_in_report: prior.include_in_report ?? row.include_in_report,
     reviewed_by: prior.reviewed_by ?? null,

@@ -243,6 +243,17 @@ async function syncReviewClassificationFromRawFinding(
     atomId: string | null;
     severity: string;
     manualComment: string | null;
+    rationaleAr?: string | null;
+    evidenceSnippet?: string;
+    pageNumber?: number | null;
+    startOffsetGlobal?: number | null;
+    endOffsetGlobal?: number | null;
+    startOffsetPage?: number | null;
+    endOffsetPage?: number | null;
+    anchorStatus?: "exact" | "unresolved";
+    anchorMethod?: string | null;
+    anchorText?: string | null;
+    anchorConfidence?: number | null;
   },
 ): Promise<void> {
   const jobId = String(row.job_id ?? "").trim();
@@ -259,6 +270,17 @@ async function syncReviewClassificationFromRawFinding(
       primary_atom_id: updates.atomId,
       severity: updates.severity,
       manual_comment: updates.manualComment,
+      rationale_ar: updates.rationaleAr ?? null,
+      evidence_snippet: updates.evidenceSnippet,
+      page_number: updates.pageNumber ?? null,
+      start_offset_global: updates.startOffsetGlobal ?? null,
+      end_offset_global: updates.endOffsetGlobal ?? null,
+      start_offset_page: updates.startOffsetPage ?? null,
+      end_offset_page: updates.endOffsetPage ?? null,
+      anchor_status: updates.anchorStatus ?? "unresolved",
+      anchor_method: updates.anchorMethod ?? null,
+      anchor_text: updates.anchorText ?? updates.evidenceSnippet ?? null,
+      anchor_confidence: updates.anchorConfidence ?? null,
       edited_by: uid,
       edited_at: nowIso,
       updated_at: nowIso,
@@ -351,6 +373,108 @@ function findNearestRawOccurrence(content: string, needle: string, hintStart: nu
     searchFrom = idx + Math.max(1, target.length);
   }
   return bestIndex;
+}
+
+function escapeRegexLiteral(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildWhitespaceFlexibleRegex(snippet: string): RegExp | null {
+  const trimmed = snippet.trim();
+  if (!trimmed) return null;
+  const parts = trimmed.split(/\s+/).filter(Boolean).map(escapeRegexLiteral);
+  if (parts.length === 0) return null;
+  return new RegExp(parts.join("\\s+"), "gu");
+}
+
+function findSnippetOccurrences(content: string, snippet: string): Array<{ start: number; end: number; text: string }> {
+  const regex = buildWhitespaceFlexibleRegex(snippet);
+  if (!regex) return [];
+  const matches: Array<{ start: number; end: number; text: string }> = [];
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(content)) !== null) {
+    const text = match[0] ?? "";
+    const start = match.index;
+    const end = start + text.length;
+    matches.push({ start, end, text });
+    if (regex.lastIndex <= match.index) regex.lastIndex = match.index + 1;
+  }
+  return matches;
+}
+
+function pickBestSnippetOccurrence(
+  content: string,
+  snippet: string,
+  hintStart: number,
+): { start: number; end: number; text: string; matchCount: number } | null {
+  const matches = findSnippetOccurrences(content, snippet);
+  if (matches.length === 0) return null;
+  const best = matches.reduce((currentBest, candidate) => {
+    const currentDistance = Math.abs(currentBest.start - hintStart);
+    const candidateDistance = Math.abs(candidate.start - hintStart);
+    return candidateDistance < currentDistance ? candidate : currentBest;
+  });
+  return {
+    ...best,
+    matchCount: matches.length,
+  };
+}
+
+async function resolveSnippetBinding(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  versionId: string,
+  snippet: string,
+  hintStart: number,
+): Promise<{
+  snippet: string;
+  startOffsetGlobal: number;
+  endOffsetGlobal: number;
+  pageNumber: number | null;
+  startOffsetPage: number | null;
+  endOffsetPage: number | null;
+  anchorStatus: "exact";
+  anchorMethod: string;
+  anchorText: string;
+  anchorConfidence: number;
+  matchCount: number;
+} | null> {
+  const { data: textRow, error: textErr } = await supabase
+    .from("script_text")
+    .select("content")
+    .eq("version_id", versionId)
+    .maybeSingle();
+  if (textErr || !textRow) return null;
+
+  const content = (textRow as { content: string }).content ?? "";
+  const resolved = pickBestSnippetOccurrence(content, snippet, hintStart);
+  if (!resolved) return null;
+
+  const { data: pageRows } = await supabase
+    .from("script_pages")
+    .select("page_number, content")
+    .eq("version_id", versionId)
+    .order("page_number", { ascending: true });
+  const { offsetToPageNumber, computePageLocalSpan } = await import("../_shared/offsetToPage.ts");
+  const pr = (pageRows ?? []) as Array<{ page_number: number; content: string }>;
+  const pageNumber = pr.length > 0 ? offsetToPageNumber(resolved.start, pr) : null;
+  const pageLocal =
+    pr.length > 0
+      ? computePageLocalSpan(resolved.start, resolved.end, pr)
+      : { start_offset_page: null, end_offset_page: null };
+
+  return {
+    snippet: resolved.text,
+    startOffsetGlobal: resolved.start,
+    endOffsetGlobal: resolved.end,
+    pageNumber,
+    startOffsetPage: pageLocal.start_offset_page,
+    endOffsetPage: pageLocal.end_offset_page,
+    anchorStatus: "exact",
+    anchorMethod: "edited_snippet_match",
+    anchorText: resolved.text,
+    anchorConfidence: 1,
+    matchCount: resolved.matchCount,
+  };
 }
 
 async function resolveManualAtomId(
@@ -743,6 +867,8 @@ Deno.serve(async (req: Request) => {
         atomId?: string | null;
         severity?: string;
         manualComment?: string | null;
+        evidenceSnippet?: string | null;
+        rationaleAr?: string | null;
       };
       try {
         body = await req.json();
@@ -759,6 +885,8 @@ Deno.serve(async (req: Request) => {
       const atomId = body.atomId?.trim() || null;
       const severity = body.severity?.trim().toLowerCase();
       const manualComment = body.manualComment?.trim() ?? null;
+      const evidenceSnippetInput = body.evidenceSnippet?.trim() ?? null;
+      const rationaleAr = body.rationaleAr?.trim() ?? null;
 
       if (!findingId) return json({ error: "findingId required" }, 400);
       if (articleId == null || typeof articleId !== "number") {
@@ -775,7 +903,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: finding } = await supabase
         .from("analysis_findings")
-        .select("id, job_id, script_id, article_id, atom_id, severity, manual_comment, location, source, evidence_snippet")
+        .select("id, job_id, script_id, version_id, article_id, atom_id, severity, manual_comment, rationale_ar, location, source, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, page_number, anchor_method")
         .eq("id", findingId)
         .maybeSingle();
       if (!finding) return json({ error: "Finding not found" }, 404);
@@ -784,11 +912,38 @@ Deno.serve(async (req: Request) => {
         id: string;
         job_id: string;
         script_id: string;
+        version_id: string | null;
         article_id: number;
         atom_id: string | null;
         severity: string;
         manual_comment: string | null;
+        rationale_ar?: string | null;
+        evidence_snippet: string;
+        start_offset_global?: number | null;
+        end_offset_global?: number | null;
+        start_offset_page?: number | null;
+        end_offset_page?: number | null;
+        page_number?: number | null;
+        anchor_method?: string | null;
       };
+
+      let resolvedBinding: Awaited<ReturnType<typeof resolveSnippetBinding>> | null = null;
+      const snippetChanged =
+        evidenceSnippetInput != null &&
+        compactWhitespace(evidenceSnippetInput) !== compactWhitespace(f.evidence_snippet ?? "");
+      if (snippetChanged) {
+        const versionId = String(f.version_id ?? "").trim();
+        if (!versionId) return json({ error: "Version not found for this finding" }, 400);
+        resolvedBinding = await resolveSnippetBinding(
+          supabase,
+          versionId,
+          evidenceSnippetInput,
+          typeof f.start_offset_global === "number" ? f.start_offset_global : 0,
+        );
+        if (!resolvedBinding) {
+          return json({ error: "The entered snippet was not found in the document." }, 400);
+        }
+      }
 
       const { data: job } = await supabase
         .from("analysis_jobs")
@@ -801,6 +956,16 @@ Deno.serve(async (req: Request) => {
 
       const actorRole = "user";
       const nowIso = new Date().toISOString();
+      const nextEvidenceSnippet = resolvedBinding?.snippet ?? evidenceSnippetInput ?? f.evidence_snippet;
+      const nextStartOffsetGlobal = resolvedBinding?.startOffsetGlobal ?? (f.start_offset_global ?? null);
+      const nextEndOffsetGlobal = resolvedBinding?.endOffsetGlobal ?? (f.end_offset_global ?? null);
+      const nextPageNumber = resolvedBinding?.pageNumber ?? (f.page_number ?? null);
+      const nextStartOffsetPage = resolvedBinding?.startOffsetPage ?? (f.start_offset_page ?? null);
+      const nextEndOffsetPage = resolvedBinding?.endOffsetPage ?? (f.end_offset_page ?? null);
+      const nextAnchorStatus = resolvedBinding?.anchorStatus ?? "exact";
+      const nextAnchorMethod = resolvedBinding?.anchorMethod ?? (f.anchor_method ?? "stored_offsets");
+      const nextAnchorText = resolvedBinding?.anchorText ?? nextEvidenceSnippet;
+      const nextAnchorConfidence = resolvedBinding?.anchorConfidence ?? 1;
       const { error: updErr } = await supabase
         .from("analysis_findings")
         .update({
@@ -808,6 +973,23 @@ Deno.serve(async (req: Request) => {
           atom_id: atomResolution.normalizedAtomId,
           severity,
           manual_comment: manualComment,
+          rationale_ar: rationaleAr,
+          evidence_snippet: nextEvidenceSnippet,
+          page_number: nextPageNumber,
+          start_offset_global: nextStartOffsetGlobal,
+          end_offset_global: nextEndOffsetGlobal,
+          start_offset_page: nextStartOffsetPage,
+          end_offset_page: nextEndOffsetPage,
+          anchor_status: nextAnchorStatus,
+          anchor_method: nextAnchorMethod,
+          anchor_page_number: nextPageNumber,
+          anchor_start_offset_page: nextStartOffsetPage,
+          anchor_end_offset_page: nextEndOffsetPage,
+          anchor_start_offset_global: nextStartOffsetGlobal,
+          anchor_end_offset_global: nextEndOffsetGlobal,
+          anchor_text: nextAnchorText,
+          anchor_confidence: nextAnchorConfidence,
+          anchor_updated_at: nowIso,
           reviewed_by: uid,
           reviewed_at: nowIso,
           reviewed_role: actorRole,
@@ -827,6 +1009,17 @@ Deno.serve(async (req: Request) => {
           atomId: atomResolution.normalizedAtomId,
           severity,
           manualComment,
+          rationaleAr,
+          evidenceSnippet: nextEvidenceSnippet,
+          pageNumber: nextPageNumber,
+          startOffsetGlobal: nextStartOffsetGlobal,
+          endOffsetGlobal: nextEndOffsetGlobal,
+          startOffsetPage: nextStartOffsetPage,
+          endOffsetPage: nextEndOffsetPage,
+          anchorStatus: nextAnchorStatus,
+          anchorMethod: nextAnchorMethod,
+          anchorText: nextAnchorText,
+          anchorConfidence: nextAnchorConfidence,
         },
       );
 
@@ -842,10 +1035,14 @@ Deno.serve(async (req: Request) => {
           oldArticleId: f.article_id,
           oldAtomId: f.atom_id,
           oldSeverity: f.severity,
+          oldEvidenceSnippet: f.evidence_snippet,
           newArticleId: articleId,
           newAtomId: atomResolution.normalizedAtomId,
           newSeverity: severity,
+          newEvidenceSnippet: nextEvidenceSnippet,
           manualComment,
+          rationaleAr,
+          snippetMatchCount: resolvedBinding?.matchCount ?? 1,
         },
       }).catch((e) => console.warn("[findings] reclassify audit canonical:", e));
 
@@ -869,6 +1066,68 @@ Deno.serve(async (req: Request) => {
         finding: camelFinding(updatedRow as Record<string, unknown>),
         atomMappingWarning: atomResolution.warning,
         reportAggregates: agg,
+      });
+    }
+
+    // ── POST /findings/validate-snippet ──
+    if (method === "POST" && rest === "validate-snippet") {
+      let body: {
+        findingId?: string;
+        snippet?: string | null;
+      };
+      try {
+        body = await req.json();
+      } catch {
+        return json({ error: "Invalid JSON" }, 400);
+      }
+
+      const findingId = body.findingId?.trim();
+      const snippet = body.snippet?.trim() ?? "";
+      if (!findingId) return json({ error: "findingId required" }, 400);
+      if (!snippet) return json({ error: "snippet required" }, 400);
+
+      const { data: finding } = await supabase
+        .from("analysis_findings")
+        .select("id, job_id, version_id, start_offset_global")
+        .eq("id", findingId)
+        .maybeSingle();
+      if (!finding) return json({ error: "Finding not found" }, 404);
+
+      const jobId = String((finding as Record<string, unknown>).job_id ?? "").trim();
+      const versionId = String((finding as Record<string, unknown>).version_id ?? "").trim();
+      if (!jobId || !versionId) return json({ error: "Finding is missing version context" }, 400);
+
+      const { data: job } = await supabase
+        .from("analysis_jobs")
+        .select("created_by")
+        .eq("id", jobId)
+        .maybeSingle();
+      if (!job) return json({ error: "Job not found" }, 404);
+      const isOwner = (job as { created_by?: string | null }).created_by === uid;
+      if (!isAdmin && !isOwner) return json({ error: "Forbidden" }, 403);
+
+      const resolvedBinding = await resolveSnippetBinding(
+        supabase,
+        versionId,
+        snippet,
+        typeof (finding as Record<string, unknown>).start_offset_global === "number"
+          ? Number((finding as Record<string, unknown>).start_offset_global)
+          : 0,
+      );
+      if (!resolvedBinding) {
+        return json({ ok: true, found: false, error: "The entered snippet was not found in the document." });
+      }
+
+      return json({
+        ok: true,
+        found: true,
+        snippet: resolvedBinding.snippet,
+        pageNumber: resolvedBinding.pageNumber,
+        startOffsetGlobal: resolvedBinding.startOffsetGlobal,
+        endOffsetGlobal: resolvedBinding.endOffsetGlobal,
+        startOffsetPage: resolvedBinding.startOffsetPage,
+        endOffsetPage: resolvedBinding.endOffsetPage,
+        matchCount: resolvedBinding.matchCount,
       });
     }
 

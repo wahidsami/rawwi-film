@@ -11,7 +11,7 @@ import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
 import { DocumentImportModal } from '@/components/import/DocumentImportModal';
-import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square } from 'lucide-react';
+import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square, Search } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getActionablePolicyArticles } from '@/data/policyMap';
 import { DecisionBar } from '@/components/DecisionBar';
@@ -1893,10 +1893,14 @@ export function ScriptWorkspace() {
   } | null>(null);
   const [editReportFindingModal, setEditReportFindingModal] = useState<AnalysisFinding | null>(null);
   const [editReportFindingSaving, setEditReportFindingSaving] = useState(false);
+  const [editReportFindingValidatingSnippet, setEditReportFindingValidatingSnippet] = useState(false);
+  const [editReportFindingSnippetValidation, setEditReportFindingSnippetValidation] = useState<string | null>(null);
   const [editReportFindingForm, setEditReportFindingForm] = useState({
     articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
     atomId: '',
     severity: 'medium',
+    evidenceSnippet: '',
+    rationaleAr: '',
     manualComment: '',
   });
   const [selectedReportFindingIds, setSelectedReportFindingIds] = useState<string[]>([]);
@@ -2086,8 +2090,11 @@ export function ScriptWorkspace() {
       articleId: String(editReportFindingModal.articleId || DEFAULT_ACTIONABLE_ARTICLE_ID),
       atomId: editReportFindingModal.atomId ?? '',
       severity: (editReportFindingModal.severity || 'medium').toLowerCase(),
+      evidenceSnippet: editReportFindingModal.evidenceSnippet ?? '',
+      rationaleAr: editReportFindingModal.rationaleAr ?? '',
       manualComment: editReportFindingModal.manualComment ?? '',
     });
+    setEditReportFindingSnippetValidation(null);
   }, [editReportFindingModal]);
 
   const loadReportHistory = useCallback(async () => {
@@ -2335,6 +2342,10 @@ export function ScriptWorkspace() {
 
   const handleEditReportFindingSubmit = useCallback(async () => {
     if (!editReportFindingModal) return;
+    if (!editReportFindingForm.evidenceSnippet.trim()) {
+      toast.error(lang === 'ar' ? 'النص المقتبس مطلوب' : 'Snippet text is required');
+      return;
+    }
     setEditReportFindingSaving(true);
     try {
       const normalizedAtomId = sanitizeAtomSelection(editReportFindingForm.articleId, editReportFindingForm.atomId);
@@ -2343,6 +2354,8 @@ export function ScriptWorkspace() {
         articleId: parseInt(editReportFindingForm.articleId, 10) || DEFAULT_ACTIONABLE_ARTICLE_ID,
         atomId: normalizedAtomId,
         severity: editReportFindingForm.severity,
+        evidenceSnippet: editReportFindingForm.evidenceSnippet?.trim() || null,
+        rationaleAr: editReportFindingForm.rationaleAr?.trim() || null,
         manualComment: editReportFindingForm.manualComment?.trim() || null,
       });
       if (res.finding) {
@@ -2366,6 +2379,7 @@ export function ScriptWorkspace() {
       } else {
         toast.success(lang === 'ar' ? 'تم تحديث التصنيف' : 'Finding classification updated');
       }
+      setEditReportFindingSnippetValidation(null);
       setEditReportFindingModal(null);
     } catch (err: any) {
       toast.error(err?.message ?? (lang === 'ar' ? 'تعذر تحديث التصنيف' : 'Failed to update finding'));
@@ -2373,6 +2387,45 @@ export function ScriptWorkspace() {
       setEditReportFindingSaving(false);
     }
   }, [editReportFindingModal, editReportFindingForm, lang, reloadSelectedReportReviewLayer]);
+
+  const handleValidateEditedReportFindingSnippet = useCallback(async () => {
+    if (!editReportFindingModal) return;
+    const snippet = editReportFindingForm.evidenceSnippet.trim();
+    if (!snippet) {
+      toast.error(lang === 'ar' ? 'أدخل النص أولاً للتحقق منه' : 'Enter snippet text first');
+      return;
+    }
+    setEditReportFindingValidatingSnippet(true);
+    try {
+      const res = await findingsApi.validateFindingSnippet({
+        findingId: editReportFindingModal.id,
+        snippet,
+      });
+      if (!res.found) {
+        setEditReportFindingSnippetValidation(lang === 'ar' ? 'النص غير موجود في المستند.' : 'Snippet not found in the document.');
+        toast.error(lang === 'ar' ? 'النص غير موجود في المستند' : 'Snippet not found in the document');
+        return;
+      }
+      if (res.snippet) {
+        setEditReportFindingForm((prev) => ({ ...prev, evidenceSnippet: res.snippet ?? prev.evidenceSnippet }));
+      }
+      const locationLabel = res.pageNumber != null
+        ? (lang === 'ar' ? `تم العثور على النص في الصفحة ${res.pageNumber}.` : `Snippet found on page ${res.pageNumber}.`)
+        : (lang === 'ar' ? 'تم العثور على النص في المستند.' : 'Snippet found in the document.');
+      const duplicateLabel = (res.matchCount ?? 0) > 1
+        ? (lang === 'ar' ? ' سيتم ربط أقرب تطابق إلى الموقع الحالي.' : ' The nearest match to the current location will be used.')
+        : '';
+      const message = `${locationLabel}${duplicateLabel}`;
+      setEditReportFindingSnippetValidation(message);
+      toast.success(message);
+    } catch (err: any) {
+      const message = err?.message ?? (lang === 'ar' ? 'تعذر التحقق من النص' : 'Could not validate snippet');
+      setEditReportFindingSnippetValidation(message);
+      toast.error(message);
+    } finally {
+      setEditReportFindingValidatingSnippet(false);
+    }
+  }, [editReportFindingForm.evidenceSnippet, editReportFindingModal, lang]);
 
   // Restore saved highlight preference when report list is ready (persists across logout/login)
   useEffect(() => {
@@ -5973,7 +6026,7 @@ export function ScriptWorkspace() {
                             className="h-7 text-[10px] px-2"
                             onClick={() => setEditReportFindingModal(f)}
                           >
-                            {lang === 'ar' ? 'تعديل التصنيف' : 'Edit classification'}
+                            {lang === 'ar' ? 'تعديل' : 'Edit'}
                           </Button>
                           {f.reviewStatus !== 'approved' ? (
                             <Button
@@ -6790,13 +6843,51 @@ export function ScriptWorkspace() {
       <Modal
         isOpen={!!editReportFindingModal}
         onClose={() => setEditReportFindingModal(null)}
-        title={lang === 'ar' ? 'تعديل التصنيف' : 'Edit classification'}
+        title={lang === 'ar' ? 'تعديل الملاحظة' : 'Edit finding'}
         className="max-w-md"
       >
         <div className="space-y-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
           <div className="p-3 bg-background rounded-md border border-border text-sm text-text-main font-medium" dir="rtl">
             {editReportFindingModal?.evidenceSnippet || editReportFindingModal?.descriptionAr}
           </div>
+          <Textarea
+            label={lang === 'ar' ? 'النص المقتبس' : 'Snippet text'}
+            value={editReportFindingForm.evidenceSnippet}
+            onChange={(e) => {
+              setEditReportFindingForm((prev) => ({ ...prev, evidenceSnippet: e.target.value }));
+              setEditReportFindingSnippetValidation(null);
+            }}
+            placeholder={lang === 'ar' ? 'يجب أن يطابق كلمة أو جملة أو فقرة قصيرة موجودة في المستند.' : 'Must match an existing word, sentence, or short paragraph in the document.'}
+          />
+          <div className="flex items-center justify-between gap-3 rounded-md border border-border/70 bg-background/50 px-3 py-2 text-xs text-text-muted">
+            <span>
+              {lang === 'ar'
+                ? 'لن يُحفظ النص إلا إذا تم العثور عليه وربطه بموضعه داخل المستند.'
+                : 'The snippet will only save if it is found and rebound to the document.'}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1 shrink-0"
+              onClick={() => void handleValidateEditedReportFindingSnippet()}
+              disabled={editReportFindingValidatingSnippet || editReportFindingSaving}
+            >
+              {editReportFindingValidatingSnippet ? <Loader2 className="w-3 h-3 animate-spin" /> : <Search className="w-3 h-3" />}
+              {lang === 'ar' ? 'تحقق من النص' : 'Check snippet'}
+            </Button>
+          </div>
+          {editReportFindingSnippetValidation && (
+            <div className="rounded-md border border-border bg-background/50 px-3 py-2 text-xs text-text-muted">
+              {editReportFindingSnippetValidation}
+            </div>
+          )}
+
+          <Textarea
+            label={lang === 'ar' ? 'الملاحظة التفسيرية' : 'AI reason'}
+            value={editReportFindingForm.rationaleAr}
+            onChange={(e) => setEditReportFindingForm((prev) => ({ ...prev, rationaleAr: e.target.value }))}
+            placeholder={lang === 'ar' ? 'عدّل التعليل الظاهر في البطاقة…' : 'Edit the explanation shown on the card…'}
+          />
 
           <Select
             label={lang === 'ar' ? 'المادة (البند)' : 'Article'}

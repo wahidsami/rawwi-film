@@ -24,7 +24,7 @@ import { resolveStorageUrl } from '@/utils/storage';
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
-  CheckCircle2, Shield, FileDown, Info,
+  CheckCircle2, Shield, FileDown, Info, Search,
 } from 'lucide-react';
 
 import {
@@ -304,11 +304,15 @@ export function Results() {
   const [selectedFindingIds, setSelectedFindingIds] = useState<string[]>([]);
   const [editFindingModal, setEditFindingModal] = useState<AnalysisFinding | null>(null);
   const [editFindingSaving, setEditFindingSaving] = useState(false);
+  const [editFindingValidatingSnippet, setEditFindingValidatingSnippet] = useState(false);
+  const [editFindingSnippetValidation, setEditFindingSnippetValidation] = useState<string | null>(null);
   const [reportVisibilitySavingId, setReportVisibilitySavingId] = useState<string | null>(null);
   const [editFindingForm, setEditFindingForm] = useState({
     articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
     atomId: '',
     severity: 'medium',
+    evidenceSnippet: '',
+    rationaleAr: '',
     manualComment: '',
   });
 
@@ -318,8 +322,11 @@ export function Results() {
       articleId: String(editFindingModal.articleId || DEFAULT_ACTIONABLE_ARTICLE_ID),
       atomId: editFindingModal.atomId ?? '',
       severity: (editFindingModal.severity || 'medium').toLowerCase(),
+      evidenceSnippet: editFindingModal.evidenceSnippet ?? '',
+      rationaleAr: editFindingModal.rationaleAr ?? '',
       manualComment: editFindingModal.manualComment ?? '',
     });
+    setEditFindingSnippetValidation(null);
   }, [editFindingModal]);
 
   // Report-level review
@@ -1129,6 +1136,10 @@ export function Results() {
 
   const handleEditFindingSubmit = async () => {
     if (!editFindingModal || !report) return;
+    if (!editFindingForm.evidenceSnippet.trim()) {
+      toast.error(lang === 'ar' ? 'النص المقتبس مطلوب' : 'Snippet text is required');
+      return;
+    }
     setEditFindingSaving(true);
     try {
       const normalizedAtomId = sanitizeResultsAtomSelection(editFindingForm.articleId, editFindingForm.atomId);
@@ -1137,24 +1148,14 @@ export function Results() {
         articleId: parseInt(editFindingForm.articleId, 10) || DEFAULT_ACTIONABLE_ARTICLE_ID,
         atomId: normalizedAtomId,
         severity: editFindingForm.severity,
+        evidenceSnippet: editFindingForm.evidenceSnippet?.trim() || null,
+        rationaleAr: editFindingForm.rationaleAr?.trim() || null,
         manualComment: editFindingForm.manualComment?.trim() || null,
       });
 
       if (res.finding) {
         setFindings((prev) => prev.map((f) => (f.id === res.finding!.id ? res.finding! : f)));
-        setReviewFindings((prev) => prev.map((f) => {
-          const matched = matchRawFindingForReview(f);
-          if (!matched || matched.id !== res.finding!.id) return f;
-          return {
-            ...f,
-            primaryArticleId: res.finding!.articleId,
-            primaryAtomId: res.finding!.atomId ?? null,
-            severity: res.finding!.severity,
-            manualComment: res.finding!.manualComment ?? null,
-            editedBy: user?.id ?? null,
-            editedAt: new Date().toISOString(),
-          };
-        }));
+        await loadReviewFindings(report.id);
       }
 
       if (res.reportAggregates) {
@@ -1190,11 +1191,51 @@ export function Results() {
         toast.success(lang === 'ar' ? 'تم تحديث التصنيف' : 'Finding classification updated');
       }
 
+      setEditFindingSnippetValidation(null);
       setEditFindingModal(null);
     } catch (err: any) {
       toast.error(err?.message ?? (lang === 'ar' ? 'تعذر تحديث التصنيف' : 'Failed to update finding'));
     } finally {
       setEditFindingSaving(false);
+    }
+  };
+
+  const handleValidateEditedFindingSnippet = async () => {
+    if (!editFindingModal) return;
+    const snippet = editFindingForm.evidenceSnippet.trim();
+    if (!snippet) {
+      toast.error(lang === 'ar' ? 'أدخل النص أولاً للتحقق منه' : 'Enter snippet text first');
+      return;
+    }
+    setEditFindingValidatingSnippet(true);
+    try {
+      const res = await findingsApi.validateFindingSnippet({
+        findingId: editFindingModal.id,
+        snippet,
+      });
+      if (!res.found) {
+        setEditFindingSnippetValidation(lang === 'ar' ? 'النص غير موجود في المستند.' : 'Snippet not found in the document.');
+        toast.error(lang === 'ar' ? 'النص غير موجود في المستند' : 'Snippet not found in the document');
+        return;
+      }
+      if (res.snippet) {
+        setEditFindingForm((prev) => ({ ...prev, evidenceSnippet: res.snippet ?? prev.evidenceSnippet }));
+      }
+      const locationLabel = res.pageNumber != null
+        ? (lang === 'ar' ? `تم العثور على النص في الصفحة ${res.pageNumber}.` : `Snippet found on page ${res.pageNumber}.`)
+        : (lang === 'ar' ? 'تم العثور على النص في المستند.' : 'Snippet found in the document.');
+      const duplicateLabel = (res.matchCount ?? 0) > 1
+        ? (lang === 'ar' ? ' سيتم ربط أقرب تطابق إلى الموقع الحالي.' : ' The nearest match to the current location will be used.')
+        : '';
+      const message = `${locationLabel}${duplicateLabel}`;
+      setEditFindingSnippetValidation(message);
+      toast.success(message);
+    } catch (err: any) {
+      const message = err?.message ?? (lang === 'ar' ? 'تعذر التحقق من النص' : 'Could not validate snippet');
+      setEditFindingSnippetValidation(message);
+      toast.error(message);
+    } finally {
+      setEditFindingValidatingSnippet(false);
     }
   };
 
@@ -1422,7 +1463,7 @@ export function Results() {
             className="h-7 text-[11px] gap-1"
             onClick={() => setEditFindingModal(f)}
           >
-            {lang === 'ar' ? 'تعديل التصنيف' : 'Edit classification'}
+            {lang === 'ar' ? 'تعديل' : 'Edit'}
           </Button>
         </div>
       </div>
@@ -1564,7 +1605,7 @@ export function Results() {
               className="h-7 text-[11px] gap-1"
               onClick={() => setEditFindingModal(matchedRaw)}
             >
-              {lang === 'ar' ? 'تعديل التصنيف' : 'Edit classification'}
+              {lang === 'ar' ? 'تعديل' : 'Edit'}
             </Button>
           </div>
         ) : (
@@ -2588,12 +2629,49 @@ export function Results() {
       <Modal
         isOpen={!!editFindingModal}
         onClose={() => setEditFindingModal(null)}
-        title={lang === 'ar' ? 'تعديل تصنيف الملاحظة' : 'Edit finding classification'}
+        title={lang === 'ar' ? 'تعديل الملاحظة' : 'Edit finding'}
       >
         <div className="space-y-4">
           <div className="p-3 bg-background rounded-md border border-border text-sm text-text-main font-medium" dir="rtl">
             {editFindingModal?.titleAr}
           </div>
+          <Textarea
+            label={lang === 'ar' ? 'النص المقتبس' : 'Snippet text'}
+            value={editFindingForm.evidenceSnippet}
+            onChange={(e) => {
+              setEditFindingForm((prev) => ({ ...prev, evidenceSnippet: e.target.value }));
+              setEditFindingSnippetValidation(null);
+            }}
+            placeholder={lang === 'ar' ? 'يجب أن يطابق كلمة أو جملة أو فقرة قصيرة موجودة في المستند.' : 'Must match an existing word, sentence, or short paragraph in the document.'}
+          />
+          <div className="flex items-center justify-between gap-3 rounded-md border border-border/70 bg-background/50 px-3 py-2 text-xs text-text-muted">
+            <span>
+              {lang === 'ar'
+                ? 'لن يُحفظ النص إلا إذا تم العثور عليه وربطه بموضعه داخل المستند.'
+                : 'The snippet will only save if it is found and rebound to the document.'}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1 shrink-0"
+              onClick={() => void handleValidateEditedFindingSnippet()}
+              disabled={editFindingValidatingSnippet || editFindingSaving}
+            >
+              {editFindingValidatingSnippet ? <Loader2 className="w-3 h-3 animate-spin" /> : <Search className="w-3 h-3" />}
+              {lang === 'ar' ? 'تحقق من النص' : 'Check snippet'}
+            </Button>
+          </div>
+          {editFindingSnippetValidation && (
+            <div className="rounded-md border border-border bg-background/50 px-3 py-2 text-xs text-text-muted">
+              {editFindingSnippetValidation}
+            </div>
+          )}
+          <Textarea
+            label={lang === 'ar' ? 'الملاحظة التفسيرية' : 'AI reason'}
+            value={editFindingForm.rationaleAr}
+            onChange={(e) => setEditFindingForm((prev) => ({ ...prev, rationaleAr: e.target.value }))}
+            placeholder={lang === 'ar' ? 'عدّل التعليل الظاهر في البطاقة…' : 'Edit the explanation shown on the card…'}
+          />
           <Select
             label={lang === 'ar' ? 'المادة' : 'Article'}
             value={editFindingForm.articleId}
