@@ -1,5 +1,4 @@
 import { config } from "../config.js";
-import { getGcamRefsForCanonicalAtom } from "../canonicalAtomMapping.js";
 import { normalizeMisusedGlossaryPassTitle } from "../findingTitleNormalize.js";
 import { callAuditorRaw, callRationaleOnly, parseAuditorWithRepair } from "../openai.js";
 import { logger } from "../logger.js";
@@ -16,8 +15,12 @@ type CanonicalCandidate = {
   evidence_snippet: string;
   severity: string;
   confidence: number;
+  article_id: number;
+  atom_id: string | null;
+  canonical_atom?: string | null;
   primary_article_id: number;
   related_article_ids: number[];
+  detection_passes?: string[];
   pillar_id?: string;
   depiction_type?: string | null;
   speaker_role?: string | null;
@@ -43,21 +46,6 @@ function canonicalAtomForFinding(f: HybridFindingLike): string | null {
 function basePrimaryArticleForFinding(f: HybridFindingLike): number {
   const primary = f.primary_article_id ?? f.article_id;
   return typeof primary === "number" && primary >= 1 && primary <= 25 ? primary : 5;
-}
-
-function chooseSafePrimaryArticle(
-  proposedPrimary: number | null | undefined,
-  f: HybridFindingLike
-): number {
-  const fallbackPrimary = basePrimaryArticleForFinding(f);
-  if (typeof proposedPrimary !== "number" || proposedPrimary < 1 || proposedPrimary > 25) {
-    return fallbackPrimary;
-  }
-  const canonicalAtom = canonicalAtomForFinding(f);
-  if (!canonicalAtom) return proposedPrimary;
-  const allowedArticleIds = [...new Set(getGcamRefsForCanonicalAtom(canonicalAtom).map((ref) => ref.article_id))];
-  if (allowedArticleIds.length === 0) return proposedPrimary;
-  return allowedArticleIds.includes(proposedPrimary) ? proposedPrimary : fallbackPrimary;
 }
 
 function isConfidenceInconsistent(a: AuditorAssessment): boolean {
@@ -97,6 +85,13 @@ function hasExplicitArticleMismatch(value: string | null | undefined, primaryArt
   return !mentionedArticles.includes(primaryArticle);
 }
 
+function isExactEvidenceInText(fullText: string | null, evidenceSnippet: string | null | undefined): boolean {
+  const text = (fullText ?? "").trim();
+  const evidence = (evidenceSnippet ?? "").trim();
+  if (!text || !evidence) return false;
+  return text.includes(evidence);
+}
+
 function applyGuardrails(a: AuditorAssessment): AuditorAssessment {
   const primaryArticle = a.primary_article_id ?? 0;
   const related = normalizeRelated(a.related_article_ids ?? [], primaryArticle);
@@ -132,8 +127,18 @@ function buildCanonicalCandidates(findings: HybridFindingLike[]): CanonicalCandi
       evidence_snippet: primary.evidence_snippet || "",
       severity: primary.severity || "medium",
       confidence: primary.confidence ?? 0.7,
+      article_id: primary.article_id,
+      atom_id: primary.atom_id ?? null,
+      canonical_atom: canonicalAtomForFinding(primary),
       primary_article_id: primaryArticle,
       related_article_ids: related,
+      detection_passes: [
+        ...new Set(
+          list
+            .map((x) => (x as { detection_pass?: string }).detection_pass)
+            .filter((value): value is string => typeof value === "string" && value.trim() !== "")
+        ),
+      ],
       pillar_id: primary.pillar_id,
       depiction_type: primary.depiction_type ?? null,
       speaker_role: primary.speaker_role ?? null,
@@ -184,6 +189,13 @@ export async function runDeepAuditorPass(args: {
     seen.add(id);
     dedupedAssessments.push(applyGuardrails(a));
   }
+  if (candidates.length > 0 && dedupedAssessments.length === 0) {
+    logger.warn("Deep auditor returned zero assessments; falling back to pre-auditor findings", {
+      candidateCount: candidates.length,
+      model: config.OPENAI_AUDITOR_MODEL,
+    });
+    return findings;
+  }
   const byId = new Map(dedupedAssessments.map((a) => [a.canonical_finding_id, a]));
 
   const withRationale = dedupedAssessments.filter(
@@ -194,11 +206,12 @@ export async function runDeepAuditorPass(args: {
     withNonDefaultRationale: withRationale.length,
   });
 
-  const merged = findings.map((f) => {
+  const merged: HybridFindingLike[] = [];
+  for (const f of findings) {
     const cId = f.canonical_finding_id ?? `LEGACY-${f.article_id}-${f.start_offset_global ?? 0}-${f.end_offset_global ?? 0}`;
     const a = byId.get(cId);
-    if (!a) return f;
-    const primaryArticle = chooseSafePrimaryArticle(a.primary_article_id, f);
+    if (!a) continue;
+    const primaryArticle = basePrimaryArticleForFinding(f);
     const related = normalizeRelated(f.related_article_ids ?? [], primaryArticle);
     const rationale = (a.rationale_ar && a.rationale_ar.trim() !== "")
       ? a.rationale_ar
@@ -213,7 +226,7 @@ export async function runDeepAuditorPass(args: {
       evidenceSnippet: f.evidence_snippet ?? "",
       articleId: primaryArticle,
     });
-    return {
+    merged.push({
       ...f,
       canonical_finding_id: cId,
       title_ar,
@@ -231,7 +244,23 @@ export async function runDeepAuditorPass(args: {
         { article_id: primaryArticle, role: "primary" },
         ...related.map((id) => ({ article_id: id, role: "related" as const })),
       ],
-    };
+    });
+  }
+
+  const filteredMerged = merged.filter((finding) => {
+    const exactEvidence = isExactEvidenceInText(fullText, finding.evidence_snippet);
+    if (!exactEvidence) return false;
+    if (isWeakRationaleText(finding.rationale_ar) && finding.final_ruling === "violation") return false;
+    return true;
+  });
+
+  logger.info("Deep auditor filter stats", {
+    beforeAuditor: findings.length,
+    auditorAcceptedCanonical: dedupedAssessments.length,
+    afterAuditorKeepList: merged.length,
+    afterDeterministicFilter: filteredMerged.length,
+    droppedByAuditorOmission: findings.length - merged.length,
+    droppedByDeterministicFilter: merged.length - filteredMerged.length,
   });
 
   const needRationale = new Map<string, {
@@ -241,7 +270,7 @@ export async function runDeepAuditorPass(args: {
     primary_article_id: number;
     weak_rationale: string | null;
   }>();
-  for (const m of merged) {
+  for (const m of filteredMerged) {
     const id = m.canonical_finding_id ?? "";
     if (!id || needRationale.has(id)) continue;
     const primaryArticle = m.primary_article_id ?? m.article_id;
@@ -284,7 +313,7 @@ export async function runDeepAuditorPass(args: {
       logger.warn("Rationale-only pass failed, keeping default rationale", { model, error: String(err) });
     }
     if (generatedByCId.size > 0) {
-      return merged.map((m) => {
+      return filteredMerged.map((m) => {
         const id = m.canonical_finding_id ?? "";
         const gen = id ? generatedByCId.get(id) : undefined;
         if (!gen) return m;
@@ -300,5 +329,5 @@ export async function runDeepAuditorPass(args: {
     }
   }
 
-  return merged;
+  return filteredMerged;
 }
