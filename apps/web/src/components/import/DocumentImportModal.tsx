@@ -188,9 +188,9 @@ export function DocumentImportModal({
                                 ? (lang === 'ar' ? `بواسطة: ${match.importedByName}` : `Imported by: ${match.importedByName}`)
                                 : null,
                               match.contextType === 'quick_analysis'
-                                ? (lang === 'ar' ? 'السياق: تحليل سريع' : 'Context: Quick analysis')
+                                ? (lang === 'ar' ? 'العميل: تحليل سريع' : 'Client: Quick analysis')
                                 : match.contextLabel
-                                  ? (lang === 'ar' ? `السياق: ${match.contextLabel}` : `Context: ${match.contextLabel}`)
+                                  ? (lang === 'ar' ? `العميل: ${match.contextLabel}` : `Client: ${match.contextLabel}`)
                                   : null,
                             ].filter(Boolean).join(' • ')}
                           </p>
