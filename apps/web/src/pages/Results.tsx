@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useLangStore } from '@/store/langStore';
@@ -747,17 +747,10 @@ export function Results() {
     ? displayApprovedFindings.filter(() => findingFilter === 'approved' || findingFilter === 'all')
     : [];
   const filteredCanonicalSummaryFindings = canonicalSummaryFindings.filter((f) => matchesFindingFilter(f));
-  const selectableReviewRawIds = useMemo(
-    () =>
-      filteredReviewViolations
-        .map((f) => matchRawFindingForReview(f)?.id ?? null)
-        .filter((id): id is string => Boolean(id)),
-    [filteredReviewViolations, findings]
-  );
-  const selectableRawFindingIds = useMemo(
-    () => filteredDisplayViolations.map((f) => f.id),
-    [filteredDisplayViolations]
-  );
+  const selectableReviewRawIds = filteredReviewViolations
+    .map((f) => matchRawFindingForReview(f)?.id ?? null)
+    .filter((id): id is string => Boolean(id));
+  const selectableRawFindingIds = filteredDisplayViolations.map((f) => f.id);
   const actionableVisibleFindingIds = useReviewFindingsUi ? selectableReviewRawIds : selectableRawFindingIds;
   const selectedVisibleFindingCount = selectedFindingIds.filter((id) => actionableVisibleFindingIds.includes(id)).length;
   const showOnlySpecialNotes = findingFilter === 'special';
