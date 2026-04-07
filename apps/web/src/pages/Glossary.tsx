@@ -868,26 +868,6 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
                   { label: t('other'), value: 'other' },
                 ]}
               />
-              <Select
-                label={t('severityFloor')}
-                value={formData.severity_floor}
-                onChange={e => setFormData({ ...formData, severity_floor: e.target.value as any })}
-                options={[
-                  { label: t('low'), value: 'Low' },
-                  { label: t('medium'), value: 'Medium' },
-                  { label: t('high'), value: 'High' },
-                  { label: t('critical'), value: 'Critical' },
-                ]}
-              />
-              <Select
-                label={t('enforcementMode')}
-                value={formData.enforcement_mode}
-                onChange={e => setFormData({ ...formData, enforcement_mode: e.target.value as any })}
-                options={[
-                  { label: t('softSignals'), value: 'soft_signal' },
-                  { label: t('mandatoryViolations'), value: 'mandatory_finding' },
-                ]}
-              />
             </div>
             <p className="text-xs text-text-muted" dir="ltr">
               {formData.term_type === 'word' && (lang === 'ar' ? 'كلمة: مطابقة رمز كامل (حد كلمة)، غير حساسة لحالة الأحرف في اللاتينية.' : 'word: exact token match (word boundary); case-insensitive in Latin.')}
