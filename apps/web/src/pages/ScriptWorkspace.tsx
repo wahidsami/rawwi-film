@@ -2051,6 +2051,25 @@ export function ScriptWorkspace() {
       hasExternalReview: reportHistory.some((r) => (r.reportCreatorId ?? r.createdBy ?? null) !== (user?.id ?? null)),
     };
   }, [reportHistory, user?.id, lang, formatOptionalReportDate, safeDateFromValue]);
+  const hasGeneratedReport = reportHistory.length > 0 || !!reportIdWhenJobCompleted;
+  const missingReportReason = lang === 'ar'
+    ? 'لا يمكن تنفيذ هذا الإجراء قبل تشغيل التحليل وإنشاء أول تقرير.'
+    : 'You cannot do this before running the analysis and generating the first report.';
+  const effectiveDecisionCapabilities = useMemo(() => {
+    const baseCapabilities =
+      showDecisionBar && decisionCan != null
+        ? { canApprove: decisionCan.canApprove, canReject: decisionCan.canReject, reasonIfDisabled: decisionCan.reason ?? null }
+        : (user ? getScriptDecisionCapabilities(script, user, hasPermission) : null);
+
+    if (!baseCapabilities) return null;
+    if (hasGeneratedReport) return baseCapabilities;
+
+    return {
+      canApprove: false,
+      canReject: false,
+      reasonIfDisabled: missingReportReason,
+    };
+  }, [showDecisionBar, decisionCan, user, script, hasPermission, hasGeneratedReport, missingReportReason]);
 
   const workspaceCanonicalHintIds = useMemo(
     () =>
@@ -5173,7 +5192,7 @@ export function ScriptWorkspace() {
               title={!hasVersionForAnalysis ? (lang === 'ar' ? 'ارفع ملف نص أولاً' : 'Upload a script file first') : isAnalysisRunning ? (lang === 'ar' ? 'عرض التقدم' : 'View progress') : (lang === 'ar' ? 'تشغيل التحليل الذكي' : 'Queue analysis')}
             >
               {isAnalysisRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
-              {isAnalyzing ? (lang === 'ar' ? 'جاري الطابور…' : 'Queuing…') : isAnalysisRunning ? `${analysisJob?.progressPercent ?? 0}%` : (lang === 'ar' ? 'تحليل ذكي' : 'Start Smart Analysis')}
+              {isAnalyzing ? (lang === 'ar' ? 'في انتظار الدور…' : 'Queuing…') : isAnalysisRunning ? `${analysisJob?.progressPercent ?? 0}%` : (lang === 'ar' ? 'تحليل ذكي' : 'Start Smart Analysis')}
           </Button>
             {isAnalysisRunning && (
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-warning rounded-full animate-pulse border-2 border-surface" />
@@ -5183,6 +5202,8 @@ export function ScriptWorkspace() {
             size="sm" 
             className="flex gap-2"
             onClick={() => navigate(analysisJobId ? `/report/${analysisJobId}?by=job${reportQuickQuery}` : `/report/${script.id}?by=script${reportQuickQuery}`)}
+            disabled={!hasGeneratedReport}
+            title={!hasGeneratedReport ? missingReportReason : undefined}
           >
             <FileText className="w-4 h-4" />
             {lang === 'ar' ? 'توليد التقرير' : 'Generate Report'}
@@ -5655,9 +5676,7 @@ export function ScriptWorkspace() {
                 currentStatus={script.status || 'draft'}
                 relatedReportId={selectedReportForHighlights?.id}
                 compact
-                capabilities={showDecisionBar && decisionCan != null
-                  ? { canApprove: decisionCan.canApprove, canReject: decisionCan.canReject, reasonIfDisabled: decisionCan.reason ?? null }
-                  : (user ? getScriptDecisionCapabilities(script, user, hasPermission) : null)}
+                capabilities={effectiveDecisionCapabilities}
                 onDecisionMade={(newStatus) => {
                   updateScript(script.id, { status: newStatus });
                   if (scriptFetched && scriptFetched.id === script.id) setScriptFetched((s) => s ? { ...s, status: newStatus } : null);
