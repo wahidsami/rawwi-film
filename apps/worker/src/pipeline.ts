@@ -52,7 +52,7 @@ type AnalysisEngineMode = "v2" | "hybrid";
 type HybridRunMode = "off" | "shadow" | "enforce";
 
 const MAX_EVIDENCE_SPAN = 280;
-const PIPELINE_LOGIC_VERSION = "v2.6";
+const PIPELINE_LOGIC_VERSION = "v2.7";
 const MAX_EVIDENCE_LEN = 260;
 const NON_CRITICAL_DB_TIMEOUT_MS = 30_000;
 const CRITICAL_DB_TIMEOUT_MS = 60_000;
@@ -143,13 +143,12 @@ function compactEvidenceText(s: string): string {
   return cleaned.length > MAX_EVIDENCE_LEN ? `${cleaned.slice(0, MAX_EVIDENCE_LEN)}…` : cleaned;
 }
 
-function isViolenceFindingStrict(finding: JudgeFinding): boolean {
+function requiresStrictExactProof(finding: JudgeFinding): boolean {
   const pass = String(finding.detection_pass ?? "").toLowerCase();
-  const atom = String(finding.canonical_atom ?? "").toUpperCase();
-  return pass === "violence" || atom === "VIOLENCE";
+  return pass !== "" && pass !== "glossary";
 }
 
-function allowsStrictGroundingMethodForViolence(method: string): boolean {
+function allowsStrictGroundingMethod(method: string): boolean {
   return method === "rationale_quote" || method === "evidence_exact";
 }
 
@@ -1112,8 +1111,8 @@ export async function processChunkJudge(
       const grounded = groundedResults
         .filter((result) => result.grounded)
         .filter((result) => {
-          if (!isViolenceFindingStrict(result.finding)) return true;
-          return allowsStrictGroundingMethodForViolence(result.method);
+          if (!requiresStrictExactProof(result.finding)) return true;
+          return allowsStrictGroundingMethod(result.method);
         })
         .map((result) => result.finding);
       const enriched = grounded.map((f) => {
@@ -1139,11 +1138,11 @@ export async function processChunkJudge(
         evidencePinnedCount: evidencePinned.length,
         groundedCount: grounded.length,
         groundingDroppedCount: groundedResults.length - grounded.length,
-        violenceStrictGroundingDroppedCount: groundedResults.filter(
+        strictExactProofDroppedCount: groundedResults.filter(
           (result) =>
             result.grounded &&
-            isViolenceFindingStrict(result.finding) &&
-            !allowsStrictGroundingMethodForViolence(result.method)
+            requiresStrictExactProof(result.finding) &&
+            !allowsStrictGroundingMethod(result.method)
         ).length,
         groundingMethods: groundedResults.reduce<Record<string, number>>((acc, result) => {
           acc[result.method] = (acc[result.method] ?? 0) + 1;
