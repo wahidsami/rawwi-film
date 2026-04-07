@@ -45,14 +45,21 @@ async function selectFindings(
 
 async function selectReviewFindings(
   supabase: ReturnType<typeof createSupabaseAdmin>,
-  jobId: string,
+  scope: { jobId?: string | null; reportId?: string | null },
 ) {
-  return await supabase
+  let query = supabase
     .from("analysis_review_findings")
     .select(REVIEW_FINDING_COLS)
-    .eq("job_id", jobId)
     .eq("is_hidden", false)
     .order("created_at", { ascending: true });
+
+  if (scope.reportId) {
+    query = query.eq("report_id", scope.reportId);
+  } else if (scope.jobId) {
+    query = query.eq("job_id", scope.jobId);
+  }
+
+  return await query;
 }
 
 function camelFinding(r: Record<string, unknown>, createdBy: string | null = null) {
@@ -634,7 +641,7 @@ Deno.serve(async (req: Request) => {
         return json({ error: "Forbidden" }, 403);
       }
 
-      const { data: rows, error } = await selectReviewFindings(supabase, jobId);
+      const { data: rows, error } = await selectReviewFindings(supabase, { jobId, reportId: reportId ?? null });
       if (error) return json({ error: error.message }, 500);
       return json((rows ?? []).map((r) => camelReviewFinding(r as Record<string, unknown>)));
     }

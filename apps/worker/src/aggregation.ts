@@ -576,6 +576,34 @@ function pickPriorReviewFindingMatch(
   );
 }
 
+function reviewRowDedupKey(row: ReviewFindingInsertRow): string {
+  return [
+    row.source_kind,
+    row.canonical_finding_id ?? "",
+    row.primary_article_id,
+    row.primary_atom_id ?? "",
+    compactReviewText(row.evidence_snippet),
+    compactReviewText(row.manual_comment ?? ""),
+    row.page_number ?? "",
+    row.start_offset_global ?? "",
+    row.end_offset_global ?? "",
+    row.review_status,
+    row.supersedes_review_finding_id ?? "",
+  ].join("|");
+}
+
+function dedupeReviewInsertRows(rows: ReviewFindingInsertRow[]): ReviewFindingInsertRow[] {
+  const seen = new Set<string>();
+  const deduped: ReviewFindingInsertRow[] = [];
+  for (const row of rows) {
+    const key = reviewRowDedupKey(row);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(row);
+  }
+  return deduped;
+}
+
 async function buildManualReviewRowsForJob(
   reportId: string,
   summary: SummaryJson,
@@ -639,7 +667,7 @@ async function materializeReviewFindings(
   const manualRows = (await buildManualReviewRowsForJob(reportId, summary, versionId)).map((row) =>
     applyPriorReviewState(row, pickPriorReviewFindingMatch(row, priorRows))
   );
-  const rows = [...carriedRows, ...manualRows];
+  const rows = dedupeReviewInsertRows([...carriedRows, ...manualRows]);
   logger.info("Materializing reviewer findings", {
     reportId,
     jobId: summary.job_id,
@@ -654,6 +682,12 @@ async function materializeReviewFindings(
       .delete()
       .eq("report_id", reportId)
       .eq("is_manual", false);
+    await supabase
+      .from("analysis_review_findings")
+      .delete()
+      .eq("report_id", reportId)
+      .eq("source_kind", "manual")
+      .not("supersedes_review_finding_id", "is", null);
     return;
   }
 
@@ -670,6 +704,22 @@ async function materializeReviewFindings(
       error: deleteErr,
     });
     throw deleteErr;
+  }
+
+  const { error: deleteCarriedManualErr } = await supabase
+    .from("analysis_review_findings")
+    .delete()
+    .eq("report_id", reportId)
+    .eq("source_kind", "manual")
+    .not("supersedes_review_finding_id", "is", null);
+
+  if (deleteCarriedManualErr) {
+    logger.error("Materialize carried manual review findings delete FAILED", {
+      reportId,
+      jobId: summary.job_id,
+      error: deleteCarriedManualErr,
+    });
+    throw deleteCarriedManualErr;
   }
 
   const { error } = await supabase
