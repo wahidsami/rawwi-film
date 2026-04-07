@@ -1141,10 +1141,17 @@ function buildCanonicalGroups(
 
 /** Dedup key: same source + article + atom + span + snippet → keep one (highest severity). */
 function dedupKey(f: DbFinding, normAtom: string): string {
+  const normalizedSource = String(f.source ?? "ai").toLowerCase();
+  const normalizedSnippet = (f.evidence_snippet ?? "").normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase();
+  if (normalizedSource === "lexicon_mandatory" || normalizedSource === "glossary") {
+    const page = f.page_number ?? 0;
+    const snipHash = sha256(normalizedSnippet);
+    return `${normalizedSource}|${f.article_id}|${normAtom}|page:${page}|${snipHash}`;
+  }
   const start = f.start_offset_global ?? 0;
   const end = f.end_offset_global ?? start;
   const snipHash = sha256(f.evidence_snippet ?? "");
-  return `${f.source ?? "ai"}|${f.article_id}|${normAtom}|${start}-${end}|${snipHash}`;
+  return `${normalizedSource}|${f.article_id}|${normAtom}|${start}-${end}|${snipHash}`;
 }
 
 /** Deduplicate findings: keep highest severity per key. */

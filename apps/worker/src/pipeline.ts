@@ -505,6 +505,47 @@ function sortFindingsStable(findings: FindingWithGlobal[]): FindingWithGlobal[] 
   return [...findings].sort(compareFindingsStable);
 }
 
+function compactNormalizedEvidence(value: string | null | undefined): string {
+  return (value ?? "").normalize("NFC").replace(/\s+/g, " ").trim();
+}
+
+function spansOverlapEnough(a: FindingWithGlobal, b: FindingWithGlobal, minRatio = 0.6): boolean {
+  const aStart = a.start_offset_global ?? 0;
+  const aEnd = a.end_offset_global ?? aStart;
+  const bStart = b.start_offset_global ?? 0;
+  const bEnd = b.end_offset_global ?? bStart;
+  const overlap = Math.max(0, Math.min(aEnd, bEnd) - Math.max(aStart, bStart));
+  const aLen = Math.max(0, aEnd - aStart);
+  const bLen = Math.max(0, bEnd - bStart);
+  if (aLen === 0 || bLen === 0) return false;
+  return overlap / Math.min(aLen, bLen) >= minRatio;
+}
+
+function dropRedundantArticleFourFindings(findings: FindingWithGlobal[]): FindingWithGlobal[] {
+  const specific = findings.filter((f) => (f.article_id ?? 0) !== 4);
+  if (specific.length === 0) return findings;
+
+  return findings.filter((candidate) => {
+    if ((candidate.article_id ?? 0) !== 4) return true;
+    if (String(candidate.source ?? "ai").toLowerCase() === "lexicon_mandatory") return true;
+
+    const candidateEvidence = compactNormalizedEvidence(candidate.evidence_snippet);
+    const candidateAtom = String(candidate.canonical_atom ?? "").toUpperCase();
+    const duplicateOwner = specific.some((other) => {
+      const otherEvidence = compactNormalizedEvidence(other.evidence_snippet);
+      const sameEvidence =
+        candidateEvidence.length >= 3 &&
+        otherEvidence.length >= 3 &&
+        (candidateEvidence.includes(otherEvidence) || otherEvidence.includes(candidateEvidence));
+      const sameIncident = sameEvidence || spansOverlapEnough(candidate, other);
+      if (!sameIncident) return false;
+      if (candidateAtom && String(other.canonical_atom ?? "").toUpperCase() !== candidateAtom) return false;
+      return severityRank(other.severity) >= severityRank(candidate.severity);
+    });
+    return !duplicateOwner;
+  });
+}
+
 function articleListsAreEquivalent(a: number[], b: number[]): boolean {
   if (a.length !== b.length) return false;
   const left = [...a].sort((x, y) => x - y);
@@ -1228,6 +1269,8 @@ export async function processChunkJudge(
     const afterDedupeCount = allFindings.length;
     allFindings = overlapCollapse(allFindings);
     const afterOverlapCount = allFindings.length;
+    allFindings = dropRedundantArticleFourFindings(allFindings);
+    const afterArticleFourCollapseCount = allFindings.length;
     logger.info("Dedupe + overlap stats", {
       chunkId: chunk.id,
       runKey,
@@ -1236,7 +1279,9 @@ export async function processChunkJudge(
       dedupeDropped: beforeDedupeCount - afterDedupeCount,
       afterOverlap: afterOverlapCount,
       overlapDropped: afterDedupeCount - afterOverlapCount,
-      finalAiFindings: afterOverlapCount,
+      afterArticleFourCollapse: afterArticleFourCollapseCount,
+      articleFourDropped: afterOverlapCount - afterArticleFourCollapseCount,
+      finalAiFindings: afterArticleFourCollapseCount,
       lexiconFindings: mandatoryFindings.length,
     });
 
