@@ -271,22 +271,6 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
           </View>
         )}
 
-        {((data.wordsToRevisit ?? []).length > 0) && (
-          <View style={{ marginTop: 16 }}>
-            <Text style={[s.sectionTitle, rtl]}>{isAr ? "كلمات / عبارات للمراجعة" : "Words / phrases to revisit"}</Text>
-            <Text style={[s.findingMeta, rtl]}>
-              {isAr
-                ? "ظهور الكلمات أو العبارات التالية في النص (للمراجعة عند التصوير — لا تُحسب مخالفات)."
-                : "The following words or phrases appear in the script (for review when filming — not counted as violations)."}
-            </Text>
-            {(data.wordsToRevisit ?? []).filter(Boolean).map((m, idx) => (
-              <View key={`revisit-${idx}-${m.term}`} style={[s.finding, { backgroundColor: "#f9fafb", borderColor: "#e5e7eb", marginTop: 6 }]}>
-                <Text style={[s.findingTitle, rtl]}>{m.term}</Text>
-                <Text style={[s.findingSnippet, rtl]}>"{m.snippet || "—"}"</Text>
-              </View>
-            ))}
-          </View>
-        )}
       </Page>
     </Document>
   );

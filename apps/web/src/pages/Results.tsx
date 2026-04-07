@@ -24,7 +24,7 @@ import { resolveStorageUrl } from '@/utils/storage';
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
-  CheckCircle2, Shield, FileDown, Info, FileSearch,
+  CheckCircle2, Shield, FileDown, Info,
 } from 'lucide-react';
 
 import {
@@ -297,6 +297,10 @@ export function Results() {
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
   const [reviewReason, setReviewReason] = useState('');
+  const [bulkReviewModal, setBulkReviewModal] = useState<{ findingIds: string[]; toStatus: 'approved' | 'violation' } | null>(null);
+  const [bulkReviewReason, setBulkReviewReason] = useState('');
+  const [bulkReviewSaving, setBulkReviewSaving] = useState(false);
+  const [selectedFindingIds, setSelectedFindingIds] = useState<string[]>([]);
   const [editFindingModal, setEditFindingModal] = useState<AnalysisFinding | null>(null);
   const [editFindingSaving, setEditFindingSaving] = useState(false);
   const [reportVisibilitySavingId, setReportVisibilitySavingId] = useState<string | null>(null);
@@ -505,6 +509,98 @@ export function Results() {
     }
   };
 
+  const handleBulkFindingReview = async () => {
+    if (!bulkReviewModal) return;
+    const reason = bulkReviewReason.trim();
+    const requireReason = settings?.platform?.requireOverrideReason !== false;
+    if (requireReason && (!reason || reason.length < 2)) {
+      toast.error(lang === 'ar' ? 'يرجى إدخال سبب' : 'Please enter a reason');
+      return;
+    }
+    setBulkReviewSaving(true);
+    try {
+      await Promise.all(
+        bulkReviewModal.findingIds.map((findingId) =>
+          findingsApi.reviewFinding(findingId, bulkReviewModal.toStatus, reason || '')
+        )
+      );
+      const selectedIds = new Set(bulkReviewModal.findingIds);
+      const reviewedAt = new Date().toISOString();
+      setFindings((prev) =>
+        prev.map((f) =>
+          selectedIds.has(f.id)
+            ? {
+                ...f,
+                reviewStatus: bulkReviewModal.toStatus,
+                reviewReason: reason,
+                reviewedBy: user?.id ?? null,
+                reviewedAt,
+                reviewedRole: 'user',
+              }
+            : f
+        )
+      );
+      setReviewFindings((prev) =>
+        prev.map((f) => {
+          const matched = matchRawFindingForReview(f);
+          if (!matched || !selectedIds.has(matched.id)) return f;
+          return {
+            ...f,
+            reviewStatus: bulkReviewModal.toStatus,
+            approvedReason: reason,
+            reviewedBy: user?.id ?? null,
+            reviewedAt,
+          };
+        })
+      );
+      if (report?.id) {
+        try {
+          const rows = await findingsApi.getReviewByReport(report.id);
+          setReviewFindings(rows);
+          const approvedCount = rows.filter((row) => row.reviewStatus === 'approved' && row.sourceKind !== 'special').length;
+          setReport((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  approvedCount,
+                  lastReviewedAt: reviewedAt,
+                  lastReviewedBy: user?.id ?? prev.lastReviewedBy ?? null,
+                  lastReviewedRole: 'user',
+                }
+              : prev
+          );
+        } catch {
+          setReport((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  lastReviewedAt: reviewedAt,
+                  lastReviewedBy: user?.id ?? prev.lastReviewedBy ?? null,
+                  lastReviewedRole: 'user',
+                }
+              : prev
+          );
+        }
+      }
+      setSelectedFindingIds([]);
+      toast.success(
+        bulkReviewModal.toStatus === 'approved'
+          ? (lang === 'ar'
+              ? `تم اعتماد ${bulkReviewModal.findingIds.length} ملاحظة كآمنة`
+              : `${bulkReviewModal.findingIds.length} findings marked safe`)
+          : (lang === 'ar'
+              ? `تمت إعادة ${bulkReviewModal.findingIds.length} ملاحظة كمخالفات`
+              : `${bulkReviewModal.findingIds.length} findings reverted to violations`)
+      );
+      setBulkReviewModal(null);
+      setBulkReviewReason('');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشلت المراجعة الجماعية' : 'Bulk review failed'));
+    } finally {
+      setBulkReviewSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-16 text-center flex flex-col items-center gap-4">
@@ -533,7 +629,6 @@ export function Results() {
   const manualReviewContextMeta = summary.manual_review_context;
   const canonicalSummaryFindings: CanonicalSummaryFinding[] = (summary.canonical_findings || []).filter(Boolean);
   const reportHints: CanonicalSummaryFinding[] = (summary.report_hints || []).filter(Boolean);
-  const wordsToRevisit = (summary.words_to_revisit || []).filter(Boolean);
   const canonicalHintIds = new Set(reportHints.map((f) => f.canonical_finding_id).filter(Boolean));
   const visibleReviewFindings = reviewFindings.filter((f) => !f.isHidden);
   const hasReviewFindings = visibleReviewFindings.length > 0;
@@ -624,6 +719,19 @@ export function Results() {
   const displayApproved = useReviewFindingsUi ? reviewApproved.length : (report.approvedCount ?? 0);
   const displaySpecialNotes = useReviewFindingsUi ? reviewSpecialNotes.length : reportHints.length;
   const editFindingAtomOptions = getResultsArticleAtomOptions(editFindingForm.articleId);
+  const selectableReviewRawIds = useMemo(
+    () =>
+      filteredReviewViolations
+        .map((f) => matchRawFindingForReview(f)?.id ?? null)
+        .filter((id): id is string => Boolean(id)),
+    [filteredReviewViolations, findings]
+  );
+  const selectableRawFindingIds = useMemo(
+    () => filteredDisplayViolations.map((f) => f.id),
+    [filteredDisplayViolations]
+  );
+  const actionableVisibleFindingIds = useReviewFindingsUi ? selectableReviewRawIds : selectableRawFindingIds;
+  const selectedVisibleFindingCount = selectedFindingIds.filter((id) => actionableVisibleFindingIds.includes(id)).length;
 
   const matchesFindingFilter = (finding: Pick<AnalysisFinding, 'source'> | Pick<CanonicalSummaryFinding, 'source'>) => {
     if (findingFilter === 'all') return true;
@@ -1000,7 +1108,6 @@ export function Results() {
         findingsByArticle: summary?.findings_by_article,
         canonicalFindings: summary?.canonical_findings,
         reportHints: summary?.report_hints ?? undefined,
-        wordsToRevisit: summary?.words_to_revisit ?? undefined,
         scriptSummary: summary?.script_summary ?? undefined,
         lang: isAr ? ('ar' as const) : ('en' as const),
         dateFormat,
@@ -1224,7 +1331,23 @@ export function Results() {
     return (
       <div key={f.id} className={cn("border rounded-lg p-4", isApproved ? "bg-success/5 border-success/20" : "bg-surface border-border")}>
         <div className="flex items-center justify-between mb-2">
-          <span className="font-semibold text-text-main text-sm">{displayTitle}</span>
+          <div className="flex items-center gap-2 min-w-0">
+            {!isApproved && (
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                checked={selectedFindingIds.includes(f.id)}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setSelectedFindingIds((prev) =>
+                    checked ? [...prev, f.id] : prev.filter((id) => id !== f.id)
+                  );
+                }}
+                aria-label={lang === 'ar' ? 'تحديد الملاحظة' : 'Select finding'}
+              />
+            )}
+            <span className="font-semibold text-text-main text-sm">{displayTitle}</span>
+          </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] text-text-muted border-border/60">{findingSourceLabel(f.source ?? 'ai')}</Badge>
             {isEdited && (
@@ -1328,7 +1451,23 @@ export function Results() {
     return (
       <div key={f.id} className={cn("border rounded-lg p-4", isApproved ? "bg-success/5 border-success/20" : "bg-surface border-border")}>
         <div className="flex items-center justify-between mb-2">
-          <span className="font-semibold text-text-main text-sm">{displayTitle}</span>
+          <div className="flex items-center gap-2 min-w-0">
+            {!isApproved && matchedRaw && (
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                checked={selectedFindingIds.includes(matchedRaw.id)}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setSelectedFindingIds((prev) =>
+                    checked ? [...prev, matchedRaw.id] : prev.filter((id) => id !== matchedRaw.id)
+                  );
+                }}
+                aria-label={lang === 'ar' ? 'تحديد الملاحظة' : 'Select finding'}
+              />
+            )}
+            <span className="font-semibold text-text-main text-sm">{displayTitle}</span>
+          </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] text-text-muted border-border/60">{reviewFindingSourceLabel(f.sourceKind)}</Badge>
             {isEdited && (
@@ -1856,6 +1995,48 @@ export function Results() {
             {isDownloadingWord ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
             {isDownloadingWord ? (lang === 'ar' ? 'جاري تجهيز Word...' : 'Preparing Word...') : (lang === 'ar' ? 'تنزيل Word' : 'Download Word')}
           </Button>
+          <Button
+            variant="outline"
+            className="h-10 px-4"
+            disabled={actionableVisibleFindingIds.length === 0}
+            onClick={() => setSelectedFindingIds(actionableVisibleFindingIds)}
+          >
+            {lang === 'ar' ? 'تحديد الكل' : 'Select all'}
+          </Button>
+          <Button
+            variant="ghost"
+            className="h-10 px-4"
+            disabled={selectedFindingIds.length === 0}
+            onClick={() => setSelectedFindingIds([])}
+          >
+            {lang === 'ar' ? 'إلغاء التحديد' : 'Clear selection'}
+          </Button>
+          <Button
+            variant="outline"
+            className="h-10 px-4 flex gap-2 text-success border-success/30 hover:bg-success/10"
+            disabled={selectedVisibleFindingCount === 0}
+            onClick={() => {
+              const findingIds = selectedFindingIds.filter((id) => actionableVisibleFindingIds.includes(id));
+              setBulkReviewModal({ findingIds, toStatus: 'approved' });
+              setBulkReviewReason('');
+            }}
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            {lang === 'ar' ? 'اعتماد المحدد كآمن' : 'Mark selected safe'}
+          </Button>
+          <Button
+            variant="outline"
+            className="h-10 px-4 flex gap-2 text-error border-error/30 hover:bg-error/10"
+            disabled={selectedVisibleFindingCount === 0}
+            onClick={() => {
+              const findingIds = selectedFindingIds.filter((id) => actionableVisibleFindingIds.includes(id));
+              setBulkReviewModal({ findingIds, toStatus: 'violation' });
+              setBulkReviewReason('');
+            }}
+          >
+            <ShieldAlert className="w-4 h-4" />
+            {lang === 'ar' ? 'إعادة المحدد كمخالفة' : 'Revert selected'}
+          </Button>
         </div>
       </div>
 
@@ -2270,30 +2451,6 @@ export function Results() {
             </>
           )}
 
-          {/* Words/sentences to revisit (separate light pass — glossary terms that appeared; not violations) */}
-          {!showOnlySpecialNotes && !showOnlyApproved && wordsToRevisit.length > 0 && (
-            <>
-              <h3 className="font-bold text-xl text-text-main border-b border-border pb-2 flex items-center gap-2 mt-12">
-                <FileSearch className="w-5 h-5 text-muted-foreground" />
-                {lang === 'ar' ? 'كلمات / عبارات للمراجعة' : 'Words / phrases to revisit'}
-                <Badge variant="outline" className="ms-2">{wordsToRevisit.length}</Badge>
-              </h3>
-              <p className="text-text-muted text-sm mt-1 mb-4">
-                {lang === 'ar'
-                  ? 'ظهور الكلمات أو العبارات التالية في النص (للمراجعة عند التصوير — لا تُحسب مخالفات).'
-                  : 'The following words or phrases appear in the script (for review when filming — not counted as violations).'}
-              </p>
-              <div className="space-y-3">
-                {wordsToRevisit.map((m, idx) => (
-                  <div key={`revisit-${idx}-${m.term}-${m.start_offset}`} className="bg-muted/30 border border-border rounded-lg p-3">
-                    <span className="font-medium text-text-main">{m.term}</span>
-                    <p className="text-sm text-text-muted mt-1 italic" dir="rtl">"{m.snippet}"</p>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
           {/* Approved section */}
           {!showOnlySpecialNotes && !showOnlyApproved && useReviewFindingsUi && reviewApproved.length > 0 && (
             <>
@@ -2350,6 +2507,46 @@ export function Results() {
               {reviewModal?.toStatus === 'approved'
                 ? (lang === 'ar' ? 'اعتماد' : 'Approve')
                 : (lang === 'ar' ? 'إعادة كمخالفة' : 'Revert')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!bulkReviewModal}
+        onClose={() => { setBulkReviewModal(null); setBulkReviewReason(''); }}
+        title={bulkReviewModal?.toStatus === 'approved'
+          ? (lang === 'ar' ? 'اعتماد المحدد كآمن' : 'Mark selected as safe')
+          : (lang === 'ar' ? 'إعادة المحدد كمخالفة' : 'Revert selected to violations')}
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-background rounded-md border border-border text-sm text-text-main font-medium" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+            {lang === 'ar'
+              ? `سيُطبَّق هذا الإجراء على ${bulkReviewModal?.findingIds.length ?? 0} ملاحظة.`
+              : `This action will be applied to ${bulkReviewModal?.findingIds.length ?? 0} findings.`}
+          </div>
+          <Textarea
+            label={lang === 'ar' ? 'السبب (مطلوب)' : 'Reason (required)'}
+            value={bulkReviewReason}
+            onChange={(e) => setBulkReviewReason(e.target.value)}
+            placeholder={bulkReviewModal?.toStatus === 'approved'
+              ? (lang === 'ar' ? 'اشرح لماذا هذه الملاحظات آمنة…' : 'Explain why these findings are safe…')
+              : (lang === 'ar' ? 'اشرح لماذا يجب اعتبار هذه الملاحظات مخالفات…' : 'Explain why these findings should be violations…')}
+          />
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button variant="outline" onClick={() => { setBulkReviewModal(null); setBulkReviewReason(''); }}>
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              variant={bulkReviewModal?.toStatus === 'approved' ? 'primary' : 'danger'}
+              onClick={handleBulkFindingReview}
+              disabled={bulkReviewSaving || (settings?.platform?.requireOverrideReason !== false && !bulkReviewReason.trim())}
+            >
+              {bulkReviewSaving
+                ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…')
+                : bulkReviewModal?.toStatus === 'approved'
+                  ? (lang === 'ar' ? 'اعتماد المحدد' : 'Approve selected')
+                  : (lang === 'ar' ? 'إعادة المحدد' : 'Revert selected')}
             </Button>
           </div>
         </div>
