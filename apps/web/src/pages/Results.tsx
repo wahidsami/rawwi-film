@@ -1098,13 +1098,22 @@ export function Results() {
     if (!report) return;
     setIsDownloadingPdf(true);
     try {
+      let latestReviewFindings = reviewFindings;
+      if (report.id) {
+        try {
+          latestReviewFindings = await findingsApi.getReviewByReport(report.id);
+          setReviewFindings(latestReviewFindings);
+        } catch {
+          // Keep current in-memory review findings as fallback.
+        }
+      }
       const basePayload = {
         scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
         clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
         createdAt: report.createdAt,
         logoUrl: settings?.branding?.logoUrl,
         findings: (findings || []).filter((f): f is AnalysisFinding => Boolean(f)),
-        reviewFindings,
+        reviewFindings: latestReviewFindings,
         findingsByArticle: summary?.findings_by_article,
         canonicalFindings: summary?.canonical_findings,
         reportHints: summary?.report_hints ?? undefined,
@@ -1267,6 +1276,15 @@ export function Results() {
     if (!report) return;
     setIsDownloadingWord(true);
     try {
+      let latestReviewFindings = reviewFindings;
+      if (report.id) {
+        try {
+          latestReviewFindings = await findingsApi.getReviewByReport(report.id);
+          setReviewFindings(latestReviewFindings);
+        } catch {
+          // Keep current in-memory review findings as fallback.
+        }
+      }
       const basePayload = {
         scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
         clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
@@ -1280,7 +1298,7 @@ export function Results() {
         deliveredAt: report.createdAt,
         viewerPages: reportViewerPages,
         findings,
-        reviewFindings,
+        reviewFindings: latestReviewFindings,
         findingsByArticle: summary.findings_by_article,
         canonicalFindings: canonicalSummaryFindings,
         reportHints: summary.report_hints ?? undefined,

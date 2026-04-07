@@ -19,6 +19,7 @@ export const CANONICAL_ATOMS = [
   'ECONOMIC',
   'PRIVACY',
   'APPEARANCE',
+  'OTHER',
 ] as const;
 
 export type CanonicalAtomId = (typeof CANONICAL_ATOMS)[number];
@@ -39,6 +40,7 @@ const FIRST_GCAM_KEY: Record<CanonicalAtomId, string> = {
   ECONOMIC: '19',
   PRIVACY: '17',
   APPEARANCE: '23',
+  OTHER: '1',
 };
 
 function parseKey(key: string): { articleId: number; atomId: string | null } {
@@ -76,6 +78,7 @@ const LABELS: Record<CanonicalAtomId, { ar: string; en: string }> = {
   ECONOMIC: { ar: 'اقتصادي', en: 'Economic' },
   PRIVACY: { ar: 'خصوصية', en: 'Privacy' },
   APPEARANCE: { ar: 'مظهر', en: 'Appearance' },
+  OTHER: { ar: 'أخرى', en: 'Others' },
 };
 
 /** Infer canonical atom from stored GCAM article/atom (for edit form). */

@@ -157,7 +157,7 @@ export const scriptsApi = {
       versionId,
       ...(options?.forceFresh ? { forceFresh: true } : {}),
       ...(options?.analysisProfile ? { analysisProfile: options.analysisProfile } : {}),
-      ...(options?.pipelineVersion ? { pipelineVersion: options.pipelineVersion } : {}),
+      pipelineVersion: options?.pipelineVersion ?? 'v2',
       ...(options?.analysisOptions ? { analysisOptions: options.analysisOptions } : {}),
     }),
   /** Get editor content and sections for a version. GET /scripts/editor?scriptId=...&versionId=... */

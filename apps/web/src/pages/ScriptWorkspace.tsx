@@ -379,7 +379,7 @@ import type { AnalysisFinding, AnalysisReviewFinding, DuplicateScriptCheckRespon
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
-import type { AnalysisJob, AnalysisModeProfile, AnalysisPipelineVersion, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
+import type { AnalysisJob, AnalysisModeProfile, ChunkStatus, ReportListItem, ReviewStatus } from '@/api/models';
 import { sanitizeFormattedHtml } from '@/utils/sanitizeHtml';
 import { PdfOriginalViewer } from '@/components/script/PdfOriginalViewer';
 import {
@@ -441,23 +441,16 @@ const ANALYSIS_MODE_OPTIONS: Array<{
 ];
 
 const ANALYSIS_PIPELINE_OPTIONS: Array<{
-  value: AnalysisPipelineVersion;
+  value: 'v2';
   labelAr: string;
   labelEn: string;
   hintAr: string;
   hintEn: string;
 }> = [
   {
-    value: 'v1',
-    labelAr: 'V1 المستقر',
-    labelEn: 'V1 Stable',
-    hintAr: 'المسار الحالي المستقر للإنتاج.',
-    hintEn: 'Current stable production pipeline.',
-  },
-  {
     value: 'v2',
-    labelAr: 'V2 التجريبي',
-    labelEn: 'V2 Beta',
+    labelAr: 'V2',
+    labelEn: 'V2',
     hintAr: 'ذاكرة سياقية أفضل وتضييق أدق للدليل.',
     hintEn: 'Improved context memory and tighter evidence pinning.',
   },
@@ -1615,7 +1608,7 @@ export function ScriptWorkspace() {
   const [reportIdWhenJobCompleted, setReportIdWhenJobCompleted] = useState<string | null>(null);
   const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
   const [analysisModeProfile, setAnalysisModeProfile] = useState<AnalysisModeProfile>('balanced');
-  const [analysisPipelineVersion, setAnalysisPipelineVersion] = useState<AnalysisPipelineVersion>('v1');
+  const [analysisPipelineVersion] = useState<'v2'>('v2');
   const [analysisControlBusy, setAnalysisControlBusy] = useState<'pause' | 'resume' | 'stop' | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
@@ -2697,7 +2690,7 @@ export function ScriptWorkspace() {
       const { jobId, manualReviewContextCount } = await scriptsApi.createTask(script.currentVersionId, {
         forceFresh: true,
         analysisProfile: analysisModeProfile,
-        pipelineVersion: analysisPipelineVersion,
+        pipelineVersion: 'v2',
       });
       setAnalysisJobId(jobId);
       setAnalysisJob(null);
@@ -5124,29 +5117,6 @@ export function ScriptWorkspace() {
               title={lang === 'ar' ? 'اختر نمط التحليل قبل بدء الفحص' : 'Choose an analysis mode before starting'}
             >
               {ANALYSIS_MODE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {lang === 'ar' ? option.labelAr : option.labelEn}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="hidden sm:flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold text-text-main">
-                {lang === 'ar' ? 'مسار التحليل' : 'Pipeline'}
-              </p>
-              <p className="text-[10px] text-text-muted truncate max-w-[11rem]">
-                {lang === 'ar' ? selectedPipelineMeta.hintAr : selectedPipelineMeta.hintEn}
-              </p>
-            </div>
-            <select
-              value={analysisPipelineVersion}
-              onChange={(e) => setAnalysisPipelineVersion(e.target.value as AnalysisPipelineVersion)}
-              className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm text-text-main focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-              disabled={isAnalyzing || isAnalysisRunning}
-              title={lang === 'ar' ? 'اختر مسار التحليل قبل بدء الفحص' : 'Choose the analysis pipeline before starting'}
-            >
-              {ANALYSIS_PIPELINE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {lang === 'ar' ? option.labelAr : option.labelEn}
                 </option>

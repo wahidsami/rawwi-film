@@ -635,7 +635,7 @@ Deno.serve(async (req: Request) => {
 
   const versionId = body?.versionId;
   const forceFresh = body?.forceFresh === true;
-  const defaultPipelineVersion = (Deno.env.get("ANALYSIS_PIPELINE_VERSION") ?? "v1").toLowerCase() === "v2" ? "v2" : "v1";
+  const defaultPipelineVersion = (Deno.env.get("ANALYSIS_PIPELINE_VERSION") ?? "v2").toLowerCase() === "v1" ? "v1" : "v2";
   const requestedPipelineVersion = body?.pipelineVersion === "v2" || body?.pipelineVersion === "v1"
     ? body.pipelineVersion
     : defaultPipelineVersion;

@@ -228,7 +228,7 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
     if (method === 'GET') return []; // Real GET /tasks returns analysis jobs; mock returns [] for compatibility.
     if (method === 'POST') {
       const jobId = 'mock-job-' + (body?.versionId ?? Math.random().toString(36).slice(2));
-      return { jobId, pipelineVersion: body?.pipelineVersion ?? 'v1' };
+      return { jobId, pipelineVersion: body?.pipelineVersion ?? 'v2' };
     }
     if (method === 'PATCH') {
       const action = body?.action;

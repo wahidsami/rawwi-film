@@ -573,6 +573,25 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
   const [generatedVariantsText, setGeneratedVariantsText] = useState('');
   const [generatingFromPrompt, setGeneratingFromPrompt] = useState(false);
   const [error, setError] = useState('');
+  const applyPromptModeDefaults = (input: FormState): FormState => {
+    const currentCanonical = input.canonical_atom?.trim();
+    const canonical = currentCanonical && currentCanonical.length > 0 ? currentCanonical : 'OTHER';
+    const canonicalOption = getCanonicalAtomOptions().find((o) => o.id === canonical);
+    const article = canonicalOption
+      ? getPolicyArticles().find((a) => a.articleId === canonicalOption.articleId)
+      : null;
+    return {
+      ...input,
+      term_type: 'phrase',
+      category: 'other',
+      severity_floor: 'Medium',
+      enforcement_mode: 'mandatory_finding',
+      canonical_atom: canonical,
+      gcam_article_id: canonicalOption?.articleId ?? input.gcam_article_id ?? 1,
+      gcam_atom_id: canonicalOption?.atomId ?? input.gcam_atom_id ?? '',
+      gcam_article_title_ar: article?.title_ar ?? input.gcam_article_title_ar ?? '',
+    };
+  };
 
   // Reset form when modal opens or termId/lexiconTerms change; derive existingTerm inside effect to avoid stale closure
   useEffect(() => {
@@ -751,6 +770,9 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
                 const next = e.target.checked;
                 setPromptMode(next);
                 setError('');
+                if (next) {
+                  setFormData((prev) => applyPromptModeDefaults(prev));
+                }
                 if (!next) {
                   setGenerationPrompt('');
                 }
@@ -820,56 +842,60 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Select
-            label={t('termType')}
-            value={formData.term_type}
-            onChange={e => setFormData({ ...formData, term_type: e.target.value as any })}
-            options={[
-              { label: t('word'), value: 'word' },
-              { label: t('phrase'), value: 'phrase' },
-              { label: t('regex'), value: 'regex' },
-            ]}
-          />
-          <Select
-            label={t('category')}
-            value={formData.category}
-            onChange={e => setFormData({ ...formData, category: e.target.value as any })}
-            options={[
-              { label: t('profanity'), value: 'profanity' },
-              { label: t('sexual'), value: 'sexual' },
-              { label: t('violence'), value: 'violence' },
-              { label: t('drugs'), value: 'drugs' },
-              { label: t('discrimination'), value: 'discrimination' },
-              { label: t('other'), value: 'other' },
-            ]}
-          />
-          <Select
-            label={t('severityFloor')}
-            value={formData.severity_floor}
-            onChange={e => setFormData({ ...formData, severity_floor: e.target.value as any })}
-            options={[
-              { label: t('low'), value: 'Low' },
-              { label: t('medium'), value: 'Medium' },
-              { label: t('high'), value: 'High' },
-              { label: t('critical'), value: 'Critical' },
-            ]}
-          />
-          <Select
-            label={t('enforcementMode')}
-            value={formData.enforcement_mode}
-            onChange={e => setFormData({ ...formData, enforcement_mode: e.target.value as any })}
-            options={[
-              { label: t('softSignals'), value: 'soft_signal' },
-              { label: t('mandatoryViolations'), value: 'mandatory_finding' },
-            ]}
-          />
-        </div>
-        <p className="text-xs text-text-muted" dir="ltr">
-          {formData.term_type === 'word' && (lang === 'ar' ? 'كلمة: مطابقة رمز كامل (حد كلمة)، غير حساسة لحالة الأحرف في اللاتينية.' : 'word: exact token match (word boundary); case-insensitive in Latin.')}
-          {formData.term_type === 'phrase' && (lang === 'ar' ? 'عبارة: مطابقة جزء من النص؛ غير حساسة لحالة الأحرف في اللاتينية.' : 'phrase: substring match; case-insensitive in Latin.')}
-          {formData.term_type === 'regex' && (lang === 'ar' ? 'تعبير منتظم: نمط خام؛ أعلام gui (لا تحويل لحروف صغيرة).' : 'regex: raw pattern; flags gui (no lowercasing).')}
-        </p>
+        {!promptMode && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <Select
+                label={t('termType')}
+                value={formData.term_type}
+                onChange={e => setFormData({ ...formData, term_type: e.target.value as any })}
+                options={[
+                  { label: t('word'), value: 'word' },
+                  { label: t('phrase'), value: 'phrase' },
+                  { label: t('regex'), value: 'regex' },
+                ]}
+              />
+              <Select
+                label={t('category')}
+                value={formData.category}
+                onChange={e => setFormData({ ...formData, category: e.target.value as any })}
+                options={[
+                  { label: t('profanity'), value: 'profanity' },
+                  { label: t('sexual'), value: 'sexual' },
+                  { label: t('violence'), value: 'violence' },
+                  { label: t('drugs'), value: 'drugs' },
+                  { label: t('discrimination'), value: 'discrimination' },
+                  { label: t('other'), value: 'other' },
+                ]}
+              />
+              <Select
+                label={t('severityFloor')}
+                value={formData.severity_floor}
+                onChange={e => setFormData({ ...formData, severity_floor: e.target.value as any })}
+                options={[
+                  { label: t('low'), value: 'Low' },
+                  { label: t('medium'), value: 'Medium' },
+                  { label: t('high'), value: 'High' },
+                  { label: t('critical'), value: 'Critical' },
+                ]}
+              />
+              <Select
+                label={t('enforcementMode')}
+                value={formData.enforcement_mode}
+                onChange={e => setFormData({ ...formData, enforcement_mode: e.target.value as any })}
+                options={[
+                  { label: t('softSignals'), value: 'soft_signal' },
+                  { label: t('mandatoryViolations'), value: 'mandatory_finding' },
+                ]}
+              />
+            </div>
+            <p className="text-xs text-text-muted" dir="ltr">
+              {formData.term_type === 'word' && (lang === 'ar' ? 'كلمة: مطابقة رمز كامل (حد كلمة)، غير حساسة لحالة الأحرف في اللاتينية.' : 'word: exact token match (word boundary); case-insensitive in Latin.')}
+              {formData.term_type === 'phrase' && (lang === 'ar' ? 'عبارة: مطابقة جزء من النص؛ غير حساسة لحالة الأحرف في اللاتينية.' : 'phrase: substring match; case-insensitive in Latin.')}
+              {formData.term_type === 'regex' && (lang === 'ar' ? 'تعبير منتظم: نمط خام؛ أعلام gui (لا تحويل لحروف صغيرة).' : 'regex: raw pattern; flags gui (no lowercasing).')}
+            </p>
+          </>
+        )}
 
         {promptMode && formData.term_type !== 'regex' && (
           <div className="space-y-4 rounded-xl border border-border bg-background/40 p-4">
