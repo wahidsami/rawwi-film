@@ -3482,25 +3482,6 @@ export function ScriptWorkspace() {
             : 'The atom was reset because it does not belong to the selected article.',
         );
       }
-      if (created.atomMappingWarning) {
-        toast((t) => (
-          <div className="max-w-sm text-sm leading-6" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-            <p className="font-semibold mb-1">{lang === 'ar' ? 'تم الحفظ مع ملاحظة' : 'Saved with note'}</p>
-            <p>
-              {lang === 'ar'
-                ? 'تعذر ربط البند الفرعي المحدد حالياً بجدول السياسة في قاعدة البيانات، لذا حُفظت الملاحظة على مستوى المادة فقط.'
-                : 'The selected atom is not yet mapped in the policy table, so the finding was saved at article level only.'}
-            </p>
-            <button
-              type="button"
-              className="mt-2 text-xs underline"
-              onClick={() => toast.dismiss(t.id)}
-            >
-              {lang === 'ar' ? 'إغلاق' : 'Dismiss'}
-            </button>
-          </div>
-        ), { duration: 7000 });
-      }
       // const report = reportHistory.find((r) => r.id === formData.reportId) ?? selectedReportForHighlights;
       // const jobId = (report as { jobId?: string })?.jobId ?? created.jobId;
       if (selectedReportForHighlights?.jobId === created.jobId) {
