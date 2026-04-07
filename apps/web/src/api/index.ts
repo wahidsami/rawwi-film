@@ -447,6 +447,9 @@ export const lexiconApi = {
   /** Generate Arabic conjugations/forms for a term (AI). Returns variants to store as term_variants. */
   generateConjugations: (term: string): Promise<{ variants: string[] }> =>
     httpClient.post('/lexicon/generate-conjugations', { term }),
+  /** Generate term variants from a user prompt (AI). Returns candidate variants to review before saving. */
+  generateFromPrompt: (prompt: string, title?: string): Promise<{ variants: string[] }> =>
+    httpClient.post('/lexicon/generate-from-prompt', { prompt, title }),
 };
 
 let reportsEndpointUnavailable = false;

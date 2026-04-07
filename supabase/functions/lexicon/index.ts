@@ -85,6 +85,36 @@ function normalizeLexiconTerm(term: string): string {
     .toLowerCase();
 }
 
+function parseJsonStringArray(content: string | null | undefined): string[] {
+  const raw = content?.trim();
+  if (!raw) return [];
+  const cleaned = raw.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
+  try {
+    const parsed = JSON.parse(cleaned) as unknown;
+    return Array.isArray(parsed)
+      ? (parsed as unknown[])
+          .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+          .map((s) => s.trim())
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function dedupePromptVariants(values: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const trimmed = value.trim();
+    if (!trimmed) continue;
+    const key = normalizeLexiconTerm(trimmed);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(trimmed);
+  }
+  return result.slice(0, 120);
+}
+
 /** If atom is not in policy_article_map (DB drift vs PolicyMap), save article-level only instead of 400. */
 async function resolveGcamAtomForLexicon(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -460,14 +490,77 @@ Deno.serve(async (req: Request) => {
       const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
       const content = data?.choices?.[0]?.message?.content?.trim();
       if (!content) return json({ variants: [] });
-      const parsed = JSON.parse(content) as unknown;
-      const variants = Array.isArray(parsed)
-        ? (parsed as unknown[]).filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((s) => s.trim())
-        : [];
+      const variants = dedupePromptVariants(parseJsonStringArray(content));
       return json({ variants });
     } catch (e) {
       console.error("[lexicon] generate-conjugations error:", e);
       return json({ error: "Failed to generate conjugations" }, 500);
+    }
+  }
+
+  // POST /lexicon/generate-from-prompt — AI-generated candidate terms/phrases from a user prompt
+  if (method === "POST" && rest === "generate-from-prompt") {
+    let body: { prompt?: string; title?: string };
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+    const promptRaw = body.prompt;
+    if (typeof promptRaw !== "string" || !promptRaw.trim()) {
+      return json({ error: "prompt is required" }, 400);
+    }
+    const prompt = promptRaw.trim();
+    const title = typeof body.title === "string" ? body.title.trim() : "";
+    const apiKey =
+      Deno.env.get("OPENAI_API_KEY")?.trim() ||
+      Deno.env.get("OPENAI_KEY")?.trim() ||
+      Deno.env.get("GPT_API_KEY")?.trim();
+    if (!apiKey) {
+      console.warn("[lexicon] No OpenAI key: set OPENAI_API_KEY in Supabase Edge secrets (not in web .env)");
+      return json(
+        {
+          error: "Glossary prompt generation not configured",
+          hint: "Supabase Dashboard → Project Settings → Edge Functions → Secrets → add OPENAI_API_KEY. Or: supabase secrets set OPENAI_API_KEY=sk-...",
+        },
+        503
+      );
+    }
+
+    const systemMsg =
+      "You generate glossary candidate terms from user prompts. Return only a JSON array of Arabic words or short Arabic phrases. No explanations, no numbering, no markdown, no duplicates. Keep each item concise and directly usable as a glossary variant. If the prompt is broad, return the most relevant items only.";
+    const userMsg =
+      `User title: ${title || "N/A"}\n` +
+      `Prompt: ${prompt}\n` +
+      "Return only a JSON array of strings. Each string must be a single candidate glossary term or short phrase.";
+
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{ role: "system", content: systemMsg }, { role: "user", content: userMsg }],
+          temperature: 0.2,
+          max_tokens: 1200,
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[lexicon] OpenAI prompt generation error:", res.status, errText);
+        return json({ error: "Glossary prompt generation failed" }, 502);
+      }
+      const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+      const content = data?.choices?.[0]?.message?.content?.trim();
+      if (!content) return json({ variants: [] });
+      const variants = dedupePromptVariants(parseJsonStringArray(content));
+      return json({ variants });
+    } catch (e) {
+      console.error("[lexicon] generate-from-prompt error:", e);
+      return json({ error: "Failed to generate glossary terms from prompt" }, 500);
     }
   }
 

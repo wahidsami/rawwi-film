@@ -37,6 +37,17 @@ function normalizeLexiconTerm(term: string): string {
     .toLowerCase();
 }
 
+function parseGeneratedVariantsInput(value: string): string[] {
+  return value
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function serializeGeneratedVariantsInput(values: string[] | null | undefined): string {
+  return (values ?? []).join('\n');
+}
+
 export function Glossary() {
   const { t, lang } = useLangStore();
   const { settings } = useSettingsStore();
@@ -557,6 +568,10 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
 
   const [formData, setFormData] = useState<FormState>(defaultForm);
   const [generatingConjugations, setGeneratingConjugations] = useState(false);
+  const [promptMode, setPromptMode] = useState(false);
+  const [generationPrompt, setGenerationPrompt] = useState('');
+  const [generatedVariantsText, setGeneratedVariantsText] = useState('');
+  const [generatingFromPrompt, setGeneratingFromPrompt] = useState(false);
   const [error, setError] = useState('');
 
   // Reset form when modal opens or termId/lexiconTerms change; derive existingTerm inside effect to avoid stale closure
@@ -582,8 +597,14 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
               }
             : {}),
         });
+        setGeneratedVariantsText(serializeGeneratedVariantsInput(existingTerm.term_variants ?? []));
+        setPromptMode(false);
+        setGenerationPrompt('');
       } else {
         setFormData(defaultForm);
+        setGeneratedVariantsText('');
+        setPromptMode(false);
+        setGenerationPrompt('');
       }
       setError('');
     }
@@ -619,7 +640,39 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
   };
 
   const removeVariant = (v: string) => {
-    setFormData({ ...formData, term_variants: (formData.term_variants ?? []).filter((x) => x !== v) });
+    const nextVariants = (formData.term_variants ?? []).filter((x) => x !== v);
+    setFormData({ ...formData, term_variants: nextVariants });
+    if (promptMode) {
+      setGeneratedVariantsText(serializeGeneratedVariantsInput(nextVariants));
+    }
+  };
+
+  const handleGenerateFromPrompt = async () => {
+    const prompt = generationPrompt.trim();
+    if (!prompt) {
+      setError(lang === 'ar' ? 'أدخل الطلب أولاً' : 'Enter the prompt first');
+      return;
+    }
+    setError('');
+    setGeneratingFromPrompt(true);
+    try {
+      const { variants } = await lexiconApi.generateFromPrompt(prompt, formData.term?.trim() || undefined);
+      setFormData({ ...formData, term_variants: variants });
+      setGeneratedVariantsText(serializeGeneratedVariantsInput(variants));
+    } catch (e: unknown) {
+      const msg = (e as { message?: string })?.message ?? String(e);
+      if (msg.includes('503') || msg.includes('not configured') || msg.includes('OPENAI_API_KEY')) {
+        setError(
+          lang === 'ar'
+            ? 'توليد الكلمات من الطلب غير مفعّل. في Supabase: الإعدادات → Edge Functions → Secrets → أضف OPENAI_API_KEY، أو أدخل الكلمات يدوياً.'
+            : 'Prompt-based glossary generation needs OPENAI_API_KEY in Supabase Edge Function secrets, or enter the variants manually.'
+        );
+      } else {
+        setError(lang === 'ar' ? 'فشل توليد الكلمات من الطلب' : 'Failed to generate variants from prompt');
+      }
+    } finally {
+      setGeneratingFromPrompt(false);
+    }
   };
 
   const handleSubmit = () => {
@@ -630,6 +683,10 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
     }
     if (!formData.canonical_atom?.trim()) {
       setError(lang === 'ar' ? 'اختر نوع المخالفة (إطار الذرات)' : 'Select a violation type (canonical atom)');
+      return;
+    }
+    if (promptMode && (formData.term_variants ?? []).length === 0) {
+      setError(lang === 'ar' ? 'ولّد الكلمات أولاً أو أدخلها في الصندوق قبل الحفظ' : 'Generate the terms first or enter them in the generated words box before saving');
       return;
     }
 
@@ -680,15 +737,37 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
         )}
 
         <Input
-          label={t('term')}
+          label={promptMode ? (lang === 'ar' ? 'عنوان المجموعة' : 'Group title') : t('term')}
           value={formData.term}
           onChange={e => setFormData({ ...formData, term: e.target.value })}
           required
         />
+        {!termId && (
+          <label className="flex items-center gap-2 text-sm text-text-main">
+            <input
+              type="checkbox"
+              checked={promptMode}
+              onChange={(e) => {
+                const next = e.target.checked;
+                setPromptMode(next);
+                setError('');
+                if (!next) {
+                  setGenerationPrompt('');
+                }
+              }}
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20"
+            />
+            <span>{lang === 'ar' ? 'إضافة من طلب' : 'From prompt'}</span>
+          </label>
+        )}
         <p className="text-xs text-text-muted" dir="ltr">
-          {lang === 'ar'
-            ? 'يُطبَّق تطبيع كشف عربي محافظ عند المطابقة: إزالة التشكيل والكشيدة وبعض الأحرف المخفية، ودمج المسافات الغريبة بين الحروف، مع توحيد شائع مثل أ/إ/آ→ا و ى→ي. يُفضّل إدخال المصطلح بصيغته العربية الطبيعية.'
-            : 'Conservative Arabic detection normalization is applied during matching: diacritics, tatweel, hidden characters, and odd letter spacing are cleaned up, with common normalization such as أ/إ/آ -> ا and ى -> ي. It is still best to enter the term in normal Arabic spelling.'}
+          {promptMode
+            ? (lang === 'ar'
+              ? 'اكتب عنواناً يصف المجموعة الناتجة، مثل: الرتب العسكرية. سيتم حفظ الكلمات المولدة كمتغيرات تحت هذا العنوان.'
+              : 'Enter a group title such as “Military ranks”. The generated items will be saved as variants under this title.')
+            : (lang === 'ar'
+              ? 'يُطبَّق تطبيع كشف عربي محافظ عند المطابقة: إزالة التشكيل والكشيدة وبعض الأحرف المخفية، ودمج المسافات الغريبة بين الحروف، مع توحيد شائع مثل أ/إ/آ→ا و ى→ي. يُفضّل إدخال المصطلح بصيغته العربية الطبيعية.'
+              : 'Conservative Arabic detection normalization is applied during matching: diacritics, tatweel, hidden characters, and odd letter spacing are cleaned up, with common normalization such as أ/إ/آ -> ا and ى -> ي. It is still best to enter the term in normal Arabic spelling.')}
         </p>
 
         {/* Canonical atom: when selected, Article + Atom + Title are set automatically and shown read-only */}
@@ -792,8 +871,62 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
           {formData.term_type === 'regex' && (lang === 'ar' ? 'تعبير منتظم: نمط خام؛ أعلام gui (لا تحويل لحروف صغيرة).' : 'regex: raw pattern; flags gui (no lowercasing).')}
         </p>
 
+        {promptMode && formData.term_type !== 'regex' && (
+          <div className="space-y-4 rounded-xl border border-border bg-background/40 p-4">
+            <Textarea
+              label={lang === 'ar' ? 'الطلب' : 'Prompt'}
+              value={generationPrompt}
+              onChange={(e) => setGenerationPrompt(e.target.value)}
+              rows={3}
+              placeholder={
+                lang === 'ar'
+                  ? 'مثال: أريد جميع أسماء الرتب العسكرية بالعربية'
+                  : 'Example: I need all military rank names in Arabic'
+              }
+            />
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGenerateFromPrompt}
+                disabled={generatingFromPrompt || !generationPrompt.trim()}
+                className="flex items-center gap-1.5"
+              >
+                {generatingFromPrompt ? (
+                  <span className="animate-pulse">{lang === 'ar' ? 'جاري التوليد…' : 'Generating…'}</span>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    {lang === 'ar' ? 'توليد الكلمات' : 'Generate terms'}
+                  </>
+                )}
+              </Button>
+            </div>
+            <Textarea
+              label={lang === 'ar' ? 'الكلمات المولدة' : 'Generated words'}
+              value={generatedVariantsText}
+              onChange={(e) => {
+                const text = e.target.value;
+                setGeneratedVariantsText(text);
+                setFormData({ ...formData, term_variants: parseGeneratedVariantsInput(text) });
+              }}
+              rows={8}
+              placeholder={
+                lang === 'ar'
+                  ? 'ستظهر الكلمات هنا، كل كلمة أو عبارة في سطر مستقل'
+                  : 'Generated terms will appear here, one word or phrase per line'
+              }
+            />
+            <p className="text-xs text-text-muted">
+              {lang === 'ar'
+                ? 'يمكنك تعديل القائمة قبل الحفظ. سيُعامل كل سطر كمتغير تابع لهذا العنوان أثناء التحليل.'
+                : 'You can edit this list before saving. Each line will be treated as a variant under this title during analysis.'}
+            </p>
+          </div>
+        )}
+
         {/* Variants / Conjugations: tags + Generate button */}
-        {formData.term_type !== 'regex' && (
+        {!promptMode && formData.term_type !== 'regex' && (
           <div>
             <label className="block text-sm font-medium text-text-main mb-1">
               {lang === 'ar' ? 'تصريفات / أشكال (اختياري)' : 'Variants / Conjugations (optional)'}
