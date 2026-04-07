@@ -1753,7 +1753,7 @@ export function ScriptWorkspace() {
   // Fetch backend decision/can so UI matches backend policy (single source of truth)
   const [decisionCanScriptId, setDecisionCanScriptId] = useState<string | null>(null);
   useEffect(() => {
-    if (!script?.id || script.status === 'approved' || script.status === 'rejected') {
+    if (!script?.id) {
       setDecisionCan(null);
       setDecisionCanScriptId(null);
       return;
@@ -1779,8 +1779,8 @@ export function ScriptWorkspace() {
         }
       });
     return () => { cancelled = true; };
-  }, [script?.id, script?.status]);
-  const showDecisionBar = decisionCan !== null && decisionCanScriptId === script?.id && script?.status !== 'approved' && script?.status !== 'rejected';
+  }, [script?.id]);
+  const showDecisionBar = decisionCan !== null && decisionCanScriptId === script?.id;
 
   // On mount: fetch latest analysis job for this script so "View Report" has a jobId
   useEffect(() => {
@@ -1995,6 +1995,7 @@ export function ScriptWorkspace() {
   }, [showDecisionBar, decisionCan, user, script, hasPermission, hasGeneratedReport, missingReportReason]);
   const selectedWorkspaceReportReviewStatus =
     selectedReportSummary?.reviewStatus ?? selectedReportForHighlights?.reviewStatus ?? null;
+  const workspaceDecisionStatus = selectedWorkspaceReportReviewStatus ?? script?.status ?? 'draft';
   const finalDecisionCapabilities = useMemo(() => {
     if (!effectiveDecisionCapabilities) return null;
     if (selectedWorkspaceReportReviewStatus !== 'approved') return effectiveDecisionCapabilities;
@@ -5555,7 +5556,7 @@ export function ScriptWorkspace() {
               <DecisionBar
                 scriptId={script.id}
                 scriptTitle={script.title}
-                currentStatus={script.status || 'draft'}
+                currentStatus={workspaceDecisionStatus}
                 relatedReportId={selectedReportForHighlights?.id}
                 compact
                 capabilities={finalDecisionCapabilities}
