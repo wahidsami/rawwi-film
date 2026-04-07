@@ -688,6 +688,44 @@ function isWeakArticleFourEvidence(candidate: FindingWithGlobal): boolean {
   return false;
 }
 
+const ARTICLE_FOUR_DEFER_PASS_NAMES = new Set([
+  "insults",
+  "violence",
+  "women",
+  "discrimination_incitement",
+  "misinformation",
+]);
+
+function detectionPassNameOf(finding: FindingWithGlobal): string {
+  return String(finding.detection_pass ?? "").trim().toLowerCase();
+}
+
+function isArticleFourDeferredBySpecificPass(
+  candidate: FindingWithGlobal,
+  specific: FindingWithGlobal[],
+): boolean {
+  return specific.some((other) => {
+    const otherPass = detectionPassNameOf(other);
+    if (!ARTICLE_FOUR_DEFER_PASS_NAMES.has(otherPass)) return false;
+
+    const candidateEvidence = compactNormalizedEvidence(candidate.evidence_snippet);
+    const otherEvidence = compactNormalizedEvidence(other.evidence_snippet);
+    const sameEvidence =
+      candidateEvidence.length >= 3 &&
+      otherEvidence.length >= 3 &&
+      (candidateEvidence.includes(otherEvidence) || otherEvidence.includes(candidateEvidence));
+    const sameIncident = sameEvidence || spansOverlapEnough(candidate, other) || incidentsAreNearby(candidate, other, 280);
+    if (!sameIncident) return false;
+
+    const strongerSpecific =
+      severityRank(other.severity) > severityRank(candidate.severity) ||
+      (severityRank(other.severity) === severityRank(candidate.severity) &&
+        (other.confidence ?? 0) >= (candidate.confidence ?? 0));
+
+    return strongerSpecific || !isWeakArticleFourEvidence(other);
+  });
+}
+
 function incidentsAreNearby(a: FindingWithGlobal, b: FindingWithGlobal, maxDistance = 1200): boolean {
   const aStart = a.start_offset_global ?? 0;
   const aEnd = a.end_offset_global ?? aStart;
@@ -743,6 +781,10 @@ function dropRedundantArticleFourFindings(findings: FindingWithGlobal[]): Findin
         return severityRank(other.severity) >= severityRank(candidate.severity);
       });
       if (nearbySpecificOwner) return false;
+    }
+
+    if (isArticleFourDeferredBySpecificPass(candidate, specific)) {
+      return false;
     }
 
     return true;

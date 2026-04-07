@@ -1,13 +1,14 @@
 /**
  * Multi-Pass Detection System
  * 
- * Uses 10 specialized scanners instead of 1 complex prompt:
+ * Uses 11 specialized scanners instead of 1 complex prompt:
  * - Pass 0: Glossary (Lexicon terms from database)
  * - Pass 1: Insults & Profanity
  * - Pass 2: Violence & Threats
  * - Pass 3: Sexual Content
  * - Pass 4: Drugs & Alcohol
  * - Pass 5: Discrimination & Incitement
+ * - Pass 6: Women & Dignity
  * 
  * Each pass runs in parallel with a focused, simple prompt.
  */
@@ -677,9 +678,9 @@ ${STRUCTURED_RATIONALE_INSTRUCTIONS}
 يجب فهم المعنى بغض النظر عن اللهجة.
 
 أمثلة:
-- "مكانك المطبخ" → تمييز جندري
 - "اطردوهم" → تحريض
 - "هذولا أقل مننا" → تمييز
+- "لا يستحقون الاحترام" → تمييز أو تحقير جماعي
 
 المهم:
 - فهم المعنى
@@ -687,14 +688,12 @@ ${STRUCTURED_RATIONALE_INSTRUCTIONS}
 
 === تعريف التمييز ===
 أي تعبير يقلل من قيمة شخص أو مجموعة بناءً على:
-- الجنس (رجل / امرأة)
 - الدين
 - العرق
 - الطبقة الاجتماعية
 - الانتماء
 
 مثل:
-- التقليل من الدور ("مكانك المطبخ")
 - الاستعلاء ("أنتم أقل")
 - الإذلال الجماعي
 
@@ -724,6 +723,8 @@ ${articlePayload}
 ❌ لا تُخرج:
 - الإهانات الفردية → (insults)
 - التهديد المباشر → (violence)
+- أي تقليل أو تحقير مرتبط بالمرأة كـ "امرأة" أو "بنت" → (women)
+- المحتوى الجنسي أو اللمس أو الوصف الجسدي → (sexual_content)
 
 === قاعدة المطابقة النصية (حرجة جدًا) ===
 
@@ -743,12 +744,12 @@ ${articlePayload}
 
 === أمثلة ===
 
-✔ "مكانك المطبخ" → تمييز جندري
 ✔ "هذولا أقل مننا" → تمييز
 ✔ "اطردوهم من البلد" → تحريض
 
 ❌ "أنت غبي" → إهانة
 ❌ "أضربك" → عنف
+❌ "مكانك المطبخ" → women
 ❌ "أنا زعلان" → ليس مخالفة
 
 === قاعدة التحقق قبل الإرجاع ===
@@ -787,7 +788,146 @@ function buildDiscriminationUserPromptAddition(): string {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// PASS 6: NATIONAL SECURITY & GOVERNANCE
+// PASS 6: WOMEN & DIGNITY
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function buildWomenPrompt(articles: GCAMArticle[]): string {
+  const articlePayload = buildArticlePayload(articles);
+  const frameworkBlock = getFrameworkPromptSection("WOMEN");
+
+  return `${frameworkBlock}
+
+${STRUCTURED_RATIONALE_INSTRUCTIONS}
+
+أنت محلل امتثال محتوى متخصص في كشف الانتهاكات المرتبطة بالمرأة وكرامتها في النصوص الدرامية.
+
+⚠️ مهم جدًا:
+- لا تعتمد على السياق العام
+- لا تعتمد على فهم المشهد
+- اعتمد فقط على النص الحرفي
+
+=== ملاحظة لغوية مهمة ===
+النص قد يكون بالفصحى أو باللهجات العربية.
+
+يجب فهم المعنى، لكن:
+- استخراج النص يجب أن يكون حرفيًا 100%
+
+المواد المرتبطة بهذا المسار:
+${articlePayload}
+
+=== تعريف مخالفة المرأة ===
+المخالفة تحدث فقط عندما يحتوي النص على:
+
+- تقليل من قيمة المرأة بسبب كونها امرأة
+- حصر دور المرأة في نطاق ضيق (مثل: المطبخ، البيت، السرير)
+- نفي حق المرأة في القرار أو الكلام
+- إهانة قائمة على النوع (gender-based degradation)
+- فرض تبعية أو سيطرة بسبب كونها امرأة
+
+=== يشمل ===
+
+- "مكانك المطبخ"
+- "ما لك كلمة"
+- "المرأة مكانها البيت"
+- "أنتِ بس للمطبخ والسرير"
+- "البنت ما لها إلا كذا"
+
+=== لا يشمل ===
+
+❌ الإهانات العامة:
+- "أنت غبية" (بدون سياق جندري واضح)
+
+❌ التمييز العام:
+- إذا كان ضد مجموعة غير محددة بالنساء
+
+❌ المحتوى الجنسي:
+- التلامس، الرغبة، الوصف الجسدي
+
+❌ العنف:
+- التهديد أو الضرب (إلا إذا النص نفسه يربطه بكونها امرأة)
+
+=== القاعدة الأساسية ===
+
+لا تُرجع أي نتيجة إلا إذا كان النص نفسه يحتوي على إهانة أو تقليل واضح للمرأة كـ "امرأة".
+
+=== قاعدة المطابقة النصية (حرجة جدًا) ===
+
+- يجب أن يكون evidence_snippet مطابقًا حرفيًا 100%
+- يجب أن يكون النص منسوخًا كما هو
+- ممنوع إعادة الصياغة
+- ممنوع اختيار نص قريب
+
+⚠️ أي اختلاف ولو حرف واحد = خطأ
+
+إذا لم تجد نصًا واضحًا:
+→ لا تُرجع نتيجة
+
+=== قواعد الدقة ===
+
+- كن محافظًا جدًا
+- لا تخمّن
+- لا تربط جمل متعددة
+- لا تعتمد على التفسير
+- canonical_atom لهذا المسار يجب أن تكون "WOMEN"
+
+=== قاعدة عدم التداخل ===
+
+❌ إذا كان النص:
+- إهانة عامة → insults
+- تهديد أو ضرب → violence
+- محتوى جنسي → sexual_content
+- تحريض ضد مجموعة → discrimination
+
+→ لا تُرجع في هذا المسار
+
+=== قاعدة التحقق قبل الإرجاع ===
+
+قبل إرجاع أي نتيجة:
+
+1. هل النص منسوخ حرفيًا؟
+2. هل يحتوي النص نفسه على تقليل واضح للمرأة؟
+3. هل يمكن فهم الإهانة بدون تفسير إضافي؟
+
+إذا لا:
+→ لا تُرجع النتيجة
+
+=== حجم المقتطف ===
+
+- يُسمح:
+  ✔ كلمة
+  ✔ جملة قصيرة
+  ✔ جملة أطول
+
+لكن فقط إذا:
+→ النص نفسه يحتوي الدليل الكامل
+
+=== المطلوب ===
+
+استخرج فقط العبارات التي تحتوي على تقليل أو إهانة واضحة للمرأة كـ "امرأة".
+
+إذا لم توجد مخالفات:
+{ "findings": [] }`;
+}
+
+function buildWomenUserPromptAddition(): string {
+  return `=== STRICT EVIDENCE RULES ===
+
+- يجب استخراج أصغر عبارة تدل على الإهانة المرتبطة بالمرأة
+- يجب أن يكون النص مطابقًا حرفيًا 100%
+- يجب أن تتطابق offsets مع النص تمامًا
+- لا تعتمد على السياق العام
+
+قبل الإرجاع:
+1. انسخ النص حرفيًا
+2. تأكد أنه موجود في النص
+3. تأكد أن الإهانة واضحة من النص نفسه
+
+إذا لم توجد مخالفات:
+{ "findings": [] }`;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PASS 7: NATIONAL SECURITY & GOVERNANCE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function buildNationalSecurityPrompt(articles: GCAMArticle[]): string {
@@ -1277,9 +1417,15 @@ export const DETECTION_PASSES: PassDefinition[] = [
   },
   {
     name: "discrimination_incitement",
-    articleIds: [5, 6, 7, 8, 13, 17],
+    articleIds: [5, 6, 8, 13, 17],
     buildPrompt: buildDiscriminationPrompt,
     model: "gpt-4.1", // Expensive model for nuanced detection
+  },
+  {
+    name: "women",
+    articleIds: [7],
+    buildPrompt: buildWomenPrompt,
+    model: "gpt-4.1", // Needs clean separation from discrimination/sexual/violence
   },
   {
     name: "national_security",
@@ -1446,17 +1592,19 @@ async function runSinglePass(
             ? buildSexualContentUserPromptAddition()
             : pass.name === "drugs_alcohol"
               ? buildDrugsUserPromptAddition()
-          : pass.name === "discrimination_incitement"
-            ? buildDiscriminationUserPromptAddition()
-            : pass.name === "national_security"
-              ? buildNationalSecurityUserPromptAddition()
-              : pass.name === "extremism_banned_groups"
-                ? buildExtremismUserPromptAddition()
-            : pass.name === "misinformation"
-              ? buildMisinformationUserPromptAddition()
-              : pass.name === "international_relations"
-                ? buildInternationalUserPromptAddition()
-          : null;
+              : pass.name === "discrimination_incitement"
+                ? buildDiscriminationUserPromptAddition()
+                : pass.name === "women"
+                  ? buildWomenUserPromptAddition()
+                  : pass.name === "national_security"
+                    ? buildNationalSecurityUserPromptAddition()
+                    : pass.name === "extremism_banned_groups"
+                      ? buildExtremismUserPromptAddition()
+                      : pass.name === "misinformation"
+                        ? buildMisinformationUserPromptAddition()
+                        : pass.name === "international_relations"
+                          ? buildInternationalUserPromptAddition()
+                          : null;
     
     // Call OpenAI with specialized prompt
     const model = pass.model || "gpt-4.1";

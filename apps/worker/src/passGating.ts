@@ -1,7 +1,7 @@
 import { config } from "./config.js";
 import { canonicalArabicToken, findStringMatches } from "./lexiconCache.js";
 
-export const PASS_GATING_VERSION = "v1";
+export const PASS_GATING_VERSION = "v2";
 
 type SignalSpec = {
   value: string;
@@ -43,10 +43,22 @@ const PASS_SIGNAL_SPECS: Record<string, SignalSpec[]> = {
     { value: "عبد", termType: "word" },
     { value: "عبيد", termType: "word" },
     { value: "كافر", termType: "word" },
+    { value: "اطردوهم", termType: "word" },
+    { value: "أقل مننا", termType: "phrase" },
+    { value: "لا يستحقون", termType: "phrase" },
+    { value: "هذولا أقل", termType: "phrase" },
+  ],
+  women: [
     { value: "المطبخ", termType: "word" },
     { value: "السرير", termType: "word" },
+    { value: "امرأة", termType: "word" },
+    { value: "المرأة", termType: "word" },
+    { value: "البنت", termType: "word" },
     { value: "مكان البنت", termType: "phrase" },
     { value: "مكانك المطبخ", termType: "phrase" },
+    { value: "ما لك كلمة", termType: "phrase" },
+    { value: "أنت بس للمطبخ", termType: "phrase" },
+    { value: "المرأة مكانها البيت", termType: "phrase" },
   ],
   national_security: [
     { value: "الأمن الوطني", termType: "phrase" },

@@ -202,6 +202,53 @@ function rationaleMentionsDifferentScene(
   return !mentioned.includes(resolved);
 }
 
+const ARTICLE_FOUR_DEFER_PASS_NAMES = new Set([
+  "insults",
+  "violence",
+  "women",
+  "discrimination_incitement",
+  "misinformation",
+]);
+
+function spansOverlapEnough(a: HybridFindingLike, b: HybridFindingLike, minRatio = 0.6): boolean {
+  const aStart = a.start_offset_global ?? 0;
+  const aEnd = a.end_offset_global ?? aStart;
+  const bStart = b.start_offset_global ?? 0;
+  const bEnd = b.end_offset_global ?? bStart;
+  const overlap = Math.max(0, Math.min(aEnd, bEnd) - Math.max(aStart, bStart));
+  const aLen = Math.max(0, aEnd - aStart);
+  const bLen = Math.max(0, bEnd - bStart);
+  if (aLen === 0 || bLen === 0) return false;
+  return overlap / Math.min(aLen, bLen) >= minRatio;
+}
+
+function shouldDropArticleFourForSpecificOwner(
+  candidate: HybridFindingLike,
+  allFindings: HybridFindingLike[],
+): boolean {
+  if ((candidate.article_id ?? 0) !== 4) return false;
+
+  const candidatePass = String((candidate as { detection_pass?: string }).detection_pass ?? "").trim().toLowerCase();
+  if (!candidatePass) return false;
+
+  const candidateEvidence = normalizeForCompare(candidate.evidence_snippet);
+  return allFindings.some((other) => {
+    if (other === candidate) return false;
+    if ((other.article_id ?? 0) === 4) return false;
+
+    const otherPass = String((other as { detection_pass?: string }).detection_pass ?? "").trim().toLowerCase();
+    if (!ARTICLE_FOUR_DEFER_PASS_NAMES.has(otherPass)) return false;
+
+    const otherEvidence = normalizeForCompare(other.evidence_snippet);
+    const sameEvidence =
+      candidateEvidence.length >= 3 &&
+      otherEvidence.length >= 3 &&
+      (candidateEvidence.includes(otherEvidence) || otherEvidence.includes(candidateEvidence));
+
+    return sameEvidence || spansOverlapEnough(candidate, other);
+  });
+}
+
 function applyGuardrails(a: AuditorAssessment): AuditorAssessment {
   const primaryArticle = a.primary_article_id ?? 0;
   const related = normalizeRelated(a.related_article_ids ?? [], primaryArticle);
@@ -361,6 +408,7 @@ export async function runDeepAuditorPass(args: {
     const exactEvidence = isExactEvidenceInText(fullText, finding.evidence_snippet);
     if (!exactEvidence) return false;
     if (isWeakRationaleText(finding.rationale_ar) && finding.final_ruling === "violation") return false;
+    if (shouldDropArticleFourForSpecificOwner(finding, merged)) return false;
     return true;
   });
 
