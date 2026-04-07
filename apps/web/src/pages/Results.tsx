@@ -39,6 +39,7 @@ import {
   type SemanticCategoryId,
 } from '@/data/semanticCategories';
 import { displayPageForFinding } from '@/utils/viewerPageFromOffset';
+import { formatResolvedSceneLabel, resolveSceneLabelFromOffset } from '@/utils/sceneLabelFromOffset';
 
 const policyArticles = getPolicyArticles().map((a) => ({
   id: a.articleId,
@@ -1314,6 +1315,10 @@ export function Results() {
       : (f.source === 'manual' ? (lang === 'ar' ? 'تعليق يدوي:' : 'Manual comment:') : (lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:'));
     const pillarId = (v3.pillar_id as string | undefined) ?? null;
     const displayPage = displayPageForFinding(f.startOffsetGlobal, reportViewerPages, f.pageNumber ?? null);
+    const sceneLabel = formatResolvedSceneLabel(
+      resolveSceneLabelFromOffset(f.startOffsetGlobal ?? null, reportViewerPages),
+      lang
+    );
     const displayTitle = displayFindingTitle({
       title: f.titleAr,
       source: f.source ?? 'ai',
@@ -1356,6 +1361,11 @@ export function Results() {
         {displayPage != null && displayPage > 0 && (
           <div className="text-[10px] text-primary font-medium mb-1">
             {lang === 'ar' ? `صفحة ${displayPage}` : `Page ${displayPage}`}
+          </div>
+        )}
+        {sceneLabel && (
+          <div className="text-[10px] text-text-muted font-medium mb-1">
+            {sceneLabel}
           </div>
         )}
         <div className={cn("p-3 rounded-md border text-sm font-medium text-text-main italic", isApproved ? "bg-success/5 border-success/10" : "bg-background/50 border-border/50")} dir="rtl">
@@ -1423,6 +1433,10 @@ export function Results() {
     const matchedRaw = matchRawFindingForReview(f);
     const isApproved = f.reviewStatus === 'approved';
     const displayPage = displayPageForFinding(f.startOffsetGlobal ?? null, reportViewerPages, f.pageNumber ?? null);
+    const sceneLabel = formatResolvedSceneLabel(
+      resolveSceneLabelFromOffset(f.startOffsetGlobal ?? null, reportViewerPages),
+      lang
+    );
     const displayTitle = displayFindingTitle({
       title: f.titleAr,
       source: f.sourceKind === 'glossary' ? 'lexicon_mandatory' : f.sourceKind === 'manual' ? 'manual' : 'ai',
@@ -1478,6 +1492,11 @@ export function Results() {
         {displayPage != null && displayPage > 0 && (
           <div className="text-[10px] text-primary font-medium mb-1">
             {lang === 'ar' ? `صفحة ${displayPage}` : `Page ${displayPage}`}
+          </div>
+        )}
+        {sceneLabel && (
+          <div className="text-[10px] text-text-muted font-medium mb-1">
+            {sceneLabel}
           </div>
         )}
         <div className={cn("p-3 rounded-md border text-sm font-medium text-text-main italic", isApproved ? "bg-success/5 border-success/10" : "bg-background/50 border-border/50")} dir="rtl">
@@ -1626,30 +1645,43 @@ export function Results() {
             {isExpanded && (
               <div className="p-4 space-y-3">
                 {list.map(({ art, f, idx }) => (
-                  <div key={`${art.article_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-text-main text-sm">
-                        {displayFindingTitle({
-                          title: f.title_ar,
-                          source: f.source ?? 'ai',
-                          evidenceSnippet: f.evidence_snippet,
-                          articleId: art.article_id,
-                        })}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-text-muted">
-                          {lang === "ar" ? "ثقة" : "conf"} {Math.round((f.confidence ?? 0) * 100)}%
-                        </span>
+                  (() => {
+                    const sceneLabel = formatResolvedSceneLabel(
+                      resolveSceneLabelFromOffset(f.start_offset_global ?? null, reportViewerPages),
+                      lang
+                    );
+                    return (
+                      <div key={`${art.article_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-semibold text-text-main text-sm">
+                            {displayFindingTitle({
+                              title: f.title_ar,
+                              source: f.source ?? 'ai',
+                              evidenceSnippet: f.evidence_snippet,
+                              articleId: art.article_id,
+                            })}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-text-muted">
+                              {lang === "ar" ? "ثقة" : "conf"} {Math.round((f.confidence ?? 0) * 100)}%
+                            </span>
+                          </div>
+                        </div>
+                        {sceneLabel && (
+                          <div className="text-[10px] text-text-muted font-medium mb-1">
+                            {sceneLabel}
+                          </div>
+                        )}
+                        <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">
+                          &quot;{f.evidence_snippet}&quot;
+                        </div>
+                        <div className="mt-2 text-xs text-text-muted">
+                          {lang === "ar" ? "المادة (مرجع قانوني): " : "Article (legal ref): "}
+                          <span className="text-text-main">{articleLabel(art.article_id)}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">
-                      &quot;{f.evidence_snippet}&quot;
-                    </div>
-                    <div className="mt-2 text-xs text-text-muted">
-                      {lang === "ar" ? "المادة (مرجع قانوني): " : "Article (legal ref): "}
-                      <span className="text-text-main">{articleLabel(art.article_id)}</span>
-                    </div>
-                  </div>
+                    );
+                  })()
                 ))}
               </div>
             )}
@@ -1696,6 +1728,10 @@ export function Results() {
                 {artFindings.map((f, idx) => {
                   const articleId = Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0;
                   const cardRationale = isWeakRationaleText(f.rationale) ? null : f.rationale;
+                  const sceneLabel = formatResolvedSceneLabel(
+                    resolveSceneLabelFromOffset(f.start_offset_global ?? null, reportViewerPages),
+                    lang
+                  );
                   return (
                         <div key={`${f.canonical_finding_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-2">
@@ -1711,6 +1747,11 @@ export function Results() {
                               <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
                             </div>
                           </div>
+                          {sceneLabel && (
+                            <div className="text-[10px] text-text-muted font-medium mb-1">
+                              {sceneLabel}
+                            </div>
+                          )}
                           <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">"{f.evidence_snippet}"</div>
                           <div className="mt-2 text-xs text-text-muted space-y-1">
                             <div>

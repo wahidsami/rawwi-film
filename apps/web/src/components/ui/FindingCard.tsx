@@ -9,6 +9,7 @@ import { Button } from './Button';
 import { cn } from '@/utils/cn';
 import { ShieldAlert, AlertTriangle, AlertCircle, Edit2, RotateCcw, MapPin, EyeOff, CheckCircle, ExternalLink } from 'lucide-react';
 import { displayPageForFinding } from '@/utils/viewerPageFromOffset';
+import { formatResolvedSceneLabel, resolveSceneLabelFromOffset } from '@/utils/sceneLabelFromOffset';
 
 interface FindingCardProps {
   finding: Finding;
@@ -54,6 +55,10 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick, scriptVi
     scriptViewerPages ?? null,
     finding.pageNumber != null && Number.isFinite(Number(finding.pageNumber)) ? Number(finding.pageNumber) : null
   );
+  const resolvedSceneLabel = formatResolvedSceneLabel(
+    resolveSceneLabelFromOffset(finding.startOffsetGlobal, scriptViewerPages ?? null),
+    lang
+  );
 
   const getLocationString = () => {
     const page = displayPage ?? finding.location?.page;
@@ -61,7 +66,8 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick, scriptVi
     const parts = [];
     const scene = finding.location?.scene;
     if (page != null && Number.isFinite(Number(page))) parts.push(`${t('page')} ${page}`);
-    if (scene != null && Number.isFinite(Number(scene))) parts.push(`${t('scene')} ${scene}`);
+    if (resolvedSceneLabel) parts.push(resolvedSceneLabel);
+    else if (scene != null && Number.isFinite(Number(scene))) parts.push(`${t('scene')} ${scene}`);
     if (finding.location?.lineChunk) parts.push(finding.location.lineChunk);
     return parts.length > 0 ? parts.join(' • ') : t('unknownLocation');
   };

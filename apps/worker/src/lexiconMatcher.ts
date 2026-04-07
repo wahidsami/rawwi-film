@@ -26,6 +26,59 @@ export type LexiconAnalysisResult = {
   softSignals: LexiconSignal[];
 };
 
+const LEXICON_SEVERITY_ORDER: Record<string, number> = {
+  critical: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
+};
+
+function compactLexiconEvidence(value: string | null | undefined): string {
+  return (value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function dedupeMandatoryFindings(list: LexiconFinding[]): LexiconFinding[] {
+  const byKey = new Map<string, LexiconFinding>();
+  for (const finding of list) {
+    const key = [
+      finding.articleId,
+      finding.atomId ?? "",
+      finding.match.startIndex,
+      finding.match.endIndex,
+      compactLexiconEvidence(finding.evidence_snippet).toLowerCase(),
+    ].join("|");
+    const existing = byKey.get(key);
+    if (!existing) {
+      byKey.set(key, finding);
+      continue;
+    }
+    const nextSeverity = LEXICON_SEVERITY_ORDER[String(finding.severity).toLowerCase()] ?? 0;
+    const existingSeverity = LEXICON_SEVERITY_ORDER[String(existing.severity).toLowerCase()] ?? 0;
+    if (nextSeverity > existingSeverity) {
+      byKey.set(key, finding);
+      continue;
+    }
+    if (nextSeverity === existingSeverity && (finding.term.term?.length ?? 0) > (existing.term.term?.length ?? 0)) {
+      byKey.set(key, finding);
+    }
+  }
+  return [...byKey.values()];
+}
+
+function dedupeSoftSignals(list: LexiconSignal[]): LexiconSignal[] {
+  const byKey = new Map<string, LexiconSignal>();
+  for (const signal of list) {
+    const key = [
+      signal.term.id,
+      signal.match.startIndex,
+      signal.match.endIndex,
+      compactLexiconEvidence(signal.match.matchedText).toLowerCase(),
+    ].join("|");
+    if (!byKey.has(key)) byKey.set(key, signal);
+  }
+  return [...byKey.values()];
+}
+
 /**
  * Analyze chunk text against lexicon; split into mandatory findings and soft signals.
  */
@@ -62,5 +115,8 @@ export function analyzeLexiconMatches(
     }
   }
 
-  return { mandatoryFindings, softSignals };
+  return {
+    mandatoryFindings: dedupeMandatoryFindings(mandatoryFindings),
+    softSignals: dedupeSoftSignals(softSignals),
+  };
 }
