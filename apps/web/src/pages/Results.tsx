@@ -719,20 +719,6 @@ export function Results() {
   const displayApproved = useReviewFindingsUi ? reviewApproved.length : (report.approvedCount ?? 0);
   const displaySpecialNotes = useReviewFindingsUi ? reviewSpecialNotes.length : reportHints.length;
   const editFindingAtomOptions = getResultsArticleAtomOptions(editFindingForm.articleId);
-  const selectableReviewRawIds = useMemo(
-    () =>
-      filteredReviewViolations
-        .map((f) => matchRawFindingForReview(f)?.id ?? null)
-        .filter((id): id is string => Boolean(id)),
-    [filteredReviewViolations, findings]
-  );
-  const selectableRawFindingIds = useMemo(
-    () => filteredDisplayViolations.map((f) => f.id),
-    [filteredDisplayViolations]
-  );
-  const actionableVisibleFindingIds = useReviewFindingsUi ? selectableReviewRawIds : selectableRawFindingIds;
-  const selectedVisibleFindingCount = selectedFindingIds.filter((id) => actionableVisibleFindingIds.includes(id)).length;
-
   const matchesFindingFilter = (finding: Pick<AnalysisFinding, 'source'> | Pick<CanonicalSummaryFinding, 'source'>) => {
     if (findingFilter === 'all') return true;
     if (findingFilter === 'special') return false;
@@ -761,6 +747,19 @@ export function Results() {
     ? displayApprovedFindings.filter(() => findingFilter === 'approved' || findingFilter === 'all')
     : [];
   const filteredCanonicalSummaryFindings = canonicalSummaryFindings.filter((f) => matchesFindingFilter(f));
+  const selectableReviewRawIds = useMemo(
+    () =>
+      filteredReviewViolations
+        .map((f) => matchRawFindingForReview(f)?.id ?? null)
+        .filter((id): id is string => Boolean(id)),
+    [filteredReviewViolations, findings]
+  );
+  const selectableRawFindingIds = useMemo(
+    () => filteredDisplayViolations.map((f) => f.id),
+    [filteredDisplayViolations]
+  );
+  const actionableVisibleFindingIds = useReviewFindingsUi ? selectableReviewRawIds : selectableRawFindingIds;
+  const selectedVisibleFindingCount = selectedFindingIds.filter((id) => actionableVisibleFindingIds.includes(id)).length;
   const showOnlySpecialNotes = findingFilter === 'special';
   const showOnlyApproved = findingFilter === 'approved';
   const filteredViolationsCount = useReviewFindingsUi
