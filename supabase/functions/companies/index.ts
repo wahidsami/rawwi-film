@@ -161,9 +161,7 @@ async function ensureUniqueClientNames(
   const results = await Promise.all(checks);
   for (const result of results) {
     if (result.rowId && result.rowId !== excludeId) {
-      return result.field === "nameAr"
-        ? "nameAr already exists"
-        : "nameEn already exists";
+      return "A client with this name already exists";
     }
   }
   return null;

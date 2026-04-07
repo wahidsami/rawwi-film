@@ -42,6 +42,10 @@ interface ClientModalProps {
 export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
   const { t, lang } = useLangStore();
   const { companies, addCompany, updateCompany } = useDataStore();
+  const duplicateNameMessage =
+    lang === 'ar'
+      ? 'يوجد عميل بهذا الاسم بالفعل'
+      : 'There is already a client with this name';
 
   const existingCompany = companyId ? companies.find(c => c.companyId === companyId) : null;
 
@@ -155,10 +159,10 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
     );
     if (!formData.nameAr.trim()) newErrors.nameAr = lang === 'ar' ? 'الاسم بالعربية مطلوب' : 'Arabic name is required';
     else if (containsEnglishLetters(formData.nameAr)) newErrors.nameAr = lang === 'ar' ? 'الرجاء استخدام حروف عربية في حقل الاسم العربي' : 'Use Arabic letters in the Arabic name field';
-    else if (duplicateNameAr) newErrors.nameAr = lang === 'ar' ? 'اسم الشركة العربي مستخدم بالفعل' : 'Arabic company name already exists';
+    else if (duplicateNameAr) newErrors.nameAr = duplicateNameMessage;
     if (!formData.nameEn.trim()) newErrors.nameEn = lang === 'ar' ? 'الاسم بالإنجليزية مطلوب' : 'English name is required';
     else if (containsArabicLetters(formData.nameEn)) newErrors.nameEn = lang === 'ar' ? 'الرجاء استخدام حروف إنجليزية في حقل الاسم الإنجليزي' : 'Use English letters in the English name field';
-    else if (duplicateNameEn) newErrors.nameEn = lang === 'ar' ? 'اسم الشركة الإنجليزي مستخدم بالفعل' : 'English company name already exists';
+    else if (duplicateNameEn) newErrors.nameEn = duplicateNameMessage;
     if (!formData.repName.trim()) newErrors.repName = lang === 'ar' ? 'اسم الممثل مطلوب' : 'Representative name is required';
     if (!normalizedPhone) {
       newErrors.phone = lang === 'ar' ? 'الجوال مطلوب' : 'Mobile is required';
@@ -209,6 +213,9 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
           scriptsCount: 0,
         };
         const saved = await addCompany(newCompany);
+        if (!saved) {
+          return;
+        }
         const id = saved?.companyId;
         if (id && logoFile) {
           const updated = await companiesApi.uploadCompanyLogo(id, logoFile);
