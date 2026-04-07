@@ -554,6 +554,132 @@ function getEvidenceQualityIssue(finding: JudgeFinding, chunkText: string): stri
   return null;
 }
 
+function getStoredEvidenceQualityIssue(
+  evidenceSnippet: string | null | undefined,
+  fullText: string | null,
+  startOffsetGlobal: number | null | undefined,
+  endOffsetGlobal: number | null | undefined,
+): string | null {
+  const evidence = compactNormalizedEvidence(evidenceSnippet);
+  if (!evidence) return "empty";
+  if (!/[\p{L}]/u.test(evidence)) return "non_text";
+  if (evidence.length < 2) return "too_short";
+  if (isHeadingLikeEvidence(evidence)) return "heading_like";
+
+  const tinyFragments = evidence.split(/\s+/).filter(Boolean);
+  if (tinyFragments.length >= 3 && tinyFragments.some((fragment) => fragment.length === 1)) {
+    return "fragmented";
+  }
+
+  if (
+    typeof fullText === "string" &&
+    typeof startOffsetGlobal === "number" &&
+    typeof endOffsetGlobal === "number" &&
+    startOffsetGlobal >= 0 &&
+    endOffsetGlobal > startOffsetGlobal &&
+    endOffsetGlobal <= fullText.length
+  ) {
+    const before = startOffsetGlobal > 0 ? fullText[startOffsetGlobal - 1] : undefined;
+    const first = fullText[startOffsetGlobal];
+    const last = fullText[endOffsetGlobal - 1];
+    const after = endOffsetGlobal < fullText.length ? fullText[endOffsetGlobal] : undefined;
+    if (isWordLikeChar(before) && isWordLikeChar(first)) return "starts_mid_word";
+    if (isWordLikeChar(last) && isWordLikeChar(after)) return "ends_mid_word";
+  }
+
+  return null;
+}
+
+function normalizeEvidenceCompareText(value: string | null | undefined): string {
+  return (value ?? "")
+    .normalize("NFC")
+    .replace(/[\s"'“”«»„:;,.!?()\[\]{}\-–—_]+/gu, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function snippetsReasonablyAlign(modelSnippet: string, canonicalSnippet: string): boolean {
+  const model = normalizeEvidenceCompareText(modelSnippet);
+  const canonical = normalizeEvidenceCompareText(canonicalSnippet);
+  if (!model || !canonical) return true;
+  if (model === canonical) return true;
+  if (model.includes(canonical) || canonical.includes(model)) return true;
+
+  const modelTokens = model.split(/\s+/).filter((token) => token.length >= 2);
+  const canonicalTokens = canonical.split(/\s+/).filter((token) => token.length >= 2);
+  if (modelTokens.length === 0 || canonicalTokens.length === 0) return false;
+
+  const canonicalSet = new Set(canonicalTokens);
+  const overlap = modelTokens.filter((token) => canonicalSet.has(token)).length;
+  const minTokenCount = Math.min(modelTokens.length, canonicalTokens.length);
+  if (minTokenCount <= 2) return false;
+  return overlap / minTokenCount >= 0.6;
+}
+
+type SceneIndexEntry = {
+  sceneIndex: number;
+  startOffset: number;
+  endOffset: number;
+};
+
+function normalizeSceneDigits(value: string): string {
+  return value.replace(/[\u0660-\u0669]/g, (digit) => String(digit.charCodeAt(0) - 0x0660));
+}
+
+function buildSceneIndex(fullText: string | null): SceneIndexEntry[] {
+  if (!fullText) return [];
+  const matches = [...fullText.matchAll(/^(.*)$/gmu)];
+  const headings = matches
+    .map((match) => ({
+      heading: (match[1] ?? "").replace(/\s+/g, " ").trim(),
+      startOffset: match.index ?? 0,
+    }))
+    .filter((line) => {
+      const heading = line.heading;
+      if (!heading) return false;
+      return (
+        /^(?:المشهد|مشهد)\s*[\d\u0660-\u0669]+/u.test(heading) ||
+        /^(?:[.٠-٩0-9]+\s+)?(?:المشهد|مشهد|الفصل|الطريق|منزل|سيارة)\b/u.test(heading) ||
+        /^(?:داخلي|خارجي)\b/u.test(heading)
+      );
+    });
+
+  return headings.map((heading, index) => ({
+    sceneIndex: index + 1,
+    startOffset: heading.startOffset,
+    endOffset: headings[index + 1]?.startOffset ?? fullText.length,
+  }));
+}
+
+function resolveSceneIndexAtOffset(sceneIndex: SceneIndexEntry[], offset: number | null | undefined): number | null {
+  if (!sceneIndex.length || typeof offset !== "number" || offset < 0) return null;
+  return (
+    sceneIndex.find((scene) => offset >= scene.startOffset && offset < scene.endOffset)?.sceneIndex ??
+    sceneIndex[sceneIndex.length - 1]?.sceneIndex ??
+    null
+  );
+}
+
+function extractSceneNumbersFromRationale(value: string | null | undefined): number[] {
+  const text = normalizeSceneDigits(value ?? "");
+  if (!text) return [];
+  return [...text.matchAll(/(?:المشهد|مشهد|scene)\s+(\d+)/giu)]
+    .map((match) => Number.parseInt(match[1] ?? "", 10))
+    .filter((num) => Number.isFinite(num));
+}
+
+function hasExplicitSceneMismatch(
+  rationale: string | null | undefined,
+  sceneIndex: SceneIndexEntry[],
+  startOffsetGlobal: number | null | undefined,
+): boolean {
+  const mentioned = extractSceneNumbersFromRationale(rationale);
+  if (mentioned.length === 0) return false;
+  const resolved = resolveSceneIndexAtOffset(sceneIndex, startOffsetGlobal);
+  if (!resolved) return false;
+  return !mentioned.includes(resolved);
+}
+
 function isWeakArticleFourEvidence(candidate: FindingWithGlobal): boolean {
   const evidence = compactNormalizedEvidence(candidate.evidence_snippet);
   if (!evidence) return true;
@@ -1614,29 +1740,82 @@ export async function processChunkJudge(
   }
   if (resolvedFindings.length > 0) {
     const insertStartedAt = Date.now();
-      const rows = resolvedFindings.map((f) => {
+    const sceneIndex = buildSceneIndex(normalizedText);
+    let postCanonicalEvidenceDroppedCount = 0;
+    let canonicalModelMismatchDroppedCount = 0;
+    let explicitSceneMismatchDroppedCount = 0;
+    const rows = resolvedFindings.flatMap((f) => {
       const start = f.start_offset_global ?? 0;
       const end = f.end_offset_global ?? start;
-        const hasSaneGlobalOffsets =
-          normalizedText != null &&
-          start >= 0 &&
-          end > start &&
-          end <= normalizedText.length &&
-          (end - start) <= MAX_EVIDENCE_SPAN;
+      const hasSaneGlobalOffsets =
+        normalizedText != null &&
+        start >= 0 &&
+        end > start &&
+        end <= normalizedText.length &&
+        (end - start) <= MAX_EVIDENCE_SPAN;
 
-        const modelSnippet = compactEvidenceText(f.evidence_snippet ?? "");
-        const canonicalSnippet = hasSaneGlobalOffsets
-          ? compactEvidenceText(normalizedText!.slice(start, end))
-          : "";
-        // Prefer canonical script text whenever offsets are sane so report evidence stays literal.
-        const excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
-        const title_ar = normalizeMisusedGlossaryPassTitle({
-          titleAr: f.title_ar,
-          rationaleAr: f.rationale_ar ?? null,
-          detectionPass: (f as { detection_pass?: string }).detection_pass ?? null,
-          evidenceSnippet: excerpt,
-          articleId: f.article_id,
+      const modelSnippet = compactEvidenceText(f.evidence_snippet ?? "");
+      const canonicalSnippet = hasSaneGlobalOffsets
+        ? compactEvidenceText(normalizedText!.slice(start, end))
+        : "";
+      // Prefer canonical script text whenever offsets are sane so report evidence stays literal.
+      const excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
+
+      const finalEvidenceIssue = getStoredEvidenceQualityIssue(
+        excerpt,
+        normalizedText,
+        hasSaneGlobalOffsets ? start : null,
+        hasSaneGlobalOffsets ? end : null,
+      );
+      if (finalEvidenceIssue) {
+        postCanonicalEvidenceDroppedCount++;
+        logger.warn("Low-quality final evidence excerpt (dropping finding before insert)", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          article: f.article_id,
+          issue: finalEvidenceIssue,
+          excerpt: excerpt.slice(0, 80),
+          modelSnippet: modelSnippet.slice(0, 80),
+          canonicalSnippet: canonicalSnippet.slice(0, 80),
         });
+        return [];
+      }
+
+      if (canonicalSnippet.length > 0 && modelSnippet.length > 0 && !snippetsReasonablyAlign(modelSnippet, canonicalSnippet)) {
+        canonicalModelMismatchDroppedCount++;
+        logger.warn("Canonical/model evidence mismatch (dropping finding before insert)", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          article: f.article_id,
+          modelSnippet: modelSnippet.slice(0, 120),
+          canonicalSnippet: canonicalSnippet.slice(0, 120),
+        });
+        return [];
+      }
+
+      if (hasExplicitSceneMismatch(f.rationale_ar ?? null, sceneIndex, f.start_offset_global ?? null)) {
+        explicitSceneMismatchDroppedCount++;
+        logger.warn("Explicit scene mismatch between rationale and resolved offset (dropping finding before insert)", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          article: f.article_id,
+          rationale: (f.rationale_ar ?? "").slice(0, 160),
+          excerpt: excerpt.slice(0, 120),
+          startOffsetGlobal: f.start_offset_global ?? null,
+        });
+        return [];
+      }
+
+      const title_ar = normalizeMisusedGlossaryPassTitle({
+        titleAr: f.title_ar,
+        rationaleAr: f.rationale_ar ?? null,
+        detectionPass: (f as { detection_pass?: string }).detection_pass ?? null,
+        evidenceSnippet: excerpt,
+        articleId: f.article_id,
+      });
       const h = evidenceHash(
         f.article_id,
         f.atom_id ?? null,
@@ -1645,7 +1824,7 @@ export async function processChunkJudge(
         excerpt
       );
       const findingPageNumber = pageNumAt(f.start_offset_global ?? 0);
-      return {
+      return [{
         job_id: jobId,
         script_id: scriptId,
         version_id: versionId,
@@ -1708,7 +1887,7 @@ export async function processChunkJudge(
           anchorText: excerpt,
           documentContent: normalizedText,
         }),
-      };
+      }];
     });
 
     // Log first row shape for debugging column mismatch
@@ -1718,6 +1897,9 @@ export async function processChunkJudge(
       jobId,
       chunkId: chunk.id,
       runKey,
+      postCanonicalEvidenceDroppedCount,
+      canonicalModelMismatchDroppedCount,
+      explicitSceneMismatchDroppedCount,
       rows: rows.length,
       timeoutMs: CRITICAL_DB_TIMEOUT_MS,
     });
