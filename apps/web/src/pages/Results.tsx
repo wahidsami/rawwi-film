@@ -301,6 +301,8 @@ export function Results() {
   const [bulkReviewModal, setBulkReviewModal] = useState<{ findingIds: string[]; toStatus: 'approved' | 'violation' } | null>(null);
   const [bulkReviewReason, setBulkReviewReason] = useState('');
   const [bulkReviewSaving, setBulkReviewSaving] = useState(false);
+  const [reportReviewModalOpen, setReportReviewModalOpen] = useState(false);
+  const [reportReviewReason, setReportReviewReason] = useState('');
   const [selectedFindingIds, setSelectedFindingIds] = useState<string[]>([]);
   const [editFindingModal, setEditFindingModal] = useState<AnalysisFinding | null>(null);
   const [editFindingSaving, setEditFindingSaving] = useState(false);
@@ -330,16 +332,10 @@ export function Results() {
   }, [editFindingModal]);
 
   // Report-level review
-  const handleReportReview = async (status: ReviewStatus) => {
+  const handleReportReview = async (status: ReviewStatus, explicitReviewNotes?: string) => {
     if (!report?.id) return;
-    let reviewNotes = '';
+    let reviewNotes = explicitReviewNotes?.trim() ?? '';
     if (status === 'under_review') {
-      const promptLabel = lang === 'ar'
-        ? 'اذكر سبب إعادة التقرير للمراجعة'
-        : 'Enter the reason for sending this report back for review';
-      const entered = window.prompt(promptLabel, report.reviewNotes ?? '');
-      if (entered == null) return;
-      reviewNotes = entered.trim();
       if (!reviewNotes) {
         toast.error(lang === 'ar' ? 'سبب إعادة المراجعة مطلوب' : 'A re-review reason is required');
         return;
@@ -360,6 +356,10 @@ export function Results() {
           status === 'rejected' ? (lang === 'ar' ? 'تم رفض التقرير' : 'Report rejected') :
             (lang === 'ar' ? 'تمت إعادة التقرير للمراجعة' : 'Report sent back for review')
       );
+      if (status === 'under_review') {
+        setReportReviewModalOpen(false);
+        setReportReviewReason('');
+      }
       if (updateScriptStatus) {
         toast.success(lang === 'ar' ? 'تم تحديث حالة النص' : 'Script status updated');
       }
@@ -368,6 +368,20 @@ export function Results() {
     }
     setReviewing(false);
   };
+
+  const openReportReReviewModal = useCallback(() => {
+    setReportReviewReason(report?.reviewNotes ?? '');
+    setReportReviewModalOpen(true);
+  }, [report?.reviewNotes]);
+
+  const handleSubmitReportReReview = useCallback(() => {
+    const reason = reportReviewReason.trim();
+    if (!reason) {
+      toast.error(lang === 'ar' ? 'سبب إعادة المراجعة مطلوب' : 'A re-review reason is required');
+      return;
+    }
+    void handleReportReview('under_review', reason);
+  }, [handleReportReview, lang, reportReviewReason]);
 
   // Load report + findings
   const loadFindings = useCallback(async (jobId: string) => {
@@ -2236,18 +2250,26 @@ export function Results() {
           </div>
 
           <div className="flex items-center gap-2">
-            {report.reviewStatus !== 'approved' && (
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1 text-success border-success/30 hover:bg-success/10" onClick={() => handleReportReview('approved')} disabled={reviewing}>
-                <CheckCircle2 className="w-3.5 h-3.5" />{lang === 'ar' ? 'قبول' : 'Approve'}
-              </Button>
-            )}
-            {report.reviewStatus !== 'rejected' && (
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1 text-error border-error/30 hover:bg-error/10" onClick={() => handleReportReview('rejected')} disabled={reviewing}>
-                <XCircle className="w-3.5 h-3.5" />{lang === 'ar' ? 'رفض' : 'Reject'}
-              </Button>
-            )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1 text-success border-success/30 hover:bg-success/10"
+              onClick={() => handleReportReview('approved')}
+              disabled={reviewing || report.reviewStatus === 'approved'}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />{lang === 'ar' ? 'قبول' : 'Approve'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1 text-error border-error/30 hover:bg-error/10"
+              onClick={() => handleReportReview('rejected')}
+              disabled={reviewing || report.reviewStatus === 'approved' || report.reviewStatus === 'rejected'}
+            >
+              <XCircle className="w-3.5 h-3.5" />{lang === 'ar' ? 'رفض' : 'Reject'}
+            </Button>
             {report.reviewStatus !== 'under_review' && (
-              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => handleReportReview('under_review')} disabled={reviewing}>
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={openReportReReviewModal} disabled={reviewing}>
                 {lang === 'ar' ? 'إعادة للمراجعة' : 'Re-review'}
               </Button>
             )}
@@ -2566,6 +2588,49 @@ export function Results() {
           )}
         </div>
       </div>
+
+      <Modal
+        isOpen={reportReviewModalOpen}
+        onClose={() => {
+          if (reviewing) return;
+          setReportReviewModalOpen(false);
+          setReportReviewReason('');
+        }}
+        title={lang === 'ar' ? 'إعادة التقرير للمراجعة' : 'Send Report Back for Review'}
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-background rounded-md border border-border text-sm text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+            {lang === 'ar'
+              ? 'اذكر سبب إعادة التقرير للمراجعة. سيتم حفظ السبب مع حالة التقرير.'
+              : 'Enter the reason for sending this report back for review. The reason will be saved with the report status.'}
+          </div>
+          <Textarea
+            label={lang === 'ar' ? 'سبب إعادة المراجعة' : 'Re-review reason'}
+            value={reportReviewReason}
+            onChange={(e) => setReportReviewReason(e.target.value)}
+            placeholder={lang === 'ar' ? 'اكتب سبب إعادة التقرير للمراجعة…' : 'Write the reason for re-review…'}
+          />
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReportReviewModalOpen(false);
+                setReportReviewReason('');
+              }}
+              disabled={reviewing}
+            >
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSubmitReportReReview}
+              disabled={reviewing || !reportReviewReason.trim()}
+            >
+              {reviewing ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : (lang === 'ar' ? 'إعادة للمراجعة' : 'Send to review')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Finding review modal */}
       <Modal 
