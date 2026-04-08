@@ -349,8 +349,6 @@ export function Glossary() {
                 <th className="px-6 py-4 font-semibold">{t('term')}</th>
                 <th className="px-6 py-4 font-semibold">{t('termType')}</th>
                 <th className="px-6 py-4 font-semibold">{t('category')}</th>
-                <th className="px-6 py-4 font-semibold">{t('severity')}</th>
-                <th className="px-6 py-4 font-semibold">{t('enforcementMode')}</th>
                 <th className="px-6 py-4 font-semibold">{t('article')}</th>
                 <th className="px-6 py-4 font-semibold">{lang === 'ar' ? 'أضافه' : 'Added by'}</th>
                 <th className="px-6 py-4 font-semibold text-end">{t('actions')}</th>
@@ -370,19 +368,6 @@ export function Glossary() {
                   </td>
                   <td className="px-6 py-4">
                     <Badge variant="outline" className="capitalize">{t(term.category as any)}</Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Badge variant={
-                      term.severity_floor === 'Critical' ? 'error' :
-                        term.severity_floor === 'High' ? 'warning' : 'outline'
-                    }>
-                      {t(term.severity_floor.toLowerCase() as any)}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Badge variant={term.enforcement_mode === 'mandatory_finding' ? 'error' : 'warning'}>
-                      {term.enforcement_mode === 'mandatory_finding' ? t('mandatoryViolations') : t('softSignals')}
-                    </Badge>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-xs">

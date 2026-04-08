@@ -373,40 +373,7 @@ export function Overview() {
             )}
           </div>
 
-          {/* Recent Activity (moved from right column) */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>{t('recentActivity')}</CardTitle>
-              {canViewAudit && (
-                <Button variant="ghost" size="sm" onClick={() => navigate('/audit')}>
-                  {t('showAll')}
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              {activities.length === 0 ? (
-                <div className="text-center py-6 text-text-muted">{t('cleanLog')}</div>
-              ) : (
-                <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border-main before:to-transparent">
-                  {activities.map((act) => (
-                    <div key={act.id} className="relative flex items-center justify-between group">
-                      <div className="flex items-start gap-4 w-full">
-                        <div className="relative z-10 w-4 h-4 mt-1 rounded-full bg-surface-main border-2 border-primary flex-shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-text-main leading-tight">{act.action}</p>
-                          <div className="flex items-center gap-2 mt-1.5 text-xs text-text-muted">
-                            <span className="font-semibold">{act.actor}</span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {act.time}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Recent Activity intentionally hidden */}
         </div>
 
         {/* Right Column (Actions & Activity) */}
