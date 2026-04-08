@@ -17,8 +17,6 @@ import {
     Clock,
     Filter,
     ArrowUpDown,
-    Plus,
-    Users,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { normalizeScriptStatusForDisplay, normalizeScriptStatusForFilter } from '@/utils/scriptStatus';
@@ -92,10 +90,6 @@ export function Scripts() {
 
     const filteredScripts = getFilteredScripts();
 
-    const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
-    const canAddScript = isAdmin && hasPermission('upload_scripts');
-    const canOpenClients = hasPermission('view_clients') || hasPermission('manage_companies');
-
     // Count by status
     const counts = {
         all: scripts.length,
@@ -147,20 +141,6 @@ export function Scripts() {
                 <h1 className="text-2xl font-bold text-text-main">
                     {lang === 'ar' ? 'إدارة النصوص' : 'Scripts Management'}
                 </h1>
-                <div className="flex flex-wrap items-center gap-2">
-                    {canAddScript && (
-                        <Button onClick={() => navigate('/clients')} className="flex items-center gap-2">
-                            <Plus className="w-4 h-4" />
-                            {lang === 'ar' ? 'إضافة نص' : 'Add script'}
-                        </Button>
-                    )}
-                    {!canAddScript && canOpenClients && (
-                        <Button variant="outline" onClick={() => navigate('/clients')} className="flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            {lang === 'ar' ? 'العملاء — إضافة نص من صفحة العميل' : 'Clients — add script from a client'}
-                        </Button>
-                    )}
-                </div>
             </div>
 
             {/* Filter Tabs */}

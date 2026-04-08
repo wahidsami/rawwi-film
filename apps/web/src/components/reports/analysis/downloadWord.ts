@@ -145,22 +145,6 @@ function normalizeScriptType(value: string | null | undefined, lang: "ar" | "en"
   return plainText(value);
 }
 
-function buildFindingAction(params: {
-  source?: string | null;
-  lang: "ar" | "en";
-}): string {
-  if (params.lang === "ar") {
-    if (params.source === "manual") return "مراجعة يدوية واتخاذ الإجراء المناسب";
-    if (params.source === "lexicon_mandatory" || params.source === "glossary") return "التحقق من الاستخدام والسياق واتخاذ الإجراء المناسب";
-    if (params.source === "ai") return "مراجعة الملاحظة آلياً وتعديل النص أو المعالجة عند الحاجة";
-    return "مراجعة واتخاذ الإجراء المناسب";
-  }
-  if (params.source === "manual") return "Manual review and appropriate action";
-  if (params.source === "lexicon_mandatory" || params.source === "glossary") return "Review glossary usage, context, and take the appropriate action";
-  if (params.source === "ai") return "Review the AI finding and adjust the wording or treatment if needed";
-  return "Review and take the appropriate action";
-}
-
 function buildOverallRecommendations(args: {
   findings: ReturnType<typeof mapAnalysisFindingsForPdf>;
   reportHints: ReportHint[];
@@ -420,31 +404,46 @@ function makeTableCell(text: string, widthPct: number, options?: {
 
 function buildFindingsTable(params: DownloadAnalysisWordParams): string {
   const { findings } = resolveWordExportFindingData(params);
-  const rows = findings.length === 0
+  const sortedFindings = [...findings].sort((a, b) => {
+    const pageA = displayPageForFinding(
+      a.startOffsetGlobal ?? null,
+      params.viewerPages ?? null,
+      a.pageNumber ?? null
+    );
+    const pageB = displayPageForFinding(
+      b.startOffsetGlobal ?? null,
+      params.viewerPages ?? null,
+      b.pageNumber ?? null
+    );
+    const normalizedPageA = pageA ?? Number.MAX_SAFE_INTEGER;
+    const normalizedPageB = pageB ?? Number.MAX_SAFE_INTEGER;
+    return (
+      normalizedPageA - normalizedPageB ||
+      (a.startOffsetGlobal ?? Number.MAX_SAFE_INTEGER) - (b.startOffsetGlobal ?? Number.MAX_SAFE_INTEGER) ||
+      (a.endOffsetGlobal ?? Number.MAX_SAFE_INTEGER) - (b.endOffsetGlobal ?? Number.MAX_SAFE_INTEGER) ||
+      plainText(a.evidenceSnippet).localeCompare(plainText(b.evidenceSnippet), "ar")
+    );
+  });
+
+  const rows = sortedFindings.length === 0
     ? [`
       <w:tr>
         ${makeTableCell("—", 800, { align: "center", rtl: false })}
         ${makeTableCell(params.lang === "ar" ? "لا توجد ملاحظات نهائية في هذا التقرير." : "There are no final findings in this report.", 2800)}
-        ${makeTableCell(params.lang === "ar" ? "لا يوجد إجراء مطلوب حالياً." : "No action is required at this time.", 1400)}
+        ${makeTableCell("", 1400)}
       </w:tr>
     `]
-    : findings.map((finding) => {
+    : sortedFindings.map((finding) => {
         const page = displayPageForFinding(
           finding.startOffsetGlobal ?? null,
           params.viewerPages ?? null,
           finding.pageNumber ?? null
         );
-        const findingText = [
-          plainText(finding.titleAr) || "ملاحظة",
-          plainText(finding.evidenceSnippet) || "—",
-        ].filter(Boolean).join("\n");
+        const findingText = plainText(finding.evidenceSnippet) || "—";
         return `<w:tr>
           ${makeTableCell(formatNullableValue(page), 800, { align: "center", rtl: false })}
           ${makeTableCell(findingText, 2800)}
-          ${makeTableCell(buildFindingAction({
-            source: finding.source ?? null,
-            lang: params.lang,
-          }), 1400)}
+          ${makeTableCell("", 1400)}
         </w:tr>`;
       });
 
