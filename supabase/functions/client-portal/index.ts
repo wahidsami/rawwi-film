@@ -3,6 +3,10 @@ import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { isUserAdmin } from "../_shared/roleCheck.ts";
 
+const LOGO_BUCKET = "company-logos";
+const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+const LOGO_MIMES = new Set(["image/png", "image/jpeg", "image/webp"]);
+
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
   const match = pathname.match(new RegExp(`/${base}/?(.*)$`));
@@ -66,11 +70,37 @@ Deno.serve(async (req: Request) => {
 
   // POST /client-portal/register (public, free registration)
   if (method === "POST" && rest === "register") {
-    let body: Record<string, unknown>;
-    try {
-      body = await req.json();
-    } catch {
-      return json({ error: "Invalid JSON body" }, 400);
+    const contentType = req.headers.get("content-type") ?? "";
+    let body: Record<string, unknown> = {};
+    let companyLogoFile: File | null = null;
+
+    if (contentType.includes("multipart/form-data")) {
+      let formData: FormData;
+      try {
+        formData = await req.formData();
+      } catch {
+        return json({ error: "Invalid form data" }, 400);
+      }
+      body = {
+        name: formData.get("name"),
+        email: formData.get("email"),
+        password: formData.get("password"),
+        companyNameAr: formData.get("companyNameAr"),
+        companyNameEn: formData.get("companyNameEn"),
+        representativeName: formData.get("representativeName"),
+        representativeTitle: formData.get("representativeTitle"),
+        mobile: formData.get("mobile"),
+      };
+      const logoCandidate = formData.get("companyLogoFile") ?? formData.get("companyLogo") ?? formData.get("logo");
+      if (logoCandidate instanceof File && logoCandidate.size > 0) {
+        companyLogoFile = logoCandidate;
+      }
+    } else {
+      try {
+        body = await req.json();
+      } catch {
+        return json({ error: "Invalid JSON body" }, 400);
+      }
     }
 
     const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
@@ -86,6 +116,14 @@ Deno.serve(async (req: Request) => {
     if (!password || password.length < 8) return json({ error: "Password must be at least 8 characters" }, 400);
     if (!name) return json({ error: "Name is required" }, 400);
     if (!companyNameAr || !companyNameEn) return json({ error: "companyNameAr and companyNameEn are required" }, 400);
+    if (companyLogoFile) {
+      if (!LOGO_MIMES.has(companyLogoFile.type)) {
+        return json({ error: "Company logo must be PNG, JPG, or WEBP" }, 400);
+      }
+      if (companyLogoFile.size > LOGO_MAX_BYTES) {
+        return json({ error: "Company logo max size is 2MB" }, 400);
+      }
+    }
 
     const { data: usersList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
     const emailTaken = (usersList?.users ?? []).some((u) => (u.email ?? "").toLowerCase() === email);
@@ -110,6 +148,8 @@ Deno.serve(async (req: Request) => {
     }
 
     let createdUserId: string | null = null;
+    let createdCompanyId: string | null = null;
+    let uploadedLogoObjectPath: string | null = null;
     try {
       const { data: userData, error: createUserErr } = await supabase.auth.admin.createUser({
         email,
@@ -146,6 +186,24 @@ Deno.serve(async (req: Request) => {
         .select("id, created_at")
         .single();
       if (companyErr || !company?.id) throw new Error(companyErr?.message || "Failed to create company profile");
+      createdCompanyId = company.id;
+
+      if (companyLogoFile) {
+        const ext = companyLogoFile.type === "image/png" ? "png" : companyLogoFile.type === "image/webp" ? "webp" : "jpg";
+        const objectName = `${company.id}/${crypto.randomUUID()}.${ext}`;
+        uploadedLogoObjectPath = objectName;
+        const { error: uploadErr } = await supabase.storage
+          .from(LOGO_BUCKET)
+          .upload(objectName, companyLogoFile, { contentType: companyLogoFile.type, upsert: true });
+        if (uploadErr) throw new Error(uploadErr.message || "Failed to upload company logo");
+
+        const logoUrl = `${LOGO_BUCKET}/${objectName}`;
+        const { error: updateLogoErr } = await supabase
+          .from("clients")
+          .update({ logo_url: logoUrl, logo_updated_at: new Date().toISOString() })
+          .eq("id", company.id);
+        if (updateLogoErr) throw new Error(updateLogoErr.message || "Failed to save company logo");
+      }
 
       const { error: accountErr } = await supabase
         .from("client_portal_accounts")
@@ -184,6 +242,12 @@ Deno.serve(async (req: Request) => {
         companyId: company.id,
       }, 201);
     } catch (error) {
+      if (uploadedLogoObjectPath) {
+        await supabase.storage.from(LOGO_BUCKET).remove([uploadedLogoObjectPath]).catch(() => {});
+      }
+      if (createdCompanyId) {
+        await supabase.from("clients").delete().eq("id", createdCompanyId).catch(() => {});
+      }
       if (createdUserId) {
         await supabase.auth.admin.deleteUser(createdUserId).catch(() => {});
       }

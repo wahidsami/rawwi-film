@@ -30,6 +30,7 @@ export interface ClientPortalRegisterBody {
   representativeName?: string;
   representativeTitle?: string;
   mobile?: string;
+  companyLogoFile?: File | null;
 }
 
 export interface ClientPortalSubmissionItem {
@@ -129,8 +130,31 @@ export interface ClientPortalMeResponse {
 }
 
 export const clientPortalApi = {
-  register: (payload: ClientPortalRegisterBody): Promise<{ ok: true; registration: 'free'; userId: string; companyId: string }> =>
-    httpClient.post('/client-portal/register', payload),
+  register: async (payload: ClientPortalRegisterBody): Promise<{ ok: true; registration: 'free'; userId: string; companyId: string }> => {
+    if (USE_MOCK_API) {
+      return httpClient.post('/client-portal/register', payload);
+    }
+    const form = new FormData();
+    form.append('name', payload.name);
+    form.append('email', payload.email);
+    form.append('password', payload.password);
+    form.append('companyNameAr', payload.companyNameAr);
+    form.append('companyNameEn', payload.companyNameEn);
+    if (payload.representativeName) form.append('representativeName', payload.representativeName);
+    if (payload.representativeTitle) form.append('representativeTitle', payload.representativeTitle);
+    if (payload.mobile) form.append('mobile', payload.mobile);
+    if (payload.companyLogoFile) form.append('companyLogoFile', payload.companyLogoFile);
+
+    const res = await fetch(`${API_BASE_URL}/client-portal/register`, {
+      method: 'POST',
+      body: form,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error((data as { error?: string }).error || res.statusText || 'Registration failed');
+    }
+    return data as { ok: true; registration: 'free'; userId: string; companyId: string };
+  },
   getMe: (): Promise<ClientPortalMeResponse> =>
     httpClient.get('/client-portal/me'),
   getSubmissions: (): Promise<ClientPortalSubmissionItem[]> =>

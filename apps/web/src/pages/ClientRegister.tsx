@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -23,6 +23,18 @@ export function ClientRegister() {
   });
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
+  const [companyLogoPreview, setCompanyLogoPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!companyLogoFile) {
+      setCompanyLogoPreview(null);
+      return;
+    }
+    const nextUrl = URL.createObjectURL(companyLogoFile);
+    setCompanyLogoPreview(nextUrl);
+    return () => URL.revokeObjectURL(nextUrl);
+  }, [companyLogoFile]);
 
   const setField = (key: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -48,6 +60,7 @@ export function ClientRegister() {
         representativeName: form.name.trim(),
         representativeTitle: form.representativeTitle.trim() || undefined,
         mobile: form.mobile.trim() || undefined,
+        companyLogoFile,
       });
       await login(form.email.trim().toLowerCase(), form.password);
       navigate('/client', { replace: true });
@@ -61,6 +74,9 @@ export function ClientRegister() {
   return (
     <div className="min-h-screen bg-background text-text-main flex items-center justify-center p-6">
       <div className="w-full max-w-2xl border border-border bg-surface rounded-2xl p-6 md:p-8 shadow-sm">
+        <div className="mb-5 flex justify-center">
+          <img src="/fclogo.png" alt="Film Commission" className="h-14 object-contain" />
+        </div>
         <div className="space-y-2 mb-6">
           <h1 className="text-2xl font-bold">{lang === 'ar' ? 'إنشاء حساب شركة إنتاج' : 'Create Production Company Account'}</h1>
           <p className="text-text-muted text-sm">
@@ -125,6 +141,33 @@ export function ClientRegister() {
             minLength={8}
             dir="ltr"
           />
+
+          <div className="md:col-span-2 space-y-2">
+            <label className="block text-sm font-medium text-text-main">
+              {lang === 'ar' ? 'شعار الشركة (اختياري)' : 'Company Logo (Optional)'}
+            </label>
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(e) => {
+                  const nextFile = e.target.files?.[0] ?? null;
+                  setCompanyLogoFile(nextFile);
+                }}
+                className="block w-full md:w-auto text-sm text-text-muted file:me-3 file:px-3 file:py-2 file:rounded-md file:border file:border-border file:bg-background file:text-text-main hover:file:bg-surface"
+              />
+              {companyLogoPreview && (
+                <img
+                  src={companyLogoPreview}
+                  alt={lang === 'ar' ? 'معاينة شعار الشركة' : 'Company logo preview'}
+                  className="h-16 w-16 rounded-md border border-border object-cover bg-background"
+                />
+              )}
+            </div>
+            <p className="text-xs text-text-muted">
+              {lang === 'ar' ? 'PNG/JPG/WEBP حتى 2MB' : 'PNG/JPG/WEBP up to 2MB'}
+            </p>
+          </div>
 
           {error && (
             <div className="md:col-span-2 rounded-md border border-error/20 bg-error/10 text-error text-sm p-3">
