@@ -12,6 +12,27 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const BUCKET = "scripts";
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
+function buildSafeStorageFileName(originalName: string, fallbackExt: string): string {
+    const normalized = (originalName || "").normalize("NFC").trim();
+    const lastDot = normalized.lastIndexOf(".");
+    const rawBase = lastDot > 0 ? normalized.slice(0, lastDot) : normalized;
+    const rawExt = lastDot > 0 ? normalized.slice(lastDot + 1) : fallbackExt;
+
+    // Supabase storage keys are safest with ASCII-only path segments.
+    const safeBase = rawBase
+        .replace(/\s+/g, "_")
+        .replace(/[^A-Za-z0-9_-]/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "");
+    const safeExt = (rawExt || fallbackExt || "bin")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+
+    const base = safeBase || "file";
+    const ext = safeExt || "bin";
+    return `${base}.${ext}`;
+}
+
 Deno.serve(async (req: Request) => {
     const origin = req.headers.get("origin") ?? undefined;
     const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
@@ -113,27 +134,25 @@ Deno.serve(async (req: Request) => {
 
         // Validate file type
         const ext = file.name.split('.').pop()?.toLowerCase();
-        if (!ext || !['pdf', 'docx', 'doc', 'txt'].includes(ext)) {
-            return json({ error: "Only PDF, DOCX, DOC, and TXT files are supported" }, 400);
+        if (!ext || !['pdf', 'docx', 'txt'].includes(ext)) {
+            return json({ error: "Only PDF, DOCX, and TXT files are supported" }, 400);
         }
 
         const fallbackContentTypeByExt: Record<string, string> = {
             pdf: "application/pdf",
             docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            doc: "application/msword",
             txt: "text/plain",
         };
         const uploadContentType = (file.type && file.type.trim()) || fallbackContentTypeByExt[ext] || "application/octet-stream";
 
         // Create storage path: {companyId}/{scriptId}/{timestamp}_{filename}
         const timestamp = Date.now();
-        // Normalize to NFC so Arabic and other Unicode render consistently (BUG-09)
+        // Keep original filename (Arabic/Unicode) for DB/display, but use safe ASCII key for Storage path.
         const normalizedFileName = typeof file.name === "string" && file.name ? file.name.normalize("NFC") : file.name;
-        // Allow letters from any language, numbers, spaces, dots, dashes, underscores, and the Arabic comma (،)
-        const sanitizedFilename = normalizedFileName.replace(/[^\p{L}\p{N}\s._\-،]/gu, '_');
+        const safeStorageFileName = buildSafeStorageFileName(normalizedFileName, ext);
         const storagePath = companyId
-            ? `${companyId}/${scriptId}/${timestamp}_${sanitizedFilename}`
-            : `${scriptId}/${timestamp}_${sanitizedFilename}`;
+            ? `${companyId}/${scriptId}/${timestamp}_${safeStorageFileName}`
+            : `${scriptId}/${timestamp}_${safeStorageFileName}`;
 
         // Upload to Supabase Storage
         const fileBuffer = await file.arrayBuffer();
