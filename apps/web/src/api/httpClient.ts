@@ -102,6 +102,110 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
     };
   }
 
+  if (path.startsWith('/client-portal')) {
+    if (method === 'POST' && path === '/client-portal/register') {
+      return {
+        ok: true,
+        registration: 'free',
+        userId: 'mock-client-user',
+        companyId: 'mock-client-company',
+      };
+    }
+    if (method === 'GET' && path === '/client-portal/me') {
+      return {
+        user: { id: 'mock-client-user', email: 'client@example.com', name: 'Client User', role: 'Client' },
+        subscription: { plan: 'free', status: 'active', price: 0 },
+        company: {
+          companyId: 'mock-client-company',
+          nameAr: 'شركة إنتاج تجريبية',
+          nameEn: 'Mock Production',
+          representativeName: 'Client User',
+          representativeTitle: 'Producer',
+          email: 'client@example.com',
+          mobile: '0500000000',
+          createdAt: new Date().toISOString(),
+        },
+      };
+    }
+    if (method === 'GET' && path === '/client-portal/submissions') {
+      return [
+        {
+          scriptId: 'mock-script-1',
+          title: 'Mock Script',
+          type: 'film',
+          status: 'in_review',
+          createdAt: new Date().toISOString(),
+          receivedAt: new Date().toISOString().slice(0, 10),
+          currentVersionId: 'mock-version-1',
+          latestReportId: null,
+          latestReportReviewStatus: null,
+          latestReportCreatedAt: null,
+        },
+      ];
+    }
+    if (method === 'GET' && path === '/client-portal/admin/submissions') {
+      return [
+        {
+          scriptId: 'mock-script-1',
+          title: 'Mock Client Script',
+          type: 'film',
+          status: 'in_review',
+          synopsis: 'Mock synopsis',
+          submittedAt: new Date().toISOString(),
+          receivedAt: new Date().toISOString().slice(0, 10),
+          currentVersionId: 'mock-version-1',
+          companyId: 'mock-client-company',
+          companyNameAr: 'شركة إنتاج تجريبية',
+          companyNameEn: 'Mock Production',
+          submittedByUserId: 'mock-client-user',
+          submittedByName: 'Client User',
+          submittedByEmail: 'client@example.com',
+          assigneeId: null,
+          assigneeName: null,
+          latestJobId: null,
+          latestJobStatus: null,
+          latestJobProgressPercent: null,
+          latestJobCompletedAt: null,
+          latestReportId: null,
+          latestReportReviewStatus: null,
+          latestReportCreatedAt: null,
+          subscriptionPlan: 'free',
+          subscriptionStatus: 'active',
+        },
+      ];
+    }
+    if (method === 'GET' && path.match(/^\/client-portal\/rejections\/[^/]+$/)) {
+      return {
+        script: { id: 'mock-script-1', title: 'Mock Script', status: 'rejected' },
+        report: {
+          id: 'mock-report-1',
+          jobId: 'mock-job-1',
+          reviewStatus: 'rejected',
+          reviewNotes: 'Mock rejection notes',
+          findingsCount: 1,
+          severityCounts: { low: 0, medium: 1, high: 0, critical: 0 },
+          summaryJson: {},
+          createdAt: new Date().toISOString(),
+        },
+        findings: [
+          {
+            id: 'mock-finding-1',
+            source: 'ai',
+            articleId: 4,
+            atomId: 'INSULT',
+            severity: 'medium',
+            titleAr: 'مخالفة تجريبية',
+            descriptionAr: 'وصف تجريبي',
+            rationaleAr: null,
+            evidenceSnippet: 'نص تجريبي للمخالفة',
+            pageNumber: 1,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      };
+    }
+  }
+
   if (path.startsWith('/users')) {
     if (method === 'GET') {
       return [

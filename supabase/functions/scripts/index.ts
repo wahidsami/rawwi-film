@@ -8,7 +8,7 @@ import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { getCorrelationId, normalizeText } from "../_shared/utils.ts";
-import { canOverrideOwnScriptDecision, isRegulatorOnly, isSuperAdminOrAdmin, isUserAdmin } from "../_shared/roleCheck.ts";
+import { canOverrideOwnScriptDecision, isClientUser, isRegulatorOnly, isSuperAdminOrAdmin, isUserAdmin } from "../_shared/roleCheck.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
 
 function pathAfter(base: string, url: string): string {
@@ -261,6 +261,61 @@ async function notifyScriptAssigned(
   if (!res.ok) console.error("[scripts] Resend error:", res.status, await res.text());
 }
 
+async function notifyAdminsOnClientSubmission(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  payload: {
+    scriptId: string;
+    scriptTitle: string;
+    companyId: string;
+    submittedByUserId: string;
+  },
+): Promise<void> {
+  const [{ data: roles }, { data: adminUserRoles }, { data: company }, { data: profile }] = await Promise.all([
+    supabase.from("roles").select("id, key").in("key", ["super_admin", "admin", "regulator"]),
+    supabase.from("user_roles").select("user_id, role_id"),
+    supabase.from("clients").select("id, name_ar, name_en").eq("id", payload.companyId).maybeSingle(),
+    supabase.from("profiles").select("name").eq("user_id", payload.submittedByUserId).maybeSingle(),
+  ]);
+
+  const adminRoleIds = new Set((roles ?? []).map((r: { id: string }) => r.id));
+  const adminUserIds = [...new Set((adminUserRoles ?? [])
+    .filter((row: { role_id: string; user_id: string }) => adminRoleIds.has(row.role_id))
+    .map((row: { user_id: string }) => row.user_id))];
+
+  if (adminUserIds.length === 0) return;
+
+  const companyName =
+    ((company as { name_ar?: string | null; name_en?: string | null } | null)?.name_ar ??
+      (company as { name_ar?: string | null; name_en?: string | null } | null)?.name_en ??
+      "Client").trim() || "Client";
+  const submitterName =
+    ((profile as { name?: string | null } | null)?.name ?? "Client").trim() || "Client";
+
+  const title = `Client submission: ${payload.scriptTitle}`;
+  const body = `A new script was submitted by ${companyName} (${submitterName}).`;
+  const metadata = {
+    script_id: payload.scriptId,
+    script_title: payload.scriptTitle,
+    company_id: payload.companyId,
+    company_name: companyName,
+    submitted_by: payload.submittedByUserId,
+    submitted_by_name: submitterName,
+  };
+
+  const notifications = adminUserIds.map((adminUserId) => ({
+    user_id: adminUserId,
+    type: "client_submission",
+    title,
+    body,
+    metadata,
+  }));
+
+  const { error } = await supabase.from("notifications").insert(notifications);
+  if (error) {
+    console.error("[scripts] notify admins on client submission:", error.message);
+  }
+}
+
 /** Shared predicate for script decision: used by GET .../decision/can and POST .../decision. */
 async function computeScriptDecisionCan(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -341,7 +396,10 @@ Deno.serve(async (req: Request) => {
   console.log(`[scripts] Request: ${method} ${req.url}`);
   console.log(`[scripts] Parsed rest path: '${rest}'`);
 
-  // GET /scripts — Only Super Admin and Admin see all. Everyone else sees only scripts assigned to them.
+  // GET /scripts
+  // - Super Admin/Admin: see all
+  // - Regulator-only: assigned scripts only
+  // - Other users (including client portal users): own scripts + assigned scripts
   if (method === "GET" && rest === "") {
     let query = supabase
       .from("scripts")
@@ -350,7 +408,12 @@ Deno.serve(async (req: Request) => {
       .order("created_at", { ascending: false });
     const seeAll = await isSuperAdminOrAdmin(supabase, uid);
     if (!seeAll) {
-      query = query.eq("assignee_id", uid);
+      const regulatorOnly = await isRegulatorOnly(supabase, uid);
+      if (regulatorOnly) {
+        query = query.eq("assignee_id", uid);
+      } else {
+        query = query.or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
+      }
     }
     const { data: rows, error } = await query;
     if (error) {
@@ -1067,6 +1130,15 @@ Deno.serve(async (req: Request) => {
       const { data: assignerProfile } = await supabase.from("profiles").select("name").eq("user_id", uid).maybeSingle();
       const assignerName = (assignerProfile as { name?: string } | null)?.name ?? undefined;
       await notifyScriptAssigned(supabase, created.assignee_id, created.id, created.title, assignerName ?? "");
+    }
+    const createdByClient = await isClientUser(supabase, uid);
+    if (createdByClient) {
+      await notifyAdminsOnClientSubmission(supabase, {
+        scriptId: created.id,
+        scriptTitle: created.title,
+        companyId: created.company_id ?? created.client_id,
+        submittedByUserId: uid,
+      });
     }
     logAuditCanonical(supabase, {
       event_type: "SCRIPT_CREATED",

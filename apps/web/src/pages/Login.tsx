@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useLangStore } from '@/store/langStore';
 import { Input } from '@/components/ui/Input';
@@ -14,7 +14,6 @@ export function Login() {
   const { login } = useAuthStore();
   const { t, lang, toggleLang } = useLangStore();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,8 +22,8 @@ export function Login() {
 
     try {
       await login(email, password);
-      // Always redirect to dashboard after login (not to previous location)
-      navigate('/', { replace: true });
+      const target = useAuthStore.getState().isClient() ? '/client' : '/';
+      navigate(target, { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Login failed';
       const isInvalidCreds = /400|invalid|credentials|password/i.test(msg);
@@ -99,6 +98,9 @@ export function Login() {
                 <div className="flex items-center justify-between text-xs">
                   <Link to="/forgot-password" className="text-primary hover:text-primary-hover font-medium">
                     {t('forgotPassword')}
+                  </Link>
+                  <Link to="/portal/register" className="text-primary hover:text-primary-hover font-medium">
+                    {lang === 'ar' ? 'تسجيل شركة جديدة (مجاني)' : 'Register Company (Free)'}
                   </Link>
                 </div>
 

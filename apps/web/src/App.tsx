@@ -23,6 +23,10 @@ import { Scripts } from '@/pages/Scripts';
 import { Certificates } from '@/pages/Certificates';
 import { NotFound } from '@/pages/NotFound';
 import { QuickAnalysis } from '@/pages/QuickAnalysis';
+import { ClientLanding } from '@/pages/ClientLanding';
+import { ClientRegister } from '@/pages/ClientRegister';
+import { ClientPortal } from '@/pages/ClientPortal';
+import { ClientSubmissions } from '@/pages/ClientSubmissions';
 import { ENABLE_QUICK_ANALYSIS } from '@/lib/env';
 
 const LANG_INIT_KEY = 'raawi-lang-initialized';
@@ -46,12 +50,22 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/set-password" element={<SetPassword />} />
+        <Route path="/portal" element={<ClientLanding />} />
+        <Route path="/portal/register" element={<ClientRegister />} />
+        <Route
+          path="/client"
+          element={
+            <ProtectedRoute requiredUserType="client">
+              <ClientPortal />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Protected Application Layout */}
         <Route
           path="/"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredUserType="admin">
               <AppLayout />
             </ProtectedRoute>
           }
@@ -91,6 +105,11 @@ function App() {
           <Route path="scripts" element={
             <ProtectedRoute requiredPermission="view_scripts">
               <Scripts />
+            </ProtectedRoute>
+          } />
+          <Route path="client-submissions" element={
+            <ProtectedRoute requiredUserType="admin" requiredPermission="view_scripts">
+              <ClientSubmissions />
             </ProtectedRoute>
           } />
           {ENABLE_QUICK_ANALYSIS && (

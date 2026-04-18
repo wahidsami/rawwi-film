@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { authApi } from '@/api';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
-export type Role = 'Super Admin' | 'Admin' | 'Regulator';
+export type Role = 'Super Admin' | 'Admin' | 'Regulator' | 'Client';
 
 export interface User {
   id: string;
@@ -17,7 +17,14 @@ export interface User {
 function mapSupabaseUserToAppUser(sbUser: SupabaseUser): User {
   const meta = sbUser.user_metadata ?? {};
   const name = (meta.name as string) || sbUser.email?.split('@')[0] || 'User';
-  const role = (meta.role as Role) || 'Admin';
+  const roleFromMeta = (meta.role as string | undefined) ?? 'Admin';
+  const role = roleFromMeta === 'Client' || roleFromMeta === 'client'
+    ? 'Client'
+    : roleFromMeta === 'Regulator' || roleFromMeta === 'regulator'
+      ? 'Regulator'
+      : roleFromMeta === 'Super Admin' || roleFromMeta === 'super_admin'
+        ? 'Super Admin'
+        : 'Admin';
   const permissions = (meta.permissions as string[] | undefined) ?? getDefaultPermissionsForRole(role);
 
   // NEW: Support allowedSections if present, otherwise derive from permissions
@@ -46,6 +53,8 @@ function getDefaultSectionsForRole(role: Role): string[] {
       return ['clients', 'tasks', 'glossary', 'reports', 'access_control', 'audit'];
     case 'Regulator':
       return ['clients', 'reports', 'glossary'];
+    case 'Client':
+      return ['client_portal'];
     default:
       return ['clients', 'reports'];
   }
@@ -67,6 +76,8 @@ function getDefaultPermissionsForRole(role: Role): string[] {
     case 'Regulator':
       // Regulator: View-only access plus glossary management
       return ['view_clients', 'view_scripts', 'view_findings', 'view_reports', 'view_tasks', 'manage_glossary'];
+    case 'Client':
+      return [];
     default:
       // Admin (default): Full management except user administration
       return [
@@ -101,6 +112,7 @@ interface AuthState {
   hasPermission: (permission: string) => boolean; // Legacy - maps to sections
   hasSection: (sectionId: string) => boolean; // NEW: Check section access
   isAdmin: () => boolean; // NEW: Helper to check if user is admin
+  isClient: () => boolean;
   initializeAuth: () => () => void;
 }
 
@@ -195,6 +207,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAdmin: () => {
     const user = get().user;
     return user?.role === 'Super Admin' || user?.role === 'Admin';
+  },
+
+  isClient: () => {
+    const user = get().user;
+    return user?.role === 'Client';
   },
 
   initializeAuth: () => {

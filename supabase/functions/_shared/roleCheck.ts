@@ -122,3 +122,24 @@ export async function isRegulatorOnly(
         return false;
     }
 }
+
+/**
+ * Returns true if the user has Client role.
+ */
+export async function isClientUser(
+    supabase: ReturnType<typeof createSupabaseAdmin>,
+    userId: string
+): Promise<boolean> {
+    try {
+        const { data: roleRows, error } = await supabase
+            .from("user_roles")
+            .select("role_id, roles(key)")
+            .eq("user_id", userId);
+
+        if (error || !roleRows || roleRows.length === 0) return false;
+        return (roleRows as any[]).some((r) => (r.roles?.key ?? "").toLowerCase() === "client");
+    } catch (err) {
+        console.error("[roleCheck] isClientUser:", err);
+        return false;
+    }
+}

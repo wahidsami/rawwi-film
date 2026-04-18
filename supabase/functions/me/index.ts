@@ -7,6 +7,20 @@ import { optionsResponse, jsonResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 
+function defaultSectionsForRole(role: string): string[] {
+  const normalized = role.trim().toLowerCase().replace(/\s+/g, "_");
+  if (normalized === "super_admin" || normalized === "admin") {
+    return ["clients", "tasks", "glossary", "reports", "access_control", "audit"];
+  }
+  if (normalized === "regulator") {
+    return ["clients", "reports", "glossary"];
+  }
+  if (normalized === "client") {
+    return ["client_portal"];
+  }
+  return ["clients", "reports"];
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? undefined;
   const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
@@ -59,7 +73,12 @@ Deno.serve(async (req: Request) => {
   const role = roleFromDb ?? ((meta.role as string) || (roleIds.length ? "Admin" : "Admin"));
   const normalizedRole = role === "Super Admin" || role === "super_admin" ? "Super Admin"
     : role === "Regulator" || role === "regulator" ? "Regulator"
-      : role === "admin" || role === "Admin" ? "Admin" : "Admin";
+      : role === "Client" || role === "client" ? "Client"
+        : role === "admin" || role === "Admin" ? "Admin" : "Admin";
+  const allowedSectionsMeta = meta.allowedSections as string[] | undefined;
+  const allowedSections = allowedSectionsMeta && allowedSectionsMeta.length > 0
+    ? allowedSectionsMeta
+    : defaultSectionsForRole(normalizedRole);
 
   return json({
     user: {
@@ -68,7 +87,7 @@ Deno.serve(async (req: Request) => {
       name,
       role: normalizedRole,
       permissions: permissionKeys,
-      allowedSections: meta.allowedSections as string[] | undefined,
+      allowedSections,
     },
   });
 });

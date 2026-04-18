@@ -83,6 +83,7 @@ export function AppLayout() {
     // Conditional sections - supports BOTH section-based and permission-based access
     { to: '/clients', icon: Users, label: t('clients'), section: 'clients', permission: 'view_clients' },
     { to: '/scripts', icon: FileText, label: lang === 'ar' ? 'النصوص' : 'Scripts', section: 'clients', permission: 'view_scripts' },
+    { to: '/client-submissions', icon: FileText, label: lang === 'ar' ? 'طلبات العملاء' : 'Client Submissions', section: 'clients', permission: 'view_scripts' },
     ...(ENABLE_QUICK_ANALYSIS
       ? [{ to: '/quick-analysis', icon: Wand2, label: lang === 'ar' ? 'تحليل سريع' : 'Quick Analysis', section: null as string | null, permission: null as string | null }]
       : []),

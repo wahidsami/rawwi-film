@@ -8,10 +8,11 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredPermission?: string; // LEGACY: Will be deprecated
   requiredSection?: string | string[]; // NEW: Preferred method (string or array of allowed sections)
+  requiredUserType?: 'admin' | 'client';
 }
 
-export function ProtectedRoute({ children, requiredPermission, requiredSection }: ProtectedRouteProps) {
-  const { isAuthenticated, hasPermission, hasSection, authReady } = useAuthStore();
+export function ProtectedRoute({ children, requiredPermission, requiredSection, requiredUserType }: ProtectedRouteProps) {
+  const { isAuthenticated, hasPermission, hasSection, authReady, isClient } = useAuthStore();
   const { t } = useLangStore();
   const location = useLocation();
 
@@ -25,6 +26,14 @@ export function ProtectedRoute({ children, requiredPermission, requiredSection }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (requiredUserType === 'admin' && isClient()) {
+    return <Navigate to="/client" replace />;
+  }
+
+  if (requiredUserType === 'client' && !isClient()) {
+    return <Navigate to="/" replace />;
   }
 
   // NEW: Check section access first (preferred)

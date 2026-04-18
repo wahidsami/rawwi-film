@@ -16,6 +16,7 @@ function getDefaultSectionsForRoleKey(roleKey: string): string[] {
   if (k === "super_admin") return [...ALL_SECTIONS];
   if (k === "admin") return [...ALL_SECTIONS];
   if (k === "regulator") return ["clients", "reports", "glossary"];
+  if (k === "client") return ["client_portal"];
   return ["clients", "reports"];
 }
 
@@ -24,6 +25,7 @@ function getRoleDisplayName(roleKey: string): string {
   const k = roleKey.toLowerCase().replace(/\s/g, "_");
   if (k === "super_admin") return "Super Admin";
   if (k === "regulator") return "Regulator";
+  if (k === "client") return "Client";
   return "Admin";
 }
 

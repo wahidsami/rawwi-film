@@ -6,6 +6,7 @@
  */
 import { optionsResponse, jsonResponse } from "../_shared/cors.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
+import { isSuperAdminOrAdmin } from "../_shared/roleCheck.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const BUCKET = "scripts";
@@ -78,6 +79,27 @@ Deno.serve(async (req: Request) => {
 
     if (!scriptId) {
         return json({ error: "scriptId is required" }, 400);
+    }
+    const { data: scriptRow, error: scriptErr } = await supabase
+        .from("scripts")
+        .select("id, created_by, assignee_id, client_id, company_id")
+        .eq("id", scriptId)
+        .maybeSingle();
+
+    if (scriptErr || !scriptRow) {
+        return json({ error: "Script not found" }, 404);
+    }
+
+    const canAdmin = await isSuperAdminOrAdmin(supabase, user.id);
+    const row = scriptRow as { created_by: string | null; assignee_id: string | null; client_id?: string | null; company_id?: string | null };
+    const ownsScript = row.created_by === user.id || row.assignee_id === user.id;
+    if (!canAdmin && !ownsScript) {
+        return json({ error: "Forbidden" }, 403);
+    }
+
+    const scriptCompanyId = (row.company_id ?? row.client_id ?? "").toString().trim();
+    if (companyId && scriptCompanyId && companyId.trim() !== scriptCompanyId) {
+        return json({ error: "companyId does not match script owner company" }, 400);
     }
 
     // Validate file size

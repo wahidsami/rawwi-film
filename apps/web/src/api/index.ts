@@ -21,6 +21,126 @@ export const authApi = {
   getMe: (): Promise<MeResponse> => httpClient.get('/me'),
 };
 
+export interface ClientPortalRegisterBody {
+  name: string;
+  email: string;
+  password: string;
+  companyNameAr: string;
+  companyNameEn: string;
+  representativeName?: string;
+  representativeTitle?: string;
+  mobile?: string;
+}
+
+export interface ClientPortalSubmissionItem {
+  scriptId: string;
+  title: string;
+  type: string;
+  status: string;
+  createdAt: string;
+  receivedAt?: string | null;
+  currentVersionId?: string | null;
+  latestReportId?: string | null;
+  latestReportReviewStatus?: string | null;
+  latestReportCreatedAt?: string | null;
+}
+
+export interface AdminClientSubmissionItem {
+  scriptId: string;
+  title: string;
+  type: string;
+  status: string;
+  synopsis?: string | null;
+  submittedAt: string;
+  receivedAt?: string | null;
+  currentVersionId?: string | null;
+  companyId: string;
+  companyNameAr?: string | null;
+  companyNameEn?: string | null;
+  submittedByUserId?: string | null;
+  submittedByName?: string | null;
+  submittedByEmail?: string | null;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
+  latestJobId?: string | null;
+  latestJobStatus?: string | null;
+  latestJobProgressPercent?: number | null;
+  latestJobCompletedAt?: string | null;
+  latestReportId?: string | null;
+  latestReportReviewStatus?: string | null;
+  latestReportCreatedAt?: string | null;
+  subscriptionPlan: 'free';
+  subscriptionStatus: 'active' | 'inactive';
+}
+
+export interface ClientPortalRejectionDetailsResponse {
+  script: {
+    id: string;
+    title: string;
+    status: string;
+  };
+  report: {
+    id: string;
+    jobId: string;
+    reviewStatus: string;
+    reviewNotes?: string | null;
+    findingsCount: number;
+    severityCounts?: Record<string, number> | null;
+    summaryJson?: Record<string, unknown> | null;
+    createdAt: string;
+  };
+  findings: Array<{
+    id: string;
+    source: string;
+    articleId: number;
+    atomId?: string | null;
+    severity: string;
+    titleAr: string;
+    descriptionAr?: string | null;
+    rationaleAr?: string | null;
+    evidenceSnippet: string;
+    pageNumber?: number | null;
+    createdAt: string;
+  }>;
+}
+
+export interface ClientPortalMeResponse {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: 'Client';
+  };
+  subscription: {
+    plan: 'free';
+    status: 'active' | 'inactive';
+    price: number;
+  };
+  company: {
+    companyId: string;
+    nameAr: string;
+    nameEn: string;
+    representativeName?: string | null;
+    representativeTitle?: string | null;
+    email?: string | null;
+    mobile?: string | null;
+    createdAt: string;
+  } | null;
+}
+
+export const clientPortalApi = {
+  register: (payload: ClientPortalRegisterBody): Promise<{ ok: true; registration: 'free'; userId: string; companyId: string }> =>
+    httpClient.post('/client-portal/register', payload),
+  getMe: (): Promise<ClientPortalMeResponse> =>
+    httpClient.get('/client-portal/me'),
+  getSubmissions: (): Promise<ClientPortalSubmissionItem[]> =>
+    httpClient.get('/client-portal/submissions'),
+  getAdminSubmissions: (): Promise<AdminClientSubmissionItem[]> =>
+    httpClient.get('/client-portal/admin/submissions'),
+  getRejectionDetails: (scriptId: string): Promise<ClientPortalRejectionDetailsResponse> =>
+    httpClient.get(`/client-portal/rejections/${encodeURIComponent(scriptId)}`),
+};
+
 export interface NotificationItem {
   id: string;
   type: string;
