@@ -23,6 +23,21 @@ function normalizePhone(value: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function resolveClientSubmissionStatus(
+  scriptStatus: unknown,
+  latestReportReviewStatus: unknown,
+): string {
+  const script = typeof scriptStatus === "string" ? scriptStatus.trim().toLowerCase() : "";
+  const review = typeof latestReportReviewStatus === "string" ? latestReportReviewStatus.trim().toLowerCase() : "";
+
+  // Client-facing status should reflect final admin decision from the latest review,
+  // even if scripts.status was not synced by the caller.
+  if (review === "approved") return "approved";
+  if (review === "rejected") return "rejected";
+
+  return script || "draft";
+}
+
 type ClientAccountRow = {
   user_id: string;
   company_id: string;
@@ -331,11 +346,12 @@ Deno.serve(async (req: Request) => {
 
     const items = (scripts ?? []).map((row: any) => {
       const latestReport = latestReportByScript.get(row.id) ?? null;
+      const effectiveStatus = resolveClientSubmissionStatus(row.status, latestReport?.review_status);
       return {
         scriptId: row.id,
         title: row.title,
         type: row.type,
-        status: row.status,
+        status: effectiveStatus,
         createdAt: row.created_at,
         receivedAt: row.received_at,
         currentVersionId: row.current_version_id,
@@ -429,12 +445,13 @@ Deno.serve(async (req: Request) => {
       const latestJob = latestJobByScript.get(row.id) ?? null;
       const latestReport = latestReportByScript.get(row.id) ?? null;
       const plan = planByCompany.get(scriptCompanyId) ?? { plan: "free", status: "active" };
+      const effectiveStatus = resolveClientSubmissionStatus(row.status, latestReport?.review_status);
 
       return {
         scriptId: row.id,
         title: row.title,
         type: row.type,
-        status: row.status,
+        status: effectiveStatus,
         synopsis: row.synopsis ?? null,
         submittedAt: row.created_at,
         receivedAt: row.received_at ?? null,

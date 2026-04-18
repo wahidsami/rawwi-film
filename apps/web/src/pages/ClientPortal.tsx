@@ -107,9 +107,34 @@ export function ClientPortal() {
     }
   }, [lang]);
 
+  const refreshSubmissionsSilently = useCallback(async () => {
+    try {
+      const list = await clientPortalApi.getSubmissions();
+      setSubmissions(list);
+    } catch {
+      // Keep current list if a background refresh fails.
+    }
+  }, []);
+
   useEffect(() => {
     loadProfileAndSubmissions();
   }, [loadProfileAndSubmissions]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      refreshSubmissionsSilently();
+    }, 15000);
+
+    const handleFocus = () => {
+      refreshSubmissionsSilently();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [refreshSubmissionsSilently]);
 
   const uploadScriptDocument = async (scriptId: string, companyId: string, uploadFile: File): Promise<UploadResult> => {
     let { data: { session } } = await supabase.auth.getSession();
