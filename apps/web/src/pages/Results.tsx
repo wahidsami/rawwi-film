@@ -7,7 +7,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate, formatDateLong, formatDateTime } from '@/utils/dateFormat';
 import { type AnalysisReport } from '@/services/reportService';
 import { reportsApi, findingsApi, scriptsApi, type AnalysisFinding, type AnalysisReviewFinding } from '@/api';
-import type { ReviewStatus, Script } from '@/api/models';
+import type { ReportListItem, ReviewStatus, Script } from '@/api/models';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -303,6 +303,13 @@ export function Results() {
   const [bulkReviewSaving, setBulkReviewSaving] = useState(false);
   const [reportReviewModalOpen, setReportReviewModalOpen] = useState(false);
   const [reportReviewReason, setReportReviewReason] = useState('');
+  const [rejectDecisionModalOpen, setRejectDecisionModalOpen] = useState(false);
+  const [rejectDecisionReason, setRejectDecisionReason] = useState('');
+  const [rejectDecisionClientComment, setRejectDecisionClientComment] = useState('');
+  const [rejectDecisionShareReports, setRejectDecisionShareReports] = useState(true);
+  const [rejectDecisionAvailableReports, setRejectDecisionAvailableReports] = useState<ReportListItem[]>([]);
+  const [rejectDecisionSelectedReportIds, setRejectDecisionSelectedReportIds] = useState<string[]>([]);
+  const [rejectDecisionLoadingReports, setRejectDecisionLoadingReports] = useState(false);
   const [selectedFindingIds, setSelectedFindingIds] = useState<string[]>([]);
   const [editFindingModal, setEditFindingModal] = useState<AnalysisFinding | null>(null);
   const [editFindingSaving, setEditFindingSaving] = useState(false);
@@ -331,8 +338,104 @@ export function Results() {
     setEditFindingSnippetValidation(null);
   }, [editFindingModal]);
 
+  const toggleRejectDecisionReport = useCallback((reportId: string) => {
+    setRejectDecisionSelectedReportIds((prev) =>
+      prev.includes(reportId)
+        ? prev.filter((id) => id !== reportId)
+        : [...prev, reportId]
+    );
+  }, []);
+
+  const openRejectDecisionModal = useCallback(async () => {
+    if (!report?.scriptId) {
+      toast.error(lang === 'ar' ? 'تعذر تحديد النص المرتبط بهذا التقرير' : 'Unable to resolve script for this report');
+      return;
+    }
+
+    setRejectDecisionReason('');
+    setRejectDecisionClientComment('');
+    setRejectDecisionShareReports(true);
+    setRejectDecisionAvailableReports([]);
+    setRejectDecisionSelectedReportIds(report.id ? [report.id] : []);
+    setRejectDecisionModalOpen(true);
+    setRejectDecisionLoadingReports(true);
+
+    try {
+      const reports = await reportsApi.listByScript(report.scriptId);
+      setRejectDecisionAvailableReports(reports);
+      const defaultReportId =
+        (report.id && reports.some((item) => item.id === report.id))
+          ? report.id
+          : (reports[0]?.id ?? null);
+      setRejectDecisionSelectedReportIds(defaultReportId ? [defaultReportId] : []);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تحميل التقارير المتاحة' : 'Failed to load available reports'));
+      setRejectDecisionAvailableReports([]);
+      setRejectDecisionSelectedReportIds(report.id ? [report.id] : []);
+    } finally {
+      setRejectDecisionLoadingReports(false);
+    }
+  }, [lang, report?.id, report?.scriptId]);
+
+  const submitRejectDecision = useCallback(async () => {
+    if (!report?.scriptId || !report?.id) return;
+    const reason = rejectDecisionReason.trim();
+    if (!reason) {
+      toast.error(lang === 'ar' ? 'يرجى إدخال سبب الرفض' : 'Please enter a rejection reason');
+      return;
+    }
+
+    setReviewing(true);
+    try {
+      await scriptsApi.makeDecision(
+        report.scriptId,
+        'reject',
+        reason,
+        report.id,
+        {
+          clientComment: rejectDecisionClientComment.trim(),
+          shareReportsToClient: rejectDecisionShareReports,
+          shareReportIds: rejectDecisionShareReports ? rejectDecisionSelectedReportIds : [],
+        },
+      );
+
+      setReport({
+        ...report,
+        reviewStatus: 'rejected',
+        reviewNotes: reason,
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: user?.id ?? null,
+      });
+      setUpdateScriptStatus(true);
+      setRejectDecisionModalOpen(false);
+      setRejectDecisionReason('');
+      setRejectDecisionClientComment('');
+      setRejectDecisionShareReports(true);
+      setRejectDecisionAvailableReports([]);
+      setRejectDecisionSelectedReportIds([]);
+      toast.success(lang === 'ar' ? 'تم رفض النص وحفظ ملاحظات العميل' : 'Script rejected and client notes saved');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تنفيذ قرار الرفض' : 'Failed to reject script'));
+    } finally {
+      setReviewing(false);
+    }
+  }, [
+    lang,
+    rejectDecisionClientComment,
+    rejectDecisionReason,
+    rejectDecisionSelectedReportIds,
+    rejectDecisionShareReports,
+    report,
+    user?.id,
+  ]);
+
   // Report-level review
   const handleReportReview = async (status: ReviewStatus, explicitReviewNotes?: string) => {
+    if (status === 'rejected') {
+      await openRejectDecisionModal();
+      return;
+    }
+
     if (!report?.id) return;
     let reviewNotes = explicitReviewNotes?.trim() ?? '';
     if (status === 'under_review') {
@@ -2233,6 +2336,12 @@ export function Results() {
                     (lang === 'ar' ? 'قيد المراجعة' : 'Under Review')}
               </span>
               {report.reviewedAt && <span className="text-xs text-text-muted ms-2">{formatDate(new Date(report.reviewedAt), { lang, format: dateFormat })}</span>}
+              {report.reviewStatus === 'rejected' && report.reviewNotes && (
+                <p className="text-xs text-text-muted mt-1" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                  <span className="font-semibold">{lang === 'ar' ? 'سبب الرفض:' : 'Rejection reason:'}</span>{' '}
+                  {report.reviewNotes}
+                </p>
+              )}
             </div>
           </div>
 
@@ -2263,7 +2372,7 @@ export function Results() {
               size="sm"
               variant="outline"
               className="h-8 text-xs gap-1 text-error border-error/30 hover:bg-error/10"
-              onClick={() => handleReportReview('rejected')}
+              onClick={() => void handleReportReview('rejected')}
               disabled={reviewing || report.reviewStatus === 'approved' || report.reviewStatus === 'rejected'}
             >
               <XCircle className="w-3.5 h-3.5" />{lang === 'ar' ? 'رفض' : 'Reject'}
@@ -2627,6 +2736,98 @@ export function Results() {
               disabled={reviewing || !reportReviewReason.trim()}
             >
               {reviewing ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : (lang === 'ar' ? 'إعادة للمراجعة' : 'Send to review')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={rejectDecisionModalOpen}
+        onClose={() => {
+          if (reviewing) return;
+          setRejectDecisionModalOpen(false);
+          setRejectDecisionReason('');
+          setRejectDecisionClientComment('');
+          setRejectDecisionShareReports(true);
+          setRejectDecisionAvailableReports([]);
+          setRejectDecisionSelectedReportIds([]);
+        }}
+        title={lang === 'ar' ? 'رفض النص وإرسال الملاحظات' : 'Reject Script & Send Feedback'}
+      >
+        <div className="space-y-4">
+          <Textarea
+            label={lang === 'ar' ? 'سبب الرفض (داخلي)' : 'Rejection reason (internal)'}
+            value={rejectDecisionReason}
+            onChange={(e) => setRejectDecisionReason(e.target.value)}
+            placeholder={lang === 'ar' ? 'اكتب سبب الرفض الذي سيُحفظ في السجل…' : 'Write the internal rejection reason…'}
+          />
+
+          <Textarea
+            label={lang === 'ar' ? 'تعليق للعميل (اختياري)' : 'Client comment (optional)'}
+            value={rejectDecisionClientComment}
+            onChange={(e) => setRejectDecisionClientComment(e.target.value)}
+            placeholder={lang === 'ar' ? 'اكتب ملاحظات واضحة تظهر للعميل في البوابة…' : 'Write clear notes that will be shown to the client…'}
+          />
+
+          <div className="rounded-md border border-border bg-background p-3 space-y-3">
+            <label className="inline-flex items-center gap-2 text-sm font-medium text-text-main">
+              <input
+                type="checkbox"
+                checked={rejectDecisionShareReports}
+                onChange={(e) => setRejectDecisionShareReports(e.target.checked)}
+              />
+              <span>{lang === 'ar' ? 'مشاركة تقرير/تقارير التحليل مع العميل' : 'Share analysis report(s) with client'}</span>
+            </label>
+
+            {rejectDecisionShareReports && (
+              <div className="space-y-2 max-h-48 overflow-y-auto pe-1">
+                {rejectDecisionLoadingReports ? (
+                  <p className="text-xs text-text-muted">{lang === 'ar' ? 'جاري تحميل التقارير…' : 'Loading reports…'}</p>
+                ) : rejectDecisionAvailableReports.length === 0 ? (
+                  <p className="text-xs text-text-muted">{lang === 'ar' ? 'لا توجد تقارير متاحة لهذا النص حالياً.' : 'No reports available for this script yet.'}</p>
+                ) : (
+                  rejectDecisionAvailableReports.map((item) => (
+                    <label key={item.id} className="flex items-start gap-2 text-sm text-text-main rounded border border-border bg-surface p-2">
+                      <input
+                        type="checkbox"
+                        checked={rejectDecisionSelectedReportIds.includes(item.id)}
+                        onChange={() => toggleRejectDecisionReport(item.id)}
+                      />
+                      <span>
+                        {(lang === 'ar' ? 'تقرير' : 'Report')} #{item.id.slice(0, 8)} {' • '}
+                        {new Date(item.createdAt).toLocaleString()} {' • '}
+                        {(lang === 'ar' ? 'الحالة' : 'Status')}: {item.reviewStatus} {' • '}
+                        {(lang === 'ar' ? 'المخالفات' : 'Findings')}: {item.findingsCount}
+                      </span>
+                    </label>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (reviewing) return;
+                setRejectDecisionModalOpen(false);
+                setRejectDecisionReason('');
+                setRejectDecisionClientComment('');
+                setRejectDecisionShareReports(true);
+                setRejectDecisionAvailableReports([]);
+                setRejectDecisionSelectedReportIds([]);
+              }}
+              disabled={reviewing}
+            >
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={submitRejectDecision}
+              disabled={reviewing || !rejectDecisionReason.trim()}
+            >
+              {reviewing ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : (lang === 'ar' ? 'تأكيد الرفض' : 'Confirm Rejection')}
             </Button>
           </div>
         </div>
