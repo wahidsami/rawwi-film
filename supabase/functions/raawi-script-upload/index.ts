@@ -18,204 +18,221 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "OPTIONS") return optionsResponse(req);
 
-    // STEP:auth_parse - Check headers
-    const authHeader = req.headers.get("Authorization");
-    console.log(`[raawi-script-upload] STEP:auth_parse - Auth header exists: ${!!authHeader}`);
-
-    if (!authHeader) {
-        return json({ code: 401, message: "Missing Authorization header" }, 401);
-    }
-
-    const token = authHeader.replace("Bearer ", "").trim();
-    console.log(`[raawi-script-upload] STEP:auth_parse - Token len: ${token.length}, Prefix: ${token.substring(0, 10)}...`);
-
-    if (!token) {
-        return json({ code: 401, message: "Invalid JWT (empty)" }, 401);
-    }
-
-    // STEP:auth_verify - Verify with Supabase Client (Standard Pattern)
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-
-    // Create client representing the user
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-        global: { headers: { Authorization: authHeader } },
-        auth: { persistSession: false }
-    });
-
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
-
-    if (authError || !user) {
-        console.error("[raawi-script-upload] STEP:auth_verify FAILED:", authError);
-        return json({ code: 401, message: "Invalid JWT (expired or bad signature)" }, 401);
-    }
-
-    console.log(`[raawi-script-upload] STEP:auth_verify SUCCESS - User ID: ${user.id}`);
-
-    // Use Admin client for privileged storage operations
-    const supabase = createSupabaseAdmin();
-
-    if (req.method !== "POST") {
-        return json({ error: "Method not allowed" }, 405);
-    }
-
-    let formData: FormData;
     try {
-        formData = await req.formData();
-    } catch (error) {
-        console.error("[raawi-script-upload] formData parse error:", error);
-        return json({ error: "Invalid form data" }, 400);
-    }
+        // STEP:auth_parse - Check headers
+        const authHeader = req.headers.get("Authorization");
+        console.log(`[raawi-script-upload] STEP:auth_parse - Auth header exists: ${!!authHeader}`);
 
-    const file = formData.get("file") as File | null;
-    const scriptId = formData.get("scriptId") as string | null;
-    const companyId = formData.get("companyId") as string | null;
-    const createVersionRaw = formData.get("createVersion") as string | null;
-    const createVersion = createVersionRaw !== "false" && createVersionRaw !== "0";
+        if (!authHeader) {
+            return json({ code: 401, message: "Missing Authorization header" }, 401);
+        }
 
-    if (!file) {
-        return json({ error: "file is required" }, 400);
-    }
+        const token = authHeader.replace("Bearer ", "").trim();
+        console.log(`[raawi-script-upload] STEP:auth_parse - Token len: ${token.length}, Prefix: ${token.substring(0, 10)}...`);
 
-    if (!scriptId) {
-        return json({ error: "scriptId is required" }, 400);
-    }
-    const { data: scriptRow, error: scriptErr } = await supabase
-        .from("scripts")
-        .select("id, created_by, assignee_id, client_id, company_id")
-        .eq("id", scriptId)
-        .maybeSingle();
+        if (!token) {
+            return json({ code: 401, message: "Invalid JWT (empty)" }, 401);
+        }
 
-    if (scriptErr || !scriptRow) {
-        return json({ error: "Script not found" }, 404);
-    }
+        // STEP:auth_verify - Verify with Supabase Client (Standard Pattern)
+        const supabaseUrl = Deno.env.get("SUPABASE_URL");
+        const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+        if (!supabaseUrl || !supabaseAnonKey) {
+            return json({ error: "Function env is missing SUPABASE_URL or SUPABASE_ANON_KEY" }, 500);
+        }
 
-    const canAdmin = await isSuperAdminOrAdmin(supabase, user.id);
-    const row = scriptRow as { created_by: string | null; assignee_id: string | null; client_id?: string | null; company_id?: string | null };
-    const ownsScript = row.created_by === user.id || row.assignee_id === user.id;
-    if (!canAdmin && !ownsScript) {
-        return json({ error: "Forbidden" }, 403);
-    }
-
-    const scriptCompanyId = (row.company_id ?? row.client_id ?? "").toString().trim();
-    if (companyId && scriptCompanyId && companyId.trim() !== scriptCompanyId) {
-        return json({ error: "companyId does not match script owner company" }, 400);
-    }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-        return json({ error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` }, 400);
-    }
-
-    // Validate file type
-    const ext = file.name.split('.').pop()?.toLowerCase();
-    if (!ext || !['pdf', 'docx', 'doc'].includes(ext)) {
-        return json({ error: "Only PDF and DOCX files are supported" }, 400);
-    }
-
-    // Create storage path: {companyId}/{scriptId}/{timestamp}_{filename}
-    const timestamp = Date.now();
-    // Normalize to NFC so Arabic and other Unicode render consistently (BUG-09)
-    const normalizedFileName = typeof file.name === "string" && file.name ? file.name.normalize("NFC") : file.name;
-    // Allow letters from any language, numbers, spaces, dots, dashes, underscores, and the Arabic comma (،)
-    const sanitizedFilename = normalizedFileName.replace(/[^\p{L}\p{N}\s._\-،]/gu, '_');
-    const storagePath = companyId
-        ? `${companyId}/${scriptId}/${timestamp}_${sanitizedFilename}`
-        : `${scriptId}/${timestamp}_${sanitizedFilename}`;
-
-    // Upload to Supabase Storage
-    const fileBuffer = await file.arrayBuffer();
-    const { data: uploadData, error: uploadError } = await supabase.storage
-        .from(BUCKET)
-        .upload(storagePath, fileBuffer, {
-            contentType: file.type,
-            upsert: false,
+        // Create client representing the user
+        const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+            global: { headers: { Authorization: authHeader } },
+            auth: { persistSession: false }
         });
 
-    if (uploadError) {
-        console.error("[raawi-script-upload] storage upload error:", uploadError);
-        return json({ error: uploadError.message || "Failed to upload file" }, 500);
-    }
+        const { data: { user }, error: authError } = await userClient.auth.getUser();
 
-    // Use relative path for database storage (bucket/path)
-    const fileUrl = `${BUCKET}/${storagePath}`;
+        if (authError || !user) {
+            console.error("[raawi-script-upload] STEP:auth_verify FAILED:", authError);
+            return json({ code: 401, message: "Invalid JWT (expired or bad signature)" }, 401);
+        }
 
-    // Update script record with relative file path
-    const { error: updateError } = await supabase
-        .from("scripts")
-        .update({ file_url: fileUrl })
-        .eq("id", scriptId);
+        console.log(`[raawi-script-upload] STEP:auth_verify SUCCESS - User ID: ${user.id}`);
 
-    if (updateError) {
-        console.error("[raawi-script-upload] script update error:", updateError);
-        // Don't fail the upload, just log the error
-    }
+        // Use Admin client for privileged storage operations
+        const supabase = createSupabaseAdmin();
 
-    if (!createVersion) {
-        console.log("[raawi-script-upload] createVersion=false: skipping version creation and extraction");
+        if (req.method !== "POST") {
+            return json({ error: "Method not allowed" }, 405);
+        }
+
+        let formData: FormData;
+        try {
+            formData = await req.formData();
+        } catch (error) {
+            console.error("[raawi-script-upload] formData parse error:", error);
+            return json({ error: "Invalid form data" }, 400);
+        }
+
+        const file = formData.get("file") as File | null;
+        const scriptId = formData.get("scriptId") as string | null;
+        const companyId = formData.get("companyId") as string | null;
+        const createVersionRaw = formData.get("createVersion") as string | null;
+        const createVersion = createVersionRaw !== "false" && createVersionRaw !== "0";
+
+        if (!file) {
+            return json({ error: "file is required" }, 400);
+        }
+
+        if (!scriptId) {
+            return json({ error: "scriptId is required" }, 400);
+        }
+        const { data: scriptRow, error: scriptErr } = await supabase
+            .from("scripts")
+            .select("id, created_by, assignee_id, client_id, company_id")
+            .eq("id", scriptId)
+            .maybeSingle();
+
+        if (scriptErr || !scriptRow) {
+            return json({ error: "Script not found" }, 404);
+        }
+
+        const canAdmin = await isSuperAdminOrAdmin(supabase, user.id);
+        const row = scriptRow as { created_by: string | null; assignee_id: string | null; client_id?: string | null; company_id?: string | null };
+        const ownsScript = row.created_by === user.id || row.assignee_id === user.id;
+        if (!canAdmin && !ownsScript) {
+            return json({ error: "Forbidden" }, 403);
+        }
+
+        const scriptCompanyId = (row.company_id ?? row.client_id ?? "").toString().trim();
+        if (companyId && scriptCompanyId && companyId.trim() !== scriptCompanyId) {
+            return json({ error: "companyId does not match script owner company" }, 400);
+        }
+
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE) {
+            return json({ error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` }, 400);
+        }
+
+        // Validate file type
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        if (!ext || !['pdf', 'docx', 'doc', 'txt'].includes(ext)) {
+            return json({ error: "Only PDF, DOCX, DOC, and TXT files are supported" }, 400);
+        }
+
+        const fallbackContentTypeByExt: Record<string, string> = {
+            pdf: "application/pdf",
+            docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            doc: "application/msword",
+            txt: "text/plain",
+        };
+        const uploadContentType = (file.type && file.type.trim()) || fallbackContentTypeByExt[ext] || "application/octet-stream";
+
+        // Create storage path: {companyId}/{scriptId}/{timestamp}_{filename}
+        const timestamp = Date.now();
+        // Normalize to NFC so Arabic and other Unicode render consistently (BUG-09)
+        const normalizedFileName = typeof file.name === "string" && file.name ? file.name.normalize("NFC") : file.name;
+        // Allow letters from any language, numbers, spaces, dots, dashes, underscores, and the Arabic comma (،)
+        const sanitizedFilename = normalizedFileName.replace(/[^\p{L}\p{N}\s._\-،]/gu, '_');
+        const storagePath = companyId
+            ? `${companyId}/${scriptId}/${timestamp}_${sanitizedFilename}`
+            : `${scriptId}/${timestamp}_${sanitizedFilename}`;
+
+        // Upload to Supabase Storage
+        const fileBuffer = await file.arrayBuffer();
+        const { error: uploadError } = await supabase.storage
+            .from(BUCKET)
+            .upload(storagePath, fileBuffer, {
+                contentType: uploadContentType,
+                upsert: false,
+            });
+
+        if (uploadError) {
+            console.error("[raawi-script-upload] storage upload error:", uploadError);
+            return json({ error: `Storage upload failed: ${uploadError.message || "Unknown storage error"}` }, 500);
+        }
+
+        // Use relative path for database storage (bucket/path)
+        const fileUrl = `${BUCKET}/${storagePath}`;
+
+        // Update script record with relative file path
+        const { error: updateError } = await supabase
+            .from("scripts")
+            .update({ file_url: fileUrl })
+            .eq("id", scriptId);
+
+        if (updateError) {
+            console.error("[raawi-script-upload] script update error:", updateError);
+            // Don't fail the upload, just log the error
+        }
+
+        if (!createVersion) {
+            console.log("[raawi-script-upload] createVersion=false: skipping version creation and extraction");
+            return json({
+                success: true,
+                fileUrl,
+                path: storagePath,
+                fileName: normalizedFileName,
+                fileSize: file.size,
+                versionId: null,
+                versionNumber: null,
+            });
+        }
+
+        // Create ScriptVersion record
+        const sourceFileType = uploadContentType;
+
+        // Get next version number
+        const { data: maxRow } = await supabase
+            .from("script_versions")
+            .select("version_number")
+            .eq("script_id", scriptId)
+            .order("version_number", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        const nextVersion = maxRow ? (maxRow as { version_number: number }).version_number + 1 : 1;
+
+        // Create version with "extracting" status
+        const { data: version, error: versionError } = await supabase
+            .from("script_versions")
+            .insert({
+                script_id: scriptId,
+                version_number: nextVersion,
+                source_file_name: normalizedFileName,
+                source_file_type: sourceFileType,
+                source_file_size: file.size,
+                source_file_path: storagePath,
+                source_file_url: fileUrl,
+                extraction_status: "extracting"
+            })
+            .select("id, version_number")
+            .single();
+
+        if (versionError || !version) {
+            console.error("[raawi-script-upload] version creation error:", versionError);
+            return json({ error: `Failed to create version: ${versionError?.message || "Unknown version error"}` }, 500);
+        }
+
+        console.log(`[raawi-script-upload] Created version ${version.id} for script ${scriptId}`);
+
+        // Update script's current_version_id
+        await supabase
+            .from("scripts")
+            .update({ current_version_id: version.id })
+            .eq("id", scriptId);
+
+        // Extraction: client must POST /extract (versionId only for PDF/DOCX server extract, or text for TXT).
+
         return json({
             success: true,
             fileUrl,
             path: storagePath,
             fileName: normalizedFileName,
             fileSize: file.size,
-            versionId: null,
-            versionNumber: null,
+            versionId: version.id,
+            versionNumber: version.version_number,
         });
+    } catch (error) {
+        console.error("[raawi-script-upload] unhandled error:", error);
+        const message = error instanceof Error ? error.message : "Unexpected upload failure";
+        return json({ error: message }, 500);
     }
-
-    // Create ScriptVersion record
-    const sourceFileType = file.type || (ext === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-
-    // Get next version number
-    const { data: maxRow } = await supabase
-        .from("script_versions")
-        .select("version_number")
-        .eq("script_id", scriptId)
-        .order("version_number", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-    const nextVersion = maxRow ? (maxRow as { version_number: number }).version_number + 1 : 1;
-
-    // Create version with "extracting" status
-    const { data: version, error: versionError } = await supabase
-        .from("script_versions")
-        .insert({
-            script_id: scriptId,
-            version_number: nextVersion,
-            source_file_name: normalizedFileName,
-            source_file_type: sourceFileType,
-            source_file_size: file.size,
-            source_file_path: storagePath,
-            source_file_url: fileUrl,
-            extraction_status: "extracting"
-        })
-        .select("id, version_number")
-        .single();
-
-    if (versionError || !version) {
-        console.error("[raawi-script-upload] version creation error:", versionError);
-        return json({ error: "Failed to create version" }, 500);
-    }
-
-    console.log(`[raawi-script-upload] Created version ${version.id} for script ${scriptId}`);
-
-    // Update script's current_version_id
-    await supabase
-        .from("scripts")
-        .update({ current_version_id: version.id })
-        .eq("id", scriptId);
-
-    // Extraction: client must POST /extract (versionId only for PDF/DOCX server extract, or text for TXT).
-
-    return json({
-        success: true,
-        fileUrl,
-        path: storagePath,
-        fileName: normalizedFileName,
-        fileSize: file.size,
-        versionId: version.id,
-        versionNumber: version.version_number,
-    });
 });
