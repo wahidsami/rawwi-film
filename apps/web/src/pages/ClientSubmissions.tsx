@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { clientPortalApi, reportsApi, scriptsApi, type AdminClientSubmissionItem } from '@/api';
 import type { ReportListItem } from '@/api/models';
 import { useLangStore } from '@/store/langStore';
+import { useDataStore } from '@/store/dataStore';
 
 function statusVariant(status: string): 'default' | 'success' | 'warning' | 'error' | 'outline' {
   const key = status.toLowerCase();
@@ -33,6 +34,7 @@ function statusLabel(status: string, lang: 'ar' | 'en'): string {
 export function ClientSubmissions() {
   const navigate = useNavigate();
   const { lang } = useLangStore();
+  const { fetchInitialData } = useDataStore();
   const [rows, setRows] = useState<AdminClientSubmissionItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -151,7 +153,7 @@ export function ClientSubmissions() {
       setShareReportsToClient(true);
       setAvailableReports([]);
       setSelectedSharedReportIds([]);
-      await load();
+      await Promise.all([load(), fetchInitialData()]);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تنفيذ القرار' : 'Failed to apply decision'));
     } finally {

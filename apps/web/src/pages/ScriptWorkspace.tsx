@@ -2168,7 +2168,8 @@ export function ScriptWorkspace() {
       }
     }
     try {
-      await reportsApi.review(reportId, status, resolvedNotes);
+      const shouldSyncScriptStatus = status === 'approved' || status === 'rejected';
+      await reportsApi.review(reportId, status, resolvedNotes, shouldSyncScriptStatus);
       toast.success(lang === 'ar' ? 'تم تحديث حالة المراجعة' : 'Review status updated');
       if (selectedReportForHighlights?.id === reportId) {
         setSelectedReportForHighlights((prev) =>
@@ -2189,6 +2190,9 @@ export function ScriptWorkspace() {
         );
       }
       loadReportHistory();
+      if (shouldSyncScriptStatus) {
+        await fetchInitialData();
+      }
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to update review');
     }
