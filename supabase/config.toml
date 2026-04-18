@@ -52,3 +52,6 @@ verify_jwt = false
 
 [functions.users]
 verify_jwt = false
+
+[functions.client-portal]
+verify_jwt = false
