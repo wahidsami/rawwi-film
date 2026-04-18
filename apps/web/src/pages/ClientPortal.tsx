@@ -461,46 +461,90 @@ export function ClientPortal() {
         ) : !details ? (
           <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد بيانات متاحة' : 'No details available'}</p>
         ) : (
-          <div className="space-y-4">
-            <div className="rounded-md border border-border bg-background p-3 space-y-1">
-              <p className="font-semibold">{details.script.title}</p>
-              <p className="text-sm text-text-muted">
-                {lang === 'ar' ? 'تاريخ التقرير:' : 'Report date:'} {new Date(details.report.createdAt).toLocaleString()}
-              </p>
-              {details.report.reviewNotes && (
-                <p className="text-sm">
-                  <span className="font-medium">{lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:'}</span> {details.report.reviewNotes}
-                </p>
-              )}
-            </div>
+          (() => {
+            const reportBlocks =
+              details.sharedReports && details.sharedReports.length > 0
+                ? details.sharedReports
+                : (details.report ? [{ report: details.report, findings: details.findings ?? [] }] : []);
 
-            <div className="space-y-3 max-h-[50vh] overflow-auto pe-1">
-              {details.findings.length === 0 ? (
-                <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد مخالفات متاحة في هذا التقرير' : 'No findings available in this report'}</p>
-              ) : (
-                details.findings.map((finding) => (
-                  <div key={finding.id} className="rounded-md border border-border bg-surface p-3 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold">{finding.titleAr}</p>
-                      <Badge variant={finding.severity === 'high' || finding.severity === 'critical' ? 'error' : 'warning'}>
-                        {finding.severity}
-                      </Badge>
-                    </div>
-                    {finding.descriptionAr && (
-                      <p className="text-sm text-text-muted">{finding.descriptionAr}</p>
-                    )}
-                    <p className="text-sm leading-relaxed bg-background rounded p-2 border border-border">
-                      {finding.evidenceSnippet}
+            return (
+              <div className="space-y-4">
+                <div className="rounded-md border border-border bg-background p-3 space-y-2">
+                  <p className="font-semibold">{details.script.title}</p>
+                  {details.decision?.decidedAt && (
+                    <p className="text-sm text-text-muted">
+                      {lang === 'ar' ? 'تاريخ قرار الرفض:' : 'Rejection decision date:'} {new Date(details.decision.decidedAt).toLocaleString()}
                     </p>
-                    <p className="text-xs text-text-muted">
-                      {lang === 'ar' ? 'المادة' : 'Article'} #{finding.articleId}
-                      {finding.pageNumber ? ` • ${lang === 'ar' ? 'صفحة' : 'Page'} ${finding.pageNumber}` : ''}
+                  )}
+                  {details.decision?.adminComment && (
+                    <p className="text-sm">
+                      <span className="font-medium">{lang === 'ar' ? 'تعليق الإدارة:' : 'Admin comment:'}</span> {details.decision.adminComment}
                     </p>
+                  )}
+                  {!details.decision?.adminComment && details.report?.reviewNotes && (
+                    <p className="text-sm">
+                      <span className="font-medium">{lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:'}</span> {details.report.reviewNotes}
+                    </p>
+                  )}
+                </div>
+
+                {reportBlocks.length === 0 ? (
+                  <p className="text-sm text-text-muted">
+                    {lang === 'ar'
+                      ? 'لم يتم إرفاق تقارير مع قرار الرفض من الإدارة.'
+                      : 'No analysis reports were attached to this rejection decision.'}
+                  </p>
+                ) : (
+                  <div className="space-y-4 max-h-[55vh] overflow-auto pe-1">
+                    {reportBlocks.map((block) => (
+                      <div key={block.report.id} className="space-y-3 rounded-lg border border-border bg-background p-3">
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold">
+                            {lang === 'ar' ? 'التقرير' : 'Report'} #{block.report.id.slice(0, 8)}
+                          </p>
+                          <p className="text-xs text-text-muted">
+                            {lang === 'ar' ? 'تاريخ التقرير:' : 'Report date:'} {new Date(block.report.createdAt).toLocaleString()}
+                          </p>
+                          {block.report.reviewNotes && (
+                            <p className="text-xs text-text-muted">
+                              {lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:'} {block.report.reviewNotes}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-3">
+                          {block.findings.length === 0 ? (
+                            <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد مخالفات متاحة في هذا التقرير' : 'No findings available in this report'}</p>
+                          ) : (
+                            block.findings.map((finding) => (
+                              <div key={finding.id} className="rounded-md border border-border bg-surface p-3 space-y-2">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className="font-semibold">{finding.titleAr}</p>
+                                  <Badge variant={finding.severity === 'high' || finding.severity === 'critical' ? 'error' : 'warning'}>
+                                    {finding.severity}
+                                  </Badge>
+                                </div>
+                                {finding.descriptionAr && (
+                                  <p className="text-sm text-text-muted">{finding.descriptionAr}</p>
+                                )}
+                                <p className="text-sm leading-relaxed bg-background rounded p-2 border border-border">
+                                  {finding.evidenceSnippet}
+                                </p>
+                                <p className="text-xs text-text-muted">
+                                  {lang === 'ar' ? 'المادة' : 'Article'} #{finding.articleId}
+                                  {finding.pageNumber ? ` • ${lang === 'ar' ? 'صفحة' : 'Page'} ${finding.pageNumber}` : ''}
+                                </p>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))
-              )}
-            </div>
-          </div>
+                )}
+              </div>
+            );
+          })()
         )}
       </Modal>
     </div>

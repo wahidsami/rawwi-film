@@ -80,7 +80,39 @@ export interface ClientPortalRejectionDetailsResponse {
     title: string;
     status: string;
   };
-  report: {
+  decision?: {
+    status: 'rejected';
+    decidedAt?: string | null;
+    adminComment?: string | null;
+    sharedReportsCount: number;
+  };
+  sharedReports?: Array<{
+    report: {
+      id: string;
+      jobId: string;
+      reviewStatus: string;
+      reviewNotes?: string | null;
+      findingsCount: number;
+      severityCounts?: Record<string, number> | null;
+      summaryJson?: Record<string, unknown> | null;
+      createdAt: string;
+    };
+    findings: Array<{
+      id: string;
+      source: string;
+      articleId: number;
+      atomId?: string | null;
+      severity: string;
+      titleAr: string;
+      descriptionAr?: string | null;
+      rationaleAr?: string | null;
+      evidenceSnippet: string;
+      pageNumber?: number | null;
+      createdAt: string;
+    }>;
+  }>;
+  // Backward-compatible legacy fields (used by existing UI paths)
+  report?: {
     id: string;
     jobId: string;
     reviewStatus: string;
@@ -90,7 +122,7 @@ export interface ClientPortalRejectionDetailsResponse {
     summaryJson?: Record<string, unknown> | null;
     createdAt: string;
   };
-  findings: Array<{
+  findings?: Array<{
     id: string;
     source: string;
     articleId: number;
@@ -145,8 +177,17 @@ export const clientPortalApi = {
     if (payload.mobile) form.append('mobile', payload.mobile);
     if (payload.companyLogoFile) form.append('companyLogoFile', payload.companyLogoFile);
 
+    const anonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY as string | undefined;
+    if (!anonKey) {
+      throw new Error('VITE_SUPABASE_ANON_KEY is required for public registration');
+    }
+
     const res = await fetch(`${API_BASE_URL}/client-portal/register`, {
       method: 'POST',
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+      },
       body: form,
     });
     const data = await res.json().catch(() => ({}));
@@ -230,8 +271,25 @@ export const scriptsApi = {
   getDecisionCan: (id: string): Promise<{ canApprove: boolean; canReject: boolean; reason?: string }> =>
     httpClient.get(`/scripts/${encodeURIComponent(id)}/decision/can`),
   /** Make approval/rejection decision on a script */
-  makeDecision: (id: string, decision: 'approve' | 'reject', reason: string, relatedReportId?: string): Promise<{ success: boolean; script: Script; message: string }> =>
-    httpClient.post(`/scripts/${encodeURIComponent(id)}/decision`, { decision, reason, relatedReportId }),
+  makeDecision: (
+    id: string,
+    decision: 'approve' | 'reject',
+    reason: string,
+    relatedReportId?: string,
+    options?: {
+      clientComment?: string;
+      shareReportsToClient?: boolean;
+      shareReportIds?: string[];
+    },
+  ): Promise<{ success: boolean; script: Script; message: string }> =>
+    httpClient.post(`/scripts/${encodeURIComponent(id)}/decision`, {
+      decision,
+      reason,
+      relatedReportId,
+      ...(options?.clientComment != null ? { clientComment: options.clientComment } : {}),
+      ...(options?.shareReportsToClient != null ? { shareReportsToClient: options.shareReportsToClient } : {}),
+      ...(options?.shareReportIds != null ? { shareReportIds: options.shareReportIds } : {}),
+    }),
   getScriptVersions: (scriptId: string, options?: { signal?: AbortSignal }): Promise<ScriptVersion[]> =>
     httpClient.get(`/scripts/${encodeURIComponent(scriptId)}/versions`, { signal: options?.signal }),
   createVersion: (scriptId: string, versionData: any, options?: { signal?: AbortSignal }): Promise<any> =>

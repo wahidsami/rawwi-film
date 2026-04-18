@@ -177,29 +177,39 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
     if (method === 'GET' && path.match(/^\/client-portal\/rejections\/[^/]+$/)) {
       return {
         script: { id: 'mock-script-1', title: 'Mock Script', status: 'rejected' },
-        report: {
-          id: 'mock-report-1',
-          jobId: 'mock-job-1',
-          reviewStatus: 'rejected',
-          reviewNotes: 'Mock rejection notes',
-          findingsCount: 1,
-          severityCounts: { low: 0, medium: 1, high: 0, critical: 0 },
-          summaryJson: {},
-          createdAt: new Date().toISOString(),
+        decision: {
+          status: 'rejected',
+          decidedAt: new Date().toISOString(),
+          adminComment: 'Please revise the dialogue and remove violating sections.',
+          sharedReportsCount: 1,
         },
-        findings: [
+        sharedReports: [
           {
-            id: 'mock-finding-1',
-            source: 'ai',
-            articleId: 4,
-            atomId: 'INSULT',
-            severity: 'medium',
-            titleAr: 'مخالفة تجريبية',
-            descriptionAr: 'وصف تجريبي',
-            rationaleAr: null,
-            evidenceSnippet: 'نص تجريبي للمخالفة',
-            pageNumber: 1,
-            createdAt: new Date().toISOString(),
+            report: {
+              id: 'mock-report-1',
+              jobId: 'mock-job-1',
+              reviewStatus: 'rejected',
+              reviewNotes: 'Mock rejection notes',
+              findingsCount: 1,
+              severityCounts: { low: 0, medium: 1, high: 0, critical: 0 },
+              summaryJson: {},
+              createdAt: new Date().toISOString(),
+            },
+            findings: [
+              {
+                id: 'mock-finding-1',
+                source: 'ai',
+                articleId: 4,
+                atomId: 'INSULT',
+                severity: 'medium',
+                titleAr: 'مخالفة تجريبية',
+                descriptionAr: 'وصف تجريبي',
+                rationaleAr: null,
+                evidenceSnippet: 'نص تجريبي للمخالفة',
+                pageNumber: 1,
+                createdAt: new Date().toISOString(),
+              },
+            ],
           },
         ],
       };

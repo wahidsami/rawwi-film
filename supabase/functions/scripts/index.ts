@@ -151,6 +151,20 @@ function normalizeScriptTitleComparable(value: unknown): string {
   return value.trim().normalize("NFC").replace(/\s+/g, " ").toLowerCase();
 }
 
+function normalizeUuidList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const unique = new Set<string>();
+  for (const item of value) {
+    if (typeof item !== "string") continue;
+    const trimmed = item.trim();
+    if (!trimmed) continue;
+    if (!uuidRegex.test(trimmed)) continue;
+    unique.add(trimmed);
+  }
+  return [...unique];
+}
+
 async function ensureQuickAnalysisClientId(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   uid: string,
@@ -1319,6 +1333,9 @@ Deno.serve(async (req: Request) => {
     const relatedReportId = typeof body.relatedReportId === 'string' && body.relatedReportId.trim()
       ? body.relatedReportId.trim()
       : null;
+    const clientComment = typeof body.clientComment === 'string' ? body.clientComment.trim().slice(0, 5000) : '';
+    const shareReportsToClient = body.shareReportsToClient === true;
+    const requestedShareReportIds = normalizeUuidList(body.shareReportIds);
 
     // Fetch script
     const { data: script, error: findErr } = await supabase
@@ -1331,6 +1348,35 @@ Deno.serve(async (req: Request) => {
 
     const currentStatus = (script as any).status || 'draft';
     const newStatus = decision === 'approve' ? 'approved' : 'rejected';
+    let sharedReportIds: string[] = [];
+
+    if (decision === 'reject' && shareReportsToClient) {
+      const candidateIds = [
+        ...new Set<string>([
+          ...requestedShareReportIds,
+          ...(relatedReportId ? [relatedReportId] : []),
+        ]),
+      ];
+
+      if (candidateIds.length > 0) {
+        const { data: reportsForScript } = await supabase
+          .from("analysis_reports")
+          .select("id")
+          .eq("script_id", scriptId)
+          .in("id", candidateIds);
+        const allowedSet = new Set((reportsForScript ?? []).map((row: { id: string }) => row.id));
+        sharedReportIds = candidateIds.filter((id) => allowedSet.has(id));
+      } else {
+        const { data: latestReport } = await supabase
+          .from("analysis_reports")
+          .select("id")
+          .eq("script_id", scriptId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (latestReport?.id) sharedReportIds = [latestReport.id as string];
+      }
+    }
 
     const can = await computeScriptDecisionCan(supabase, uid, script as { created_by?: string | null; assignee_id?: string | null });
     console.info("[scripts] decision POST", {
@@ -1368,7 +1414,13 @@ Deno.serve(async (req: Request) => {
       p_changed_by: uid,
       p_reason: reason,
       p_related_report_id: relatedReportId,
-      p_metadata: { decision, correlationId }
+      p_metadata: {
+        decision,
+        correlationId,
+        client_comment: clientComment || null,
+        share_reports_to_client: decision === 'reject' ? shareReportsToClient : false,
+        shared_report_ids: decision === 'reject' ? sharedReportIds : [],
+      }
     });
 
     if (logErr) {

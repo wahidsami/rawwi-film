@@ -495,62 +495,125 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Forbidden" }, 403);
     }
 
-    const { data: report } = await supabase
-      .from("analysis_reports")
-      .select("id, job_id, script_id, review_status, review_notes, findings_count, severity_counts, summary_json, created_at")
+    const { data: latestDecision } = await supabase
+      .from("script_status_history")
+      .select("id, changed_at, reason, related_report_id, metadata")
       .eq("script_id", scriptId)
-      .order("created_at", { ascending: false })
+      .eq("to_status", "rejected")
+      .order("changed_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (!report) return json({ error: "No report found for this script" }, 404);
+    const decisionMetadata = ((latestDecision as any)?.metadata ?? {}) as Record<string, unknown>;
+    const hasExplicitShareChoice = typeof decisionMetadata.share_reports_to_client === "boolean";
+    const shareReportsToClient = hasExplicitShareChoice
+      ? decisionMetadata.share_reports_to_client === true
+      : true; // Legacy fallback: older rejections implicitly shared latest report
 
-    const { data: reviewFindings } = await supabase
-      .from("analysis_review_findings")
-      .select("id, source_kind, primary_article_id, primary_atom_id, severity, title_ar, description_ar, rationale_ar, evidence_snippet, review_status, include_in_report, page_number, created_at")
-      .eq("report_id", (report as any).id)
-      .eq("is_hidden", false)
-      .eq("include_in_report", true)
-      .eq("review_status", "violation")
-      .order("created_at", { ascending: true });
+    const sharedReportIdsFromMeta = Array.isArray(decisionMetadata.shared_report_ids)
+      ? [...new Set((decisionMetadata.shared_report_ids as unknown[])
+          .filter((id): id is string => typeof id === "string")
+          .map((id) => id.trim())
+          .filter(Boolean))]
+      : [];
 
-    const fallbackFindings =
-      (reviewFindings ?? []).length > 0
-        ? []
-        : (await supabase
-            .from("analysis_findings")
-            .select("id, source, article_id, atom_id, severity, title_ar, description_ar, rationale_ar, evidence_snippet, review_status, page_number, created_at")
-            .eq("job_id", (report as any).job_id)
-            .neq("review_status", "approved")
-            .order("created_at", { ascending: true })).data ?? [];
+    const reportIdsToShare = shareReportsToClient
+      ? [...new Set([
+          ...sharedReportIdsFromMeta,
+          ...(typeof (latestDecision as any)?.related_report_id === "string" && (latestDecision as any).related_report_id
+            ? [(latestDecision as any).related_report_id as string]
+            : []),
+        ])]
+      : [];
 
-    const findings = (reviewFindings ?? []).length > 0
-      ? (reviewFindings ?? []).map((f: any) => ({
-          id: f.id,
-          source: f.source_kind,
-          articleId: f.primary_article_id,
-          atomId: f.primary_atom_id,
-          severity: f.severity,
-          titleAr: f.title_ar,
-          descriptionAr: f.description_ar,
-          rationaleAr: f.rationale_ar,
-          evidenceSnippet: f.evidence_snippet,
-          pageNumber: f.page_number,
-          createdAt: f.created_at,
-        }))
-      : (fallbackFindings as any[]).map((f: any) => ({
-          id: f.id,
-          source: f.source,
-          articleId: f.article_id,
-          atomId: f.atom_id,
-          severity: f.severity,
-          titleAr: f.title_ar,
-          descriptionAr: f.description_ar,
-          rationaleAr: f.rationale_ar,
-          evidenceSnippet: f.evidence_snippet,
-          pageNumber: f.page_number,
-          createdAt: f.created_at,
-        }));
+    let reportRows: any[] = [];
+    if (reportIdsToShare.length > 0) {
+      const { data: explicitRows } = await supabase
+        .from("analysis_reports")
+        .select("id, job_id, script_id, review_status, review_notes, findings_count, severity_counts, summary_json, created_at")
+        .eq("script_id", scriptId)
+        .in("id", reportIdsToShare)
+        .order("created_at", { ascending: false });
+      reportRows = explicitRows ?? [];
+    } else if (!hasExplicitShareChoice) {
+      const { data: legacyRow } = await supabase
+        .from("analysis_reports")
+        .select("id, job_id, script_id, review_status, review_notes, findings_count, severity_counts, summary_json, created_at")
+        .eq("script_id", scriptId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      reportRows = legacyRow ? [legacyRow] : [];
+    }
+
+    const loadReportPayload = async (reportRow: any) => {
+      const { data: reviewFindings } = await supabase
+        .from("analysis_review_findings")
+        .select("id, source_kind, primary_article_id, primary_atom_id, severity, title_ar, description_ar, rationale_ar, evidence_snippet, review_status, include_in_report, page_number, created_at")
+        .eq("report_id", reportRow.id)
+        .eq("is_hidden", false)
+        .eq("include_in_report", true)
+        .eq("review_status", "violation")
+        .order("created_at", { ascending: true });
+
+      const fallbackFindings =
+        (reviewFindings ?? []).length > 0
+          ? []
+          : (await supabase
+              .from("analysis_findings")
+              .select("id, source, article_id, atom_id, severity, title_ar, description_ar, rationale_ar, evidence_snippet, review_status, page_number, created_at")
+              .eq("job_id", reportRow.job_id)
+              .neq("review_status", "approved")
+              .order("created_at", { ascending: true })).data ?? [];
+
+      const findings = (reviewFindings ?? []).length > 0
+        ? (reviewFindings ?? []).map((f: any) => ({
+            id: f.id,
+            source: f.source_kind,
+            articleId: f.primary_article_id,
+            atomId: f.primary_atom_id,
+            severity: f.severity,
+            titleAr: f.title_ar,
+            descriptionAr: f.description_ar,
+            rationaleAr: f.rationale_ar,
+            evidenceSnippet: f.evidence_snippet,
+            pageNumber: f.page_number,
+            createdAt: f.created_at,
+          }))
+        : (fallbackFindings as any[]).map((f: any) => ({
+            id: f.id,
+            source: f.source,
+            articleId: f.article_id,
+            atomId: f.atom_id,
+            severity: f.severity,
+            titleAr: f.title_ar,
+            descriptionAr: f.description_ar,
+            rationaleAr: f.rationale_ar,
+            evidenceSnippet: f.evidence_snippet,
+            pageNumber: f.page_number,
+            createdAt: f.created_at,
+          }));
+
+      return {
+        report: {
+          id: reportRow.id,
+          jobId: reportRow.job_id,
+          reviewStatus: reportRow.review_status,
+          reviewNotes: reportRow.review_notes,
+          findingsCount: reportRow.findings_count,
+          severityCounts: reportRow.severity_counts,
+          summaryJson: reportRow.summary_json,
+          createdAt: reportRow.created_at,
+        },
+        findings,
+      };
+    };
+
+    const sharedReports = await Promise.all(reportRows.map((row) => loadReportPayload(row)));
+    const primaryShared = sharedReports[0] ?? null;
+    const adminComment = typeof decisionMetadata.client_comment === "string" && decisionMetadata.client_comment.trim()
+      ? decisionMetadata.client_comment.trim()
+      : ((latestDecision as any)?.reason ?? null);
 
     return json({
       script: {
@@ -558,17 +621,16 @@ Deno.serve(async (req: Request) => {
         title: (scriptRow as any).title,
         status: (scriptRow as any).status,
       },
-      report: {
-        id: (report as any).id,
-        jobId: (report as any).job_id,
-        reviewStatus: (report as any).review_status,
-        reviewNotes: (report as any).review_notes,
-        findingsCount: (report as any).findings_count,
-        severityCounts: (report as any).severity_counts,
-        summaryJson: (report as any).summary_json,
-        createdAt: (report as any).created_at,
+      decision: {
+        status: "rejected",
+        decidedAt: (latestDecision as any)?.changed_at ?? null,
+        adminComment,
+        sharedReportsCount: sharedReports.length,
       },
-      findings,
+      sharedReports,
+      // Keep legacy fields to avoid breaking older clients.
+      report: primaryShared?.report ?? null,
+      findings: primaryShared?.findings ?? [],
     });
   }
 

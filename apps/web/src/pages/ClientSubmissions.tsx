@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
-import { clientPortalApi, scriptsApi, type AdminClientSubmissionItem } from '@/api';
+import { clientPortalApi, reportsApi, scriptsApi, type AdminClientSubmissionItem } from '@/api';
+import type { ReportListItem } from '@/api/models';
 import { useLangStore } from '@/store/langStore';
 
 function statusVariant(status: string): 'default' | 'success' | 'warning' | 'error' | 'outline' {
@@ -40,6 +41,11 @@ export function ClientSubmissions() {
   const [decisionScript, setDecisionScript] = useState<AdminClientSubmissionItem | null>(null);
   const [decisionAction, setDecisionAction] = useState<'approve' | 'reject'>('approve');
   const [decisionReason, setDecisionReason] = useState('');
+  const [decisionClientComment, setDecisionClientComment] = useState('');
+  const [shareReportsToClient, setShareReportsToClient] = useState(true);
+  const [availableReports, setAvailableReports] = useState<ReportListItem[]>([]);
+  const [selectedSharedReportIds, setSelectedSharedReportIds] = useState<string[]>([]);
+  const [isLoadingReports, setIsLoadingReports] = useState(false);
   const [isDeciding, setIsDeciding] = useState(false);
 
   const load = async () => {
@@ -78,10 +84,39 @@ export function ClientSubmissions() {
     });
   }, [rows, search, statusFilter]);
 
-  const openDecisionModal = (row: AdminClientSubmissionItem, action: 'approve' | 'reject') => {
+  const openDecisionModal = async (row: AdminClientSubmissionItem, action: 'approve' | 'reject') => {
     setDecisionScript(row);
     setDecisionAction(action);
     setDecisionReason('');
+    setDecisionClientComment('');
+    setShareReportsToClient(action === 'reject');
+    setAvailableReports([]);
+    setSelectedSharedReportIds([]);
+
+    if (action !== 'reject') return;
+
+    setIsLoadingReports(true);
+    try {
+      const reports = await reportsApi.listByScript(row.scriptId);
+      setAvailableReports(reports);
+      const defaultReportId =
+        (row.latestReportId && reports.some((r) => r.id === row.latestReportId))
+          ? row.latestReportId
+          : (reports[0]?.id ?? null);
+      setSelectedSharedReportIds(defaultReportId ? [defaultReportId] : []);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تحميل التقارير المتاحة' : 'Failed to load available reports'));
+      setAvailableReports([]);
+      setSelectedSharedReportIds([]);
+    } finally {
+      setIsLoadingReports(false);
+    }
+  };
+
+  const toggleSharedReport = (reportId: string) => {
+    setSelectedSharedReportIds((prev) => prev.includes(reportId)
+      ? prev.filter((id) => id !== reportId)
+      : [...prev, reportId]);
   };
 
   const submitDecision = async () => {
@@ -97,6 +132,13 @@ export function ClientSubmissions() {
         decisionAction,
         decisionReason.trim(),
         decisionScript.latestReportId ?? undefined,
+        decisionAction === 'reject'
+          ? {
+              clientComment: decisionClientComment.trim(),
+              shareReportsToClient,
+              shareReportIds: shareReportsToClient ? selectedSharedReportIds : [],
+            }
+          : undefined,
       );
       toast.success(
         decisionAction === 'approve'
@@ -105,6 +147,10 @@ export function ClientSubmissions() {
       );
       setDecisionScript(null);
       setDecisionReason('');
+      setDecisionClientComment('');
+      setShareReportsToClient(true);
+      setAvailableReports([]);
+      setSelectedSharedReportIds([]);
       await load();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تنفيذ القرار' : 'Failed to apply decision'));
@@ -209,10 +255,10 @@ export function ClientSubmissions() {
                       )}
                       {!isFinal && (
                         <>
-                          <Button size="sm" onClick={() => openDecisionModal(row, 'approve')}>
+                          <Button size="sm" onClick={() => void openDecisionModal(row, 'approve')}>
                             {lang === 'ar' ? 'قبول' : 'Approve'}
                           </Button>
-                          <Button size="sm" variant="danger" onClick={() => openDecisionModal(row, 'reject')}>
+                          <Button size="sm" variant="danger" onClick={() => void openDecisionModal(row, 'reject')}>
                             {lang === 'ar' ? 'رفض' : 'Reject'}
                           </Button>
                         </>
@@ -228,7 +274,15 @@ export function ClientSubmissions() {
 
       <Modal
         isOpen={decisionScript != null}
-        onClose={() => !isDeciding && setDecisionScript(null)}
+        onClose={() => {
+          if (isDeciding) return;
+          setDecisionScript(null);
+          setDecisionReason('');
+          setDecisionClientComment('');
+          setShareReportsToClient(true);
+          setAvailableReports([]);
+          setSelectedSharedReportIds([]);
+        }}
         title={decisionAction === 'approve'
           ? (lang === 'ar' ? 'تأكيد قبول النص' : 'Confirm Script Approval')
           : (lang === 'ar' ? 'تأكيد رفض النص' : 'Confirm Script Rejection')}
@@ -243,11 +297,71 @@ export function ClientSubmissions() {
             value={decisionReason}
             onChange={(e) => setDecisionReason(e.target.value)}
           />
+          {decisionAction === 'reject' && (
+            <>
+              <Textarea
+                label={lang === 'ar' ? 'تعليق يظهر للعميل' : 'Client-facing comment'}
+                rows={3}
+                value={decisionClientComment}
+                onChange={(e) => setDecisionClientComment(e.target.value)}
+                placeholder={lang === 'ar' ? 'اكتب ملاحظات واضحة للعميل حول أسباب الرفض…' : 'Write clear feedback to client about the rejection…'}
+              />
+
+              <div className="rounded-md border border-border bg-background p-3 space-y-3">
+                <label className="inline-flex items-center gap-2 text-sm font-medium text-text-main">
+                  <input
+                    type="checkbox"
+                    checked={shareReportsToClient}
+                    onChange={(e) => setShareReportsToClient(e.target.checked)}
+                  />
+                  <span>{lang === 'ar' ? 'مشاركة تقرير/تقارير التحليل مع العميل' : 'Share analysis report(s) with client'}</span>
+                </label>
+
+                {shareReportsToClient && (
+                  <div className="space-y-2">
+                    {isLoadingReports ? (
+                      <p className="text-xs text-text-muted">{lang === 'ar' ? 'جاري تحميل التقارير…' : 'Loading reports…'}</p>
+                    ) : availableReports.length === 0 ? (
+                      <p className="text-xs text-text-muted">{lang === 'ar' ? 'لا توجد تقارير متاحة لهذا النص حالياً.' : 'No reports available for this script yet.'}</p>
+                    ) : (
+                      availableReports.map((report) => (
+                        <label key={report.id} className="flex items-start gap-2 text-sm text-text-main rounded border border-border bg-surface p-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedSharedReportIds.includes(report.id)}
+                            onChange={() => toggleSharedReport(report.id)}
+                          />
+                          <span>
+                            {lang === 'ar' ? 'تقرير' : 'Report'} #{report.id.slice(0, 8)} • {new Date(report.createdAt).toLocaleString()}
+                            {' • '}
+                            {lang === 'ar' ? 'الحالة:' : 'Status:'} {report.reviewStatus}
+                            {' • '}
+                            {lang === 'ar' ? 'المخالفات:' : 'Findings:'} {report.findingsCount}
+                          </span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
           <div className="flex items-center gap-2">
             <Button isLoading={isDeciding} onClick={submitDecision}>
               {lang === 'ar' ? 'تأكيد' : 'Confirm'}
             </Button>
-            <Button variant="outline" onClick={() => setDecisionScript(null)} disabled={isDeciding}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDecisionScript(null);
+                setDecisionReason('');
+                setDecisionClientComment('');
+                setShareReportsToClient(true);
+                setAvailableReports([]);
+                setSelectedSharedReportIds([]);
+              }}
+              disabled={isDeciding}
+            >
               {lang === 'ar' ? 'إلغاء' : 'Cancel'}
             </Button>
           </div>
