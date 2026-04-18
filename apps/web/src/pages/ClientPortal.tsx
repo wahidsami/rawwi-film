@@ -90,6 +90,89 @@ export function ClientPortal() {
   const [detailsError, setDetailsError] = useState('');
   const [details, setDetails] = useState<ClientPortalRejectionDetailsResponse | null>(null);
 
+  type RejectionReportBlock = {
+    report: NonNullable<ClientPortalRejectionDetailsResponse['sharedReports']>[number]['report'];
+    findings: NonNullable<ClientPortalRejectionDetailsResponse['sharedReports']>[number]['findings'];
+  };
+
+  const sanitizeFilePart = (value: string): string =>
+    value
+      .trim()
+      .replace(/[\\/:*?"<>|]+/g, '_')
+      .replace(/\s+/g, '_')
+      .slice(0, 60) || 'script';
+
+  const triggerBlobDownload = (fileName: string, content: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportRejectionReport = (block: RejectionReportBlock, format: 'json' | 'txt') => {
+    if (!details) return;
+    const scriptTitle = details.script.title || 'script';
+    const reportIdShort = block.report.id.slice(0, 8);
+    const fileBase = `${sanitizeFilePart(scriptTitle)}_rejection_report_${reportIdShort}`;
+
+    if (format === 'json') {
+      const payload = {
+        script: details.script,
+        decision: details.decision ?? null,
+        report: block.report,
+        findings: block.findings,
+      };
+      triggerBlobDownload(
+        `${fileBase}.json`,
+        JSON.stringify(payload, null, 2),
+        'application/json;charset=utf-8',
+      );
+      return;
+    }
+
+    const lines: string[] = [
+      `${lang === 'ar' ? 'عنوان النص' : 'Script title'}: ${details.script.title}`,
+      `${lang === 'ar' ? 'رقم التقرير' : 'Report ID'}: ${block.report.id}`,
+      `${lang === 'ar' ? 'تاريخ التقرير' : 'Report date'}: ${new Date(block.report.createdAt).toLocaleString()}`,
+      `${lang === 'ar' ? 'عدد المخالفات' : 'Findings count'}: ${block.findings.length}`,
+    ];
+
+    if (details.decision?.adminComment) {
+      lines.push(`${lang === 'ar' ? 'تعليق الإدارة' : 'Admin comment'}: ${details.decision.adminComment}`);
+    }
+    if (block.report.reviewNotes) {
+      lines.push(`${lang === 'ar' ? 'ملاحظة المراجع' : 'Reviewer note'}: ${block.report.reviewNotes}`);
+    }
+    lines.push('');
+
+    block.findings.forEach((finding, index) => {
+      lines.push(`${lang === 'ar' ? 'مخالفة' : 'Finding'} ${index + 1}`);
+      lines.push(`${lang === 'ar' ? 'العنوان' : 'Title'}: ${finding.titleAr}`);
+      lines.push(`${lang === 'ar' ? 'الخطورة' : 'Severity'}: ${finding.severity}`);
+      lines.push(`${lang === 'ar' ? 'المادة' : 'Article'}: ${finding.articleId}`);
+      if (finding.pageNumber) {
+        lines.push(`${lang === 'ar' ? 'الصفحة' : 'Page'}: ${finding.pageNumber}`);
+      }
+      if (finding.descriptionAr) {
+        lines.push(`${lang === 'ar' ? 'الوصف' : 'Description'}: ${finding.descriptionAr}`);
+      }
+      if (finding.rationaleAr) {
+        lines.push(`${lang === 'ar' ? 'التبرير' : 'Rationale'}: ${finding.rationaleAr}`);
+      }
+      lines.push(`${lang === 'ar' ? 'الدليل' : 'Evidence'}: ${finding.evidenceSnippet}`);
+      lines.push('');
+    });
+
+    triggerBlobDownload(
+      `${fileBase}.txt`,
+      lines.join('\n'),
+      'text/plain;charset=utf-8',
+    );
+  };
+
   const loadProfileAndSubmissions = useCallback(async () => {
     setIsLoading(true);
     setError('');
@@ -498,7 +581,7 @@ export function ClientPortal() {
                   <div className="space-y-4 max-h-[55vh] overflow-auto pe-1">
                     {reportBlocks.map((block) => (
                       <div key={block.report.id} className="space-y-3 rounded-lg border border-border bg-background p-3">
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <p className="text-sm font-semibold">
                             {lang === 'ar' ? 'التقرير' : 'Report'} #{block.report.id.slice(0, 8)}
                           </p>
@@ -510,6 +593,22 @@ export function ClientPortal() {
                               {lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:'} {block.report.reviewNotes}
                             </p>
                           )}
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => exportRejectionReport(block, 'json')}
+                            >
+                              {lang === 'ar' ? 'تنزيل JSON' : 'Download JSON'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => exportRejectionReport(block, 'txt')}
+                            >
+                              {lang === 'ar' ? 'تنزيل نص' : 'Download Text'}
+                            </Button>
+                          </div>
                         </div>
 
                         <div className="space-y-3">
