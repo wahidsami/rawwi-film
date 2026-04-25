@@ -13,6 +13,7 @@ import { useLangStore } from '@/store/langStore';
 import type { Script } from '@/api/models';
 import { supabase } from '@/lib/supabaseClient';
 import { API_BASE_URL } from '@/lib/env';
+import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
 import { extractDocxWithPages } from '@/utils/documentExtract';
 import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 
@@ -89,88 +90,106 @@ export function ClientPortal() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState('');
   const [details, setDetails] = useState<ClientPortalRejectionDetailsResponse | null>(null);
+  const [downloadingReportId, setDownloadingReportId] = useState<string | null>(null);
 
   type RejectionReportBlock = {
     report: NonNullable<ClientPortalRejectionDetailsResponse['sharedReports']>[number]['report'];
     findings: NonNullable<ClientPortalRejectionDetailsResponse['sharedReports']>[number]['findings'];
   };
 
-  const sanitizeFilePart = (value: string): string =>
-    value
-      .trim()
-      .replace(/[\\/:*?"<>|]+/g, '_')
-      .replace(/\s+/g, '_')
-      .slice(0, 60) || 'script';
-
-  const triggerBlobDownload = (fileName: string, content: string, mimeType: string) => {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = fileName;
-    anchor.click();
-    URL.revokeObjectURL(url);
+  type ReportSummaryShape = {
+    findings_by_article?: Array<{
+      article_id: number;
+      top_findings?: Array<{
+        title_ar?: string;
+        severity?: string;
+        confidence?: number;
+        evidence_snippet?: string;
+      }>;
+    }>;
+    canonical_findings?: Array<{
+      canonical_finding_id: string;
+      title_ar: string;
+      evidence_snippet: string;
+      severity: string;
+      confidence: number;
+      rationale?: string | null;
+      pillar_id?: string | null;
+      primary_article_id?: number | null;
+      related_article_ids?: number[];
+      start_line_chunk?: number | null;
+      end_line_chunk?: number | null;
+      page_number?: number | null;
+      primary_policy_atom_id?: string | null;
+      source?: string | null;
+    }>;
+    report_hints?: Array<{
+      canonical_finding_id: string;
+      title_ar: string;
+      evidence_snippet: string;
+      severity: string;
+      confidence: number;
+      rationale?: string | null;
+      pillar_id?: string | null;
+      primary_article_id?: number | null;
+      related_article_ids?: number[];
+      start_line_chunk?: number | null;
+      end_line_chunk?: number | null;
+    }>;
+    script_summary?: {
+      synopsis_ar: string;
+      key_risky_events_ar?: string;
+      narrative_stance_ar?: string;
+      compliance_posture_ar?: string;
+      confidence: number;
+    };
   };
 
-  const exportRejectionReport = (block: RejectionReportBlock, format: 'json' | 'txt') => {
+  const asReportSummary = (summaryJson?: Record<string, unknown> | null): ReportSummaryShape | null => {
+    if (!summaryJson || typeof summaryJson !== 'object') return null;
+    return summaryJson as ReportSummaryShape;
+  };
+
+  const downloadRejectionReportPdf = async (block: RejectionReportBlock) => {
     if (!details) return;
-    const scriptTitle = details.script.title || 'script';
-    const reportIdShort = block.report.id.slice(0, 8);
-    const fileBase = `${sanitizeFilePart(scriptTitle)}_rejection_report_${reportIdShort}`;
+    setDetailsError('');
+    setDownloadingReportId(block.report.id);
+    try {
+      const summary = asReportSummary(block.report.summaryJson);
+      const canonicalFindings =
+        summary?.canonical_findings && summary.canonical_findings.length > 0
+          ? summary.canonical_findings
+          : block.findings.map((finding, index) => ({
+              canonical_finding_id: finding.id || `${block.report.id}-${index}`,
+              title_ar: finding.titleAr || (lang === 'ar' ? 'مخالفة' : 'Finding'),
+              evidence_snippet: finding.evidenceSnippet || '',
+              severity: finding.severity || 'info',
+              confidence: 1,
+              rationale: finding.rationaleAr || finding.descriptionAr || null,
+              primary_article_id: Number.isFinite(finding.articleId) ? finding.articleId : null,
+              related_article_ids: [],
+              page_number: finding.pageNumber ?? null,
+              source: finding.source || 'ai',
+            }));
 
-    if (format === 'json') {
-      const payload = {
-        script: details.script,
-        decision: details.decision ?? null,
-        report: block.report,
-        findings: block.findings,
-      };
-      triggerBlobDownload(
-        `${fileBase}.json`,
-        JSON.stringify(payload, null, 2),
-        'application/json;charset=utf-8',
-      );
-      return;
+      await downloadAnalysisPdf({
+        scriptTitle: details.script.title || (lang === 'ar' ? 'تقرير النص' : 'Script Report'),
+        clientName: profile?.company
+          ? (lang === 'ar' ? profile.company.nameAr : profile.company.nameEn)
+          : (lang === 'ar' ? 'شركة الإنتاج' : 'Production Company'),
+        createdAt: block.report.createdAt,
+        findingsByArticle: summary?.findings_by_article ?? null,
+        canonicalFindings,
+        reportHints: summary?.report_hints ?? null,
+        scriptSummary: summary?.script_summary ?? null,
+        lang,
+      });
+      setNotice(lang === 'ar' ? 'تم تنزيل تقرير PDF.' : 'PDF report downloaded.');
+    } catch (err) {
+      setDetailsError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تنزيل ملف PDF للتقرير' : 'Unable to download report PDF'));
+    } finally {
+      setDownloadingReportId(null);
     }
-
-    const lines: string[] = [
-      `${lang === 'ar' ? 'عنوان النص' : 'Script title'}: ${details.script.title}`,
-      `${lang === 'ar' ? 'رقم التقرير' : 'Report ID'}: ${block.report.id}`,
-      `${lang === 'ar' ? 'تاريخ التقرير' : 'Report date'}: ${new Date(block.report.createdAt).toLocaleString()}`,
-      `${lang === 'ar' ? 'عدد المخالفات' : 'Findings count'}: ${block.findings.length}`,
-    ];
-
-    if (details.decision?.adminComment) {
-      lines.push(`${lang === 'ar' ? 'تعليق الإدارة' : 'Admin comment'}: ${details.decision.adminComment}`);
-    }
-    if (block.report.reviewNotes) {
-      lines.push(`${lang === 'ar' ? 'ملاحظة المراجع' : 'Reviewer note'}: ${block.report.reviewNotes}`);
-    }
-    lines.push('');
-
-    block.findings.forEach((finding, index) => {
-      lines.push(`${lang === 'ar' ? 'مخالفة' : 'Finding'} ${index + 1}`);
-      lines.push(`${lang === 'ar' ? 'العنوان' : 'Title'}: ${finding.titleAr}`);
-      lines.push(`${lang === 'ar' ? 'الخطورة' : 'Severity'}: ${finding.severity}`);
-      lines.push(`${lang === 'ar' ? 'المادة' : 'Article'}: ${finding.articleId}`);
-      if (finding.pageNumber) {
-        lines.push(`${lang === 'ar' ? 'الصفحة' : 'Page'}: ${finding.pageNumber}`);
-      }
-      if (finding.descriptionAr) {
-        lines.push(`${lang === 'ar' ? 'الوصف' : 'Description'}: ${finding.descriptionAr}`);
-      }
-      if (finding.rationaleAr) {
-        lines.push(`${lang === 'ar' ? 'التبرير' : 'Rationale'}: ${finding.rationaleAr}`);
-      }
-      lines.push(`${lang === 'ar' ? 'الدليل' : 'Evidence'}: ${finding.evidenceSnippet}`);
-      lines.push('');
-    });
-
-    triggerBlobDownload(
-      `${fileBase}.txt`,
-      lines.join('\n'),
-      'text/plain;charset=utf-8',
-    );
   };
 
   const loadProfileAndSubmissions = useCallback(async () => {
@@ -597,16 +616,10 @@ export function ClientPortal() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => exportRejectionReport(block, 'json')}
+                              onClick={() => void downloadRejectionReportPdf(block)}
+                              isLoading={downloadingReportId === block.report.id}
                             >
-                              {lang === 'ar' ? 'تنزيل JSON' : 'Download JSON'}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => exportRejectionReport(block, 'txt')}
-                            >
-                              {lang === 'ar' ? 'تنزيل نص' : 'Download Text'}
+                              {lang === 'ar' ? 'تنزيل PDF' : 'Download PDF'}
                             </Button>
                           </div>
                         </div>
