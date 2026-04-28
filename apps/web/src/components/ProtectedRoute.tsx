@@ -33,7 +33,7 @@ export function ProtectedRoute({ children, requiredPermission, requiredSection, 
   }
 
   if (requiredUserType === 'client' && !isClient()) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   // NEW: Check section access first (preferred)

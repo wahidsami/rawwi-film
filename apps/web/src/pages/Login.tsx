@@ -22,7 +22,7 @@ export function Login() {
 
     try {
       await login(email, password);
-      const target = useAuthStore.getState().isClient() ? '/client' : '/';
+      const target = useAuthStore.getState().isClient() ? '/client' : '/app';
       navigate(target, { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Login failed';

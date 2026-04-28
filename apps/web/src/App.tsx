@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppLayout } from '@/layout/AppLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useLangStore } from '@/store/langStore';
@@ -28,8 +28,14 @@ import { ClientRegister } from '@/pages/ClientRegister';
 import { ClientPortal } from '@/pages/ClientPortal';
 import { ClientSubmissions } from '@/pages/ClientSubmissions';
 import { ENABLE_QUICK_ANALYSIS } from '@/lib/env';
+import { Landing } from '@/pages/Landing';
 
 const LANG_INIT_KEY = 'raawi-lang-initialized';
+
+function LegacyAdminRedirect() {
+  const location = useLocation();
+  return <Navigate to={`/app${location.pathname}${location.search}`} replace />;
+}
 
 function App() {
   useEffect(() => {
@@ -46,6 +52,7 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -63,7 +70,7 @@ function App() {
 
         {/* Protected Application Layout */}
         <Route
-          path="/"
+          path="/app"
           element={
             <ProtectedRoute requiredUserType="admin">
               <AppLayout />
@@ -148,6 +155,24 @@ function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Route>
+
+        {/* Legacy admin URLs kept for compatibility after moving the app under /app */}
+        <Route path="/access-control" element={<LegacyAdminRedirect />} />
+        <Route path="/glossary" element={<LegacyAdminRedirect />} />
+        <Route path="/clients" element={<LegacyAdminRedirect />} />
+        <Route path="/clients/:id" element={<LegacyAdminRedirect />} />
+        <Route path="/tasks" element={<LegacyAdminRedirect />} />
+        <Route path="/scripts" element={<LegacyAdminRedirect />} />
+        <Route path="/client-submissions" element={<LegacyAdminRedirect />} />
+        {ENABLE_QUICK_ANALYSIS && <Route path="/quick-analysis" element={<LegacyAdminRedirect />} />}
+        <Route path="/scripts/:id/workspace" element={<LegacyAdminRedirect />} />
+        <Route path="/workspace/:id" element={<LegacyAdminRedirect />} />
+        <Route path="/report/:id" element={<LegacyAdminRedirect />} />
+        <Route path="/reports" element={<LegacyAdminRedirect />} />
+        <Route path="/audit" element={<LegacyAdminRedirect />} />
+        <Route path="/certificates" element={<LegacyAdminRedirect />} />
+        <Route path="/settings" element={<LegacyAdminRedirect />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

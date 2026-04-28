@@ -78,24 +78,24 @@ export function AppLayout() {
 
   const baseNavLinks = [
     // Always visible to all authenticated users
-    { to: '/', icon: LayoutDashboard, label: t('overview'), section: null as string | null, permission: null as string | null },
+    { to: '/app', icon: LayoutDashboard, label: t('overview'), section: null as string | null, permission: null as string | null },
 
     // Conditional sections - supports BOTH section-based and permission-based access
-    { to: '/clients', icon: Users, label: t('clients'), section: 'clients', permission: 'view_clients' },
-    { to: '/scripts', icon: FileText, label: lang === 'ar' ? 'النصوص' : 'Scripts', section: 'clients', permission: 'view_scripts' },
-    { to: '/client-submissions', icon: FileText, label: lang === 'ar' ? 'طلبات العملاء' : 'Client Submissions', section: 'clients', permission: 'view_scripts' },
+    { to: '/app/clients', icon: Users, label: t('clients'), section: 'clients', permission: 'view_clients' },
+    { to: '/app/scripts', icon: FileText, label: lang === 'ar' ? 'النصوص' : 'Scripts', section: 'clients', permission: 'view_scripts' },
+    { to: '/app/client-submissions', icon: FileText, label: lang === 'ar' ? 'طلبات العملاء' : 'Client Submissions', section: 'clients', permission: 'view_scripts' },
     ...(ENABLE_QUICK_ANALYSIS
-      ? [{ to: '/quick-analysis', icon: Wand2, label: lang === 'ar' ? 'تحليل سريع' : 'Quick Analysis', section: null as string | null, permission: null as string | null }]
+      ? [{ to: '/app/quick-analysis', icon: Wand2, label: lang === 'ar' ? 'تحليل سريع' : 'Quick Analysis', section: null as string | null, permission: null as string | null }]
       : []),
-    { to: '/glossary', icon: BookOpen, label: t('glossary'), section: 'glossary', permission: 'manage_glossary' },
-    { to: '/tasks', icon: FileText, label: lang === 'ar' ? 'المهام' : 'Tasks', section: 'tasks', permission: 'view_tasks' },
-    { to: '/reports', icon: FileText, label: t('reports'), section: 'reports', permission: 'view_reports' },
-    ...(settings?.features?.enableCertificates ? [{ to: '/certificates', icon: Award, label: t('certificates'), section: null as string | null, permission: null as string | null }] : []),
-    { to: '/access-control', icon: ShieldCheck, label: t('accessControl'), section: 'access_control', permission: 'manage_users' },
-    { to: '/audit', icon: History, label: t('auditLog'), section: 'audit', permission: 'view_audit' },
+    { to: '/app/glossary', icon: BookOpen, label: t('glossary'), section: 'glossary', permission: 'manage_glossary' },
+    { to: '/app/tasks', icon: FileText, label: lang === 'ar' ? 'المهام' : 'Tasks', section: 'tasks', permission: 'view_tasks' },
+    { to: '/app/reports', icon: FileText, label: t('reports'), section: 'reports', permission: 'view_reports' },
+    ...(settings?.features?.enableCertificates ? [{ to: '/app/certificates', icon: Award, label: t('certificates'), section: null as string | null, permission: null as string | null }] : []),
+    { to: '/app/access-control', icon: ShieldCheck, label: t('accessControl'), section: 'access_control', permission: 'manage_users' },
+    { to: '/app/audit', icon: History, label: t('auditLog'), section: 'audit', permission: 'view_audit' },
 
     // Always visible
-    { to: '/settings', icon: Settings, label: t('settings'), section: null as string | null, permission: null as string | null },
+    { to: '/app/settings', icon: Settings, label: t('settings'), section: null as string | null, permission: null as string | null },
   ];
 
   const navLinks = baseNavLinks.filter(link => {

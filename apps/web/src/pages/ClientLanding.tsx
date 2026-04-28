@@ -11,7 +11,7 @@ export function ClientLanding() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    navigate(isClient() ? '/client' : '/', { replace: true });
+    navigate(isClient() ? '/client' : '/app', { replace: true });
   }, [isAuthenticated, isClient, navigate]);
 
   return (
