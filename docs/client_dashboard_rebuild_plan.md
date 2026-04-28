@@ -220,6 +220,8 @@ Add an admin-side certificate builder/editor after the lifecycle itself is worki
 - Admin preview flow
 - Template fields/slots tied to live script/client/certificate data
 - [x] Client certificate download generates a real PDF directly, not browser print/save-as-PDF.
+- [x] Certificate QR code points to a public verification page for safe certificate metadata.
+- [ ] Approved script snapshot/hash verification is deferred to the copyright/security phase.
 
 ### Important Collaboration Note
 

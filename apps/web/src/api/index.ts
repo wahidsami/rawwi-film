@@ -290,6 +290,32 @@ export interface CertificateTemplatesResponse {
   templates: CertificateTemplate[];
 }
 
+export interface CertificateVerificationResponse {
+  certificate: {
+    certificateNumber: string;
+    certificateStatus: string;
+    issuedAt: string;
+    scriptTitle: string;
+    scriptType: string;
+    scriptStatus: string;
+    submittedAt?: string | null;
+    approvedAt?: string | null;
+    companyNameAr?: string | null;
+    companyNameEn?: string | null;
+    payment?: {
+      status: string;
+      totalAmount: number;
+      currency: string;
+      completedAt?: string | null;
+    } | null;
+    verification: {
+      verified: boolean;
+      contentSnapshotAvailable: boolean;
+      contentHash?: string | null;
+    };
+  };
+}
+
 export const clientPortalApi = {
   register: async (payload: ClientPortalRegisterBody): Promise<{ ok: true; registration: 'free'; userId: string; companyId: string }> => {
     if (USE_MOCK_API) {
@@ -360,6 +386,8 @@ export const certificatesApi = {
     httpClient.put(`/certificates/templates/${encodeURIComponent(templateId)}`, payload),
   setDefaultTemplate: (templateId: string): Promise<{ ok: boolean; template: CertificateTemplate }> =>
     httpClient.post(`/certificates/templates/${encodeURIComponent(templateId)}/default`, {}),
+  verifyCertificate: (certificateNumber: string): Promise<CertificateVerificationResponse> =>
+    httpClient.get(`/certificates/verify/${encodeURIComponent(certificateNumber)}`),
   processDemoPayment: (
     scriptId: string,
     demoCardId: string,

@@ -28,6 +28,7 @@ import { ClientLanding } from '@/pages/ClientLanding';
 import { ClientRegister } from '@/pages/ClientRegister';
 import { ClientPortal } from '@/pages/ClientPortal';
 import { ClientSubmissions } from '@/pages/ClientSubmissions';
+import { CertificateVerify } from '@/pages/CertificateVerify';
 import { ENABLE_QUICK_ANALYSIS } from '@/lib/env';
 import { Landing } from '@/pages/Landing';
 
@@ -60,6 +61,7 @@ function App() {
         <Route path="/set-password" element={<SetPassword />} />
         <Route path="/portal" element={<ClientLanding />} />
         <Route path="/portal/register" element={<ClientRegister />} />
+        <Route path="/verify-certificate/:certificateNumber" element={<CertificateVerify />} />
         <Route
           path="/client"
           element={

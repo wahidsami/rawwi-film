@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Document, Image, Page, Text, View, pdf } from '@react-pdf/renderer';
+import QRCode from 'qrcode';
 import { AlertTriangle, Award, BadgeCheck, CreditCard, Download, Loader2, ShieldCheck } from 'lucide-react';
 import {
   certificatesApi,
@@ -74,6 +75,12 @@ function getCertificateValues(item: CertificateDashboardItem, lang: 'ar' | 'en')
   };
 }
 
+function getCertificateVerificationUrl(item: CertificateDashboardItem) {
+  const certificateNumber = item.certificate?.certificateNumber ?? 'certificate';
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${origin}/verify-certificate/${encodeURIComponent(certificateNumber)}`;
+}
+
 function resolveTemplateText(text: string | undefined, item: CertificateDashboardItem, lang: 'ar' | 'en') {
   const values = getCertificateValues(item, lang);
   return (text ?? '')
@@ -83,7 +90,8 @@ function resolveTemplateText(text: string | undefined, item: CertificateDashboar
     .replaceAll('{{company_name}}', values.companyName)
     .replaceAll('{{issued_at}}', formatDate(values.issuedAt, lang))
     .replaceAll('{{approved_at}}', formatDate(values.approvedAt, lang))
-    .replaceAll('{{amount_paid}}', values.amountPaidFormatted);
+    .replaceAll('{{amount_paid}}', values.amountPaidFormatted)
+    .replaceAll('{{verification_url}}', getCertificateVerificationUrl(item));
 }
 
 function pageDimensions(template?: CertificateTemplate | null) {
@@ -116,17 +124,14 @@ function TemplateElementPdf({ element, item, lang, page, template }: {
   lang: 'ar' | 'en';
   page: { width: number; height: number };
   template: CertificateTemplate;
+  qrDataUrl: string;
 }) {
   const boxStyle = elementStyle(element, page, template);
   if ((element.type === 'image' || element.type === 'logo') && element.imageUrl) {
     return <Image src={element.imageUrl} style={[boxStyle, { objectFit: 'contain' }]} />;
   }
   if (element.type === 'qr') {
-    return (
-      <View style={[boxStyle, { borderWidth: 1, borderColor: '#111827', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' }]}>
-        <Text style={{ fontSize: 16, color: '#111827' }}>QR</Text>
-      </View>
-    );
+    return <Image src={qrDataUrl} style={[boxStyle, { objectFit: 'contain', backgroundColor: '#ffffff' }]} />;
   }
   if (element.type === 'logo' && element.logoSource === 'client') {
     return (
@@ -159,6 +164,7 @@ function CertificatePdfDocument({ item, lang, template }: {
   item: CertificateDashboardItem;
   lang: 'ar' | 'en';
   template?: CertificateTemplate | null;
+  qrDataUrl: string;
 }) {
   const values = getCertificateValues(item, lang);
   const page = pageDimensions(template);
@@ -181,7 +187,7 @@ function CertificatePdfDocument({ item, lang, template }: {
             />
           ) : null}
           {(template.templateData.elements ?? []).map((element) => (
-            <TemplateElementPdf key={element.id} element={element} item={item} lang={lang} page={page} template={template} />
+            <TemplateElementPdf key={element.id} element={element} item={item} lang={lang} page={page} template={template} qrDataUrl={qrDataUrl} />
           ))}
         </Page>
       </Document>
@@ -213,6 +219,9 @@ function CertificatePdfDocument({ item, lang, template }: {
               </View>
             ))}
           </View>
+          <View style={{ position: 'absolute', right: 72, bottom: 72, width: 96, height: 96 }}>
+            <Image src={qrDataUrl} style={{ width: 96, height: 96 }} />
+          </View>
         </View>
       </Page>
     </Document>
@@ -221,7 +230,12 @@ function CertificatePdfDocument({ item, lang, template }: {
 
 async function downloadCertificateDocument(item: CertificateDashboardItem, lang: 'ar' | 'en', template?: CertificateTemplate | null) {
   const certificateNumber = item.certificate?.certificateNumber ?? 'certificate';
-  const blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={template} />).toBlob();
+  const qrDataUrl = await QRCode.toDataURL(getCertificateVerificationUrl(item), {
+    errorCorrectionLevel: 'M',
+    margin: 1,
+    scale: 8,
+  });
+  const blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={template} qrDataUrl={qrDataUrl} />).toBlob();
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

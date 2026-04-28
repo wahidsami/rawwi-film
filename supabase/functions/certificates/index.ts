@@ -382,17 +382,101 @@ async function loadLatestCompletedPayment(
   return data as any | null;
 }
 
+async function loadCertificateVerification(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  certificateNumber: string,
+) {
+  const { data: certificate, error: certificateError } = await supabase
+    .from("script_certificates")
+    .select("id, script_id, payment_id, certificate_number, certificate_status, issued_at, certificate_data")
+    .eq("certificate_number", certificateNumber)
+    .maybeSingle();
+  if (certificateError) throw new Error(certificateError.message);
+  if (!certificate) return null;
+
+  const scriptId = (certificate as any).script_id;
+  const [{ data: script, error: scriptError }, { data: approvedHistory }, { data: payment }] = await Promise.all([
+    supabase
+      .from("scripts")
+      .select("id, title, type, status, company_id, client_id, created_at")
+      .eq("id", scriptId)
+      .maybeSingle(),
+    supabase
+      .from("script_status_history")
+      .select("changed_at")
+      .eq("script_id", scriptId)
+      .eq("to_status", "approved")
+      .order("changed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    (certificate as any).payment_id
+      ? supabase
+          .from("script_certificate_payments")
+          .select("id, payment_status, total_amount, currency, completed_at")
+          .eq("id", (certificate as any).payment_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  if (scriptError) throw new Error(scriptError.message);
+
+  const certificateData = ((certificate as any).certificate_data ?? {}) as Record<string, unknown>;
+  const ownerCompanyId = (((script as any)?.company_id ?? (script as any)?.client_id) ?? certificateData.company_id ?? "").toString();
+  const { data: company } = ownerCompanyId
+    ? await supabase.from("clients").select("id, name_ar, name_en").eq("id", ownerCompanyId).maybeSingle()
+    : { data: null };
+
+  return {
+    certificateNumber: (certificate as any).certificate_number,
+    certificateStatus: (certificate as any).certificate_status,
+    issuedAt: (certificate as any).issued_at,
+    scriptTitle: ((script as any)?.title ?? certificateData.script_title ?? "").toString(),
+    scriptType: ((script as any)?.type ?? "").toString(),
+    scriptStatus: ((script as any)?.status ?? "").toString(),
+    submittedAt: ((script as any)?.created_at ?? null) as string | null,
+    approvedAt: ((approvedHistory as any)?.changed_at ?? certificateData.approved_at ?? null) as string | null,
+    companyNameAr: ((company as any)?.name_ar ?? certificateData.company_name_ar ?? null) as string | null,
+    companyNameEn: ((company as any)?.name_en ?? certificateData.company_name_en ?? null) as string | null,
+    payment: payment
+      ? {
+          status: (payment as any).payment_status,
+          totalAmount: (payment as any).total_amount,
+          currency: (payment as any).currency,
+          completedAt: (payment as any).completed_at,
+        }
+      : null,
+    verification: {
+      verified: (certificate as any).certificate_status === "issued",
+      contentSnapshotAvailable: false,
+      contentHash: null,
+    },
+  };
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? undefined;
   const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
   if (req.method === "OPTIONS") return optionsResponse(req);
 
+  const rest = pathAfter("certificates", req.url);
+  const method = req.method;
+
+  if (method === "GET" && rest.startsWith("verify/")) {
+    const certificateNumber = decodeURIComponent(rest.slice("verify/".length)).trim();
+    if (!certificateNumber) return json({ error: "certificateNumber is required" }, 400);
+    try {
+      const supabase = createSupabaseAdmin();
+      const verification = await loadCertificateVerification(supabase, certificateNumber);
+      if (!verification) return json({ error: "Certificate not found" }, 404);
+      return json({ certificate: verification });
+    } catch (err) {
+      return json({ error: err instanceof Error ? err.message : "Unable to verify certificate" }, 500);
+    }
+  }
+
   const auth = await requireAuth(req);
   if (auth instanceof Response) return auth;
 
   const { userId, supabase } = auth;
-  const rest = pathAfter("certificates", req.url);
-  const method = req.method;
   const isAdmin = await isUserAdmin(supabase, userId);
   const account = await getClientAccountForUser(supabase, userId);
 
