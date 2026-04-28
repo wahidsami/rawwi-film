@@ -18,6 +18,7 @@ import { FileUpload } from '@/components/ui/FileUpload';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { ClientPortalLayout, type ClientPortalSection } from '@/components/client-portal/ClientPortalLayout';
+import { ClientCertificatesSection } from '@/components/client-portal/ClientCertificatesSection';
 import { clientPortalApi, scriptsApi, type ClientPortalMeResponse, type ClientPortalSubmissionItem, type ClientPortalRejectionDetailsResponse } from '@/api';
 import { useAuthStore } from '@/store/authStore';
 import { useLangStore } from '@/store/langStore';
@@ -769,12 +770,7 @@ export function ClientPortal() {
     if (activeSection === 'scripts') return renderSubmissionList();
     if (activeSection === 'new-script') return renderNewScriptForm();
     if (activeSection === 'certificates') {
-      return renderPlaceholderSection(
-        'قسم الشهادات',
-        'Certificates Section',
-        'هذا القسم محجوز للمرحلة القادمة حتى نربطه بشكل صحيح مع مخرجات التقارير والوثائق المعتمدة داخل النظام.',
-        'This section is reserved for the next phase, when we wire it properly to issued reports and approved documents.',
-      );
+      return <ClientCertificatesSection lang={lang} />;
     }
     if (activeSection === 'notifications') {
       return renderPlaceholderSection(

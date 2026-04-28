@@ -21,6 +21,7 @@ import Settings from '@/pages/Settings';
 import { Audit } from '@/pages/Audit';
 import { Scripts } from '@/pages/Scripts';
 import { Certificates } from '@/pages/Certificates';
+import { CertificateDesigner } from '@/pages/CertificateDesigner';
 import { NotFound } from '@/pages/NotFound';
 import { QuickAnalysis } from '@/pages/QuickAnalysis';
 import { ClientLanding } from '@/pages/ClientLanding';
@@ -152,6 +153,7 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="certificates" element={<Certificates />} />
+          <Route path="certificates/templates/:templateId/designer" element={<CertificateDesigner />} />
           <Route path="settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Route>

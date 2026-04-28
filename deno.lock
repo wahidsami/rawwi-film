@@ -1,0 +1,61 @@
+{
+  "version": "5",
+  "redirects": {
+    "https://esm.sh/@supabase/supabase-js@2": "https://esm.sh/@supabase/supabase-js@2.105.1"
+  },
+  "remote": {
+    "https://esm.sh/@supabase/supabase-js@2.105.1": "d96e63cd3c7d0a07d5821a3573b4923d0e556e064633265c584656d95b22fa38"
+  },
+  "workspace": {
+    "members": {
+      "apps/web": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@react-pdf/renderer@^4.3.2",
+            "npm:@supabase/supabase-js@^2.95.3",
+            "npm:@tailwindcss/vite@4.1.17",
+            "npm:@types/node@22",
+            "npm:@types/react-dom@19.2.3",
+            "npm:@types/react@19.2.7",
+            "npm:@vitejs/plugin-react@5.1.1",
+            "npm:buffer@^6.0.3",
+            "npm:clsx@^2.1.1",
+            "npm:date-fns@^4.1.0",
+            "npm:dompurify@^3.2.2",
+            "npm:events@^3.3.0",
+            "npm:jszip@^3.10.1",
+            "npm:lucide-react@0.563",
+            "npm:mammoth@^1.11.0",
+            "npm:pdfjs-dist@^4.7.76",
+            "npm:process@~0.11.10",
+            "npm:react-dom@19.2.3",
+            "npm:react-hot-toast@^2.6.0",
+            "npm:react-router-dom@^7.13.0",
+            "npm:react@19.2.3",
+            "npm:recharts@^3.7.0",
+            "npm:tailwind-merge@^3.4.0",
+            "npm:tailwindcss@4.1.17",
+            "npm:tesseract.js@7",
+            "npm:tsx@^4.19.2",
+            "npm:typescript@5.9.3",
+            "npm:vite@7.2.4",
+            "npm:zustand@^5.0.11"
+          ]
+        }
+      },
+      "apps/worker": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@supabase/supabase-js@^2.45.0",
+            "npm:@types/node@22",
+            "npm:dotenv@^16.4.5",
+            "npm:openai@^4.73.0",
+            "npm:tsx@^4.19.2",
+            "npm:typescript@^5.6.0",
+            "npm:zod@^3.23.0"
+          ]
+        }
+      }
+    }
+  }
+}

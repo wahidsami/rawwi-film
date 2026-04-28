@@ -161,6 +161,135 @@ export interface ClientPortalMeResponse {
   } | null;
 }
 
+export interface CertificateDemoCard {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+  brand: string;
+  maskedNumber: string;
+}
+
+export interface CertificatePaymentInfo {
+  id: string;
+  paymentStatus: string;
+  paymentMethod: string;
+  paymentReference: string;
+  demoCardId?: string | null;
+  cardBrand?: string | null;
+  cardLast4?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+}
+
+export interface ScriptCertificateInfo {
+  id: string;
+  certificateNumber: string;
+  certificateStatus: string;
+  issuedAt: string;
+  certificateData?: Record<string, unknown>;
+}
+
+export interface CertificateDashboardItem {
+  scriptId: string;
+  scriptTitle: string;
+  scriptType: string;
+  scriptStatus?: string;
+  approvedAt: string;
+  companyId?: string | null;
+  companyNameAr?: string | null;
+  companyNameEn?: string | null;
+  certificateFee: {
+    baseAmount: number;
+    taxAmount: number;
+    totalAmount: number;
+    currency: string;
+  };
+  certificateStatus: 'payment_pending' | 'payment_failed' | 'issued';
+  latestPayment: CertificatePaymentInfo | null;
+  certificate: ScriptCertificateInfo | null;
+}
+
+export interface ClientCertificatesResponse {
+  demoCards: CertificateDemoCard[];
+  defaultTemplate?: CertificateTemplate | null;
+  items: CertificateDashboardItem[];
+}
+
+export interface AdminCertificatesResponse {
+  summary: {
+    approvedScripts: number;
+    completedPayments: number;
+    issuedCertificates: number;
+    pendingPayments: number;
+  };
+  defaultTemplate?: CertificateTemplate | null;
+  items: CertificateDashboardItem[];
+}
+
+export interface ProcessDemoCertificatePaymentResponse {
+  ok: boolean;
+  alreadyIssued?: boolean;
+  payment?: CertificatePaymentInfo;
+  certificate?: ScriptCertificateInfo;
+  error?: string;
+}
+
+export interface AdminCertificateActionResponse {
+  ok: boolean;
+  alreadyCompleted?: boolean;
+  payment?: CertificatePaymentInfo;
+  certificate?: ScriptCertificateInfo;
+  error?: string;
+}
+
+export type CertificatePageSize = 'A4' | 'A5' | 'Letter';
+export type CertificateOrientation = 'portrait' | 'landscape';
+export type CertificateBackgroundFit = 'cover' | 'contain' | 'tile';
+export type CertificateElementType = 'logo' | 'title' | 'paragraph' | 'qr' | 'image' | 'date' | 'footer';
+
+export interface CertificateTemplateElement {
+  id: string;
+  type: CertificateElementType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text?: string;
+  imageUrl?: string;
+  logoSource?: 'film_commission' | 'client' | 'uploaded';
+  fontFamily?: string;
+  fontSize?: number;
+  bold?: boolean;
+  italic?: boolean;
+  color?: string;
+  align?: 'left' | 'center' | 'right';
+  opacity?: number;
+}
+
+export interface CertificateTemplateData {
+  elements: CertificateTemplateElement[];
+}
+
+export interface CertificateTemplate {
+  id: string;
+  name: string;
+  description?: string | null;
+  isDefault: boolean;
+  pageSize: CertificatePageSize;
+  orientation: CertificateOrientation;
+  backgroundColor: string;
+  backgroundImageUrl?: string | null;
+  backgroundImageFit: CertificateBackgroundFit;
+  backgroundImageOpacity: number;
+  templateData: CertificateTemplateData;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CertificateTemplatesResponse {
+  templates: CertificateTemplate[];
+}
+
 export const clientPortalApi = {
   register: async (payload: ClientPortalRegisterBody): Promise<{ ok: true; registration: 'free'; userId: string; companyId: string }> => {
     if (USE_MOCK_API) {
@@ -204,6 +333,38 @@ export const clientPortalApi = {
     httpClient.get('/client-portal/admin/submissions'),
   getRejectionDetails: (scriptId: string): Promise<ClientPortalRejectionDetailsResponse> =>
     httpClient.get(`/client-portal/rejections/${encodeURIComponent(scriptId)}`),
+};
+
+export const certificatesApi = {
+  getClientDashboard: (): Promise<ClientCertificatesResponse> =>
+    httpClient.get('/certificates/client'),
+  getAdminDashboard: (): Promise<AdminCertificatesResponse> =>
+    httpClient.get('/certificates/admin'),
+  confirmAdminPayment: (scriptId: string): Promise<AdminCertificateActionResponse> =>
+    httpClient.post('/certificates/admin/confirm-payment', { scriptId }),
+  issueAdminCertificate: (
+    scriptId: string,
+    forceRegenerate = false,
+  ): Promise<AdminCertificateActionResponse> =>
+    httpClient.post('/certificates/admin/issue', { scriptId, forceRegenerate }),
+  getTemplates: (): Promise<CertificateTemplatesResponse> =>
+    httpClient.get('/certificates/templates'),
+  createTemplate: (payload: { name: string; description?: string }): Promise<{ ok: boolean; template: CertificateTemplate }> =>
+    httpClient.post('/certificates/templates', payload),
+  getTemplate: (templateId: string): Promise<{ template: CertificateTemplate }> =>
+    httpClient.get(`/certificates/templates/${encodeURIComponent(templateId)}`),
+  updateTemplate: (
+    templateId: string,
+    payload: Partial<Omit<CertificateTemplate, 'id' | 'createdAt' | 'updatedAt'>>,
+  ): Promise<{ ok: boolean; template: CertificateTemplate }> =>
+    httpClient.put(`/certificates/templates/${encodeURIComponent(templateId)}`, payload),
+  setDefaultTemplate: (templateId: string): Promise<{ ok: boolean; template: CertificateTemplate }> =>
+    httpClient.post(`/certificates/templates/${encodeURIComponent(templateId)}/default`, {}),
+  processDemoPayment: (
+    scriptId: string,
+    demoCardId: string,
+  ): Promise<ProcessDemoCertificatePaymentResponse> =>
+    httpClient.post('/certificates/pay', { scriptId, demoCardId }),
 };
 
 export interface NotificationItem {
