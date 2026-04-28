@@ -127,6 +127,34 @@ function normalizeWorkClassification(value: unknown): string | null {
   return trimmed ? trimmed.slice(0, 120) : null;
 }
 
+async function isAllowedWorkClassification(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  value: string,
+): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const normalized = normalizeWorkClassification(value);
+  if (!normalized) {
+    return { ok: false, status: 400, error: "workClassification is required" };
+  }
+
+  const { data, error } = await supabase
+    .from("script_classification_options")
+    .select("id")
+    .eq("label_ar", normalized)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[scripts] failed to validate work classification:", error.message);
+    return { ok: false, status: 500, error: error.message };
+  }
+
+  if (!data) {
+    return { ok: false, status: 400, error: "Invalid workClassification" };
+  }
+
+  return { ok: true };
+}
+
 function normalizeEpisodeCount(value: unknown): number | null {
   if (value === null || value === undefined || value === "") return null;
   const parsed =
@@ -1069,6 +1097,10 @@ Deno.serve(async (req: Request) => {
     if (!workClassification) {
       return json({ error: "workClassification is required" }, 400);
     }
+    const workClassificationValidation = await isAllowedWorkClassification(supabase, workClassification);
+    if (!workClassificationValidation.ok) {
+      return json({ error: workClassificationValidation.error }, workClassificationValidation.status);
+    }
     if (status == null || typeof status !== "string" || !String(status).trim()) {
       return json({ error: "status is required" }, 400);
     }
@@ -1489,6 +1521,12 @@ Deno.serve(async (req: Request) => {
     if (body.synopsis !== undefined) updates.synopsis = typeof body.synopsis === 'string' ? body.synopsis.trim() || null : null;
     if (body.workClassification !== undefined || body.work_classification !== undefined) {
       updates.work_classification = normalizeWorkClassification(body.workClassification ?? body.work_classification);
+      if (updates.work_classification) {
+        const workClassificationValidation = await isAllowedWorkClassification(supabase, updates.work_classification);
+        if (!workClassificationValidation.ok) {
+          return json({ error: workClassificationValidation.error }, workClassificationValidation.status);
+        }
+      }
     }
     if (body.episodeCount !== undefined || body.episode_count !== undefined) {
       updates.episode_count = normalizeEpisodeCount(body.episodeCount ?? body.episode_count);

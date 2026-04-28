@@ -16,6 +16,11 @@ import { API_BASE_URL } from '@/lib/env';
 import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
 import { extractDocxWithPages } from '@/utils/documentExtract';
 import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
+import {
+  buildScriptClassificationSelectOptions,
+  LEGACY_SCRIPT_CLASSIFICATION_OPTIONS,
+  useScriptClassificationOptions,
+} from '@/lib/scriptClassificationOptions';
 
 type UploadResult = {
   success: boolean;
@@ -26,18 +31,6 @@ type UploadResult = {
   versionId: string | null;
   versionNumber: number | null;
 };
-
-const WORK_CLASSIFICATION_OPTIONS = [
-  { value: 'أمني', labelAr: 'أمني', labelEn: 'Security' },
-  { value: 'وثائقي', labelAr: 'وثائقي', labelEn: 'Documentary' },
-  { value: 'درامي', labelAr: 'درامي', labelEn: 'Drama' },
-  { value: 'كوميدي', labelAr: 'كوميدي', labelEn: 'Comedy' },
-  { value: 'تاريخي', labelAr: 'تاريخي', labelEn: 'Historical' },
-  { value: 'اجتماعي', labelAr: 'اجتماعي', labelEn: 'Social' },
-  { value: 'أطفال', labelAr: 'أطفال', labelEn: 'Children' },
-  { value: 'إعلامي', labelAr: 'إعلامي', labelEn: 'Media' },
-  { value: 'آخر', labelAr: 'آخر', labelEn: 'Other' },
-] as const;
 
 function statusLabel(status: string, lang: 'ar' | 'en'): string {
   const key = status.toLowerCase();
@@ -62,6 +55,11 @@ export function ClientPortal() {
   const navigate = useNavigate();
   const { lang } = useLangStore();
   const { logout, user } = useAuthStore();
+  const { options: scriptClassificationOptions } = useScriptClassificationOptions();
+  const workClassificationOptions = useMemo(
+    () => buildScriptClassificationSelectOptions(lang === 'ar' ? 'ar' : 'en', scriptClassificationOptions),
+    [lang, scriptClassificationOptions],
+  );
 
   const [profile, setProfile] = useState<ClientPortalMeResponse | null>(null);
   const [submissions, setSubmissions] = useState<ClientPortalSubmissionItem[]>([]);
@@ -80,7 +78,7 @@ export function ClientPortal() {
   }>({
     title: '',
     type: 'Film' as 'Film' | 'Series',
-    workClassification: WORK_CLASSIFICATION_OPTIONS[0].value,
+    workClassification: LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
     synopsis: '',
     receivedAt: new Date().toISOString().slice(0, 10),
   });
@@ -223,6 +221,16 @@ export function ClientPortal() {
   }, [loadProfileAndSubmissions]);
 
   useEffect(() => {
+    const defaultClassification = workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '';
+    setForm((prev) => {
+      if (prev.workClassification && workClassificationOptions.some((option) => option.value === prev.workClassification)) {
+        return prev;
+      }
+      return { ...prev, workClassification: defaultClassification };
+    });
+  }, [workClassificationOptions]);
+
+  useEffect(() => {
     const intervalId = window.setInterval(() => {
       refreshSubmissionsSilently();
     }, 15000);
@@ -339,7 +347,7 @@ export function ClientPortal() {
       setForm({
         title: '',
         type: 'Film',
-        workClassification: WORK_CLASSIFICATION_OPTIONS[0].value,
+        workClassification: workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
         synopsis: '',
         receivedAt: new Date().toISOString().slice(0, 10),
       });
@@ -470,9 +478,9 @@ export function ClientPortal() {
                   onChange={(e) => setForm((prev) => ({ ...prev, workClassification: e.target.value }))}
                   className="w-full h-10 rounded-[var(--radius)] border border-border bg-surface px-3 text-sm"
                 >
-                  {WORK_CLASSIFICATION_OPTIONS.map((option) => (
+                  {workClassificationOptions.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {lang === 'ar' ? option.labelAr : option.labelEn}
+                      {option.label}
                     </option>
                   ))}
                 </select>

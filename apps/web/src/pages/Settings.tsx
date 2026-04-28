@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore, AppSettings } from '@/store/settingsStore';
@@ -12,6 +12,11 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { validatePassword } from '@/utils/validation';
+import {
+  createScriptClassificationOption,
+  updateScriptClassificationOption,
+  useScriptClassificationOptions,
+} from '@/lib/scriptClassificationOptions';
 
 type TabId = 'account' | 'platform' | 'security' | 'branding' | 'features';
 
@@ -26,6 +31,25 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
+  const {
+    options: scriptClassificationOptions,
+    isLoading: scriptClassificationLoading,
+    reload: reloadScriptClassifications,
+  } = useScriptClassificationOptions(true);
+  const [classificationDrafts, setClassificationDrafts] = useState<Array<{
+    id: string;
+    labelAr: string;
+    labelEn: string;
+    sortOrder: string;
+    isActive: boolean;
+  }>>([]);
+  const [newClassification, setNewClassification] = useState({
+    labelAr: '',
+    labelEn: '',
+    sortOrder: '',
+  });
+  const [savingClassificationId, setSavingClassificationId] = useState<string | null>(null);
+  const [creatingClassification, setCreatingClassification] = useState(false);
 
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
 
@@ -47,6 +71,102 @@ export default function Settings() {
   const updateSection = <K extends keyof AppSettings>(section: K, values: Partial<AppSettings[K]>) => {
     updateSettings({ [section]: { ...settings[section], ...values } } as Partial<AppSettings>);
     toast.success(t('settingsUpdated'));
+  };
+
+  useEffect(() => {
+    setClassificationDrafts(
+      scriptClassificationOptions.map((option) => ({
+        id: option.id,
+        labelAr: option.label_ar,
+        labelEn: option.label_en,
+        sortOrder: String(option.sort_order),
+        isActive: option.is_active,
+      })),
+    );
+  }, [scriptClassificationOptions]);
+
+  const updateClassificationDraft = (id: string, updates: Partial<{
+    labelAr: string;
+    labelEn: string;
+    sortOrder: string;
+    isActive: boolean;
+  }>) => {
+    setClassificationDrafts((drafts) => drafts.map((draft) => (
+      draft.id === id ? { ...draft, ...updates } : draft
+    )));
+  };
+
+  const handleSaveClassification = async (draft: {
+    id: string;
+    labelAr: string;
+    labelEn: string;
+    sortOrder: string;
+    isActive: boolean;
+  }) => {
+    if (!draft.labelAr.trim() || !draft.labelEn.trim()) {
+      toast.error(lang === 'ar' ? 'أدخل الاسم العربي والإنجليزي' : 'Enter both Arabic and English labels');
+      return;
+    }
+    setSavingClassificationId(draft.id);
+    try {
+      await updateScriptClassificationOption(draft.id, {
+        labelAr: draft.labelAr,
+        labelEn: draft.labelEn,
+        sortOrder: Number.parseInt(draft.sortOrder || '0', 10) || 0,
+        isActive: draft.isActive,
+      });
+      await reloadScriptClassifications();
+      toast.success(lang === 'ar' ? 'تم تحديث التصنيف' : 'Classification updated');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تحديث التصنيف' : 'Failed to update classification'));
+    } finally {
+      setSavingClassificationId(null);
+    }
+  };
+
+  const handleToggleClassification = async (draft: {
+    id: string;
+    labelAr: string;
+    labelEn: string;
+    sortOrder: string;
+    isActive: boolean;
+  }) => {
+    setSavingClassificationId(draft.id);
+    try {
+      await updateScriptClassificationOption(draft.id, {
+        isActive: !draft.isActive,
+      });
+      await reloadScriptClassifications();
+      toast.success(lang === 'ar'
+        ? (draft.isActive ? 'تم إيقاف التصنيف' : 'تم تفعيل التصنيف')
+        : (draft.isActive ? 'Classification disabled' : 'Classification enabled'));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تحديث حالة التصنيف' : 'Failed to update classification status'));
+    } finally {
+      setSavingClassificationId(null);
+    }
+  };
+
+  const handleCreateClassification = async () => {
+    if (!newClassification.labelAr.trim() || !newClassification.labelEn.trim()) {
+      toast.error(lang === 'ar' ? 'أدخل الاسم العربي والإنجليزي' : 'Enter both Arabic and English labels');
+      return;
+    }
+    setCreatingClassification(true);
+    try {
+      await createScriptClassificationOption({
+        labelAr: newClassification.labelAr,
+        labelEn: newClassification.labelEn,
+        sortOrder: Number.parseInt(newClassification.sortOrder || '0', 10) || 0,
+      });
+      setNewClassification({ labelAr: '', labelEn: '', sortOrder: '' });
+      await reloadScriptClassifications();
+      toast.success(lang === 'ar' ? 'تمت إضافة التصنيف' : 'Classification added');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر إضافة التصنيف' : 'Failed to add classification'));
+    } finally {
+      setCreatingClassification(false);
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -260,6 +380,134 @@ export default function Settings() {
                         checked={settings.platform.requireOverrideReason} 
                         onCheckedChange={(c) => updateSection('platform', { requireOverrideReason: c })} 
                       />
+                    </div>
+                  </div>
+
+                  <hr className="border-border" />
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-text-main">
+                          {lang === 'ar' ? 'تصنيفات الأعمال' : 'Work Classifications'}
+                        </h3>
+                        <p className="text-sm text-text-muted">
+                          {lang === 'ar'
+                            ? 'أي تصنيف تضيفه هنا سيظهر تلقائياً في قوائم إضافة النصوص للإدارة والعميل.'
+                            : 'Any classification added here will automatically appear in script creation dropdowns for admins and clients.'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void reloadScriptClassifications()}
+                        className="px-3 py-2 text-sm rounded-md border border-border bg-background hover:bg-surface-hover transition-colors"
+                      >
+                        {lang === 'ar' ? 'تحديث' : 'Refresh'}
+                      </button>
+                    </div>
+
+                    {scriptClassificationLoading ? (
+                      <div className="rounded-lg border border-border bg-background px-4 py-6 text-sm text-text-muted">
+                        {lang === 'ar' ? 'جاري تحميل التصنيفات...' : 'Loading classifications...'}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {classificationDrafts.map((draft) => (
+                          <div key={draft.id} className="rounded-lg border border-border bg-background p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                              <Input
+                                label={lang === 'ar' ? 'الاسم بالعربية' : 'Arabic Label'}
+                                value={draft.labelAr}
+                                onChange={(e) => updateClassificationDraft(draft.id, { labelAr: e.target.value })}
+                              />
+                              <Input
+                                label={lang === 'ar' ? 'الاسم بالإنجليزية' : 'English Label'}
+                                value={draft.labelEn}
+                                onChange={(e) => updateClassificationDraft(draft.id, { labelEn: e.target.value })}
+                              />
+                              <Input
+                                label={lang === 'ar' ? 'الترتيب' : 'Sort Order'}
+                                type="number"
+                                value={draft.sortOrder}
+                                onChange={(e) => updateClassificationDraft(draft.id, { sortOrder: e.target.value })}
+                              />
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-text-main">
+                                  {lang === 'ar' ? 'الحالة' : 'Status'}
+                                </label>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className={cn(
+                                    'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium',
+                                    draft.isActive
+                                      ? 'bg-success/10 text-success'
+                                      : 'bg-surface-hover text-text-muted',
+                                  )}>
+                                    {draft.isActive
+                                      ? (lang === 'ar' ? 'نشط' : 'Active')
+                                      : (lang === 'ar' ? 'مخفي' : 'Hidden')}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleToggleClassification(draft)}
+                                    disabled={savingClassificationId === draft.id}
+                                    className="px-3 py-2 text-xs rounded-md border border-border bg-surface hover:bg-surface-hover transition-colors disabled:opacity-50"
+                                  >
+                                    {draft.isActive
+                                      ? (lang === 'ar' ? 'إيقاف' : 'Disable')
+                                      : (lang === 'ar' ? 'تفعيل' : 'Enable')}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleSaveClassification(draft)}
+                                    disabled={savingClassificationId === draft.id}
+                                    className="px-3 py-2 text-xs rounded-md bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50"
+                                  >
+                                    {savingClassificationId === draft.id
+                                      ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…')
+                                      : (lang === 'ar' ? 'حفظ' : 'Save')}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="rounded-lg border border-dashed border-border bg-background p-4 space-y-4">
+                      <h4 className="font-semibold text-text-main">
+                        {lang === 'ar' ? 'إضافة تصنيف جديد' : 'Add New Classification'}
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <Input
+                          label={lang === 'ar' ? 'الاسم بالعربية' : 'Arabic Label'}
+                          value={newClassification.labelAr}
+                          onChange={(e) => setNewClassification((state) => ({ ...state, labelAr: e.target.value }))}
+                        />
+                        <Input
+                          label={lang === 'ar' ? 'الاسم بالإنجليزية' : 'English Label'}
+                          value={newClassification.labelEn}
+                          onChange={(e) => setNewClassification((state) => ({ ...state, labelEn: e.target.value }))}
+                        />
+                        <Input
+                          label={lang === 'ar' ? 'الترتيب' : 'Sort Order'}
+                          type="number"
+                          value={newClassification.sortOrder}
+                          onChange={(e) => setNewClassification((state) => ({ ...state, sortOrder: e.target.value }))}
+                        />
+                        <div className="flex items-end">
+                          <button
+                            type="button"
+                            onClick={() => void handleCreateClassification()}
+                            disabled={creatingClassification}
+                            className="w-full h-10 rounded-md bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                          >
+                            {creatingClassification
+                              ? (lang === 'ar' ? 'جاري الإضافة…' : 'Adding…')
+                              : (lang === 'ar' ? 'إضافة' : 'Add')}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

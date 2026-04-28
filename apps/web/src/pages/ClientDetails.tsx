@@ -26,19 +26,11 @@ import { normalizeScriptStatusForDisplay } from '@/utils/scriptStatus';
 import { downloadClientDetailsPdf } from '@/components/reports/client-details/download';
 import { extractDocxWithPages } from '@/utils/documentExtract';
 import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
-
-const WORK_CLASSIFICATION_OPTIONS = [
-  { value: '', labelAr: 'غير محدد', labelEn: 'Unspecified' },
-  { value: 'أمني', labelAr: 'أمني', labelEn: 'Security' },
-  { value: 'وثائقي', labelAr: 'وثائقي', labelEn: 'Documentary' },
-  { value: 'درامي', labelAr: 'درامي', labelEn: 'Drama' },
-  { value: 'كوميدي', labelAr: 'كوميدي', labelEn: 'Comedy' },
-  { value: 'تاريخي', labelAr: 'تاريخي', labelEn: 'Historical' },
-  { value: 'اجتماعي', labelAr: 'اجتماعي', labelEn: 'Social' },
-  { value: 'أطفال', labelAr: 'أطفال', labelEn: 'Children' },
-  { value: 'إعلامي', labelAr: 'إعلامي', labelEn: 'Media' },
-  { value: 'آخر', labelAr: 'آخر', labelEn: 'Other' },
-] as const;
+import {
+  buildScriptClassificationSelectOptions,
+  LEGACY_SCRIPT_CLASSIFICATION_OPTIONS,
+  useScriptClassificationOptions,
+} from '@/lib/scriptClassificationOptions';
 
 function parseEpisodeCountInput(value: string): number | null {
   const trimmed = value.trim();
@@ -78,6 +70,18 @@ export function ClientDetails() {
 
   const [isEditScriptOpen, setIsEditScriptOpen] = useState<Script | null>(null);
   const [editScriptForm, setEditScriptForm] = useState<Partial<Script>>({});
+  const { options: scriptClassificationOptions } = useScriptClassificationOptions();
+  const workClassificationOptions = useMemo(
+    () => buildScriptClassificationSelectOptions(lang === 'ar' ? 'ar' : 'en', scriptClassificationOptions),
+    [lang, scriptClassificationOptions],
+  );
+  const editWorkClassificationOptions = useMemo(
+    () => buildScriptClassificationSelectOptions(lang === 'ar' ? 'ar' : 'en', scriptClassificationOptions, {
+      includeBlank: true,
+      preserveValue: (editScriptForm.workClassification as string | undefined) ?? isEditScriptOpen?.workClassification ?? '',
+    }),
+    [lang, scriptClassificationOptions, editScriptForm.workClassification, isEditScriptOpen?.workClassification],
+  );
 
   const handleUpdateScript = async () => {
     if (!isEditScriptOpen) return;
@@ -122,7 +126,7 @@ export function ClientDetails() {
   const [formData, setFormData] = useState({
     title: '',
     type: '' as '' | 'Film' | 'Series',
-    workClassification: '',
+    workClassification: LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
     episodeCount: '' as string,
     receivedAt: new Date().toISOString().split('T')[0],
     synopsis: '',
@@ -182,11 +186,21 @@ export function ClientDetails() {
     loadReportCounts();
   }, [loadReportCounts]);
 
+  useEffect(() => {
+    const defaultClassification = workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '';
+    setFormData((prev) => {
+      if (prev.workClassification && workClassificationOptions.some((option) => option.value === prev.workClassification)) {
+        return prev;
+      }
+      return { ...prev, workClassification: defaultClassification };
+    });
+  }, [workClassificationOptions]);
+
   const openNewScriptModal = () => {
     setFormData({
       title: '',
       type: '',
-      workClassification: '',
+      workClassification: workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
       episodeCount: '',
       receivedAt: new Date().toISOString().split('T')[0],
       synopsis: '',
@@ -420,7 +434,7 @@ export function ClientDetails() {
         title: '',
         type: '',
         synopsis: '',
-        workClassification: '',
+        workClassification: workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
         episodeCount: '',
         receivedAt: new Date().toISOString().split('T')[0],
         assigneeId: user?.id || '',
@@ -661,10 +675,7 @@ export function ClientDetails() {
               label={lang === 'ar' ? 'تصنيف العمل' : 'Work Classification'}
               value={editScriptForm.workClassification || ''}
               onChange={e => setEditScriptForm({ ...editScriptForm, workClassification: e.target.value })}
-              options={WORK_CLASSIFICATION_OPTIONS.map((option) => ({
-                value: option.value,
-                label: lang === 'ar' ? option.labelAr : option.labelEn,
-              }))}
+              options={editWorkClassificationOptions}
             />
             <Input
               label={lang === 'ar' ? 'عدد الحلقات' : 'Episode Count'}
@@ -758,10 +769,7 @@ export function ClientDetails() {
               setFormData({ ...formData, workClassification: e.target.value });
               setNewScriptErrors((prev) => ({ ...prev, workClassification: '' }));
             }}
-            options={WORK_CLASSIFICATION_OPTIONS.map((option) => ({
-              value: option.value,
-              label: lang === 'ar' ? option.labelAr : option.labelEn,
-            }))}
+            options={workClassificationOptions}
             error={newScriptErrors.workClassification}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
