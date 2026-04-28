@@ -1224,7 +1224,23 @@ Deno.serve(async (req: Request) => {
     const canAdminReplace = await isSuperAdminOrAdmin(supabase, uid);
     const isQuick = s.is_quick_analysis === true;
     const canAccessQuick = isQuick && (s.created_by === uid || s.assignee_id === uid || canAdminReplace);
-    if (!canAdminReplace && !canAccessQuick) {
+    const rawSourceFilePath = typeof body.source_file_path === "string" ? body.source_file_path.trim() || null : null;
+    const rawSourceFileUrl = typeof body.source_file_url === "string" ? body.source_file_url.trim() || null : null;
+    const pathOrUrl = rawSourceFilePath ?? rawSourceFileUrl;
+    const rawSourceFileName = typeof body.source_file_name === "string" ? body.source_file_name.trim() || null : null;
+    const sourceFileNameNfc = rawSourceFileName ? rawSourceFileName.normalize("NFC") : null;
+    const sourceFileType = typeof body.source_file_type === "string" ? body.source_file_type.trim() || null : null;
+    const extractionStatus = typeof body.extraction_status === "string" ? body.extraction_status.trim() || "pending" : "pending";
+    const isManualTextVersion =
+      !pathOrUrl &&
+      (!sourceFileType ||
+        sourceFileType === "text/plain" ||
+        sourceFileType === "text/html" ||
+        sourceFileType === "text/markdown" ||
+        sourceFileType === "application/x-raawi-editor");
+    const clientCanCreateManualVersion = !isQuick && s.created_by === uid && isManualTextVersion;
+
+    if (!canAdminReplace && !canAccessQuick && !clientCanCreateManualVersion) {
       return json({ error: "Only Admin/Super Admin can replace script files." }, 403);
     }
     if (body.clearAnalysisOnReplace === true && !isQuick) {
@@ -1239,20 +1255,15 @@ Deno.serve(async (req: Request) => {
       .limit(1)
       .single();
     const nextVersion = maxRow ? (maxRow as { version_number: number }).version_number + 1 : 1;
-    const storagePath = typeof body.source_file_path === "string" ? body.source_file_path.trim() || null : null;
-    const storageUrl = typeof body.source_file_url === "string" ? body.source_file_url.trim() || null : null;
-    const pathOrUrl = storagePath ?? storageUrl;
-    const rawSourceFileName = typeof body.source_file_name === "string" ? body.source_file_name.trim() || null : null;
-    const sourceFileNameNfc = rawSourceFileName ? rawSourceFileName.normalize("NFC") : null;
     const versionInsert = {
       script_id: sid,
       version_number: nextVersion,
       source_file_name: sourceFileNameNfc,
-      source_file_type: typeof body.source_file_type === "string" ? body.source_file_type.trim() || null : null,
+      source_file_type: sourceFileType,
       source_file_size: typeof body.source_file_size === "number" ? body.source_file_size : null,
       source_file_path: pathOrUrl,
       source_file_url: pathOrUrl,
-      extraction_status: typeof body.extraction_status === "string" ? body.extraction_status.trim() || "pending" : "pending",
+      extraction_status: extractionStatus,
     };
     const { data: version, error: versionErr } = await supabase
       .from("script_versions")

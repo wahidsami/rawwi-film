@@ -1,0 +1,63 @@
+.client-portal-theme {
+  /*
+    Client dashboard master identity file.
+    Change these values to retheme the whole client portal area.
+  */
+  --primary: #672a55;
+  --primary-hover: #7d3566;
+  --secondary: #76b6b7;
+  --background: #f5f3f8;
+  --surface: #ffffff;
+  --border: #e6deea;
+  --text-main: #1f1724;
+  --text-muted: #74697a;
+  --success: #1f9d69;
+  --warning: #c68a17;
+  --error: #cb4a59;
+  --info: #4f6ef7;
+}
+
+.client-portal-shell {
+  background:
+    radial-gradient(circle at top right, rgba(118, 182, 183, 0.16), transparent 22rem),
+    radial-gradient(circle at top left, rgba(103, 42, 85, 0.14), transparent 24rem),
+    linear-gradient(180deg, #fcfbfd 0%, #f5f3f8 100%);
+}
+
+.client-portal-panel {
+  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.client-portal-sidebar-link {
+  position: relative;
+  overflow: hidden;
+}
+
+.client-portal-sidebar-link::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 3px;
+  border-radius: 999px;
+  background: transparent;
+  transition: background-color 160ms ease;
+}
+
+.client-portal-sidebar-link[data-active="true"]::before {
+  background: var(--primary);
+}
+
+.client-portal-hero {
+  background:
+    linear-gradient(135deg, rgba(103, 42, 85, 0.98) 0%, rgba(125, 53, 102, 0.94) 46%, rgba(118, 182, 183, 0.88) 100%);
+  box-shadow:
+    0 24px 56px rgba(103, 42, 85, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.client-portal-stat-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(250, 247, 251, 0.98) 100%);
+}

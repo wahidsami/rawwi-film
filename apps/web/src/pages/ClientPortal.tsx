@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  ArrowUpRight,
+  Award,
+  BellRing,
+  Clock3,
+  FileCheck2,
+  FolderKanban,
+  Settings2,
+  ShieldAlert,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -7,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FileUpload } from '@/components/ui/FileUpload';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { ClientPortalLayout, type ClientPortalSection } from '@/components/client-portal/ClientPortalLayout';
 import { clientPortalApi, scriptsApi, type ClientPortalMeResponse, type ClientPortalSubmissionItem, type ClientPortalRejectionDetailsResponse } from '@/api';
 import { useAuthStore } from '@/store/authStore';
 import { useLangStore } from '@/store/langStore';
@@ -53,7 +64,7 @@ function statusVariant(status: string): 'default' | 'success' | 'warning' | 'err
 
 export function ClientPortal() {
   const navigate = useNavigate();
-  const { lang } = useLangStore();
+  const { lang, toggleLang } = useLangStore();
   const { logout, user } = useAuthStore();
   const { options: scriptClassificationOptions } = useScriptClassificationOptions();
   const workClassificationOptions = useMemo(
@@ -68,6 +79,8 @@ export function ClientPortal() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [uploaderKey, setUploaderKey] = useState(1);
+  const [activeSection, setActiveSection] = useState<ClientPortalSection>('overview');
+  const [entryMode, setEntryMode] = useState<'upload' | 'paste'>('upload');
 
   const [form, setForm] = useState<{
     title: string;
@@ -83,6 +96,7 @@ export function ClientPortal() {
     receivedAt: new Date().toISOString().slice(0, 10),
   });
   const [file, setFile] = useState<File | null>(null);
+  const [manualText, setManualText] = useState('');
 
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -293,8 +307,12 @@ export function ClientPortal() {
       setError(lang === 'ar' ? 'عنوان النص مطلوب' : 'Script title is required');
       return;
     }
-    if (!file) {
+    if (entryMode === 'upload' && !file) {
       setError(lang === 'ar' ? 'يجب إرفاق ملف النص' : 'Please attach a script file');
+      return;
+    }
+    if (entryMode === 'paste' && !manualText.trim()) {
+      setError(lang === 'ar' ? 'يجب إدخال نص في المحرر' : 'Please enter script text in the editor');
       return;
     }
 
@@ -315,33 +333,43 @@ export function ClientPortal() {
       const created = await scriptsApi.addScript(scriptPayload);
 
       createdScriptId = created.id;
-      const upload = await uploadScriptDocument(created.id, profile.company.companyId, file);
-      if (!upload.versionId) {
-        throw new Error(lang === 'ar' ? 'تعذّر إنشاء نسخة النص' : 'Failed to create script version');
-      }
+      if (entryMode === 'upload') {
+        const upload = await uploadScriptDocument(created.id, profile.company.companyId, file!);
+        if (!upload.versionId) {
+          throw new Error(lang === 'ar' ? 'تعذّر إنشاء نسخة النص' : 'Failed to create script version');
+        }
 
-      const ext = file.name.toLowerCase().split('.').pop() || '';
-      if (ext === 'pdf') {
-        await scriptsApi.extractText(upload.versionId, undefined, { enqueueAnalysis: false });
-        const extractedVersion = await waitForVersionExtraction(created.id, upload.versionId, {
-          timeoutMs: PDF_EXTRACTION_TIMEOUT_MS,
-          intervalMs: PDF_EXTRACTION_INTERVAL_MS,
-        });
-        if (!extractedVersion.extracted_text?.trim()) {
-          throw new Error(lang === 'ar' ? 'لم يتم استخراج نص من الملف' : 'No text extracted from file');
+        const ext = file!.name.toLowerCase().split('.').pop() || '';
+        if (ext === 'pdf') {
+          await scriptsApi.extractText(upload.versionId, undefined, { enqueueAnalysis: false });
+          const extractedVersion = await waitForVersionExtraction(created.id, upload.versionId, {
+            timeoutMs: PDF_EXTRACTION_TIMEOUT_MS,
+            intervalMs: PDF_EXTRACTION_INTERVAL_MS,
+          });
+          if (!extractedVersion.extracted_text?.trim()) {
+            throw new Error(lang === 'ar' ? 'لم يتم استخراج نص من الملف' : 'No text extracted from file');
+          }
+        } else if (ext === 'docx') {
+          const { pages } = await extractDocxWithPages(file!);
+          const res = await scriptsApi.extractText(upload.versionId, undefined, { pages, enqueueAnalysis: false });
+          if (!(res as { extracted_text?: string }).extracted_text?.trim()) {
+            throw new Error(lang === 'ar' ? 'لم يتم استخراج نص من الملف' : 'No text extracted from file');
+          }
+        } else if (ext === 'txt') {
+          const text = await file!.text();
+          if (!text.trim()) throw new Error(lang === 'ar' ? 'الملف النصي فارغ' : 'Text file is empty');
+          await scriptsApi.extractText(upload.versionId, text, { enqueueAnalysis: false });
+        } else {
+          throw new Error(lang === 'ar' ? 'صيغة الملف غير مدعومة' : 'Unsupported file format');
         }
-      } else if (ext === 'docx') {
-        const { pages } = await extractDocxWithPages(file);
-        const res = await scriptsApi.extractText(upload.versionId, undefined, { pages, enqueueAnalysis: false });
-        if (!(res as { extracted_text?: string }).extracted_text?.trim()) {
-          throw new Error(lang === 'ar' ? 'لم يتم استخراج نص من الملف' : 'No text extracted from file');
-        }
-      } else if (ext === 'txt') {
-        const text = await file.text();
-        if (!text.trim()) throw new Error(lang === 'ar' ? 'الملف النصي فارغ' : 'Text file is empty');
-        await scriptsApi.extractText(upload.versionId, text, { enqueueAnalysis: false });
       } else {
-        throw new Error(lang === 'ar' ? 'صيغة الملف غير مدعومة' : 'Unsupported file format');
+        const version = await scriptsApi.createVersion(created.id, {
+          source_file_name: 'client-editor-entry.txt',
+          source_file_type: 'application/x-raawi-editor',
+          source_file_size: manualText.trim().length,
+          extraction_status: 'pending',
+        });
+        await scriptsApi.extractText(version.id, manualText.trim(), { enqueueAnalysis: false });
       }
 
       setForm({
@@ -352,10 +380,13 @@ export function ClientPortal() {
         receivedAt: new Date().toISOString().slice(0, 10),
       });
       setFile(null);
+      setManualText('');
+      setEntryMode('upload');
       setUploaderKey((v) => v + 1);
       setNotice(lang === 'ar'
         ? 'تم إرسال النص بنجاح، وسيتم مراجعته من فريق الإدارة.'
         : 'Script submitted successfully and sent to admin review.');
+      setActiveSection('scripts');
       await loadProfileAndSubmissions();
     } catch (err) {
       if (createdScriptId) {
@@ -383,180 +414,412 @@ export function ClientPortal() {
   };
 
   const totalRejected = useMemo(() => submissions.filter((s) => s.status.toLowerCase() === 'rejected').length, [submissions]);
+  const totalApproved = useMemo(() => submissions.filter((s) => s.status.toLowerCase() === 'approved').length, [submissions]);
+  const totalPending = useMemo(
+    () => submissions.filter((s) => ['analysis_running', 'review_required', 'in_review'].includes(s.status.toLowerCase())).length,
+    [submissions],
+  );
+  const recentSubmissions = useMemo(() => submissions.slice(0, 5), [submissions]);
 
   const handleLogout = () => {
     logout();
     navigate('/portal', { replace: true });
   };
 
-  return (
-    <div className="min-h-screen bg-background text-text-main">
-      <header className="border-b border-border bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold">{lang === 'ar' ? 'بوابة شركات الإنتاج' : 'Production Client Portal'}</h1>
-            <p className="text-sm text-text-muted">
-              {profile?.company
-                ? (lang === 'ar' ? profile.company.nameAr : profile.company.nameEn)
-                : (lang === 'ar' ? 'جاري تحميل معلومات الشركة...' : 'Loading company profile...')}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="success">
-              {lang === 'ar' ? 'الاشتراك: مجاني' : 'Subscription: Free'}
-            </Badge>
-            <span className="text-sm text-text-muted hidden md:inline">{user?.name}</span>
-            <Button variant="outline" onClick={handleLogout}>
-              {lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 py-6 space-y-6">
-        {error && (
-          <div className="rounded-md border border-error/20 bg-error/10 p-3 text-sm text-error">{error}</div>
-        )}
-        {notice && (
-          <div className="rounded-md border border-success/20 bg-success/10 p-3 text-sm text-success">{notice}</div>
-        )}
-
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>{lang === 'ar' ? 'إجمالي النصوص' : 'Total Submissions'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{submissions.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>{lang === 'ar' ? 'المرفوض' : 'Rejected'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-error">{totalRejected}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>{lang === 'ar' ? 'حالة الاشتراك' : 'Subscription'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg font-semibold">{lang === 'ar' ? 'مفعل - مجاني' : 'Active - Free'}</p>
-            </CardContent>
-          </Card>
-        </section>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{lang === 'ar' ? 'رفع نص جديد' : 'Submit New Script'}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmitScript} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label={lang === 'ar' ? 'عنوان النص' : 'Script Title'}
-                value={form.title}
-                onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                required
-              />
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'نوع الإنتاج' : 'Production Type'}</label>
-                <select
-                  value={form.type}
-                  onChange={(e) => setForm((prev) => ({ ...prev, type: e.target.value as 'Film' | 'Series' }))}
-                  className="w-full h-10 rounded-[var(--radius)] border border-border bg-surface px-3 text-sm"
-                >
-                  <option value="Film">{lang === 'ar' ? 'فيلم' : 'Film'}</option>
-                  <option value="Series">{lang === 'ar' ? 'مسلسل' : 'Series'}</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'تصنيف العمل' : 'Work Classification'}</label>
-                <select
-                  value={form.workClassification}
-                  onChange={(e) => setForm((prev) => ({ ...prev, workClassification: e.target.value }))}
-                  className="w-full h-10 rounded-[var(--radius)] border border-border bg-surface px-3 text-sm"
-                >
-                  {workClassificationOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <Input
-                label={lang === 'ar' ? 'تاريخ الاستلام' : 'Received Date'}
-                type="date"
-                value={form.receivedAt}
-                onChange={(e) => setForm((prev) => ({ ...prev, receivedAt: e.target.value }))}
-              />
-              <div className="md:col-span-2">
-                <Textarea
-                  label={lang === 'ar' ? 'ملخص النص' : 'Synopsis'}
-                  rows={4}
-                  value={form.synopsis}
-                  onChange={(e) => setForm((prev) => ({ ...prev, synopsis: e.target.value }))}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <div key={uploaderKey}>
-                  <FileUpload
-                    label={lang === 'ar' ? 'ملف النص' : 'Script File'}
-                    accept=".pdf,.docx,.txt"
-                    helperText={lang === 'ar' ? 'يدعم PDF وDOCX وTXT حتى 50MB' : 'Supports PDF, DOCX, and TXT up to 50MB'}
-                    onChange={setFile}
-                  />
+  const renderSubmissionList = () => (
+    <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+      <CardHeader>
+        <CardTitle>{lang === 'ar' ? 'حالة النصوص المرسلة' : 'Submitted Scripts Status'}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-sm text-text-muted">{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+        ) : submissions.length === 0 ? (
+          <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد نصوص مرسلة بعد.' : 'No submitted scripts yet.'}</p>
+        ) : (
+          <div className="space-y-3">
+            {submissions.map((item) => (
+              <div key={item.scriptId} className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-surface p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{item.title}</p>
+                    <p className="text-sm text-text-muted">
+                      {item.type} • {new Date(item.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={statusVariant(item.status)}>{statusLabel(item.status, lang)}</Badge>
+                    {item.status.toLowerCase() === 'rejected' && (
+                      <Button size="sm" variant="outline" onClick={() => openRejectionDetails(item.scriptId)}>
+                        {lang === 'ar' ? 'عرض تقرير الرفض' : 'View Rejection Report'}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="md:col-span-2 flex items-center gap-3">
-                <Button type="submit" isLoading={isSubmitting}>
-                  {lang === 'ar' ? 'إرسال للنظام' : 'Submit to Dashboard'}
-                </Button>
-                <Button type="button" variant="outline" onClick={loadProfileAndSubmissions} disabled={isLoading || isSubmitting}>
-                  {lang === 'ar' ? 'تحديث' : 'Refresh'}
-                </Button>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const renderNewScriptForm = () => (
+    <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+      <CardHeader>
+        <CardTitle>{lang === 'ar' ? 'إضافة نص جديد' : 'Add New Script'}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmitScript} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="md:col-span-2 space-y-2">
+            <label className="block text-sm font-medium text-text-main">
+              {lang === 'ar' ? 'طريقة إدخال النص' : 'Script Entry Method'}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setEntryMode('upload')}
+                className={`rounded-[var(--radius)] border px-4 py-2 text-sm transition ${entryMode === 'upload' ? 'border-primary bg-primary text-white' : 'border-border bg-background text-text-main hover:bg-surface'}`}
+              >
+                {lang === 'ar' ? 'استيراد ملف' : 'Import file'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEntryMode('paste')}
+                className={`rounded-[var(--radius)] border px-4 py-2 text-sm transition ${entryMode === 'paste' ? 'border-primary bg-primary text-white' : 'border-border bg-background text-text-main hover:bg-surface'}`}
+              >
+                {lang === 'ar' ? 'لصق النص في المحرر' : 'Paste into editor'}
+              </button>
+            </div>
+            <p className="text-xs text-text-muted">
+              {lang === 'ar'
+                ? 'سنُبقي مسار الاستيراد الحالي كما هو، ونضيف مسار التحرير النصي بشكل آمن دون كسر الربط مع مساحة عمل الإدارة.'
+                : 'The current import flow stays intact, while a safe text-entry path is added without breaking admin workspace wiring.'}
+            </p>
+          </div>
+          <Input
+            label={lang === 'ar' ? 'عنوان النص' : 'Script Title'}
+            value={form.title}
+            onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+            required
+          />
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'نوع الإنتاج' : 'Production Type'}</label>
+            <select
+              value={form.type}
+              onChange={(e) => setForm((prev) => ({ ...prev, type: e.target.value as 'Film' | 'Series' }))}
+              className="h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 text-sm"
+            >
+              <option value="Film">{lang === 'ar' ? 'فيلم' : 'Film'}</option>
+              <option value="Series">{lang === 'ar' ? 'مسلسل' : 'Series'}</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'تصنيف العمل' : 'Work Classification'}</label>
+            <select
+              value={form.workClassification}
+              onChange={(e) => setForm((prev) => ({ ...prev, workClassification: e.target.value }))}
+              className="h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 text-sm"
+            >
+              {workClassificationOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Input
+            label={lang === 'ar' ? 'تاريخ الاستلام' : 'Received Date'}
+            type="date"
+            value={form.receivedAt}
+            onChange={(e) => setForm((prev) => ({ ...prev, receivedAt: e.target.value }))}
+          />
+          <div className="md:col-span-2">
+            <Textarea
+              label={lang === 'ar' ? 'ملخص النص' : 'Synopsis'}
+              rows={4}
+              value={form.synopsis}
+              onChange={(e) => setForm((prev) => ({ ...prev, synopsis: e.target.value }))}
+            />
+          </div>
+          {entryMode === 'upload' ? (
+            <div className="md:col-span-2">
+              <div key={uploaderKey}>
+                <FileUpload
+                  label={lang === 'ar' ? 'ملف النص' : 'Script File'}
+                  accept=".pdf,.docx,.txt"
+                  helperText={lang === 'ar' ? 'يدعم PDF وDOCX وTXT حتى 50MB. هذا هو المسار الحالي المرتبط بمساحة عمل الإدارة.' : 'Supports PDF, DOCX, and TXT up to 50MB. This is the current flow already wired to the admin workspace.'}
+                  onChange={setFile}
+                />
               </div>
-            </form>
+            </div>
+          ) : (
+            <div className="md:col-span-2">
+              <Textarea
+                label={lang === 'ar' ? 'محرر النص' : 'Script Editor'}
+                rows={14}
+                value={manualText}
+                onChange={(e) => setManualText(e.target.value)}
+                placeholder={
+                  lang === 'ar'
+                    ? 'الصق النص هنا. سننشئ له نسخة نظامية ونمرره لنفس مسار المعالجة المستخدم في النظام الحالي.'
+                    : 'Paste the script text here. We will create a proper version and send it through the same processing path used by the current system.'
+                }
+              />
+            </div>
+          )}
+          <div className="md:col-span-2 flex flex-wrap items-center gap-3">
+            <Button type="submit" isLoading={isSubmitting}>
+              {lang === 'ar' ? 'إرسال للنظام' : 'Submit to Dashboard'}
+            </Button>
+            <Button type="button" variant="outline" onClick={loadProfileAndSubmissions} disabled={isLoading || isSubmitting}>
+              {lang === 'ar' ? 'تحديث' : 'Refresh'}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+
+  const renderOverview = () => (
+    <div className="space-y-4">
+      <section className="client-portal-hero rounded-[calc(var(--radius)+0.85rem)] px-6 py-6 text-white shadow-[0_24px_60px_rgba(103,42,85,0.18)] md:px-8 md:py-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-xs font-medium uppercase tracking-[0.24em] text-white/70">
+              {lang === 'ar' ? 'مرحلة التأسيس' : 'Foundation Phase'}
+            </p>
+            <h2 className="mt-3 text-2xl font-bold md:text-3xl">
+              {lang === 'ar' ? 'لوحة عميل جديدة على نفس العمود الفقري للنظام' : 'A new client dashboard on the same system backbone'}
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80 md:text-base">
+              {lang === 'ar'
+                ? 'هذا الإصدار يضع الغلاف الجديد والأقسام الأساسية دون كسر الربط الحالي مع الإدارة والتقارير. سنضيف المحرر والتقسيم الذكي للمشاهد على مراحل آمنة.'
+                : 'This phase introduces the new shell and core sections without breaking the current admin/report wiring. Editor and smart scene splitting will follow in safe phases.'}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:min-w-[300px]">
+            <button
+              type="button"
+              onClick={() => setActiveSection('new-script')}
+              className="rounded-2xl border border-white/20 bg-white/12 px-4 py-4 text-start transition hover:bg-white/18"
+            >
+              <p className="text-sm font-semibold">{lang === 'ar' ? 'إضافة نص' : 'Add Script'}</p>
+              <p className="mt-1 text-xs text-white/70">{lang === 'ar' ? 'رفع ملف جديد للشركة' : 'Submit a new company script'}</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveSection('scripts')}
+              className="rounded-2xl border border-white/20 bg-white/12 px-4 py-4 text-start transition hover:bg-white/18"
+            >
+              <p className="text-sm font-semibold">{lang === 'ar' ? 'متابعة النصوص' : 'Track Scripts'}</p>
+              <p className="mt-1 text-xs text-white/70">{lang === 'ar' ? 'عرض الحالات والقرارات' : 'View statuses and decisions'}</p>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-4 md:grid-cols-2">
+        <Card className="client-portal-stat-card border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+          <CardContent className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-sm text-text-muted">{lang === 'ar' ? 'إجمالي النصوص' : 'Total Scripts'}</p>
+              <p className="mt-2 text-3xl font-bold">{submissions.length}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <FolderKanban className="h-6 w-6" />
+            </div>
           </CardContent>
         </Card>
+        <Card className="client-portal-stat-card border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+          <CardContent className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-sm text-text-muted">{lang === 'ar' ? 'المعتمد' : 'Approved'}</p>
+              <p className="mt-2 text-3xl font-bold text-success">{totalApproved}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-success/10 text-success">
+              <FileCheck2 className="h-6 w-6" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="client-portal-stat-card border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+          <CardContent className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-sm text-text-muted">{lang === 'ar' ? 'قيد المتابعة' : 'In Progress'}</p>
+              <p className="mt-2 text-3xl font-bold text-warning">{totalPending}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-warning/10 text-warning">
+              <Clock3 className="h-6 w-6" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="client-portal-stat-card border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+          <CardContent className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-sm text-text-muted">{lang === 'ar' ? 'المرفوض' : 'Rejected'}</p>
+              <p className="mt-2 text-3xl font-bold text-error">{totalRejected}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-error/10 text-error">
+              <ShieldAlert className="h-6 w-6" />
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
-        <Card>
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
           <CardHeader>
-            <CardTitle>{lang === 'ar' ? 'حالة النصوص المرسلة' : 'Submitted Scripts Status'}</CardTitle>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle>{lang === 'ar' ? 'أحدث النصوص' : 'Recent Scripts'}</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setActiveSection('scripts')}>
+                {lang === 'ar' ? 'عرض الكل' : 'View all'}
+                <ArrowUpRight className="ms-2 h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <p className="text-sm text-text-muted">{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
-            ) : submissions.length === 0 ? (
-              <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد نصوص مرسلة بعد.' : 'No submitted scripts yet.'}</p>
+          <CardContent className="space-y-3">
+            {recentSubmissions.length === 0 ? (
+              <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد نصوص بعد. ابدأ بإضافة النص الأول.' : 'No scripts yet. Start by adding your first script.'}</p>
             ) : (
-              <div className="space-y-3">
-                {submissions.map((item) => (
-                  <div key={item.scriptId} className="border border-border rounded-lg p-4 bg-surface">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold">{item.title}</p>
-                        <p className="text-sm text-text-muted">
-                          {item.type} • {new Date(item.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={statusVariant(item.status)}>{statusLabel(item.status, lang)}</Badge>
-                        {item.status.toLowerCase() === 'rejected' && (
-                          <Button size="sm" variant="outline" onClick={() => openRejectionDetails(item.scriptId)}>
-                            {lang === 'ar' ? 'عرض تقرير الرفض' : 'View Rejection Report'}
-                          </Button>
-                        )}
-                      </div>
+              recentSubmissions.map((item) => (
+                <div key={item.scriptId} className="rounded-[calc(var(--radius)+0.3rem)] border border-border bg-background/80 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold">{item.title}</p>
+                      <p className="mt-1 text-sm text-text-muted">{item.type} • {new Date(item.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={statusVariant(item.status)}>{statusLabel(item.status, lang)}</Badge>
+                      {item.status.toLowerCase() === 'rejected' ? (
+                        <Button size="sm" variant="outline" onClick={() => openRejectionDetails(item.scriptId)}>
+                          {lang === 'ar' ? 'تقرير الرفض' : 'Rejection report'}
+                        </Button>
+                      ) : null}
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))
             )}
           </CardContent>
         </Card>
-      </main>
+
+        <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+          <CardHeader>
+            <CardTitle>{lang === 'ar' ? 'الأقسام التالية في الطريق' : 'Next sections in progress'}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="rounded-[calc(var(--radius)+0.3rem)] border border-border bg-background/80 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary/15 text-secondary">
+                  <Award className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-semibold">{lang === 'ar' ? 'الشهادات' : 'Certificates'}</p>
+                  <p className="mt-1 text-sm leading-6 text-text-muted">
+                    {lang === 'ar' ? 'ربط أقوى مع الوثائق والشهادات المعتمدة سيصل في مرحلة منفصلة.' : 'A stronger issued-documents and certificates section will arrive in a dedicated phase.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-[calc(var(--radius)+0.3rem)] border border-border bg-background/80 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <BellRing className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-semibold">{lang === 'ar' ? 'الإشعارات' : 'Notifications'}</p>
+                  <p className="mt-1 text-sm leading-6 text-text-muted">
+                    {lang === 'ar' ? 'سنفصل تنبيهات العميل لاحقًا بدل الاعتماد على متابعة الحالة يدويًا.' : 'Client notifications will be separated into their own stream in a later phase.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-[calc(var(--radius)+0.3rem)] border border-border bg-background/80 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-success/10 text-success">
+                  <Settings2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-semibold">{lang === 'ar' ? 'الإعدادات' : 'Settings'}</p>
+                  <p className="mt-1 text-sm leading-6 text-text-muted">
+                    {lang === 'ar' ? 'إعدادات الحساب والشركة ستنتقل لاحقًا إلى صفحة مستقلة شبيهة بالنظام القديم.' : 'Account and company settings will move later into a dedicated page closer to the old dashboard.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+    </div>
+  );
+
+  const renderPlaceholderSection = (titleAr: string, titleEn: string, bodyAr: string, bodyEn: string) => (
+    <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+      <CardHeader>
+        <CardTitle>{lang === 'ar' ? titleAr : titleEn}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="max-w-3xl text-sm leading-7 text-text-muted">{lang === 'ar' ? bodyAr : bodyEn}</p>
+      </CardContent>
+    </Card>
+  );
+
+  const renderActiveSection = () => {
+    if (activeSection === 'overview') return renderOverview();
+    if (activeSection === 'scripts') return renderSubmissionList();
+    if (activeSection === 'new-script') return renderNewScriptForm();
+    if (activeSection === 'certificates') {
+      return renderPlaceholderSection(
+        'قسم الشهادات',
+        'Certificates Section',
+        'هذا القسم محجوز للمرحلة القادمة حتى نربطه بشكل صحيح مع مخرجات التقارير والوثائق المعتمدة داخل النظام.',
+        'This section is reserved for the next phase, when we wire it properly to issued reports and approved documents.',
+      );
+    }
+    if (activeSection === 'notifications') {
+      return renderPlaceholderSection(
+        'قسم الإشعارات',
+        'Notifications Section',
+        'سنفصل الإشعارات هنا في مرحلة لاحقة. حاليًا يمكنك متابعة آخر الحالات مباشرة من قسم النصوص.',
+        'Notifications will be separated here in a later phase. For now, you can track the latest statuses from the scripts section.',
+      );
+    }
+    return renderPlaceholderSection(
+      'قسم الإعدادات',
+      'Settings Section',
+      'الإعدادات ستأتي لاحقًا بصياغة أقرب للنظام القديم، مع الحفاظ على الربط الحالي مع بيانات الحساب والشركة.',
+      'Settings will come later in a structure closer to the old dashboard, while preserving the current account and company wiring.',
+    );
+  };
+
+  return (
+    <ClientPortalLayout
+      lang={lang}
+      companyName={
+        profile?.company
+          ? (lang === 'ar' ? profile.company.nameAr : profile.company.nameEn)
+          : (lang === 'ar' ? 'جاري تحميل معلومات الشركة...' : 'Loading company profile...')
+      }
+      userName={user?.name}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      onToggleLanguage={toggleLang}
+      onLogout={handleLogout}
+      subscriptionLabel={lang === 'ar' ? 'الاشتراك: مجاني' : 'Subscription: Free'}
+      summary={{
+        totalScripts: submissions.length,
+        rejectedScripts: totalRejected,
+      }}
+    >
+      <div className="space-y-4">
+        {error && (
+          <div className="rounded-[calc(var(--radius)+0.3rem)] border border-error/20 bg-error/10 p-3 text-sm text-error">{error}</div>
+        )}
+        {notice && (
+          <div className="rounded-[calc(var(--radius)+0.3rem)] border border-success/20 bg-success/10 p-3 text-sm text-success">{notice}</div>
+        )}
+        {renderActiveSection()}
+      </div>
 
       <Modal
         isOpen={detailsOpen}
@@ -667,6 +930,6 @@ export function ClientPortal() {
           })()
         )}
       </Modal>
-    </div>
+    </ClientPortalLayout>
   );
 }
