@@ -253,7 +253,7 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
       <section
         className="relative overflow-hidden rounded-[calc(var(--radius)+0.75rem)] border border-border/80 shadow-[0_24px_70px_rgba(31,23,36,0.08)]"
         style={{
-          backgroundImage: "url('/cover.jpg')",
+          backgroundImage: "url('/bannerguide.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
