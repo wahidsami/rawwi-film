@@ -88,6 +88,47 @@ function renderElementLabel(element: CertificateTemplateElement) {
   return element.text || element.type;
 }
 
+function getCanvasBackgroundStyle(template: CertificateTemplate, showGrid: boolean) {
+  const images: string[] = [];
+  const sizes: string[] = [];
+  const repeats: string[] = [];
+  const positions: string[] = [];
+
+  if (template.backgroundImageUrl) {
+    const imageSize = template.backgroundImageFit === 'tile' ? '160px 160px' : template.backgroundImageFit;
+    const imageRepeat = template.backgroundImageFit === 'tile' ? 'repeat' : 'no-repeat';
+
+    images.push(`linear-gradient(rgba(255,255,255,${1 - template.backgroundImageOpacity}), rgba(255,255,255,${1 - template.backgroundImageOpacity}))`);
+    sizes.push('100% 100%');
+    repeats.push('no-repeat');
+    positions.push('center');
+
+    images.push(`url("${template.backgroundImageUrl}")`);
+    sizes.push(imageSize);
+    repeats.push(imageRepeat);
+    positions.push('center');
+  }
+
+  if (showGrid) {
+    images.push('linear-gradient(rgba(17,24,39,.12) 1px, transparent 1px)');
+    sizes.push(`${GRID_SIZE}px ${GRID_SIZE}px`);
+    repeats.push('repeat');
+    positions.push('center');
+
+    images.push('linear-gradient(90deg, rgba(17,24,39,.12) 1px, transparent 1px)');
+    sizes.push(`${GRID_SIZE}px ${GRID_SIZE}px`);
+    repeats.push('repeat');
+    positions.push('center');
+  }
+
+  return {
+    backgroundImage: images.join(', '),
+    backgroundSize: sizes.join(', '),
+    backgroundRepeat: repeats.join(', '),
+    backgroundPosition: positions.join(', '),
+  };
+}
+
 export function CertificateDesigner() {
   const { templateId = '' } = useParams();
   const navigate = useNavigate();
@@ -357,19 +398,7 @@ export function CertificateDesigner() {
               width: 'min(100%, 1000px)',
               aspectRatio: `${canvasRatio}`,
               backgroundColor: template.backgroundColor,
-              backgroundImage: [
-                template.backgroundImageUrl ? `linear-gradient(rgba(255,255,255,${1 - template.backgroundImageOpacity}), rgba(255,255,255,${1 - template.backgroundImageOpacity})), url("${template.backgroundImageUrl}")` : '',
-                showGrid ? 'linear-gradient(rgba(17,24,39,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,.12) 1px, transparent 1px)' : '',
-              ].filter(Boolean).join(', '),
-              backgroundSize: [
-                template.backgroundImageUrl ? (template.backgroundImageFit === 'tile' ? '160px 160px' : template.backgroundImageFit) : '',
-                showGrid ? `${GRID_SIZE}px ${GRID_SIZE}px, ${GRID_SIZE}px ${GRID_SIZE}px` : '',
-              ].filter(Boolean).join(', '),
-              backgroundRepeat: [
-                template.backgroundImageUrl ? (template.backgroundImageFit === 'tile' ? 'repeat' : 'no-repeat') : '',
-                showGrid ? 'repeat, repeat' : '',
-              ].filter(Boolean).join(', '),
-              backgroundPosition: 'center',
+              ...getCanvasBackgroundStyle(template, showGrid),
             }}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
