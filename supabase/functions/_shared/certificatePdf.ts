@@ -100,6 +100,29 @@ function isArabicText(value: string) {
   return /[\u0600-\u06FF]/.test(value);
 }
 
+function getSupabasePublicUrl() {
+  return (
+    Deno.env.get("SUPABASE_URL")
+    || Deno.env.get("PUBLIC_SUPABASE_URL")
+    || Deno.env.get("PUBLIC_SITE_URL")
+    || ""
+  ).replace(/\/+$/, "");
+}
+
+function resolvePublicStorageUrl(pathOrUrl: string | null | undefined, bucket = "company-logos") {
+  const value = String(pathOrUrl ?? "").trim();
+  if (!value) return null;
+  if (/^https?:\/\//i.test(value) || value.startsWith("data:")) return value;
+  const base = getSupabasePublicUrl();
+  if (!base) return null;
+  const cleanPath = value.replace(/^\/+/, "");
+  if (cleanPath.startsWith("storage/v1/object/public/")) {
+    return `${base}/${cleanPath}`;
+  }
+  const objectPath = cleanPath.startsWith(`${bucket}/`) ? cleanPath : `${bucket}/${cleanPath}`;
+  return `${base}/storage/v1/object/public/${objectPath}`;
+}
+
 function hasArabicTemplateText(template: CertificateTemplate | null | undefined) {
   if (!template) return false;
   const elements = Array.isArray(template.templateData?.elements) ? template.templateData.elements : [];
@@ -165,8 +188,9 @@ async function loadImageSource(src: string | null | undefined): Promise<{ mime: 
   const value = String(src ?? "").trim();
   if (!value) return null;
   if (value.startsWith("data:")) return parseDataUrl(value);
-  if (!/^https?:\/\//i.test(value)) return null;
-  const response = await fetch(value);
+  const resolved = /^https?:\/\//i.test(value) ? value : resolvePublicStorageUrl(value) ?? value;
+  if (!/^https?:\/\//i.test(resolved)) return null;
+  const response = await fetch(resolved);
   if (!response.ok) return null;
   const mime = (response.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
   return { mime, bytes: new Uint8Array(await response.arrayBuffer()) };
@@ -176,6 +200,12 @@ function isSvgSource(src: string | null | undefined) {
   const value = String(src ?? "").trim().toLowerCase();
   if (!value) return false;
   return value.startsWith("data:image/svg+xml") || value.endsWith(".svg");
+}
+
+function normalizePdfTextForRtl(text: string) {
+  const value = String(text ?? "");
+  if (!isArabicText(value)) return value;
+  return value.replace(/([0-9]+)/g, "\u200E$1\u200E");
 }
 
 async function embedImage(
@@ -286,21 +316,46 @@ function drawTextBox(
   const size = options.fontSize;
   const lineHeight = Math.max(size * 1.25, options.minLineHeight ?? size * 1.25);
   const lines = wrapText(font, text, size, box.width);
+  const rtl = isArabicText(text);
   let cursorY = box.y + box.height - size;
   for (const line of lines) {
-    const lineWidth = font.widthOfTextAtSize(line, size);
+    const tokens = String(line ?? "").trim().split(/\s+/).filter(Boolean);
+    const renderedTokens = rtl ? tokens.map((token) => normalizePdfTextForRtl(token)) : tokens;
+    const lineWidth = renderedTokens.reduce((sum, token, index) => {
+      const tokenWidth = font.widthOfTextAtSize(token, size);
+      const spaceWidth = index < renderedTokens.length - 1 ? font.widthOfTextAtSize(" ", size) : 0;
+      return sum + tokenWidth + spaceWidth;
+    }, 0);
     let x = box.x;
     if (options.align === "center") x = box.x + Math.max(0, (box.width - lineWidth) / 2);
     if (options.align === "right") x = box.x + Math.max(0, box.width - lineWidth);
     if (cursorY < box.y - size) break;
-    page.drawText(line, {
-      x,
-      y: cursorY,
-      size,
-      font,
-      color: options.color,
-      opacity: options.opacity ?? 1,
-    });
+    if (!rtl) {
+      page.drawText(line, {
+        x,
+        y: cursorY,
+        size,
+        font,
+        color: options.color,
+        opacity: options.opacity ?? 1,
+      });
+    } else {
+      let cursorX = x + lineWidth;
+      for (let i = 0; i < renderedTokens.length; i++) {
+        const token = renderedTokens[i] ?? "";
+        const tokenWidth = font.widthOfTextAtSize(token, size);
+        cursorX -= tokenWidth;
+        page.drawText(token, {
+          x: cursorX,
+          y: cursorY,
+          size,
+          font,
+          color: options.color,
+          opacity: options.opacity ?? 1,
+        });
+        if (i < renderedTokens.length - 1) cursorX -= font.widthOfTextAtSize(" ", size);
+      }
+    }
     cursorY -= lineHeight;
   }
 }
@@ -598,7 +653,7 @@ function renderFallbackCertificate(
     color: rgb(0.12, 0.12, 0.2),
   });
   page.drawText(`Certificate Number: ${values.certificateNumber}`, { x: 60, y: pageDims.height - 125, size: 14, font: fonts.cairoRegular });
-  page.drawText(`Script Title: ${values.scriptTitle}`, { x: 60, y: pageDims.height - 155, size: 14, font: fonts.cairoRegular });
+  page.drawText(`Script Title: ${normalizePdfTextForRtl(values.scriptTitle)}`, { x: 60, y: pageDims.height - 155, size: 14, font: fonts.cairoRegular });
   page.drawText(`Company: ${values.companyName || "-"}`, { x: 60, y: pageDims.height - 185, size: 14, font: fonts.cairoRegular });
   page.drawText(`Approved At: ${values.approvedAt || values.issuedAt}`, { x: 60, y: pageDims.height - 215, size: 11, font: fonts.cairoRegular, color: rgb(0.35, 0.35, 0.45) });
 }
