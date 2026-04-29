@@ -231,6 +231,25 @@ function resolveFormattedValues(input: CertificatePdfInput, hasArabic: boolean) 
   const issuedAt = new Date(input.issuedAt);
   const approvedAt = input.approvedAt ? new Date(input.approvedAt) : null;
   const amountPaid = Number.isFinite(input.amountPaid) ? Number(input.amountPaid) : 0;
+  const formatDualDate = (date: Date | null) => {
+    if (!date || !Number.isFinite(date.getTime())) return "";
+    if (!hasArabic) {
+      return date.toLocaleDateString(locale);
+    }
+    const hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(date);
+    const gregorian = new Intl.DateTimeFormat("ar-SA", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(date);
+    return `${hijri} هـ الموافق ${gregorian} م`;
+  };
   return {
     certificateNumber: input.certificateNumber,
     scriptTitle: input.scriptTitle,
@@ -241,6 +260,8 @@ function resolveFormattedValues(input: CertificatePdfInput, hasArabic: boolean) 
     companyLogoUrl: input.companyLogoUrl ?? null,
     issuedAt: Number.isFinite(issuedAt.getTime()) ? issuedAt.toLocaleDateString(locale) : "",
     approvedAt: approvedAt && Number.isFinite(approvedAt.getTime()) ? approvedAt.toLocaleDateString(locale) : "",
+    issuedAtDual: formatDualDate(issuedAt),
+    approvedAtDual: formatDualDate(approvedAt),
     amountPaidFormatted: new Intl.NumberFormat(locale, {
       style: "currency",
       currency: input.currency || "SAR",
@@ -262,6 +283,8 @@ function resolveTemplateText(text: string, values: ReturnType<typeof resolveForm
     .replaceAll("{{company_name_en}}", values.companyNameEn || values.companyName)
     .replaceAll("{{issued_at}}", values.issuedAt)
     .replaceAll("{{approved_at}}", values.approvedAt)
+    .replaceAll("{{issued_at_dual}}", values.issuedAtDual)
+    .replaceAll("{{approved_at_dual}}", values.approvedAtDual)
     .replaceAll("{{amount_paid}}", values.amountPaidFormatted)
     .replaceAll("{{amount_paid_en}}", values.amountPaidFormatted)
     .replaceAll("{{verification_url}}", values.verificationUrl);

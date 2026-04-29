@@ -107,16 +107,14 @@ function makeElement(type: CertificateElementType, lang: 'ar' | 'en'): Certifica
   if (type === 'logo') return { ...base, width: 160, height: 80, logoSource: 'film_commission', imageUrl: FILM_LOGO_PLACEHOLDER };
   if (type === 'qr') return { ...base, width: 120, height: 120 };
   if (type === 'image') return { ...base, width: 180, height: 120 };
-  if (type === 'date') return { ...base, width: 220, height: 48, text: '{{issued_at}}' };
+  if (type === 'date') return { ...base, width: 340, height: 56, text: '{{issued_at_dual}}' };
   if (type === 'footer') return { ...base, width: 520, height: 56, text: lang === 'ar' ? 'نص تذييل الشهادة' : 'Certificate footer text' };
   if (type === 'paragraph') {
     return {
       ...base,
       width: 520,
       height: 120,
-      text: lang === 'ar'
-        ? 'تشهد راوي فيلم بأن {{script_title}} قد تمت الموافقة عليه لصالح {{company_name}}.'
-        : 'This certifies that {{script_title}} has been approved for {{company_name}}.',
+      text: lang === 'ar' ? 'اكتب النص هنا' : 'Write your text here',
     };
   }
   if (type === 'script_name') return { ...base, width: 520, height: 64, text: '{{script_title}}', fontSize: 28, bold: true };
@@ -133,12 +131,30 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-function renderElementLabel(element: CertificateTemplateElement) {
+function formatDualDate(date: Date, lang: 'ar' | 'en') {
+  if (!Number.isFinite(date.getTime())) return '';
+  const gregorianLocale = lang === 'ar' ? 'ar-SA' : 'en-US';
+  const gregorian = new Intl.DateTimeFormat(gregorianLocale, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+  const hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+  return lang === 'ar' ? `${hijri} هـ الموافق ${gregorian} م` : gregorian;
+}
+
+function renderElementLabel(element: CertificateTemplateElement, lang: 'ar' | 'en') {
   if (element.type === 'qr') return 'QR';
   if (element.type === 'logo' && element.logoSource === 'client') return 'CLIENT LOGO';
   if (element.type === 'script_name') return '{{script_title}}';
   if (element.type === 'company_name') return '{{company_name}}';
-  if (element.type === 'date') return element.text || '{{issued_at}}';
+  if (element.type === 'date') return formatDualDate(new Date(), lang);
   return element.text || element.type;
 }
 
@@ -462,6 +478,8 @@ export function CertificateDesigner() {
       .replaceAll('{{company_name}}', lang === 'ar' ? 'اسم الشركة المالكة' : 'Owning Company Name')
       .replaceAll('{{issued_at}}', new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US'))
       .replaceAll('{{approved_at}}', new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US'))
+      .replaceAll('{{issued_at_dual}}', formatDualDate(new Date(), lang))
+      .replaceAll('{{approved_at_dual}}', formatDualDate(new Date(), lang))
       .replaceAll('{{certificate_number}}', 'CERT-XXXXXX')
       .replaceAll('{{amount_paid}}', lang === 'ar' ? '٤٬٠٢٥ ر.س' : 'SAR 4,025');
   };
@@ -609,7 +627,7 @@ export function CertificateDesigner() {
                 ) : element.type === 'image' || element.type === 'logo' ? (
                   element.imageUrl ? <img src={element.imageUrl} alt="" className="h-full w-full object-contain" /> : <div className="flex h-full items-center justify-center border border-dashed border-text-muted text-xs">{text.image}</div>
                 ) : (
-                  <div className="h-full w-full overflow-hidden whitespace-pre-wrap">{renderElementLabel(element)}</div>
+                <div className="h-full w-full overflow-hidden whitespace-pre-wrap">{renderElementLabel(element, lang)}</div>
                 )}
                 <span
                   className="absolute bottom-0 end-0 h-4 w-4 cursor-se-resize rounded-tl bg-primary"
@@ -758,11 +776,13 @@ export function CertificateDesigner() {
                 ) : (
                   <div className="h-full w-full whitespace-pre-wrap">
                     {resolvePreviewText(
-                      element.type === 'script_name'
-                        ? '{{script_title}}'
-                        : element.type === 'company_name'
-                          ? '{{company_name}}'
-                          : (element.text ?? ''),
+                      element.type === 'date'
+                        ? '{{issued_at_dual}}'
+                        : element.type === 'script_name'
+                          ? '{{script_title}}'
+                          : element.type === 'company_name'
+                            ? '{{company_name}}'
+                            : (element.text ?? ''),
                     )}
                   </div>
                 )}

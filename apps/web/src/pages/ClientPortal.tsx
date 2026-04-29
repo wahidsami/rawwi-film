@@ -77,6 +77,14 @@ export function ClientPortal() {
     () => buildScriptClassificationSelectOptions(lang === 'ar' ? 'ar' : 'en', scriptClassificationOptions),
     [lang, scriptClassificationOptions],
   );
+  const expectedRankOptions = useMemo(
+    () => [
+      { value: 'high', label: lang === 'ar' ? 'عالية' : 'High' },
+      { value: 'medium', label: lang === 'ar' ? 'متوسطة' : 'Medium' },
+      { value: 'low', label: lang === 'ar' ? 'منخفضة' : 'Low' },
+    ],
+    [lang],
+  );
 
   const [profile, setProfile] = useState<ClientPortalMeResponse | null>(null);
   const [submissions, setSubmissions] = useState<ClientPortalSubmissionItem[]>([]);
@@ -92,14 +100,14 @@ export function ClientPortal() {
     title: string;
     type: 'Film' | 'Series';
     workClassification: string;
+    expectedRank: 'low' | 'medium' | 'high';
     synopsis: string;
-    receivedAt: string;
   }>({
     title: '',
     type: 'Film' as 'Film' | 'Series',
     workClassification: LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
+    expectedRank: 'medium',
     synopsis: '',
-    receivedAt: new Date().toISOString().slice(0, 10),
   });
   const [file, setFile] = useState<File | null>(null);
   const [manualText, setManualText] = useState('');
@@ -255,8 +263,19 @@ export function ClientPortal() {
 
   const refreshSubmissionsSilently = useCallback(async () => {
     try {
-      const list = await clientPortalApi.getSubmissions();
+      const [list, certDashboard] = await Promise.all([
+        clientPortalApi.getSubmissions(),
+        certificatesApi.getClientDashboard().catch(() => null),
+      ]);
       setSubmissions(list);
+      if (certDashboard) {
+        const paidIds = new Set(
+          (certDashboard.items ?? [])
+            .filter((item) => item.certificateStatus === 'issued' || item.latestPayment?.paymentStatus === 'completed')
+            .map((item) => item.scriptId),
+        );
+        setPaidScriptIds(paidIds);
+      }
     } catch {
       // Keep current list if a background refresh fails.
     }
@@ -279,7 +298,7 @@ export function ClientPortal() {
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       refreshSubmissionsSilently();
-    }, 15000);
+    }, 5000);
 
     const handleFocus = () => {
       refreshSubmissionsSilently();
@@ -291,6 +310,22 @@ export function ClientPortal() {
       window.removeEventListener('focus', handleFocus);
     };
   }, [refreshSubmissionsSilently]);
+
+  useEffect(() => {
+    const companyId = profile?.company?.companyId;
+    if (!companyId) return;
+
+    const channel = supabase
+      .channel(`client-portal-scripts:${companyId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'scripts', filter: `company_id=eq.${companyId}` }, () => {
+        refreshSubmissionsSilently();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.company?.companyId, refreshSubmissionsSilently]);
 
   const uploadScriptDocument = async (scriptId: string, companyId: string, uploadFile: File): Promise<UploadResult> => {
     let { data: { session } } = await supabase.auth.getSession();
@@ -357,9 +392,9 @@ export function ClientPortal() {
         title: form.title.trim(),
         type: form.type,
         workClassification: form.workClassification,
+        expectedRank: form.expectedRank,
         synopsis: form.synopsis.trim(),
         status: 'in_review',
-        receivedAt: form.receivedAt || null,
         createdAt: new Date().toISOString(),
       };
       const created = await scriptsApi.addScript(scriptPayload);
@@ -408,8 +443,8 @@ export function ClientPortal() {
         title: '',
         type: 'Film',
         workClassification: workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
+        expectedRank: 'medium',
         synopsis: '',
-        receivedAt: new Date().toISOString().slice(0, 10),
       });
       setFile(null);
       setManualText('');
@@ -449,8 +484,8 @@ export function ClientPortal() {
           title: form.title.trim(),
           type: form.type,
           workClassification: form.workClassification,
+          expectedRank: form.expectedRank,
           synopsis: form.synopsis.trim(),
-          receivedAt: form.receivedAt || null,
           status: 'draft',
         } as Partial<Script>);
       } else {
@@ -460,9 +495,9 @@ export function ClientPortal() {
           title: form.title.trim(),
           type: form.type,
           workClassification: form.workClassification,
+          expectedRank: form.expectedRank,
           synopsis: form.synopsis.trim(),
           status: 'draft',
-          receivedAt: form.receivedAt || null,
           createdAt: new Date().toISOString(),
         };
         await scriptsApi.addScript(scriptPayload);
@@ -498,7 +533,7 @@ export function ClientPortal() {
       ...prev,
       title: item.title ?? '',
       type: item.type === 'Series' ? 'Series' : 'Film',
-      receivedAt: item.receivedAt ? String(item.receivedAt).slice(0, 10) : new Date().toISOString().slice(0, 10),
+      expectedRank: (item as ClientPortalSubmissionItem & { expectedRank?: 'low' | 'medium' | 'high' | null }).expectedRank ?? prev.expectedRank ?? 'medium',
       synopsis: prev.synopsis ?? '',
     }));
     setActiveSection('new-script');
@@ -777,12 +812,20 @@ export function ClientPortal() {
               ))}
             </select>
           </div>
-          <Input
-            label={lang === 'ar' ? 'تاريخ الاستلام' : 'Received Date'}
-            type="date"
-            value={form.receivedAt}
-            onChange={(e) => setForm((prev) => ({ ...prev, receivedAt: e.target.value }))}
-          />
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'الرتبة المتوقعة' : 'Expected Rank'}</label>
+            <select
+              value={form.expectedRank}
+              onChange={(e) => setForm((prev) => ({ ...prev, expectedRank: e.target.value as 'low' | 'medium' | 'high' }))}
+              className="h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 text-sm"
+            >
+              {expectedRankOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="md:col-span-2">
             <Textarea
               label={lang === 'ar' ? 'ملخص النص' : 'Synopsis'}
@@ -1117,6 +1160,14 @@ export function ClientPortal() {
         'Notifications will be separated here in a later phase. For now, you can track the latest statuses from the scripts section.',
       );
     }
+    if (activeSection === 'compliance-guidelines') {
+      return renderPlaceholderSection(
+        'ارشادات الامتثال',
+        'Compliance Guidelines',
+        'coming soon',
+        'coming soon',
+      );
+    }
     return renderPlaceholderSection(
       'قسم الإعدادات',
       'Settings Section',
@@ -1138,7 +1189,7 @@ export function ClientPortal() {
       onSectionChange={setActiveSection}
       onToggleLanguage={toggleLang}
       onLogout={handleLogout}
-      subscriptionLabel={lang === 'ar' ? 'الاشتراك: مجاني' : 'Subscription: Free'}
+      subscriptionLabel=""
       summary={{
         totalScripts: submissions.length,
         rejectedScripts: totalRejected,

@@ -11,6 +11,7 @@ import {
   LogOut,
   PlusSquare,
   Settings,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -23,6 +24,7 @@ export type ClientPortalSection =
   | 'payment'
   | 'certificates'
   | 'notifications'
+  | 'compliance-guidelines'
   | 'settings';
 
 type ClientPortalLayoutProps = {
@@ -93,6 +95,14 @@ const navItems: NavItem[] = [
     icon: Bell,
   },
   {
+    id: 'compliance-guidelines',
+    labelAr: 'ارشادات الامتثال',
+    labelEn: 'Compliance Guidelines',
+    descriptionAr: 'إرشادات الامتثال والضوابط',
+    descriptionEn: 'Compliance guidance and controls',
+    icon: ShieldCheck,
+  },
+  {
     id: 'settings',
     labelAr: 'الإعدادات',
     labelEn: 'Settings',
@@ -143,7 +153,7 @@ export function ClientPortalLayout({
             </div>
 
             <div className="flex flex-wrap items-center gap-2 md:gap-3">
-              <Badge variant="success">{subscriptionLabel}</Badge>
+              {subscriptionLabel ? <Badge variant="success">{subscriptionLabel}</Badge> : null}
               <Badge variant="outline">
                 {isArabic ? `إجمالي النصوص: ${summary.totalScripts}` : `Total Scripts: ${summary.totalScripts}`}
               </Badge>
@@ -194,22 +204,6 @@ export function ClientPortalLayout({
                 <CollapseIcon className="h-4 w-4" />
               </Button>
             </div>
-
-            {!isSidebarCollapsed ? (
-              <div className="client-portal-hero rounded-[calc(var(--radius)+0.6rem)] px-4 py-5 text-white">
-                <p className="text-xs font-medium uppercase tracking-[0.24em] text-white/70">
-                  {isArabic ? 'مساحة الشركة' : 'Company Space'}
-                </p>
-                <h2 className="mt-2 text-lg font-semibold">
-                  {isArabic ? 'إدارة النصوص والطلبات' : 'Manage Scripts and Requests'}
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-white/80">
-                  {isArabic
-                    ? 'هذا هو الغلاف الأساسي للبوابة الجديدة. سنضيف الأقسام تدريجيًا مع الحفاظ على ربطها الكامل مع الإدارة.'
-                    : 'This is the foundation shell of the new portal. Sections will be added gradually while keeping full admin wiring.'}
-                </p>
-              </div>
-            ) : null}
 
             <nav className={cn('space-y-2', !isSidebarCollapsed && 'mt-4')}>
               {navItems.map((item) => {
