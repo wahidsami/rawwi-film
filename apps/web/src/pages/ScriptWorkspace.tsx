@@ -5697,7 +5697,7 @@ export function ScriptWorkspace() {
                     style={{ left: tooltipPos.x + 12, top: tooltipPos.y + 8 }}
                   >
                     <div className="text-xs font-semibold text-text-muted mb-1">
-                      {lang === 'ar' ? 'مادة' : 'Art'} {formatAtomDisplay(tooltipFinding.articleId, tooltipFinding.atomId)}
+                      {getFindingDisplayTitle(tooltipFinding)}
                     </div>
                     <p className="text-sm text-text-main line-clamp-3" dir="rtl">{tooltipFinding.descriptionAr || tooltipFinding.evidenceSnippet}</p>
                     <Badge variant={tooltipFinding.reviewStatus === 'approved' ? 'success' : 'error'} className="mt-1.5 text-[10px]">

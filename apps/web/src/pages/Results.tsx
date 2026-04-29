@@ -1548,13 +1548,6 @@ export function Results() {
           "{f.evidenceSnippet}"
         </div>
         <div className="mt-2 text-xs text-text-muted space-y-1">
-          <div>{lang === 'ar' ? 'المادة الأساسية:' : 'Primary article:'} <span className="text-text-main">{articleLabel(primaryArticle)}</span></div>
-          {relatedArticles.length > 0 && (
-            <div>
-              {lang === 'ar' ? 'مواد مرتبطة:' : 'Related articles:'}{" "}
-              <span className="text-text-main">{relatedArticles.map(articleLabel).join(lang === 'ar' ? '، ' : ', ')}</span>
-            </div>
-          )}
           {pillarId && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{pillarId}</span></div>}
           {showRationale && (
             <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{rationale}</span></div>
@@ -1679,10 +1672,6 @@ export function Results() {
           "{f.evidenceSnippet}"
         </div>
         <div className="mt-2 text-xs text-text-muted space-y-1">
-          <div>{lang === 'ar' ? 'المادة الأساسية:' : 'Primary article:'} <span className="text-text-main">{articleLabel(f.primaryArticleId)}</span></div>
-          {f.primaryAtomId && (
-            <div>{lang === 'ar' ? 'البند:' : 'Atom:'} <span className="text-text-main">{f.primaryAtomId}</span></div>
-          )}
           {rationale && (
             <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{rationale}</span></div>
           )}
@@ -1936,15 +1925,6 @@ export function Results() {
                                 {findingSourceLabel(f.source ?? 'ai')}
                               </span>
                             </div>
-                            <div>{lang === 'ar' ? 'المادة الأساسية:' : 'Primary article:'} <span className="text-text-main">{articleLabel(articleId)}</span></div>
-                            {((f.related_article_ids ?? []).filter((id) => id !== articleId).length > 0) && (
-                              <div>
-                                {lang === 'ar' ? 'مواد مرتبطة:' : 'Related articles:'}{" "}
-                                <span className="text-text-main">
-                                  {(f.related_article_ids ?? []).filter((id) => id !== articleId).map(articleLabel).join(lang === 'ar' ? '، ' : ', ')}
-                                </span>
-                              </div>
-                            )}
                             {f.pillar_id && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{f.pillar_id}</span></div>}
                             {cardRationale && (
                               <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{cardRationale}</span></div>
