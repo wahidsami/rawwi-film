@@ -21,6 +21,18 @@ type ClientCertificatesSectionProps = {
 };
 
 type CertificateStatus = CertificateDashboardItem['certificateStatus'];
+type CertificateExportDebug = {
+  scriptId: string;
+  certificateNumber: string;
+  templateId: string | null;
+  templateElementsRaw: number;
+  templateElementsValid: number;
+  usedTemplate: boolean;
+  firstBlobSize: number;
+  fallbackBlobSize: number | null;
+  usedFallbackLayout: boolean;
+  values: ReturnType<typeof getCertificateValues>;
+};
 
 const fontBase = typeof window !== 'undefined' ? window.location.origin : '';
 
@@ -228,11 +240,12 @@ function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl }: 
   );
 }
 
-function CertificatePdfDocument({ item, lang, template, qrDataUrl }: {
+function CertificatePdfDocument({ item, lang, template, qrDataUrl, forceBuiltinFont = false }: {
   item: CertificateDashboardItem;
   lang: 'ar' | 'en';
   template?: CertificateTemplate | null;
   qrDataUrl: string;
+  forceBuiltinFont?: boolean;
 }) {
   const values = getCertificateValues(item, lang);
   const page = pageDimensions(template);
@@ -264,7 +277,7 @@ function CertificatePdfDocument({ item, lang, template, qrDataUrl }: {
   }
   return (
     <Document>
-      <Page size="A4" orientation="landscape" style={{ padding: 44, backgroundColor: '#fffdf8', color: '#1f2333', fontFamily: lang === 'ar' ? 'CertificateCairo' : 'Helvetica' }}>
+      <Page size="A4" orientation="landscape" style={{ padding: 44, backgroundColor: '#fffdf8', color: '#1f2333', fontFamily: forceBuiltinFont ? 'Helvetica' : (lang === 'ar' ? 'CertificateCairo' : 'Helvetica') }}>
         <View style={{ borderWidth: 8, borderColor: '#d2ba6a', padding: 28, height: '100%' }}>
           <Text style={{ fontSize: 12, color: '#86652c', letterSpacing: 2 }}>{lang === 'ar' ? 'نظام راوي فيلم' : 'RAAWI FILM SYSTEM'}</Text>
           <Text style={{ marginTop: 10, fontSize: 34, color: '#3c2a63', fontWeight: 700 }}>{lang === 'ar' ? 'شهادة اعتماد النص' : 'Script Approval Certificate'}</Text>
@@ -301,31 +314,29 @@ async function downloadCertificateDocument(item: CertificateDashboardItem, lang:
   const certificateNumber = item.certificate?.certificateNumber ?? 'certificate';
   const values = getCertificateValues(item, lang);
   const templateElements = sanitizeTemplateElements(template);
-  if (import.meta.env.DEV) {
-    console.group('[certificate-export]');
-    console.info('scriptId:', item.scriptId);
-    console.info('certificateNumber:', certificateNumber);
-    console.info('templateId:', template?.id ?? null);
-    console.info('templateElements(raw):', template?.templateData?.elements?.length ?? 0);
-    console.info('templateElements(valid):', templateElements.length);
-    console.info('values:', values);
-    console.groupEnd();
-  }
+  const debug: CertificateExportDebug = {
+    scriptId: item.scriptId,
+    certificateNumber,
+    templateId: template?.id ?? null,
+    templateElementsRaw: template?.templateData?.elements?.length ?? 0,
+    templateElementsValid: templateElements.length,
+    usedTemplate: Boolean(template && templateElements.length > 0),
+    firstBlobSize: 0,
+    fallbackBlobSize: null,
+    usedFallbackLayout: false,
+    values,
+  };
   const qrDataUrl = await QRCode.toDataURL(getCertificateVerificationUrl(item), {
     errorCorrectionLevel: 'M',
     margin: 1,
     scale: 8,
   });
   let blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={template} qrDataUrl={qrDataUrl} />).toBlob();
+  debug.firstBlobSize = blob.size;
   if (blob.size < 1500) {
-    if (import.meta.env.DEV) {
-      console.warn('[certificate-export] template blob too small, retrying with fallback layout', {
-        scriptId: item.scriptId,
-        certificateNumber,
-        blobSize: blob.size,
-      });
-    }
-    blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={null} qrDataUrl={qrDataUrl} />).toBlob();
+    debug.usedFallbackLayout = true;
+    blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={null} qrDataUrl={qrDataUrl} forceBuiltinFont />).toBlob();
+    debug.fallbackBlobSize = blob.size;
   }
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -335,6 +346,7 @@ async function downloadCertificateDocument(item: CertificateDashboardItem, lang:
   link.click();
   document.body.removeChild(link);
   window.setTimeout(() => URL.revokeObjectURL(url), 500);
+  return debug;
 }
 
 export function ClientCertificatesSection({ lang }: ClientCertificatesSectionProps) {
@@ -346,6 +358,7 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
   const [selectedCardId, setSelectedCardId] = useState('');
   const [isPaying, setIsPaying] = useState(false);
   const [downloadingId, setDownloadingId] = useState('');
+  const [exportDebug, setExportDebug] = useState<CertificateExportDebug | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -411,7 +424,13 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
     setDownloadingId(item.scriptId);
     setError('');
     try {
-      await downloadCertificateDocument(item, lang, data?.defaultTemplate ?? null);
+      const debug = await downloadCertificateDocument(item, lang, data?.defaultTemplate ?? null);
+      setExportDebug(debug);
+      if (debug.usedFallbackLayout && (debug.fallbackBlobSize ?? 0) < 1500) {
+        setError(lang === 'ar'
+          ? 'تعذر إنشاء شهادة PDF صالحة. يرجى فتح نافذة التشخيص وإرسال البيانات للدعم.'
+          : 'Failed to generate a valid certificate PDF. Open diagnostics and share it with support.');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر إنشاء ملف PDF' : 'Unable to generate PDF'));
     } finally {
@@ -426,6 +445,23 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
       )}
       {notice && (
         <div className="rounded-[calc(var(--radius)+0.3rem)] border border-success/20 bg-success/10 p-3 text-sm text-success">{notice}</div>
+      )}
+      {exportDebug && (
+        <div className="rounded-[calc(var(--radius)+0.3rem)] border border-primary/20 bg-primary/5 p-3 text-xs text-text-muted">
+          <div className="flex items-center justify-between gap-2">
+            <span>{lang === 'ar' ? 'تشخيص تصدير الشهادة متاح' : 'Certificate export diagnostics available'}</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const payload = JSON.stringify(exportDebug, null, 2);
+                navigator.clipboard.writeText(payload).catch(() => {});
+              }}
+            >
+              {lang === 'ar' ? 'نسخ التشخيص' : 'Copy diagnostics'}
+            </Button>
+          </div>
+        </div>
       )}
 
       <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
