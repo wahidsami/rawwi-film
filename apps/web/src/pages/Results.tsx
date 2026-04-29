@@ -3003,37 +3003,32 @@ export function Results() {
 
             <div className="grid gap-2 md:grid-cols-2">
               <div className="rounded-xl border border-border bg-background/60 p-3">
-                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المادة / الذرة' : 'Article / atom'}</div>
-                <div className="font-semibold text-text-main">
-                  {traceModal.primaryArticleId != null
-                    ? formatAtomDisplayR(traceModal.primaryArticleId, traceModal.primaryAtomId ?? null)
-                    : '—'}
-                </div>
-                {traceModal.articleTitle && (
-                  <div className="text-xs text-text-muted mt-1">{traceModal.articleTitle}</div>
-                )}
-              </div>
-              <div className="rounded-xl border border-border bg-background/60 p-3">
                 <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الصفحة / السطور' : 'Page / lines'}</div>
                 <div className="font-semibold text-text-main">
                   {traceModal.pageNumber != null ? `${lang === 'ar' ? 'صفحة' : 'Page'} ${traceModal.pageNumber}` : '—'}
                   {traceModal.lines ? ` • ${traceModal.lines}` : ''}
                 </div>
               </div>
-            </div>
-
-            <div className="grid gap-2 md:grid-cols-2">
               <div className="rounded-xl border border-border bg-background/60 p-3">
-                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'القرار النهائي' : 'Final ruling'}</div>
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الحكم النهائي' : 'Final ruling'}</div>
                 <div className="font-semibold text-text-main">
                   {traceModal.finalRuling
                     ? traceModal.finalRuling
                     : traceModal.statusLabel ?? '—'}
                 </div>
               </div>
+            </div>
+
+            <div className="grid gap-2 md:grid-cols-2">
               <div className="rounded-xl border border-border bg-background/60 p-3">
                 <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'التقرير' : 'Report'}</div>
                 <div className="font-semibold text-text-main">{traceModal.reportTitle ?? '—'}</div>
+              </div>
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المعرف الموحد' : 'Canonical ID'}</div>
+                <div className="font-mono text-xs text-text-main break-all">
+                  {traceModal.canonicalFindingId ?? '—'}
+                </div>
               </div>
             </div>
 
@@ -3055,13 +3050,6 @@ export function Results() {
                 </div>
               </div>
             </div>
-
-            {traceModal.canonicalFindingId && (
-              <div className="rounded-xl border border-border bg-background/60 p-3">
-                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المعرف الموحد' : 'Canonical ID'}</div>
-                <div className="font-mono text-xs text-text-main break-all">{traceModal.canonicalFindingId}</div>
-              </div>
-            )}
 
             {traceModal.analysisMeta && (
               <div className="grid gap-2 md:grid-cols-3">
