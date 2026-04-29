@@ -520,15 +520,10 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
     setDownloadingId(item.scriptId);
     setError('');
     try {
-      const debug = await downloadCertificateDocument(item, lang, data?.defaultTemplate ?? null);
-      setExportDebug(debug);
-      if (debug.usedFallbackLayout && (debug.fallbackBlobSize ?? 0) < 1500) {
-        setError(lang === 'ar'
-          ? 'تعذر إنشاء شهادة PDF صالحة. يرجى فتح نافذة التشخيص وإرسال البيانات للدعم.'
-          : 'Failed to generate a valid certificate PDF. Open diagnostics and share it with support.');
-      }
+      const response = await certificatesApi.getClientCertificateFileUrl(item.scriptId, true);
+      window.open(response.signedUrl, '_blank', 'noopener,noreferrer');
     } catch (err) {
-      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر إنشاء ملف PDF' : 'Unable to generate PDF'));
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تنزيل ملف الشهادة' : 'Unable to download certificate file'));
     } finally {
       setDownloadingId('');
     }
@@ -538,21 +533,10 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
     setPreviewingId(item.scriptId);
     setError('');
     try {
-      const { blob, debug } = await generateCertificatePdfBlob(item, lang, data?.defaultTemplate ?? null);
-      setExportDebug(debug);
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-      const url = URL.createObjectURL(blob);
-      setPreviewUrl(url);
-      setPreviewOpen(true);
-      if (debug.usedFallbackLayout && (debug.fallbackBlobSize ?? 0) < 1500) {
-        setError(lang === 'ar'
-          ? 'تعذر إنشاء معاينة شهادة صالحة. يرجى نسخ التشخيص وإرساله للدعم.'
-          : 'Failed to generate a valid certificate preview. Copy diagnostics and share with support.');
-      }
+      const response = await certificatesApi.getClientCertificateFileUrl(item.scriptId, false);
+      window.open(response.signedUrl, '_blank', 'noopener,noreferrer');
     } catch (err) {
-      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر إنشاء معاينة الشهادة' : 'Unable to generate certificate preview'));
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر فتح معاينة الشهادة' : 'Unable to open certificate preview'));
     } finally {
       setPreviewingId('');
     }

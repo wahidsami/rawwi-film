@@ -41,6 +41,7 @@ const CERTIFICATE_TAX_AMOUNT = Number((CERTIFICATE_BASE_AMOUNT * CERTIFICATE_TAX
 const CERTIFICATE_TOTAL_AMOUNT = Number((CERTIFICATE_BASE_AMOUNT + CERTIFICATE_TAX_AMOUNT).toFixed(2));
 const CERTIFICATE_CURRENCY = "SAR";
 const CERTIFICATE_FEE_SETTINGS_KEY = "certificate_fee_settings";
+const CERTIFICATE_FILES_BUCKET = "script-certificates";
 
 type CertificateFeeConfig = {
   baseAmount: number;
@@ -570,6 +571,59 @@ async function loadCertificateVerification(
   };
 }
 
+async function createCertificateFileSignedUrl(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  params: {
+    scriptId: string;
+    userId: string;
+    isAdmin: boolean;
+    requireCompletedPayment: boolean;
+    download?: boolean;
+  },
+) {
+  const { data: script, error: scriptError } = await supabase
+    .from("scripts")
+    .select("id, company_id, client_id")
+    .eq("id", params.scriptId)
+    .maybeSingle();
+  if (scriptError) throw new Error(scriptError.message);
+  if (!script) throw new Error("Script not found");
+
+  if (!params.isAdmin) {
+    const account = await getClientAccountForUser(supabase, params.userId);
+    if (!account) throw new Error("Client portal account not found");
+    const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
+    if (ownerCompanyId !== account.company_id) throw new Error("Forbidden");
+  }
+
+  const { data: certificate, error: certificateError } = await supabase
+    .from("script_certificates")
+    .select("id, script_id, certificate_data")
+    .eq("script_id", params.scriptId)
+    .maybeSingle();
+  if (certificateError) throw new Error(certificateError.message);
+  if (!certificate) throw new Error("Certificate not found");
+
+  if (params.requireCompletedPayment) {
+    const payment = await loadLatestCompletedPayment(supabase, params.scriptId);
+    if (!payment?.id) throw new Error("Certificate is locked until payment is completed");
+  }
+
+  const certificateData = ((certificate as any).certificate_data ?? {}) as Record<string, unknown>;
+  const filePath = typeof certificateData.file_path === "string" ? certificateData.file_path.trim() : "";
+  if (!filePath) throw new Error("Certificate file is not available");
+
+  const signed = await supabase.storage
+    .from(CERTIFICATE_FILES_BUCKET)
+    .createSignedUrl(filePath, 60 * 10, params.download ? { download: true } : undefined);
+  if (signed.error || !signed.data?.signedUrl) throw new Error(signed.error?.message || "Failed to sign certificate file URL");
+
+  return {
+    signedUrl: signed.data.signedUrl,
+    filePath,
+  };
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? undefined;
   const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
@@ -728,18 +782,37 @@ Deno.serve(async (req: Request) => {
       .eq("id", account.company_id)
       .maybeSingle();
 
-    const certificate = await issueCertificateForScript(supabase, {
-      scriptId,
-      payerUserId: userId,
-      companyId: account.company_id,
-      companyNameAr: (company as any)?.name_ar ?? null,
-      companyNameEn: (company as any)?.name_en ?? null,
-      companyLogoUrl: (company as any)?.logo_url ?? null,
-      scriptTitle: (script as any).title,
-      paymentId: payment.id,
-      amountPaid: Number((payment as any).total_amount ?? feeConfig.totalAmount),
+    const { data: existingCertificate, error: existingCertificateError } = await supabase
+      .from("script_certificates")
+      .select("id, certificate_number, certificate_status, issued_at, certificate_data")
+      .eq("script_id", scriptId)
+      .maybeSingle();
+    if (existingCertificateError) return json({ error: existingCertificateError.message }, 500);
+    if (!existingCertificate?.id) {
+      return json({ error: "Certificate is not generated yet. Admin approval must complete first." }, 409);
+    }
+
+    const mergedCertificateData = {
+      ...(((existingCertificate as any).certificate_data ?? {}) as Record<string, unknown>),
+      amount_paid: Number((payment as any).total_amount ?? feeConfig.totalAmount),
       currency: String((payment as any).currency ?? feeConfig.currency),
-    });
+      payment_completed_at: (payment as any).completed_at ?? new Date().toISOString(),
+      payment_reference: (payment as any).payment_reference ?? paymentReference,
+    };
+
+    const { data: linkedCertificate, error: linkCertificateError } = await supabase
+      .from("script_certificates")
+      .update({
+        payment_id: payment.id,
+        owner_user_id: userId,
+        certificate_data: mergedCertificateData,
+      })
+      .eq("id", (existingCertificate as any).id)
+      .select("id, certificate_number, certificate_status, issued_at, certificate_data")
+      .single();
+    if (linkCertificateError || !linkedCertificate) {
+      return json({ error: linkCertificateError?.message || "Failed to link payment to certificate" }, 500);
+    }
 
     await notifyAdmins(supabase, {
       type: "certificate_payment_completed",
@@ -756,29 +829,15 @@ Deno.serve(async (req: Request) => {
       },
     });
 
-    await notifyAdmins(supabase, {
-      type: "certificate_issued",
-      title: `Certificate issued: ${(script as any).title}`,
-      body: `Certificate ${(certificate as any).certificate_number} was issued for "${(script as any).title}".`,
-      metadata: {
-        script_id: scriptId,
-        script_title: (script as any).title,
-        company_id: account.company_id,
-        payment_id: payment.id,
-        certificate_id: (certificate as any).id,
-        certificate_number: (certificate as any).certificate_number,
-      },
-    });
-
     return json({
       ok: true,
       payment: payment,
       certificate: {
-        id: (certificate as any).id,
-        certificateNumber: (certificate as any).certificate_number,
-        certificateStatus: (certificate as any).certificate_status,
-        issuedAt: (certificate as any).issued_at,
-        certificateData: (certificate as any).certificate_data ?? {},
+        id: (linkedCertificate as any).id,
+        certificateNumber: (linkedCertificate as any).certificate_number,
+        certificateStatus: (linkedCertificate as any).certificate_status,
+        issuedAt: (linkedCertificate as any).issued_at,
+        certificateData: (linkedCertificate as any).certificate_data ?? {},
       },
     });
   }
@@ -1069,58 +1128,45 @@ Deno.serve(async (req: Request) => {
     const forceRegenerate = body.forceRegenerate === true;
     if (!scriptId) return json({ error: "scriptId is required" }, 400);
 
+    const reason = forceRegenerate
+      ? "Manual regenerate is disabled. Certificates are generated automatically only at admin approval."
+      : "Manual issue is disabled. Certificates are generated automatically only at admin approval.";
+    return json({ error: reason }, 409);
+  }
+
+  const clientFileMatch = rest.match(/^client\/file\/([0-9a-f-]{36})$/i);
+  if (method === "GET" && clientFileMatch) {
+    if (!account) return json({ error: "Client portal account not found" }, 403);
+    const scriptId = clientFileMatch[1];
     try {
-      const context = await loadAdminScriptContext(supabase, scriptId);
-      if (!context) return json({ error: "Script not found" }, 404);
-
-      const payment = await loadLatestCompletedPayment(supabase, scriptId);
-      if (!payment?.id) {
-        return json({ error: "A completed certificate payment is required before issuing a certificate" }, 409);
-      }
-
-      const certificate = await issueCertificateForScript(supabase, {
+      const payload = await createCertificateFileSignedUrl(supabase, {
         scriptId,
-        payerUserId: payment.payer_user_id ?? context.account?.user_id ?? null,
-        companyId: context.ownerCompanyId,
-        companyNameAr: context.company?.name_ar ?? null,
-        companyNameEn: context.company?.name_en ?? null,
-        companyLogoUrl: context.company?.logo_url ?? null,
-        scriptTitle: context.script.title,
-        paymentId: payment.id,
-        amountPaid: Number((payment as any).total_amount ?? 0),
-        currency: String((payment as any).currency ?? CERTIFICATE_CURRENCY),
-        issuedBy: userId,
-        forceRegenerate,
+        userId,
+        isAdmin: false,
+        requireCompletedPayment: true,
+        download: new URL(req.url).searchParams.get("download") === "1",
       });
-
-      await notifyAdmins(supabase, {
-        type: "certificate_issued",
-        title: `Certificate issued: ${context.script.title}`,
-        body: `Certificate ${(certificate as any).certificate_number} was issued for "${context.script.title}".`,
-        metadata: {
-          script_id: scriptId,
-          script_title: context.script.title,
-          company_id: context.ownerCompanyId,
-          payment_id: payment.id,
-          certificate_id: (certificate as any).id,
-          certificate_number: (certificate as any).certificate_number,
-          issued_by: userId,
-          force_regenerate: forceRegenerate,
-        },
-      });
-
-      return json({
-        ok: true,
-        certificate: {
-          id: (certificate as any).id,
-          certificateNumber: (certificate as any).certificate_number,
-          certificateStatus: (certificate as any).certificate_status,
-          issuedAt: (certificate as any).issued_at,
-          certificateData: (certificate as any).certificate_data ?? {},
-        },
-      });
+      return json({ ok: true, ...payload });
     } catch (err) {
-      return json({ error: err instanceof Error ? err.message : "Failed to issue certificate" }, 500);
+      return json({ error: err instanceof Error ? err.message : "Unable to open certificate file" }, 400);
+    }
+  }
+
+  const adminFileMatch = rest.match(/^admin\/file\/([0-9a-f-]{36})$/i);
+  if (method === "GET" && adminFileMatch) {
+    if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    const scriptId = adminFileMatch[1];
+    try {
+      const payload = await createCertificateFileSignedUrl(supabase, {
+        scriptId,
+        userId,
+        isAdmin: true,
+        requireCompletedPayment: false,
+        download: new URL(req.url).searchParams.get("download") === "1",
+      });
+      return json({ ok: true, ...payload });
+    } catch (err) {
+      return json({ error: err instanceof Error ? err.message : "Unable to open certificate file" }, 400);
     }
   }
 

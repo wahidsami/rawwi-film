@@ -445,6 +445,16 @@ export const certificatesApi = {
     demoCardId: string,
   ): Promise<ProcessDemoCertificatePaymentResponse> =>
     httpClient.post('/certificates/pay', { scriptId, demoCardId }),
+  getClientCertificateFileUrl: (
+    scriptId: string,
+    download = false,
+  ): Promise<{ ok: boolean; signedUrl: string; filePath: string }> =>
+    httpClient.get(`/certificates/client/file/${encodeURIComponent(scriptId)}${download ? '?download=1' : ''}`),
+  getAdminCertificateFileUrl: (
+    scriptId: string,
+    download = false,
+  ): Promise<{ ok: boolean; signedUrl: string; filePath: string }> =>
+    httpClient.get(`/certificates/admin/file/${encodeURIComponent(scriptId)}${download ? '?download=1' : ''}`),
   getFeeSettings: (): Promise<CertificateFeeConfigResponse> =>
     httpClient.get('/certificates/admin/fee-settings'),
   updateFeeSettings: (payload: { baseAmount: number; taxRate: number; currency?: string }): Promise<{ ok: boolean; feeConfig: CertificateFeeConfigResponse['feeConfig'] }> =>

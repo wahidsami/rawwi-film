@@ -10,6 +10,9 @@ import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { getCorrelationId, normalizeText } from "../_shared/utils.ts";
 import { canOverrideOwnScriptDecision, isClientUser, isRegulatorOnly, isSuperAdminOrAdmin, isUserAdmin } from "../_shared/roleCheck.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
+import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
+
+const CERTIFICATE_FILES_BUCKET = "script-certificates";
 
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
@@ -404,13 +407,16 @@ async function ensureCertificateGeneratedOnApproval(
 ): Promise<void> {
   const existing = await supabase
     .from("script_certificates")
-    .select("id")
+    .select("id, certificate_number, certificate_data")
     .eq("script_id", params.scriptId)
     .maybeSingle();
-  if (existing.data?.id) return;
-
-  const { data: certificateNumber, error: numberError } = await supabase.rpc("generate_script_certificate_number");
-  if (numberError || !certificateNumber) throw new Error(numberError?.message || "Failed to generate certificate number");
+  const certificateNumber = existing.data?.certificate_number
+    ? String(existing.data.certificate_number)
+    : await (async () => {
+      const { data, error } = await supabase.rpc("generate_script_certificate_number");
+      if (error || !data) throw new Error(error?.message || "Failed to generate certificate number");
+      return String(data);
+    })();
 
   const { data: company } = await supabase
     .from("clients")
@@ -418,6 +424,7 @@ async function ensureCertificateGeneratedOnApproval(
     .eq("id", params.companyId)
     .maybeSingle();
 
+  const approvedAt = new Date().toISOString();
   const certificatePayload = {
     script_id: params.scriptId,
     script_title: params.scriptTitle,
@@ -425,13 +432,68 @@ async function ensureCertificateGeneratedOnApproval(
     company_name_ar: (company as any)?.name_ar ?? null,
     company_name_en: (company as any)?.name_en ?? null,
     company_logo_url: (company as any)?.logo_url ?? null,
-    approved_at: new Date().toISOString(),
-    issued_at: new Date().toISOString(),
+    approved_at: approvedAt,
+    issued_at: approvedAt,
     certificate_number: certificateNumber,
     amount_paid: 0,
     currency: "SAR",
     generated_on_approval: true,
   };
+
+  // Generate deterministic PDF on approval in backend and store once.
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([841.89, 595.28]); // A4 landscape
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const titleSize = 28;
+  const textSize = 14;
+  page.drawRectangle({
+    x: 20,
+    y: 20,
+    width: 801.89,
+    height: 555.28,
+    borderColor: rgb(0.46, 0.2, 0.4),
+    borderWidth: 2,
+  });
+  page.drawText("Script Approval Certificate", { x: 245, y: 520, size: titleSize, font, color: rgb(0.12, 0.12, 0.2) });
+  page.drawText(`Certificate Number: ${certificateNumber}`, { x: 60, y: 470, size: textSize, font });
+  page.drawText(`Script Title: ${params.scriptTitle || "-"}`, { x: 60, y: 440, size: textSize, font });
+  page.drawText(`Company: ${((company as any)?.name_en ?? (company as any)?.name_ar ?? "-").toString()}`, { x: 60, y: 410, size: textSize, font });
+  page.drawText(`Script ID: ${params.scriptId}`, { x: 60, y: 380, size: 11, font, color: rgb(0.35, 0.35, 0.45) });
+  page.drawText(`Approved At: ${approvedAt}`, { x: 60, y: 355, size: 11, font, color: rgb(0.35, 0.35, 0.45) });
+  page.drawText("Generated automatically on admin approval.", { x: 60, y: 110, size: 11, font, color: rgb(0.35, 0.35, 0.45) });
+  const pdfBytes = await pdfDoc.save();
+
+  const storagePath = `${params.scriptId}/${certificateNumber}.pdf`;
+  const { error: uploadError } = await supabase
+    .storage
+    .from(CERTIFICATE_FILES_BUCKET)
+    .upload(storagePath, pdfBytes, {
+      contentType: "application/pdf",
+      upsert: true,
+    });
+  if (uploadError) throw new Error(`Failed to upload certificate PDF: ${uploadError.message}`);
+
+  const mergedPayload = {
+    ...(existing.data?.certificate_data && typeof existing.data.certificate_data === "object" ? existing.data.certificate_data : {}),
+    ...certificatePayload,
+    file_bucket: CERTIFICATE_FILES_BUCKET,
+    file_path: storagePath,
+    generated_at: approvedAt,
+  };
+
+  if (existing.data?.id) {
+    const { error } = await supabase
+      .from("script_certificates")
+      .update({
+        issued_by: params.approvedByUserId,
+        certificate_status: "issued",
+        issued_at: approvedAt,
+        certificate_data: mergedPayload,
+      })
+      .eq("id", existing.data.id);
+    if (error) throw new Error(error.message);
+    return;
+  }
 
   const { error } = await supabase
     .from("script_certificates")
@@ -442,7 +504,7 @@ async function ensureCertificateGeneratedOnApproval(
       certificate_number: certificateNumber,
       issued_by: params.approvedByUserId,
       certificate_status: "issued",
-      certificate_data: certificatePayload,
+      certificate_data: mergedPayload,
     });
   if (error) throw new Error(error.message);
 }
