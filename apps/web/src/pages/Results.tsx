@@ -2281,67 +2281,6 @@ export function Results() {
               )}
             </div>
           )}
-          {useRealFindingsUi && (
-            <label className="flex items-center gap-2 text-sm text-text-muted cursor-pointer">
-              <input
-                type="checkbox"
-                checked={groupFindingsByAtom}
-                onChange={(e) => setGroupFindingsByAtom(e.target.checked)}
-                className="rounded border-border"
-              />
-              {lang === 'ar' ? 'تجميع حسب الذرة' : 'Group by atom'}
-            </label>
-          )}
-          <Button variant="outline" onClick={handleDownloadPdf} className="h-10 px-4 flex gap-2" disabled={isDownloadingPdf}>
-            {isDownloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-            {isDownloadingPdf ? (lang === 'ar' ? 'جاري تجهيز PDF...' : 'Preparing PDF...') : (lang === 'ar' ? 'تنزيل PDF' : 'Download PDF')}
-          </Button>
-          <Button variant="outline" onClick={handleDownloadWord} className="h-10 px-4 flex gap-2" disabled={isDownloadingWord}>
-            {isDownloadingWord ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-            {isDownloadingWord ? (lang === 'ar' ? 'جاري تجهيز Word...' : 'Preparing Word...') : (lang === 'ar' ? 'تنزيل Word' : 'Download Word')}
-          </Button>
-          <Button
-            variant="outline"
-            className="h-10 px-4"
-            disabled={actionableVisibleFindingIds.length === 0}
-            onClick={() => setSelectedFindingIds(actionableVisibleFindingIds)}
-          >
-            {lang === 'ar' ? 'تحديد الكل' : 'Select all'}
-          </Button>
-          <Button
-            variant="ghost"
-            className="h-10 px-4"
-            disabled={selectedFindingIds.length === 0}
-            onClick={() => setSelectedFindingIds([])}
-          >
-            {lang === 'ar' ? 'إلغاء التحديد' : 'Clear selection'}
-          </Button>
-          <Button
-            variant="outline"
-            className="h-10 px-4 flex gap-2 text-success border-success/30 hover:bg-success/10"
-            disabled={selectedVisibleFindingCount === 0}
-            onClick={() => {
-              const findingIds = selectedFindingIds.filter((id) => actionableVisibleFindingIds.includes(id));
-              setBulkReviewModal({ findingIds, toStatus: 'approved' });
-              setBulkReviewReason('');
-            }}
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            {lang === 'ar' ? 'اعتماد المحدد كآمن' : 'Mark selected safe'}
-          </Button>
-          <Button
-            variant="outline"
-            className="h-10 px-4 flex gap-2 text-error border-error/30 hover:bg-error/10"
-            disabled={selectedVisibleFindingCount === 0}
-            onClick={() => {
-              const findingIds = selectedFindingIds.filter((id) => actionableVisibleFindingIds.includes(id));
-              setBulkReviewModal({ findingIds, toStatus: 'violation' });
-              setBulkReviewReason('');
-            }}
-          >
-            <ShieldAlert className="w-4 h-4" />
-            {lang === 'ar' ? 'إعادة المحدد كمخالفة' : 'Revert selected'}
-          </Button>
         </div>
       </div>
 
