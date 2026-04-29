@@ -1540,6 +1540,15 @@ export function ScriptWorkspace() {
     const fromQuery = new URLSearchParams(location.search).get('quick') === '1';
     return fromQuery || Boolean(script?.isQuickAnalysis);
   }, [location.search, script?.isQuickAnalysis]);
+  const guardCanceledScriptAction = useCallback(() => {
+    if (!isClientCanceledScript) return false;
+    toast.error(
+      lang === 'ar'
+        ? 'لا يمكن تنفيذ هذا الإجراء لأن العميل ألغى النص.'
+        : 'This action is disabled because the client canceled this script.'
+    );
+    return true;
+  }, [isClientCanceledScript, lang]);
   const reportQuickQuery = isQuickContext ? '&quick=1' : '';
 
   // When route id changes (e.g. Open Workspace from Quick Analysis), reset so we show loading
@@ -2186,6 +2195,7 @@ export function ScriptWorkspace() {
   }, []);
 
   const submitRejectDecision = useCallback(async () => {
+    if (guardCanceledScriptAction()) return;
     if (!script?.id || !rejectDecisionReportId) return;
     const reason = rejectDecisionReason.trim();
     if (!reason) {
@@ -2237,6 +2247,7 @@ export function ScriptWorkspace() {
   }, [
     closeRejectDecisionModal,
     fetchInitialData,
+    guardCanceledScriptAction,
     lang,
     loadReportHistory,
     rejectDecisionClientComment,
@@ -2250,6 +2261,7 @@ export function ScriptWorkspace() {
   ]);
 
   const handleReview = async (reportId: string, status: ReviewStatus, notes?: string) => {
+    if (guardCanceledScriptAction()) return;
     if (status === 'rejected') {
       openRejectDecisionModal(reportId);
       return;
@@ -2300,6 +2312,7 @@ export function ScriptWorkspace() {
   };
 
   const handleDeleteReport = async (reportId: string) => {
+    if (guardCanceledScriptAction()) return;
     const yes = confirm(lang === 'ar' ? 'هل أنت متأكد من حذف هذا التقرير؟' : 'Are you sure you want to delete this report?');
     if (!yes) return;
     try {
@@ -2371,6 +2384,7 @@ export function ScriptWorkspace() {
   }, [id, lang]);
 
   const handleReportFindingReviewSubmit = useCallback(async () => {
+    if (guardCanceledScriptAction()) return;
     if (!reportFindingReviewModal) return;
     const reason = reportFindingReviewReason.trim();
     const requireReason = settings?.platform?.requireOverrideReason !== false;
@@ -2412,9 +2426,10 @@ export function ScriptWorkspace() {
     } finally {
       setReportFindingReviewSaving(false);
     }
-  }, [reportFindingReviewModal, reportFindingReviewReason, settings?.platform?.requireOverrideReason, lang, user?.id, reloadSelectedReportReviewLayer]);
+  }, [guardCanceledScriptAction, reportFindingReviewModal, reportFindingReviewReason, settings?.platform?.requireOverrideReason, lang, user?.id, reloadSelectedReportReviewLayer]);
 
   const handleBulkReportFindingReviewSubmit = useCallback(async () => {
+    if (guardCanceledScriptAction()) return;
     if (!bulkReportFindingReviewModal) return;
     const reason = bulkReportFindingReviewReason.trim();
     const requireReason = settings?.platform?.requireOverrideReason !== false;
@@ -2462,6 +2477,7 @@ export function ScriptWorkspace() {
       setBulkReportFindingReviewSaving(false);
     }
   }, [
+    guardCanceledScriptAction,
     bulkReportFindingReviewModal,
     bulkReportFindingReviewReason,
     settings?.platform?.requireOverrideReason,
@@ -2471,6 +2487,7 @@ export function ScriptWorkspace() {
   ]);
 
   const handleEditReportFindingSubmit = useCallback(async () => {
+    if (guardCanceledScriptAction()) return;
     if (!editReportFindingModal) return;
     if (!editReportFindingForm.evidenceSnippet.trim()) {
       toast.error(lang === 'ar' ? 'النص المقتبس مطلوب' : 'Snippet text is required');
@@ -2516,9 +2533,10 @@ export function ScriptWorkspace() {
     } finally {
       setEditReportFindingSaving(false);
     }
-  }, [editReportFindingModal, editReportFindingForm, lang, reloadSelectedReportReviewLayer]);
+  }, [guardCanceledScriptAction, editReportFindingModal, editReportFindingForm, lang, reloadSelectedReportReviewLayer]);
 
   const handleValidateEditedReportFindingSnippet = useCallback(async () => {
+    if (guardCanceledScriptAction()) return;
     if (!editReportFindingModal) return;
     const snippet = editReportFindingForm.evidenceSnippet.trim();
     if (!snippet) {
@@ -2555,7 +2573,7 @@ export function ScriptWorkspace() {
     } finally {
       setEditReportFindingValidatingSnippet(false);
     }
-  }, [editReportFindingForm.evidenceSnippet, editReportFindingModal, lang]);
+  }, [guardCanceledScriptAction, editReportFindingForm.evidenceSnippet, editReportFindingModal, lang]);
 
   // Restore saved highlight preference when report list is ready (persists across logout/login)
   useEffect(() => {
@@ -2818,6 +2836,7 @@ export function ScriptWorkspace() {
   };
 
   const handleStartAnalysis = async () => {
+    if (guardCanceledScriptAction()) return;
     if (!script?.currentVersionId) {
       toast.error(lang === 'ar' ? 'ارفع ملف نص أولاً لتفعيل التحليل.' : 'Upload a script file first to run analysis.');
       return;
@@ -3089,6 +3108,7 @@ export function ScriptWorkspace() {
     ? activeChunkAgeLabel.replace(/^زمن الجزء الجاري:\s*/, '').replace(/^Active chunk time:\s*/, '')
     : '—';
   const handlePauseAnalysis = useCallback(async () => {
+    if (guardCanceledScriptAction()) return;
     if (!analysisJobId || analysisControlBusy) return;
     setAnalysisControlBusy('pause');
     try {
@@ -3100,9 +3120,10 @@ export function ScriptWorkspace() {
     } finally {
       setAnalysisControlBusy(null);
     }
-  }, [analysisJobId, analysisControlBusy, lang]);
+  }, [analysisJobId, analysisControlBusy, guardCanceledScriptAction, lang]);
 
   const handleResumeAnalysis = useCallback(async () => {
+    if (guardCanceledScriptAction()) return;
     if (!analysisJobId || analysisControlBusy) return;
     setAnalysisControlBusy('resume');
     try {
@@ -3115,9 +3136,10 @@ export function ScriptWorkspace() {
     } finally {
       setAnalysisControlBusy(null);
     }
-  }, [analysisJobId, analysisControlBusy, lang, startPolling]);
+  }, [analysisJobId, analysisControlBusy, guardCanceledScriptAction, lang, startPolling]);
 
   const handleStopAnalysis = useCallback(async () => {
+    if (guardCanceledScriptAction()) return;
     if (!analysisJobId || analysisControlBusy) return;
     setAnalysisControlBusy('stop');
     try {
@@ -3129,9 +3151,10 @@ export function ScriptWorkspace() {
     } finally {
       setAnalysisControlBusy(null);
     }
-  }, [analysisJobId, analysisControlBusy, lang]);
+  }, [analysisJobId, analysisControlBusy, guardCanceledScriptAction, lang]);
 
   const handleCancelAnalysis = useCallback(async () => {
+    if (guardCanceledScriptAction()) return;
     if (!analysisJobId || analysisControlBusy) return;
     const confirmed = window.confirm(
       lang === 'ar'
@@ -3150,12 +3173,13 @@ export function ScriptWorkspace() {
     } finally {
       setAnalysisControlBusy(null);
     }
-  }, [analysisJobId, analysisControlBusy, lang, stopPolling]);
+  }, [analysisJobId, analysisControlBusy, guardCanceledScriptAction, lang, stopPolling]);
 
   const canReplaceFile = user?.role === 'Super Admin' || user?.role === 'Admin';
   const hasVersionForAnalysis = Boolean(script?.currentVersionId);
 
   const handleOpenFilePicker = useCallback(() => {
+    if (guardCanceledScriptAction()) return;
     if (!canReplaceFile || isUploading) return;
     const replacingExistingContent =
       ((editorData?.content != null && editorData.content.trim() !== '') || !!extractedText) ||
@@ -3170,9 +3194,10 @@ export function ScriptWorkspace() {
       if (!ok) return;
     }
     fileInputRef.current?.click();
-  }, [canReplaceFile, isUploading, editorData?.content, extractedText, reportHistory.length, hasVersionForAnalysis, lang]);
+  }, [canReplaceFile, isUploading, editorData?.content, extractedText, reportHistory.length, hasVersionForAnalysis, guardCanceledScriptAction, lang]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (guardCanceledScriptAction()) return;
     const file = e.target.files?.[0];
     if (!file || !script) return;
 
@@ -3566,6 +3591,7 @@ export function ScriptWorkspace() {
   );
 
   const handleMarkViolation = () => {
+    if (guardCanceledScriptAction()) return;
     const text = contextMenu?.text ?? '';
     let startOffsetGlobal = contextMenu?.startOffsetGlobal ?? 0;
     let endOffsetGlobal = contextMenu?.endOffsetGlobal ?? 0;
@@ -3592,6 +3618,7 @@ export function ScriptWorkspace() {
   };
 
   const saveManualFinding = async () => {
+    if (guardCanceledScriptAction()) return;
     if (!script?.id || !script?.currentVersionId || !formData.reportId || manualOffsets == null) {
       toast.error(lang === 'ar' ? 'اختر تقريراً وتأكد من وجود نص محدد.' : 'Select a report and ensure text is selected.');
       return;
@@ -6128,13 +6155,15 @@ export function ScriptWorkspace() {
                           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button 
                               onClick={(e) => { e.stopPropagation(); updateFindingStatus(f.id, 'accepted', 'Override AI finding', user?.name); }}
-                              className="p-1.5 bg-success/10 text-success rounded hover:bg-success/20 transition-colors" title="Accept/Override"
+                              disabled={isClientCanceledScript}
+                              className="p-1.5 bg-success/10 text-success rounded hover:bg-success/20 transition-colors disabled:opacity-40 disabled:pointer-events-none" title="Accept/Override"
                             >
                               <Check className="w-3 h-3" />
                             </button>
                             <button 
                               onClick={(e) => { e.stopPropagation(); updateFindingStatus(f.id, 'confirmed', 'Confirm Violation', user?.name); }}
-                              className="p-1.5 bg-error/10 text-error rounded hover:bg-error/20 transition-colors" title="Confirm Violation"
+                              disabled={isClientCanceledScript}
+                              className="p-1.5 bg-error/10 text-error rounded hover:bg-error/20 transition-colors disabled:opacity-40 disabled:pointer-events-none" title="Confirm Violation"
                             >
                               <ShieldAlert className="w-3 h-3" />
                             </button>
