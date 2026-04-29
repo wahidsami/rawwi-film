@@ -32,6 +32,7 @@ type CertificateExportDebug = {
   fallbackBlobSize: number | null;
   usedFallbackLayout: boolean;
   values: ReturnType<typeof getCertificateValues>;
+  skippedUnsupportedImages: number;
 };
 
 const fontBase = typeof window !== 'undefined' ? window.location.origin : '';
@@ -109,6 +110,17 @@ function resolveClientLogoUrl(item: CertificateDashboardItem): string | null {
   if (!cleaned) return null;
   const { data } = supabase.storage.from('company-logos').getPublicUrl(cleaned);
   return data?.publicUrl ?? null;
+}
+
+function isSvgImageSource(src?: string | null) {
+  const value = (src ?? '').trim().toLowerCase();
+  if (!value) return false;
+  return value.startsWith('data:image/svg+xml') || value.endsWith('.svg');
+}
+
+function resolveFilmCommissionLogoUrl() {
+  if (typeof window === 'undefined') return '/fclogo.png';
+  return `${window.location.origin}/fclogo.png`;
 }
 
 function getCertificateVerificationUrl(item: CertificateDashboardItem) {
@@ -203,9 +215,12 @@ function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl }: 
   qrDataUrl: string;
 }) {
   const boxStyle = elementStyle(element, page, template);
+  if (element.type === 'logo' && element.logoSource === 'film_commission') {
+    return <Image src={resolveFilmCommissionLogoUrl()} style={[boxStyle, { objectFit: 'contain' }]} />;
+  }
   if (element.type === 'logo' && element.logoSource === 'client') {
     const clientLogoUrl = resolveClientLogoUrl(item);
-    if (clientLogoUrl) {
+    if (clientLogoUrl && !isSvgImageSource(clientLogoUrl)) {
       return <Image src={clientLogoUrl} style={[boxStyle, { objectFit: 'contain' }]} />;
     }
     return (
@@ -214,7 +229,7 @@ function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl }: 
       </View>
     );
   }
-  if ((element.type === 'image' || element.type === 'logo') && element.imageUrl) {
+  if ((element.type === 'image' || element.type === 'logo') && element.imageUrl && !isSvgImageSource(element.imageUrl)) {
     return <Image src={element.imageUrl} style={[boxStyle, { objectFit: 'contain' }]} />;
   }
   if (element.type === 'qr') {
@@ -251,12 +266,15 @@ function CertificatePdfDocument({ item, lang, template, qrDataUrl, forceBuiltinF
   const page = pageDimensions(template);
   const templateElements = sanitizeTemplateElements(template);
   if (template && templateElements.length > 0 && hasRenderableTemplateContent(templateElements)) {
+    const safeBackgroundImageUrl = template.backgroundImageUrl && !isSvgImageSource(template.backgroundImageUrl)
+      ? template.backgroundImageUrl
+      : null;
     return (
       <Document>
         <Page wrap={false} size={[page.width, page.height]} style={{ position: 'relative', backgroundColor: template.backgroundColor }}>
-          {template.backgroundImageUrl ? (
+          {safeBackgroundImageUrl ? (
             <Image
-              src={template.backgroundImageUrl}
+              src={safeBackgroundImageUrl}
               style={{
                 position: 'absolute',
                 left: 0,
@@ -325,7 +343,18 @@ async function generateCertificatePdfBlob(item: CertificateDashboardItem, lang: 
     fallbackBlobSize: null,
     usedFallbackLayout: false,
     values,
+    skippedUnsupportedImages: 0,
   };
+  const unsupportedImageCount = templateElements.filter((element) => {
+    if (element.type !== 'image' && element.type !== 'logo') return false;
+    if (element.type === 'logo' && element.logoSource === 'film_commission') return false;
+    if (element.type === 'logo' && element.logoSource === 'client') {
+      const logoUrl = resolveClientLogoUrl(item);
+      return !logoUrl || isSvgImageSource(logoUrl);
+    }
+    return isSvgImageSource(element.imageUrl ?? '');
+  }).length;
+  debug.skippedUnsupportedImages = unsupportedImageCount + (template?.backgroundImageUrl && isSvgImageSource(template.backgroundImageUrl) ? 1 : 0);
   const qrDataUrl = await QRCode.toDataURL(getCertificateVerificationUrl(item), {
     errorCorrectionLevel: 'M',
     margin: 1,
