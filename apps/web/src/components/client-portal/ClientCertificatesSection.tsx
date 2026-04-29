@@ -35,6 +35,7 @@ type CertificateExportDebug = {
   skippedUnsupportedImages: number;
   offCanvasElements: number;
   zeroOpacityElements: number;
+  usedSafeTemplateMode: boolean;
 };
 
 const fontBase = typeof window !== 'undefined' ? window.location.origin : '';
@@ -148,7 +149,8 @@ function resolveTemplateText(text: string | undefined, item: CertificateDashboar
     .replaceAll('{{verification_url}}', getCertificateVerificationUrl(item));
 }
 
-function resolvePdfFontFamily(fontFamily?: string) {
+function resolvePdfFontFamily(fontFamily?: string, forceBuiltinFont = false) {
+  if (forceBuiltinFont) return 'Helvetica';
   const normalized = (fontFamily ?? '').toLowerCase();
   if (
     normalized.includes('cairo') ||
@@ -220,13 +222,14 @@ function hasRenderableTemplateContent(elements: CertificateTemplateElement[]): b
   });
 }
 
-function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl }: {
+function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl, forceBuiltinFont = false }: {
   element: CertificateTemplateElement;
   item: CertificateDashboardItem;
   lang: 'ar' | 'en';
   page: { width: number; height: number };
   template: CertificateTemplate;
   qrDataUrl: string;
+  forceBuiltinFont?: boolean;
 }) {
   const boxStyle = elementStyle(element, page, template);
   if (element.type === 'logo' && element.logoSource === 'film_commission') {
@@ -255,7 +258,7 @@ function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl }: 
         boxStyle,
         {
           fontSize: element.fontSize ?? 18,
-          fontFamily: resolvePdfFontFamily(element.fontFamily),
+          fontFamily: resolvePdfFontFamily(element.fontFamily, forceBuiltinFont),
           fontWeight: element.bold ? 700 : 400,
           fontStyle: element.italic ? 'italic' : 'normal',
           color: element.color ?? '#111827',
@@ -269,18 +272,19 @@ function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl }: 
   );
 }
 
-function CertificatePdfDocument({ item, lang, template, qrDataUrl, forceBuiltinFont = false }: {
+function CertificatePdfDocument({ item, lang, template, qrDataUrl, forceBuiltinFont = false, safeTemplateMode = false }: {
   item: CertificateDashboardItem;
   lang: 'ar' | 'en';
   template?: CertificateTemplate | null;
   qrDataUrl: string;
   forceBuiltinFont?: boolean;
+  safeTemplateMode?: boolean;
 }) {
   const values = getCertificateValues(item, lang);
   const page = pageDimensions(template);
   const templateElements = sanitizeTemplateElements(template);
   if (template && templateElements.length > 0 && hasRenderableTemplateContent(templateElements)) {
-    const safeBackgroundImageUrl = template.backgroundImageUrl && !isSvgImageSource(template.backgroundImageUrl)
+    const safeBackgroundImageUrl = !safeTemplateMode && template.backgroundImageUrl && !isSvgImageSource(template.backgroundImageUrl)
       ? template.backgroundImageUrl
       : null;
     return (
@@ -301,7 +305,7 @@ function CertificatePdfDocument({ item, lang, template, qrDataUrl, forceBuiltinF
             />
           ) : null}
           {templateElements.map((element) => (
-            <TemplateElementPdf key={element.id} element={element} item={item} lang={lang} page={page} template={template} qrDataUrl={qrDataUrl} />
+            <TemplateElementPdf key={element.id} element={element} item={item} lang={lang} page={page} template={template} qrDataUrl={qrDataUrl} forceBuiltinFont={safeTemplateMode || forceBuiltinFont} />
           ))}
         </Page>
       </Document>
@@ -360,6 +364,7 @@ async function generateCertificatePdfBlob(item: CertificateDashboardItem, lang: 
     skippedUnsupportedImages: 0,
     offCanvasElements: 0,
     zeroOpacityElements: 0,
+    usedSafeTemplateMode: false,
   };
   const page = pageDimensions(template);
   debug.zeroOpacityElements = templateElements.filter((element) => (element.opacity ?? 1) <= 0.01).length;
@@ -391,6 +396,23 @@ async function generateCertificatePdfBlob(item: CertificateDashboardItem, lang: 
   });
   let blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={template} qrDataUrl={qrDataUrl} />).toBlob();
   debug.firstBlobSize = blob.size;
+  if (template && templateElements.length > 0) {
+    // Safety path: same template layout but safer font/background handling.
+    const safeBlob = await pdf(
+      <CertificatePdfDocument
+        item={item}
+        lang={lang}
+        template={template}
+        qrDataUrl={qrDataUrl}
+        forceBuiltinFont
+        safeTemplateMode
+      />,
+    ).toBlob();
+    if (safeBlob.size > 1500) {
+      blob = safeBlob;
+      debug.usedSafeTemplateMode = true;
+    }
+  }
   if (blob.size < 1500) {
     debug.usedFallbackLayout = true;
     blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={null} qrDataUrl={qrDataUrl} forceBuiltinFont />).toBlob();
