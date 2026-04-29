@@ -393,6 +393,60 @@ async function notifyAdminsOnClientScriptCanceled(
   }
 }
 
+async function ensureCertificateGeneratedOnApproval(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  params: {
+    scriptId: string;
+    scriptTitle: string;
+    companyId: string;
+    approvedByUserId: string;
+  },
+): Promise<void> {
+  const existing = await supabase
+    .from("script_certificates")
+    .select("id")
+    .eq("script_id", params.scriptId)
+    .maybeSingle();
+  if (existing.data?.id) return;
+
+  const { data: certificateNumber, error: numberError } = await supabase.rpc("generate_script_certificate_number");
+  if (numberError || !certificateNumber) throw new Error(numberError?.message || "Failed to generate certificate number");
+
+  const { data: company } = await supabase
+    .from("clients")
+    .select("id, name_ar, name_en, logo_url")
+    .eq("id", params.companyId)
+    .maybeSingle();
+
+  const certificatePayload = {
+    script_id: params.scriptId,
+    script_title: params.scriptTitle,
+    company_id: params.companyId,
+    company_name_ar: (company as any)?.name_ar ?? null,
+    company_name_en: (company as any)?.name_en ?? null,
+    company_logo_url: (company as any)?.logo_url ?? null,
+    approved_at: new Date().toISOString(),
+    issued_at: new Date().toISOString(),
+    certificate_number: certificateNumber,
+    amount_paid: 0,
+    currency: "SAR",
+    generated_on_approval: true,
+  };
+
+  const { error } = await supabase
+    .from("script_certificates")
+    .insert({
+      script_id: params.scriptId,
+      payment_id: null,
+      owner_user_id: null,
+      certificate_number: certificateNumber,
+      issued_by: params.approvedByUserId,
+      certificate_status: "issued",
+      certificate_data: certificatePayload,
+    });
+  if (error) throw new Error(error.message);
+}
+
 /** Shared predicate for script decision: used by GET .../decision/can and POST .../decision. */
 async function computeScriptDecisionCan(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -1418,7 +1472,7 @@ Deno.serve(async (req: Request) => {
     // Fetch script
     const { data: script, error: findErr } = await supabase
       .from("scripts")
-      .select("id, title, status, created_by, assignee_id")
+      .select("id, title, status, created_by, assignee_id, company_id, client_id")
       .eq("id", scriptId)
       .maybeSingle();
 
@@ -1504,6 +1558,25 @@ Deno.serve(async (req: Request) => {
     if (logErr) {
       console.error(`[scripts] correlationId=${correlationId} audit log error=`, logErr.message);
       // Continue anyway - status was updated successfully
+    }
+
+    if (decision === "approve") {
+      const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
+      if (ownerCompanyId) {
+        try {
+          await ensureCertificateGeneratedOnApproval(supabase, {
+            scriptId,
+            scriptTitle: (script as any).title,
+            companyId: ownerCompanyId,
+            approvedByUserId: uid,
+          });
+        } catch (certificateError) {
+          console.error(
+            `[scripts] correlationId=${correlationId} approval-time certificate generation error=`,
+            certificateError instanceof Error ? certificateError.message : certificateError,
+          );
+        }
+      }
     }
 
     // If related report, optionally update report status

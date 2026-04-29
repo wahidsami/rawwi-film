@@ -255,7 +255,7 @@ async function loadDefaultCertificateTemplate(
 }
 
 function resolveClientCertificateStatus(latestPayment: any | null, certificate: any | null): "payment_pending" | "payment_failed" | "issued" {
-  if (certificate && certificate.certificate_status === "issued") return "issued";
+  if (latestPayment?.payment_status === "completed" && certificate && certificate.certificate_status === "issued") return "issued";
   if (latestPayment?.payment_status === "failed") return "payment_failed";
   return "payment_pending";
 }
@@ -377,11 +377,32 @@ async function issueCertificateForScript(
 ) {
   const existing = await supabase
     .from("script_certificates")
-    .select("id, script_id, certificate_number, certificate_status, issued_at, certificate_data")
+    .select("id, script_id, payment_id, certificate_number, certificate_status, issued_at, certificate_data")
     .eq("script_id", params.scriptId)
     .maybeSingle();
 
-  if (existing.data?.id && !params.forceRegenerate) return existing.data;
+  if (existing.data?.id && !params.forceRegenerate) {
+    if (!existing.data.payment_id && params.paymentId) {
+      const { data: linked, error: linkError } = await supabase
+        .from("script_certificates")
+        .update({
+          payment_id: params.paymentId,
+          owner_user_id: params.payerUserId,
+          issued_by: params.issuedBy ?? null,
+          certificate_data: {
+            ...((existing.data.certificate_data ?? {}) as Record<string, unknown>),
+            amount_paid: params.amountPaid,
+            currency: params.currency,
+          },
+        })
+        .eq("id", existing.data.id)
+        .select("id, script_id, certificate_number, certificate_status, issued_at, certificate_data")
+        .single();
+      if (linkError || !linked) throw new Error(linkError?.message || "Failed to link payment to certificate");
+      return linked;
+    }
+    return existing.data;
+  }
 
   const { data: certificateNumber, error: numberError } = await supabase.rpc("generate_script_certificate_number");
   if (numberError || !certificateNumber) throw new Error(numberError?.message || "Failed to generate certificate number");
@@ -668,25 +689,6 @@ Deno.serve(async (req: Request) => {
     }
 
     const feeConfig = await loadCertificateFeeConfig(supabase);
-
-    const existingCertificate = await supabase
-      .from("script_certificates")
-      .select("id, script_id, certificate_number, certificate_status, issued_at, certificate_data")
-      .eq("script_id", scriptId)
-      .maybeSingle();
-    if (existingCertificate.data?.id) {
-      return json({
-        ok: true,
-        alreadyIssued: true,
-        certificate: {
-          id: existingCertificate.data.id,
-          certificateNumber: existingCertificate.data.certificate_number,
-          certificateStatus: existingCertificate.data.certificate_status,
-          issuedAt: existingCertificate.data.issued_at,
-          certificateData: existingCertificate.data.certificate_data ?? {},
-        },
-      });
-    }
 
     const paymentReference = `FAKEPAY-${Date.now()}-${scriptId.slice(0, 8).toUpperCase()}`;
     const paymentStatus = selectedCard.success ? "completed" : "failed";
