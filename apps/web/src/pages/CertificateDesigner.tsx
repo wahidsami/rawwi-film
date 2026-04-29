@@ -198,6 +198,7 @@ export function CertificateDesigner() {
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [savedTemplateKey, setSavedTemplateKey] = useState('');
   const [showBackWarning, setShowBackWarning] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const dragState = useRef<{
     id: string;
     mode: DragMode;
@@ -455,6 +456,16 @@ export function CertificateDesigner() {
     navigate('/app/certificates');
   };
 
+  const resolvePreviewText = (value?: string) => {
+    return (value ?? '')
+      .replaceAll('{{script_title}}', lang === 'ar' ? 'اسم النص المعتمد' : 'Approved Script Name')
+      .replaceAll('{{company_name}}', lang === 'ar' ? 'اسم الشركة المالكة' : 'Owning Company Name')
+      .replaceAll('{{issued_at}}', new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US'))
+      .replaceAll('{{approved_at}}', new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US'))
+      .replaceAll('{{certificate_number}}', 'CERT-XXXXXX')
+      .replaceAll('{{amount_paid}}', lang === 'ar' ? '٤٬٠٢٥ ر.س' : 'SAR 4,025');
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-sm text-text-muted">
@@ -480,7 +491,7 @@ export function CertificateDesigner() {
             <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
             {text.back}
           </Button>
-          <Button variant="outline" onClick={() => setSelectedId('')}>
+          <Button variant="outline" onClick={() => setShowPreview(true)}>
             {text.preview}
           </Button>
           <Button onClick={() => void saveTemplate()} isLoading={isSaving}>
@@ -698,6 +709,68 @@ export function CertificateDesigner() {
           </CardContent>
         </Card>
       </div>
+
+      <Modal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        title={text.preview}
+        className="max-w-5xl"
+      >
+        <div className="max-h-[75vh] overflow-auto rounded-[var(--radius)] border border-border bg-background p-4">
+          <div
+            className="relative mx-auto shadow-xl"
+            style={{
+              width: 'min(100%, 1000px)',
+              aspectRatio: `${canvasRatio}`,
+              backgroundColor: template.backgroundColor,
+              ...getCanvasBackgroundStyle(template, false),
+            }}
+          >
+            {template.templateData.elements.map((element) => (
+              <div
+                key={`preview-${element.id}`}
+                className="absolute overflow-hidden"
+                style={{
+                  left: `${(element.x / CANVAS_BASE_WIDTH) * 100}%`,
+                  top: `${(element.y / canvasBaseHeightFromRatio(canvasRatio)) * 100}%`,
+                  width: `${(element.width / CANVAS_BASE_WIDTH) * 100}%`,
+                  height: `${(element.height / canvasBaseHeightFromRatio(canvasRatio)) * 100}%`,
+                  opacity: element.opacity ?? 1,
+                  fontFamily: element.fontFamily,
+                  fontSize: element.fontSize,
+                  fontWeight: element.bold ? 700 : 400,
+                  fontStyle: element.italic ? 'italic' : 'normal',
+                  color: element.color,
+                  textAlign: element.align,
+                  lineHeight: 1.35,
+                }}
+              >
+                {element.type === 'qr' ? (
+                  <div className="flex h-full w-full items-center justify-center border-2 border-dashed border-text-muted bg-white text-xs font-semibold text-text-muted">
+                    QR
+                  </div>
+                ) : element.type === 'logo' && element.logoSource === 'client' ? (
+                  <div className="flex h-full w-full items-center justify-center border border-dashed border-text-muted text-xs">
+                    {text.clientLogo}
+                  </div>
+                ) : element.type === 'image' || element.type === 'logo' ? (
+                  element.imageUrl ? <img src={element.imageUrl} alt="" className="h-full w-full object-contain" /> : <div className="flex h-full items-center justify-center border border-dashed border-text-muted text-xs">{text.image}</div>
+                ) : (
+                  <div className="h-full w-full whitespace-pre-wrap">
+                    {resolvePreviewText(
+                      element.type === 'script_name'
+                        ? '{{script_title}}'
+                        : element.type === 'company_name'
+                          ? '{{company_name}}'
+                          : (element.text ?? ''),
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         isOpen={showBackWarning}

@@ -299,12 +299,34 @@ function CertificatePdfDocument({ item, lang, template, qrDataUrl }: {
 
 async function downloadCertificateDocument(item: CertificateDashboardItem, lang: 'ar' | 'en', template?: CertificateTemplate | null) {
   const certificateNumber = item.certificate?.certificateNumber ?? 'certificate';
+  const values = getCertificateValues(item, lang);
+  const templateElements = sanitizeTemplateElements(template);
+  if (import.meta.env.DEV) {
+    console.group('[certificate-export]');
+    console.info('scriptId:', item.scriptId);
+    console.info('certificateNumber:', certificateNumber);
+    console.info('templateId:', template?.id ?? null);
+    console.info('templateElements(raw):', template?.templateData?.elements?.length ?? 0);
+    console.info('templateElements(valid):', templateElements.length);
+    console.info('values:', values);
+    console.groupEnd();
+  }
   const qrDataUrl = await QRCode.toDataURL(getCertificateVerificationUrl(item), {
     errorCorrectionLevel: 'M',
     margin: 1,
     scale: 8,
   });
-  const blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={template} qrDataUrl={qrDataUrl} />).toBlob();
+  let blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={template} qrDataUrl={qrDataUrl} />).toBlob();
+  if (blob.size < 1500) {
+    if (import.meta.env.DEV) {
+      console.warn('[certificate-export] template blob too small, retrying with fallback layout', {
+        scriptId: item.scriptId,
+        certificateNumber,
+        blobSize: blob.size,
+      });
+    }
+    blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={null} qrDataUrl={qrDataUrl} />).toBlob();
+  }
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
