@@ -63,6 +63,23 @@ function formatAtomDisplay(articleId: number, atomId: string | null): string {
   return a.includes('.') ? a : `${articleId}.${a}`;
 }
 
+function getFindingDisplayTitle(finding: {
+  titleAr?: string | null;
+  descriptionAr?: string | null;
+  excerpt?: string | null;
+  evidenceSnippet?: string | null;
+}): string {
+  const title = (finding.titleAr ?? "").trim();
+  if (title) return title;
+  const description = (finding.descriptionAr ?? "").trim();
+  if (description) return description;
+  const excerpt = (finding.excerpt ?? "").trim();
+  if (excerpt) return excerpt;
+  const evidence = (finding.evidenceSnippet ?? "").trim();
+  if (evidence) return evidence;
+  return "مخالفة محتوى";
+}
+
 function formatAnalysisElapsed(ms: number, lang: 'ar' | 'en'): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const hours = Math.floor(totalSeconds / 3600);
@@ -1854,6 +1871,8 @@ export function ScriptWorkspace() {
   // ── Report history ──
   const [sidebarTab, setSidebarTab] = useState<'findings' | 'reports'>('findings');
   const [reportHistory, setReportHistory] = useState<ReportListItem[]>([]);
+  const [approveDecisionReportId, setApproveDecisionReportId] = useState<string | null>(null);
+  const [approveDecisionSubmitting, setApproveDecisionSubmitting] = useState(false);
   const [rejectDecisionReportId, setRejectDecisionReportId] = useState<string | null>(null);
   const [rejectDecisionReason, setRejectDecisionReason] = useState('');
   const [rejectDecisionClientComment, setRejectDecisionClientComment] = useState('');
@@ -2170,6 +2189,15 @@ export function ScriptWorkspace() {
     setRejectDecisionReportIds(defaultReportId ? [defaultReportId] : []);
   }, [reportHistory]);
 
+  const openApproveDecisionConfirm = useCallback((reportId: string) => {
+    setApproveDecisionReportId(reportId);
+  }, []);
+
+  const closeApproveDecisionConfirm = useCallback((force = false) => {
+    if (approveDecisionSubmitting && !force) return;
+    setApproveDecisionReportId(null);
+  }, [approveDecisionSubmitting]);
+
   const closeRejectDecisionModal = useCallback(() => {
     if (rejectDecisionSubmitting) return;
     setRejectDecisionReportId(null);
@@ -2247,6 +2275,35 @@ export function ScriptWorkspace() {
     script?.id,
     selectedReportForHighlights?.id,
     user?.id,
+  ]);
+
+  const submitApproveDecision = useCallback(async () => {
+    if (!script?.id || !approveDecisionReportId) return;
+    setApproveDecisionSubmitting(true);
+    try {
+      await scriptsApi.makeDecision(
+        script.id,
+        'approve',
+        lang === 'ar'
+          ? 'تم اعتماد النص من الإدارة'
+          : 'Script approved by administration',
+        approveDecisionReportId,
+      );
+      toast.success(lang === 'ar' ? 'تم اعتماد النص وتوليد الشهادة' : 'Script approved and certificate generation started');
+      await Promise.all([loadReportHistory(), fetchInitialData()]);
+      closeApproveDecisionConfirm(true);
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'فشل تنفيذ قرار القبول' : 'Failed to approve script'));
+    } finally {
+      setApproveDecisionSubmitting(false);
+    }
+  }, [
+    approveDecisionReportId,
+    closeApproveDecisionConfirm,
+    fetchInitialData,
+    lang,
+    loadReportHistory,
+    script?.id,
   ]);
 
   const handleReview = async (reportId: string, status: ReviewStatus, notes?: string) => {
@@ -5938,8 +5995,8 @@ export function ScriptWorkspace() {
                             }}
                             aria-label={lang === 'ar' ? 'تحديد الملاحظة' : 'Select finding'}
                           />
-                          <span className="text-[10px] font-mono text-text-muted">
-                            Art {formatAtomDisplay(f.articleId, f.atomId)}
+                          <span className="text-[10px] font-semibold text-text-main">
+                            {getFindingDisplayTitle(f)}
                             {(() => {
                               const ws = findingWorkspaceResolve.get(f.id);
                               const dp =
@@ -6095,7 +6152,7 @@ export function ScriptWorkspace() {
                   "{f.excerpt}"
                 </p>
                 <div className="flex items-center justify-between mt-3 text-xs text-text-muted">
-                  <span className="font-medium">{f.articleId}</span>
+                  <span className="font-medium text-text-main">{getFindingDisplayTitle(f as any)}</span>
                   {f.status !== 'open' && (
                     <Badge variant={f.status === 'accepted' ? 'success' : 'error'} className="text-[10px]">
                       {f.status}
@@ -6123,7 +6180,7 @@ export function ScriptWorkspace() {
                         "{f.excerpt}"
                       </p>
                       <div className="flex items-center justify-between mt-3 text-xs text-text-muted">
-                        <span className="font-medium">{f.articleId}</span>
+                        <span className="font-medium text-text-main">{getFindingDisplayTitle(f as any)}</span>
                         {f.status === 'open' && (
                           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button 
@@ -6210,7 +6267,7 @@ export function ScriptWorkspace() {
                         </Button>
 
                         {r.reviewStatus !== 'approved' && (
-                          <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2 text-success hover:text-success" onClick={() => handleReview(r.id, 'approved')}>
+                          <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2 text-success hover:text-success" onClick={() => openApproveDecisionConfirm(r.id)}>
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             {lang === 'ar' ? 'قبول' : 'Approve'}
                           </Button>
@@ -6341,6 +6398,36 @@ export function ScriptWorkspace() {
             <Button variant="outline" onClick={() => setIsViolationModalOpen(false)}>{lang === 'ar' ? 'إلغاء' : 'Cancel'}</Button>
             <Button variant="danger" onClick={saveManualFinding} disabled={manualSaving || !formData.reportId || reportHistory.length === 0}>
               {manualSaving ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : (lang === 'ar' ? 'حفظ الملاحظة' : 'Save Finding')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={approveDecisionReportId != null}
+        onClose={closeApproveDecisionConfirm}
+        title={lang === 'ar' ? 'تأكيد اعتماد النص' : 'Confirm Script Approval'}
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-7 text-text-muted">
+            {lang === 'ar'
+              ? 'هذا الإجراء سيُنشئ شهادة الاعتماد تلقائياً، ثم تُحفظ حتى يدفع العميل رسوم الشهادة. هل تريد المتابعة؟'
+              : 'This action will generate the approval certificate automatically, then keep it stored until the client pays the certificate fee. Do you want to continue?'}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="primary"
+              isLoading={approveDecisionSubmitting}
+              onClick={() => void submitApproveDecision()}
+            >
+              {lang === 'ar' ? 'نعم، اعتمد' : 'Yes, approve'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={closeApproveDecisionConfirm}
+              disabled={approveDecisionSubmitting}
+            >
+              {lang === 'ar' ? 'لا' : 'No'}
             </Button>
           </div>
         </div>

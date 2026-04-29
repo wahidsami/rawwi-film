@@ -67,6 +67,12 @@ export const config = {
    */
   ANALYSIS_ENGINE: ((process.env.ANALYSIS_ENGINE ?? "v2").toLowerCase() === "hybrid" ? "hybrid" : "v2") as "v2" | "hybrid",
   /**
+   * Violation prompt pack:
+   * - v2: current live prompts
+   * - v3: new policy-driven prompt overlay built from the updated violation handbook
+   */
+  VIOLATION_SYSTEM_VERSION: ((process.env.VIOLATION_SYSTEM_VERSION ?? "v2").toLowerCase() === "v3" ? "v3" : "v2") as "v2" | "v3",
+  /**
    * Pipeline version:
    * - v1: current production-safe pipeline
    * - v2: next-generation pipeline with staged rollout via job config

@@ -20,6 +20,7 @@
 export const PROMPT_VERSIONS = {
   router: "v1.1",
   judge: "v2.2-multipass",
+  violation_system: ((process.env.VIOLATION_SYSTEM_VERSION ?? "v2").toLowerCase() === "v3" ? "v3" : "v2"),
   auditor: "v1.2",
   schema: "v2.0",
 };
