@@ -2341,6 +2341,31 @@ export function Results() {
               />
               <span>{lang === 'ar' ? 'تحديث حالة النص تلقائياً' : 'Also update script status'}</span>
             </label>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-10 text-xs gap-1 text-success border-success/30 hover:bg-success/10"
+              onClick={() => handleReportReview('approved')}
+              disabled={reviewing || report.reviewStatus === 'approved'}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {lang === 'ar' ? 'قبول' : 'Approve'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-10 text-xs gap-1 text-error border-error/30 hover:bg-error/10"
+              onClick={() => void handleReportReview('rejected')}
+              disabled={reviewing || report.reviewStatus === 'approved' || report.reviewStatus === 'rejected'}
+            >
+              <XCircle className="w-3.5 h-3.5" />
+              {lang === 'ar' ? 'رفض' : 'Reject'}
+            </Button>
+            {report.reviewStatus !== 'under_review' && (
+              <Button size="sm" variant="ghost" className="h-10 text-xs" onClick={openReportReReviewModal} disabled={reviewing}>
+                {lang === 'ar' ? 'إعادة للمراجعة' : 'Re-review'}
+              </Button>
+            )}
           </div>
           <div className="relative flex items-center gap-2 shrink-0" ref={reportActionsMenuRef}>
             <button
