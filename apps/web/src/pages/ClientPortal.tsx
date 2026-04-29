@@ -119,6 +119,7 @@ export function ClientPortal() {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
   const [paymentSuccessOpen, setPaymentSuccessOpen] = useState(false);
+  const [paidScriptIds, setPaidScriptIds] = useState<Set<string>>(new Set());
   const [paymentForm, setPaymentForm] = useState({
     cardHolder: '',
     cardNumber: '',
@@ -230,12 +231,21 @@ export function ClientPortal() {
     setIsLoading(true);
     setError('');
     try {
-      const [me, list] = await Promise.all([
+      const [me, list, certDashboard] = await Promise.all([
         clientPortalApi.getMe(),
         clientPortalApi.getSubmissions(),
+        certificatesApi.getClientDashboard().catch(() => null),
       ]);
       setProfile(me);
       setSubmissions(list);
+      if (certDashboard) {
+        const paidIds = new Set(
+          (certDashboard.items ?? [])
+            .filter((item) => item.certificateStatus === 'issued' || item.latestPayment?.paymentStatus === 'completed')
+            .map((item) => item.scriptId),
+        );
+        setPaidScriptIds(paidIds);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تحميل بيانات البوابة' : 'Failed to load portal data'));
     } finally {
@@ -542,6 +552,11 @@ export function ClientPortal() {
       setPaymentSuccessOpen(true);
       const refreshed = await certificatesApi.getClientDashboard();
       setPaymentData(refreshed);
+      setPaidScriptIds(new Set(
+        (refreshed.items ?? [])
+          .filter((item) => item.certificateStatus === 'issued' || item.latestPayment?.paymentStatus === 'completed')
+          .map((item) => item.scriptId),
+      ));
       await loadProfileAndSubmissions();
     } catch (err) {
       setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر إتمام عملية الدفع' : 'Unable to complete payment'));
@@ -655,7 +670,7 @@ export function ClientPortal() {
                   const status = item.status.toLowerCase();
                   const isDraft = status === 'draft';
                   const isSubmitted = ['in_review', 'analysis_running', 'review_required'].includes(status);
-                  const canPay = status === 'approved';
+                  const canPay = status === 'approved' && !paidScriptIds.has(item.scriptId);
                   return (
                     <tr key={item.scriptId} className="border-b border-border/70 last:border-b-0">
                       <td className="px-4 py-3 text-text-muted">{(scriptsPage - 1) * scriptsPageSize + index + 1}</td>
