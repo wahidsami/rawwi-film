@@ -32,14 +32,19 @@ function splitStoragePath(pathOrUrl: string): { bucket: string; objectPath: stri
       const privatePrefix = 'sign/';
       const normalized = rest.startsWith(publicPrefix) ? rest.slice(publicPrefix.length) : rest.startsWith(privatePrefix) ? rest.slice(privatePrefix.length) : rest;
       const slash = normalized.indexOf('/');
-      if (slash > 0) return { bucket: normalized.slice(0, slash), objectPath: normalized.slice(slash + 1) };
+      if (slash > 0) {
+        const objectWithQuery = normalized.slice(slash + 1);
+        const objectPath = objectWithQuery.split('?')[0].split('#')[0];
+        return { bucket: normalized.slice(0, slash), objectPath };
+      }
     }
     return null;
   }
 
   const slash = trimmed.indexOf('/');
   if (slash <= 0) return null;
-  return { bucket: trimmed.slice(0, slash), objectPath: trimmed.slice(slash + 1) };
+  const objectPath = trimmed.slice(slash + 1).split('?')[0].split('#')[0];
+  return { bucket: trimmed.slice(0, slash), objectPath };
 }
 
 export function ClientRegistrationRequest() {
@@ -61,14 +66,17 @@ export function ClientRegistrationRequest() {
 
   const openDocument = async (doc: { name: string; path?: string; url?: string }) => {
     try {
-      let finalUrl = doc.url?.trim() || '';
-      if (!finalUrl && doc.path) {
-        const parsed = splitStoragePath(doc.path);
-        if (parsed) {
-          const { data, error } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.objectPath, 60 * 60);
-          if (error || !data?.signedUrl) throw new Error(error?.message || 'Unable to create signed URL');
-          finalUrl = data.signedUrl;
-        }
+      let finalUrl = '';
+      // Always prefer fresh signing from storage path for private docs.
+      const fromPath = doc.path ? splitStoragePath(doc.path) : null;
+      const fromUrl = !fromPath && doc.url ? splitStoragePath(doc.url) : null;
+      const parsed = fromPath ?? fromUrl;
+      if (parsed) {
+        const { data, error } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.objectPath, 60 * 60);
+        if (error || !data?.signedUrl) throw new Error(error?.message || 'Unable to create signed URL');
+        finalUrl = data.signedUrl;
+      } else if (doc.url?.trim()) {
+        finalUrl = doc.url.trim();
       }
       if (!finalUrl) {
         throw new Error(lang === 'ar' ? 'لا يوجد رابط متاح لهذا المستند' : 'No URL available for this document');
@@ -224,4 +232,3 @@ export function ClientRegistrationRequest() {
     </div>
   );
 }
-
