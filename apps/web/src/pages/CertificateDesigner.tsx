@@ -41,6 +41,20 @@ const FILM_LOGO_PLACEHOLDER =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120"><rect width="240" height="120" rx="16" fill="#111827"/><text x="120" y="54" text-anchor="middle" font-family="Arial" font-size="18" fill="#ffffff">FILM</text><text x="120" y="80" text-anchor="middle" font-family="Arial" font-size="16" fill="#d1d5db">COMMISSION</text></svg>');
 
+const CERTIFICATE_FONT_OPTIONS = [
+  { label: 'Cairo', value: "'Cairo', Tahoma, sans-serif" },
+  { label: 'Hacen Saudi Arabia', value: "'Hacen Saudi Arabia', 'Cairo', Tahoma, sans-serif" },
+  { label: 'Hacen Tunisia', value: "'Hacen Tunisia', 'Cairo', Tahoma, sans-serif" },
+  { label: 'Hacen Liner Screen', value: "'Hacen Liner Screen', 'Cairo', Tahoma, sans-serif" },
+  { label: 'Hacen Algeria', value: "'Hacen Algeria', 'Cairo', Tahoma, sans-serif" },
+  { label: 'Traditional Arabic', value: "'Traditional Arabic', 'Cairo', Tahoma, serif" },
+  { label: 'Simplified Arabic', value: "'Simplified Arabic', 'Cairo', Tahoma, sans-serif" },
+  { label: 'Tahoma', value: 'Tahoma, Arial, sans-serif' },
+  { label: 'Arial', value: 'Arial, sans-serif' },
+  { label: 'Georgia', value: 'Georgia, serif' },
+  { label: 'Times New Roman', value: "'Times New Roman', serif" },
+];
+
 type DragMode = 'move' | 'resize';
 
 function snap(value: number, enabled: boolean) {
@@ -56,7 +70,7 @@ function makeElement(type: CertificateElementType): CertificateTemplateElement {
     y: 120,
     width: 220,
     height: 80,
-    fontFamily: 'Arial',
+    fontFamily: "'Cairo', Tahoma, sans-serif",
     fontSize: type === 'title' ? 34 : 18,
     bold: type === 'title',
     italic: false,
@@ -469,9 +483,9 @@ export function CertificateDesigner() {
                     <Textarea label="Text" value={selected.text ?? ''} onChange={(event) => updateElement(selected.id, { text: event.target.value })} />
                     <Select
                       label="Font"
-                      value={selected.fontFamily ?? 'Arial'}
+                      value={selected.fontFamily ?? "'Cairo', Tahoma, sans-serif"}
                       onChange={(event) => updateElement(selected.id, { fontFamily: event.target.value })}
-                      options={[{ label: 'Arial', value: 'Arial' }, { label: 'Georgia', value: 'Georgia' }, { label: 'Times New Roman', value: 'Times New Roman' }, { label: 'Tahoma', value: 'Tahoma' }]}
+                      options={CERTIFICATE_FONT_OPTIONS}
                     />
                     <Input label="Size" type="number" value={selected.fontSize ?? 18} onChange={(event) => updateElement(selected.id, { fontSize: Number(event.target.value) })} />
                     <Input label="Color" type="color" value={selected.color ?? '#111827'} onChange={(event) => updateElement(selected.id, { color: event.target.value })} />

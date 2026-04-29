@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Document, Image, Page, Text, View, pdf } from '@react-pdf/renderer';
+import { Document, Font, Image, Page, Text, View, pdf } from '@react-pdf/renderer';
 import QRCode from 'qrcode';
 import { AlertTriangle, Award, BadgeCheck, CreditCard, Download, Loader2, ShieldCheck } from 'lucide-react';
 import {
@@ -20,6 +20,16 @@ type ClientCertificatesSectionProps = {
 };
 
 type CertificateStatus = CertificateDashboardItem['certificateStatus'];
+
+const fontBase = typeof window !== 'undefined' ? window.location.origin : '';
+
+Font.register({
+  family: 'CertificateCairo',
+  fonts: [
+    { src: `${fontBase}/fonts/Cairo-Regular.ttf` },
+    { src: `${fontBase}/fonts/Cairo-Bold.ttf`, fontWeight: 700 },
+  ],
+});
 
 function formatCurrency(amount: number, currency: string, lang: 'ar' | 'en') {
   return new Intl.NumberFormat(lang === 'ar' ? 'ar-SA' : 'en-US', {
@@ -94,6 +104,20 @@ function resolveTemplateText(text: string | undefined, item: CertificateDashboar
     .replaceAll('{{verification_url}}', getCertificateVerificationUrl(item));
 }
 
+function resolvePdfFontFamily(fontFamily?: string) {
+  const normalized = (fontFamily ?? '').toLowerCase();
+  if (
+    normalized.includes('cairo') ||
+    normalized.includes('hacen') ||
+    normalized.includes('arabic') ||
+    normalized.includes('tahoma')
+  ) {
+    return 'CertificateCairo';
+  }
+  if (normalized.includes('times')) return 'Times-Roman';
+  return 'Helvetica';
+}
+
 function pageDimensions(template?: CertificateTemplate | null) {
   const base = PDF_PAGE_SIZE[template?.pageSize ?? 'A4'] ?? PDF_PAGE_SIZE.A4;
   const orientation = template?.orientation ?? 'landscape';
@@ -118,7 +142,7 @@ function elementStyle(element: CertificateTemplateElement, page: { width: number
   };
 }
 
-function TemplateElementPdf({ element, item, lang, page, template }: {
+function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl }: {
   element: CertificateTemplateElement;
   item: CertificateDashboardItem;
   lang: 'ar' | 'en';
@@ -146,7 +170,7 @@ function TemplateElementPdf({ element, item, lang, page, template }: {
         boxStyle,
         {
           fontSize: element.fontSize ?? 18,
-          fontFamily: 'Helvetica',
+          fontFamily: resolvePdfFontFamily(element.fontFamily),
           fontWeight: element.bold ? 700 : 400,
           fontStyle: element.italic ? 'italic' : 'normal',
           color: element.color ?? '#111827',
@@ -160,7 +184,7 @@ function TemplateElementPdf({ element, item, lang, page, template }: {
   );
 }
 
-function CertificatePdfDocument({ item, lang, template }: {
+function CertificatePdfDocument({ item, lang, template, qrDataUrl }: {
   item: CertificateDashboardItem;
   lang: 'ar' | 'en';
   template?: CertificateTemplate | null;
@@ -195,7 +219,7 @@ function CertificatePdfDocument({ item, lang, template }: {
   }
   return (
     <Document>
-      <Page size="A4" orientation="landscape" style={{ padding: 44, backgroundColor: '#fffdf8', color: '#1f2333' }}>
+      <Page size="A4" orientation="landscape" style={{ padding: 44, backgroundColor: '#fffdf8', color: '#1f2333', fontFamily: lang === 'ar' ? 'CertificateCairo' : 'Helvetica' }}>
         <View style={{ borderWidth: 8, borderColor: '#d2ba6a', padding: 28, height: '100%' }}>
           <Text style={{ fontSize: 12, color: '#86652c', letterSpacing: 2 }}>{lang === 'ar' ? 'نظام راوي فيلم' : 'RAAWI FILM SYSTEM'}</Text>
           <Text style={{ marginTop: 10, fontSize: 34, color: '#3c2a63', fontWeight: 700 }}>{lang === 'ar' ? 'شهادة اعتماد النص' : 'Script Approval Certificate'}</Text>
