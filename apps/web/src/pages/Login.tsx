@@ -104,7 +104,7 @@ export function Login() {
                 </Button>
 
                 <div className="text-center pt-1">
-                  <Link to="/portal" className="text-sm text-text-muted hover:text-text-main">
+                  <Link to="/" className="text-sm text-text-muted hover:text-text-main">
                     {lang === 'ar' ? 'العودة للرئيسية' : 'Back to main'}
                   </Link>
                 </div>

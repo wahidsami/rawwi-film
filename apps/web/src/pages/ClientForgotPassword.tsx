@@ -65,7 +65,7 @@ export function ClientForgotPassword() {
             <Link to="/client/login" className="text-sm text-primary hover:underline block">
               {lang === 'ar' ? 'العودة لتسجيل دخول العملاء' : 'Back to Client Login'}
             </Link>
-            <Link to="/portal" className="text-sm text-text-muted hover:text-text-main block">
+            <Link to="/" className="text-sm text-text-muted hover:text-text-main block">
               {lang === 'ar' ? 'العودة للرئيسية' : 'Back to main'}
             </Link>
           </div>
