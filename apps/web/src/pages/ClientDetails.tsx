@@ -135,6 +135,7 @@ export function ClientDetails() {
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [reportCountByScriptId, setReportCountByScriptId] = useState<Record<string, number>>({});
+  const [effectiveStatusByScriptId, setEffectiveStatusByScriptId] = useState<Record<string, string>>({});
   const [companyCertificates, setCompanyCertificates] = useState<CertificateDashboardItem[]>([]);
   const [certificatesLoading, setCertificatesLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'scripts' | 'certificates'>('scripts');
@@ -171,17 +172,25 @@ export function ClientDetails() {
   const loadReportCounts = useCallback(async () => {
     if (companyScripts.length === 0) return;
     const counts: Record<string, number> = {};
+    const effectiveStatuses: Record<string, string> = {};
     await Promise.all(
       companyScripts.map(async (script) => {
         try {
           const list = await reportsApi.listByScript(script.id);
           counts[script.id] = list.length;
+          const latest = list[0];
+          const review = String((latest as any)?.reviewStatus ?? '').toLowerCase();
+          if (review === 'approved') effectiveStatuses[script.id] = 'approved';
+          else if (review === 'rejected') effectiveStatuses[script.id] = 'rejected';
+          else effectiveStatuses[script.id] = script.status;
         } catch {
           counts[script.id] = 0;
+          effectiveStatuses[script.id] = script.status;
         }
       })
     );
     setReportCountByScriptId((prev) => ({ ...prev, ...counts }));
+    setEffectiveStatusByScriptId((prev) => ({ ...prev, ...effectiveStatuses }));
   }, [companyScripts]);
 
   useEffect(() => {
@@ -625,6 +634,18 @@ export function ClientDetails() {
               </thead>
               <tbody>
                 {companyScripts.map((script) => (
+                  (() => {
+                    const effectiveStatus = effectiveStatusByScriptId[script.id] ?? script.status;
+                    const normalized = String(effectiveStatus).toLowerCase();
+                    const badgeVariant =
+                      normalized === 'draft'
+                        ? 'outline'
+                        : normalized === 'approved'
+                          ? 'success'
+                          : normalized === 'rejected'
+                            ? 'error'
+                            : 'warning';
+                    return (
                   <tr
                     key={script.id}
                     className="bg-surface border-b border-border hover:bg-background/50 transition-colors cursor-pointer group"
@@ -636,8 +657,8 @@ export function ClientDetails() {
                     <td className="px-6 py-4">{script.type}</td>
                     <td className="px-6 py-4 text-text-muted">{script.createdAt}</td>
                     <td className="px-6 py-4">
-                      <Badge variant={script.status === 'Draft' ? 'outline' : script.status === 'Approved' ? 'success' : 'warning'}>
-                        {normalizeScriptStatusForDisplay(script.status)}
+                      <Badge variant={badgeVariant}>
+                        {normalizeScriptStatusForDisplay(effectiveStatus)}
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
@@ -687,6 +708,8 @@ export function ClientDetails() {
                       )}
                     </td>
                   </tr>
+                    );
+                  })()
                 ))}
               </tbody>
             </table>

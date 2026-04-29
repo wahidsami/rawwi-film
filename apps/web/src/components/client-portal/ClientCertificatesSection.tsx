@@ -159,17 +159,27 @@ function elementStyle(element: CertificateTemplateElement, page: { width: number
 function sanitizeTemplateElements(template?: CertificateTemplate | null): CertificateTemplateElement[] {
   const raw = template?.templateData?.elements;
   if (!Array.isArray(raw)) return [];
-  return raw.filter((element) => (
-    element &&
-    typeof element.id === 'string' &&
-    typeof element.type === 'string' &&
-    Number.isFinite(element.x) &&
-    Number.isFinite(element.y) &&
-    Number.isFinite(element.width) &&
-    Number.isFinite(element.height) &&
-    element.width > 0 &&
-    element.height > 0
-  ));
+  return raw
+    .map((element) => {
+      if (!element || typeof element.id !== 'string' || typeof element.type !== 'string') return null;
+      const x = Number((element as any).x);
+      const y = Number((element as any).y);
+      const width = Number((element as any).width);
+      const height = Number((element as any).height);
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(width) || !Number.isFinite(height)) return null;
+      if (width <= 0 || height <= 0) return null;
+      return { ...element, x, y, width, height } as CertificateTemplateElement;
+    })
+    .filter((element): element is CertificateTemplateElement => Boolean(element));
+}
+
+function hasRenderableTemplateContent(elements: CertificateTemplateElement[]): boolean {
+  return elements.some((element) => {
+    if (element.type === 'qr') return true;
+    if (element.type === 'logo') return Boolean(element.imageUrl) || element.logoSource === 'client' || element.logoSource === 'film_commission';
+    if (element.type === 'image') return Boolean(element.imageUrl);
+    return Boolean((element.text ?? '').trim());
+  });
 }
 
 function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl }: {
@@ -227,7 +237,7 @@ function CertificatePdfDocument({ item, lang, template, qrDataUrl }: {
   const values = getCertificateValues(item, lang);
   const page = pageDimensions(template);
   const templateElements = sanitizeTemplateElements(template);
-  if (template && templateElements.length > 0) {
+  if (template && templateElements.length > 0 && hasRenderableTemplateContent(templateElements)) {
     return (
       <Document>
         <Page wrap={false} size={[page.width, page.height]} style={{ position: 'relative', backgroundColor: template.backgroundColor }}>
