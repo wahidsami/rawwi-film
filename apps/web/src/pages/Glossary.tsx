@@ -4,7 +4,12 @@ import { useLangStore } from '@/store/langStore';
 import { useDataStore, LexiconTerm } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
 import { getPolicyArticles } from '@/data/policyMap';
-import { getCanonicalAtomOptions, inferCanonicalAtomFromGcam } from '@/data/canonicalAtomGcamMap';
+import {
+  getLegacyPolicyArticleIdForViolationTypeId,
+  violationTypesForChecklist,
+  violationTypeLabel,
+  type ViolationTypeId,
+} from '@/data/violationTypes';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -46,6 +51,35 @@ function parseGeneratedVariantsInput(value: string): string[] {
 
 function serializeGeneratedVariantsInput(values: string[] | null | undefined): string {
   return (values ?? []).join('\n');
+}
+
+function inferViolationTypeIdFromLegacyGcam(articleId: number | null | undefined, atomId?: string | null): ViolationTypeId {
+  const normalizedArticleId = Number(articleId);
+  const normalizedAtomId = (atomId ?? '').trim();
+  if (normalizedArticleId === 4) return 'religious_fundamentals';
+  if (normalizedArticleId === 5) return 'profanity';
+  if (normalizedArticleId === 6) {
+    if (normalizedAtomId.includes('4')) return 'bullying';
+    if (normalizedAtomId.includes('3')) return 'child_disability_harm';
+    return 'children_crime';
+  }
+  if (normalizedArticleId === 7) return 'women_abuse';
+  if (normalizedArticleId === 8) return 'society_identity';
+  if (normalizedArticleId === 9) {
+    if (normalizedAtomId.includes('4')) return 'inappropriate_sexual_content';
+    return 'explicit_sexual_scenes';
+  }
+  if (normalizedArticleId === 10) return 'drugs_alcohol';
+  if (normalizedArticleId === 12) return 'national_security';
+  if (normalizedArticleId === 13) return 'political_leadership';
+  if (normalizedArticleId === 16) return 'historical_unreliable';
+  if (normalizedArticleId === 17) {
+    if (normalizedAtomId.includes('14')) return 'parents_abuse';
+    if (normalizedAtomId.includes('15')) return 'elderly_abuse';
+    if (normalizedAtomId.includes('16')) return 'bullying';
+    return 'family_values';
+  }
+  return 'other';
 }
 
 export function Glossary() {
@@ -349,7 +383,7 @@ export function Glossary() {
                 <th className="px-6 py-4 font-semibold">{t('term')}</th>
                 <th className="px-6 py-4 font-semibold">{t('termType')}</th>
                 <th className="px-6 py-4 font-semibold">{t('category')}</th>
-                <th className="px-6 py-4 font-semibold">{t('article')}</th>
+                <th className="px-6 py-4 font-semibold">{lang === 'ar' ? 'نوع المخالفة' : 'Violation type'}</th>
                 <th className="px-6 py-4 font-semibold">{lang === 'ar' ? 'أضافه' : 'Added by'}</th>
                 <th className="px-6 py-4 font-semibold text-end">{t('actions')}</th>
               </tr>
@@ -371,8 +405,11 @@ export function Glossary() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-xs">
-                      <p className="font-semibold">{t('article')} {term.gcam_article_id} {term.gcam_atom_id ? `(${term.gcam_atom_id})` : ''}</p>
-                      {term.gcam_article_title_ar && <p className="text-text-muted mt-0.5">{term.gcam_article_title_ar}</p>}
+                      <p className="font-semibold">
+                        {lang === 'ar'
+                          ? violationTypeLabel(inferViolationTypeIdFromLegacyGcam(term.gcam_article_id, term.gcam_atom_id ?? null), 'ar')
+                          : violationTypeLabel(inferViolationTypeIdFromLegacyGcam(term.gcam_article_id, term.gcam_atom_id ?? null), 'en')}
+                      </p>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-text-muted text-xs">
@@ -535,7 +572,8 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
   const { lexiconTerms, addLexiconTerm, updateLexiconTerm } = useDataStore();
   const { user } = useAuthStore();
 
-  type FormState = Partial<LexiconTerm> & { canonical_atom?: string };
+  const violationTypes = violationTypesForChecklist();
+  type FormState = Partial<LexiconTerm> & { violationTypeId?: ViolationTypeId };
   const defaultForm: FormState = {
     term: '',
     term_type: 'word',
@@ -548,7 +586,7 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
     description: '',
     example_usage: '',
     term_variants: [],
-    canonical_atom: '',
+    violationTypeId: 'other',
   };
 
   const [formData, setFormData] = useState<FormState>(defaultForm);
@@ -559,22 +597,17 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
   const [generatingFromPrompt, setGeneratingFromPrompt] = useState(false);
   const [error, setError] = useState('');
   const applyPromptModeDefaults = (input: FormState): FormState => {
-    const currentCanonical = input.canonical_atom?.trim();
-    const canonical = currentCanonical && currentCanonical.length > 0 ? currentCanonical : 'OTHER';
-    const canonicalOption = getCanonicalAtomOptions().find((o) => o.id === canonical);
-    const article = canonicalOption
-      ? getPolicyArticles().find((a) => a.articleId === canonicalOption.articleId)
-      : null;
+    const currentType = input.violationTypeId ?? 'other';
     return {
       ...input,
       term_type: 'phrase',
       category: 'other',
       severity_floor: 'Medium',
       enforcement_mode: 'mandatory_finding',
-      canonical_atom: canonical,
-      gcam_article_id: canonicalOption?.articleId ?? input.gcam_article_id ?? 1,
-      gcam_atom_id: canonicalOption?.atomId ?? input.gcam_atom_id ?? '',
-      gcam_article_title_ar: article?.title_ar ?? input.gcam_article_title_ar ?? '',
+      violationTypeId: currentType,
+      gcam_article_id: getLegacyPolicyArticleIdForViolationTypeId(currentType),
+      gcam_atom_id: '',
+      gcam_article_title_ar: getPolicyArticles().find((a) => a.articleId === getLegacyPolicyArticleIdForViolationTypeId(currentType))?.title_ar ?? '',
     };
   };
 
@@ -583,23 +616,15 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
     if (isOpen) {
       const existingTerm = termId ? lexiconTerms.find(t => t.id === termId) : null;
       if (existingTerm) {
-        const inferred = inferCanonicalAtomFromGcam(
-          existingTerm.gcam_article_id,
-          existingTerm.gcam_atom_id ?? null
-        );
-        const opt = inferred ? getCanonicalAtomOptions().find((o) => o.id === inferred) : null;
+        const inferred = inferViolationTypeIdFromLegacyGcam(existingTerm.gcam_article_id, existingTerm.gcam_atom_id ?? null);
         setFormData({
           ...existingTerm,
           term_variants: existingTerm.term_variants ?? [],
-          canonical_atom: inferred || '',
-          ...(opt
-            ? {
-                gcam_article_id: opt.articleId,
-                gcam_atom_id: opt.atomId ?? '',
-                gcam_article_title_ar:
-                  getPolicyArticles().find((a) => a.articleId === opt.articleId)?.title_ar ?? existingTerm.gcam_article_title_ar,
-              }
-            : {}),
+          violationTypeId: inferred,
+          gcam_article_id: getLegacyPolicyArticleIdForViolationTypeId(inferred),
+          gcam_atom_id: '',
+          gcam_article_title_ar:
+            getPolicyArticles().find((a) => a.articleId === getLegacyPolicyArticleIdForViolationTypeId(inferred))?.title_ar ?? existingTerm.gcam_article_title_ar,
         });
         setGeneratedVariantsText(serializeGeneratedVariantsInput(existingTerm.term_variants ?? []));
         setPromptMode(false);
@@ -685,8 +710,8 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
       setError(lang === 'ar' ? 'المصطلح مطلوب' : 'Term is required');
       return;
     }
-    if (!formData.canonical_atom?.trim()) {
-      setError(lang === 'ar' ? 'اختر نوع المخالفة (إطار الذرات)' : 'Select a violation type (canonical atom)');
+    if (!formData.violationTypeId) {
+      setError(lang === 'ar' ? 'اختر نوع المخالفة' : 'Select a violation type');
       return;
     }
     if (promptMode && (formData.term_variants ?? []).length === 0) {
@@ -705,7 +730,7 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
       return;
     }
 
-    const { canonical_atom: _, ...rest } = formData;
+    const { violationTypeId: _, ...rest } = formData;
     const payload = { ...rest };
     if (Array.isArray(payload.term_variants) && payload.term_variants.length === 0) {
       delete (payload as Partial<LexiconTerm>).term_variants;
@@ -777,54 +802,35 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
               : 'Conservative Arabic detection normalization is applied during matching: diacritics, tatweel, hidden characters, and odd letter spacing are cleaned up, with common normalization such as أ/إ/آ -> ا and ى -> ي. It is still best to enter the term in normal Arabic spelling.')}
         </p>
 
-        {/* Canonical atom: when selected, Article + Atom + Title are set automatically and shown read-only */}
         <div>
           <label className="block text-sm font-medium text-text-main mb-1">
-            {lang === 'ar' ? 'نوع المخالفة (إطار الذرات) *' : 'Violation type (canonical atom) *'}
+            {lang === 'ar' ? 'نوع المخالفة *' : 'Violation type *'}
           </label>
           <Select
-            value={formData.canonical_atom ?? ''}
+            value={formData.violationTypeId ?? 'other'}
             onChange={(e) => {
-              const val = e.target.value;
-              if (!val) {
-                setFormData({ ...formData, canonical_atom: '', gcam_article_id: 1, gcam_atom_id: '', gcam_article_title_ar: '' });
-                return;
-              }
-              const opt = getCanonicalAtomOptions().find((o) => o.id === val);
-              if (opt) {
-                const article = getPolicyArticles().find((a) => a.articleId === opt.articleId);
-                setFormData({
-                  ...formData,
-                  canonical_atom: val,
-                  gcam_article_id: opt.articleId,
-                  gcam_atom_id: opt.atomId ?? '',
-                  gcam_article_title_ar: article?.title_ar ?? '',
-                });
-              }
+              const violationTypeId = e.target.value as ViolationTypeId;
+              const legacyArticleId = getLegacyPolicyArticleIdForViolationTypeId(violationTypeId);
+              setFormData({
+                ...formData,
+                violationTypeId,
+                gcam_article_id: legacyArticleId,
+                gcam_atom_id: '',
+                gcam_article_title_ar: getPolicyArticles().find((a) => a.articleId === legacyArticleId)?.title_ar ?? '',
+              });
             }}
             options={[
               { label: lang === 'ar' ? '— اختر نوع المخالفة —' : '— Select violation type —', value: '' },
-              ...getCanonicalAtomOptions().map((o) => ({
-                label: lang === 'ar' ? `${o.labelAr} (م ${o.articleId})` : `${o.labelEn} (Art ${o.articleId})`,
+              ...violationTypes.map((o) => ({
+                label: lang === 'ar' ? o.titleAr : o.titleEn,
                 value: o.id,
               })),
             ]}
             className="w-full"
           />
-          {formData.canonical_atom ? (
-            <div className="mt-2 p-3 rounded-md bg-muted/50 border border-border text-sm text-text-main">
-              {lang === 'ar' ? 'المادة والذرة المرتبطة:' : 'Linked article & atom:'}{' '}
-              <span dir="rtl" className="font-medium">
-                {lang === 'ar' ? `م ${formData.gcam_article_id}` : `Art ${formData.gcam_article_id}`}
-                {formData.gcam_article_title_ar ? ` — ${formData.gcam_article_title_ar}` : ''}
-                {formData.gcam_atom_id ? ` (${formData.gcam_atom_id})` : ''}
-              </span>
-            </div>
-          ) : (
-            <p className="text-xs text-text-muted mt-0.5">
-              {lang === 'ar' ? 'مطلوب. يحدد المادة والذرة تلقائياً.' : 'Required. Sets article and atom automatically.'}
-            </p>
-          )}
+          <p className="text-xs text-text-muted mt-0.5">
+            {lang === 'ar' ? 'يُستخدم هذا الاختيار داخلياً لربط المصطلح بالمخالفات الحالية.' : 'This selection is used internally to map the term to the current violation system.'}
+          </p>
         </div>
 
         {!promptMode && (
