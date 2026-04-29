@@ -117,7 +117,7 @@ function normalizeType(t: unknown): string {
 
 function normalizeStatus(s: unknown): string {
   const v = String(s).toLowerCase().replace(/\s+/g, "_");
-  const allowed = ["draft", "in_review", "analysis_running", "review_required", "approved", "rejected"];
+  const allowed = ["draft", "in_review", "analysis_running", "review_required", "approved", "rejected", "canceled", "cancelled"];
   return allowed.includes(v) ? v : "draft";
 }
 
@@ -355,6 +355,41 @@ async function notifyAdminsOnClientSubmission(
   const { error } = await supabase.from("notifications").insert(notifications);
   if (error) {
     console.error("[scripts] notify admins on client submission:", error.message);
+  }
+}
+
+async function notifyAdminsOnClientScriptCanceled(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  payload: { scriptId: string; scriptTitle: string; companyId: string; canceledByUserId: string }
+) {
+  const { scriptId, scriptTitle, companyId, canceledByUserId } = payload;
+  const { data: admins } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .in("role", ["Super Admin", "Admin"]);
+  const adminUserIds = (admins ?? [])
+    .map((row: { user_id?: string | null }) => row.user_id)
+    .filter((value): value is string => Boolean(value));
+  if (adminUserIds.length === 0) return;
+
+  const notifications = adminUserIds.map((adminUserId) => ({
+    user_id: adminUserId,
+    type: "client_script_deleted",
+    title: "Client canceled a script",
+    message: `Client canceled script "${scriptTitle}".`,
+    link: `/workspace/${scriptId}`,
+    data: {
+      scriptId,
+      scriptTitle,
+      companyId,
+      canceledByUserId,
+      eventType: "client_script_deleted",
+    },
+  }));
+
+  const { error } = await supabase.from("notifications").insert(notifications);
+  if (error) {
+    console.error("[scripts] notify admins on client script cancel:", error.message);
   }
 }
 
@@ -1602,20 +1637,39 @@ Deno.serve(async (req: Request) => {
     const scriptId = rest.trim();
     const { data: script, error: findErr } = await supabase
       .from("scripts")
-      .select("id, created_by")
+      .select("id, created_by, title, company_id, client_id, status")
       .eq("id", scriptId)
       .maybeSingle();
     if (findErr || !script) return json({ error: "Script not found" }, 404);
     if ((script as any).created_by !== uid) return json({ error: "Forbidden" }, 403);
-    const { error: delErr } = await supabase
-      .from("scripts")
-      .delete()
-      .eq("id", scriptId);
-    if (delErr) {
-      console.error(`[scripts] correlationId=${correlationId} delete error=`, delErr.message);
-      return json({ error: delErr.message }, 500);
+
+    const currentStatus = String((script as any).status ?? "").toLowerCase();
+    if (currentStatus === "canceled" || currentStatus === "cancelled") {
+      return json({ ok: true, alreadyCanceled: true });
     }
-    return json({ ok: true });
+
+    const { data: updated, error: updateErr } = await supabase
+      .from("scripts")
+      .update({ status: "canceled" })
+      .eq("id", scriptId)
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .single();
+    if (updateErr || !updated) {
+      console.error(`[scripts] correlationId=${correlationId} soft-cancel error=`, updateErr?.message);
+      return json({ error: updateErr?.message || "Failed to cancel script" }, 500);
+    }
+
+    const scriptRow = updated as ScriptRow;
+    const createdByClient = await isClientUser(supabase, uid);
+    if (createdByClient) {
+      await notifyAdminsOnClientScriptCanceled(supabase, {
+        scriptId: scriptRow.id,
+        scriptTitle: scriptRow.title,
+        companyId: scriptRow.company_id ?? scriptRow.client_id,
+        canceledByUserId: uid,
+      });
+    }
+    return json({ ok: true, script: toScriptFrontend(scriptRow) });
   }
 
   // Stubs: POST /scripts/upload, POST /scripts/extract (frontend uses top-level /upload, /extract)

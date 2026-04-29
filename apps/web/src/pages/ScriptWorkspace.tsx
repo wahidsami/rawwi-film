@@ -1526,6 +1526,7 @@ export function ScriptWorkspace() {
   const [scriptFetched, setScriptFetched] = useState<Script | null>(null);
   const [scriptByIdLoading, setScriptByIdLoading] = useState(true);
   const script = scriptFromList ?? scriptFetched ?? undefined;
+  const isClientCanceledScript = ['canceled', 'cancelled'].includes(String(script?.status ?? '').toLowerCase());
   const scriptFindings = findings.filter(f => f.scriptId === id);
   const manualScriptFindings = useMemo(
     () => scriptFindings.filter((f) => f.source === 'manual'),
@@ -5132,7 +5133,7 @@ export function ScriptWorkspace() {
               variant="outline"
               size="sm"
               onClick={handleOpenFilePicker}
-              disabled={isUploading}
+              disabled={isUploading || isClientCanceledScript}
               className="hidden sm:flex gap-2 relative overflow-hidden group"
             >
               <Upload className="w-4 h-4" />
@@ -5158,7 +5159,7 @@ export function ScriptWorkspace() {
               value={analysisModeProfile}
               onChange={(e) => setAnalysisModeProfile(e.target.value as AnalysisModeProfile)}
               className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm text-text-main focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-              disabled={isAnalyzing || isAnalysisRunning}
+              disabled={isAnalyzing || isAnalysisRunning || isClientCanceledScript}
               title={lang === 'ar' ? 'اختر نمط التحليل قبل بدء الفحص' : 'Choose an analysis mode before starting'}
             >
               {ANALYSIS_MODE_OPTIONS.map((option) => (
@@ -5174,7 +5175,7 @@ export function ScriptWorkspace() {
               size="sm"
               className="flex gap-2"
               onClick={isAnalysisRunning ? () => setAnalysisModalOpen(true) : handleStartAnalysis}
-              disabled={!hasVersionForAnalysis || isAnalyzing}
+              disabled={!hasVersionForAnalysis || isAnalyzing || isClientCanceledScript}
               title={!hasVersionForAnalysis ? (lang === 'ar' ? 'ارفع ملف نص أولاً' : 'Upload a script file first') : isAnalysisRunning ? (lang === 'ar' ? 'عرض التقدم' : 'View progress') : (lang === 'ar' ? 'تشغيل التحليل الذكي' : 'Queue analysis')}
             >
               {isAnalysisRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
@@ -5188,7 +5189,7 @@ export function ScriptWorkspace() {
             size="sm" 
             className="flex gap-2"
             onClick={() => navigate(analysisJobId ? `/report/${analysisJobId}?by=job${reportQuickQuery}` : `/report/${script.id}?by=script${reportQuickQuery}`)}
-            disabled={!hasGeneratedReport}
+            disabled={!hasGeneratedReport || isClientCanceledScript}
             title={!hasGeneratedReport ? missingReportReason : undefined}
           >
             <FileText className="w-4 h-4" />
@@ -5199,7 +5200,7 @@ export function ScriptWorkspace() {
             variant="outline"
             className="flex gap-2"
             onClick={handleDownloadAnnotatedWorkspacePdf}
-            disabled={!strictImportedAnchoring || !selectedReportForHighlights || isDownloadingAnnotatedPdf || !annotatedWorkspaceExport.pages.length}
+            disabled={!strictImportedAnchoring || !selectedReportForHighlights || isDownloadingAnnotatedPdf || !annotatedWorkspaceExport.pages.length || isClientCanceledScript}
             title={
               !strictImportedAnchoring
                 ? (lang === 'ar' ? 'هذا التصدير مخصص للنسخة المستوردة داخل مساحة العمل.' : 'This export is for the imported working copy inside the workspace.')
@@ -5215,6 +5216,13 @@ export function ScriptWorkspace() {
       </div>
 
       <div className="flex-1 flex min-h-0 relative">
+        {isClientCanceledScript && (
+          <div className="absolute top-0 left-0 right-0 z-20 bg-error/15 border-b border-error/40 px-4 py-2 text-sm text-error">
+            {lang === 'ar'
+              ? 'تم إلغاء هذا النص من قبل العميل. تم إيقاف إجراءات مساحة العمل.'
+              : 'This script was canceled by the client. Workspace actions are disabled.'}
+          </div>
+        )}
 
         <div
           ref={viewerScrollRef}

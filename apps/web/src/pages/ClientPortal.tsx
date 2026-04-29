@@ -4,11 +4,16 @@ import {
   ArrowUpRight,
   Award,
   BellRing,
+  CreditCard,
   Clock3,
+  Eye,
   FileCheck2,
   FolderKanban,
+  Pencil,
+  Search,
   Settings2,
   ShieldAlert,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -104,6 +109,11 @@ export function ClientPortal() {
   const [detailsError, setDetailsError] = useState('');
   const [details, setDetails] = useState<ClientPortalRejectionDetailsResponse | null>(null);
   const [downloadingReportId, setDownloadingReportId] = useState<string | null>(null);
+  const [scriptsSearch, setScriptsSearch] = useState('');
+  const [scriptsStatusFilter, setScriptsStatusFilter] = useState<'all' | 'draft' | 'submitted' | 'approved' | 'rejected'>('all');
+  const [scriptsPage, setScriptsPage] = useState(1);
+  const [scriptToDelete, setScriptToDelete] = useState<ClientPortalSubmissionItem | null>(null);
+  const [editingDraft, setEditingDraft] = useState<ClientPortalSubmissionItem | null>(null);
 
   type RejectionReportBlock = {
     report: NonNullable<ClientPortalRejectionDetailsResponse['sharedReports']>[number]['report'];
@@ -399,6 +409,80 @@ export function ClientPortal() {
     }
   };
 
+  const handleSaveDraft = async () => {
+    setNotice('');
+    setError('');
+    if (!profile?.company?.companyId) {
+      setError(lang === 'ar' ? 'تعذّر تحديد الشركة الحالية' : 'Unable to resolve your company account');
+      return;
+    }
+    if (!form.title.trim()) {
+      setError(lang === 'ar' ? 'عنوان النص مطلوب' : 'Script title is required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (editingDraft) {
+        await scriptsApi.updateScript(editingDraft.scriptId, {
+          title: form.title.trim(),
+          type: form.type,
+          workClassification: form.workClassification,
+          synopsis: form.synopsis.trim(),
+          receivedAt: form.receivedAt || null,
+          status: 'draft',
+        } as Partial<Script>);
+      } else {
+        const scriptPayload: Script = {
+          id: '',
+          companyId: profile.company.companyId,
+          title: form.title.trim(),
+          type: form.type,
+          workClassification: form.workClassification,
+          synopsis: form.synopsis.trim(),
+          status: 'draft',
+          receivedAt: form.receivedAt || null,
+          createdAt: new Date().toISOString(),
+        };
+        await scriptsApi.addScript(scriptPayload);
+      }
+      setNotice(lang === 'ar' ? 'تم حفظ النص كمسودة.' : 'Script saved as draft.');
+      setEditingDraft(null);
+      await loadProfileAndSubmissions();
+      setActiveSection('scripts');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل حفظ المسودة' : 'Failed to save draft'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteScript = async () => {
+    if (!scriptToDelete) return;
+    setNotice('');
+    setError('');
+    try {
+      await scriptsApi.deleteScript(scriptToDelete.scriptId);
+      setNotice(lang === 'ar' ? 'تم إلغاء النص بنجاح.' : 'Script canceled successfully.');
+      setScriptToDelete(null);
+      await loadProfileAndSubmissions();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر إلغاء النص' : 'Unable to cancel script'));
+    }
+  };
+
+  const startEditDraft = (item: ClientPortalSubmissionItem) => {
+    setEditingDraft(item);
+    setForm((prev) => ({
+      ...prev,
+      title: item.title ?? '',
+      type: item.type === 'Series' ? 'Series' : 'Film',
+      receivedAt: item.receivedAt ? String(item.receivedAt).slice(0, 10) : new Date().toISOString().slice(0, 10),
+      synopsis: prev.synopsis ?? '',
+    }));
+    setActiveSection('new-script');
+  };
+
   const openRejectionDetails = async (scriptId: string) => {
     setDetailsOpen(true);
     setDetailsLoading(true);
@@ -421,6 +505,34 @@ export function ClientPortal() {
     [submissions],
   );
   const recentSubmissions = useMemo(() => submissions.slice(0, 5), [submissions]);
+  const visibleSubmissions = useMemo(
+    () => submissions.filter((s) => !['canceled', 'cancelled'].includes(s.status.toLowerCase())),
+    [submissions],
+  );
+  const filteredSubmissions = useMemo(() => {
+    const q = scriptsSearch.trim().toLowerCase();
+    return visibleSubmissions.filter((item) => {
+      const status = item.status.toLowerCase();
+      const isDraft = status === 'draft';
+      const isSubmitted = ['in_review', 'analysis_running', 'review_required'].includes(status);
+      const passStatus =
+        scriptsStatusFilter === 'all' ||
+        (scriptsStatusFilter === 'draft' && isDraft) ||
+        (scriptsStatusFilter === 'submitted' && isSubmitted) ||
+        (scriptsStatusFilter === 'approved' && status === 'approved') ||
+        (scriptsStatusFilter === 'rejected' && status === 'rejected');
+      if (!passStatus) return false;
+      if (!q) return true;
+      return item.title.toLowerCase().includes(q) || item.type.toLowerCase().includes(q);
+    });
+  }, [visibleSubmissions, scriptsSearch, scriptsStatusFilter]);
+  const scriptsPageSize = 10;
+  const scriptsPageCount = Math.max(1, Math.ceil(filteredSubmissions.length / scriptsPageSize));
+  const pagedSubmissions = filteredSubmissions.slice((scriptsPage - 1) * scriptsPageSize, scriptsPage * scriptsPageSize);
+
+  useEffect(() => {
+    setScriptsPage(1);
+  }, [scriptsSearch, scriptsStatusFilter]);
 
   const handleLogout = () => {
     logout();
@@ -433,32 +545,86 @@ export function ClientPortal() {
         <CardTitle>{lang === 'ar' ? 'حالة النصوص المرسلة' : 'Submitted Scripts Status'}</CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 flex flex-col gap-3 md:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            <Input
+              value={scriptsSearch}
+              onChange={(e) => setScriptsSearch(e.target.value)}
+              placeholder={lang === 'ar' ? 'بحث باسم النص...' : 'Search by script title...'}
+              className="pl-10"
+            />
+          </div>
+          <select
+            value={scriptsStatusFilter}
+            onChange={(e) => setScriptsStatusFilter(e.target.value as typeof scriptsStatusFilter)}
+            className="h-10 rounded-[var(--radius)] border border-border bg-surface px-3 text-sm"
+          >
+            <option value="all">{lang === 'ar' ? 'الكل' : 'All'}</option>
+            <option value="draft">{lang === 'ar' ? 'مسودة' : 'Draft'}</option>
+            <option value="submitted">{lang === 'ar' ? 'مُرسل' : 'Submitted'}</option>
+            <option value="approved">{lang === 'ar' ? 'مقبول' : 'Approved'}</option>
+            <option value="rejected">{lang === 'ar' ? 'مرفوض' : 'Rejected'}</option>
+          </select>
+        </div>
         {isLoading ? (
           <p className="text-sm text-text-muted">{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
-        ) : submissions.length === 0 ? (
+        ) : filteredSubmissions.length === 0 ? (
           <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد نصوص مرسلة بعد.' : 'No submitted scripts yet.'}</p>
         ) : (
-          <div className="space-y-3">
-            {submissions.map((item) => (
-              <div key={item.scriptId} className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-surface p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">{item.title}</p>
-                    <p className="text-sm text-text-muted">
-                      {item.type} • {new Date(item.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={statusVariant(item.status)}>{statusLabel(item.status, lang)}</Badge>
-                    {item.status.toLowerCase() === 'rejected' && (
-                      <Button size="sm" variant="outline" onClick={() => openRejectionDetails(item.scriptId)}>
-                        {lang === 'ar' ? 'عرض تقرير الرفض' : 'View Rejection Report'}
-                      </Button>
-                    )}
-                  </div>
-                </div>
+          <div className="overflow-x-auto rounded-[calc(var(--radius)+0.35rem)] border border-border bg-surface">
+            <table className="w-full text-sm">
+              <thead className="border-b border-border text-xs uppercase text-text-muted">
+                <tr>
+                  <th className="px-4 py-3 text-start">#</th>
+                  <th className="px-4 py-3 text-start">{lang === 'ar' ? 'اسم النص' : 'Script Name'}</th>
+                  <th className="px-4 py-3 text-start">{lang === 'ar' ? 'وقت الإرسال' : 'Submission Time'}</th>
+                  <th className="px-4 py-3 text-start">{lang === 'ar' ? 'الحالة' : 'Status'}</th>
+                  <th className="px-4 py-3 text-start">{lang === 'ar' ? 'الإجراءات' : 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedSubmissions.map((item, index) => {
+                  const status = item.status.toLowerCase();
+                  const isDraft = status === 'draft';
+                  const isSubmitted = ['in_review', 'analysis_running', 'review_required'].includes(status);
+                  const canPay = status === 'approved';
+                  return (
+                    <tr key={item.scriptId} className="border-b border-border/70 last:border-b-0">
+                      <td className="px-4 py-3 text-text-muted">{(scriptsPage - 1) * scriptsPageSize + index + 1}</td>
+                      <td className="px-4 py-3 font-medium text-text-main">{item.title}</td>
+                      <td className="px-4 py-3 text-text-muted">{new Date(item.createdAt).toLocaleString()}</td>
+                      <td className="px-4 py-3"><Badge variant={statusVariant(item.status)}>{statusLabel(item.status, lang)}</Badge></td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <Button size="sm" variant="ghost" onClick={() => navigate(`/workspace/${item.scriptId}`)} aria-label="view"><Eye className="h-4 w-4" /></Button>
+                          {isDraft ? (
+                            <Button size="sm" variant="ghost" onClick={() => startEditDraft(item)} aria-label="edit"><Pencil className="h-4 w-4" /></Button>
+                          ) : null}
+                          <Button size="sm" variant="ghost" onClick={() => setScriptToDelete(item)} aria-label="delete"><Trash2 className="h-4 w-4 text-error" /></Button>
+                          {!isDraft && !isSubmitted && canPay ? (
+                            <Button size="sm" variant="ghost" onClick={() => setActiveSection('certificates')} aria-label="payment"><CreditCard className="h-4 w-4 text-primary" /></Button>
+                          ) : null}
+                          {status === 'rejected' ? (
+                            <Button size="sm" variant="outline" onClick={() => openRejectionDetails(item.scriptId)}>
+                              {lang === 'ar' ? 'تقرير الرفض' : 'Rejection'}
+                            </Button>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="flex items-center justify-between border-t border-border px-4 py-3">
+              <span className="text-xs text-text-muted">{filteredSubmissions.length} {lang === 'ar' ? 'نتيجة' : 'results'}</span>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" disabled={scriptsPage <= 1} onClick={() => setScriptsPage((v) => v - 1)}>{lang === 'ar' ? 'السابق' : 'Previous'}</Button>
+                <span className="text-xs text-text-muted">{scriptsPage} / {scriptsPageCount}</span>
+                <Button size="sm" variant="outline" disabled={scriptsPage >= scriptsPageCount} onClick={() => setScriptsPage((v) => v + 1)}>{lang === 'ar' ? 'التالي' : 'Next'}</Button>
               </div>
-            ))}
+            </div>
           </div>
         )}
       </CardContent>
@@ -572,6 +738,9 @@ export function ClientPortal() {
           <div className="md:col-span-2 flex flex-wrap items-center gap-3">
             <Button type="submit" isLoading={isSubmitting}>
               {lang === 'ar' ? 'إرسال للنظام' : 'Submit to Dashboard'}
+            </Button>
+            <Button type="button" variant="outline" isLoading={isSubmitting} onClick={handleSaveDraft}>
+              {lang === 'ar' ? 'حفظ كمسودة' : 'Save Draft'}
             </Button>
             <Button type="button" variant="outline" onClick={loadProfileAndSubmissions} disabled={isLoading || isSubmitting}>
               {lang === 'ar' ? 'تحديث' : 'Refresh'}
@@ -925,6 +1094,27 @@ export function ClientPortal() {
             );
           })()
         )}
+      </Modal>
+      <Modal
+        isOpen={scriptToDelete != null}
+        onClose={() => setScriptToDelete(null)}
+        title={lang === 'ar' ? 'إلغاء النص' : 'Cancel Script'}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-muted">
+            {lang === 'ar'
+              ? 'سيتم إلغاء هذا النص وإشعار الإدارة بذلك. هل تريد المتابعة؟'
+              : 'This script will be canceled and admin will be notified. Continue?'}
+          </p>
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="outline" onClick={() => setScriptToDelete(null)}>
+              {lang === 'ar' ? 'رجوع' : 'Back'}
+            </Button>
+            <Button variant="danger" onClick={handleDeleteScript}>
+              {lang === 'ar' ? 'تأكيد الإلغاء' : 'Confirm Cancel'}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </ClientPortalLayout>
   );
