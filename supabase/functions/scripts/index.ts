@@ -10,7 +10,9 @@ import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { getCorrelationId, normalizeText } from "../_shared/utils.ts";
 import { canOverrideOwnScriptDecision, isClientUser, isRegulatorOnly, isSuperAdminOrAdmin, isUserAdmin } from "../_shared/roleCheck.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
-import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
+import fontkit from "npm:@pdf-lib/fontkit@1.1.1";
+import { PDFDocument, rgb } from "npm:pdf-lib@1.17.1";
+import { getFontBytes } from "../_shared/pdfVfs.ts";
 
 const CERTIFICATE_FILES_BUCKET = "script-certificates";
 
@@ -442,8 +444,15 @@ async function ensureCertificateGeneratedOnApproval(
 
   // Generate deterministic PDF on approval in backend and store once.
   const pdfDoc = await PDFDocument.create();
+  pdfDoc.registerFontkit(fontkit);
   const page = pdfDoc.addPage([841.89, 595.28]); // A4 landscape
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const cairoRegular = getFontBytes("Cairo-Regular.ttf");
+  const cairoBold = getFontBytes("Cairo-Bold.ttf");
+  if (!cairoRegular || !cairoBold) {
+    throw new Error("Arabic certificate fonts are missing");
+  }
+  const font = await pdfDoc.embedFont(cairoRegular);
+  const boldFont = await pdfDoc.embedFont(cairoBold);
   const titleSize = 28;
   const textSize = 14;
   page.drawRectangle({
@@ -454,7 +463,7 @@ async function ensureCertificateGeneratedOnApproval(
     borderColor: rgb(0.46, 0.2, 0.4),
     borderWidth: 2,
   });
-  page.drawText("Script Approval Certificate", { x: 245, y: 520, size: titleSize, font, color: rgb(0.12, 0.12, 0.2) });
+  page.drawText("Script Approval Certificate", { x: 230, y: 520, size: titleSize, font: boldFont, color: rgb(0.12, 0.12, 0.2) });
   page.drawText(`Certificate Number: ${certificateNumber}`, { x: 60, y: 470, size: textSize, font });
   page.drawText(`Script Title: ${params.scriptTitle || "-"}`, { x: 60, y: 440, size: textSize, font });
   page.drawText(`Company: ${((company as any)?.name_en ?? (company as any)?.name_ar ?? "-").toString()}`, { x: 60, y: 410, size: textSize, font });
