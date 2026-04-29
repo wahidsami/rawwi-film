@@ -1,5 +1,44 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@font-face {
+  font-family: 'Cairo';
+  src: url('/fonts/Cairo-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cairo';
+  src: url('/fonts/Cairo-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @theme {
   --color-primary: var(--primary);
@@ -27,25 +66,25 @@
     /* 🎨 Master Identity File */
     
     /* Primary Colors */
-    --primary: #21945F;
-    --primary-hover: #0F4731;
-    --secondary: #F4BE19;
+    --primary: #672a55;
+    --primary-hover: #7d3566;
+    --secondary: #76b6b7;
     
     /* Neutrals */
-    --background: #f8fafc;
+    --background: #f5f3f8;
     --surface: #ffffff;
-    --border: #e2e8f0;
-    --text-main: #0f172a;
-    --text-muted: #64748b;
+    --border: #e6deea;
+    --text-main: #1f1724;
+    --text-muted: #74697a;
     
     /* Semantic Colors */
-    --success: #10b981;
-    --warning: #f59e0b;
-    --error: #ef4444;
-    --info: #3b82f6;
+    --success: #1f9d69;
+    --warning: #c68a17;
+    --error: #cb4a59;
+    --info: #4f6ef7;
   
     /* Layout Tokens */
-    --radius: 0.5rem;
+    --radius: 0.65rem;
   }
 
   body {

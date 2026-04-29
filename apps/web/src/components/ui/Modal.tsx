@@ -32,12 +32,12 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
       aria-labelledby="modal-title"
     >
       <div 
-        className="absolute inset-0 bg-secondary/80 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-text-main/35 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
       <div 
         className={cn(
-          "relative bg-surface rounded-[var(--radius)] shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200",
+          "dashboard-panel relative flex w-full max-w-lg animate-in flex-col overflow-hidden rounded-[calc(var(--radius)+0.55rem)] border border-border/70 shadow-[0_28px_80px_rgba(31,23,36,0.22)] duration-200 fade-in zoom-in-95",
           className
         )}
       >

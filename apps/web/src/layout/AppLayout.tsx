@@ -98,6 +98,10 @@ export function AppLayout() {
     { to: '/app/settings', icon: Settings, label: t('settings'), section: null as string | null, permission: null as string | null },
   ];
 
+  const adminSubtitle = lang === 'ar'
+    ? 'إدارة المراجعات والنصوص والتقارير'
+    : 'Reviews, scripts, reports, and operations';
+
   const navLinks = baseNavLinks.filter(link => {
     // No section/permission required → always show (Overview, Settings, Certificates)
     if (!link.section && !link.permission) return true;
@@ -184,40 +188,63 @@ export function AppLayout() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-background text-text-main overflow-hidden">
+    <div className="dashboard-theme dashboard-shell flex h-screen overflow-hidden p-3 text-text-main md:p-5">
       {/* Sidebar */}
       <aside
         className={cn(
-          "hidden md:flex flex-shrink-0 border-e border-border bg-surface shadow-[0_0_15px_rgba(0,0,0,0.02)] flex-col z-10 transition-all duration-300",
-          isSidebarCollapsed ? "w-20" : "w-64"
+          "dashboard-panel hidden flex-shrink-0 flex-col rounded-[calc(var(--radius)+0.75rem)] border border-border/70 shadow-[0_20px_60px_rgba(31,23,36,0.06)] transition-all duration-300 md:flex",
+          isSidebarCollapsed ? "w-20" : "w-72"
         )}
       >
-        <div className={cn("h-16 flex items-center border-b border-border", isSidebarCollapsed ? "px-3 justify-center" : "px-6")}>
-          <div className="flex items-center justify-center w-full">
+        <div className={cn("flex items-center border-b border-border/60", isSidebarCollapsed ? "h-20 justify-center px-3" : "px-5 py-5")}>
+          <div className={cn("flex min-w-0 items-center", isSidebarCollapsed ? "justify-center" : "w-full gap-3")}>
             <img
               src="/dashboardlogo.png"
               alt="Raawi Film"
-              className={cn("object-contain transition-all duration-300", isSidebarCollapsed ? "h-8" : "h-10")}
+              className={cn("object-contain transition-all duration-300", isSidebarCollapsed ? "h-9" : "h-11")}
             />
+            {!isSidebarCollapsed && (
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-[0.24em] text-text-muted">Admin</p>
+                <p className="mt-1 truncate text-sm font-semibold text-text-main">{adminSubtitle}</p>
+              </div>
+            )}
           </div>
         </div>
 
-        <nav className={cn("flex-1 py-4 space-y-1 overflow-y-auto", isSidebarCollapsed ? "px-2" : "px-3")}>
+        {!isSidebarCollapsed && (
+          <div className="mx-4 mt-4 rounded-[calc(var(--radius)+0.6rem)] bg-primary px-4 py-4 text-white shadow-[0_18px_40px_rgba(103,42,85,0.16)]">
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-white/70">
+              {lang === 'ar' ? 'مساحة الإدارة' : 'Admin Space'}
+            </p>
+            <p className="mt-2 text-sm font-semibold">
+              {lang === 'ar' ? 'لوحة راوي فيلم' : 'Raawi Film Console'}
+            </p>
+          </div>
+        )}
+
+        <nav className={cn("flex-1 space-y-2 overflow-y-auto py-4", isSidebarCollapsed ? "px-2" : "px-4")}>
           {navLinks.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               title={isSidebarCollapsed ? link.label : undefined}
               className={({ isActive }) => cn(
-                "flex items-center rounded-md transition-colors text-sm font-medium",
+                "dashboard-sidebar-link flex rounded-[calc(var(--radius)+0.45rem)] text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/8 text-primary shadow-[0_10px_30px_rgba(103,42,85,0.08)]"
                   : "text-text-muted hover:bg-background hover:text-text-main",
-                isSidebarCollapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-2.5",
+                isActive && "is-active",
+                isSidebarCollapsed ? "items-center justify-center px-2 py-3" : "items-center gap-3 px-4 py-3",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
               )}
             >
-              <link.icon className="w-5 h-5 flex-shrink-0" />
+              <span className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-colors",
+                "bg-background/80 text-current"
+              )}>
+                <link.icon className="h-5 w-5 flex-shrink-0" />
+              </span>
               {!isSidebarCollapsed && <span>{link.label}</span>}
             </NavLink>
           ))}
@@ -225,10 +252,10 @@ export function AppLayout() {
       </aside>
 
       {/* Main Column */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="ms-0 flex min-w-0 flex-1 flex-col md:ms-4">
         <Toaster position="top-center" />
         {/* Topbar */}
-        <header className="relative h-16 bg-surface border-b border-border flex items-center justify-between px-4 md:px-6 z-[140]">
+        <header className="dashboard-panel relative z-[140] flex h-16 items-center justify-between rounded-[calc(var(--radius)+0.75rem)] border border-border/70 px-4 shadow-[0_16px_40px_rgba(31,23,36,0.05)] md:px-6">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsSidebarCollapsed((value) => !value)}
@@ -238,7 +265,7 @@ export function AppLayout() {
               title={isSidebarCollapsed
                 ? (lang === 'ar' ? 'توسيع الشريط الجانبي' : 'Expand sidebar')
                 : (lang === 'ar' ? 'طي الشريط الجانبي' : 'Collapse sidebar')}
-              className="hidden md:flex items-center justify-center w-9 h-9 rounded-md text-text-muted hover:text-text-main hover:bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="hidden h-9 w-9 items-center justify-center rounded-[var(--radius)] text-text-muted transition-colors hover:bg-background hover:text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20 md:flex"
             >
               {isSidebarCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
             </button>
@@ -249,7 +276,7 @@ export function AppLayout() {
               <button
                 onClick={openNotifPanel}
                 aria-label={lang === 'ar' ? 'الإشعارات' : 'Notifications'}
-                className="relative flex items-center justify-center w-9 h-9 rounded-md text-text-muted hover:text-text-main hover:bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="relative flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-text-muted transition-colors hover:bg-background hover:text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <Bell className="w-5 h-5" />
                 {notifUnreadCount > 0 && (
@@ -260,7 +287,7 @@ export function AppLayout() {
               </button>
               {notifOpen && (
                 <div
-                  className="fixed max-h-[min(24rem,70vh)] overflow-hidden rounded-lg border border-border bg-surface shadow-lg z-[200] flex flex-col"
+                  className="dashboard-panel fixed z-[200] flex max-h-[min(24rem,70vh)] flex-col overflow-hidden rounded-[calc(var(--radius)+0.45rem)] border border-border/70 shadow-[0_24px_60px_rgba(31,23,36,0.14)]"
                   style={notifPanelStyle ? { top: notifPanelStyle.top, left: notifPanelStyle.left, width: notifPanelStyle.width } : undefined}
                 >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -300,7 +327,7 @@ export function AppLayout() {
             <button
               onClick={toggleLang}
               aria-label="Toggle language"
-              className="flex items-center gap-2 text-sm font-medium text-text-muted hover:text-text-main transition-colors px-2 py-1 rounded-md hover:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="flex items-center gap-2 rounded-[var(--radius)] px-2 py-1 text-sm font-medium text-text-muted transition-colors hover:bg-background hover:text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <Globe className="w-4 h-4" />
               <span>{lang === 'ar' ? 'EN' : 'عربي'}</span>
@@ -317,7 +344,7 @@ export function AppLayout() {
                 onClick={handleLogout}
                 title={t('logout')}
                 aria-label={t('logout')}
-                className="w-8 h-8 rounded-full bg-background flex items-center justify-center text-text-muted hover:bg-error/10 hover:text-error transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-text-muted transition-colors hover:bg-error/10 hover:text-error focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <LogOut className="w-4 h-4 rtl:rotate-180" />
               </button>
@@ -326,7 +353,7 @@ export function AppLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-6 md:p-8">
+        <main className="mt-4 flex-1 overflow-auto rounded-[calc(var(--radius)+0.75rem)] p-1 md:p-3">
           <Outlet />
         </main>
       </div>

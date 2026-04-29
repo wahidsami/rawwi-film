@@ -14,9 +14,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const baseStyles = "inline-flex items-center justify-center rounded-[var(--radius)] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:pointer-events-none disabled:opacity-50";
     
     const variants = {
-      primary: "bg-primary text-white hover:bg-primary-hover shadow-sm",
+      primary: "bg-primary text-white hover:bg-primary-hover shadow-[0_10px_24px_rgba(103,42,85,0.16)]",
       secondary: "bg-secondary text-white hover:bg-secondary/90 shadow-sm",
-      outline: "border border-border bg-transparent hover:bg-background text-text-main",
+      outline: "border border-border bg-surface/70 hover:bg-background text-text-main",
       ghost: "hover:bg-background text-text-main hover:text-text-main",
       danger: "bg-error text-white hover:bg-error/90 shadow-sm",
     };
@@ -34,7 +34,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(baseStyles, variants[variant], sizes[size], className)}
         {...props}
       >
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isLoading && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
         {children}
       </button>
     );
