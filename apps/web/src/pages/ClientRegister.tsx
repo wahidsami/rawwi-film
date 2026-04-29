@@ -181,7 +181,7 @@ export function ClientRegister() {
           <p className="mt-3 text-text-muted">{success}</p>
           <div className="mt-6 flex justify-center gap-3">
             <Link to="/client/login"><Button variant="outline">{lang === 'ar' ? 'تسجيل الدخول' : 'Login'}</Button></Link>
-            <Link to="/portal"><Button>{lang === 'ar' ? 'العودة' : 'Back'}</Button></Link>
+            <Link to="/"><Button>{lang === 'ar' ? 'العودة' : 'Back'}</Button></Link>
           </div>
         </div>
       </div>
@@ -307,7 +307,7 @@ export function ClientRegister() {
               <Button type="submit" isLoading={isSaving}>{lang === 'ar' ? 'إرسال طلب الانضمام' : 'Submit Join Request'}</Button>
             )}
             <Link to="/client/login"><Button type="button" variant="outline">{lang === 'ar' ? 'لديك حساب؟ تسجيل الدخول' : 'Already have an account? Login'}</Button></Link>
-            <Link to="/portal" className="text-sm text-text-muted hover:text-text-main">{lang === 'ar' ? 'العودة للصفحة الرئيسية' : 'Back to landing'}</Link>
+            <Link to="/" className="text-sm text-text-muted hover:text-text-main">{lang === 'ar' ? 'العودة للصفحة الرئيسية' : 'Back to landing'}</Link>
           </div>
         </form>
       </div>
