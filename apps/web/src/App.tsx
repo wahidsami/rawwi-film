@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppLayout } from '@/layout/AppLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -16,6 +16,7 @@ import { ClientInfo } from '@/pages/ClientInfo';
 import { InternalClientEdit } from '@/pages/InternalClientEdit';
 import { ClientRegistrationRequest } from '@/pages/ClientRegistrationRequest';
 import { Tasks } from '@/pages/Tasks';
+import { ScriptWorkspace } from '@/pages/ScriptWorkspace';
 import { Results } from '@/pages/Results';
 import { Glossary } from '@/pages/Glossary';
 import Reports from '@/pages/Reports';
@@ -35,8 +36,6 @@ import { ClientSubmissions } from '@/pages/ClientSubmissions';
 import { CertificateVerify } from '@/pages/CertificateVerify';
 import { ENABLE_QUICK_ANALYSIS } from '@/lib/env';
 import { Landing } from '@/pages/Landing';
-
-const ScriptWorkspace = lazy(() => import('@/pages/ScriptWorkspace').then((m) => ({ default: m.ScriptWorkspace })));
 
 const LANG_INIT_KEY = 'raawi-lang-initialized';
 
@@ -154,16 +153,12 @@ function App() {
           )}
           <Route path="scripts/:id/workspace" element={
             <ProtectedRoute>
-              <Suspense fallback={<div className="p-6 text-sm text-text-muted">Loading workspace...</div>}>
-                <ScriptWorkspace />
-              </Suspense>
+              <ScriptWorkspace />
             </ProtectedRoute>
           } />
           <Route path="workspace/:id" element={
             <ProtectedRoute>
-              <Suspense fallback={<div className="p-6 text-sm text-text-muted">Loading workspace...</div>}>
-                <ScriptWorkspace />
-              </Suspense>
+              <ScriptWorkspace />
             </ProtectedRoute>
           } />
           <Route path="report/:id" element={
