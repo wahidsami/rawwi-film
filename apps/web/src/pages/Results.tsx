@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useLangStore } from '@/store/langStore';
@@ -24,7 +24,7 @@ import { resolveStorageUrl } from '@/utils/storage';
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
-  CheckCircle2, Shield, FileDown, Info, Search,
+  CheckCircle2, Shield, FileDown, Info, Search, List, MoreVertical, FileText,
 } from 'lucide-react';
 
 import {
@@ -342,6 +342,10 @@ export function Results() {
   const [editFindingValidatingSnippet, setEditFindingValidatingSnippet] = useState(false);
   const [editFindingSnippetValidation, setEditFindingSnippetValidation] = useState<string | null>(null);
   const [reportVisibilitySavingId, setReportVisibilitySavingId] = useState<string | null>(null);
+  const [reportActionsMenuOpen, setReportActionsMenuOpen] = useState(false);
+  const [checklistModalOpen, setChecklistModalOpen] = useState(false);
+  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
+  const reportActionsMenuRef = useRef<HTMLDivElement | null>(null);
   const [editFindingForm, setEditFindingForm] = useState({
     articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
     atomId: '',
@@ -351,6 +355,24 @@ export function Results() {
     rationaleAr: '',
     manualComment: '',
   });
+
+  useEffect(() => {
+    if (!reportActionsMenuOpen) return;
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (target && reportActionsMenuRef.current?.contains(target)) return;
+      setReportActionsMenuOpen(false);
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setReportActionsMenuOpen(false);
+    };
+    window.addEventListener('mousedown', handlePointerDown);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [reportActionsMenuOpen]);
 
   useEffect(() => {
     if (!editFindingModal) return;
@@ -946,6 +968,60 @@ export function Results() {
     REVIEW_REQUIRED: { label: lang === 'ar' ? 'يتطلب مراجعة' : 'REVIEW REQUIRED', bg: 'bg-warning/5', text: 'text-warning', border: 'border-warning/30', icon: AlertTriangle },
   };
   const DecisionIcon = decisionConfig[decision].icon;
+  const compactReportStats = [
+    {
+      key: 'total',
+      labelAr: 'قيد المراجعة',
+      labelEn: 'Under review',
+      value: displayTotal,
+      tone: 'warning',
+    },
+    {
+      key: 'ai',
+      labelAr: 'آلية',
+      labelEn: 'AI',
+      value: displayTypeCounts.ai,
+      tone: 'primary',
+    },
+    {
+      key: 'glossary',
+      labelAr: 'قاموس',
+      labelEn: 'Glossary',
+      value: displayTypeCounts.glossary,
+      tone: 'info',
+    },
+    {
+      key: 'manual',
+      labelAr: 'يدوية',
+      labelEn: 'Manual',
+      value: displayTypeCounts.manual,
+      tone: 'neutral',
+    },
+    ...(displayApproved > 0
+      ? [{
+          key: 'approved',
+          labelAr: 'آمنة',
+          labelEn: 'Safe',
+          value: displayApproved,
+          tone: 'success',
+        }]
+      : []),
+    ...(displaySpecialNotes > 0
+      ? [{
+          key: 'special',
+          labelAr: 'ملاحظات',
+          labelEn: 'Notes',
+          value: displaySpecialNotes,
+          tone: 'info',
+        }]
+      : []),
+  ] as Array<{
+    key: string;
+    labelAr: string;
+    labelEn: string;
+    value: number;
+    tone: 'primary' | 'warning' | 'info' | 'success' | 'neutral';
+  }>;
 
   const toggleArticle = (key: string) => setExpandedArticles(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -2365,24 +2441,75 @@ export function Results() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mb-3 p-3 bg-surface rounded-lg border border-border">
-            <input
-              type="checkbox"
-              id="update-script-status"
-              checked={updateScriptStatus}
-              onChange={(e) => setUpdateScriptStatus(e.target.checked)}
-              className="w-4 h-4 rounded border-border"
-            />
-            <label htmlFor="update-script-status" className="text-sm text-text-primary cursor-pointer">
-              {lang === 'ar' ? 'تحديث حالة النص تلقائياً' : 'Also update script status'}
-            </label>
-          </div>
+          <p className="text-xs text-text-muted mt-2">
+            {lang === 'ar'
+              ? 'يمكنك تنفيذ الاعتماد أو الرفض أو إعادة المراجعة من شريط الأدوات العلوي.'
+              : 'Approve, reject, or send back for review from the top toolbar.'}
+          </p>
+        </div>
+      )}
 
-          <div className="flex items-center gap-2">
+      <div className="rounded-2xl border border-border bg-surface/70 p-3 md:p-4 mb-8 shadow-sm">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setChecklistModalOpen(true)}
+              className="h-11 w-11 rounded-xl border border-border bg-background/80 text-text-main hover:bg-background hover:border-primary/30 transition-colors flex items-center justify-center"
+              aria-label={lang === 'ar' ? 'فتح قائمة التحقق' : 'Open checklist'}
+            >
+              <List className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setSummaryModalOpen(true)}
+              className="h-11 w-11 rounded-xl border border-border bg-background/80 text-text-main hover:bg-background hover:border-primary/30 transition-colors flex items-center justify-center"
+              aria-label={lang === 'ar' ? 'فتح ملخص النص' : 'Open script summary'}
+            >
+              <Info className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2">
+            {compactReportStats.map((stat) => (
+              <button
+                key={stat.key}
+                type="button"
+                onClick={() => {
+                  if (stat.key === 'total') setFindingFilter('all');
+                  else if (stat.key === 'ai') setFindingFilter((v) => (v === 'ai' ? 'all' : 'ai'));
+                  else if (stat.key === 'glossary') setFindingFilter((v) => (v === 'glossary' ? 'all' : 'glossary'));
+                  else if (stat.key === 'manual') setFindingFilter((v) => (v === 'manual' ? 'all' : 'manual'));
+                  else if (stat.key === 'approved') setFindingFilter((v) => (v === 'approved' ? 'all' : 'approved'));
+                  else if (stat.key === 'special') setFindingFilter((v) => (v === 'special' ? 'all' : 'special'));
+                }}
+                className={cn(
+                  "rounded-xl border px-3 py-2 text-start transition-colors bg-background/70 hover:bg-background",
+                  stat.tone === 'warning' && 'border-warning/20',
+                  stat.tone === 'primary' && 'border-primary/20',
+                  stat.tone === 'info' && 'border-info/20',
+                  stat.tone === 'success' && 'border-success/20',
+                  stat.tone === 'neutral' && 'border-border'
+                )}
+              >
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? stat.labelAr : stat.labelEn}</div>
+                <div className="text-lg font-bold text-text-main leading-none">{stat.value}</div>
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-background/70 text-sm text-text-muted">
+              <input
+                type="checkbox"
+                checked={updateScriptStatus}
+                onChange={(e) => setUpdateScriptStatus(e.target.checked)}
+                className="w-4 h-4 rounded border-border"
+              />
+              <span>{lang === 'ar' ? 'تحديث حالة النص تلقائياً' : 'Also update script status'}</span>
+            </label>
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-xs gap-1 text-success border-success/30 hover:bg-success/10"
+              className="h-10 text-xs gap-1 text-success border-success/30 hover:bg-success/10"
               onClick={() => handleReportReview('approved')}
               disabled={reviewing || report.reviewStatus === 'approved'}
             >
@@ -2391,158 +2518,91 @@ export function Results() {
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-xs gap-1 text-error border-error/30 hover:bg-error/10"
+              className="h-10 text-xs gap-1 text-error border-error/30 hover:bg-error/10"
               onClick={() => void handleReportReview('rejected')}
               disabled={reviewing || report.reviewStatus === 'approved' || report.reviewStatus === 'rejected'}
             >
               <XCircle className="w-3.5 h-3.5" />{lang === 'ar' ? 'رفض' : 'Reject'}
             </Button>
             {report.reviewStatus !== 'under_review' && (
-              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={openReportReReviewModal} disabled={reviewing}>
+              <Button size="sm" variant="ghost" className="h-10 text-xs" onClick={openReportReReviewModal} disabled={reviewing}>
                 {lang === 'ar' ? 'إعادة للمراجعة' : 'Re-review'}
               </Button>
             )}
           </div>
-        </div>
-      )}
-
-      {/* Summary card */}
-      <div className={cn(
-        "rounded-2xl border p-6 mb-10 flex flex-col md:flex-row items-start justify-between gap-6 shadow-sm",
-        decisionConfig[decision].bg, decisionConfig[decision].border
-      )}>
-        <div className="flex-1 w-full">
-          <div className="text-sm text-text-muted mb-1 font-mono">Job: {report.jobId?.slice(0, 8)}...</div>
-          <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 w-full mt-4">
+          <div className="relative flex items-center gap-2 shrink-0" ref={reportActionsMenuRef}>
             <button
               type="button"
-              onClick={() => setFindingFilter('all')}
-              className={cn(
-                "bg-surface/50 border border-border p-3 rounded-xl text-start transition-colors",
-                findingFilter === 'all' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/40'
-              )}
+              onClick={() => setReportActionsMenuOpen((v) => !v)}
+              className="h-11 w-11 rounded-xl border border-border bg-background/80 text-text-main hover:bg-background hover:border-primary/30 transition-colors flex items-center justify-center"
+              aria-label={lang === 'ar' ? 'فتح قائمة الإجراءات' : 'Open actions menu'}
             >
-              <div className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'مخالفات نهائية' : 'Final violations'}</div>
-              <div className="font-bold text-lg">{displayTotal}</div>
+              <MoreVertical className="w-5 h-5" />
             </button>
-            <button
-              type="button"
-              onClick={() => setFindingFilter((v) => (v === 'ai' ? 'all' : 'ai'))}
-              className={cn(
-                "bg-primary/5 border border-primary/20 p-3 rounded-xl text-primary text-start transition-colors",
-                findingFilter === 'ai' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'
-              )}
-            >
-              <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'ملاحظات آلية' : 'AI findings'}</div>
-              <div className="font-bold text-lg">{displayTypeCounts.ai}</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => setFindingFilter((v) => (v === 'glossary' ? 'all' : 'glossary'))}
-              className={cn(
-                "bg-warning/5 border border-warning/20 p-3 rounded-xl text-warning text-start transition-colors",
-                findingFilter === 'glossary' ? 'ring-2 ring-warning border-warning' : 'hover:border-warning/40'
-              )}
-            >
-              <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'مطابقات القاموس' : 'Glossary findings'}</div>
-              <div className="font-bold text-lg">{displayTypeCounts.glossary}</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => setFindingFilter((v) => (v === 'manual' ? 'all' : 'manual'))}
-              className={cn(
-                "bg-surface/50 border border-border p-3 rounded-xl text-primary text-start transition-colors",
-                findingFilter === 'manual' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/40'
-              )}
-            >
-              <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'ملاحظات يدوية' : 'Manual findings'}</div>
-              <div className="font-bold text-lg">{displayTypeCounts.manual}</div>
-            </button>
-            {displayApproved > 0 && (
-              <button
-                type="button"
-                onClick={() => setFindingFilter((v) => (v === 'approved' ? 'all' : 'approved'))}
-                className={cn(
-                  "bg-success/5 border border-success/20 p-3 rounded-xl text-success text-start transition-colors",
-                  findingFilter === 'approved' ? 'ring-2 ring-success border-success' : 'hover:border-success/40'
-                )}
-              >
-                <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'معتمد كآمن' : 'Marked safe'}</div>
-                <div className="font-bold text-lg">{displayApproved}</div>
-              </button>
-            )}
-            {displaySpecialNotes > 0 && (
-              <button
-                type="button"
-                onClick={() => setFindingFilter((v) => (v === 'special' ? 'all' : 'special'))}
-                className={cn(
-                  "bg-info/5 border border-info/20 p-3 rounded-xl text-info text-start transition-colors",
-                  findingFilter === 'special' ? 'ring-2 ring-info border-info' : 'hover:border-info/40'
-                )}
-              >
-                <div className="text-xs mb-1 font-semibold">{lang === 'ar' ? 'ملاحظات خاصة' : 'Special notes'}</div>
-                <div className="font-bold text-lg">{displaySpecialNotes}</div>
-              </button>
+            {reportActionsMenuOpen && (
+              <div className="absolute z-20 top-full mt-3 end-0 w-64 rounded-2xl border border-border bg-surface shadow-xl p-2">
+                <button
+                  type="button"
+                  onClick={() => { setReportActionsMenuOpen(false); void handleDownloadPdf(); }}
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-text-main hover:bg-background"
+                >
+                  <FileDown className="w-4 h-4" />
+                  {lang === 'ar' ? 'تنزيل PDF' : 'Download PDF'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setReportActionsMenuOpen(false); void handleDownloadWord(); }}
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-text-main hover:bg-background"
+                >
+                  <FileText className="w-4 h-4" />
+                  {lang === 'ar' ? 'تنزيل Word' : 'Download Word'}
+                </button>
+                <div className="my-2 border-t border-border" />
+                <button
+                  type="button"
+                  onClick={() => { setReportActionsMenuOpen(false); setSelectedFindingIds(actionableVisibleFindingIds); }}
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-text-main hover:bg-background disabled:opacity-50"
+                  disabled={actionableVisibleFindingIds.length === 0}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {lang === 'ar' ? 'تحديد الكل' : 'Select all'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setReportActionsMenuOpen(false); setSelectedFindingIds([]); }}
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-text-main hover:bg-background disabled:opacity-50"
+                  disabled={selectedFindingIds.length === 0}
+                >
+                  <XCircle className="w-4 h-4" />
+                  {lang === 'ar' ? 'إلغاء التحديد' : 'Clear selection'}
+                </button>
+                <div className="my-2 border-t border-border" />
+                <label className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-text-main hover:bg-background cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showAllFindingRows}
+                    onChange={(e) => setShowAllFindingRows(e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  <span>{lang === 'ar' ? 'إظهار التكرارات' : 'Show duplicates'}</span>
+                </label>
+                <label className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-text-main hover:bg-background cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={groupFindingsByAtom}
+                    onChange={(e) => setGroupFindingsByAtom(e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  <span>{lang === 'ar' ? 'تجميع حسب الذرة' : 'Group by atom'}</span>
+                </label>
+              </div>
             )}
           </div>
-        </div>
-        <div className={cn(
-          "flex items-center gap-3 px-6 py-3 rounded-xl border bg-background/50 backdrop-blur-sm shrink-0",
-          decisionConfig[decision].text, decisionConfig[decision].border
-        )}>
-          <DecisionIcon className="w-8 h-8" />
-          <span className="text-2xl font-bold">{decisionConfig[decision].label}</span>
         </div>
       </div>
 
-      {/* Main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Checklist: semantic categories (aligned with findings grouping) */}
-        <div className="lg:col-span-4 space-y-4">
-          <div className="border-b border-border pb-2">
-            <h3 className="font-bold text-lg text-text-main">
-              {lang === 'ar' ? 'قائمة التحقق (أنواع المخالفات)' : 'Compliance checklist (violation types)'}
-            </h3>
-            <p className="text-xs text-text-muted mt-1">
-              {lang === 'ar'
-                ? 'عدد المخالفات لكل نوع من أنواع المخالفات؛ يظهر عنوان المخالفة فقط في بطاقة كل نتيجة.'
-                : 'Violation count per violation type; each finding card shows the violation title only.'}
-            </p>
-          </div>
-          <div className="space-y-2 max-h-[min(75vh,32rem)] overflow-y-auto pe-1">
-            {semanticCategoriesOrdered.map((cat) => {
-              const n = categoryViolationCounts.get(cat.id) ?? 0;
-              if (cat.id === 'other' && n === 0) return null;
-              return (
-                <div
-                  key={cat.id}
-                  className="flex justify-between items-start gap-2 py-2.5 px-3 rounded-xl bg-surface border border-border shadow-sm"
-                >
-                  <div className="flex items-start gap-2 min-w-0">
-                    {n > 0 ? (
-                      <XCircle className="w-4 h-4 text-error shrink-0 mt-0.5" />
-                    ) : (
-                      <CheckCircle className="w-4 h-4 text-success/70 shrink-0 mt-0.5" />
-                    )}
-                    <span className="text-text-main text-sm leading-snug text-start" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                      {lang === 'ar' ? cat.titleAr : cat.titleEn}
-                    </span>
-                  </div>
-                  {n > 0 ? (
-                    <Badge variant="error" className="h-6 px-2 shrink-0 text-xs">
-                      {n}
-                    </Badge>
-                  ) : (
-                    <CheckCircle className="w-4 h-4 text-success/50 shrink-0" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Detailed findings */}
-        <div className="lg:col-span-8 space-y-8">
+      {/* Main findings */}
+      <div className="space-y-8">
           {/* Violations section */}
           <h3 className="font-bold text-xl text-text-main border-b border-border pb-2 flex items-center gap-2">
             {showOnlySpecialNotes ? (
@@ -2712,7 +2772,83 @@ export function Results() {
             </>
           )}
         </div>
-      </div>
+
+      <Modal
+        isOpen={checklistModalOpen}
+        onClose={() => setChecklistModalOpen(false)}
+        title={lang === 'ar' ? 'قائمة التحقق (أنواع المخالفات)' : 'Compliance checklist (violation types)'}
+        className="max-w-4xl"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-muted">
+            {lang === 'ar'
+              ? 'تُعرض هنا نفس أنواع المخالفات المستخدمة في البطاقات، مع العدّ الحالي لكل نوع.'
+              : 'This shows the same violation types used by the cards, with the current count for each type.'}
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {semanticCategoriesOrdered.map((cat) => {
+              const n = categoryViolationCounts.get(cat.id) ?? 0;
+              if (cat.id === 'other' && n === 0) return null;
+              return (
+                <div key={cat.id} className="rounded-xl border border-border bg-background/70 p-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                      {lang === 'ar' ? cat.titleAr : cat.titleEn}
+                    </div>
+                    <div className="text-[11px] text-text-muted mt-1">
+                      {lang === 'ar' ? 'ترتيب' : 'Order'} {cat.order}
+                    </div>
+                  </div>
+                  <Badge variant={n > 0 ? 'error' : 'outline'} className="shrink-0">
+                    {n}
+                  </Badge>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={summaryModalOpen}
+        onClose={() => setSummaryModalOpen(false)}
+        title={lang === 'ar' ? 'فهم النص (ملخص الذكاء الاصطناعي)' : 'Script understanding (AI summary)'}
+        className="max-w-2xl"
+      >
+        <div className="space-y-3">
+          {summary.script_summary ? (
+            <>
+              <p className="text-text-main text-sm leading-relaxed">{summary.script_summary.synopsis_ar}</p>
+              {summary.script_summary.key_risky_events_ar && (
+                <p className="text-text-muted text-sm">
+                  <span className="font-semibold text-text-main">{lang === "ar" ? "أهم المشاهد الحساسة: " : "Key risky events: "}</span>
+                  {summary.script_summary.key_risky_events_ar}
+                </p>
+              )}
+              {summary.script_summary.narrative_stance_ar && (
+                <p className="text-text-muted text-sm">
+                  <span className="font-semibold text-text-main">{lang === "ar" ? "موقف السرد: " : "Narrative stance: "}</span>
+                  {summary.script_summary.narrative_stance_ar}
+                </p>
+              )}
+              {summary.script_summary.compliance_posture_ar && (
+                <p className="text-text-muted text-sm">
+                  <span className="font-semibold text-text-main">{lang === "ar" ? "انطباع الامتثال: " : "Compliance posture: "}</span>
+                  {summary.script_summary.compliance_posture_ar}
+                </p>
+              )}
+              <p className="text-[11px] text-text-muted">
+                {lang === "ar" ? "ثقة الملخص: " : "Summary confidence: "}
+                {Math.round((summary.script_summary.confidence ?? 0) * 100)}%
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-text-muted">
+              {lang === 'ar' ? 'لا يوجد ملخص ذكاء اصطناعي متاح لهذا التقرير.' : 'No AI summary is available for this report.'}
+            </p>
+          )}
+        </div>
+      </Modal>
 
       <Modal
         isOpen={reportReviewModalOpen}
@@ -2850,7 +2986,7 @@ export function Results() {
       </Modal>
 
       {/* Finding review modal */}
-      <Modal 
+      <Modal
         isOpen={!!reviewModal}
         onClose={() => { setReviewModal(null); setReviewReason(''); }}
         title={reviewModal?.toStatus === 'approved'
@@ -3007,6 +3143,6 @@ export function Results() {
           </div>
         </div>
       </Modal>
-    </div >
+    </div>
   );
 }
