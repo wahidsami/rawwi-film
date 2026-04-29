@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Document, Font, Image, Page, Text, View, pdf } from '@react-pdf/renderer';
 import QRCode from 'qrcode';
-import { AlertTriangle, Award, BadgeCheck, CreditCard, Download, Loader2, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Award, BadgeCheck, CreditCard, Download, Eye, Loader2, ShieldCheck } from 'lucide-react';
 import {
   certificatesApi,
   type CertificateDashboardItem,
@@ -310,7 +310,7 @@ function CertificatePdfDocument({ item, lang, template, qrDataUrl, forceBuiltinF
   );
 }
 
-async function downloadCertificateDocument(item: CertificateDashboardItem, lang: 'ar' | 'en', template?: CertificateTemplate | null) {
+async function generateCertificatePdfBlob(item: CertificateDashboardItem, lang: 'ar' | 'en', template?: CertificateTemplate | null) {
   const certificateNumber = item.certificate?.certificateNumber ?? 'certificate';
   const values = getCertificateValues(item, lang);
   const templateElements = sanitizeTemplateElements(template);
@@ -338,6 +338,12 @@ async function downloadCertificateDocument(item: CertificateDashboardItem, lang:
     blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={null} qrDataUrl={qrDataUrl} forceBuiltinFont />).toBlob();
     debug.fallbackBlobSize = blob.size;
   }
+  return { blob, debug };
+}
+
+async function downloadCertificateDocument(item: CertificateDashboardItem, lang: 'ar' | 'en', template?: CertificateTemplate | null) {
+  const certificateNumber = item.certificate?.certificateNumber ?? 'certificate';
+  const { blob, debug } = await generateCertificatePdfBlob(item, lang, template);
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -358,6 +364,9 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
   const [selectedCardId, setSelectedCardId] = useState('');
   const [isPaying, setIsPaying] = useState(false);
   const [downloadingId, setDownloadingId] = useState('');
+  const [previewingId, setPreviewingId] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [exportDebug, setExportDebug] = useState<CertificateExportDebug | null>(null);
 
   const loadData = async () => {
@@ -435,6 +444,30 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
       setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر إنشاء ملف PDF' : 'Unable to generate PDF'));
     } finally {
       setDownloadingId('');
+    }
+  };
+
+  const handlePreview = async (item: CertificateDashboardItem) => {
+    setPreviewingId(item.scriptId);
+    setError('');
+    try {
+      const { blob, debug } = await generateCertificatePdfBlob(item, lang, data?.defaultTemplate ?? null);
+      setExportDebug(debug);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      setPreviewOpen(true);
+      if (debug.usedFallbackLayout && (debug.fallbackBlobSize ?? 0) < 1500) {
+        setError(lang === 'ar'
+          ? 'تعذر إنشاء معاينة شهادة صالحة. يرجى نسخ التشخيص وإرساله للدعم.'
+          : 'Failed to generate a valid certificate preview. Copy diagnostics and share with support.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر إنشاء معاينة الشهادة' : 'Unable to generate certificate preview'));
+    } finally {
+      setPreviewingId('');
     }
   };
 
@@ -584,6 +617,15 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
                             <Download className="me-2 h-4 w-4" />
                             {lang === 'ar' ? 'تنزيل الشهادة' : 'Download Certificate'}
                           </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => void handlePreview(item)}
+                            isLoading={previewingId === item.scriptId}
+                          >
+                            <Eye className="me-2 h-4 w-4" />
+                            {lang === 'ar' ? 'معاينة الشهادة' : 'Preview Certificate'}
+                          </Button>
                           <Badge variant="success">
                             <ShieldCheck className="me-1 h-3.5 w-3.5" />
                             {lang === 'ar' ? 'صادرة' : 'Issued'}
@@ -661,6 +703,28 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
               </Button>
             </div>
           </div>
+        )}
+      </Modal>
+      <Modal
+        isOpen={previewOpen}
+        onClose={() => {
+          setPreviewOpen(false);
+          if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+          }
+        }}
+        title={lang === 'ar' ? 'معاينة الشهادة' : 'Certificate Preview'}
+        className="max-w-5xl"
+      >
+        {!previewUrl ? (
+          <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد معاينة متاحة' : 'No preview available'}</p>
+        ) : (
+          <iframe
+            title="certificate-preview"
+            src={previewUrl}
+            className="h-[75vh] w-full rounded-md border border-border bg-white"
+          />
         )}
       </Modal>
     </div>

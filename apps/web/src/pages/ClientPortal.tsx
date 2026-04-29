@@ -1286,7 +1286,10 @@ export function ClientPortal() {
       </Modal>
       <Modal
         isOpen={paymentSuccessOpen}
-        onClose={() => setPaymentSuccessOpen(false)}
+        onClose={() => {
+          setPaymentSuccessOpen(false);
+          setActiveSection('scripts');
+        }}
         title={lang === 'ar' ? 'تم الدفع بنجاح' : 'Payment Successful'}
       >
         <div className="space-y-4">
@@ -1296,7 +1299,13 @@ export function ClientPortal() {
               : 'Congratulations! Your payment was completed successfully. Visit the Certificates section within 5 minutes to find your certificate.'}
           </p>
           <div className="flex items-center justify-end gap-2">
-            <Button variant="outline" onClick={() => setPaymentSuccessOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPaymentSuccessOpen(false);
+                setActiveSection('scripts');
+              }}
+            >
               {lang === 'ar' ? 'إغلاق' : 'Close'}
             </Button>
             <Button onClick={() => { setPaymentSuccessOpen(false); setActiveSection('certificates'); }}>
