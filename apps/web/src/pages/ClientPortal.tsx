@@ -49,6 +49,8 @@ type UploadResult = {
   versionNumber: number | null;
 };
 
+type ComplianceTabKey = 'guidelines' | 'age';
+
 function statusLabel(status: string, lang: 'ar' | 'en'): string {
   const key = status.toLowerCase();
   if (key === 'approved') return lang === 'ar' ? 'مقبول' : 'Approved';
@@ -66,6 +68,414 @@ function statusVariant(status: string): 'default' | 'success' | 'warning' | 'err
   if (key === 'rejected') return 'error';
   if (key === 'analysis_running' || key === 'review_required' || key === 'in_review') return 'warning';
   return 'outline';
+}
+
+function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
+  const isArabic = lang === 'ar';
+  const [activeTab, setActiveTab] = useState<ComplianceTabKey>('guidelines');
+
+  const ageRatings = useMemo(() => [
+    {
+      code: 'G',
+      labelAr: 'الفيلم مناسب لجميع الفئات العمرية',
+      labelEn: 'Suitable for all ages',
+      summaryAr: 'المحتوى ضمن إطار إيجابي وخالٍ من تأثيرات العنف أو التهديد.',
+      summaryEn: 'Positive content with no violence or threatening impact.',
+      detailsAr: 'يتضمن بشكل أساسي الأفلام الكرتونية.',
+      detailsEn: 'Primarily includes animated films.',
+    },
+    {
+      code: 'PG',
+      labelAr: 'يُنصح بوجود إشراف عائلي',
+      labelEn: 'Parental guidance recommended',
+      summaryAr: 'المحتوى بشكل عام آمن.',
+      summaryEn: 'Content is generally safe.',
+      detailsAr: 'قد يحتوي على القليل من العنف أو الحزن أو الخيال. ويُعرض في سياق مناسب للأطفال.',
+      detailsEn: 'May contain mild violence, sadness, or fantasy, presented in a child-appropriate context.',
+    },
+    {
+      code: 'PG12',
+      labelAr: 'يلزم مرافقة الراشدين لمن هم تحت 12 عامًا',
+      labelEn: 'Adult accompaniment required for under 12',
+      summaryAr: 'المحتوى بشكل عام آمن.',
+      summaryEn: 'Content is generally safe.',
+      detailsAr: 'تتضمن هذه الفئة أفلام الخيال العلمي والأبطال الخارقين والأفلام المأخوذة من الكتب الكوميدية. وقد تحتوي على بعض المشاهد التي قد لا تناسب من هم تحت 12 عامًا، ويُنصح أن يقوم الراشدون بتقييم مدى ملاءمة المحتوى.',
+      detailsEn: 'Includes sci-fi, superhero, and comic-book adaptations. Some scenes may not suit viewers under 12; adults should assess suitability.',
+    },
+    {
+      code: 'PG15',
+      labelAr: 'يلزم مرافقة الراشدين لمن هم تحت 15 عامًا',
+      labelEn: 'Adult accompaniment required for under 15',
+      summaryAr: 'مواضيع الأفلام مناسبة لعمر 15 سنة فما فوق.',
+      summaryEn: 'Themes are suitable for ages 15 and above.',
+      detailsAr: 'يُسمح بدخول من هم أصغر بشرط وجود راشدين. وقد تتضمن مشاهد غير مناسبة لبعض الفئات مثل أفلام الأكشن والأبطال الخارقين والخيال العلمي والكوارث الطبيعية والرومانسية بحبكة بسيطة وأفلام الحروب البسيطة.',
+      detailsEn: 'Younger viewers may enter with adults. May include action, superheroes, sci-fi, natural disasters, light romance, and mild war themes.',
+    },
+    {
+      code: 'R15',
+      labelAr: 'يمنع دخول المشاهدين أقل من 15 عامًا',
+      labelEn: 'No viewers under 15',
+      summaryAr: 'المحتوى يتضمن مواضيع ناضجة.',
+      summaryEn: 'Contains mature themes.',
+      detailsAr: 'تُطرح بشكل غير مناسب لمن هم في هذا العمر وما دونه، وتشمل أمثلة مثل الحروب والجريمة والعصابات والرومانسية والرعب والعنف.',
+      detailsEn: 'Not suitable for viewers at or below this age. Examples include war, crime, romance, horror, and violence.',
+    },
+    {
+      code: 'R18',
+      labelAr: 'يمنع دخول المشاهدين أقل من 18 عامًا',
+      labelEn: 'No viewers under 18',
+      summaryAr: 'المحتوى يتضمن مواضيع حساسة.',
+      summaryEn: 'Contains sensitive themes.',
+      detailsAr: 'قد يحتوي على مشاهد عنيفة للغاية أو العنف المنزلي أو مواضيع سياسية.',
+      detailsEn: 'May include extreme violence, domestic violence, or political themes.',
+    },
+  ], [isArabic]);
+
+  const violations = useMemo(() => [
+    {
+      number: 1,
+      titleAr: 'المساس بالثوابت الدينية',
+      titleEn: 'Religious fundamentals',
+      bodyAr: 'يشمل هذا النوع من المخالفات أي محتوى يتضمن إساءة أو تشويه أو سخرية أو تشكيك في أصول الشريعة الإسلامية، بما في ذلك القرآن الكريم والأحاديث النبوية المتواترة والشعائر الأساسية. ويمكن أن يظهر ذلك في الحوارات أو المشاهد أو حتى من خلال السخرية أو التلميح أو الرمزية. ومن أبرز مؤشرات هذا النوع من الانتهاك استخدام عبارات استهزاء بالدين، أو ربطه بسلوكيات سلبية بشكل تهكمي، أو تصوير شخصيات دينية بصورة مهينة، أو إعادة تفسير النصوص الدينية بطريقة ساخرة أو محرفة.',
+      examplesAr: 'ومن الأمثلة على ذلك مشاهد تسخر من الصلاة أو الأذان، أو تصوير شخصية دينية كمخادعة أو جاهلة، أو حوارات تشكك في النصوص الدينية بأسلوب استهزائي، أو استخدام آيات وأحاديث في سياق كوميدي غير لائق.',
+    },
+    {
+      number: 2,
+      titleAr: 'المساس بالقيادة السياسية',
+      titleEn: 'Political leadership',
+      bodyAr: 'يتعلق هذا البند بأي محتوى يتضمن إساءة مباشرة أو غير مباشرة لرموز الدولة، مثل الملوك أو ولاة العهد أو القيادات العليا. وقد يظهر ذلك من خلال ذكر هذه الشخصيات أو الإشارة إليها بسياق سلبي، أو عبر تلميحات سياسية ساخرة، أو إسقاطات درامية واضحة تستهدف القيادة.',
+      examplesAr: 'تشمل الأمثلة الحوارات التي تسخر من القيادة، أو تقديم شخصيات تمثلها بصورة فاسدة أو ضعيفة، أو مشاهد تدعو إلى التمرد عليها.',
+    },
+    {
+      number: 3,
+      titleAr: 'الإضرار بالأمن الوطني',
+      titleEn: 'National security',
+      bodyAr: 'يشمل هذا النوع من المحتوى كل ما يمكن أن يهدد استقرار الدولة أو يشجع على سلوكيات تمس الأمن العام. ويظهر ذلك عادة من خلال استخدام كلمات أو دعوات صريحة مثل التمرد أو العصيان أو إسقاط النظام، أو تقديم تعليمات عملية يمكن تنفيذها، أو تمجيد الفوضى والجرائم.',
+      examplesAr: 'ومن أبرز الأمثلة شرح كيفية تصنيع المتفجرات، أو الدعوة للإضرابات والعصيان المدني، أو تصوير رجال الأمن كأعداء للمجتمع، أو التقليل من خطورة الإرهاب والعنف.',
+    },
+    {
+      number: 4,
+      titleAr: 'المحتوى التاريخي غير الموثوق',
+      titleEn: 'Unreliable historical content',
+      bodyAr: 'يتعلق هذا البند بالمحتوى الذي يعرض معلومات تاريخية عن المملكة أو الشخصيات الإسلامية دون الاعتماد على مصادر موثوقة ومعتمدة. ويظهر ذلك من خلال تقديم روايات تختلف بشكل واضح عن الحقائق المعروفة، أو عرض معلومات دون سند، أو تحريف الأحداث التاريخية.',
+      examplesAr: 'ومن الأمثلة تغيير أحداث تاريخية معروفة، أو اختلاق مواقف لشخصيات تاريخية، أو تقديم روايات بديلة دون توضيح أنها خيالية.',
+    },
+    {
+      number: 5,
+      titleAr: 'الإساءة للمجتمع أو الهوية الوطنية',
+      titleEn: 'Community or national identity',
+      bodyAr: 'يشمل هذا النوع من المخالفات أي محتوى يتضمن تعميمات سلبية أو تشويهًا لصورة المجتمع السعودي أو مكوناته. وغالبًا ما يظهر ذلك من خلال استخدام ألفاظ تعميمية مثل "دائمًا" أو "كل"، أو ربط المجتمع بصفات سلبية جماعية، أو الإساءة لقبائل أو عوائل.',
+      examplesAr: 'ومن الأمثلة على ذلك وصف السعوديين بصفات سلبية عامة، أو تصوير قبيلة كاملة بصورة إجرامية، أو نسب ثقافات غير سعودية إلى المجتمع، أو الترويج لقطع صلة الرحم.',
+    },
+    {
+      number: 6,
+      titleAr: 'محتوى الجرائم الموجه للأطفال',
+      titleEn: 'Crime content for children',
+      bodyAr: 'يتعلق هذا البند بالمحتوى الموجه للأطفال الذي يعرض الجرائم أو السلوكيات الخطرة بطريقة إيجابية أو محفزة. ويظهر ذلك عندما يتم تقديم شخصية محبوبة ترتكب جرائم دون عواقب، أو استخدام عناصر إخراجية تجعل الجريمة تبدو ممتعة، أو غياب أي نتائج سلبية للسلوك.',
+      examplesAr: 'ومن الأمثلة طفل يتابع شخصية تسرق وتنجح، أو تقديم العصابات كأبطال، أو تصوير تعاطي المخدرات بشكل ممتع.',
+    },
+    {
+      number: 7,
+      titleAr: 'الترويج للمخدرات والمسكرات',
+      titleEn: 'Drugs and alcohol promotion',
+      bodyAr: 'يشمل هذا النوع من المحتوى أي عرض يقوم بتعليم أو تشجيع استخدام أو تصنيع المخدرات أو الكحول. ويظهر ذلك من خلال شرح خطوات التصنيع، أو ربط هذه المواد بالمتعة أو النجاح أو حل المشكلات.',
+      examplesAr: 'ومن الأمثلة تقديم طريقة تصنيع مخدر، أو تصوير المخدرات كوسيلة للتخلص من المشاكل، أو إظهار شخصية ناجحة بسبب تعاطيها.',
+    },
+    {
+      number: 8,
+      titleAr: 'إيذاء الطفل وذوي الإعاقة',
+      titleEn: 'Harm to children and persons with disabilities',
+      bodyAr: 'يتضمن هذا البند أي محتوى يحتوي على إيذاء أو استغلال أو سخرية من الأطفال أو ذوي الإعاقة. وقد يظهر ذلك من خلال مشاهد عنف غير مبرر، أو استخدام ألفاظ مهينة، أو تقديم هذه الفئات كوسيلة للضحك.',
+      examplesAr: 'ومن الأمثلة التنمر على طفل أو شخص من ذوي الإعاقة، أو مشاهد تعذيب، أو السخرية من الإعاقة بشكل مباشر أو ضمني.',
+    },
+    {
+      number: 9,
+      titleAr: 'المحتوى الجنسي غير المناسب',
+      titleEn: 'Inappropriate sexual content',
+      bodyAr: 'يشمل هذا البند أي محتوى يروج أو يلمّح لسلوكيات جنسية غير مناسبة للجمهور العام، خاصة إذا تم تقديمها بشكل إيجابي. ويظهر ذلك من خلال التلميحات الجنسية أو الحوارات الإيحائية أو تطبيع هذه السلوكيات.',
+      examplesAr: 'ومن الأمثلة الحوارات ذات الطابع الجنسي الصريح أو غير المباشر، أو الترويج لعلاقات غير مناسبة للقاصرين.',
+    },
+    {
+      number: 10,
+      titleAr: 'المشاهد الجنسية الصريحة',
+      titleEn: 'Explicit sexual scenes',
+      bodyAr: 'يتعلق هذا البند بعرض مباشر للممارسات الجنسية، سواء من خلال مشاهد جسدية واضحة أو تصوير تفصيلي للعلاقات. ويُعد هذا النوع من المحتوى من أكثر أنواع المخالفات وضوحًا نظرًا لطبيعته المباشرة.',
+      examplesAr: 'ويشمل ذلك اللقطات أو المشاهد التي تعرض العلاقة الحميمة بصورة واضحة أو مفصلة.',
+    },
+    {
+      number: 11,
+      titleAr: 'الألفاظ النابية',
+      titleEn: 'Profanity',
+      bodyAr: 'يشمل هذا البند استخدام الكلمات المسيئة أو الخادشة، سواء كانت مباشرة أو ضمنية. وتظهر المخالفة من خلال استخدام الشتائم أو الألفاظ ذات الطابع الجنسي أو المهين، خاصة إذا تكرر استخدامها أو كان لها تأثير سلبي واضح على سياق العمل.',
+      examplesAr: 'ومن الأمثلة الشتائم المباشرة أو الإيحاءات اللفظية المهينة أو الألفاظ الجنسية الفجة.',
+    },
+    {
+      number: 12,
+      titleAr: 'الإساءة إلى المرأة أو تعنيفها',
+      titleEn: 'Abuse or violence against women',
+      bodyAr: 'يتضمن هذا النوع من المحتوى أي إساءة للمرأة أو تقليل من شأنها أو تبرير أو تجميل العنف ضدها، سواء كان ذلك جسديًا أو نفسيًا أو اجتماعيًا. وقد يظهر في الحوارات أو السلوكيات داخل المشاهد أو الرسائل الضمنية أو حتى في الكوميديا.',
+      examplesAr: 'ومن المؤشرات تبرير إيذاء المرأة، أو تصويرها كأقل قيمة بشكل متكرر، أو استخدام ألفاظ مهينة، أو عرض العنف ضدها دون إدانة.',
+    },
+    {
+      number: 13,
+      titleAr: 'تقويض قيم الأسرة',
+      titleEn: 'Undermining family values',
+      bodyAr: 'يشمل هذا البند أي محتوى يروج لتفكك الأسرة أو يضعف الروابط الأسرية دون طرح متوازن أو نقدي. ويظهر ذلك من خلال تشجيع القطيعة بين أفراد الأسرة، أو تصوير الأسرة ككيان سلبي بالكامل، أو الترويج لسلوكيات تهدم العلاقات.',
+      examplesAr: 'ومن الأمثلة الدعوة لقطع العلاقة مع الوالدين دون مبرر، أو تقديم الخيانة الزوجية بشكل طبيعي، أو التقليل من أهمية الأسرة بشكل متكرر.',
+    },
+    {
+      number: 14,
+      titleAr: 'الإساءة إلى الوالدين',
+      titleEn: 'Disrespect to parents',
+      bodyAr: 'يتعلق هذا البند بأي محتوى يتضمن إهانة أو تحقير أو إساءة مباشرة أو غير مباشرة للأب أو الأم. ويظهر ذلك من خلال استخدام ألفاظ مهينة، أو تقديم سلوكيات عقوق بشكل طبيعي، أو التقليل من مكانة الوالدين.',
+      examplesAr: 'ومن الأمثلة حوارات تتضمن سب الوالدين، أو مشاهد اعتداء عليهم، أو تقديمهم كشخصيات مثيرة للسخرية بشكل متكرر.',
+    },
+    {
+      number: 15,
+      titleAr: 'الإساءة إلى كبار السن',
+      titleEn: 'Disrespect to the elderly',
+      bodyAr: 'يشمل هذا النوع من المحتوى أي إساءة أو تهميش أو سخرية من كبار السن، سواء من خلال تصويرهم كعبء أو بلا قيمة، أو السخرية من حالتهم الصحية أو أعمارهم، أو تجاهل حقوقهم.',
+      examplesAr: 'ومن الأمثلة مشاهد تسخر من شخص مسن، أو تقديم كبار السن كشخصيات غير مهمة، أو استغلالهم أو إهمالهم دون إدانة.',
+    },
+    {
+      number: 16,
+      titleAr: 'التنمر الجارح والسخرية',
+      titleEn: 'Bullying and mockery',
+      bodyAr: 'يشمل هذا البند أي محتوى يتضمن إساءة متكررة أو مقصودة لشخص أو فئة من خلال السخرية أو الإهانة أو التقليل من القيمة، سواء بشكل مباشر أو غير مباشر. ويظهر ذلك في الحوارات أو الكوميديا أو التفاعل بين الشخصيات أو السرد.',
+      examplesAr: 'ومن أبرز المؤشرات استخدام ألفاظ مهينة بشكل متكرر، أو استهداف صفات شخصية مثل الشكل أو العمر أو الإعاقة، أو وجود ردود فعل إيجابية على الإساءة، أو غياب أي إدانة لها.',
+    },
+  ], [isArabic]);
+
+  const renderCardText = (ar: string, en: string) => (isArabic ? ar : en);
+
+  return (
+    <div className="space-y-6">
+      <section
+        className="relative overflow-hidden rounded-[calc(var(--radius)+0.75rem)] border border-border/80 shadow-[0_24px_70px_rgba(31,23,36,0.08)]"
+        style={{
+          backgroundImage: "url('/cover.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-background/70" />
+        <div className="relative grid gap-6 p-6 md:grid-cols-[minmax(0,1fr)_260px] md:p-8">
+          <div className="space-y-4">
+            <Badge variant="outline" className="w-fit border-border/80 bg-background/80 px-3 py-1 text-[11px] uppercase tracking-[0.22em]">
+              {renderCardText('إرشادات البوابة', 'Portal Guidance')}
+            </Badge>
+            <div>
+              <h2 className="text-3xl font-bold text-text-main md:text-4xl">
+                {renderCardText('ارشادات الامتثال', 'Compliance Guidelines')}
+              </h2>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-text-muted md:text-base">
+                {renderCardText(
+                  'دليل مرجعي يوضح تصنيف الأعمار والمخالفات النصية الشائعة، مع عرض منظم يساعد على القراءة السريعة والمراجعة الدقيقة.',
+                  'A reference guide for age ratings and common text violations, arranged for quick scanning and careful review.',
+                )}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="success" className="px-3 py-1 text-[11px]">
+                {renderCardText('مرجع رقابي', 'Review reference')}
+              </Badge>
+              <Badge variant="outline" className="px-3 py-1 text-[11px]">
+                {renderCardText('محتوى مرئي ومباشر', 'Visual and direct content')}
+              </Badge>
+              <Badge variant="outline" className="px-3 py-1 text-[11px]">
+                {renderCardText('قابل للتحديث لاحقًا', 'Upgradeable later')}
+              </Badge>
+            </div>
+          </div>
+          <div className="grid gap-3 self-end">
+            <Card className="border-border/70 bg-background/85">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <FileCheck2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text-main">{renderCardText('مخالفات النصوص', 'Text Violations')}</p>
+                  <p className="text-xs text-text-muted">{renderCardText('16 بندًا مرجعيًا', '16 reference items')}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-border/70 bg-background/85">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-warning/10 text-warning">
+                  <Award className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text-main">{renderCardText('التصنيف العمري', 'Age Rating')}</p>
+                  <p className="text-xs text-text-muted">{renderCardText('6 فئات منظمة', '6 structured groups')}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <div className="flex flex-wrap gap-2 rounded-[calc(var(--radius)+0.45rem)] border border-border/70 bg-background/85 p-2 shadow-[0_12px_30px_rgba(31,23,36,0.04)]">
+        <button
+          type="button"
+          onClick={() => setActiveTab('guidelines')}
+          className={cn(
+            'flex-1 rounded-[calc(var(--radius)+0.35rem)] px-4 py-3 text-start transition-all duration-200',
+            activeTab === 'guidelines' ? 'bg-primary text-white shadow-[0_12px_30px_rgba(103,42,85,0.18)]' : 'hover:bg-surface text-text-main',
+          )}
+        >
+          <p className="text-sm font-semibold">{renderCardText('Compliance Guidelines / مخالفات النصوص', 'Compliance Guidelines / Text Violations')}</p>
+          <p className={cn('mt-1 text-xs', activeTab === 'guidelines' ? 'text-white/80' : 'text-text-muted')}>
+            {renderCardText('تصنيف البنود الرقابية وإبراز أمثلة المخالفات', 'Regulatory items and examples of violations')}
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('age')}
+          className={cn(
+            'flex-1 rounded-[calc(var(--radius)+0.35rem)] px-4 py-3 text-start transition-all duration-200',
+            activeTab === 'age' ? 'bg-primary text-white shadow-[0_12px_30px_rgba(103,42,85,0.18)]' : 'hover:bg-surface text-text-main',
+          )}
+        >
+          <p className="text-sm font-semibold">{renderCardText('التصنيف العمري', 'Age Rating')}</p>
+          <p className={cn('mt-1 text-xs', activeTab === 'age' ? 'text-white/80' : 'text-text-muted')}>
+            {renderCardText('إيضاح مستويات المشاهدة المناسبة', 'Audience suitability levels')}
+          </p>
+        </button>
+      </div>
+
+      {activeTab === 'guidelines' ? (
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="grid gap-4 md:grid-cols-2">
+            {violations.map((item) => (
+              <Card key={item.number} className="group overflow-hidden border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(31,23,36,0.10)]">
+                <CardContent className="space-y-4 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-error/10 text-error transition-transform duration-300 group-hover:scale-105">
+                      <ShieldAlert className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="px-2 py-0 text-[10px]">
+                          {item.number}
+                        </Badge>
+                        <h3 className="text-base font-bold leading-6 text-text-main">{renderCardText(item.titleAr, item.titleEn)}</h3>
+                      </div>
+                      <p className="mt-2 text-sm leading-7 text-text-muted">{renderCardText(item.bodyAr, item.bodyAr)}</p>
+                    </div>
+                  </div>
+                  <div className="rounded-[calc(var(--radius)+0.2rem)] border border-border/70 bg-surface/80 p-4">
+                    <p className="text-sm leading-7 text-text-main">{renderCardText(item.examplesAr, item.examplesAr)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="space-y-4">
+            <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+              <CardContent className="space-y-4 p-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <Eye className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-text-main">{renderCardText('كيف تُقرأ هذه الصفحة؟', 'How to read this page?')}</p>
+                    <p className="text-xs text-text-muted">{renderCardText('بنية سريعة تساعد على المراجعة', 'A quick structure for review')}</p>
+                  </div>
+                </div>
+                <div className="space-y-3 text-sm leading-7 text-text-muted">
+                  <p>{renderCardText('كل بطاقة تمثل نقطة مراجعة مستقلة يمكن توسيعها لاحقًا إلى دليل تفصيلي أو صفحة مرجعية منفصلة.', 'Each card is an independent review point that can later expand into a detailed or separate reference page.')}</p>
+                  <p>{renderCardText('الترتيب الحالي يحافظ على الوضوح مع إبراز النصوص التي تحتاج إلى انتباه مباشر من المراجع.', 'The current order keeps the content clear while highlighting items needing direct reviewer attention.')}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+              <CardContent className="space-y-3 p-5">
+                <p className="text-sm font-semibold text-text-main">{renderCardText('أولوية التدقيق', 'Review priority')}</p>
+                <div className="space-y-3">
+                  {[
+                    renderCardText('المحتوى الديني والسياسي أولًا', 'Religious and political content first'),
+                    renderCardText('السلامة الوطنية ثم الفئات الحساسة', 'National safety then sensitive groups'),
+                    renderCardText('السلوكيات الجنسية والعنف اللفظي', 'Sexual behavior and profanity'),
+                  ].map((line) => (
+                    <div key={line} className="flex items-start gap-3 rounded-[calc(var(--radius)+0.2rem)] border border-border/70 bg-surface/80 p-3 text-sm leading-6 text-text-main">
+                      <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                      <span>{line}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="grid gap-4 md:grid-cols-2">
+            {ageRatings.map((item) => (
+              <Card key={item.code} className="group overflow-hidden border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(31,23,36,0.10)]">
+                <CardContent className="space-y-4 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-warning/10 text-warning transition-transform duration-300 group-hover:scale-105">
+                      <Award className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="warning" className="px-2 py-0 text-[10px]">
+                          {item.code}
+                        </Badge>
+                        <h3 className="text-base font-bold leading-6 text-text-main">{renderCardText(item.labelAr, item.labelEn)}</h3>
+                      </div>
+                      <p className="mt-2 text-sm leading-7 text-text-muted">{renderCardText(item.summaryAr, item.summaryEn)}</p>
+                    </div>
+                  </div>
+                  <div className="rounded-[calc(var(--radius)+0.2rem)] border border-border/70 bg-surface/80 p-4">
+                    <p className="text-sm leading-7 text-text-main">{renderCardText(item.detailsAr, item.detailsEn)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="space-y-4">
+            <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+              <CardContent className="space-y-4 p-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-success/10 text-success">
+                    <Clock3 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-text-main">{renderCardText('ملخص التصنيف', 'Rating summary')}</p>
+                    <p className="text-xs text-text-muted">{renderCardText('نظرة سريعة على مستويات المشاهدة', 'A quick look at audience levels')}</p>
+                  </div>
+                </div>
+                <div className="space-y-3 text-sm leading-7 text-text-muted">
+                  <p>{renderCardText('التصنيف ليس منعًا بقدر ما هو توضيح لمستوى الملاءمة، ويُستخدم لتسهيل اختيار المشاهدة المناسبة.', 'Rating is guidance, not only restriction, and helps viewers choose the right content level.')}</p>
+                  <p>{renderCardText('يمكن تطوير هذا القسم لاحقًا إلى بطاقة مرجعية أو أداة تصنيف تفاعلية داخل البوابة.', 'This section can later expand into a reference card or interactive rating tool inside the portal.')}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+              <CardContent className="space-y-3 p-5">
+                <p className="text-sm font-semibold text-text-main">{renderCardText('المفتاح البصري', 'Visual key')}</p>
+                <div className="space-y-3">
+                  {[
+                    { badge: 'G', label: renderCardText('لجميع الأعمار', 'All ages') },
+                    { badge: 'PG', label: renderCardText('إشراف عائلي', 'Parental guidance') },
+                    { badge: 'R18', label: renderCardText('قيود عمرية', 'Age restriction') },
+                  ].map((item) => (
+                    <div key={item.badge} className="flex items-center gap-3 rounded-[calc(var(--radius)+0.2rem)] border border-border/70 bg-surface/80 p-3 text-sm leading-6 text-text-main">
+                      <Badge variant="outline" className="min-w-12 justify-center px-2 py-0 text-[10px] font-bold">
+                        {item.badge}
+                      </Badge>
+                      <span>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function ClientPortal() {
@@ -1161,12 +1571,7 @@ export function ClientPortal() {
       );
     }
     if (activeSection === 'compliance-guidelines') {
-      return renderPlaceholderSection(
-        'ارشادات الامتثال',
-        'Compliance Guidelines',
-        'coming soon',
-        'coming soon',
-      );
+      return <ComplianceGuidelinesSection lang={lang} />;
     }
     return renderPlaceholderSection(
       'قسم الإعدادات',
