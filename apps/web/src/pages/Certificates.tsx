@@ -160,7 +160,7 @@ export function Certificates() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="dashboard-page-header p-5 md:p-6">
         <h1 className="text-2xl font-bold text-text-main">{t('certificates')}</h1>
         <p className="mt-1 text-text-muted">
           {lang === 'ar'
@@ -239,7 +239,7 @@ export function Certificates() {
           ) : (
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
               {templates.map((template) => (
-                <div key={template.id} className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-background p-4">
+                <div key={template.id} className="dashboard-item-card p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -297,7 +297,7 @@ export function Certificates() {
           ) : (
             <div className="space-y-3">
               {data.items.map((item) => (
-                <div key={item.scriptId} className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-background p-4">
+                <div key={item.scriptId} className="dashboard-item-card p-4">
                   <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">

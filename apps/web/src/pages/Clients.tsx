@@ -117,7 +117,7 @@ export function Clients() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="dashboard-page-header flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-text-main">{t('clients')}</h1>
           <p className="text-text-muted mt-1">{lang === 'ar' ? 'إدارة الشركات والعملاء المسجلين' : 'Manage registered companies and clients'}</p>
@@ -188,7 +188,7 @@ export function Clients() {
       </div>
 
       {/* Search Input */}
-      <div className="flex justify-between items-center">
+      <div className="dashboard-panel rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-4 shadow-[0_16px_40px_rgba(31,23,36,0.04)]">
         <div className="relative w-full sm:w-80">
           <Search className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted", lang === 'ar' ? 'right-3' : 'left-3')} />
           <Input
@@ -223,7 +223,7 @@ export function Clients() {
         ) : filteredClients.map((client) => (
           <Card
             key={client.companyId}
-            className="hover:shadow-md transition-shadow cursor-pointer group"
+            className="group cursor-pointer transition-shadow hover:shadow-[0_20px_50px_rgba(31,23,36,0.08)]"
             onClick={() => navigate(`/clients/${client.companyId}`)}
           >
             <CardContent className="p-6">

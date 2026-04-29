@@ -245,7 +245,7 @@ function Reports() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="dashboard-page-header flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-text-main">{t('reports')}</h1>
           <p className="text-text-muted mt-1">{t('reportsSubtitle' as any)}</p>
@@ -301,7 +301,7 @@ function Reports() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="dashboard-panel flex flex-col gap-4 rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-4 shadow-[0_16px_40px_rgba(31,23,36,0.04)] lg:flex-row">
         <div className="w-full lg:w-1/3">
           <Input
             placeholder={t('search')}
@@ -344,7 +344,7 @@ function Reports() {
       </div>
 
       {/* Table */}
-      <Card>
+      <Card className="dashboard-table-card">
         <div className="overflow-x-auto">
           {loading ? (
             <div className="flex justify-center p-12"><RefreshCw className="w-8 h-8 animate-spin text-primary" /></div>
@@ -358,7 +358,7 @@ function Reports() {
             <div className="text-center p-12 text-text-muted">{t('noReportsFound')}</div>
           ) : (
             <table className="w-full text-sm text-start">
-              <thead className="text-xs text-text-muted uppercase bg-background border-b border-border">
+              <thead className="border-b border-border text-xs uppercase text-text-muted">
                 <tr>
                   <th className="px-6 py-4 font-semibold">{t('reportId' as any)}</th>
                   <th className="px-6 py-4 font-semibold">{t('company' as any)}</th>
@@ -372,7 +372,7 @@ function Reports() {
               </thead>
               <tbody className="divide-y divide-border">
                 {paginatedReports.map(report => (
-                  <tr key={report.id} className="bg-surface hover:bg-background/50 transition-colors cursor-pointer" onClick={() => handleOpen(report)}>
+                  <tr key={report.id} className="cursor-pointer bg-transparent transition-colors" onClick={() => handleOpen(report)}>
                     <td className="px-6 py-4 font-mono text-xs text-text-muted">{report.id?.substring(0, 8)}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
@@ -423,7 +423,7 @@ function Reports() {
           )}
         </div>
         {!loading && !error && filteredReports.length > 0 && (
-          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-border bg-background">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-background/70 px-6 py-4">
             <div className="flex items-center gap-3">
               <span className="text-sm text-text-muted">{lang === 'ar' ? 'عرض' : 'Show'}</span>
               <Select

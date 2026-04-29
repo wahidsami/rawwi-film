@@ -138,8 +138,13 @@ export function Overview() {
 
   return (
     <div className="space-y-8 pb-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-text-main">{t('overview')}</h1>
+      <div className="dashboard-page-header flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.24em] text-text-muted">
+            {lang === 'ar' ? 'لوحة الإدارة' : 'Admin Dashboard'}
+          </p>
+          <h1 className="mt-2 text-2xl font-bold text-text-main">{t('overview')}</h1>
+        </div>
         <Button
           variant="outline"
           onClick={handleExportReport}
@@ -379,7 +384,7 @@ export function Overview() {
         {/* Right Column (Actions & Activity) */}
         <div className="space-y-8">
           {/* Quick Actions */}
-          <Card className="bg-primary/5 border-primary/20">
+          <Card className="border-primary/20 bg-primary/5">
             <CardHeader>
               <CardTitle className="text-primary-dark">{t('quickActions')}</CardTitle>
             </CardHeader>

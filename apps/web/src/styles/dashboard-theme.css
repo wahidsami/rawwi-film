@@ -66,3 +66,44 @@
 .client-portal-stat-card {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(250, 247, 251, 0.98) 100%);
 }
+
+.dashboard-sidebar-link.is-active > span:first-child {
+  background: var(--primary);
+  color: #fff;
+}
+
+.dashboard-page-header {
+  border: 1px solid rgba(230, 222, 234, 0.72);
+  border-radius: calc(var(--radius) + 0.75rem);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(250, 247, 251, 0.9)),
+    radial-gradient(circle at top right, rgba(118, 182, 183, 0.14), transparent 18rem);
+  box-shadow: 0 16px 40px rgba(31, 23, 36, 0.05);
+}
+
+.dashboard-table-card {
+  overflow: hidden;
+  border-radius: calc(var(--radius) + 0.45rem);
+  border: 1px solid rgba(230, 222, 234, 0.72);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 16px 40px rgba(31, 23, 36, 0.05);
+}
+
+.dashboard-table-card thead {
+  background: rgba(245, 243, 248, 0.86);
+}
+
+.dashboard-table-card tbody tr {
+  transition: background-color 160ms ease;
+}
+
+.dashboard-table-card tbody tr:hover {
+  background: rgba(245, 243, 248, 0.58);
+}
+
+.dashboard-item-card {
+  border: 1px solid rgba(230, 222, 234, 0.74);
+  border-radius: calc(var(--radius) + 0.35rem);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
