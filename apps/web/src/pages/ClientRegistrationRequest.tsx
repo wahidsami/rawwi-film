@@ -57,6 +57,7 @@ export function ClientRegistrationRequest() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerTitle, setViewerTitle] = useState('');
+  const [viewerBlobUrl, setViewerBlobUrl] = useState<string | null>(null);
 
   const company = useMemo(() => companies.find((c) => c.companyId === id), [companies, id]);
 
@@ -81,8 +82,24 @@ export function ClientRegistrationRequest() {
       if (!finalUrl) {
         throw new Error(lang === 'ar' ? 'لا يوجد رابط متاح لهذا المستند' : 'No URL available for this document');
       }
+
+      // Validate signed URL quickly; fallback to direct download if storage gateway returns an error.
+      let resolvedUrl = finalUrl;
+      try {
+        const response = await fetch(finalUrl, { method: 'GET' });
+        if (!response.ok) throw new Error(`signed-url-${response.status}`);
+      } catch {
+        if (!parsed) throw new Error(lang === 'ar' ? 'تعذر فتح المستند' : 'Failed to open document');
+        const { data, error } = await supabase.storage.from(parsed.bucket).download(parsed.objectPath);
+        if (error || !data) throw new Error(error?.message || (lang === 'ar' ? 'تعذر تنزيل المستند' : 'Failed to download document'));
+        if (viewerBlobUrl) URL.revokeObjectURL(viewerBlobUrl);
+        const blobUrl = URL.createObjectURL(data);
+        setViewerBlobUrl(blobUrl);
+        resolvedUrl = blobUrl;
+      }
+
       setViewerTitle(doc.name);
-      setViewerUrl(finalUrl);
+      setViewerUrl(resolvedUrl);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر فتح المستند' : 'Failed to open document'));
     }
@@ -212,7 +229,13 @@ export function ClientRegistrationRequest() {
         </div>
       </Modal>
 
-      <Modal isOpen={!!viewerUrl} onClose={() => setViewerUrl(null)} title={viewerTitle || (lang === 'ar' ? 'عرض المستند' : 'Document Viewer')}>
+      <Modal isOpen={!!viewerUrl} onClose={() => {
+        setViewerUrl(null);
+        if (viewerBlobUrl) {
+          URL.revokeObjectURL(viewerBlobUrl);
+          setViewerBlobUrl(null);
+        }
+      }} title={viewerTitle || (lang === 'ar' ? 'عرض المستند' : 'Document Viewer')}>
         <div className="space-y-3">
           {viewerUrl && (
             <>
