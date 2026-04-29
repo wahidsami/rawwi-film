@@ -20,6 +20,7 @@ type CanonicalSummaryFinding = {
   severity: string;
   confidence: number;
   rationale?: string | null;
+  actionText?: string | null;
   pillar_id?: string | null;
   primary_article_id?: number | null;
   related_article_ids?: number[];
@@ -42,6 +43,7 @@ export type AnalysisPdfFinding = {
   primaryArticleId?: number;
   relatedArticleIds?: number[];
   rationale?: string | null;
+  actionText?: string | null;
   pillarId?: string | null;
   startLineChunk?: number;
   endLineChunk?: number;
@@ -80,6 +82,7 @@ export function splitAnalysisReviewFindingsForPdf(
       primaryArticleId: Number.isFinite(row.primaryArticleId) ? row.primaryArticleId : 0,
       relatedArticleIds: [],
       rationale: row.rationaleAr ?? row.descriptionAr ?? null,
+      actionText: row.actionText ?? null,
       pillarId: null,
       pageNumber: row.pageNumber ?? undefined,
       reviewStatus: row.reviewStatus,
@@ -101,6 +104,7 @@ export function splitAnalysisReviewFindingsForPdf(
       primaryArticleId: Number.isFinite(row.primaryArticleId) ? row.primaryArticleId : 0,
       relatedArticleIds: [],
       rationale: row.rationaleAr ?? row.descriptionAr ?? null,
+      actionText: row.actionText ?? null,
       pillarId: null,
       pageNumber: row.pageNumber ?? undefined,
       reviewStatus: row.reviewStatus,
@@ -141,6 +145,7 @@ export function mapAnalysisFindingsForPdf(
       primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
       relatedArticleIds: f.related_article_ids ?? [],
       rationale: f.rationale ?? null,
+      actionText: f.actionText ?? null,
       pillarId: f.pillar_id ?? null,
       startLineChunk: f.start_line_chunk ?? undefined,
       endLineChunk: f.end_line_chunk ?? undefined,
@@ -167,6 +172,7 @@ export function mapAnalysisFindingsForPdf(
       primaryArticleId: Number(v3.primary_article_id),
       relatedArticleIds: (v3.related_article_ids as number[] | undefined) ?? [],
       rationale: (v3.rationale_ar as string | undefined) ?? null,
+      actionText: (v3.action_text as string | undefined) ?? null,
       pillarId: (v3.pillar_id as string | undefined) ?? null,
       startLineChunk: f.startLineChunk ?? undefined,
       endLineChunk: f.endLineChunk ?? undefined,

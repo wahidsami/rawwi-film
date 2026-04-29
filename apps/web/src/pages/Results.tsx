@@ -343,6 +343,13 @@ export function Results() {
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
   const [reviewReason, setReviewReason] = useState('');
+  const [actionModal, setActionModal] = useState<{
+    findingId?: string;
+    reviewFindingId?: string;
+    titleAr: string;
+    actionText: string;
+  } | null>(null);
+  const [actionSaving, setActionSaving] = useState(false);
   const [traceModal, setTraceModal] = useState<{
     titleAr: string;
     evidenceSnippet: string;
@@ -733,6 +740,33 @@ export function Results() {
     }
   };
 
+  const handleFindingActionSave = async () => {
+    if (!actionModal) return;
+    const actionText = actionModal.actionText.trim();
+    setActionSaving(true);
+    try {
+      const res = await findingsApi.setFindingAction({
+        findingId: actionModal.findingId,
+        reviewFindingId: actionModal.reviewFindingId,
+        actionText: actionText || null,
+      });
+      const updatedRows = [
+        ...(res.reviewFinding ? [res.reviewFinding] : []),
+        ...(res.reviewFindings ?? []),
+      ];
+      if (updatedRows.length > 0) {
+        const byId = new Map(updatedRows.map((row) => [row.id, row]));
+        setReviewFindings((prev) => prev.map((row) => byId.get(row.id) ?? row));
+      }
+      toast.success(lang === 'ar' ? 'تم حفظ الإجراء' : 'Action saved');
+      setActionModal(null);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed');
+    } finally {
+      setActionSaving(false);
+    }
+  };
+
   const handleBulkFindingReview = async () => {
     if (!bulkReviewModal) return;
     const reason = bulkReviewReason.trim();
@@ -1096,6 +1130,23 @@ export function Results() {
       const snippet = compactWhitespace(f.evidenceSnippet);
       if (!snippet) return false;
       const articleMatches = (f.articleId ?? 0) === (rf.primaryArticleId ?? 0);
+      return articleMatches && (snippet.includes(evidence) || evidence.includes(snippet));
+    });
+  }
+
+  function matchReviewFindingForRaw(raw: AnalysisFinding): AnalysisReviewFinding | undefined {
+    const rawCanonical = findingCanonicalId(raw);
+    if (rawCanonical) {
+      for (const review of reviewFindings) {
+        if (review.canonicalFindingId === rawCanonical) return review;
+      }
+    }
+    const evidence = compactWhitespace(raw.evidenceSnippet);
+    if (evidence.length < 4) return undefined;
+    return reviewFindings.find((review) => {
+      const snippet = compactWhitespace(review.evidenceSnippet);
+      if (!snippet) return false;
+      const articleMatches = (review.primaryArticleId ?? 0) === (raw.articleId ?? 0);
       return articleMatches && (snippet.includes(evidence) || evidence.includes(snippet));
     });
   }
@@ -1653,6 +1704,8 @@ export function Results() {
     const rationale = pickFindingRationale(f);
     const showRationale = !!rationale && !isWeakRationaleText(rationale) && rationale !== (f.evidenceSnippet ?? '').trim();
     const manualComment = (f.manualComment ?? '').trim();
+    const matchedReview = matchReviewFindingForRaw(f);
+    const actionText = (matchedReview?.actionText ?? '').trim();
     const isEdited = Boolean(f.editedAt || f.editedBy);
     const showManualComment = !!manualComment && manualComment !== rationale;
     const manualCommentLabel = isEdited
@@ -1724,6 +1777,9 @@ export function Results() {
           {showRationale && (
             <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{rationale}</span></div>
           )}
+          {actionText && (
+            <div>{lang === 'ar' ? 'الإجراء:' : 'Action:'} <span className="text-text-main">{actionText}</span></div>
+          )}
           {showManualComment && (
             <div>{manualCommentLabel} <span className="text-text-main">{manualComment}</span></div>
           )}
@@ -1743,6 +1799,23 @@ export function Results() {
         )}
         {/* Action buttons */}
         <div className="flex items-center gap-2 mt-2 print:hidden">
+          {matchedReview && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-[11px] gap-1"
+              onClick={() =>
+                setActionModal({
+                  findingId: f.id,
+                  titleAr: f.titleAr,
+                  actionText,
+                })
+              }
+            >
+              <FileText className="w-3 h-3" />
+              {lang === 'ar' ? 'الإجراء' : 'Action'}
+            </Button>
+          )}
           <Button
             size="sm"
             variant="outline"
@@ -1819,6 +1892,7 @@ export function Results() {
     const rationale = !isWeakRationaleText(f.rationaleAr) ? stripArticleAtomReferences(f.rationaleAr?.trim()) : null;
     const confidence = matchedRaw ? Math.round((matchedRaw.confidence ?? 0) * 100) : null;
     const manualComment = (f.manualComment ?? '').trim();
+    const actionText = (f.actionText ?? '').trim();
     const isEdited = Boolean(f.editedAt || f.editedBy);
     const showManualComment = !!manualComment && manualComment !== rationale;
     const manualCommentLabel = isEdited
@@ -1879,6 +1953,9 @@ export function Results() {
           {rationale && (
             <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{rationale}</span></div>
           )}
+          {actionText && (
+            <div>{lang === 'ar' ? 'الإجراء:' : 'Action:'} <span className="text-text-main">{actionText}</span></div>
+          )}
           {showManualComment && (
             <div>{manualCommentLabel} <span className="text-text-main">{manualComment}</span></div>
           )}
@@ -1894,6 +1971,21 @@ export function Results() {
         )}
         {matchedRaw ? (
           <div className="flex items-center gap-2 mt-2 print:hidden">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-[11px] gap-1"
+              onClick={() =>
+                setActionModal({
+                  reviewFindingId: f.id,
+                  titleAr: f.titleAr,
+                  actionText: f.actionText ?? '',
+                })
+              }
+            >
+              <FileText className="w-3 h-3" />
+              {lang === 'ar' ? 'الإجراء' : 'Action'}
+            </Button>
             <Button
               size="sm"
               variant="outline"
@@ -3094,6 +3186,43 @@ export function Results() {
             <div className="flex justify-end pt-2 border-t border-border">
               <Button variant="outline" onClick={() => setTraceModal(null)}>
                 {lang === 'ar' ? 'إغلاق' : 'Close'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={!!actionModal}
+        onClose={() => { setActionModal(null); }}
+        title={lang === 'ar' ? 'إجراء الملاحظة' : 'Finding action'}
+        className="max-w-xl"
+      >
+        {actionModal && (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-border bg-background/60 p-3">
+              <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الملاحظة' : 'Finding'}</div>
+              <div className="font-semibold text-text-main">{actionModal.titleAr}</div>
+            </div>
+            <Textarea
+              label={lang === 'ar' ? 'الإجراء' : 'Action'}
+              value={actionModal.actionText}
+              onChange={(e) => setActionModal((prev) => prev ? ({ ...prev, actionText: e.target.value }) : prev)}
+              placeholder={lang === 'ar' ? 'اكتب الإجراء المطلوب…' : 'Write the recommended action…'}
+            />
+            <div className="rounded-xl border border-border bg-background/60 p-3 text-xs text-text-muted">
+              {lang === 'ar'
+                ? 'إذا تُركت الخانة فارغة، سيبقى عمود الإجراء فارغًا في ملف Word.'
+                : 'If left empty, the Action column will remain blank in the Word export.'}
+            </div>
+            <div className="flex justify-end gap-3 pt-2 border-t border-border">
+              <Button variant="outline" onClick={() => setActionModal(null)} disabled={actionSaving}>
+                {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+              </Button>
+              <Button onClick={handleFindingActionSave} disabled={actionSaving}>
+                {actionSaving
+                  ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…')
+                  : (lang === 'ar' ? 'حفظ الإجراء' : 'Save action')}
               </Button>
             </div>
           </div>

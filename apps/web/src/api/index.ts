@@ -55,6 +55,7 @@ export interface ClientPortalSubmissionItem {
   type: string;
   status: string;
   createdAt: string;
+  expectedRank?: 'low' | 'medium' | 'high' | string | null;
   receivedAt?: string | null;
   currentVersionId?: string | null;
   latestReportId?: string | null;
@@ -69,6 +70,7 @@ export interface AdminClientSubmissionItem {
   status: string;
   synopsis?: string | null;
   submittedAt: string;
+  expectedRank?: 'low' | 'medium' | 'high' | string | null;
   receivedAt?: string | null;
   currentVersionId?: string | null;
   companyId: string;
@@ -863,6 +865,7 @@ export interface AnalysisReviewFinding {
   rationaleAr?: string | null;
   evidenceSnippet: string;
   manualComment?: string | null;
+  actionText?: string | null;
   pageNumber?: number | null;
   startOffsetGlobal?: number | null;
   endOffsetGlobal?: number | null;
@@ -903,6 +906,19 @@ export interface SetReviewFindingReportVisibilityResponse {
   reviewFinding: AnalysisReviewFinding;
 }
 
+export interface SetFindingActionBody {
+  findingId?: string;
+  reviewFindingId?: string;
+  actionText?: string | null;
+}
+
+export interface SetFindingActionResponse {
+  ok: true;
+  reviewFinding?: AnalysisReviewFinding;
+  reviewFindings?: AnalysisReviewFinding[];
+  updatedIds?: string[];
+}
+
 export const findingsApi = {
   getFindings: (): Promise<Finding[]> => httpClient.get('/findings'),
   /** List findings for a specific job (with review status). */
@@ -925,6 +941,8 @@ export const findingsApi = {
     httpClient.post('/findings/review', { findingId, toStatus, reason }),
   setReviewFindingReportVisibility: (body: SetReviewFindingReportVisibilityBody): Promise<SetReviewFindingReportVisibilityResponse> =>
     httpClient.post('/findings/report-visibility', body),
+  setFindingAction: (body: SetFindingActionBody): Promise<SetFindingActionResponse> =>
+    httpClient.post('/findings/action', body),
   reclassifyFinding: async (body: ReclassifyFindingBody): Promise<ReclassifyFindingResponse> => {
     try {
       return await httpClient.post('/findings/reclassify', body);

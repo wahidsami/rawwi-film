@@ -22,7 +22,7 @@ function pathAfter(base: string, url: string): string {
 const FINDING_COLS =
   "id, job_id, script_id, version_id, source, article_id, atom_id, severity, confidence, title_ar, description_ar, rationale_ar, evidence_snippet, start_offset_global, end_offset_global, start_offset_page, end_offset_page, start_line_chunk, end_line_chunk, location, evidence_hash, page_number, anchor_status, anchor_method, anchor_page_number, anchor_start_offset_page, anchor_end_offset_page, anchor_start_offset_global, anchor_end_offset_global, anchor_text, anchor_confidence, anchor_updated_at, created_at, created_by, manual_comment";
 const REVIEW_FINDING_COLS =
-  "id, job_id, report_id, script_id, version_id, canonical_finding_id, source_kind, primary_article_id, primary_atom_id, severity, review_status, title_ar, description_ar, rationale_ar, evidence_snippet, manual_comment, page_number, start_offset_global, end_offset_global, start_offset_page, end_offset_page, anchor_status, anchor_method, anchor_text, anchor_confidence, is_manual, is_hidden, include_in_report, approved_reason, reviewed_by, reviewed_at, edited_by, edited_at, created_from_job_id, supersedes_review_finding_id, created_at, updated_at";
+  "id, job_id, report_id, script_id, version_id, canonical_finding_id, source_kind, primary_article_id, primary_atom_id, severity, review_status, title_ar, description_ar, rationale_ar, evidence_snippet, manual_comment, action_text, page_number, start_offset_global, end_offset_global, start_offset_page, end_offset_page, anchor_status, anchor_method, anchor_text, anchor_confidence, is_manual, is_hidden, include_in_report, approved_reason, reviewed_by, reviewed_at, edited_by, edited_at, created_from_job_id, supersedes_review_finding_id, created_at, updated_at";
 
 async function selectFindings(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -124,6 +124,7 @@ function camelReviewFinding(r: Record<string, unknown>) {
     rationaleAr: r.rationale_ar ?? null,
     evidenceSnippet: r.evidence_snippet,
     manualComment: r.manual_comment ?? null,
+    actionText: r.action_text ?? null,
     pageNumber: r.page_number ?? null,
     startOffsetGlobal: r.start_offset_global ?? null,
     endOffsetGlobal: r.end_offset_global ?? null,
@@ -277,6 +278,7 @@ async function syncReviewClassificationFromRawFinding(
       primary_atom_id: updates.atomId,
       severity: updates.severity,
       manual_comment: updates.manualComment,
+      action_text: null,
       rationale_ar: updates.rationaleAr ?? null,
       evidence_snippet: updates.evidenceSnippet,
       page_number: updates.pageNumber ?? null,
@@ -334,6 +336,7 @@ async function createManualReviewFinding(
       rationale_ar: null,
       evidence_snippet: payload.evidenceSnippet,
       manual_comment: payload.manualComment,
+      action_text: null,
       page_number: payload.pageNumber,
       start_offset_global: payload.startOffsetGlobal,
       end_offset_global: payload.endOffsetGlobal,
@@ -360,6 +363,31 @@ async function createManualReviewFinding(
   }
 
   return (data as { id?: string | null } | null)?.id ?? null;
+}
+
+async function syncReviewActionFromRawFinding(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  row: Record<string, unknown>,
+  uid: string,
+  actionText: string | null,
+): Promise<string[]> {
+  const jobId = String(row.job_id ?? "").trim();
+  if (!jobId) return [];
+  const reportId = await getReportIdForJob(supabase, jobId);
+  if (!reportId) return [];
+  const ids = await findReviewFindingIdsForRawFinding(supabase, reportId, row);
+  if (ids.length === 0) return [];
+  const nowIso = new Date().toISOString();
+  await supabase
+    .from("analysis_review_findings")
+    .update({
+      action_text: actionText,
+      edited_by: uid,
+      edited_at: nowIso,
+      updated_at: nowIso,
+    })
+    .in("id", ids);
+  return ids;
 }
 
 function findNearestRawOccurrence(content: string, needle: string, hintStart: number): number | null {
@@ -862,6 +890,122 @@ Deno.serve(async (req: Request) => {
       return json({
         ok: true,
         reviewFinding: camelReviewFinding(updatedRow as Record<string, unknown>),
+      });
+    }
+
+    if (method === "POST" && rest === "action") {
+      let body: {
+        findingId?: string;
+        reviewFindingId?: string;
+        actionText?: string | null;
+      };
+      try {
+        body = await req.json();
+      } catch {
+        return json({ error: "Invalid JSON" }, 400);
+      }
+
+      const reviewFindingId = body.reviewFindingId?.trim();
+      const findingId = body.findingId?.trim();
+      const actionText = typeof body.actionText === "string" ? body.actionText.trim() : "";
+      const normalizedActionText = actionText.length > 0 ? actionText : null;
+
+      if (!reviewFindingId && !findingId) {
+        return json({ error: "reviewFindingId or findingId required" }, 400);
+      }
+
+      if (reviewFindingId) {
+        const { data: reviewFinding } = await supabase
+          .from("analysis_review_findings")
+          .select("id, job_id")
+          .eq("id", reviewFindingId)
+          .maybeSingle();
+        if (!reviewFinding) return json({ error: "Review finding not found" }, 404);
+
+        const reviewRow = reviewFinding as { id: string; job_id: string };
+        const { data: job } = await supabase
+          .from("analysis_jobs")
+          .select("created_by")
+          .eq("id", reviewRow.job_id)
+          .maybeSingle();
+        if (!job) return json({ error: "Job not found" }, 404);
+        const isOwner = (job as { created_by?: string | null }).created_by === uid;
+        if (!isAdmin && !isOwner) return json({ error: "Forbidden" }, 403);
+
+        const nowIso = new Date().toISOString();
+        const { data: updatedRow, error: updateErr } = await supabase
+          .from("analysis_review_findings")
+          .update({
+            action_text: normalizedActionText,
+            edited_by: uid,
+            edited_at: nowIso,
+            updated_at: nowIso,
+          })
+          .eq("id", reviewFindingId)
+          .select(REVIEW_FINDING_COLS)
+          .maybeSingle();
+        if (updateErr || !updatedRow) {
+          return json({ error: updateErr?.message ?? "Could not update finding action" }, 500);
+        }
+
+        logAuditCanonical(supabase, {
+          event_type: "FINDING_ACTION_UPDATED",
+          actor_user_id: uid,
+          actor_role: "user",
+          target_type: "report",
+          target_id: reviewRow.job_id,
+          target_label: reviewFindingId,
+          result_status: "success",
+          metadata: { reviewFindingId, actionText: normalizedActionText },
+        }).catch((e) => console.warn("[findings] action audit canonical:", e));
+
+        return json({
+          ok: true,
+          reviewFinding: camelReviewFinding(updatedRow as Record<string, unknown>),
+        });
+      }
+
+      const { data: rawFinding } = await supabase
+        .from("analysis_findings")
+        .select("id, job_id, article_id, source, evidence_snippet, location")
+        .eq("id", findingId)
+        .maybeSingle();
+      if (!rawFinding) return json({ error: "Finding not found" }, 404);
+
+      const rawRow = rawFinding as Record<string, unknown>;
+      const { data: job } = await supabase
+        .from("analysis_jobs")
+        .select("created_by")
+        .eq("id", String(rawRow.job_id ?? ""))
+        .maybeSingle();
+      if (!job) return json({ error: "Job not found" }, 404);
+      const isOwner = (job as { created_by?: string | null }).created_by === uid;
+      if (!isAdmin && !isOwner) return json({ error: "Forbidden" }, 403);
+
+      const ids = await syncReviewActionFromRawFinding(supabase, rawRow, uid, normalizedActionText);
+      if (ids.length === 0) return json({ error: "Review finding not found for this raw finding" }, 404);
+
+      const { data: updatedRows } = await supabase
+        .from("analysis_review_findings")
+        .select(REVIEW_FINDING_COLS)
+        .in("id", ids)
+        .order("created_at", { ascending: true });
+
+      logAuditCanonical(supabase, {
+        event_type: "FINDING_ACTION_UPDATED",
+        actor_user_id: uid,
+        actor_role: "user",
+        target_type: "report",
+        target_id: String(rawRow.job_id ?? ""),
+        target_label: findingId,
+        result_status: "success",
+        metadata: { findingId, actionText: normalizedActionText, updatedCount: ids.length },
+      }).catch((e) => console.warn("[findings] action audit canonical:", e));
+
+      return json({
+        ok: true,
+        reviewFindings: (updatedRows ?? []).map((row) => camelReviewFinding(row as Record<string, unknown>)),
+        updatedIds: ids,
       });
     }
 

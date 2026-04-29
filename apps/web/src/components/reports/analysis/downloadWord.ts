@@ -440,10 +440,11 @@ function buildFindingsTable(params: DownloadAnalysisWordParams): string {
           finding.pageNumber ?? null
         );
         const findingText = plainText(finding.evidenceSnippet) || "—";
+        const actionText = plainText(finding.actionText) || "";
         return `<w:tr>
           ${makeTableCell(formatNullableValue(page), 800, { align: "center", rtl: false })}
           ${makeTableCell(findingText, 2800)}
-          ${makeTableCell("", 1400)}
+          ${makeTableCell(actionText, 1400)}
         </w:tr>`;
       });
 
