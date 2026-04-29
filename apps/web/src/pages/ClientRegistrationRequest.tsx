@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, ExternalLink, FileText } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 import { useLangStore } from '@/store/langStore';
 import { useDataStore } from '@/store/dataStore';
 import { Button } from '@/components/ui/Button';
@@ -55,9 +55,6 @@ export function ClientRegistrationRequest() {
   const [actionId, setActionId] = useState<string | null>(null);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
-  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
-  const [viewerTitle, setViewerTitle] = useState('');
-  const [viewerBlobUrl, setViewerBlobUrl] = useState<string | null>(null);
 
   const company = useMemo(() => companies.find((c) => c.companyId === id), [companies, id]);
 
@@ -65,43 +62,27 @@ export function ClientRegistrationRequest() {
     return <div className="p-8 text-center text-text-muted">{lang === 'ar' ? 'لم يتم العثور على طلب التسجيل' : 'Registration request not found'}</div>;
   }
 
-  const openDocument = async (doc: { name: string; path?: string; url?: string }) => {
+  const downloadDocument = async (doc: { name: string; path?: string; url?: string }) => {
     try {
-      let finalUrl = '';
-      // Always prefer fresh signing from storage path for private docs.
       const fromPath = doc.path ? splitStoragePath(doc.path) : null;
       const fromUrl = !fromPath && doc.url ? splitStoragePath(doc.url) : null;
       const parsed = fromPath ?? fromUrl;
-      if (parsed) {
-        const { data, error } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.objectPath, 60 * 60);
-        if (error || !data?.signedUrl) throw new Error(error?.message || 'Unable to create signed URL');
-        finalUrl = data.signedUrl;
-      } else if (doc.url?.trim()) {
-        finalUrl = doc.url.trim();
-      }
-      if (!finalUrl) {
-        throw new Error(lang === 'ar' ? 'لا يوجد رابط متاح لهذا المستند' : 'No URL available for this document');
-      }
+      if (!parsed) throw new Error(lang === 'ar' ? 'مسار المستند غير صالح' : 'Invalid document path');
 
-      // Validate signed URL quickly; fallback to direct download if storage gateway returns an error.
-      let resolvedUrl = finalUrl;
-      try {
-        const response = await fetch(finalUrl, { method: 'GET' });
-        if (!response.ok) throw new Error(`signed-url-${response.status}`);
-      } catch {
-        if (!parsed) throw new Error(lang === 'ar' ? 'تعذر فتح المستند' : 'Failed to open document');
-        const { data, error } = await supabase.storage.from(parsed.bucket).download(parsed.objectPath);
-        if (error || !data) throw new Error(error?.message || (lang === 'ar' ? 'تعذر تنزيل المستند' : 'Failed to download document'));
-        if (viewerBlobUrl) URL.revokeObjectURL(viewerBlobUrl);
-        const blobUrl = URL.createObjectURL(data);
-        setViewerBlobUrl(blobUrl);
-        resolvedUrl = blobUrl;
-      }
+      const { data, error } = await supabase.storage.from(parsed.bucket).download(parsed.objectPath);
+      if (error || !data) throw new Error(error?.message || (lang === 'ar' ? 'تعذر تنزيل المستند' : 'Failed to download document'));
 
-      setViewerTitle(doc.name);
-      setViewerUrl(resolvedUrl);
+      const blobUrl = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = doc.name || parsed.objectPath.split('/').pop() || 'document';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(blobUrl);
+      toast.success(lang === 'ar' ? 'تم تنزيل المستند' : 'Document downloaded');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر فتح المستند' : 'Failed to open document'));
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تنزيل المستند' : 'Failed to download document'));
     }
   };
 
@@ -194,9 +175,9 @@ export function ClientRegistrationRequest() {
                     <p className="truncate font-medium text-text-main">{doc.name}</p>
                     <p className="text-xs text-text-muted">{doc.type}</p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => void openDocument(doc)}>
-                    <FileText className="me-1 h-4 w-4" />
-                    {lang === 'ar' ? 'عرض' : 'View'}
+                  <Button variant="outline" size="sm" onClick={() => void downloadDocument(doc)}>
+                    <Download className="me-1 h-4 w-4" />
+                    {lang === 'ar' ? 'تنزيل' : 'Download'}
                   </Button>
                 </div>
               ))
@@ -229,29 +210,6 @@ export function ClientRegistrationRequest() {
         </div>
       </Modal>
 
-      <Modal isOpen={!!viewerUrl} onClose={() => {
-        setViewerUrl(null);
-        if (viewerBlobUrl) {
-          URL.revokeObjectURL(viewerBlobUrl);
-          setViewerBlobUrl(null);
-        }
-      }} title={viewerTitle || (lang === 'ar' ? 'عرض المستند' : 'Document Viewer')}>
-        <div className="space-y-3">
-          {viewerUrl && (
-            <>
-              <div className="h-[70vh] w-full overflow-hidden rounded-lg border border-border">
-                <iframe src={viewerUrl} title={viewerTitle} className="h-full w-full" />
-              </div>
-              <div className="flex justify-end">
-                <a href={viewerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center text-sm font-medium text-primary hover:underline">
-                  {lang === 'ar' ? 'فتح في نافذة جديدة' : 'Open in new tab'}
-                  <ExternalLink className="ms-1 h-4 w-4" />
-                </a>
-              </div>
-            </>
-          )}
-        </div>
-      </Modal>
     </div>
   );
 }
