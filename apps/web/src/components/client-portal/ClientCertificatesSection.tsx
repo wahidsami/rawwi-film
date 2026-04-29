@@ -156,6 +156,22 @@ function elementStyle(element: CertificateTemplateElement, page: { width: number
   };
 }
 
+function sanitizeTemplateElements(template?: CertificateTemplate | null): CertificateTemplateElement[] {
+  const raw = template?.templateData?.elements;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((element) => (
+    element &&
+    typeof element.id === 'string' &&
+    typeof element.type === 'string' &&
+    Number.isFinite(element.x) &&
+    Number.isFinite(element.y) &&
+    Number.isFinite(element.width) &&
+    Number.isFinite(element.height) &&
+    element.width > 0 &&
+    element.height > 0
+  ));
+}
+
 function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl }: {
   element: CertificateTemplateElement;
   item: CertificateDashboardItem;
@@ -168,23 +184,22 @@ function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl }: 
   if (element.type === 'logo' && element.logoSource === 'client') {
     const clientLogoUrl = resolveClientLogoUrl(item);
     if (clientLogoUrl) {
-      return <Image fixed src={clientLogoUrl} style={[boxStyle, { objectFit: 'contain' }]} />;
+      return <Image src={clientLogoUrl} style={[boxStyle, { objectFit: 'contain' }]} />;
     }
     return (
-      <View fixed style={[boxStyle, { borderWidth: 1, borderColor: '#d1d5db', alignItems: 'center', justifyContent: 'center' }]}>
+      <View style={[boxStyle, { borderWidth: 1, borderColor: '#d1d5db', alignItems: 'center', justifyContent: 'center' }]}>
         <Text style={{ fontSize: 10, color: '#6b7280' }}>{lang === 'ar' ? 'شعار العميل' : 'Client Logo'}</Text>
       </View>
     );
   }
   if ((element.type === 'image' || element.type === 'logo') && element.imageUrl) {
-    return <Image fixed src={element.imageUrl} style={[boxStyle, { objectFit: 'contain' }]} />;
+    return <Image src={element.imageUrl} style={[boxStyle, { objectFit: 'contain' }]} />;
   }
   if (element.type === 'qr') {
-    return <Image fixed src={qrDataUrl} style={[boxStyle, { objectFit: 'contain', backgroundColor: '#ffffff' }]} />;
+    return <Image src={qrDataUrl} style={[boxStyle, { objectFit: 'contain', backgroundColor: '#ffffff' }]} />;
   }
   return (
     <Text
-      fixed
       style={[
         boxStyle,
         {
@@ -211,13 +226,13 @@ function CertificatePdfDocument({ item, lang, template, qrDataUrl }: {
 }) {
   const values = getCertificateValues(item, lang);
   const page = pageDimensions(template);
-  if (template) {
+  const templateElements = sanitizeTemplateElements(template);
+  if (template && templateElements.length > 0) {
     return (
       <Document>
         <Page wrap={false} size={[page.width, page.height]} style={{ position: 'relative', backgroundColor: template.backgroundColor }}>
           {template.backgroundImageUrl ? (
             <Image
-              fixed
               src={template.backgroundImageUrl}
               style={{
                 position: 'absolute',
@@ -230,7 +245,7 @@ function CertificatePdfDocument({ item, lang, template, qrDataUrl }: {
               }}
             />
           ) : null}
-          {(template.templateData.elements ?? []).map((element) => (
+          {templateElements.map((element) => (
             <TemplateElementPdf key={element.id} element={element} item={item} lang={lang} page={page} template={template} qrDataUrl={qrDataUrl} />
           ))}
         </Page>
