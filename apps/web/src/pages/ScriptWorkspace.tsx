@@ -1540,7 +1540,7 @@ export function ScriptWorkspace() {
     const fromQuery = new URLSearchParams(location.search).get('quick') === '1';
     return fromQuery || Boolean(script?.isQuickAnalysis);
   }, [location.search, script?.isQuickAnalysis]);
-  const guardCanceledScriptAction = useCallback(() => {
+  const guardCanceledScriptAction = () => {
     if (!isClientCanceledScript) return false;
     toast.error(
       lang === 'ar'
@@ -1548,7 +1548,7 @@ export function ScriptWorkspace() {
         : 'This action is disabled because the client canceled this script.'
     );
     return true;
-  }, [isClientCanceledScript, lang]);
+  };
   const reportQuickQuery = isQuickContext ? '&quick=1' : '';
 
   // When route id changes (e.g. Open Workspace from Quick Analysis), reset so we show loading
