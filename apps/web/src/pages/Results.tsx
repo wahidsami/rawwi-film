@@ -116,6 +116,10 @@ function getViolationTypeIdFromFinding(
   finding: Pick<AnalysisFinding, 'titleAr' | 'descriptionAr' | 'source'> & {
     title_ar?: string | null;
     description_ar?: string | null;
+    articleId?: number | null;
+    atomId?: string | null;
+    primaryArticleId?: number | null;
+    primaryAtomId?: string | null;
     location?: Record<string, unknown> | null;
   }
 ): ViolationTypeId | null {
@@ -132,19 +136,34 @@ function getViolationTypeIdFromFinding(
     const resolved = resolveViolationTypeId(candidate);
     if (resolved) return resolved;
   }
-  const articleId = Number(v3.primary_article_id);
+  const articleId = Number(finding.articleId ?? finding.primaryArticleId ?? v3.primary_article_id);
   const atomId =
-    typeof v3.primary_policy_atom_id === 'string'
+    finding.atomId ??
+    finding.primaryAtomId ??
+    (typeof v3.primary_policy_atom_id === 'string'
       ? v3.primary_policy_atom_id
       : typeof v3.atom_id === 'string'
         ? v3.atom_id
-        : null;
+        : null);
   const legacyResolved = getViolationTypeIdFromLegacyPolicyArticle(
     Number.isFinite(articleId) ? articleId : null,
     atomId,
   );
   if (legacyResolved) return legacyResolved;
   return null;
+}
+
+function getViolationTypeIdFromReviewFinding(finding: AnalysisReviewFinding): ViolationTypeId | null {
+  return getViolationTypeIdFromFinding({
+    titleAr: finding.titleAr,
+    descriptionAr: finding.descriptionAr,
+    source: finding.sourceKind,
+    articleId: finding.primaryArticleId,
+    atomId: finding.primaryAtomId ?? null,
+    primaryArticleId: finding.primaryArticleId,
+    primaryAtomId: finding.primaryAtomId ?? null,
+    location: (finding as { location?: Record<string, unknown> | null }).location ?? null,
+  });
 }
 
 const RATIONALE_SAYS_NOT_VIOLATION = [
@@ -840,14 +859,9 @@ export function Results() {
     const add = (id: ViolationTypeId) => {
       m.set(id, (m.get(id) ?? 0) + 1);
     };
-  if (hasReviewFindings) {
+    if (hasReviewFindings) {
       for (const f of reviewViolations) {
-        add(getViolationTypeIdFromFinding({
-          titleAr: f.titleAr,
-          descriptionAr: f.descriptionAr,
-          source: f.sourceKind,
-          location: (f as { location?: Record<string, unknown> | null }).location ?? null,
-        }) ?? 'other');
+        add(getViolationTypeIdFromReviewFinding(f) ?? 'other');
       }
       return m;
     }
@@ -2181,12 +2195,7 @@ export function Results() {
   function renderFindingsFromReview(list: AnalysisReviewFinding[]) {
     const byCat = new Map<ViolationTypeId, AnalysisReviewFinding[]>();
     for (const f of list) {
-      const cat = getViolationTypeIdFromFinding({
-        titleAr: f.titleAr,
-        descriptionAr: f.descriptionAr,
-        source: f.sourceKind,
-        location: (f as { location?: Record<string, unknown> | null }).location ?? null,
-      }) ?? 'other';
+      const cat = getViolationTypeIdFromReviewFinding(f) ?? 'other';
       if (!byCat.has(cat)) byCat.set(cat, []);
       byCat.get(cat)!.push(f);
     }
