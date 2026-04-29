@@ -150,11 +150,11 @@ export function Audit() {
 
   return (
     <div className="space-y-6 pb-8">
-      <div>
+      <div className="dashboard-page-header p-5 md:p-6">
         <h1 className="text-2xl font-bold text-text-main">{t('auditLog')}</h1>
       </div>
 
-      <Card>
+      <Card className="dashboard-panel">
         <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
@@ -237,7 +237,7 @@ export function Audit() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="dashboard-table-card">
         <CardContent className="p-0">
           {error && (
             <div className="p-4 bg-error/10 text-error rounded-t-lg">{error}</div>
@@ -263,7 +263,7 @@ export function Audit() {
                   {data.map((row) => (
                     <Fragment key={row.id}>
                       <tr
-                        className="border-b border-border hover:bg-surface-hover/50"
+                        className="border-b border-border bg-transparent transition-colors"
                       >
                         <td className="p-3 text-text-main">{row.eventType}</td>
                         <td className="p-3 text-text-main">

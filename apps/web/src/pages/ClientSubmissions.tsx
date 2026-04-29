@@ -163,7 +163,7 @@ export function ClientSubmissions() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="dashboard-page-header flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between md:p-6">
         <div>
           <h1 className="text-2xl font-bold text-text-main">
             {lang === 'ar' ? 'طلبات نصوص العملاء' : 'Client Script Submissions'}
@@ -179,7 +179,7 @@ export function ClientSubmissions() {
         </Button>
       </div>
 
-      <Card>
+      <Card className="dashboard-panel">
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <Input
@@ -210,7 +210,7 @@ export function ClientSubmissions() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="dashboard-table-card">
         <CardHeader>
           <CardTitle>{lang === 'ar' ? 'قائمة الطلبات' : 'Submission Queue'}</CardTitle>
         </CardHeader>
@@ -227,7 +227,7 @@ export function ClientSubmissions() {
                 const status = row.status.toLowerCase();
                 const isFinal = status === 'approved' || status === 'rejected';
                 return (
-                  <div key={row.scriptId} className="rounded-lg border border-border bg-surface p-4 space-y-3">
+                  <div key={row.scriptId} className="dashboard-item-card space-y-3 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="space-y-1">
                         <p className="font-semibold text-text-main">{row.title}</p>
@@ -309,7 +309,7 @@ export function ClientSubmissions() {
                 placeholder={lang === 'ar' ? 'اكتب ملاحظات واضحة للعميل حول أسباب الرفض…' : 'Write clear feedback to client about the rejection…'}
               />
 
-              <div className="rounded-md border border-border bg-background p-3 space-y-3">
+              <div className="dashboard-item-card space-y-3 p-3">
                 <label className="inline-flex items-center gap-2 text-sm font-medium text-text-main">
                   <input
                     type="checkbox"
@@ -327,7 +327,7 @@ export function ClientSubmissions() {
                       <p className="text-xs text-text-muted">{lang === 'ar' ? 'لا توجد تقارير متاحة لهذا النص حالياً.' : 'No reports available for this script yet.'}</p>
                     ) : (
                       availableReports.map((report) => (
-                        <label key={report.id} className="flex items-start gap-2 text-sm text-text-main rounded border border-border bg-surface p-2">
+                        <label key={report.id} className="dashboard-item-card flex items-start gap-2 p-2 text-sm text-text-main">
                           <input
                             type="checkbox"
                             checked={selectedSharedReportIds.includes(report.id)}

@@ -101,6 +101,10 @@
   background: rgba(245, 243, 248, 0.58);
 }
 
+.dashboard-table-card thead tr {
+  background: transparent;
+}
+
 .dashboard-item-card {
   border: 1px solid rgba(230, 222, 234, 0.74);
   border-radius: calc(var(--radius) + 0.35rem);

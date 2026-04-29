@@ -25,7 +25,7 @@ export function Tasks() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="dashboard-page-header p-5 md:p-6">
         <h1 className="text-2xl font-bold tracking-tight text-text-main">
           {lang === 'ar' ? 'مهام التحليل' : 'Analysis Tasks'}
         </h1>
@@ -35,7 +35,7 @@ export function Tasks() {
       </div>
 
       {tasks.length === 0 ? (
-        <Card className="border-dashed border-2 bg-background/50">
+        <Card className="dashboard-table-card border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-16 h-16 bg-surface border border-border rounded-2xl flex items-center justify-center mb-4 shadow-sm">
               <FileText className="w-8 h-8 text-text-muted" />
@@ -49,10 +49,10 @@ export function Tasks() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
+        <Card className="dashboard-table-card">
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left rtl:text-right">
-              <thead className="text-xs text-text-muted uppercase bg-background border-b border-border">
+              <thead className="border-b border-border text-xs uppercase text-text-muted">
                 <tr>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'النص' : 'Script'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'الإصدار' : 'Version'}</th>
@@ -66,7 +66,7 @@ export function Tasks() {
                 {tasks.map((task) => (
                   <tr
                     key={task.id}
-                    className="bg-surface border-b border-border hover:bg-background/50 transition-colors cursor-pointer group"
+                    className="group cursor-pointer border-b border-border bg-transparent transition-colors"
                     onClick={() => navigate(`/workspace/${task.scriptId}`)}
                   >
                     <td className="px-6 py-4">
@@ -88,12 +88,12 @@ export function Tasks() {
                               'warning'
                       }>
                         {task.status === 'Ready' && (
-                          <CheckCircle2 className="w-3 h-3 mr-1 inline" />
+                          <CheckCircle2 className="w-3 h-3 me-1 inline" />
                         )}
                         {task.status}
                       </Badge>
                       {task.status === 'Ready' && (
-                        <p className="text-xs text-green-600 mt-1">
+                        <p className="text-xs text-success mt-1">
                           {lang === 'ar' ? 'المستند جاهز' : 'Document ready'}
                         </p>
                       )}

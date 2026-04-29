@@ -137,14 +137,14 @@ export function Scripts() {
     return (
         <div className="space-y-6 pb-8">
             {/* Header */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="dashboard-page-header flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
                 <h1 className="text-2xl font-bold text-text-main">
                     {lang === 'ar' ? 'إدارة النصوص' : 'Scripts Management'}
                 </h1>
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-border">
+            <div className="dashboard-panel flex items-center gap-2 overflow-x-auto rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-3 shadow-[0_16px_40px_rgba(31,23,36,0.04)]">
                 {tabs.map(tab => {
                     const Icon = tab.icon;
                     const isActive = statusFilter === tab.key;
@@ -156,7 +156,7 @@ export function Scripts() {
                                 "flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors",
                                 isActive
                                     ? "bg-primary text-white"
-                                    : "bg-surface hover:bg-surface-hover text-text-muted"
+                                    : "bg-white/70 hover:bg-surface-hover text-text-muted"
                             )}
                         >
                             <Icon className="w-4 h-4" />
@@ -170,7 +170,7 @@ export function Scripts() {
             </div>
 
             {/* Search and Sort */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="dashboard-panel flex flex-col gap-4 rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-4 shadow-[0_16px_40px_rgba(31,23,36,0.04)] sm:flex-row">
                 <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
                     <Input
@@ -185,7 +185,7 @@ export function Scripts() {
                     <select
                         value={sortBy}
                         onChange={e => setSortBy(e.target.value as any)}
-                        className="px-4 py-2 rounded-lg bg-surface border border-border text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="px-4 py-2 rounded-lg border border-border bg-surface/80 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
                     >
                         <option value="date">{lang === 'ar' ? 'الأحدث' : 'Newest'}</option>
                         <option value="title">{lang === 'ar' ? 'العنوان' : 'Title'}</option>
@@ -222,7 +222,7 @@ export function Scripts() {
                         return (
                             <Card
                                 key={script.id}
-                                className="hover:shadow-lg transition-shadow cursor-pointer"
+                                className="cursor-pointer transition-shadow hover:shadow-[0_20px_50px_rgba(31,23,36,0.08)]"
                                 onClick={() => navigate(`/scripts/${script.id}/workspace`)}
                             >
                                 <CardContent className="p-6 space-y-4">
