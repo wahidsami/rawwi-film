@@ -76,6 +76,7 @@ function buildBilingualClientEmail(params: {
   ctaLabelEn?: string;
   ctaLabelAr?: string;
   ctaUrl?: string;
+  logoUrl?: string;
 }): string {
   const ctaHtml = params.ctaUrl
     ? `
@@ -95,7 +96,7 @@ function buildBilingualClientEmail(params: {
   return `
     <div style="max-width:680px;margin:0 auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#ffffff;color:#111827;font-family:Arial,Helvetica,sans-serif;line-height:1.6;">
       <div style="text-align:center;margin-bottom:16px;">
-        <img src="https://raawifilm.com/fclogo.png" alt="Film Commission" style="height:56px;object-fit:contain;" />
+        <img src="${htmlEscape(params.logoUrl ?? "https://raawifilm.com/fclogo.png")}" alt="Film Commission" style="height:56px;object-fit:contain;" />
       </div>
       <h2 style="margin:0 0 10px;font-size:20px;">${htmlEscape(params.titleEn)}</h2>
       <p style="margin:0 0 14px;white-space:pre-wrap;">${params.bodyEn}</p>
@@ -477,6 +478,7 @@ Deno.serve(async (req: Request) => {
           titleAr: "تم استلام طلب التسجيل",
           bodyEn: `Dear ${htmlEscape(name)},\nThank you for registering ${htmlEscape(companyNameEn)} with Raawi Film.\nYour request is now under review. We will email you once the admin team approves or rejects it.`,
           bodyAr: `عزيزي/عزيزتي ${htmlEscape(name)}،\nشكرًا لتسجيل شركة ${htmlEscape(companyNameAr)} في منصة راوي فيلم.\nطلبكم الآن قيد المراجعة، وسيصلكم بريد إلكتروني بعد قرار الاعتماد أو الرفض.`,
+          logoUrl: `${(Deno.env.get("APP_PUBLIC_URL") ?? "https://raawifilm.com").replace(/\/$/, "")}/fclogo.png`,
         }),
       });
 

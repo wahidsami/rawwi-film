@@ -213,6 +213,7 @@ function buildBilingualClientEmail(params: {
   ctaLabelEn?: string;
   ctaLabelAr?: string;
   ctaUrl?: string;
+  logoUrl?: string;
 }): string {
   const ctaHtml = params.ctaUrl
     ? `
@@ -232,7 +233,7 @@ function buildBilingualClientEmail(params: {
   return `
     <div style="max-width:680px;margin:0 auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#ffffff;color:#111827;font-family:Arial,Helvetica,sans-serif;line-height:1.6;">
       <div style="text-align:center;margin-bottom:16px;">
-        <img src="https://raawifilm.com/fclogo.png" alt="Film Commission" style="height:56px;object-fit:contain;" />
+        <img src="${htmlEscape(params.logoUrl ?? "https://raawifilm.com/fclogo.png")}" alt="Film Commission" style="height:56px;object-fit:contain;" />
       </div>
       <h2 style="margin:0 0 10px;font-size:20px;">${htmlEscape(params.titleEn)}</h2>
       <p style="margin:0 0 14px;white-space:pre-wrap;">${params.bodyEn}</p>
@@ -820,9 +821,10 @@ Deno.serve(async (req: Request) => {
             titleAr: "تمت الموافقة على التسجيل",
             bodyEn: `Congratulations.\nYour registration for ${htmlEscape(after.name_en || after.name_ar)} has been approved.\nYou can now sign in and start using the client portal.`,
             bodyAr: `تهانينا.\nتمت الموافقة على تسجيل شركة ${htmlEscape(after.name_ar || after.name_en)}.\nيمكنكم الآن تسجيل الدخول والبدء في استخدام بوابة العميل.`,
-            ctaUrl: `${appPublicUrl}/login`,
+            ctaUrl: `${appPublicUrl}/client/login`,
             ctaLabelEn: "Login",
             ctaLabelAr: "تسجيل الدخول",
+            logoUrl: `${appPublicUrl}/fclogo.png`,
           }),
         });
       }
@@ -907,6 +909,7 @@ Deno.serve(async (req: Request) => {
             titleAr: "تحديث طلب التسجيل",
             bodyEn: `Dear ${htmlEscape(after.representative_name || after.name_en || after.name_ar)},\nWe are sorry, but your registration request for ${htmlEscape(after.name_en || after.name_ar)} was not approved at this time.\nReason:\n${htmlEscape(reason)}`,
             bodyAr: `عزيزي/عزيزتي ${htmlEscape(after.representative_name || after.name_ar || after.name_en)}،\nنعتذر، لم تتم الموافقة على طلب تسجيل شركة ${htmlEscape(after.name_ar || after.name_en)} في الوقت الحالي.\nسبب الرفض:\n${htmlEscape(reason)}`,
+            logoUrl: `${(Deno.env.get("APP_PUBLIC_URL") ?? "https://raawifilm.com").replace(/\/$/, "")}/fclogo.png`,
           }),
         });
       }
