@@ -23,29 +23,27 @@ import { useAuthStore } from '@/store/authStore';
 const heroSlides = [
   {
     id: 1,
-    titleAr: 'فسح النص مع راوي أسرع',
-    titleEn: 'Get script clearance faster with Raawi',
-    subtitleAr: 'مع راوي يمكنك رفع النص، تشغيل التحليل، ومتابعة رحلة المراجعة من مكان واحد.',
-    subtitleEn: 'Upload the script, run the analysis, and follow the review journey from one place.',
-    image:
-      'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1600&q=80',
+    titleAr: 'انضم إلى منصة راوي فيلم الآن',
+    titleEn: 'Join Raawi film platform now',
+    subtitleAr: 'راوي يساعدك في إيصال نصوصك السينمائية بسرعة أكبر إلى هيئة الأفلام.',
+    subtitleEn: 'Raawi helps you to get your film scripts faster to the film commission',
+    image: '/slide01.jpg',
   },
   {
     id: 2,
-    titleAr: 'راوي يدقق النصوص السينمائية',
-    titleEn: 'Raawi reviews film scripts intelligently',
-    subtitleAr: 'تحليل أوضح، تقارير أنظف، وربط أسرع بين الملاحظات والنص الأصلي.',
-    subtitleEn: 'Clearer analysis, cleaner reports, and faster evidence-to-text grounding.',
-    image:
-      'https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=1600&q=80',
+    titleAr: 'راوي سيساعدك!',
+    titleEn: 'Raawi will help!',
+    subtitleAr: 'راوي ينظم ملفات نصوص الأفلام والمسلسلات، ويعرض الملاحظات، ويساعدك للوصول إلى أفضل نسخة.',
+    subtitleEn: 'Raawi organizes your film and series scripts files, show you issues and help you to achieve perfection',
+    image: '/slide02.jpg',
   },
   {
     id: 3,
-    titleAr: 'المنصة الذكية لمراجعة النصوص السينمائية',
-    titleEn: 'The smart platform for cinematic script review',
-    subtitleAr: 'تجربة متكاملة لشركات الإنتاج: رفع، تحليل، مراجعة، واعتماد في تدفق واحد.',
-    subtitleEn: 'A unified workflow for production companies: upload, analyze, review, and approve.',
-    image: '/cover.jpg',
+    titleAr: 'شهادة النص... بسرعة',
+    titleEn: 'Script certificate...so fast',
+    subtitleAr: 'راوي يصدر شهادة اعتماد النص الخاصة بك بسرعة غير مسبوقة.',
+    subtitleEn: 'Raawi issues your script approval certificate faster than ever',
+    image: '/slide03.jpg',
   },
 ];
 
@@ -67,10 +65,10 @@ const aboutCards = [
       'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=80',
   },
   {
-    titleAr: 'تحليل النص الذكي',
-    titleEn: 'Smart script analysis',
-    bodyAr: 'تحليل آلي وتقارير تفصيلية تساعد على اكتشاف المشكلات بشكل مبكر.',
-    bodyEn: 'Automated analysis and detailed reports that surface issues early.',
+    titleAr: 'إصدار الشهادات بسرعة',
+    titleEn: 'Fast Certificate issuing',
+    bodyAr: 'راوي يساعدك في إصدار شهادة اعتماد النص تلقائيًا بمجرد الموافقة عليه.',
+    bodyEn: 'Raawi helps you to get your script approval certificate automatically once it was approved',
     image:
       'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
   },
@@ -638,20 +636,20 @@ export function Landing() {
           <div className="mx-auto max-w-7xl px-4 lg:px-8">
             <div className="grid gap-10 lg:grid-cols-[1fr_0.95fr]">
               <div>
-                <h2 className="mb-4 text-5xl text-white md:text-6xl">{isArabic ? 'ابدأ الآن' : 'Get started now'}</h2>
-                <p className="max-w-2xl text-xl leading-8 text-gray-300">
-                  {isArabic
-                    ? 'الآن يمكن أن تكون الصفحة الأولى للنظام أقرب بكثير للهوية القديمة، بينما يبقى التطبيق التشغيلي بالكامل داخل /app.'
-                    : 'The public homepage now gets much closer to the old identity while the operational application remains under /app.'}
-                </p>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link to="/portal/register">
-                    <Button size="lg" className="gap-2 bg-[#76B6B7] text-black hover:bg-[#5a9fa0]">
-                      <UserPlus className="h-5 w-5" />
-                      {isArabic ? 'تسجيل مجاني للشركات' : 'Free company registration'}
-                    </Button>
-                  </Link>
-                  <Link to="/login">
+              <h2 className="mb-4 text-5xl text-white md:text-6xl">{isArabic ? 'ابدأ الآن' : 'Get started now'}</h2>
+              <p className="max-w-2xl text-xl leading-8 text-gray-300">
+                {isArabic
+                  ? 'راوي هي أداتك المثالية لتنظيم نصوصك وتحريرها والحصول على الموافقات.'
+                  : 'Raawi is your ultimate tool to organize, edit and get approovals for your scripts'}
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link to="/portal/register">
+                  <Button size="lg" className="gap-2 bg-[#76B6B7] text-black hover:bg-[#5a9fa0]">
+                    <UserPlus className="h-5 w-5" />
+                      {isArabic ? 'سجّل الآن' : 'Register now'}
+                  </Button>
+                </Link>
+                  <Link to="/client/login">
                     <Button size="lg" variant="outline" className="gap-2 border-white/20 text-white hover:bg-white/10">
                       <LogIn className="h-5 w-5" />
                       {isArabic ? 'تسجيل الدخول' : 'Login'}
@@ -661,24 +659,13 @@ export function Landing() {
               </div>
 
               <div className="rounded-[32px] border border-white/10 bg-black/35 p-6 shadow-[0_30px_100px_rgba(0,0,0,0.35)] backdrop-blur">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                    <p className="text-sm text-white/50">{isArabic ? 'المسار الإداري' : 'Admin path'}</p>
-                    <p className="mt-2 text-lg font-semibold text-white">{isArabic ? 'تحليل، مراجعة، تقارير' : 'Analysis, review, reports'}</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                    <p className="text-sm text-white/50">{isArabic ? 'بوابة الشركات' : 'Company portal'}</p>
-                    <p className="mt-2 text-lg font-semibold text-white">{isArabic ? 'تسجيل، رفع، متابعة' : 'Register, submit, track'}</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:col-span-2">
-                    <p className="text-sm text-white/50">{isArabic ? 'المسار التشغيلي' : 'Operational path'}</p>
-                    <p className="mt-2 text-sm leading-7 text-white/75">
-                      {isArabic
-                        ? 'يفتح الزائر الصفحة العامة أولًا على /، ثم ينتقل المستخدم الداخلي إلى /app حيث تبقى كل وظائف راوي الحالية كما هي.'
-                        : 'Visitors now land on / first, while the internal operational system remains available under /app.'}
-                    </p>
-                  </div>
-                </div>
+                <h3 className="mb-4 text-2xl text-white">{isArabic ? 'مزايا راوي للعملاء' : 'Raawi features for clients'}</h3>
+                <ul className="space-y-3 text-white/80">
+                  <li>{isArabic ? 'تسجيل مجاني وسريع للشركات.' : 'Fast and free company registration.'}</li>
+                  <li>{isArabic ? 'رفع النصوص ومتابعة حالتها خطوة بخطوة.' : 'Submit scripts and track status step by step.'}</li>
+                  <li>{isArabic ? 'تقارير واضحة تساعدك على التحسين قبل الاعتماد.' : 'Clear reports that help you improve before approval.'}</li>
+                  <li>{isArabic ? 'إصدار شهادة الاعتماد تلقائيًا بعد الموافقة.' : 'Automatic certificate issuance after approval.'}</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -708,10 +695,10 @@ export function Landing() {
             <div className="text-right">
               <h3 className="mb-2 text-xl text-white">{isArabic ? 'الوصول السريع' : 'Quick access'}</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><Link to="/login" className="transition hover:text-red-400">{isArabic ? 'تسجيل الدخول' : 'Login'}</Link></li>
-                <li><Link to="/portal/register" className="transition hover:text-red-400">{isArabic ? 'تسجيل شركة' : 'Register company'}</Link></li>
-                <li><Link to="/portal" className="transition hover:text-red-400">{isArabic ? 'بوابة الشركات' : 'Company portal'}</Link></li>
-                <li><a href="#contact" className="transition hover:text-red-400">{isArabic ? 'ابدأ الآن' : 'Get started'}</a></li>
+                <li><Link to="/client/login" className="transition hover:text-red-400">{isArabic ? 'دخول العملاء' : 'Client login'}</Link></li>
+                <li><Link to="/portal/register" className="transition hover:text-red-400">{isArabic ? 'تسجيل شركة جديدة' : 'Register company'}</Link></li>
+                <li><Link to="/login" className="transition hover:text-red-400">{isArabic ? 'دخول هيئة الأفلام' : 'Film Commission login'}</Link></li>
+                <li><Link to="/verify-certificate/DEMO-CERT-0001" className="transition hover:text-red-400">{isArabic ? 'التحقق من الشهادة' : 'Verify certificate'}</Link></li>
               </ul>
             </div>
             <div className="text-right">
