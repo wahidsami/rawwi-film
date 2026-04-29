@@ -1,18 +1,34 @@
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate } from '@/utils/dateFormat';
 import { useDataStore } from '@/store/dataStore';
+import { usersApi, type UserListItem } from '@/api';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { ArrowRight, FileText, Calendar, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, FileText, Calendar, CheckCircle2, Search } from 'lucide-react';
+import { Input } from '@/components/ui/Input';
 import type { AnalysisJob, Task } from '@/api/models';
+
+const PAGE_SIZE = 10;
 
 export function Tasks() {
   const { lang } = useLangStore();
   const { settings } = useSettingsStore();
   const navigate = useNavigate();
   const { tasks, scripts } = useDataStore();
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [users, setUsers] = useState<UserListItem[]>([]);
+
+  useEffect(() => {
+    usersApi.getUsers().then(setUsers).catch(() => setUsers([]));
+  }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   /** Resolve script display name: assignment Task has scriptTitle; AnalysisJob has only scriptId — resolve from scripts list when possible. */
   const getScriptDisplayName = (task: AnalysisJob | Task): string => {
@@ -22,6 +38,34 @@ export function Tasks() {
     const script = scripts.find((s) => s.id === task.scriptId);
     return script?.title?.trim() ?? task.scriptId;
   };
+
+  const getPerformer = (task: AnalysisJob | Task): string => {
+    const anyTask = task as AnalysisJob & Task & { createdBy?: string | null; createdByName?: string | null };
+    if (anyTask.createdByName?.trim()) return anyTask.createdByName.trim();
+
+    const directId = anyTask.assignedTo || anyTask.createdBy || null;
+    if (!directId) return '—';
+
+    const matchedUser = users.find((u) => u.id === directId);
+    if (matchedUser?.name?.trim()) return matchedUser.name.trim();
+
+    return directId;
+  };
+
+  const filteredTasks = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return tasks;
+
+    return tasks.filter((task) => {
+      const scriptName = getScriptDisplayName(task).toLowerCase();
+      const status = (task.status || '').toLowerCase();
+      const performer = getPerformer(task).toLowerCase();
+      return scriptName.includes(q) || status.includes(q) || performer.includes(q);
+    });
+  }, [tasks, search, users, scripts]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredTasks.length / PAGE_SIZE));
+  const pagedTasks = filteredTasks.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -34,7 +78,19 @@ export function Tasks() {
         </p>
       </div>
 
-      {tasks.length === 0 ? (
+      <div className="dashboard-panel rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-4 shadow-[0_16px_40px_rgba(31,23,36,0.04)]">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={lang === 'ar' ? 'ابحث بالنص أو الحالة أو المستخدم...' : 'Search by script, status, or user...'}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      {filteredTasks.length === 0 ? (
         <Card className="dashboard-table-card border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-16 h-16 bg-surface border border-border rounded-2xl flex items-center justify-center mb-4 shadow-sm">
@@ -55,6 +111,7 @@ export function Tasks() {
               <thead className="border-b border-border text-xs uppercase text-text-muted">
                 <tr>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'النص' : 'Script'}</th>
+                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'بواسطة' : 'Performed By'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'الإصدار' : 'Version'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'الحالة' : 'Status'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'التقدم' : 'Progress'}</th>
@@ -63,7 +120,7 @@ export function Tasks() {
                 </tr>
               </thead>
               <tbody>
-                {tasks.map((task) => (
+                {pagedTasks.map((task) => (
                   <tr
                     key={task.id}
                     className="group cursor-pointer border-b border-border bg-transparent transition-colors"
@@ -76,6 +133,9 @@ export function Tasks() {
                           {getScriptDisplayName(task)}
                         </span>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-text-muted">
+                      {getPerformer(task)}
                     </td>
                     <td className="px-6 py-4 text-text-muted text-xs">
                       {'versionId' in task ? task.versionId : <span className="text-muted-foreground/50 italic">{lang === 'ar' ? 'مسند يدوياً' : 'Manually Assigned'}</span>}
@@ -122,6 +182,28 @@ export function Tasks() {
               </tbody>
             </table>
           </div>
+          {pageCount > 1 && (
+            <div className="flex items-center justify-between border-t border-border px-6 py-4">
+              <span className="text-sm text-text-muted">{filteredTasks.length} {lang === 'ar' ? 'نتيجة' : 'results'}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm text-text-main disabled:opacity-50"
+                  disabled={page <= 1}
+                  onClick={() => setPage((v) => v - 1)}
+                >
+                  {lang === 'ar' ? 'السابق' : 'Previous'}
+                </button>
+                <span className="text-sm text-text-muted">{page} / {pageCount}</span>
+                <button
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm text-text-main disabled:opacity-50"
+                  disabled={page >= pageCount}
+                  onClick={() => setPage((v) => v + 1)}
+                >
+                  {lang === 'ar' ? 'التالي' : 'Next'}
+                </button>
+              </div>
+            </div>
+          )}
         </Card>
       )}
     </div>
