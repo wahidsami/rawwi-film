@@ -591,7 +591,19 @@ async function ensureCertificateGeneratedForApprovedScript(
     .maybeSingle();
   if (scriptError) throw new Error(scriptError.message);
   if (!script) throw new Error("Script not found");
-  if (((script as any).status ?? "").toLowerCase() !== "approved") {
+
+  const { data: latestReport, error: reportError } = await supabase
+    .from("analysis_reports")
+    .select("review_status, created_at")
+    .eq("script_id", params.scriptId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (reportError) throw new Error(reportError.message);
+
+  const isApprovedByScript = ((script as any).status ?? "").toLowerCase() === "approved";
+  const isApprovedByReview = (((latestReport as any)?.review_status ?? "").toLowerCase() === "approved");
+  if (!isApprovedByScript && !isApprovedByReview) {
     throw new Error("Certificate generation is only allowed for approved scripts");
   }
 
