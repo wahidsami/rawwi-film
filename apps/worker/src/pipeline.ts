@@ -1678,8 +1678,15 @@ export async function processChunkJudge(
       if (hybridMode === "enforce") {
         persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
       } else {
-        // True shadow mode: evaluate hybrid output, but keep persisting baseline results.
-        persistedFindings = baselineFindings;
+        const persistValidatedFindings = config.AUDITOR_LAYER_VERSION === "v4";
+        if (persistValidatedFindings) {
+          // Auditor V4 is the hard truth gate, so persist the validated hybrid output
+          // even when the job is running in shadow comparison mode.
+          persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
+        } else {
+          // True shadow mode: evaluate hybrid output, but keep persisting baseline results.
+          persistedFindings = baselineFindings;
+        }
       }
       logger.info("Hybrid context pipeline completed", {
         jobId,
@@ -1688,6 +1695,7 @@ export async function processChunkJudge(
         hybridDurationMs: Date.now() - hybridStartedAt,
         baselineCount: baselineFindings.length,
         persistedCount: persistedFindings.length,
+        persistedSource: hybridMode === "enforce" || config.AUDITOR_LAYER_VERSION === "v4" ? "validated_hybrid" : "baseline",
       });
       if (config.ANALYSIS_EVAL_LOG) {
         const evalPayload = {
