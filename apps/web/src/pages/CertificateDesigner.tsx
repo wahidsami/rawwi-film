@@ -13,6 +13,7 @@ import {
   QrCode,
   Save,
   Type,
+  X,
 } from 'lucide-react';
 import {
   certificatesApi,
@@ -118,6 +119,8 @@ function makeElement(type: CertificateElementType, lang: 'ar' | 'en'): Certifica
         : 'This certifies that {{script_title}} has been approved for {{company_name}}.',
     };
   }
+  if (type === 'script_name') return { ...base, width: 520, height: 64, text: '{{script_title}}', fontSize: 28, bold: true };
+  if (type === 'company_name') return { ...base, width: 520, height: 56, text: '{{company_name}}', fontSize: 24, bold: true };
   return { ...base, width: 520, height: 70, text: lang === 'ar' ? 'شهادة اعتماد' : 'Certificate of Approval' };
 }
 
@@ -133,6 +136,8 @@ function readFileAsDataUrl(file: File): Promise<string> {
 function renderElementLabel(element: CertificateTemplateElement) {
   if (element.type === 'qr') return 'QR';
   if (element.type === 'logo' && element.logoSource === 'client') return 'CLIENT LOGO';
+  if (element.type === 'script_name') return '{{script_title}}';
+  if (element.type === 'company_name') return '{{company_name}}';
   if (element.type === 'date') return element.text || '{{issued_at}}';
   return element.text || element.type;
 }
@@ -239,6 +244,8 @@ export function CertificateDesigner() {
     logo: lang === 'ar' ? 'الشعار' : 'Logo',
     title: lang === 'ar' ? 'العنوان' : 'Title',
     text: lang === 'ar' ? 'نص' : 'Text',
+    scriptName: lang === 'ar' ? 'اسم النص' : 'Script Name',
+    companyName: lang === 'ar' ? 'اسم الشركة' : 'Company Name',
     image: lang === 'ar' ? 'صورة' : 'Image',
     date: lang === 'ar' ? 'التاريخ' : 'Date',
     footer: lang === 'ar' ? 'التذييل' : 'Footer',
@@ -531,6 +538,8 @@ export function CertificateDesigner() {
               <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'logo')} onClick={() => addElement('logo')}><ImageIcon className="me-2 h-4 w-4" />{text.logo}</Button>
               <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'title')} onClick={() => addElement('title')}><Type className="me-2 h-4 w-4" />{text.title}</Button>
               <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'paragraph')} onClick={() => addElement('paragraph')}><Type className="me-2 h-4 w-4" />{text.text}</Button>
+              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'script_name')} onClick={() => addElement('script_name')}><Type className="me-2 h-4 w-4" />{text.scriptName}</Button>
+              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'company_name')} onClick={() => addElement('company_name')}><Type className="me-2 h-4 w-4" />{text.companyName}</Button>
               <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'qr')} onClick={() => addElement('qr')}><QrCode className="me-2 h-4 w-4" />QR</Button>
               <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'image')} onClick={() => addElement('image')}><FileImage className="me-2 h-4 w-4" />{text.image}</Button>
               <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'date')} onClick={() => addElement('date')}><CalendarDays className="me-2 h-4 w-4" />{text.date}</Button>
@@ -560,7 +569,7 @@ export function CertificateDesigner() {
               <div
                 key={element.id}
                 className={cn(
-                  'absolute select-none border bg-white/5 p-1 text-text-main',
+                  'group absolute select-none border bg-white/5 p-1 text-text-main',
                   selectedId === element.id ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-primary/40',
                 )}
                 style={{
@@ -595,6 +604,22 @@ export function CertificateDesigner() {
                   className="absolute bottom-0 end-0 h-4 w-4 cursor-se-resize rounded-tl bg-primary"
                   onPointerDown={(event) => onPointerDown(event, element, 'resize')}
                 />
+                <button
+                  type="button"
+                  className="absolute end-1 top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-error/85 text-white opacity-0 transition group-hover:opacity-100"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setTemplate((current) => current ? {
+                      ...current,
+                      templateData: { elements: current.templateData.elements.filter((entry) => entry.id !== element.id) },
+                    } : current);
+                    if (selectedId === element.id) setSelectedId('');
+                  }}
+                  aria-label={text.deleteElement}
+                  title={text.deleteElement}
+                >
+                  <X className="h-3 w-3" />
+                </button>
               </div>
             ))}
           </div>
@@ -617,7 +642,7 @@ export function CertificateDesigner() {
                   <Input label={text.width} type="number" value={selected.width} onChange={(event) => updateElement(selected.id, { width: Number(event.target.value) })} />
                   <Input label={text.height} type="number" value={selected.height} onChange={(event) => updateElement(selected.id, { height: Number(event.target.value) })} />
                 </div>
-                {(selected.type === 'title' || selected.type === 'paragraph' || selected.type === 'date' || selected.type === 'footer') && (
+                {(selected.type === 'title' || selected.type === 'paragraph' || selected.type === 'script_name' || selected.type === 'company_name' || selected.type === 'date' || selected.type === 'footer') && (
                   <>
                     <Textarea label={text.text} value={selected.text ?? ''} onChange={(event) => updateElement(selected.id, { text: event.target.value })} />
                     <Select

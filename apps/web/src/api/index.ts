@@ -279,7 +279,7 @@ export interface AdminCertificateActionResponse {
 export type CertificatePageSize = 'A4' | 'A5' | 'Letter';
 export type CertificateOrientation = 'portrait' | 'landscape';
 export type CertificateBackgroundFit = 'cover' | 'contain' | 'tile';
-export type CertificateElementType = 'logo' | 'title' | 'paragraph' | 'qr' | 'image' | 'date' | 'footer';
+export type CertificateElementType = 'logo' | 'title' | 'paragraph' | 'script_name' | 'company_name' | 'qr' | 'image' | 'date' | 'footer';
 
 export interface CertificateTemplateElement {
   id: string;
