@@ -32,6 +32,10 @@ function assertSingleCategory(result: ReturnType<typeof runAuditorV4Gate>, title
   assert.equal(result.findings[0].title_ar, title);
 }
 
+function assertRejected(result: ReturnType<typeof runAuditorV4Gate>, message: string): void {
+  assert.equal(result.findings.length, 0, message);
+}
+
 function run() {
   const text = [
     "يقاطع، بصوت منخفض",
@@ -42,6 +46,7 @@ function run() {
     "اسكتي",
     "اللي ما يحترم النظام… ينكسر",
     "يلعن",
+    "الآن أنت آمن",
   ].join("\n");
 
   const sexualRejected = runAuditorV4Gate({
@@ -53,7 +58,7 @@ function run() {
       }),
     ],
   });
-  assert.equal(sexualRejected.findings.length, 0, "sexual should reject non-sexual dialogue");
+  assertRejected(sexualRejected, "sexual should reject non-sexual dialogue");
 
   const sexualRejected2 = runAuditorV4Gate({
     fullText: text,
@@ -64,7 +69,7 @@ function run() {
       }),
     ],
   });
-  assertSingleCategory(sexualRejected2, "التنمر الجارح والسخرية", "family/bullying text should resolve to bullying");
+  assertSingleCategory(sexualRejected2, "التنمر الجارح والسخرية", "pure insult dialogue should resolve to bullying, not sexual");
 
   const historicalRejected = runAuditorV4Gate({
     fullText: text,
@@ -75,7 +80,7 @@ function run() {
       }),
     ],
   });
-  assert.equal(historicalRejected.findings.length, 0, "historical should reject generic social dialogue");
+  assertRejected(historicalRejected, "historical should reject generic social dialogue");
 
   const familyRejected = runAuditorV4Gate({
     fullText: text,
@@ -108,7 +113,7 @@ function run() {
       }),
     ],
   });
-  assert.equal(familyRejected3.findings.length, 0, "isolated imperative should be rejected as too weak");
+  assertRejected(familyRejected3, "isolated imperative should be rejected as too weak");
 
   const profanityRejected = runAuditorV4Gate({
     fullText: text,
@@ -119,7 +124,7 @@ function run() {
       }),
     ],
   });
-  assert.equal(profanityRejected.findings.length, 0, "profanity should reject non-profanity threat language");
+  assertRejected(profanityRejected, "profanity should reject non-profanity threat language");
 
   const profanityAccepted = runAuditorV4Gate({
     fullText: text,
@@ -143,6 +148,29 @@ function run() {
     ],
   });
   assertSingleCategory(bullyingFromInsult, "التنمر الجارح والسخرية", "insult should resolve to bullying");
+
+  const religionDriftRejected = runAuditorV4Gate({
+    fullText: text,
+    findings: [
+      finding({
+        title_ar: "المساس بالثوابت الدينية",
+        evidence_snippet: "أنا شاركت في هذا",
+        rationale_ar: "المقتطف يتضمن لفظ يلعن",
+      }),
+    ],
+  });
+  assertRejected(religionDriftRejected, "rationale drift must be rejected");
+
+  const otherRejected = runAuditorV4Gate({
+    fullText: text,
+    findings: [
+      finding({
+        title_ar: "أخرى",
+        evidence_snippet: "الآن أنت آمن",
+      }),
+    ],
+  });
+  assertRejected(otherRejected, "weak normal sentence must not become other");
 
   console.log("All auditor v4 tests passed.");
 }

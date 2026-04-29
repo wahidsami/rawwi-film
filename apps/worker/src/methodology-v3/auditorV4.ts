@@ -260,7 +260,7 @@ const CATEGORY_RULES: Record<AuditorV4Category, CategoryRule> = {
     titleAr: "الألفاظ النابية",
     priority: 15,
     minTokens: 1,
-    signals: ["يلعن", "لعنة", "تبا", "تبًا", "تباً", "خرا", "وسخ", "قذر", "حقير", "وضيع", "نذل", "خسيس", "لئيم", "جبان", "ساقط"],
+    signals: ["يلعن", "لعنة", "تبا", "تبًا", "تباً", "خرا", "وسخ", "قذر", "ساقط", "نذل", "خسيس", "لئيم"],
     phrases: ["يا حمار", "يا كلب", "يا خرا", "يلعن", "تبًا", "تبا"],
     negatives: ["أب", "أم", "المرأة", "العجوز", "المجتمع", "القيادة", "الدين", "الصلاة", "الأذان", "القرآن", "السنة"],
     score: (evidence) => {
@@ -296,6 +296,260 @@ function tokenCount(value: string | null | undefined): number {
     .filter(Boolean).length;
 }
 
+const GROUNDING_STOPWORDS = new Set([
+  "في",
+  "من",
+  "على",
+  "إلى",
+  "الى",
+  "عن",
+  "هذا",
+  "هذه",
+  "ذلك",
+  "تلك",
+  "هناك",
+  "هنا",
+  "ثم",
+  "كما",
+  "لكن",
+  "بل",
+  "قد",
+  "لا",
+  "لم",
+  "لن",
+  "ما",
+  "ماذا",
+  "متى",
+  "كيف",
+  "أو",
+  "و",
+  "أن",
+  "إن",
+  "إنه",
+  "أنها",
+  "انه",
+  "انها",
+  "هو",
+  "هي",
+  "هم",
+  "هن",
+  "أنا",
+  "انت",
+  "أنت",
+  "انتي",
+  "أنتي",
+  "نص",
+  "المقتطف",
+  "العبارة",
+  "السياق",
+  "المشهد",
+  "الفصل",
+  "صفحة",
+  "تحليل",
+  "آلي",
+  "ملاحظة",
+  "تفسيرية",
+  "يظهر",
+  "تظهر",
+  "يتضمن",
+  "تتضمن",
+  "يحتوي",
+  "تحتوي",
+  "ورد",
+  "يرد",
+  "ضمن",
+  "مباشر",
+  "مباشرة",
+  "واضح",
+  "وضوح",
+  "مخالفة",
+  "مؤشر",
+  "قرار",
+  "أحد",
+  "أخرى",
+  "أخرى",
+]);
+
+const ALLOWED_RATIONALE_TOKENS = new Set([
+  "مخالفة",
+  "مخالفه",
+  "إهانة",
+  "اهانة",
+  "تهديد",
+  "عنف",
+  "شتيمة",
+  "شتيمه",
+  "سب",
+  "تحريض",
+  "سخرية",
+  "سخريه",
+  "إيحاء",
+  "ايحاء",
+  "إيذاء",
+  "ايذاء",
+  "تعميم",
+  "اتهام",
+  "ادعاء",
+  "مزاعم",
+  "كراهية",
+  "كراهيه",
+  "لفظي",
+  "لفظية",
+  "جسدي",
+  "جنسية",
+  "جنسي",
+  "ديني",
+  "تاريخي",
+  "أسري",
+  "اسري",
+  "سياسي",
+  "مجتمعي",
+  "وطني",
+  "صريح",
+  "ضمني",
+  "واضح",
+  "واضحة",
+  "مباشر",
+  "مباشرة",
+  "مؤشر",
+  "مؤشرات",
+  "تحقق",
+  "سياقي",
+  "سياق",
+]);
+
+const GENERIC_SNIPPET_FRAGMENTS = [
+  "يقاطع",
+  "ينظر",
+  "ينظرون",
+  "يهمس",
+  "يتنهد",
+  "يبتسم",
+  "يضحك",
+  "يصرخ",
+  "يسكت",
+  "يسكتون",
+  "شوف",
+  "شاهد",
+  "متحمس",
+  "منخفض",
+  "بصوت منخفض",
+  "بصوت عال",
+  "أمام الطلاب",
+  "الآن أنت آمن",
+];
+
+function normalizeTokens(value: string): string[] {
+  return normalizeDetectionText(value, { stripPunctuation: true })
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
+function lockTokens(value: string): string[] {
+  return (value ?? "")
+    .normalize("NFC")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
+function meaningfulTokens(value: string): string[] {
+  return normalizeTokens(value).filter((token) => token.length >= 3 && !GROUNDING_STOPWORDS.has(token));
+}
+
+function containsAllNormalized(text: string, needles: string[]): boolean {
+  return needles.every((needle) => containsAnyNormalized(text, [needle]));
+}
+
+function isWeakSnippet(text: string): boolean {
+  const meaningful = meaningfulTokens(text);
+  if (meaningful.length === 0) return true;
+  if (meaningful.length === 1 && meaningful[0].length <= 4) return true;
+  if (GENERIC_SNIPPET_FRAGMENTS.some((fragment) => containsAnyNormalized(text, [fragment]))) return true;
+  return false;
+}
+
+function categoryHasSignature(category: AuditorV4Category, evidence: string): boolean {
+  const text = normalizeText(evidence);
+  if (!text) return false;
+
+  switch (category) {
+    case "sexual_explicit":
+      return (
+        containsAnyNormalized(text, ["جنس", "جماع", "مضاجعة", "ممارسة", "عري", "عاري", "مكشوف", "ثدي", "قضيب", "مهبل", "فرج", "زنا"]) &&
+        !containsAnyNormalized(text, ["ضرب", "دفع", "قتل", "ركل", "صفع", "تهديد", "عنف"])
+      );
+    case "sexual_implicit":
+      return (
+        !containsAnyNormalized(text, ["جنس", "جماع", "مضاجعة", "ممارسة", "عري", "عاري", "مكشوف", "ثدي", "قضيب", "مهبل", "فرج", "زنا"]) &&
+        containsAnyNormalized(text, ["غزل", "إيحاء", "إيحائي", "شهوة", "إغراء", "قبلات", "حضن", "عناق", "يلمس", "يلامس", "ينام", "علاقة", "جسد", "شهوانية"])
+      );
+    case "drugs":
+      return containsAnyNormalized(text, ["مخدر", "مخدرات", "حشيش", "خمر", "كحول", "سكران", "سكر", "تعاطي", "مدمن", "تدخين", "سيجارة"]);
+    case "national_security":
+      return containsAnyNormalized(text, ["أمن", "استقرار", "فوضى", "تمرد", "عصيان", "تخريب", "تفجير", "قنبلة", "هجوم", "شغب", "إرهاب", "حرق", "نسف", "خطف", "إسقاط النظام", "اخرجوا وخربوا", "دعوة للفوضى", "تهديد الأمن"]);
+    case "political":
+      return containsAnyNormalized(text, ["الملك", "ولي العهد", "القيادة", "القائد", "الحاكم", "الحكم", "السلطة", "الانقلاب", "تمرد", "عصيان", "إسقاط الحكم", "إسقاط القيادة", "إسقاط النظام"]);
+    case "religion":
+      return (
+        containsAnyNormalized(text, ["الدين", "الإسلام", "مسلم", "مسلمين", "قرآن", "سنة", "صلاة", "أذان", "صيام", "حج", "رمضان", "الله", "النبي", "رسول", "شريعة", "مسجد", "عبادة"]) &&
+        containsAnyNormalized(text, ["استهزاء", "سخرية", "يشكك", "تشكيك", "يهين", "يقدح", "تحريف", "تطاول", "يسخر", "يسب", "يستهين", "يستهزئ", "لعن", "يلعن"])
+      );
+    case "historical":
+      return (
+        containsAnyNormalized(text, ["تاريخ", "تاريخي", "هجرية", "ميلادية", "عهد", "قرن", "الماضي", "ماض", "حقبة", "رواية تاريخية", "في عام", "سنة"]) &&
+        containsAnyNormalized(text, ["غير موثوق", "مضلل", "مزوّر", "مزور", "تحريف", "تزوير", "ادعاء", "رواية", "حدث", "تاريخ"])
+      );
+    case "society":
+      return (
+        containsAnyNormalized(text, ["السعوديين", "السعودي", "السعودية", "الشعب", "المجتمع", "القبيلة", "القبائل", "العائلة", "العوائل", "الجهات الرسمية", "الموظفين", "الحكومة", "المؤسسات"]) &&
+        containsAnyNormalized(text, ["كلهم", "جميع", "دائمًا", "دائماً", "الكل", "العامة", "الجهات الرسمية", "حرامية", "كسالى", "نصابين", "مجرمين", "فاسدين", "كذابين", "كاذبين"])
+      );
+    case "children":
+      return (
+        containsAnyNormalized(text, ["طفل", "أطفال", "طفلة", "أولاد", "ولد", "بنت", "طلاب", "طالب", "تلميذ", "قاصر", "قاصرين"]) &&
+        containsAnyNormalized(text, ["سرق", "يضحك", "يدخن", "تعاطي", "جرم", "جريمة", "عنف", "تنمر", "إهانة", "ضرب", "إيذاء", "استغلال", "تحرش"])
+      );
+    case "disability":
+      return (
+        containsAnyNormalized(text, ["إعاقة", "معاق", "معاقة", "أعمى", "أصم", "بكم", "مقعد", "ذوي الإعاقة"]) &&
+        containsAnyNormalized(text, ["إهانة", "سخرية", "ضرب", "إيذاء", "احتقار", "تنمر"])
+      );
+    case "women":
+      return (
+        containsAnyNormalized(text, ["امرأة", "المرأة", "نساء", "زوجة", "بنت", "بنات", "أنثى", "نسائية"]) &&
+        containsAnyNormalized(text, ["مكانها المطبخ", "مكان المرأة", "المرأة ما تفهم", "المرأة أقل", "أقل من الرجل", "تعنيف", "إهانة", "تحقير", "ضرب", "إيذاء", "احتقار"])
+      );
+    case "parents":
+      return (
+        containsAnyNormalized(text, ["أب", "أم", "أبوك", "أمك", "والد", "والدة", "والدين", "أبوي", "أمي"]) &&
+        containsAnyNormalized(text, ["إهانة", "تحقير", "سب", "ضرب", "عقوق", "غبي", "فاشل", "حقير", "وسخ", "قذر"])
+      );
+    case "elderly":
+      return (
+        containsAnyNormalized(text, ["عجوز", "مسن", "مسنة", "كبير السن", "كبار السن", "شيخ", "جدة", "جد"]) &&
+        containsAnyNormalized(text, ["إهانة", "تحقير", "سخرية", "ضرب", "إيذاء", "غبي", "فاشل", "حقير", "وسخ", "قذر"])
+      );
+    case "family":
+      return (
+        containsAnyNormalized(text, ["أسرة", "عائلة", "أهل", "أهلك", "الزواج", "زوج", "زوجة", "البيت"]) &&
+        containsAnyNormalized(text, ["اقطع علاقتك بأهلك", "اترك أهلك", "العائلة ما لها قيمة", "الزواج مضيعة وقت", "بدونهم", "استغني عن الأسرة", "تفكك الأسرة", "قطع الرحم"])
+      );
+    case "bullying":
+      return containsAnyNormalized(text, ["غبي", "أحمق", "فاشل", "ما تسوى", "لا أحد يبيك", "مقرف", "سخيف", "حقير", "وضيع", "جبان", "تافه", "عديم التربية", "يا فاشل", "يا غبي", "يا أحمق"]);
+    case "profanity":
+      return containsAnyNormalized(text, ["يلعن", "لعنة", "تبا", "تبًا", "تباً", "خرا", "وسخ", "قذر", "ساقط", "نذل", "خسيس", "لئيم", "يا حمار", "يا كلب", "يا خرا"]);
+    case "other":
+      return containsAnyNormalized(text, ["فساد", "رشوة", "ابتزاز", "احتيال", "خيانة", "سرقة", "تسريب", "تحريض", "تهديد", "كذب", "كاذب", "فضيحة", "انتهاك", "مخالفة", "مضلل", "معلومات مغلوطة", "غير دقيقة"]);
+    default:
+      return false;
+  }
+}
+
 function titleCategory(title: string | null | undefined): AuditorV4Category | null {
   const text = normalizeText(title);
   if (!text) return null;
@@ -310,42 +564,11 @@ function scoreCategory(category: AuditorV4Category, evidence: string): number {
   if (!rule) return 0;
   const text = normalizeText(evidence);
   if (!text) return 0;
-  if (rule.negatives.some((n) => containsAnyNormalized(text, [n]))) {
-    // Negative filters are strict only when the negative signal clearly dominates.
-    if (category !== "profanity" || !containsAnyNormalized(text, ["يلعن", "لعنة", "تبا", "تبًا", "تباً"])) {
-      return 0;
-    }
-  }
+  if (isWeakSnippet(text) && category !== "profanity" && category !== "bullying") return 0;
+  if (tokenCount(text) < rule.minTokens && !(category === "profanity" && tokenCount(text) >= 1)) return 0;
+  if (!categoryHasSignature(category, text)) return 0;
   const score = rule.score(text);
-  if (score <= 0) return 0;
-  if (tokenCount(text) < rule.minTokens) {
-    if (!(category === "profanity" && tokenCount(text) >= 1)) return 0;
-  }
-  if (category === "religion") {
-    if (!containsAnyNormalized(text, ["الدين", "الإسلام", "قرآن", "سنة", "صلاة", "أذان", "الله", "رسول", "نبي", "شريعة"])) return 0;
-  }
-  if (category === "historical") {
-    if (!containsAnyNormalized(text, ["تاريخ", "تاريخي", "هجرية", "ميلادية", "في عام", "عهد", "القرن", "التاريخ يقول", "الرواية التاريخية"])) return 0;
-  }
-  if (category === "family") {
-    if (!containsAnyNormalized(text, ["اقطع علاقتك بأهلك", "اترك أهلك", "العائلة ما لها قيمة", "الزواج مضيعة وقت", "بدونهم", "استغني عن الأسرة"])) return 0;
-  }
-  if (category === "women") {
-    if (!containsAnyNormalized(text, ["امرأة", "المرأة", "نساء", "زوجة", "بنت", "بنات", "أنثى"])) return 0;
-  }
-  if (category === "parents") {
-    if (!containsAnyNormalized(text, ["أب", "أم", "أبوك", "أمك", "والد", "والدين", "أبوي", "أمي"])) return 0;
-  }
-  if (category === "elderly") {
-    if (!containsAnyNormalized(text, ["عجوز", "مسن", "مسنة", "كبار السن", "شيخ", "جدة", "جد"])) return 0;
-  }
-  if (category === "bullying") {
-    if (containsAnyNormalized(text, ["أب", "أم", "المرأة", "العجوز", "كبار السن", "السعوديين", "المجتمع", "القبيلة", "العائلة", "أهلك"])) return 0;
-  }
-  if (category === "sexual_explicit") {
-    if (containsAnyNormalized(text, ["ضرب", "دفع", "قتل", "رعب"]) && !containsAnyNormalized(text, ["جنس", "جماع", "مضاجعة", "ممارسة", "عري", "زنا"])) return 0;
-  }
-  return score;
+  return score > 0 ? score : 0;
 }
 
 function bestCategoryForEvidence(evidence: string): { category: AuditorV4Category | null; score: number } {
@@ -375,6 +598,9 @@ function isGroundedRationale(evidence: string, rationale: string | null | undefi
   if (/\bمادة\s+\d+/u.test(text)) return false;
   const extractedNames = ["فهد", "سامي", "مها", "ناصر", "حسام", "ريم", "دلال"];
   if (containsAnyNormalized(text, extractedNames) && !extractedNames.some((name) => evidence.includes(name))) return false;
+  const rationaleTokens = lockTokens(text).filter((token) => token.length >= 3 && !GROUNDING_STOPWORDS.has(token));
+  if (rationaleTokens.length === 0) return true;
+  if (rationaleTokens.some((token) => !normalizeText(evidence).includes(token) && !ALLOWED_RATIONALE_TOKENS.has(token))) return false;
   return true;
 }
 
