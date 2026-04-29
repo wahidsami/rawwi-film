@@ -323,9 +323,16 @@ export function Certificates() {
                         <p>{lang === 'ar' ? 'لا توجد دفعة بعد' : 'No payment yet'}</p>
                       )}
                       {item.certificate ? (
-                        <p className="mt-2 text-success">
-                          {lang === 'ar' ? 'رقم الشهادة' : 'Certificate number'}: {item.certificate.certificateNumber}
-                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <p className="text-success">
+                            {lang === 'ar' ? 'رقم الشهادة' : 'Certificate number'}: {item.certificate.certificateNumber}
+                          </p>
+                          {item.certificateStatus !== 'issued' ? (
+                            <Badge variant="warning" className="text-[11px]">
+                              {lang === 'ar' ? 'مولدة - بانتظار الدفع' : 'Generated - Pending Payment'}
+                            </Badge>
+                          ) : null}
+                        </div>
                       ) : null}
                       <div className="flex flex-wrap gap-2 xl:justify-end">
                         {item.latestPayment?.paymentStatus !== 'completed' ? (

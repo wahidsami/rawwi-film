@@ -679,9 +679,16 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
                         </p>
                       ) : null}
                       {item.certificate ? (
-                        <p className="text-sm text-success">
-                          {lang === 'ar' ? 'رقم الشهادة:' : 'Certificate number:'} {item.certificate.certificateNumber}
-                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm text-success">
+                            {lang === 'ar' ? 'رقم الشهادة:' : 'Certificate number:'} {item.certificate.certificateNumber}
+                          </p>
+                          {item.certificateStatus !== 'issued' ? (
+                            <Badge variant="warning" className="text-[11px]">
+                              {lang === 'ar' ? 'مولدة - بانتظار الدفع' : 'Generated - Pending Payment'}
+                            </Badge>
+                          ) : null}
+                        </div>
                       ) : null}
                     </div>
 
