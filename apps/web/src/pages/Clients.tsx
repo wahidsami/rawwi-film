@@ -6,7 +6,6 @@ import { useDataStore } from '@/store/dataStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { CompanyAvatar } from '@/components/ui/CompanyAvatar';
 import { ClientModal } from '@/components/ClientModal';
@@ -70,7 +69,6 @@ export function Clients() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [creators, setCreators] = useState<Record<string, string>>({});
-  const [reviewClient, setReviewClient] = useState<Company | null>(null);
   const [rejectClient, setRejectClient] = useState<Company | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [actionId, setActionId] = useState<string | null>(null);
@@ -171,7 +169,6 @@ export function Clients() {
     try {
       await companiesApi.approveCompany(client.companyId);
       toast.success(lang === 'ar' ? 'تم اعتماد العميل وإرسال بريد القبول' : 'Client approved and acceptance email sent');
-      setReviewClient(null);
       await fetchInitialData();
       setActiveTab('clients');
     } catch (err) {
@@ -193,7 +190,6 @@ export function Clients() {
       toast.success(lang === 'ar' ? 'تم رفض الطلب وإرسال السبب للعميل' : 'Request rejected and reason emailed to client');
       setRejectClient(null);
       setRejectionReason('');
-      setReviewClient(null);
       await fetchInitialData();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Rejection failed');
@@ -215,7 +211,7 @@ export function Clients() {
     if (activeTab === 'new') {
       return (
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={(event) => { event.stopPropagation(); setReviewClient(client); }}>
+          <Button variant="outline" size="sm" onClick={(event) => { event.stopPropagation(); navigate(`/app/clients/${client.companyId}/request`); }}>
             {lang === 'ar' ? 'عرض الطلب' : 'View Request'}
           </Button>
           {isPending && (
@@ -258,7 +254,7 @@ export function Clients() {
     <Card
       key={client.companyId}
       className="group cursor-pointer transition-shadow hover:shadow-[0_20px_50px_rgba(31,23,36,0.08)]"
-      onClick={() => activeTab === 'new' ? setReviewClient(client) : navigate(`/clients/${client.companyId}`)}
+      onClick={() => activeTab === 'new' ? navigate(`/app/clients/${client.companyId}/request`) : navigate(`/clients/${client.companyId}`)}
     >
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
@@ -304,21 +300,6 @@ export function Clients() {
       </CardContent>
     </Card>
   );
-
-  const detailRows = reviewClient ? [
-    [lang === 'ar' ? 'اسم الشركة بالعربية' : 'Company Arabic Name', reviewClient.nameAr],
-    [lang === 'ar' ? 'اسم الشركة بالإنجليزية' : 'Company English Name', reviewClient.nameEn],
-    [lang === 'ar' ? 'الموقع الإلكتروني' : 'Website', reviewClient.website || '—'],
-    [lang === 'ar' ? 'البريد الإلكتروني' : 'Email', reviewClient.email || '—'],
-    [lang === 'ar' ? 'رقم الشركة' : 'Company Phone', reviewClient.phone || reviewClient.mobile || '—'],
-    [lang === 'ar' ? 'العنوان الوطني' : 'Saudi Address', [reviewClient.addressLine1, reviewClient.addressLine2, reviewClient.city, reviewClient.postalCode].filter(Boolean).join(', ') || '—'],
-    [lang === 'ar' ? 'مسؤول التواصل' : 'Contact Person', reviewClient.representativeName || '—'],
-    [lang === 'ar' ? 'المنصب' : 'Position', reviewClient.representativeTitle || '—'],
-    [lang === 'ar' ? 'بريد مسؤول التواصل' : 'Contact Email', reviewClient.contactEmail || '—'],
-    [lang === 'ar' ? 'جوال مسؤول التواصل' : 'Contact Mobile', reviewClient.contactMobile || '—'],
-    [lang === 'ar' ? 'سنوات الخبرة' : 'Years of Experience', reviewClient.yearsOfExperience?.toString() || '—'],
-    [lang === 'ar' ? 'عن الشركة' : 'About', reviewClient.about || '—'],
-  ] : [];
 
   return (
     <div className="space-y-6">
@@ -437,7 +418,7 @@ export function Clients() {
                   <tr
                     key={client.companyId}
                     className="cursor-pointer border-b border-border bg-transparent transition-colors"
-                    onClick={() => activeTab === 'new' ? setReviewClient(client) : navigate(`/clients/${client.companyId}`)}
+                    onClick={() => activeTab === 'new' ? navigate(`/app/clients/${client.companyId}/request`) : navigate(`/clients/${client.companyId}`)}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -475,50 +456,6 @@ export function Clients() {
           {lang === 'ar' ? 'لا توجد نتائج في هذا القسم' : 'No results in this section'}
         </div>
       )}
-
-      <Modal
-        isOpen={!!reviewClient}
-        onClose={() => setReviewClient(null)}
-        title={lang === 'ar' ? 'تفاصيل طلب التسجيل' : 'Registration Request Details'}
-      >
-        {reviewClient && (
-          <div className="space-y-5">
-            <div className="flex items-center gap-3">
-              <CompanyAvatar name={clientDisplayName(reviewClient, lang === 'ar' ? 'ar' : 'en')} logoUrl={reviewClient.logoUrl ?? undefined} size={52} />
-              <div>
-                <p className="font-semibold text-text-main">{clientDisplayName(reviewClient, lang === 'ar' ? 'ar' : 'en')}</p>
-                <div className="mt-1">{statusBadge(reviewClient, lang === 'ar' ? 'ar' : 'en')}</div>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {detailRows.map(([label, value]) => (
-                <div key={label} className="dashboard-item-card p-3">
-                  <p className="text-xs text-text-muted">{label}</p>
-                  <p className="mt-1 break-words text-sm font-medium text-text-main">{value}</p>
-                </div>
-              ))}
-            </div>
-            <div className="dashboard-item-card p-3">
-              <p className="text-xs text-text-muted">{lang === 'ar' ? 'المستندات القانونية' : 'Legal Documents'}</p>
-              <div className="mt-2 space-y-1">
-                {(reviewClient.legalDocuments ?? []).length > 0 ? reviewClient.legalDocuments?.map((doc) => (
-                  <p key={`${doc.type}-${doc.name}`} className="text-sm text-text-main">{doc.type}: {doc.name}</p>
-                )) : <p className="text-sm text-text-muted">—</p>}
-              </div>
-            </div>
-            {reviewClient.rejectionReason && (
-              <div className="rounded-lg border border-error/20 bg-error/10 p-3 text-sm text-error">{reviewClient.rejectionReason}</div>
-            )}
-            {(reviewClient.approvalStatus ?? 'approved') === 'pending' && (
-              <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
-                <Button variant="outline" onClick={() => setReviewClient(null)}>{t('cancel')}</Button>
-                <Button onClick={() => void approveClient(reviewClient)} disabled={actionId === reviewClient.companyId}>{lang === 'ar' ? 'اعتماد الطلب' : 'Approve Request'}</Button>
-                <Button variant="danger" onClick={() => setRejectClient(reviewClient)} disabled={actionId === reviewClient.companyId}>{lang === 'ar' ? 'رفض الطلب' : 'Reject Request'}</Button>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
 
       <Modal
         isOpen={!!rejectClient}
