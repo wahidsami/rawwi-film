@@ -1,74 +1,125 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
 import { useDataStore } from '@/store/dataStore';
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { Badge } from '@/components/ui/Badge';
 import { CompanyAvatar } from '@/components/ui/CompanyAvatar';
 import { ClientModal } from '@/components/ClientModal';
 import {
   Building2,
-  FileText,
-  Clock,
   CheckCircle,
+  Clock,
+  Download,
+  Edit2,
+  FileText,
+  FolderGit2,
+  Grid2X2,
+  List,
+  Loader2,
   Plus,
   Search,
-  User,
-  Calendar,
-  FolderGit2,
-  Edit2,
   Trash2,
-  Download,
+  User,
   UserCheck,
-  Loader2,
+  XCircle,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate } from '@/utils/dateFormat';
 import { cn } from '@/utils/cn';
-import { usersApi } from '@/api';
+import { companiesApi, usersApi } from '@/api';
+import type { Company } from '@/api/models';
 import { downloadClientsPdf } from '@/components/reports/clients/download';
+
+type ClientTab = 'new' | 'clients' | 'internal';
+type ViewMode = 'cards' | 'table';
+
+const VIEW_STORAGE_KEY = 'raawi-admin-clients-view';
+const PAGE_SIZE = 10;
+
+function clientDisplayName(client: Company, lang: 'ar' | 'en') {
+  return lang === 'ar' ? client.nameAr : client.nameEn;
+}
+
+function statusBadge(client: Company, lang: 'ar' | 'en') {
+  const status = client.approvalStatus ?? 'approved';
+  if (status === 'pending') return <Badge variant="warning">{lang === 'ar' ? 'قيد المراجعة' : 'Pending'}</Badge>;
+  if (status === 'rejected') return <Badge variant="error">{lang === 'ar' ? 'مرفوض' : 'Rejected'}</Badge>;
+  return <Badge variant="success">{lang === 'ar' ? 'معتمد' : 'Approved'}</Badge>;
+}
 
 export function Clients() {
   const { t, lang } = useLangStore();
   const { settings } = useSettingsStore();
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { companies, scripts, isLoading, removeCompany } = useDataStore();
-
-  const filteredClients = companies.filter(c =>
-    c.nameAr.includes(search) ||
-    c.nameEn.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const companyIds = new Set(filteredClients.map(c => c.companyId));
-  const pendingScriptsCount = scripts.filter(s => companyIds.has(s.companyId) && (s.status === 'pending' || s.status === 'in_review' || (s.status as string) === 'In Review')).length;
-  const approvedScriptsCount = scripts.filter(s => companyIds.has(s.companyId) && s.status === 'approved').length;
-
+  const { companies, scripts, isLoading, removeCompany, fetchInitialData } = useDataStore();
   const { user, hasSection } = useAuthStore();
-  const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
-
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin' || hasSection('access_control');
-  const [exportingPdf, setExportingPdf] = useState(false);
 
-  // NEW: Fetch creators map for display
+  const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<ClientTab>('new');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = window.localStorage.getItem(VIEW_STORAGE_KEY);
+    return saved === 'table' ? 'table' : 'cards';
+  });
+  const [page, setPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const [creators, setCreators] = useState<Record<string, string>>({});
+  const [reviewClient, setReviewClient] = useState<Company | null>(null);
+  const [rejectClient, setRejectClient] = useState<Company | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [actionId, setActionId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isAdmin) {
-      usersApi.getUsers()
-        .then(users => {
-          const map: Record<string, string> = {};
-          users.forEach(u => map[u.id] = u.name);
-          setCreators(map);
-        })
-        .catch(err => console.error('Failed to load creators:', err));
-    }
+    window.localStorage.setItem(VIEW_STORAGE_KEY, viewMode);
+  }, [viewMode]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, search, viewMode]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    usersApi.getUsers()
+      .then((users) => {
+        const map: Record<string, string> = {};
+        users.forEach((u) => { map[u.id] = u.name; });
+        setCreators(map);
+      })
+      .catch((err) => console.error('Failed to load creators:', err));
   }, [isAdmin]);
+
+  const portalPendingOrRejected = companies.filter((client) => (client.source ?? 'internal') === 'portal' && (client.approvalStatus ?? 'pending') !== 'approved');
+  const portalApproved = companies.filter((client) => (client.source ?? 'internal') === 'portal' && (client.approvalStatus ?? 'pending') === 'approved');
+  const internalClients = companies.filter((client) => (client.source ?? 'internal') === 'internal');
+
+  const tabClients = activeTab === 'new' ? portalPendingOrRejected : activeTab === 'clients' ? portalApproved : internalClients;
+
+  const filteredClients = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return tabClients;
+    return tabClients.filter((client) =>
+      client.nameAr.includes(search.trim()) ||
+      client.nameEn.toLowerCase().includes(q) ||
+      (client.email ?? '').toLowerCase().includes(q) ||
+      (client.representativeName ?? '').toLowerCase().includes(q)
+    );
+  }, [tabClients, search]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredClients.length / PAGE_SIZE));
+  const pagedClients = viewMode === 'table'
+    ? filteredClients.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    : filteredClients;
+
+  const companyIds = new Set(filteredClients.map((client) => client.companyId));
+  const pendingScriptsCount = scripts.filter((script) => companyIds.has(script.companyId) && ['pending', 'in_review', 'In Review'].includes(script.status as string)).length;
+  const approvedScriptsCount = scripts.filter((script) => companyIds.has(script.companyId) && script.status === 'approved').length;
 
   const handleExportPdf = async () => {
     setExportingPdf(true);
@@ -78,10 +129,8 @@ export function Clients() {
         lang: lang === 'ar' ? 'ar' : 'en',
         dateFormat: settings?.platform?.dateFormat,
       });
-      const isAr = lang === 'ar';
-      toast.success(isAr ? 'تم تنزيل التقرير' : 'Report downloaded');
+      toast.success(lang === 'ar' ? 'تم تنزيل التقرير' : 'Report downloaded');
     } catch (err: unknown) {
-      console.error(err);
       toast.error(err instanceof Error ? err.message : 'PDF export failed');
     } finally {
       setExportingPdf(false);
@@ -93,220 +142,409 @@ export function Clients() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    setEditingCompanyId(id);
+  const handleOpenEditModal = (event: React.MouseEvent, client: Company) => {
+    event.stopPropagation();
+    if ((client.source ?? 'internal') !== 'internal') {
+      toast.error(lang === 'ar' ? 'يمكن تعديل العملاء الداخليين فقط من هنا' : 'Only internal clients can be edited here');
+      return;
+    }
+    setEditingCompanyId(client.companyId);
     setIsModalOpen(true);
   };
 
-  const handleDeleteClient = async (e: React.MouseEvent, client: { companyId: string; nameAr: string; nameEn: string; scriptsCount?: number }) => {
-    e.stopPropagation();
-    const name = lang === 'ar' ? client.nameAr : client.nameEn;
+  const handleDeleteClient = async (event: React.MouseEvent, client: Company) => {
+    event.stopPropagation();
+    if ((client.source ?? 'internal') !== 'internal') {
+      toast.error(lang === 'ar' ? 'لا يمكن حذف طلبات البوابة من هنا' : 'Portal clients cannot be deleted here');
+      return;
+    }
+    const name = clientDisplayName(client, lang === 'ar' ? 'ar' : 'en');
     const hasScripts = Number(client.scriptsCount ?? 0) > 0;
     const message = hasScripts
       ? (lang === 'ar'
         ? `سيتم حذف الشركة "${name}" وجميع النصوص والتحليلات المرتبطة بها. هل أنت متأكد؟`
         : `This will delete "${name}" and all associated scripts and analyses. Are you sure?`)
-      : (lang === 'ar'
-        ? `حذف الشركة "${name}"؟`
-        : `Delete "${name}"?`);
+      : (lang === 'ar' ? `حذف الشركة "${name}"؟` : `Delete "${name}"?`);
     if (!window.confirm(message)) return;
     await removeCompany(client.companyId);
   };
 
+  const approveClient = async (client: Company) => {
+    setActionId(client.companyId);
+    try {
+      await companiesApi.approveCompany(client.companyId);
+      toast.success(lang === 'ar' ? 'تم اعتماد العميل وإرسال بريد القبول' : 'Client approved and acceptance email sent');
+      setReviewClient(null);
+      await fetchInitialData();
+      setActiveTab('clients');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Approval failed');
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const rejectRegistration = async () => {
+    if (!rejectClient) return;
+    if (!rejectionReason.trim()) {
+      toast.error(lang === 'ar' ? 'يرجى كتابة سبب الرفض' : 'Please write a rejection reason');
+      return;
+    }
+    setActionId(rejectClient.companyId);
+    try {
+      await companiesApi.rejectCompany(rejectClient.companyId, rejectionReason.trim());
+      toast.success(lang === 'ar' ? 'تم رفض الطلب وإرسال السبب للعميل' : 'Request rejected and reason emailed to client');
+      setRejectClient(null);
+      setRejectionReason('');
+      setReviewClient(null);
+      await fetchInitialData();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Rejection failed');
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const tabs: Array<{ id: ClientTab; label: string; count: number }> = [
+    { id: 'new', label: lang === 'ar' ? 'الجدد' : 'New', count: portalPendingOrRejected.length },
+    { id: 'clients', label: lang === 'ar' ? 'العملاء' : 'Clients', count: portalApproved.length },
+    { id: 'internal', label: lang === 'ar' ? 'عملاء داخليون' : 'Internal Clients', count: internalClients.length },
+  ];
+
+  const renderActions = (client: Company) => {
+    const isInternal = (client.source ?? 'internal') === 'internal';
+    const isPending = (client.approvalStatus ?? 'approved') === 'pending';
+    if (!isAdmin) return null;
+    if (activeTab === 'new') {
+      return (
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={(event) => { event.stopPropagation(); setReviewClient(client); }}>
+            {lang === 'ar' ? 'عرض الطلب' : 'View Request'}
+          </Button>
+          {isPending && (
+            <>
+              <Button size="sm" onClick={(event) => { event.stopPropagation(); void approveClient(client); }} disabled={actionId === client.companyId}>
+                <CheckCircle className="me-1 h-4 w-4" />
+                {lang === 'ar' ? 'اعتماد' : 'Approve'}
+              </Button>
+              <Button variant="danger" size="sm" onClick={(event) => { event.stopPropagation(); setRejectClient(client); }} disabled={actionId === client.companyId}>
+                <XCircle className="me-1 h-4 w-4" />
+                {lang === 'ar' ? 'رفض' : 'Reject'}
+              </Button>
+            </>
+          )}
+        </div>
+      );
+    }
+    if (!isInternal) return null;
+    return (
+      <div className="flex items-center justify-end gap-0.5">
+        <button
+          onClick={(event) => handleOpenEditModal(event, client)}
+          className="rounded-md p-1.5 text-text-muted transition-colors hover:bg-primary/10 hover:text-primary"
+          aria-label="Edit Client"
+        >
+          <Edit2 className="h-4 w-4" />
+        </button>
+        <button
+          onClick={(event) => void handleDeleteClient(event, client)}
+          className="rounded-md p-1.5 text-text-muted transition-colors hover:bg-error/10 hover:text-error"
+          aria-label="Delete Client"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  };
+
+  const renderClientCard = (client: Company) => (
+    <Card
+      key={client.companyId}
+      className="group cursor-pointer transition-shadow hover:shadow-[0_20px_50px_rgba(31,23,36,0.08)]"
+      onClick={() => activeTab === 'new' ? setReviewClient(client) : navigate(`/clients/${client.companyId}`)}
+    >
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <CompanyAvatar
+            name={clientDisplayName(client, lang === 'ar' ? 'ar' : 'en')}
+            logoUrl={client.logoUrl ?? client.avatarUrl ?? undefined}
+            size={48}
+            className="rounded-[var(--radius)] border border-border"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-semibold text-text-main transition-colors group-hover:text-primary">
+                  {clientDisplayName(client, lang === 'ar' ? 'ar' : 'en')}
+                </h3>
+                <p className="truncate text-sm text-text-muted">{lang === 'ar' ? client.nameEn : client.nameAr}</p>
+              </div>
+              {statusBadge(client, lang === 'ar' ? 'ar' : 'en')}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-3">
+          <div className="flex items-center gap-3 text-sm">
+            <User className="h-4 w-4 flex-shrink-0 text-text-muted" />
+            <span className="w-28 flex-shrink-0 text-text-muted">{t('representative')}:</span>
+            <span className="truncate font-medium text-text-main">{client.representativeName || '—'}</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <FolderGit2 className="h-4 w-4 flex-shrink-0 text-text-muted" />
+            <span className="w-28 flex-shrink-0 text-text-muted">{t('scriptsCount')}:</span>
+            <span className="truncate font-medium text-text-main">{Number.isFinite(Number(client.scriptsCount)) ? Number(client.scriptsCount) : 0}</span>
+          </div>
+          {isAdmin && client.created_by && (
+            <div className="flex items-center gap-3 text-sm">
+              <UserCheck className="h-4 w-4 flex-shrink-0 text-text-muted" />
+              <span className="w-28 flex-shrink-0 text-text-muted">{lang === 'ar' ? 'أنشأ بواسطة' : 'Created By'}:</span>
+              <span className="truncate font-medium text-text-main">{creators[client.created_by] || '—'}</span>
+            </div>
+          )}
+          <div className="pt-2">{renderActions(client)}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const detailRows = reviewClient ? [
+    [lang === 'ar' ? 'اسم الشركة بالعربية' : 'Company Arabic Name', reviewClient.nameAr],
+    [lang === 'ar' ? 'اسم الشركة بالإنجليزية' : 'Company English Name', reviewClient.nameEn],
+    [lang === 'ar' ? 'الموقع الإلكتروني' : 'Website', reviewClient.website || '—'],
+    [lang === 'ar' ? 'البريد الإلكتروني' : 'Email', reviewClient.email || '—'],
+    [lang === 'ar' ? 'رقم الشركة' : 'Company Phone', reviewClient.phone || reviewClient.mobile || '—'],
+    [lang === 'ar' ? 'العنوان الوطني' : 'Saudi Address', [reviewClient.addressLine1, reviewClient.addressLine2, reviewClient.city, reviewClient.postalCode].filter(Boolean).join(', ') || '—'],
+    [lang === 'ar' ? 'مسؤول التواصل' : 'Contact Person', reviewClient.representativeName || '—'],
+    [lang === 'ar' ? 'المنصب' : 'Position', reviewClient.representativeTitle || '—'],
+    [lang === 'ar' ? 'بريد مسؤول التواصل' : 'Contact Email', reviewClient.contactEmail || '—'],
+    [lang === 'ar' ? 'جوال مسؤول التواصل' : 'Contact Mobile', reviewClient.contactMobile || '—'],
+    [lang === 'ar' ? 'سنوات الخبرة' : 'Years of Experience', reviewClient.yearsOfExperience?.toString() || '—'],
+    [lang === 'ar' ? 'عن الشركة' : 'About', reviewClient.about || '—'],
+  ] : [];
+
   return (
     <div className="space-y-6">
-      {/* Page Header */}
       <div className="dashboard-page-header flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-text-main">{t('clients')}</h1>
-          <p className="text-text-muted mt-1">{lang === 'ar' ? 'إدارة الشركات والعملاء المسجلين' : 'Manage registered companies and clients'}</p>
+          <p className="mt-1 text-text-muted">{lang === 'ar' ? 'إدارة طلبات التسجيل والعملاء والشركات الداخلية' : 'Manage registration requests, portal clients, and internal companies'}</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={handleExportPdf}
-            disabled={exportingPdf}
-          >
-            {exportingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" className="flex items-center gap-2" onClick={handleExportPdf} disabled={exportingPdf}>
+            {exportingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             {exportingPdf ? (lang === 'ar' ? 'جاري تجهيز PDF...' : 'Preparing PDF...') : t('exportPdf')}
           </Button>
           {isAdmin && (
             <Button className="flex items-center gap-2" onClick={handleOpenAddModal}>
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               {t('addNewClient')}
             </Button>
           )}
         </div>
       </div>
 
-      {/* Stats Row */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('totalClients')}</CardTitle>
-            <Building2 className="h-4 w-4 text-text-muted" />
+            <CardTitle className="text-sm font-medium">{lang === 'ar' ? 'طلبات جديدة' : 'New Requests'}</CardTitle>
+            <Clock className="h-4 w-4 text-text-muted" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-text-main">{companies.length}</div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-text-main">{portalPendingOrRejected.length}</div></CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('registeredScripts')}</CardTitle>
-            <FileText className="h-4 w-4 text-text-muted" />
+            <CardTitle className="text-sm font-medium">{lang === 'ar' ? 'عملاء البوابة' : 'Portal Clients'}</CardTitle>
+            <Building2 className="h-4 w-4 text-text-muted" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-text-main">
-              {companies.reduce((acc, c) => acc + (Number.isFinite(Number(c.scriptsCount)) ? Number(c.scriptsCount) : 0), 0)}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-text-main">{portalApproved.length}</div></CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('pendingScripts')}</CardTitle>
-            <Clock className="h-4 w-4 text-text-muted" />
+            <FileText className="h-4 w-4 text-text-muted" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-text-main">{pendingScriptsCount}</div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-text-main">{pendingScriptsCount}</div></CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('approvedScripts')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-text-muted" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-text-main">{approvedScriptsCount}</div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-text-main">{approvedScriptsCount}</div></CardContent>
         </Card>
       </div>
 
-      {/* Search Input */}
-      <div className="dashboard-panel rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-4 shadow-[0_16px_40px_rgba(31,23,36,0.04)]">
+      <div className="dashboard-panel space-y-4 rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-4 shadow-[0_16px_40px_rgba(31,23,36,0.04)]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex gap-2 overflow-x-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                  activeTab === tab.id ? 'bg-primary text-white' : 'bg-white/70 text-text-muted hover:bg-surface-hover',
+                )}
+              >
+                <span>{tab.label}</span>
+                <span className={cn('rounded-full px-2 py-0.5 text-xs', activeTab === tab.id ? 'bg-white/20' : 'bg-background')}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant={viewMode === 'cards' ? 'primary' : 'outline'} size="sm" onClick={() => setViewMode('cards')} aria-label="Card view">
+              <Grid2X2 className="h-4 w-4" />
+            </Button>
+            <Button variant={viewMode === 'table' ? 'primary' : 'outline'} size="sm" onClick={() => setViewMode('table')} aria-label="Table view">
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
         <div className="relative w-full sm:w-80">
-          <Search className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted", lang === 'ar' ? 'right-3' : 'left-3')} />
+          <Search className={cn('absolute top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted', lang === 'ar' ? 'right-3' : 'left-3')} />
           <Input
             placeholder={t('searchClients')}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={cn("h-10", lang === 'ar' ? 'pr-9' : 'pl-9')}
+            onChange={(event) => setSearch(event.target.value)}
+            className={cn('h-10', lang === 'ar' ? 'pr-9' : 'pl-9')}
           />
         </div>
       </div>
 
-      {/* Grid of Company Cards */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded bg-border"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-border rounded w-2/3"></div>
-                    <div className="h-3 bg-border rounded w-1/3"></div>
-                  </div>
-                </div>
-                <div className="mt-6 space-y-3">
-                  <div className="h-3 bg-border rounded w-full"></div>
-                  <div className="h-3 bg-border rounded w-full"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : filteredClients.map((client) => (
-          <Card
-            key={client.companyId}
-            className="group cursor-pointer transition-shadow hover:shadow-[0_20px_50px_rgba(31,23,36,0.08)]"
-            onClick={() => navigate(`/clients/${client.companyId}`)}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <CompanyAvatar
-                  name={lang === 'ar' ? client.nameAr : client.nameEn}
-                  logoUrl={client.logoUrl ?? client.avatarUrl ?? undefined}
-                  size={48}
-                  className="rounded-[var(--radius)] border border-border"
-                />
-                <div className="flex-1 min-w-0 pr-6 relative">
-                  <h3 className="text-base font-semibold text-text-main truncate group-hover:text-primary transition-colors">
-                    {lang === 'ar' ? client.nameAr : client.nameEn}
-                  </h3>
-                  <p className="text-sm text-text-muted truncate">
-                    {lang === 'ar' ? client.nameEn : client.nameAr}
-                  </p>
-                  {isAdmin && (
-                    <div className="absolute top-0 end-0 flex items-center gap-0.5">
-                      <button
-                        onClick={(e) => handleOpenEditModal(e, client.companyId)}
-                        className="p-1.5 text-text-muted hover:text-primary hover:bg-primary/10 rounded-md transition-colors"
-                        aria-label="Edit Client"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => handleDeleteClient(e, client)}
-                        className="p-1.5 text-text-muted hover:text-error hover:bg-error/10 rounded-md transition-colors"
-                        aria-label="Delete Client"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
+      {viewMode === 'cards' ? (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {isLoading ? Array.from({ length: 6 }).map((_, index) => (
+            <Card key={index} className="animate-pulse"><CardContent className="h-48 p-6" /></Card>
+          )) : pagedClients.map(renderClientCard)}
+        </div>
+      ) : (
+        <Card className="dashboard-table-card">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left rtl:text-right">
+              <thead className="border-b border-border text-xs uppercase text-text-muted">
+                <tr>
+                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'الشركة' : 'Company'}</th>
+                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'المسؤول' : 'Contact'}</th>
+                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'الحالة' : 'Status'}</th>
+                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'النصوص' : 'Scripts'}</th>
+                  <th className="px-6 py-4 font-medium text-end">{lang === 'ar' ? 'الإجراءات' : 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedClients.map((client) => (
+                  <tr
+                    key={client.companyId}
+                    className="cursor-pointer border-b border-border bg-transparent transition-colors"
+                    onClick={() => activeTab === 'new' ? setReviewClient(client) : navigate(`/clients/${client.companyId}`)}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <CompanyAvatar name={clientDisplayName(client, lang === 'ar' ? 'ar' : 'en')} logoUrl={client.logoUrl ?? undefined} size={36} />
+                        <div>
+                          <p className="font-medium text-text-main">{clientDisplayName(client, lang === 'ar' ? 'ar' : 'en')}</p>
+                          <p className="text-xs text-text-muted">{client.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-text-muted">{client.representativeName || '—'}</td>
+                    <td className="px-6 py-4">{statusBadge(client, lang === 'ar' ? 'ar' : 'en')}</td>
+                    <td className="px-6 py-4">{client.scriptsCount ?? 0}</td>
+                    <td className="px-6 py-4 text-end">{renderActions(client)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {pageCount > 1 && (
+            <div className="flex items-center justify-between border-t border-border px-6 py-4">
+              <span className="text-sm text-text-muted">{filteredClients.length} {lang === 'ar' ? 'نتيجة' : 'results'}</span>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>{t('previous')}</Button>
+                <span className="text-sm text-text-muted">{page} / {pageCount}</span>
+                <Button variant="outline" size="sm" disabled={page >= pageCount} onClick={() => setPage((value) => value + 1)}>{t('next')}</Button>
               </div>
+            </div>
+          )}
+        </Card>
+      )}
 
-              <div className="mt-6 space-y-3">
-                <div className="flex items-center gap-3 text-sm">
-                  <User className="w-4 h-4 text-text-muted flex-shrink-0" />
-                  <span className="text-text-muted w-28 flex-shrink-0">{t('representative')}:</span>
-                  <span className="text-text-main font-medium truncate">{client.representativeName}</span>
-                </div>
+      {!isLoading && filteredClients.length === 0 && (
+        <div className="py-12 text-center text-text-muted">
+          {lang === 'ar' ? 'لا توجد نتائج في هذا القسم' : 'No results in this section'}
+        </div>
+      )}
 
-                <div className="flex items-center gap-3 text-sm">
-                  <Calendar className="w-4 h-4 text-text-muted flex-shrink-0" />
-                  <span className="text-text-muted w-28 flex-shrink-0">{t('registrationDate')}:</span>
-                  <span className="text-text-main font-medium truncate">{client.createdAt}</span>
-                </div>
-
-                <div className="flex items-center gap-3 text-sm">
-                  <FolderGit2 className="w-4 h-4 text-text-muted flex-shrink-0" />
-                  <span className="text-text-muted w-28 flex-shrink-0">{t('scriptsCount')}:</span>
-                  <span className="text-text-main font-medium truncate">{Number.isFinite(Number(client.scriptsCount)) ? Number(client.scriptsCount) : 0}</span>
-                </div>
-
-                {/* NEW: Created By Display (Admin Only) */}
-                {isAdmin && client.created_by && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <UserCheck className="w-4 h-4 text-text-muted flex-shrink-0" />
-                    <span className="text-text-muted w-28 flex-shrink-0">{t('createdBy')}:</span>
-                    <span className="text-text-main font-medium truncate">
-                      {creators[client.created_by] || 'Unknown'}
-                    </span>
-                  </div>
-                )}
+      <Modal
+        isOpen={!!reviewClient}
+        onClose={() => setReviewClient(null)}
+        title={lang === 'ar' ? 'تفاصيل طلب التسجيل' : 'Registration Request Details'}
+      >
+        {reviewClient && (
+          <div className="space-y-5">
+            <div className="flex items-center gap-3">
+              <CompanyAvatar name={clientDisplayName(reviewClient, lang === 'ar' ? 'ar' : 'en')} logoUrl={reviewClient.logoUrl ?? undefined} size={52} />
+              <div>
+                <p className="font-semibold text-text-main">{clientDisplayName(reviewClient, lang === 'ar' ? 'ar' : 'en')}</p>
+                <div className="mt-1">{statusBadge(reviewClient, lang === 'ar' ? 'ar' : 'en')}</div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-        {filteredClients.length === 0 && (
-          <div className="col-span-full py-12 text-center text-text-muted">
-            {lang === 'ar' ? 'لم يتم العثور على شركات' : 'No companies found'}
+            </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {detailRows.map(([label, value]) => (
+                <div key={label} className="dashboard-item-card p-3">
+                  <p className="text-xs text-text-muted">{label}</p>
+                  <p className="mt-1 break-words text-sm font-medium text-text-main">{value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="dashboard-item-card p-3">
+              <p className="text-xs text-text-muted">{lang === 'ar' ? 'المستندات القانونية' : 'Legal Documents'}</p>
+              <div className="mt-2 space-y-1">
+                {(reviewClient.legalDocuments ?? []).length > 0 ? reviewClient.legalDocuments?.map((doc) => (
+                  <p key={`${doc.type}-${doc.name}`} className="text-sm text-text-main">{doc.type}: {doc.name}</p>
+                )) : <p className="text-sm text-text-muted">—</p>}
+              </div>
+            </div>
+            {reviewClient.rejectionReason && (
+              <div className="rounded-lg border border-error/20 bg-error/10 p-3 text-sm text-error">{reviewClient.rejectionReason}</div>
+            )}
+            {(reviewClient.approvalStatus ?? 'approved') === 'pending' && (
+              <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
+                <Button variant="outline" onClick={() => setReviewClient(null)}>{t('cancel')}</Button>
+                <Button onClick={() => void approveClient(reviewClient)} disabled={actionId === reviewClient.companyId}>{lang === 'ar' ? 'اعتماد الطلب' : 'Approve Request'}</Button>
+                <Button variant="danger" onClick={() => setRejectClient(reviewClient)} disabled={actionId === reviewClient.companyId}>{lang === 'ar' ? 'رفض الطلب' : 'Reject Request'}</Button>
+              </div>
+            )}
           </div>
         )}
-      </div>
+      </Modal>
 
-      <ClientModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        companyId={editingCompanyId}
-      />
-    </div >
+      <Modal
+        isOpen={!!rejectClient}
+        onClose={() => { setRejectClient(null); setRejectionReason(''); }}
+        title={lang === 'ar' ? 'سبب رفض طلب التسجيل' : 'Registration Rejection Reason'}
+      >
+        <div className="space-y-4">
+          <Input
+            label={lang === 'ar' ? 'سبب الرفض' : 'Rejection Reason'}
+            value={rejectionReason}
+            onChange={(event) => setRejectionReason(event.target.value)}
+            required
+          />
+          <div className="flex justify-end gap-2 border-t border-border pt-4">
+            <Button variant="outline" onClick={() => { setRejectClient(null); setRejectionReason(''); }}>{t('cancel')}</Button>
+            <Button variant="danger" onClick={() => void rejectRegistration()} disabled={!!actionId}>
+              {lang === 'ar' ? 'إرسال الرفض' : 'Submit Rejection'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <ClientModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} companyId={editingCompanyId} />
+    </div>
   );
 }

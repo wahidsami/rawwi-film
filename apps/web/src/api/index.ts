@@ -27,10 +27,26 @@ export interface ClientPortalRegisterBody {
   password: string;
   companyNameAr: string;
   companyNameEn: string;
+  website?: string;
+  phone?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  postalCode?: string;
   representativeName?: string;
   representativeTitle?: string;
   mobile?: string;
+  contactEmail?: string;
+  contactMobile?: string;
+  about?: string;
+  yearsOfExperience?: number | null;
   companyLogoFile?: File | null;
+  legalDocuments?: {
+    cr?: File | null;
+    license?: File | null;
+    nationalAddress?: File | null;
+  };
+  acceptedTerms: boolean;
 }
 
 export interface ClientPortalSubmissionItem {
@@ -317,7 +333,7 @@ export interface CertificateVerificationResponse {
 }
 
 export const clientPortalApi = {
-  register: async (payload: ClientPortalRegisterBody): Promise<{ ok: true; registration: 'free'; userId: string; companyId: string }> => {
+  register: async (payload: ClientPortalRegisterBody): Promise<{ ok: true; registration: 'pending_review'; userId: string; companyId: string }> => {
     if (USE_MOCK_API) {
       return httpClient.post('/client-portal/register', payload);
     }
@@ -327,10 +343,24 @@ export const clientPortalApi = {
     form.append('password', payload.password);
     form.append('companyNameAr', payload.companyNameAr);
     form.append('companyNameEn', payload.companyNameEn);
+    if (payload.website) form.append('website', payload.website);
+    if (payload.phone) form.append('phone', payload.phone);
+    if (payload.addressLine1) form.append('addressLine1', payload.addressLine1);
+    if (payload.addressLine2) form.append('addressLine2', payload.addressLine2);
+    if (payload.city) form.append('city', payload.city);
+    if (payload.postalCode) form.append('postalCode', payload.postalCode);
     if (payload.representativeName) form.append('representativeName', payload.representativeName);
     if (payload.representativeTitle) form.append('representativeTitle', payload.representativeTitle);
     if (payload.mobile) form.append('mobile', payload.mobile);
+    if (payload.contactEmail) form.append('contactEmail', payload.contactEmail);
+    if (payload.contactMobile) form.append('contactMobile', payload.contactMobile);
+    if (payload.about) form.append('about', payload.about);
+    if (payload.yearsOfExperience != null) form.append('yearsOfExperience', String(payload.yearsOfExperience));
+    form.append('acceptedTerms', payload.acceptedTerms ? 'true' : 'false');
     if (payload.companyLogoFile) form.append('companyLogoFile', payload.companyLogoFile);
+    if (payload.legalDocuments?.cr) form.append('crDocument', payload.legalDocuments.cr);
+    if (payload.legalDocuments?.license) form.append('licenseDocument', payload.legalDocuments.license);
+    if (payload.legalDocuments?.nationalAddress) form.append('nationalAddressDocument', payload.legalDocuments.nationalAddress);
 
     const anonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY as string | undefined;
     if (!anonKey) {
@@ -349,8 +379,12 @@ export const clientPortalApi = {
     if (!res.ok) {
       throw new Error((data as { error?: string }).error || res.statusText || 'Registration failed');
     }
-    return data as { ok: true; registration: 'free'; userId: string; companyId: string };
+    return data as { ok: true; registration: 'pending_review'; userId: string; companyId: string };
   },
+  getTerms: (): Promise<{ ar: string; en: string }> =>
+    httpClient.get('/client-portal/terms'),
+  updateTerms: (terms: { ar: string; en: string }): Promise<{ ok: boolean; terms: { ar: string; en: string } }> =>
+    httpClient.put('/client-portal/admin/terms', terms),
   getMe: (): Promise<ClientPortalMeResponse> =>
     httpClient.get('/client-portal/me'),
   getSubmissions: (): Promise<ClientPortalSubmissionItem[]> =>
@@ -418,6 +452,8 @@ export const notificationsApi = {
 
 export const companiesApi = {
   getCompanies: (): Promise<Company[]> => httpClient.get('/companies'),
+  approveCompany: (id: string): Promise<Company> => httpClient.post(`/companies/${id}/approve`, {}),
+  rejectCompany: (id: string, reason: string): Promise<Company> => httpClient.post(`/companies/${id}/reject`, { reason }),
   addCompany: (company: Company): Promise<Company> => httpClient.post('/companies', company),
   updateCompany: (id: string, updates: Partial<Company>): Promise<Company> => httpClient.put(`/companies/${id}`, updates),
   deleteCompany: (id: string): Promise<{ ok: boolean }> => httpClient.delete(`/companies/${id}`),

@@ -8,6 +8,8 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Switch } from '@/components/ui/Switch';
+import { Textarea } from '@/components/ui/Textarea';
+import { clientPortalApi } from '@/api';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
@@ -50,6 +52,8 @@ export default function Settings() {
   });
   const [savingClassificationId, setSavingClassificationId] = useState<string | null>(null);
   const [creatingClassification, setCreatingClassification] = useState(false);
+  const [clientTerms, setClientTerms] = useState({ ar: '', en: '' });
+  const [savingClientTerms, setSavingClientTerms] = useState(false);
 
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
 
@@ -84,6 +88,34 @@ export default function Settings() {
       })),
     );
   }, [scriptClassificationOptions]);
+
+  useEffect(() => {
+    clientPortalApi.getTerms()
+      .then(setClientTerms)
+      .catch(() => {
+        setClientTerms({
+          ar: 'أقر بأن جميع البيانات والمستندات المقدمة صحيحة، وأوافق على شروط استخدام منصة راوي فيلم وسياسة معالجة الطلبات.',
+          en: 'I confirm that all submitted information and documents are accurate, and I agree to the Raawi Film platform terms and request review policy.',
+        });
+      });
+  }, []);
+
+  const handleSaveClientTerms = async () => {
+    if (!clientTerms.ar.trim() || !clientTerms.en.trim()) {
+      toast.error(lang === 'ar' ? 'يرجى إدخال الشروط بالعربية والإنجليزية' : 'Please enter Arabic and English terms');
+      return;
+    }
+    setSavingClientTerms(true);
+    try {
+      const response = await clientPortalApi.updateTerms(clientTerms);
+      setClientTerms(response.terms);
+      toast.success(lang === 'ar' ? 'تم حفظ شروط تسجيل العملاء' : 'Client registration terms saved');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر حفظ الشروط' : 'Failed to save terms'));
+    } finally {
+      setSavingClientTerms(false);
+    }
+  };
 
   const updateClassificationDraft = (id: string, updates: Partial<{
     labelAr: string;
@@ -355,6 +387,36 @@ export default function Settings() {
                         />
                       </div>
                     </div>
+                  </div>
+
+                  <hr className="border-border" />
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-text-main">
+                      {lang === 'ar' ? 'شروط تسجيل العملاء' : 'Client Registration Terms'}
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <Textarea
+                        label={lang === 'ar' ? 'الشروط بالعربية' : 'Arabic Terms'}
+                        rows={6}
+                        value={clientTerms.ar}
+                        onChange={(e) => setClientTerms((state) => ({ ...state, ar: e.target.value }))}
+                      />
+                      <Textarea
+                        label={lang === 'ar' ? 'الشروط بالإنجليزية' : 'English Terms'}
+                        rows={6}
+                        value={clientTerms.en}
+                        onChange={(e) => setClientTerms((state) => ({ ...state, en: e.target.value }))}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleSaveClientTerms()}
+                      disabled={savingClientTerms}
+                      className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {savingClientTerms ? (lang === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (lang === 'ar' ? 'حفظ الشروط' : 'Save Terms')}
+                    </button>
                   </div>
 
                   <hr className="border-border" />

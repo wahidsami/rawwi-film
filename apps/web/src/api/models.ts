@@ -54,6 +54,23 @@ export interface Company {
   avatarUrl?: string | null;
   /** NEW: User ID who created this client (for ownership tracking) */
   created_by?: string | null;
+  source?: 'internal' | 'portal';
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  website?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
+  contactEmail?: string | null;
+  contactMobile?: string | null;
+  about?: string | null;
+  yearsOfExperience?: number | null;
+  legalDocuments?: Array<{ type: string; name: string; path?: string; url?: string; size?: number }>;
+  termsAcceptedAt?: string | null;
+  approvedAt?: string | null;
+  rejectedAt?: string | null;
+  rejectionReason?: string | null;
 }
 
 export interface ScriptVersion {

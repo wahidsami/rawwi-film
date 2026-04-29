@@ -4,8 +4,13 @@ import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { isUserAdmin } from "../_shared/roleCheck.ts";
 
 const LOGO_BUCKET = "company-logos";
+const LEGAL_DOC_BUCKET = "company-legal-documents";
 const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 const LOGO_MIMES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const DOC_MAX_BYTES = 10 * 1024 * 1024;
+const DOC_MIMES = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
+const RESEND_API = "https://api.resend.com/emails";
+const FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
 
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
@@ -21,6 +26,59 @@ function normalizePhone(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function field(body: Record<string, unknown>, key: string): string | null {
+  const value = body[key];
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function htmlEscape(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+async function sendClientEmail(params: { to: string; subject: string; html: string }) {
+  const resendKey = Deno.env.get("RESEND_API_KEY");
+  if (!resendKey) {
+    console.warn("[client-portal] RESEND_API_KEY not set; skipping email:", params.subject, params.to);
+    return;
+  }
+  const res = await fetch(RESEND_API, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: [params.to],
+      subject: params.subject,
+      html: params.html,
+    }),
+  });
+  if (!res.ok) {
+    console.error("[client-portal] email failed:", res.status, await res.text());
+  }
+}
+
+async function loadClientTerms(supabase: ReturnType<typeof createSupabaseAdmin>): Promise<{ ar: string; en: string }> {
+  const fallback = {
+    ar: "أقر بأن جميع البيانات والمستندات المقدمة صحيحة، وأوافق على شروط استخدام منصة راوي فيلم وسياسة معالجة الطلبات.",
+    en: "I confirm that all submitted information and documents are accurate, and I agree to the Raawi Film platform terms and request review policy.",
+  };
+  const { data } = await supabase.from("app_settings").select("value").eq("key", "client_terms").maybeSingle();
+  const value = ((data as any)?.value ?? {}) as Record<string, unknown>;
+  return {
+    ar: typeof value.ar === "string" && value.ar.trim() ? value.ar : fallback.ar,
+    en: typeof value.en === "string" && value.en.trim() ? value.en : fallback.en,
+  };
 }
 
 function resolveClientSubmissionStatus(
@@ -83,11 +141,16 @@ Deno.serve(async (req: Request) => {
   const rest = pathAfter("client-portal", req.url);
   const method = req.method;
 
+  if (method === "GET" && rest === "terms") {
+    return json(await loadClientTerms(supabase));
+  }
+
   // POST /client-portal/register (public, free registration)
   if (method === "POST" && rest === "register") {
     const contentType = req.headers.get("content-type") ?? "";
     let body: Record<string, unknown> = {};
     let companyLogoFile: File | null = null;
+    const legalFiles: Array<{ key: string; type: string; file: File }> = [];
 
     if (contentType.includes("multipart/form-data")) {
       let formData: FormData;
@@ -105,10 +168,31 @@ Deno.serve(async (req: Request) => {
         representativeName: formData.get("representativeName"),
         representativeTitle: formData.get("representativeTitle"),
         mobile: formData.get("mobile"),
+        website: formData.get("website"),
+        phone: formData.get("phone"),
+        addressLine1: formData.get("addressLine1"),
+        addressLine2: formData.get("addressLine2"),
+        city: formData.get("city"),
+        postalCode: formData.get("postalCode"),
+        contactEmail: formData.get("contactEmail"),
+        contactMobile: formData.get("contactMobile"),
+        about: formData.get("about"),
+        yearsOfExperience: formData.get("yearsOfExperience"),
+        acceptedTerms: formData.get("acceptedTerms"),
       };
       const logoCandidate = formData.get("companyLogoFile") ?? formData.get("companyLogo") ?? formData.get("logo");
       if (logoCandidate instanceof File && logoCandidate.size > 0) {
         companyLogoFile = logoCandidate;
+      }
+      for (const item of [
+        { key: "crDocument", type: "cr" },
+        { key: "licenseDocument", type: "license" },
+        { key: "nationalAddressDocument", type: "national_address" },
+      ]) {
+        const candidate = formData.get(item.key);
+        if (candidate instanceof File && candidate.size > 0) {
+          legalFiles.push({ ...item, file: candidate });
+        }
       }
     } else {
       try {
@@ -126,17 +210,41 @@ Deno.serve(async (req: Request) => {
     const representativeName = typeof body.representativeName === "string" ? body.representativeName.trim() : null;
     const representativeTitle = typeof body.representativeTitle === "string" ? body.representativeTitle.trim() : null;
     const mobile = normalizePhone(body.mobile);
+    const website = field(body, "website");
+    const phone = normalizePhone(body.phone);
+    const addressLine1 = field(body, "addressLine1");
+    const addressLine2 = field(body, "addressLine2");
+    const city = field(body, "city");
+    const postalCode = field(body, "postalCode");
+    const contactEmail = field(body, "contactEmail");
+    const contactMobile = normalizePhone(body.contactMobile);
+    const about = field(body, "about");
+    const yearsOfExperience = Number.parseInt(field(body, "yearsOfExperience") ?? "0", 10);
+    const acceptedTerms = body.acceptedTerms === true || body.acceptedTerms === "true";
 
     if (!email || !isValidEmail(email)) return json({ error: "Valid email is required" }, 400);
     if (!password || password.length < 8) return json({ error: "Password must be at least 8 characters" }, 400);
     if (!name) return json({ error: "Name is required" }, 400);
     if (!companyNameAr || !companyNameEn) return json({ error: "companyNameAr and companyNameEn are required" }, 400);
+    if (!mobile) return json({ error: "Company phone/mobile is required" }, 400);
+    if (!addressLine1 || !city || !postalCode) return json({ error: "Saudi address fields are required" }, 400);
+    if (contactEmail && !isValidEmail(contactEmail)) return json({ error: "Valid contact email is required" }, 400);
+    if (!acceptedTerms) return json({ error: "Terms must be accepted" }, 400);
+    if (legalFiles.length < 3) return json({ error: "CR, license, and national address documents are required" }, 400);
     if (companyLogoFile) {
       if (!LOGO_MIMES.has(companyLogoFile.type)) {
         return json({ error: "Company logo must be PNG, JPG, or WEBP" }, 400);
       }
       if (companyLogoFile.size > LOGO_MAX_BYTES) {
         return json({ error: "Company logo max size is 2MB" }, 400);
+      }
+    }
+    for (const doc of legalFiles) {
+      if (!DOC_MIMES.has(doc.file.type)) {
+        return json({ error: "Legal documents must be PDF, PNG, JPG, or WEBP" }, 400);
+      }
+      if (doc.file.size > DOC_MAX_BYTES) {
+        return json({ error: "Legal document max size is 10MB" }, 400);
       }
     }
 
@@ -174,6 +282,7 @@ Deno.serve(async (req: Request) => {
           name,
           role: "Client",
           allowedSections: ["client_portal"],
+          approvalStatus: "pending",
         },
       });
       if (createUserErr || !userData.user?.id) {
@@ -195,7 +304,21 @@ Deno.serve(async (req: Request) => {
           representative_name: representativeName,
           representative_title: representativeTitle,
           mobile,
+          phone,
           email,
+          website,
+          address_line1: addressLine1,
+          address_line2: addressLine2,
+          city,
+          postal_code: postalCode,
+          country: "Saudi Arabia",
+          contact_email: contactEmail ?? email,
+          contact_mobile: contactMobile,
+          about,
+          years_of_experience: Number.isFinite(yearsOfExperience) ? yearsOfExperience : null,
+          source: "portal",
+          approval_status: "pending",
+          terms_accepted_at: new Date().toISOString(),
           created_by: createdUserId,
         })
         .select("id, created_at")
@@ -220,13 +343,30 @@ Deno.serve(async (req: Request) => {
         if (updateLogoErr) throw new Error(updateLogoErr.message || "Failed to save company logo");
       }
 
+      const legalDocuments: Array<{ type: string; name: string; path: string; size: number; mimeType: string }> = [];
+      for (const doc of legalFiles) {
+        const rawExt = doc.file.name.split(".").pop()?.toLowerCase();
+        const ext = rawExt && /^[a-z0-9]+$/.test(rawExt) ? rawExt : (doc.file.type === "application/pdf" ? "pdf" : "bin");
+        const objectName = `${company.id}/${doc.type}-${crypto.randomUUID()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from(LEGAL_DOC_BUCKET)
+          .upload(objectName, doc.file, { contentType: doc.file.type, upsert: true });
+        if (uploadErr) throw new Error(uploadErr.message || "Failed to upload legal document");
+        legalDocuments.push({ type: doc.type, name: doc.file.name, path: `${LEGAL_DOC_BUCKET}/${objectName}`, size: doc.file.size, mimeType: doc.file.type });
+      }
+      const { error: docsErr } = await supabase
+        .from("clients")
+        .update({ legal_documents: legalDocuments })
+        .eq("id", company.id);
+      if (docsErr) throw new Error(docsErr.message || "Failed to save legal documents");
+
       const { error: accountErr } = await supabase
         .from("client_portal_accounts")
         .insert({
           user_id: createdUserId,
           company_id: company.id,
           subscription_plan: "free",
-          subscription_status: "active",
+          subscription_status: "inactive",
         });
       if (accountErr) throw new Error(accountErr.message);
 
@@ -245,14 +385,29 @@ Deno.serve(async (req: Request) => {
           companyId: company.id,
           allowedSections: ["client_portal"],
           subscriptionPlan: "free",
-          subscriptionStatus: "active",
+          subscriptionStatus: "inactive",
+          approvalStatus: "pending",
         },
       });
       if (metaErr) throw new Error(metaErr.message);
 
+      await supabase.auth.admin.updateUserById(createdUserId, {
+        ban_duration: "876000h",
+      });
+
+      await sendClientEmail({
+        to: email,
+        subject: "Registration received – Raawi Film",
+        html: `
+          <p>Dear ${htmlEscape(name)},</p>
+          <p>Thank you for registering ${htmlEscape(companyNameEn)} with Raawi Film.</p>
+          <p>Your request is now under review. We will email you once the admin team approves or rejects it.</p>
+        `.trim(),
+      });
+
       return json({
         ok: true,
-        registration: "free",
+        registration: "pending_review",
         userId: createdUserId,
         companyId: company.id,
       }, 201);
@@ -261,7 +416,11 @@ Deno.serve(async (req: Request) => {
         await supabase.storage.from(LOGO_BUCKET).remove([uploadedLogoObjectPath]).catch(() => {});
       }
       if (createdCompanyId) {
-        await supabase.from("clients").delete().eq("id", createdCompanyId).catch(() => {});
+        try {
+          await supabase.from("clients").delete().eq("id", createdCompanyId);
+        } catch (_) {
+          // best-effort cleanup
+        }
       }
       if (createdUserId) {
         await supabase.auth.admin.deleteUser(createdUserId).catch(() => {});
@@ -277,9 +436,29 @@ Deno.serve(async (req: Request) => {
   const account = await getClientAccountForUser(supabase, userId);
   const isAdmin = await isUserAdmin(supabase, userId);
 
+  if (method === "PUT" && rest === "admin/terms") {
+    if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    let body: { ar?: string; en?: string };
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+    const ar = (body.ar ?? "").trim();
+    const en = (body.en ?? "").trim();
+    if (!ar || !en) return json({ error: "Arabic and English terms are required" }, 400);
+    const value = { ar, en };
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert({ key: "client_terms", value, updated_at: new Date().toISOString(), updated_by: userId }, { onConflict: "key" });
+    if (error) return json({ error: error.message }, 500);
+    return json({ ok: true, terms: value });
+  }
+
   // GET /client-portal/me
   if (method === "GET" && rest === "me") {
     if (!account) return json({ error: "Client portal account not found" }, 403);
+    if (account.subscription_status !== "active") return json({ error: "Client portal account is not active" }, 403);
     const [{ data: userResult }, { data: company }] = await Promise.all([
       supabase.auth.admin.getUserById(userId),
       supabase

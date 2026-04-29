@@ -15,6 +15,8 @@ const LOGO_BUCKET = "company-logos";
 const LOGO_MAX_BYTES = 2 * 1024 * 1024; // 2MB
 const LOGO_MIMES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const HTML_TAG_LIKE = /<|>/;
+const RESEND_API = "https://api.resend.com/emails";
+const FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
 
 type ClientRow = {
   id: string;
@@ -28,6 +30,24 @@ type ClientRow = {
   created_by?: string | null; // NEW
   logo_url?: string | null;
   logo_updated_at?: string | null;
+  source?: "internal" | "portal";
+  approval_status?: "pending" | "approved" | "rejected";
+  website?: string | null;
+  phone?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  contact_email?: string | null;
+  contact_mobile?: string | null;
+  about?: string | null;
+  years_of_experience?: number | null;
+  legal_documents?: Array<{ type: string; name: string; path?: string; url?: string; size?: number }> | null;
+  terms_accepted_at?: string | null;
+  approved_at?: string | null;
+  rejected_at?: string | null;
+  rejection_reason?: string | null;
 };
 
 type FrontendClient = {
@@ -42,6 +62,24 @@ type FrontendClient = {
   created_by?: string | null; // NEW: Maintain snake_case to match frontend model
   logoUrl?: string | null;
   scriptsCount: number;
+  source?: "internal" | "portal";
+  approvalStatus?: "pending" | "approved" | "rejected";
+  website?: string | null;
+  phone?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
+  contactEmail?: string | null;
+  contactMobile?: string | null;
+  about?: string | null;
+  yearsOfExperience?: number | null;
+  legalDocuments?: Array<{ type: string; name: string; path?: string; url?: string; size?: number }>;
+  termsAcceptedAt?: string | null;
+  approvedAt?: string | null;
+  rejectedAt?: string | null;
+  rejectionReason?: string | null;
 };
 
 function toFrontend(row: ClientRow, scriptsCount = 0): FrontendClient {
@@ -57,8 +95,28 @@ function toFrontend(row: ClientRow, scriptsCount = 0): FrontendClient {
     created_by: row.created_by ?? null, // NEW
     logoUrl: row.logo_url ?? null,
     scriptsCount,
+    source: row.source ?? "internal",
+    approvalStatus: row.approval_status ?? "approved",
+    website: row.website ?? null,
+    phone: row.phone ?? null,
+    addressLine1: row.address_line1 ?? null,
+    addressLine2: row.address_line2 ?? null,
+    city: row.city ?? null,
+    postalCode: row.postal_code ?? null,
+    country: row.country ?? null,
+    contactEmail: row.contact_email ?? null,
+    contactMobile: row.contact_mobile ?? null,
+    about: row.about ?? null,
+    yearsOfExperience: row.years_of_experience ?? null,
+    legalDocuments: row.legal_documents ?? [],
+    termsAcceptedAt: row.terms_accepted_at ?? null,
+    approvedAt: row.approved_at ?? null,
+    rejectedAt: row.rejected_at ?? null,
+    rejectionReason: row.rejection_reason ?? null,
   };
 }
+
+const CLIENT_SELECT = "id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, created_by, logo_url, logo_updated_at, source, approval_status, website, phone, address_line1, address_line2, city, postal_code, country, contact_email, contact_mobile, about, years_of_experience, legal_documents, terms_accepted_at, approved_at, rejected_at, rejection_reason";
 
 function getPathAfterCompanies(url: string): string {
   const pathname = new URL(url).pathname;
@@ -111,6 +169,39 @@ function normalizeEmail(value: string | null | undefined): string | null {
   return trimmed || null;
 }
 
+function htmlEscape(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+async function sendClientEmail(params: { to: string; subject: string; html: string }) {
+  const resendKey = Deno.env.get("RESEND_API_KEY");
+  if (!resendKey) {
+    console.warn("[companies] RESEND_API_KEY not set; skipping email:", params.subject, params.to);
+    return;
+  }
+  const res = await fetch(RESEND_API, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: [params.to],
+      subject: params.subject,
+      html: params.html,
+    }),
+  });
+  if (!res.ok) {
+    console.error("[companies] email failed:", res.status, await res.text());
+  }
+}
+
 function containsArabicLetters(value: string): boolean {
   return /[\u0600-\u06FF]/.test(value);
 }
@@ -133,7 +224,7 @@ async function ensureUniqueClientNames(
   nameEn: string | null,
   excludeId?: string,
 ): Promise<string | null> {
-  const checks: Promise<{ field: "nameAr" | "nameEn"; rowId: string | null }>[] = [];
+  const checks: PromiseLike<{ field: "nameAr" | "nameEn"; rowId: string | null }>[] = [];
 
   if (nameAr) {
     checks.push(
@@ -222,7 +313,7 @@ Deno.serve(async (req: Request) => {
         }
         const { data: clientRows, error } = await supabase
           .from("clients")
-          .select("id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, created_by, logo_url, logo_updated_at")
+          .select(CLIENT_SELECT)
           .in("id", clientIds)
           .order("created_at", { ascending: false });
         if (error) return jsonResponse({ error: error.message }, 500);
@@ -230,7 +321,7 @@ Deno.serve(async (req: Request) => {
       } else {
         const { data: clientRows, error } = await supabase
           .from("clients")
-          .select("id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, created_by, logo_url, logo_updated_at")
+          .select(CLIENT_SELECT)
           .order("created_at", { ascending: false });
         if (error) return jsonResponse({ error: error.message }, 500);
         rows = clientRows as ClientRow[];
@@ -301,12 +392,15 @@ Deno.serve(async (req: Request) => {
         representative_title: typeof body.representativeTitle === "string" ? body.representativeTitle.trim() || null : null,
         mobile,
         email,
+        source: "internal",
+        approval_status: "approved",
+        approved_at: new Date().toISOString(),
       };
 
       if (body.logoUrl !== undefined) (insert as Record<string, unknown>).logo_url = typeof body.logoUrl === "string" ? body.logoUrl.trim() || null : null;
       if (insert.logo_url) (insert as Record<string, unknown>).logo_updated_at = new Date().toISOString();
 
-      const { data: row, error } = await supabase.from("clients").insert(insert).select("id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, created_by, logo_url, logo_updated_at").single();
+      const { data: row, error } = await supabase.from("clients").insert(insert).select(CLIENT_SELECT).single();
 
       if (error) {
         return jsonResponse({ error: error.message }, 500);
@@ -369,7 +463,7 @@ Deno.serve(async (req: Request) => {
         .from("clients")
         .update({ logo_url: logoUrl, logo_updated_at: new Date().toISOString() })
         .eq("id", companyId)
-        .select("id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, logo_url, logo_updated_at")
+        .select(CLIENT_SELECT)
         .single();
       if (updateErr) return jsonResponse({ error: updateErr.message }, 500);
       return jsonResponse(toFrontend(updated as ClientRow));
@@ -390,7 +484,7 @@ Deno.serve(async (req: Request) => {
         .from("clients")
         .update({ logo_url: null, logo_updated_at: new Date().toISOString() })
         .eq("id", companyId)
-        .select("id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, logo_url, logo_updated_at")
+        .select(CLIENT_SELECT)
         .single();
       if (updateErr) return jsonResponse({ error: updateErr.message }, 500);
       return jsonResponse(toFrontend(updated as ClientRow));
@@ -408,7 +502,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: beforeRow, error: fetchErr } = await supabase
         .from("clients")
-        .select("id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, logo_url, logo_updated_at")
+        .select(CLIENT_SELECT)
         .eq("id", id)
         .single();
 
@@ -416,6 +510,9 @@ Deno.serve(async (req: Request) => {
         return jsonResponse({ error: "Client not found" }, 404);
       }
       const before = beforeRow as ClientRow;
+      if ((before.source ?? "internal") !== "internal") {
+        return jsonResponse({ error: "Portal-registered clients cannot be edited from the internal client form" }, 403);
+      }
 
       const updates: Record<string, unknown> = {};
       if (body.nameAr !== undefined) {
@@ -484,7 +581,7 @@ Deno.serve(async (req: Request) => {
         .from("clients")
         .update(updates)
         .eq("id", id)
-        .select("id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, logo_url, logo_updated_at")
+        .select(CLIENT_SELECT)
         .single();
 
       if (updateErr) {
@@ -500,6 +597,169 @@ Deno.serve(async (req: Request) => {
         target_label: after.name_ar || after.name_en,
         result_status: "success",
         metadata: { before: toFrontend(before), after: toFrontend(after) },
+      }).catch((e) => console.warn("[companies] audit:", e));
+      return jsonResponse(toFrontend(after));
+    }
+
+    // POST /companies/:id/approve → approve portal registration
+    if (method === "POST" && companyId && subPath === "approve") {
+      const { data: beforeRow, error: fetchErr } = await supabase
+        .from("clients")
+        .select(CLIENT_SELECT)
+        .eq("id", companyId)
+        .single();
+      if (fetchErr || !beforeRow) return jsonResponse({ error: "Client not found" }, 404);
+      const before = beforeRow as ClientRow;
+      if ((before.source ?? "internal") !== "portal") return jsonResponse({ error: "Only portal clients can be approved" }, 400);
+
+      const { data: account } = await supabase
+        .from("client_portal_accounts")
+        .select("user_id")
+        .eq("company_id", companyId)
+        .maybeSingle();
+      const userId = (account as { user_id?: string } | null)?.user_id ?? before.created_by ?? null;
+      if (userId) {
+        const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+        await supabase.auth.admin.updateUserById(userId, {
+          ban_duration: "none",
+          user_metadata: {
+            ...(authUser?.user?.user_metadata ?? {}),
+            role: "Client",
+            companyId,
+            allowedSections: ["client_portal"],
+            subscriptionPlan: "free",
+            subscriptionStatus: "active",
+            approvalStatus: "approved",
+          },
+        });
+        await supabase
+          .from("client_portal_accounts")
+          .update({ subscription_status: "active" })
+          .eq("user_id", userId);
+      }
+
+      const { data: afterRow, error: updateErr } = await supabase
+        .from("clients")
+        .update({
+          approval_status: "approved",
+          approved_at: new Date().toISOString(),
+          approved_by: actorUserId,
+          rejected_at: null,
+          rejected_by: null,
+          rejection_reason: null,
+        })
+        .eq("id", companyId)
+        .select(CLIENT_SELECT)
+        .single();
+      if (updateErr || !afterRow) return jsonResponse({ error: updateErr?.message ?? "Approval failed" }, 500);
+      const after = afterRow as ClientRow;
+
+      const appPublicUrl = (Deno.env.get("APP_PUBLIC_URL") ?? "http://localhost:5173").replace(/\/$/, "");
+      if (after.email) {
+        await sendClientEmail({
+          to: after.email,
+          subject: "Your Raawi Film registration is approved",
+          html: `
+            <p>Congratulations.</p>
+            <p>Your registration for ${htmlEscape(after.name_en || after.name_ar)} has been approved.</p>
+            <p>You can now sign in and start using the client portal:</p>
+            <p><a href="${appPublicUrl}/login">${appPublicUrl}/login</a></p>
+          `.trim(),
+        });
+      }
+
+      await logAuditCanonical(supabase, {
+        event_type: "CLIENT_UPDATED",
+        actor_user_id: actorUserId,
+        target_type: "client",
+        target_id: companyId,
+        target_label: after.name_ar || after.name_en,
+        result_status: "success",
+        metadata: { action: "approve_registration", before: toFrontend(before), after: toFrontend(after) },
+      }).catch((e) => console.warn("[companies] audit:", e));
+      return jsonResponse(toFrontend(after));
+    }
+
+    // POST /companies/:id/reject → reject portal registration with reason
+    if (method === "POST" && companyId && subPath === "reject") {
+      let body: { reason?: string };
+      try {
+        body = await req.json();
+      } catch {
+        return jsonResponse({ error: "Invalid JSON body" }, 400);
+      }
+      const reason = (body.reason ?? "").trim();
+      if (!reason) return jsonResponse({ error: "Rejection reason is required" }, 400);
+      const { data: beforeRow, error: fetchErr } = await supabase
+        .from("clients")
+        .select(CLIENT_SELECT)
+        .eq("id", companyId)
+        .single();
+      if (fetchErr || !beforeRow) return jsonResponse({ error: "Client not found" }, 404);
+      const before = beforeRow as ClientRow;
+      if ((before.source ?? "internal") !== "portal") return jsonResponse({ error: "Only portal clients can be rejected" }, 400);
+
+      const { data: account } = await supabase
+        .from("client_portal_accounts")
+        .select("user_id")
+        .eq("company_id", companyId)
+        .maybeSingle();
+      const userId = (account as { user_id?: string } | null)?.user_id ?? before.created_by ?? null;
+      if (userId) {
+        const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+        await supabase.auth.admin.updateUserById(userId, {
+          ban_duration: "876000h",
+          user_metadata: {
+            ...(authUser?.user?.user_metadata ?? {}),
+            role: "Client",
+            companyId,
+            allowedSections: ["client_portal"],
+            subscriptionPlan: "free",
+            subscriptionStatus: "inactive",
+            approvalStatus: "rejected",
+          },
+        });
+        await supabase
+          .from("client_portal_accounts")
+          .update({ subscription_status: "inactive" })
+          .eq("user_id", userId);
+      }
+
+      const { data: afterRow, error: updateErr } = await supabase
+        .from("clients")
+        .update({
+          approval_status: "rejected",
+          rejected_at: new Date().toISOString(),
+          rejected_by: actorUserId,
+          rejection_reason: reason,
+        })
+        .eq("id", companyId)
+        .select(CLIENT_SELECT)
+        .single();
+      if (updateErr || !afterRow) return jsonResponse({ error: updateErr?.message ?? "Rejection failed" }, 500);
+      const after = afterRow as ClientRow;
+
+      if (after.email) {
+        await sendClientEmail({
+          to: after.email,
+          subject: "Raawi Film registration request update",
+          html: `
+            <p>Dear ${htmlEscape(after.representative_name || after.name_en || after.name_ar)},</p>
+            <p>We are sorry, but your registration request for ${htmlEscape(after.name_en || after.name_ar)} was not approved at this time.</p>
+            <p><strong>Reason:</strong></p>
+            <p>${htmlEscape(reason)}</p>
+          `.trim(),
+        });
+      }
+
+      await logAuditCanonical(supabase, {
+        event_type: "CLIENT_UPDATED",
+        actor_user_id: actorUserId,
+        target_type: "client",
+        target_id: companyId,
+        target_label: after.name_ar || after.name_en,
+        result_status: "success",
+        metadata: { action: "reject_registration", before: toFrontend(before), after: toFrontend(after), reason },
       }).catch((e) => console.warn("[companies] audit:", e));
       return jsonResponse(toFrontend(after));
     }

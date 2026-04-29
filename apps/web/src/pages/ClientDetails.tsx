@@ -122,7 +122,8 @@ export function ClientDetails() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
-  const canAddScript = isAdmin && hasPermission('upload_scripts');
+  const isPortalClient = (company?.source ?? 'internal') === 'portal';
+  const canAddScript = isAdmin && hasPermission('upload_scripts') && !isPortalClient;
   const [formData, setFormData] = useState({
     title: '',
     type: '' as '' | 'Film' | 'Series',
@@ -490,7 +491,7 @@ export function ClientDetails() {
         <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight text-text-main flex items-center gap-3">
             {lang === 'ar' ? company.nameAr : company.nameEn}
-            {isAdmin && (
+            {isAdmin && !isPortalClient && (
               <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)} className="h-8 text-xs font-normal">
                 <Edit className="w-3.5 h-3.5 mr-1" />
                 {t('editData' as any)}
@@ -534,6 +535,11 @@ export function ClientDetails() {
                 <p className="text-xs text-text-muted uppercase mb-1">{t('scriptsCount')}</p>
                 <p className="font-medium text-text-main">{companyScripts.length}</p>
               </div>
+              <div className="flex items-end">
+                <Button variant="outline" size="sm" onClick={() => navigate(`/clients/${company.companyId}/info`)}>
+                  {lang === 'ar' ? 'المزيد' : 'More'}
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -559,7 +565,9 @@ export function ClientDetails() {
               {lang === 'ar' ? 'لا يوجد نصوص' : 'No scripts yet'}
             </h3>
             <p className="text-text-muted max-w-sm mb-6">
-              {lang === 'ar' ? 'قم برفع أول نص للبدء في عملية التحليل.' : 'Upload the first script to start the analysis process.'}
+              {isPortalClient
+                ? (lang === 'ar' ? 'سيتم عرض النصوص هنا بعد أن يرسلها العميل من بوابة العملاء.' : 'Scripts will appear here after the client submits them from the client portal.')
+                : (lang === 'ar' ? 'قم برفع أول نص للبدء في عملية التحليل.' : 'Upload the first script to start the analysis process.')}
             </p>
             {canAddScript && (
               <Button onClick={openNewScriptModal}>

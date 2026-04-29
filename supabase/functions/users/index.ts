@@ -60,48 +60,42 @@ async function callerHasAdminPermission(
   return keysList.includes("manage_users") || keysList.includes("access_control:manage");
 }
 
-function upsertProfile(
+async function upsertProfile(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   userId: string,
   name: string,
   email: string
 ): Promise<void> {
-  return supabase
+  const { error } = await supabase
     .from("profiles")
     .upsert(
       { user_id: userId, name, email, updated_at: new Date().toISOString() },
       { onConflict: "user_id" }
-    )
-    .then(({ error }) => {
-      if (error) console.error("[users] profiles upsert:", error.message);
-    });
+    );
+  if (error) console.error("[users] profiles upsert:", error.message);
 }
 
-function ensureUserRole(
+async function ensureUserRole(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   userId: string,
   roleKey: string
 ): Promise<void> {
-  return supabase
+  const { data: role, error: roleErr } = await supabase
     .from("roles")
     .select("id")
     .eq("key", roleKey)
-    .maybeSingle()
-    .then(({ data: role, error: roleErr }) => {
-      if (roleErr || !role) {
-        console.error("[users] role not found:", roleKey, roleErr?.message);
-        return;
-      }
-      return supabase
-        .from("user_roles")
-        .upsert(
-          { user_id: userId, role_id: role.id },
-          { onConflict: "user_id,role_id" }
-        )
-        .then(({ error }) => {
-          if (error) console.error("[users] user_roles upsert:", error.message);
-        });
-    });
+    .maybeSingle();
+  if (roleErr || !role) {
+    console.error("[users] role not found:", roleKey, roleErr?.message);
+    return;
+  }
+  const { error } = await supabase
+    .from("user_roles")
+    .upsert(
+      { user_id: userId, role_id: role.id },
+      { onConflict: "user_id,role_id" }
+    );
+  if (error) console.error("[users] user_roles upsert:", error.message);
 }
 
 Deno.serve(async (req: Request) => {
@@ -151,7 +145,7 @@ Deno.serve(async (req: Request) => {
         status: u.banned_until ? "disabled" : "active",
         allowedSections, // Return this
       };
-    });
+    }).filter((u) => u.roleKey !== "client");
     return jsonResponse(list, 200, { origin });
   }
 

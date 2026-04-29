@@ -12,6 +12,7 @@ import { AccessControl } from '@/pages/AccessControl';
 import { Overview } from '@/pages/Overview';
 import { Clients } from '@/pages/Clients';
 import { ClientDetails } from '@/pages/ClientDetails';
+import { ClientInfo } from '@/pages/ClientInfo';
 import { Tasks } from '@/pages/Tasks';
 import { ScriptWorkspace } from '@/pages/ScriptWorkspace';
 import { Results } from '@/pages/Results';
@@ -107,6 +108,11 @@ function App() {
               <ClientDetails />
             </ProtectedRoute>
           } />
+          <Route path="clients/:id/info" element={
+            <ProtectedRoute requiredPermission="view_clients">
+              <ClientInfo />
+            </ProtectedRoute>
+          } />
           <Route path="tasks" element={
             <ProtectedRoute requiredPermission="view_tasks">
               <Tasks />
@@ -165,6 +171,7 @@ function App() {
         <Route path="/glossary" element={<LegacyAdminRedirect />} />
         <Route path="/clients" element={<LegacyAdminRedirect />} />
         <Route path="/clients/:id" element={<LegacyAdminRedirect />} />
+        <Route path="/clients/:id/info" element={<LegacyAdminRedirect />} />
         <Route path="/tasks" element={<LegacyAdminRedirect />} />
         <Route path="/scripts" element={<LegacyAdminRedirect />} />
         <Route path="/client-submissions" element={<LegacyAdminRedirect />} />
