@@ -305,7 +305,7 @@ function CertificatePdfDocument({ item, lang, template, qrDataUrl, forceBuiltinF
             />
           ) : null}
           {templateElements.map((element) => (
-            <TemplateElementPdf key={element.id} element={element} item={item} lang={lang} page={page} template={template} qrDataUrl={qrDataUrl} forceBuiltinFont={safeTemplateMode || forceBuiltinFont} />
+            <TemplateElementPdf key={element.id} element={element} item={item} lang={lang} page={page} template={template} qrDataUrl={qrDataUrl} forceBuiltinFont={forceBuiltinFont} />
           ))}
         </Page>
       </Document>
@@ -404,7 +404,6 @@ async function generateCertificatePdfBlob(item: CertificateDashboardItem, lang: 
         lang={lang}
         template={template}
         qrDataUrl={qrDataUrl}
-        forceBuiltinFont
         safeTemplateMode
       />,
     ).toBlob();
@@ -415,7 +414,15 @@ async function generateCertificatePdfBlob(item: CertificateDashboardItem, lang: 
   }
   if (blob.size < 1500) {
     debug.usedFallbackLayout = true;
-    blob = await pdf(<CertificatePdfDocument item={item} lang={lang} template={null} qrDataUrl={qrDataUrl} forceBuiltinFont />).toBlob();
+    blob = await pdf(
+      <CertificatePdfDocument
+        item={item}
+        lang={lang}
+        template={null}
+        qrDataUrl={qrDataUrl}
+        forceBuiltinFont={lang !== 'ar'}
+      />,
+    ).toBlob();
     debug.fallbackBlobSize = blob.size;
   }
   return { blob, debug };
