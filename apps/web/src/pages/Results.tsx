@@ -343,6 +343,28 @@ export function Results() {
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
   const [reviewReason, setReviewReason] = useState('');
+  const [traceModal, setTraceModal] = useState<{
+    titleAr: string;
+    evidenceSnippet: string;
+    rationale?: string | null;
+    sourceLabel: string;
+    confidence?: number | null;
+    pageNumber?: number | null;
+    lines?: string | null;
+    statusLabel?: string | null;
+    reviewReason?: string | null;
+    sourceKind?: string | null;
+    primaryArticleId?: number | null;
+    primaryAtomId?: string | null;
+    canonicalFindingId?: string | null;
+    finalRuling?: string | null;
+    articleTitle?: string | null;
+    reportTitle?: string | null;
+    reviewedAt?: string | null;
+    reviewedBy?: string | null;
+    createdAt?: string | null;
+    analysisMeta?: NonNullable<Report['summaryJson']['analysis_meta']>;
+  } | null>(null);
   const [bulkReviewModal, setBulkReviewModal] = useState<{ findingIds: string[]; toStatus: 'approved' | 'violation' } | null>(null);
   const [bulkReviewReason, setBulkReviewReason] = useState('');
   const [bulkReviewSaving, setBulkReviewSaving] = useState(false);
@@ -1595,6 +1617,33 @@ export function Results() {
     return stripArticleAtomReferences(title) || (lang === 'ar' ? 'ملاحظة' : 'Finding');
   }
 
+  function openFindingTrace(params: {
+    titleAr: string;
+    evidenceSnippet: string;
+    rationale?: string | null;
+    sourceLabel: string;
+    confidence?: number | null;
+    pageNumber?: number | null;
+    lines?: string | null;
+    statusLabel?: string | null;
+    reviewReason?: string | null;
+    sourceKind?: string | null;
+    primaryArticleId?: number | null;
+    primaryAtomId?: string | null;
+    canonicalFindingId?: string | null;
+    finalRuling?: string | null;
+    articleTitle?: string | null;
+    reportTitle?: string | null;
+    reviewedAt?: string | null;
+    reviewedBy?: string | null;
+    createdAt?: string | null;
+  }) {
+    setTraceModal({
+      ...params,
+      analysisMeta,
+    });
+  }
+
   function renderFindingCard(f: AnalysisFinding) {
     const isApproved = f.reviewStatus === 'approved';
     const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
@@ -1694,6 +1743,37 @@ export function Results() {
         )}
         {/* Action buttons */}
         <div className="flex items-center gap-2 mt-2 print:hidden">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px] gap-1"
+            onClick={() =>
+              openFindingTrace({
+                titleAr: f.titleAr,
+                evidenceSnippet: f.evidenceSnippet,
+                rationale,
+                sourceLabel: findingSourceLabel(f.source ?? 'ai'),
+                confidence: f.confidence ?? null,
+                pageNumber: f.pageNumber ?? null,
+                lines: f.startLineChunk != null ? `${f.startLineChunk}${f.endLineChunk != null && f.endLineChunk !== f.startLineChunk ? `-${f.endLineChunk}` : ''}` : null,
+                statusLabel: isApproved ? (lang === 'ar' ? 'آمن' : 'Safe') : (lang === 'ar' ? 'مخالف' : 'Violation'),
+                reviewReason: f.reviewReason ?? null,
+                sourceKind: f.source ?? null,
+                primaryArticleId: primaryArticle,
+                primaryAtomId: f.atomId ?? null,
+                canonicalFindingId: (v3.canonical_finding_id as string | undefined) ?? null,
+                finalRuling: (v3.final_ruling as string | undefined) ?? null,
+                articleTitle: policyArticles.find((a) => a.id === primaryArticle)?.titleAr ?? null,
+                reportTitle: report?.scriptTitle ?? null,
+                reviewedAt: f.reviewedAt ?? null,
+                reviewedBy: f.reviewedBy ?? null,
+                createdAt: report?.createdAt ?? null,
+              })
+            }
+          >
+            <Search className="w-3 h-3" />
+            {lang === 'ar' ? 'التتبع' : 'Trace'}
+          </Button>
           {!isApproved && (
             <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 text-success border-success/30 hover:bg-success/10"
               onClick={() => { setReviewModal({ findingId: f.id, toStatus: 'approved', titleAr: f.titleAr }); setReviewReason(''); }}>
@@ -1814,6 +1894,37 @@ export function Results() {
         )}
         {matchedRaw ? (
           <div className="flex items-center gap-2 mt-2 print:hidden">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-[11px] gap-1"
+              onClick={() =>
+                openFindingTrace({
+                  titleAr: f.titleAr,
+                  evidenceSnippet: f.evidenceSnippet,
+                  rationale,
+                  sourceLabel: reviewFindingSourceLabel(f.sourceKind),
+                  confidence: confidence != null ? confidence / 100 : null,
+                  pageNumber: f.pageNumber ?? null,
+                  lines: f.startOffsetGlobal != null ? `${f.startOffsetGlobal}${f.endOffsetGlobal != null && f.endOffsetGlobal !== f.startOffsetGlobal ? `-${f.endOffsetGlobal}` : ''}` : null,
+                  statusLabel: isApproved ? (lang === 'ar' ? 'آمن' : 'Safe') : (lang === 'ar' ? 'مخالف' : 'Violation'),
+                  reviewReason: f.approvedReason ?? null,
+                  sourceKind: f.sourceKind ?? null,
+                  primaryArticleId: f.primaryArticleId ?? null,
+                  primaryAtomId: f.primaryAtomId ?? null,
+                  canonicalFindingId: f.canonicalFindingId ?? null,
+                  finalRuling: f.reviewStatus ?? null,
+                  articleTitle: policyArticles.find((a) => a.id === f.primaryArticleId)?.titleAr ?? null,
+                  reportTitle: report?.scriptTitle ?? null,
+                  reviewedAt: f.reviewedAt ?? null,
+                  reviewedBy: f.reviewedBy ?? null,
+                  createdAt: report?.createdAt ?? null,
+                })
+              }
+            >
+              <Search className="w-3 h-3" />
+              {lang === 'ar' ? 'التتبع' : 'Trace'}
+            </Button>
             <Button
               size="sm"
               variant="outline"
@@ -2859,6 +2970,146 @@ export function Results() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!traceModal}
+        onClose={() => setTraceModal(null)}
+        title={lang === 'ar' ? 'تتبع الملاحظة' : 'Finding trace'}
+        className="max-w-2xl"
+      >
+        {traceModal && (
+          <div className="space-y-4">
+            <div className="grid gap-2 md:grid-cols-2">
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'العنوان' : 'Title'}</div>
+                <div className="font-semibold text-text-main">{traceModal.titleAr}</div>
+              </div>
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المصدر' : 'Source'}</div>
+                <div className="font-semibold text-text-main">{traceModal.sourceLabel}</div>
+              </div>
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الحالة النهائية' : 'Final status'}</div>
+                <div className="font-semibold text-text-main">{traceModal.statusLabel ?? '—'}</div>
+              </div>
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الثقة' : 'Confidence'}</div>
+                <div className="font-semibold text-text-main">
+                  {traceModal.confidence != null ? `${Math.round(traceModal.confidence * 100)}%` : '—'}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-2 md:grid-cols-2">
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المادة / الذرة' : 'Article / atom'}</div>
+                <div className="font-semibold text-text-main">
+                  {traceModal.primaryArticleId != null
+                    ? formatAtomDisplayR(traceModal.primaryArticleId, traceModal.primaryAtomId ?? null)
+                    : '—'}
+                </div>
+                {traceModal.articleTitle && (
+                  <div className="text-xs text-text-muted mt-1">{traceModal.articleTitle}</div>
+                )}
+              </div>
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الصفحة / السطور' : 'Page / lines'}</div>
+                <div className="font-semibold text-text-main">
+                  {traceModal.pageNumber != null ? `${lang === 'ar' ? 'صفحة' : 'Page'} ${traceModal.pageNumber}` : '—'}
+                  {traceModal.lines ? ` • ${traceModal.lines}` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-2 md:grid-cols-2">
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'القرار النهائي' : 'Final ruling'}</div>
+                <div className="font-semibold text-text-main">
+                  {traceModal.finalRuling
+                    ? traceModal.finalRuling
+                    : traceModal.statusLabel ?? '—'}
+                </div>
+              </div>
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'التقرير' : 'Report'}</div>
+                <div className="font-semibold text-text-main">{traceModal.reportTitle ?? '—'}</div>
+              </div>
+            </div>
+
+            <div className="grid gap-2 md:grid-cols-3">
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'وقت الاكتشاف' : 'Detected at'}</div>
+                <div className="font-semibold text-text-main">
+                  {traceModal.createdAt ? formatDateTime(new Date(traceModal.createdAt), { lang }) : '—'}
+                </div>
+              </div>
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المراجع' : 'Reviewed by'}</div>
+                <div className="font-semibold text-text-main">{traceModal.reviewedBy ?? '—'}</div>
+              </div>
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'وقت المراجعة' : 'Reviewed at'}</div>
+                <div className="font-semibold text-text-main">
+                  {traceModal.reviewedAt ? formatDateTime(new Date(traceModal.reviewedAt), { lang }) : '—'}
+                </div>
+              </div>
+            </div>
+
+            {traceModal.canonicalFindingId && (
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المعرف الموحد' : 'Canonical ID'}</div>
+                <div className="font-mono text-xs text-text-main break-all">{traceModal.canonicalFindingId}</div>
+              </div>
+            )}
+
+            {traceModal.analysisMeta && (
+              <div className="grid gap-2 md:grid-cols-3">
+                <div className="rounded-xl border border-border bg-background/60 p-3">
+                  <div className="text-[11px] text-text-muted mb-1">Auditor</div>
+                  <div className="font-semibold text-text-main">{traceModal.analysisMeta.auditor_layer_version.toUpperCase()}</div>
+                </div>
+                <div className="rounded-xl border border-border bg-background/60 p-3">
+                  <div className="text-[11px] text-text-muted mb-1">Pipeline</div>
+                  <div className="font-semibold text-text-main">{traceModal.analysisMeta.analysis_pipeline_version.toUpperCase()}</div>
+                </div>
+                <div className="rounded-xl border border-border bg-background/60 p-3">
+                  <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المعالجة' : 'Engine'}</div>
+                  <div className="font-semibold text-text-main">
+                    {traceModal.analysisMeta.analysis_engine === 'hybrid'
+                      ? (lang === 'ar' ? 'محرك هجين' : 'Hybrid engine')
+                      : 'v2'}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-xl border border-border bg-background/60 p-3">
+              <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'النص المقتبس' : 'Evidence snippet'}</div>
+              <div className="font-medium text-text-main italic" dir="rtl">"{traceModal.evidenceSnippet}"</div>
+            </div>
+
+            {traceModal.rationale && (
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'الشرح / الملاحظة' : 'Rationale / note'}</div>
+                <div className="text-sm text-text-main">{traceModal.rationale}</div>
+              </div>
+            )}
+
+            {traceModal.reviewReason && (
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'سبب الاعتماد/التعديل' : 'Review reason'}</div>
+                <div className="text-sm text-text-main">{traceModal.reviewReason}</div>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-2 border-t border-border">
+              <Button variant="outline" onClick={() => setTraceModal(null)}>
+                {lang === 'ar' ? 'إغلاق' : 'Close'}
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Finding review modal */}
