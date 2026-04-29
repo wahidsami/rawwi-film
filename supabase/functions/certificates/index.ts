@@ -808,129 +808,128 @@ Deno.serve(async (req: Request) => {
     const selectedCard = DEMO_CARDS.find((card) => card.id === demoCardId);
     if (!selectedCard) return json({ error: "Unknown demo card" }, 400);
 
-    const { data: script, error: scriptError } = await supabase
-      .from("scripts")
-      .select("id, title, type, status, company_id, client_id")
-      .eq("id", scriptId)
-      .maybeSingle();
-    if (scriptError || !script) return json({ error: "Script not found" }, 404);
+    try {
+      const { data: script, error: scriptError } = await supabase
+        .from("scripts")
+        .select("id, title, type, status, company_id, client_id")
+        .eq("id", scriptId)
+        .maybeSingle();
+      if (scriptError || !script) return json({ error: "Script not found" }, 404);
 
-    const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
-    if (ownerCompanyId !== account.company_id) return json({ error: "Forbidden" }, 403);
-    const { data: latestReport } = await supabase
-      .from("analysis_reports")
-      .select("review_status, created_at")
-      .eq("script_id", scriptId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const isApprovedByScript = ((script as any).status ?? "").toLowerCase() === "approved";
-    const isApprovedByReview = (((latestReport as any)?.review_status ?? "").toLowerCase() === "approved");
-    if (!isApprovedByScript && !isApprovedByReview) {
-      return json({ error: "Certificate payment is only available for approved scripts" }, 409);
-    }
+      const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
+      if (ownerCompanyId !== account.company_id) return json({ error: "Forbidden" }, 403);
+      const { data: latestReport } = await supabase
+        .from("analysis_reports")
+        .select("review_status, created_at")
+        .eq("script_id", scriptId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const isApprovedByScript = ((script as any).status ?? "").toLowerCase() === "approved";
+      const isApprovedByReview = (((latestReport as any)?.review_status ?? "").toLowerCase() === "approved");
+      if (!isApprovedByScript && !isApprovedByReview) {
+        return json({ error: "Certificate payment is only available for approved scripts" }, 409);
+      }
 
-    const feeConfig = await loadCertificateFeeConfig(supabase);
+      const feeConfig = await loadCertificateFeeConfig(supabase);
 
-    const paymentReference = `FAKEPAY-${Date.now()}-${scriptId.slice(0, 8).toUpperCase()}`;
-    const paymentStatus = selectedCard.success ? "completed" : "failed";
-    const { data: payment, error: paymentError } = await supabase
-      .from("script_certificate_payments")
-      .insert({
-        script_id: scriptId,
-        payer_user_id: userId,
-        amount_base: feeConfig.baseAmount,
-        tax_amount: feeConfig.taxAmount,
-        total_amount: feeConfig.totalAmount,
-        currency: feeConfig.currency,
-        payment_status: paymentStatus,
-        payment_method: "fake_card",
-        payment_reference: paymentReference,
-        demo_card_id: selectedCard.id,
-        card_brand: selectedCard.brand,
-        card_last4: selectedCard.maskedNumber.replace(/\s+/g, "").slice(-4),
-        metadata: { demo: true },
-        completed_at: selectedCard.success ? new Date().toISOString() : null,
-      })
-      .select("id, script_id, total_amount, currency, payment_status, payment_method, payment_reference, demo_card_id, card_brand, card_last4, completed_at, created_at")
-      .single();
-    if (paymentError || !payment) return json({ error: paymentError?.message || "Payment failed" }, 500);
+      const paymentReference = `FAKEPAY-${Date.now()}-${scriptId.slice(0, 8).toUpperCase()}`;
+      const paymentStatus = selectedCard.success ? "completed" : "failed";
+      const { data: payment, error: paymentError } = await supabase
+        .from("script_certificate_payments")
+        .insert({
+          script_id: scriptId,
+          payer_user_id: userId,
+          amount_base: feeConfig.baseAmount,
+          tax_amount: feeConfig.taxAmount,
+          total_amount: feeConfig.totalAmount,
+          currency: feeConfig.currency,
+          payment_status: paymentStatus,
+          payment_method: "fake_card",
+          payment_reference: paymentReference,
+          demo_card_id: selectedCard.id,
+          card_brand: selectedCard.brand,
+          card_last4: selectedCard.maskedNumber.replace(/\s+/g, "").slice(-4),
+          metadata: { demo: true },
+          completed_at: selectedCard.success ? new Date().toISOString() : null,
+        })
+        .select("id, script_id, total_amount, currency, payment_status, payment_method, payment_reference, demo_card_id, card_brand, card_last4, completed_at, created_at")
+        .single();
+      if (paymentError || !payment) return json({ error: paymentError?.message || "Payment failed" }, 500);
 
-    if (!selectedCard.success) {
-      return json({
-        ok: false,
-        payment: payment,
-        error: "Demo payment was declined",
-      }, 402);
-    }
+      if (!selectedCard.success) {
+        return json({
+          ok: false,
+          payment: payment,
+          error: "Demo payment was declined",
+        }, 402);
+      }
 
-    const { data: company } = await supabase
-      .from("clients")
-      .select("id, name_ar, name_en, logo_url")
-      .eq("id", account.company_id)
-      .maybeSingle();
+      const { data: existingCertificate, error: existingCertificateError } = await supabase
+        .from("script_certificates")
+        .select("id, certificate_number, certificate_status, issued_at, certificate_data")
+        .eq("script_id", scriptId)
+        .maybeSingle();
+      if (existingCertificateError) return json({ error: existingCertificateError.message }, 500);
+      const ensuredCertificate = existingCertificate?.id
+        ? existingCertificate
+        : await ensureCertificateGeneratedForApprovedScript(supabase, {
+          scriptId,
+          fallbackIssuedBy: userId,
+        });
 
-    const { data: existingCertificate, error: existingCertificateError } = await supabase
-      .from("script_certificates")
-      .select("id, certificate_number, certificate_status, issued_at, certificate_data")
-      .eq("script_id", scriptId)
-      .maybeSingle();
-    if (existingCertificateError) return json({ error: existingCertificateError.message }, 500);
-    const ensuredCertificate = existingCertificate?.id
-      ? existingCertificate
-      : await ensureCertificateGeneratedForApprovedScript(supabase, {
-        scriptId,
-        fallbackIssuedBy: userId,
+      const mergedCertificateData = {
+        ...(((ensuredCertificate as any).certificate_data ?? {}) as Record<string, unknown>),
+        amount_paid: Number((payment as any).total_amount ?? feeConfig.totalAmount),
+        currency: String((payment as any).currency ?? feeConfig.currency),
+        payment_completed_at: (payment as any).completed_at ?? new Date().toISOString(),
+        payment_reference: (payment as any).payment_reference ?? paymentReference,
+      };
+
+      const { data: linkedCertificate, error: linkCertificateError } = await supabase
+        .from("script_certificates")
+        .update({
+          payment_id: payment.id,
+          owner_user_id: userId,
+          certificate_data: mergedCertificateData,
+        })
+        .eq("id", (ensuredCertificate as any).id)
+        .select("id, certificate_number, certificate_status, issued_at, certificate_data")
+        .single();
+      if (linkCertificateError || !linkedCertificate) {
+        return json({ error: linkCertificateError?.message || "Failed to link payment to certificate" }, 500);
+      }
+
+      await notifyAdmins(supabase, {
+        type: "certificate_payment_completed",
+        title: `Certificate payment completed: ${(script as any).title}`,
+        body: `Client payment was completed for script "${(script as any).title}".`,
+        metadata: {
+          script_id: scriptId,
+          script_title: (script as any).title,
+          company_id: account.company_id,
+          payment_id: payment.id,
+          payment_reference: payment.payment_reference,
+          total_amount: payment.total_amount,
+          currency: payment.currency,
+        },
       });
 
-    const mergedCertificateData = {
-      ...(((ensuredCertificate as any).certificate_data ?? {}) as Record<string, unknown>),
-      amount_paid: Number((payment as any).total_amount ?? feeConfig.totalAmount),
-      currency: String((payment as any).currency ?? feeConfig.currency),
-      payment_completed_at: (payment as any).completed_at ?? new Date().toISOString(),
-      payment_reference: (payment as any).payment_reference ?? paymentReference,
-    };
-
-    const { data: linkedCertificate, error: linkCertificateError } = await supabase
-      .from("script_certificates")
-      .update({
-        payment_id: payment.id,
-        owner_user_id: userId,
-        certificate_data: mergedCertificateData,
-      })
-      .eq("id", (ensuredCertificate as any).id)
-      .select("id, certificate_number, certificate_status, issued_at, certificate_data")
-      .single();
-    if (linkCertificateError || !linkedCertificate) {
-      return json({ error: linkCertificateError?.message || "Failed to link payment to certificate" }, 500);
+      return json({
+        ok: true,
+        payment: payment,
+        certificate: {
+          id: (linkedCertificate as any).id,
+          certificateNumber: (linkedCertificate as any).certificate_number,
+          certificateStatus: (linkedCertificate as any).certificate_status,
+          issuedAt: (linkedCertificate as any).issued_at,
+          certificateData: (linkedCertificate as any).certificate_data ?? {},
+        },
+      });
+    } catch (err) {
+      console.error("[certificates/pay] unhandled:", err);
+      return json({ error: err instanceof Error ? err.message : "Failed to process certificate payment" }, 500);
     }
-
-    await notifyAdmins(supabase, {
-      type: "certificate_payment_completed",
-      title: `Certificate payment completed: ${(script as any).title}`,
-      body: `Client payment was completed for script "${(script as any).title}".`,
-      metadata: {
-        script_id: scriptId,
-        script_title: (script as any).title,
-        company_id: account.company_id,
-        payment_id: payment.id,
-        payment_reference: payment.payment_reference,
-        total_amount: payment.total_amount,
-        currency: payment.currency,
-      },
-    });
-
-    return json({
-      ok: true,
-      payment: payment,
-      certificate: {
-        id: (linkedCertificate as any).id,
-        certificateNumber: (linkedCertificate as any).certificate_number,
-        certificateStatus: (linkedCertificate as any).certificate_status,
-        issuedAt: (linkedCertificate as any).issued_at,
-        certificateData: (linkedCertificate as any).certificate_data ?? {},
-      },
-    });
   }
 
   if (rest === "admin/fee-settings") {
