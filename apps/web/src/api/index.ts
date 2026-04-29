@@ -214,6 +214,7 @@ export interface CertificateDashboardItem {
   companyId?: string | null;
   companyNameAr?: string | null;
   companyNameEn?: string | null;
+  companyLogoUrl?: string | null;
   certificateFee: {
     baseAmount: number;
     taxAmount: number;

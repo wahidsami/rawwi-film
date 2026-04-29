@@ -310,17 +310,21 @@ function mapCertificateItems(
   latestPaymentsMap: Map<string, any>,
   certificatesMap: Map<string, any>,
   feeConfig: CertificateFeeConfig,
+  companyMap?: Map<string, { logo_url?: string | null }>,
 ) {
   return scripts.map((script) => {
     const latestPayment = latestPaymentsMap.get(script.id) ?? null;
     const certificate = certificatesMap.get(script.id) ?? null;
     const status = resolveClientCertificateStatus(latestPayment, certificate);
+    const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
+    const company = ownerCompanyId && companyMap ? companyMap.get(ownerCompanyId) : null;
     return {
       scriptId: script.id,
       scriptTitle: script.title,
       scriptType: script.type,
       scriptStatus: script.status,
       approvedAt: approvedAtMap.get(script.id) ?? script.created_at,
+      companyLogoUrl: company?.logo_url ?? null,
       certificateFee: {
         baseAmount: feeConfig.baseAmount,
         taxAmount: feeConfig.taxAmount,
@@ -362,6 +366,7 @@ async function issueCertificateForScript(
     companyId: string;
     companyNameAr: string | null;
     companyNameEn: string | null;
+    companyLogoUrl: string | null;
     scriptTitle: string;
     paymentId: string;
     amountPaid: number;
@@ -387,6 +392,7 @@ async function issueCertificateForScript(
     company_id: params.companyId,
     company_name_ar: params.companyNameAr,
     company_name_en: params.companyNameEn,
+    company_logo_url: params.companyLogoUrl,
     issued_at: new Date().toISOString(),
     certificate_number: certificateNumber,
     amount_paid: params.amountPaid,
@@ -445,7 +451,7 @@ async function loadAdminScriptContext(
 
   const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
   const [{ data: company }, { data: account }] = await Promise.all([
-    supabase.from("clients").select("id, name_ar, name_en").eq("id", ownerCompanyId).maybeSingle(),
+    supabase.from("clients").select("id, name_ar, name_en, logo_url").eq("id", ownerCompanyId).maybeSingle(),
     supabase.from("client_portal_accounts").select("user_id, company_id").eq("company_id", ownerCompanyId).maybeSingle(),
   ]);
 
@@ -595,13 +601,18 @@ Deno.serve(async (req: Request) => {
       return status === "approved" || reviewStatus === "approved";
     });
     const scriptIds = scripts.map((row) => row.id);
-    const [approvedAtMap, latestPaymentsMap, certificatesMap, defaultTemplate, feeConfig] = await Promise.all([
+    const [approvedAtMap, latestPaymentsMap, certificatesMap, defaultTemplate, feeConfig, companies] = await Promise.all([
       loadApprovedAtMap(supabase, scriptIds),
       loadLatestPaymentsMap(supabase, scriptIds),
       loadCertificatesMap(supabase, scriptIds),
       loadDefaultCertificateTemplate(supabase),
       loadCertificateFeeConfig(supabase),
+      supabase.from("clients").select("id, logo_url"),
     ]);
+    const companyMap = new Map<string, { logo_url?: string | null }>();
+    for (const row of (companies.data ?? []) as Array<{ id: string; logo_url?: string | null }>) {
+      companyMap.set(row.id, row);
+    }
 
     return json({
       demoCards: DEMO_CARDS.map((card) => ({
@@ -613,7 +624,7 @@ Deno.serve(async (req: Request) => {
       })),
       defaultTemplate,
       feeConfig,
-      items: mapCertificateItems(scripts, approvedAtMap, latestPaymentsMap, certificatesMap, feeConfig),
+      items: mapCertificateItems(scripts, approvedAtMap, latestPaymentsMap, certificatesMap, feeConfig, companyMap),
     });
   }
 
@@ -711,7 +722,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: company } = await supabase
       .from("clients")
-      .select("id, name_ar, name_en")
+      .select("id, name_ar, name_en, logo_url")
       .eq("id", account.company_id)
       .maybeSingle();
 
@@ -721,6 +732,7 @@ Deno.serve(async (req: Request) => {
       companyId: account.company_id,
       companyNameAr: (company as any)?.name_ar ?? null,
       companyNameEn: (company as any)?.name_en ?? null,
+      companyLogoUrl: (company as any)?.logo_url ?? null,
       scriptTitle: (script as any).title,
       paymentId: payment.id,
       amountPaid: Number((payment as any).total_amount ?? feeConfig.totalAmount),
@@ -817,7 +829,7 @@ Deno.serve(async (req: Request) => {
       loadApprovedAtMap(supabase, scriptIds),
       loadLatestPaymentsMap(supabase, scriptIds),
       loadCertificatesMap(supabase, scriptIds),
-      supabase.from("clients").select("id, name_ar, name_en"),
+      supabase.from("clients").select("id, name_ar, name_en, logo_url"),
       loadDefaultCertificateTemplate(supabase),
       loadCertificateFeeConfig(supabase),
     ]);
@@ -841,6 +853,7 @@ Deno.serve(async (req: Request) => {
         companyId: ownerCompanyId || null,
         companyNameAr: company?.name_ar ?? null,
         companyNameEn: company?.name_en ?? null,
+        companyLogoUrl: company?.logo_url ?? null,
         certificateFee: {
           baseAmount: feeConfig.baseAmount,
           taxAmount: feeConfig.taxAmount,
@@ -1069,6 +1082,7 @@ Deno.serve(async (req: Request) => {
         companyId: context.ownerCompanyId,
         companyNameAr: context.company?.name_ar ?? null,
         companyNameEn: context.company?.name_en ?? null,
+        companyLogoUrl: context.company?.logo_url ?? null,
         scriptTitle: context.script.title,
         paymentId: payment.id,
         amountPaid: Number((payment as any).total_amount ?? 0),

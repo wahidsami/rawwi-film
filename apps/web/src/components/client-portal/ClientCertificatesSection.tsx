@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
+import { supabase } from '@/lib/supabaseClient';
 
 type ClientCertificatesSectionProps = {
   lang: 'ar' | 'en';
@@ -68,6 +69,8 @@ function getCertificateValues(item: CertificateDashboardItem, lang: 'ar' | 'en')
   const companyName =
     String(rawData.company_name_ar ?? '').trim() ||
     String(rawData.company_name_en ?? '').trim() ||
+    String(item.companyNameAr ?? '').trim() ||
+    String(item.companyNameEn ?? '').trim() ||
     '';
   const issuedAt = item.certificate?.issuedAt ?? String(rawData.issued_at ?? item.approvedAt);
   const amountPaid = typeof rawData.amount_paid === 'number' ? rawData.amount_paid : item.certificateFee.totalAmount;
@@ -83,6 +86,17 @@ function getCertificateValues(item: CertificateDashboardItem, lang: 'ar' | 'en')
     currency,
     amountPaidFormatted: formatCurrency(amountPaid, currency, lang),
   };
+}
+
+function resolveClientLogoUrl(item: CertificateDashboardItem): string | null {
+  const rawData = (item.certificate?.certificateData ?? {}) as Record<string, unknown>;
+  const raw = String(rawData.company_logo_url ?? item.companyLogoUrl ?? '').trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw) || raw.startsWith('data:')) return raw;
+  const cleaned = raw.replace(/^company-logos\//, '').replace(/^\/+/, '');
+  if (!cleaned) return null;
+  const { data } = supabase.storage.from('company-logos').getPublicUrl(cleaned);
+  return data?.publicUrl ?? null;
 }
 
 function getCertificateVerificationUrl(item: CertificateDashboardItem) {
@@ -151,21 +165,26 @@ function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl }: 
   qrDataUrl: string;
 }) {
   const boxStyle = elementStyle(element, page, template);
-  if ((element.type === 'image' || element.type === 'logo') && element.imageUrl) {
-    return <Image src={element.imageUrl} style={[boxStyle, { objectFit: 'contain' }]} />;
-  }
-  if (element.type === 'qr') {
-    return <Image src={qrDataUrl} style={[boxStyle, { objectFit: 'contain', backgroundColor: '#ffffff' }]} />;
-  }
   if (element.type === 'logo' && element.logoSource === 'client') {
+    const clientLogoUrl = resolveClientLogoUrl(item);
+    if (clientLogoUrl) {
+      return <Image fixed src={clientLogoUrl} style={[boxStyle, { objectFit: 'contain' }]} />;
+    }
     return (
-      <View style={[boxStyle, { borderWidth: 1, borderColor: '#d1d5db', alignItems: 'center', justifyContent: 'center' }]}>
+      <View fixed style={[boxStyle, { borderWidth: 1, borderColor: '#d1d5db', alignItems: 'center', justifyContent: 'center' }]}>
         <Text style={{ fontSize: 10, color: '#6b7280' }}>{lang === 'ar' ? 'شعار العميل' : 'Client Logo'}</Text>
       </View>
     );
   }
+  if ((element.type === 'image' || element.type === 'logo') && element.imageUrl) {
+    return <Image fixed src={element.imageUrl} style={[boxStyle, { objectFit: 'contain' }]} />;
+  }
+  if (element.type === 'qr') {
+    return <Image fixed src={qrDataUrl} style={[boxStyle, { objectFit: 'contain', backgroundColor: '#ffffff' }]} />;
+  }
   return (
     <Text
+      fixed
       style={[
         boxStyle,
         {
@@ -195,9 +214,10 @@ function CertificatePdfDocument({ item, lang, template, qrDataUrl }: {
   if (template) {
     return (
       <Document>
-        <Page size={[page.width, page.height]} style={{ position: 'relative', backgroundColor: template.backgroundColor }}>
+        <Page wrap={false} size={[page.width, page.height]} style={{ position: 'relative', backgroundColor: template.backgroundColor }}>
           {template.backgroundImageUrl ? (
             <Image
+              fixed
               src={template.backgroundImageUrl}
               style={{
                 position: 'absolute',

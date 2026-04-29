@@ -132,6 +132,7 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
 function renderElementLabel(element: CertificateTemplateElement) {
   if (element.type === 'qr') return 'QR';
+  if (element.type === 'logo' && element.logoSource === 'client') return 'CLIENT LOGO';
   if (element.type === 'date') return element.text || '{{issued_at}}';
   return element.text || element.type;
 }
@@ -581,6 +582,10 @@ export function CertificateDesigner() {
                   <div className="flex h-full w-full items-center justify-center border-2 border-dashed border-text-muted bg-white text-xs font-semibold text-text-muted">
                     QR
                   </div>
+                ) : element.type === 'logo' && element.logoSource === 'client' ? (
+                  <div className="flex h-full w-full items-center justify-center border border-dashed border-text-muted text-xs">
+                    {text.clientLogo}
+                  </div>
                 ) : element.type === 'image' || element.type === 'logo' ? (
                   element.imageUrl ? <img src={element.imageUrl} alt="" className="h-full w-full object-contain" /> : <div className="flex h-full items-center justify-center border border-dashed border-text-muted text-xs">{text.image}</div>
                 ) : (
@@ -641,7 +646,10 @@ export function CertificateDesigner() {
                         const logoSource = event.target.value as 'film_commission' | 'client' | 'uploaded';
                         updateElement(selected.id, {
                           logoSource,
-                          imageUrl: logoSource === 'film_commission' ? FILM_LOGO_PLACEHOLDER : selected.imageUrl,
+                          imageUrl:
+                            logoSource === 'film_commission'
+                              ? FILM_LOGO_PLACEHOLDER
+                              : (logoSource === 'client' ? undefined : selected.imageUrl),
                         });
                       }}
                       options={[{ label: text.filmCommission, value: 'film_commission' }, { label: text.clientLogo, value: 'client' }, { label: text.uploadedLogo, value: 'uploaded' }]}
