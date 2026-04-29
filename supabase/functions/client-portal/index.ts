@@ -6,9 +6,9 @@ import { isUserAdmin } from "../_shared/roleCheck.ts";
 const LOGO_BUCKET = "company-logos";
 const LEGAL_DOC_BUCKET = "company-legal-documents";
 const LOGO_MAX_BYTES = 2 * 1024 * 1024;
-const LOGO_MIMES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const LOGO_MIMES = new Set(["image/png", "image/jpeg"]);
 const DOC_MAX_BYTES = 10 * 1024 * 1024;
-const DOC_MIMES = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
+const DOC_MIMES = new Set(["application/pdf", "image/png", "image/jpeg"]);
 const RESEND_API = "https://api.resend.com/emails";
 const FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
 
@@ -66,6 +66,45 @@ async function sendClientEmail(params: { to: string; subject: string; html: stri
   if (!res.ok) {
     console.error("[client-portal] email failed:", res.status, await res.text());
   }
+}
+
+function buildBilingualClientEmail(params: {
+  titleEn: string;
+  titleAr: string;
+  bodyEn: string;
+  bodyAr: string;
+  ctaLabelEn?: string;
+  ctaLabelAr?: string;
+  ctaUrl?: string;
+}): string {
+  const ctaHtml = params.ctaUrl
+    ? `
+      <p style="margin:20px 0 0;">
+        <a href="${htmlEscape(params.ctaUrl)}" style="background:#5b4bff;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;display:inline-block;font-weight:600;">
+          ${htmlEscape(params.ctaLabelEn ?? "Open Portal")}
+        </a>
+      </p>
+      <p dir="rtl" style="margin:10px 0 0;">
+        <a href="${htmlEscape(params.ctaUrl)}" style="background:#5b4bff;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;display:inline-block;font-weight:600;font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">
+          ${htmlEscape(params.ctaLabelAr ?? "فتح البوابة")}
+        </a>
+      </p>
+    `
+    : "";
+
+  return `
+    <div style="max-width:680px;margin:0 auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#ffffff;color:#111827;font-family:Arial,Helvetica,sans-serif;line-height:1.6;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <img src="https://raawifilm.com/fclogo.png" alt="Film Commission" style="height:56px;object-fit:contain;" />
+      </div>
+      <h2 style="margin:0 0 10px;font-size:20px;">${htmlEscape(params.titleEn)}</h2>
+      <p style="margin:0 0 14px;white-space:pre-wrap;">${params.bodyEn}</p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:18px 0;" />
+      <h2 dir="rtl" style="margin:0 0 10px;font-size:20px;font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">${htmlEscape(params.titleAr)}</h2>
+      <p dir="rtl" style="margin:0 0 14px;white-space:pre-wrap;font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">${params.bodyAr}</p>
+      ${ctaHtml}
+    </div>
+  `.trim();
 }
 
 async function loadClientTerms(supabase: ReturnType<typeof createSupabaseAdmin>): Promise<{ ar: string; en: string }> {
@@ -233,7 +272,7 @@ Deno.serve(async (req: Request) => {
     if (legalFiles.length < 3) return json({ error: "CR, license, and national address documents are required" }, 400);
     if (companyLogoFile) {
       if (!LOGO_MIMES.has(companyLogoFile.type)) {
-        return json({ error: "Company logo must be PNG, JPG, or WEBP" }, 400);
+        return json({ error: "Company logo must be PNG or JPG" }, 400);
       }
       if (companyLogoFile.size > LOGO_MAX_BYTES) {
         return json({ error: "Company logo max size is 2MB" }, 400);
@@ -241,7 +280,7 @@ Deno.serve(async (req: Request) => {
     }
     for (const doc of legalFiles) {
       if (!DOC_MIMES.has(doc.file.type)) {
-        return json({ error: "Legal documents must be PDF, PNG, JPG, or WEBP" }, 400);
+        return json({ error: "Legal documents must be PDF, PNG, or JPG" }, 400);
       }
       if (doc.file.size > DOC_MAX_BYTES) {
         return json({ error: "Legal document max size is 10MB" }, 400);
@@ -327,7 +366,7 @@ Deno.serve(async (req: Request) => {
       createdCompanyId = company.id;
 
       if (companyLogoFile) {
-        const ext = companyLogoFile.type === "image/png" ? "png" : companyLogoFile.type === "image/webp" ? "webp" : "jpg";
+        const ext = companyLogoFile.type === "image/png" ? "png" : "jpg";
         const objectName = `${company.id}/${crypto.randomUUID()}.${ext}`;
         uploadedLogoObjectPath = objectName;
         const { error: uploadErr } = await supabase.storage
@@ -397,12 +436,13 @@ Deno.serve(async (req: Request) => {
 
       await sendClientEmail({
         to: email,
-        subject: "Registration received – Raawi Film",
-        html: `
-          <p>Dear ${htmlEscape(name)},</p>
-          <p>Thank you for registering ${htmlEscape(companyNameEn)} with Raawi Film.</p>
-          <p>Your request is now under review. We will email you once the admin team approves or rejects it.</p>
-        `.trim(),
+        subject: "Registration received | تم استلام طلب التسجيل",
+        html: buildBilingualClientEmail({
+          titleEn: "Registration Received",
+          titleAr: "تم استلام طلب التسجيل",
+          bodyEn: `Dear ${htmlEscape(name)},\nThank you for registering ${htmlEscape(companyNameEn)} with Raawi Film.\nYour request is now under review. We will email you once the admin team approves or rejects it.`,
+          bodyAr: `عزيزي/عزيزتي ${htmlEscape(name)}،\nشكرًا لتسجيل شركة ${htmlEscape(companyNameAr)} في منصة راوي فيلم.\nطلبكم الآن قيد المراجعة، وسيصلكم بريد إلكتروني بعد قرار الاعتماد أو الرفض.`,
+        }),
       });
 
       return json({

@@ -202,6 +202,45 @@ async function sendClientEmail(params: { to: string; subject: string; html: stri
   }
 }
 
+function buildBilingualClientEmail(params: {
+  titleEn: string;
+  titleAr: string;
+  bodyEn: string;
+  bodyAr: string;
+  ctaLabelEn?: string;
+  ctaLabelAr?: string;
+  ctaUrl?: string;
+}): string {
+  const ctaHtml = params.ctaUrl
+    ? `
+      <p style="margin:20px 0 0;">
+        <a href="${htmlEscape(params.ctaUrl)}" style="background:#5b4bff;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;display:inline-block;font-weight:600;">
+          ${htmlEscape(params.ctaLabelEn ?? "Open Portal")}
+        </a>
+      </p>
+      <p dir="rtl" style="margin:10px 0 0;">
+        <a href="${htmlEscape(params.ctaUrl)}" style="background:#5b4bff;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;display:inline-block;font-weight:600;font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">
+          ${htmlEscape(params.ctaLabelAr ?? "فتح البوابة")}
+        </a>
+      </p>
+    `
+    : "";
+
+  return `
+    <div style="max-width:680px;margin:0 auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#ffffff;color:#111827;font-family:Arial,Helvetica,sans-serif;line-height:1.6;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <img src="https://raawifilm.com/fclogo.png" alt="Film Commission" style="height:56px;object-fit:contain;" />
+      </div>
+      <h2 style="margin:0 0 10px;font-size:20px;">${htmlEscape(params.titleEn)}</h2>
+      <p style="margin:0 0 14px;white-space:pre-wrap;">${params.bodyEn}</p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:18px 0;" />
+      <h2 dir="rtl" style="margin:0 0 10px;font-size:20px;font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">${htmlEscape(params.titleAr)}</h2>
+      <p dir="rtl" style="margin:0 0 14px;white-space:pre-wrap;font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">${params.bodyAr}</p>
+      ${ctaHtml}
+    </div>
+  `.trim();
+}
+
 function containsArabicLetters(value: string): boolean {
   return /[\u0600-\u06FF]/.test(value);
 }
@@ -658,13 +697,16 @@ Deno.serve(async (req: Request) => {
       if (after.email) {
         await sendClientEmail({
           to: after.email,
-          subject: "Your Raawi Film registration is approved",
-          html: `
-            <p>Congratulations.</p>
-            <p>Your registration for ${htmlEscape(after.name_en || after.name_ar)} has been approved.</p>
-            <p>You can now sign in and start using the client portal:</p>
-            <p><a href="${appPublicUrl}/login">${appPublicUrl}/login</a></p>
-          `.trim(),
+          subject: "Registration approved | تمت الموافقة على التسجيل",
+          html: buildBilingualClientEmail({
+            titleEn: "Registration Approved",
+            titleAr: "تمت الموافقة على التسجيل",
+            bodyEn: `Congratulations.\nYour registration for ${htmlEscape(after.name_en || after.name_ar)} has been approved.\nYou can now sign in and start using the client portal.`,
+            bodyAr: `تهانينا.\nتمت الموافقة على تسجيل شركة ${htmlEscape(after.name_ar || after.name_en)}.\nيمكنكم الآن تسجيل الدخول والبدء في استخدام بوابة العميل.`,
+            ctaUrl: `${appPublicUrl}/login`,
+            ctaLabelEn: "Login",
+            ctaLabelAr: "تسجيل الدخول",
+          }),
         });
       }
 
@@ -742,13 +784,13 @@ Deno.serve(async (req: Request) => {
       if (after.email) {
         await sendClientEmail({
           to: after.email,
-          subject: "Raawi Film registration request update",
-          html: `
-            <p>Dear ${htmlEscape(after.representative_name || after.name_en || after.name_ar)},</p>
-            <p>We are sorry, but your registration request for ${htmlEscape(after.name_en || after.name_ar)} was not approved at this time.</p>
-            <p><strong>Reason:</strong></p>
-            <p>${htmlEscape(reason)}</p>
-          `.trim(),
+          subject: "Registration request update | تحديث طلب التسجيل",
+          html: buildBilingualClientEmail({
+            titleEn: "Registration Request Update",
+            titleAr: "تحديث طلب التسجيل",
+            bodyEn: `Dear ${htmlEscape(after.representative_name || after.name_en || after.name_ar)},\nWe are sorry, but your registration request for ${htmlEscape(after.name_en || after.name_ar)} was not approved at this time.\nReason:\n${htmlEscape(reason)}`,
+            bodyAr: `عزيزي/عزيزتي ${htmlEscape(after.representative_name || after.name_ar || after.name_en)}،\nنعتذر، لم تتم الموافقة على طلب تسجيل شركة ${htmlEscape(after.name_ar || after.name_en)} في الوقت الحالي.\nسبب الرفض:\n${htmlEscape(reason)}`,
+          }),
         });
       }
 
