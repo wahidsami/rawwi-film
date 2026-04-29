@@ -66,6 +66,7 @@ function run() {
       finding({
         title_ar: "المشاهد الجنسية الصريحة",
         evidence_snippet: "قوم يا عديم التربية",
+        rationale_ar: "",
       }),
     ],
   });
@@ -77,6 +78,7 @@ function run() {
       finding({
         title_ar: "المحتوى التاريخي غير الموثوق",
         evidence_snippet: "انتي ما لك كلمة. انتي ملك هنا",
+        rationale_ar: "",
       }),
     ],
   });
@@ -88,6 +90,7 @@ function run() {
       finding({
         title_ar: "تقويض قيم الأسرة",
         evidence_snippet: "يا فاشل",
+        rationale_ar: "",
       }),
     ],
   });
@@ -99,6 +102,7 @@ function run() {
       finding({
         title_ar: "تقويض قيم الأسرة",
         evidence_snippet: "عديم التربية",
+        rationale_ar: "",
       }),
     ],
   });
@@ -110,6 +114,7 @@ function run() {
       finding({
         title_ar: "تقويض قيم الأسرة",
         evidence_snippet: "اسكتي",
+        rationale_ar: "",
       }),
     ],
   });
@@ -121,6 +126,7 @@ function run() {
       finding({
         title_ar: "الألفاظ النابية",
         evidence_snippet: "اللي ما يحترم النظام… ينكسر",
+        rationale_ar: "",
       }),
     ],
   });
@@ -132,6 +138,7 @@ function run() {
       finding({
         title_ar: "الألفاظ النابية",
         evidence_snippet: "يلعن",
+        rationale_ar: "",
       }),
     ],
   });
@@ -144,6 +151,7 @@ function run() {
       finding({
         title_ar: "تقويض قيم الأسرة",
         evidence_snippet: "يا فاشل",
+        rationale_ar: "",
       }),
     ],
   });
@@ -167,6 +175,7 @@ function run() {
       finding({
         title_ar: "أخرى",
         evidence_snippet: "الآن أنت آمن",
+        rationale_ar: "",
       }),
     ],
   });

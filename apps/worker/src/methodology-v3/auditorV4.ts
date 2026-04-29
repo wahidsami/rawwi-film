@@ -370,54 +370,6 @@ const GROUNDING_STOPWORDS = new Set([
   "أخرى",
 ]);
 
-const ALLOWED_RATIONALE_TOKENS = new Set([
-  "مخالفة",
-  "مخالفه",
-  "إهانة",
-  "اهانة",
-  "تهديد",
-  "عنف",
-  "شتيمة",
-  "شتيمه",
-  "سب",
-  "تحريض",
-  "سخرية",
-  "سخريه",
-  "إيحاء",
-  "ايحاء",
-  "إيذاء",
-  "ايذاء",
-  "تعميم",
-  "اتهام",
-  "ادعاء",
-  "مزاعم",
-  "كراهية",
-  "كراهيه",
-  "لفظي",
-  "لفظية",
-  "جسدي",
-  "جنسية",
-  "جنسي",
-  "ديني",
-  "تاريخي",
-  "أسري",
-  "اسري",
-  "سياسي",
-  "مجتمعي",
-  "وطني",
-  "صريح",
-  "ضمني",
-  "واضح",
-  "واضحة",
-  "مباشر",
-  "مباشرة",
-  "مؤشر",
-  "مؤشرات",
-  "تحقق",
-  "سياقي",
-  "سياق",
-]);
-
 const GENERIC_SNIPPET_FRAGMENTS = [
   "يقاطع",
   "ينظر",
@@ -600,7 +552,7 @@ function isGroundedRationale(evidence: string, rationale: string | null | undefi
   if (containsAnyNormalized(text, extractedNames) && !extractedNames.some((name) => evidence.includes(name))) return false;
   const rationaleTokens = lockTokens(text).filter((token) => token.length >= 3 && !GROUNDING_STOPWORDS.has(token));
   if (rationaleTokens.length === 0) return true;
-  if (rationaleTokens.some((token) => !normalizeText(evidence).includes(token) && !ALLOWED_RATIONALE_TOKENS.has(token))) return false;
+  if (rationaleTokens.some((token) => !normalizeText(evidence).includes(token))) return false;
   return true;
 }
 
