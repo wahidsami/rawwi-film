@@ -10,11 +10,47 @@ import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { getCorrelationId, normalizeText } from "../_shared/utils.ts";
 import { canOverrideOwnScriptDecision, isClientUser, isRegulatorOnly, isSuperAdminOrAdmin, isUserAdmin } from "../_shared/roleCheck.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
-import fontkit from "npm:@pdf-lib/fontkit@1.1.1";
-import { PDFDocument, rgb } from "npm:pdf-lib@1.17.1";
-import { getFontBytes } from "../_shared/pdfVfs.ts";
+import { loadDefaultCertificateTemplate, renderCertificatePdfBytes } from "../_shared/certificatePdf.ts";
 
 const CERTIFICATE_FILES_BUCKET = "script-certificates";
+const CERTIFICATE_BASE_AMOUNT = 3500;
+const CERTIFICATE_TAX_RATE = 0.15;
+const CERTIFICATE_CURRENCY = "SAR";
+const CERTIFICATE_FEE_SETTINGS_KEY = "certificate_fee_settings";
+
+type CertificateFeeConfig = {
+  baseAmount: number;
+  taxRate: number;
+  taxAmount: number;
+  totalAmount: number;
+  currency: string;
+};
+
+function normalizeFeeConfig(raw: Record<string, unknown> | null | undefined): CertificateFeeConfig {
+  const baseAmount = typeof raw?.baseAmount === "number" && Number.isFinite(raw.baseAmount) && raw.baseAmount >= 0
+    ? raw.baseAmount
+    : CERTIFICATE_BASE_AMOUNT;
+  const taxRate = typeof raw?.taxRate === "number" && Number.isFinite(raw.taxRate) && raw.taxRate >= 0
+    ? raw.taxRate
+    : CERTIFICATE_TAX_RATE;
+  const currency = typeof raw?.currency === "string" && raw.currency.trim()
+    ? raw.currency.trim().toUpperCase()
+    : CERTIFICATE_CURRENCY;
+  const taxAmount = Number((baseAmount * taxRate).toFixed(2));
+  const totalAmount = Number((baseAmount + taxAmount).toFixed(2));
+  return { baseAmount, taxRate, taxAmount, totalAmount, currency };
+}
+
+async function loadCertificateFeeConfig(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+): Promise<CertificateFeeConfig> {
+  const { data } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", CERTIFICATE_FEE_SETTINGS_KEY)
+    .maybeSingle();
+  return normalizeFeeConfig(((data as any)?.value ?? null) as Record<string, unknown> | null);
+}
 
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
@@ -405,6 +441,7 @@ async function ensureCertificateGeneratedOnApproval(
     scriptTitle: string;
     companyId: string;
     approvedByUserId: string;
+    verificationUrlBase?: string | null;
   },
 ): Promise<void> {
   const existing = await supabase
@@ -427,6 +464,10 @@ async function ensureCertificateGeneratedOnApproval(
     .maybeSingle();
 
   const approvedAt = new Date().toISOString();
+  const [template, feeConfig] = await Promise.all([
+    loadDefaultCertificateTemplate(supabase),
+    loadCertificateFeeConfig(supabase),
+  ]);
   const certificatePayload = {
     script_id: params.scriptId,
     script_title: params.scriptTitle,
@@ -437,40 +478,27 @@ async function ensureCertificateGeneratedOnApproval(
     approved_at: approvedAt,
     issued_at: approvedAt,
     certificate_number: certificateNumber,
-    amount_paid: 0,
-    currency: "SAR",
+    amount_paid: feeConfig.totalAmount,
+    currency: feeConfig.currency,
     generated_on_approval: true,
   };
 
-  // Generate deterministic PDF on approval in backend and store once.
-  const pdfDoc = await PDFDocument.create();
-  pdfDoc.registerFontkit(fontkit);
-  const page = pdfDoc.addPage([841.89, 595.28]); // A4 landscape
-  const cairoRegular = getFontBytes("Cairo-Regular.ttf");
-  const cairoBold = getFontBytes("Cairo-Bold.ttf");
-  if (!cairoRegular || !cairoBold) {
-    throw new Error("Arabic certificate fonts are missing");
-  }
-  const font = await pdfDoc.embedFont(cairoRegular);
-  const boldFont = await pdfDoc.embedFont(cairoBold);
-  const titleSize = 28;
-  const textSize = 14;
-  page.drawRectangle({
-    x: 20,
-    y: 20,
-    width: 801.89,
-    height: 555.28,
-    borderColor: rgb(0.46, 0.2, 0.4),
-    borderWidth: 2,
+  const pdfBytes = await renderCertificatePdfBytes({
+    template,
+    certificateNumber,
+    scriptTitle: params.scriptTitle,
+    companyNameAr: (company as any)?.name_ar ?? null,
+    companyNameEn: (company as any)?.name_en ?? null,
+    companyLogoUrl: (company as any)?.logo_url ?? null,
+    issuedAt: approvedAt,
+    approvedAt,
+    amountPaid: feeConfig.totalAmount,
+    currency: feeConfig.currency,
+    scriptType: null,
+    verificationUrl: params.verificationUrlBase
+      ? `${params.verificationUrlBase.replace(/\/+$/, "")}/verify-certificate/${encodeURIComponent(certificateNumber)}`
+      : null,
   });
-  page.drawText("Script Approval Certificate", { x: 230, y: 520, size: titleSize, font: boldFont, color: rgb(0.12, 0.12, 0.2) });
-  page.drawText(`Certificate Number: ${certificateNumber}`, { x: 60, y: 470, size: textSize, font });
-  page.drawText(`Script Title: ${params.scriptTitle || "-"}`, { x: 60, y: 440, size: textSize, font });
-  page.drawText(`Company: ${((company as any)?.name_en ?? (company as any)?.name_ar ?? "-").toString()}`, { x: 60, y: 410, size: textSize, font });
-  page.drawText(`Script ID: ${params.scriptId}`, { x: 60, y: 380, size: 11, font, color: rgb(0.35, 0.35, 0.45) });
-  page.drawText(`Approved At: ${approvedAt}`, { x: 60, y: 355, size: 11, font, color: rgb(0.35, 0.35, 0.45) });
-  page.drawText("Generated automatically on admin approval.", { x: 60, y: 110, size: 11, font, color: rgb(0.35, 0.35, 0.45) });
-  const pdfBytes = await pdfDoc.save();
 
   const storagePath = `${params.scriptId}/${certificateNumber}.pdf`;
   const { error: uploadError } = await supabase
@@ -1640,6 +1668,7 @@ Deno.serve(async (req: Request) => {
             scriptTitle: (script as any).title,
             companyId: ownerCompanyId,
             approvedByUserId: uid,
+            verificationUrlBase: origin ?? null,
           });
         } catch (certificateError) {
           console.error(

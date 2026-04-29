@@ -2,9 +2,7 @@ import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { isUserAdmin } from "../_shared/roleCheck.ts";
-import fontkit from "npm:@pdf-lib/fontkit@1.1.1";
-import { PDFDocument, rgb } from "npm:pdf-lib@1.17.1";
-import { getFontBytes } from "../_shared/pdfVfs.ts";
+import { loadDefaultCertificateTemplate, renderCertificatePdfBytes } from "../_shared/certificatePdf.ts";
 
 type ClientAccountRow = {
   user_id: string;
@@ -54,6 +52,24 @@ type CertificateFeeConfig = {
   currency: string;
 };
 
+function mapTemplate(row: CertificateTemplateRow) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? null,
+    isDefault: row.is_default,
+    pageSize: row.page_size,
+    orientation: row.orientation,
+    backgroundColor: row.background_color,
+    backgroundImageUrl: row.background_image_url ?? null,
+    backgroundImageFit: row.background_image_fit,
+    backgroundImageOpacity: Number(row.background_image_opacity ?? 1),
+    templateData: row.template_data ?? { elements: [] },
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 const DEMO_CARDS: DemoCard[] = [
   {
     id: "visa_success",
@@ -85,24 +101,6 @@ function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
   const match = pathname.match(new RegExp(`/${base}/?(.*)$`));
   return (match?.[1] ?? "").replace(/^\/+/, "").trim();
-}
-
-function mapTemplate(row: CertificateTemplateRow) {
-  return {
-    id: row.id,
-    name: row.name,
-    description: row.description ?? null,
-    isDefault: row.is_default,
-    pageSize: row.page_size,
-    orientation: row.orientation,
-    backgroundColor: row.background_color,
-    backgroundImageUrl: row.background_image_url ?? null,
-    backgroundImageFit: row.background_image_fit,
-    backgroundImageOpacity: Number(row.background_image_opacity ?? 1),
-    templateData: row.template_data ?? { elements: [] },
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
 }
 
 async function loadAdminUserIds(
@@ -244,18 +242,6 @@ async function loadCertificatesMap(
     if (!map.has((row as any).script_id)) map.set((row as any).script_id, row);
   }
   return map;
-}
-
-async function loadDefaultCertificateTemplate(
-  supabase: ReturnType<typeof createSupabaseAdmin>,
-) {
-  const { data, error } = await supabase
-    .from("certificate_templates")
-    .select("id, name, description, is_default, page_size, orientation, background_color, background_image_url, background_image_fit, background_image_opacity, template_data, created_at, updated_at")
-    .eq("is_default", true)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return data ? mapTemplate(data as CertificateTemplateRow) : null;
 }
 
 function resolveClientCertificateStatus(latestPayment: any | null, certificate: any | null): "payment_pending" | "payment_failed" | "issued" {
@@ -576,7 +562,7 @@ async function loadCertificateVerification(
 
 async function ensureCertificateGeneratedForApprovedScript(
   supabase: ReturnType<typeof createSupabaseAdmin>,
-  params: { scriptId: string; fallbackIssuedBy?: string | null },
+  params: { scriptId: string; fallbackIssuedBy?: string | null; verificationUrlBase?: string | null },
 ) {
   const { data: existing, error: existingError } = await supabase
     .from("script_certificates")
@@ -614,30 +600,35 @@ async function ensureCertificateGeneratedForApprovedScript(
     ? await supabase.from("clients").select("id, name_ar, name_en, logo_url").eq("id", ownerCompanyId).maybeSingle()
     : { data: null };
 
-  const { data: certificateNumber, error: numberError } = await supabase.rpc("generate_script_certificate_number");
-  if (numberError || !certificateNumber) throw new Error(numberError?.message || "Failed to generate certificate number");
+  const [template, feeConfig, certificateNumberResult] = await Promise.all([
+    loadDefaultCertificateTemplate(supabase),
+    loadCertificateFeeConfig(supabase),
+    supabase.rpc("generate_script_certificate_number"),
+  ]);
+  const certificateNumber = certificateNumberResult.data;
+  if (certificateNumberResult.error || !certificateNumber) {
+    throw new Error(certificateNumberResult.error?.message || "Failed to generate certificate number");
+  }
 
   const issuedAt = new Date().toISOString();
   const storagePath = `${params.scriptId}/${String(certificateNumber)}.pdf`;
 
-  const pdfDoc = await PDFDocument.create();
-  pdfDoc.registerFontkit(fontkit);
-  const page = pdfDoc.addPage([841.89, 595.28]);
-  const cairoRegular = getFontBytes("Cairo-Regular.ttf");
-  const cairoBold = getFontBytes("Cairo-Bold.ttf");
-  if (!cairoRegular || !cairoBold) {
-    throw new Error("Arabic certificate fonts are missing");
-  }
-  const font = await pdfDoc.embedFont(cairoRegular);
-  const boldFont = await pdfDoc.embedFont(cairoBold);
-  page.drawRectangle({ x: 20, y: 20, width: 801.89, height: 555.28, borderColor: rgb(0.46, 0.2, 0.4), borderWidth: 2 });
-  page.drawText("Script Approval Certificate", { x: 230, y: 520, size: 28, font: boldFont, color: rgb(0.12, 0.12, 0.2) });
-  page.drawText(`Certificate Number: ${String(certificateNumber)}`, { x: 60, y: 470, size: 14, font });
-  page.drawText(`Script Title: ${String((script as any).title ?? "-")}`, { x: 60, y: 440, size: 14, font });
-  page.drawText(`Company: ${((company as any)?.name_en ?? (company as any)?.name_ar ?? "-").toString()}`, { x: 60, y: 410, size: 14, font });
-  page.drawText(`Script ID: ${params.scriptId}`, { x: 60, y: 380, size: 11, font, color: rgb(0.35, 0.35, 0.45) });
-  page.drawText(`Approved At: ${issuedAt}`, { x: 60, y: 355, size: 11, font, color: rgb(0.35, 0.35, 0.45) });
-  const pdfBytes = await pdfDoc.save();
+  const pdfBytes = await renderCertificatePdfBytes({
+    template,
+    certificateNumber: String(certificateNumber),
+    scriptTitle: String((script as any).title ?? ""),
+    companyNameAr: (company as any)?.name_ar ?? null,
+    companyNameEn: (company as any)?.name_en ?? null,
+    companyLogoUrl: (company as any)?.logo_url ?? null,
+    scriptType: String((script as any)?.type ?? ""),
+    issuedAt,
+    approvedAt: issuedAt,
+    amountPaid: feeConfig.totalAmount,
+    currency: feeConfig.currency,
+    verificationUrl: params.verificationUrlBase
+      ? `${params.verificationUrlBase.replace(/\/+$/, "")}/verify-certificate/${encodeURIComponent(String(certificateNumber))}`
+      : null,
+  });
 
   const { error: uploadError } = await supabase.storage.from(CERTIFICATE_FILES_BUCKET).upload(storagePath, pdfBytes, {
     contentType: "application/pdf",
@@ -655,8 +646,8 @@ async function ensureCertificateGeneratedForApprovedScript(
     approved_at: issuedAt,
     issued_at: issuedAt,
     certificate_number: String(certificateNumber),
-    amount_paid: 0,
-    currency: "SAR",
+    amount_paid: feeConfig.totalAmount,
+    currency: feeConfig.currency,
     generated_on_approval: true,
     file_bucket: CERTIFICATE_FILES_BUCKET,
     file_path: storagePath,
@@ -897,6 +888,7 @@ Deno.serve(async (req: Request) => {
         : await ensureCertificateGeneratedForApprovedScript(supabase, {
           scriptId,
           fallbackIssuedBy: userId,
+          verificationUrlBase: origin ?? null,
         });
 
       const mergedCertificateData = {
