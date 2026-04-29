@@ -221,3 +221,39 @@ export function getLegacyPolicyArticleIdForViolationTypeId(id: ViolationTypeId):
       return 4;
   }
 }
+
+export function getViolationTypeIdFromLegacyPolicyArticle(
+  articleId: number | null | undefined,
+  atomId?: string | null,
+): ViolationTypeId | null {
+  const normalizedArticleId = Number(articleId);
+  const normalizedAtomId = (atomId ?? '').trim();
+
+  if (!Number.isFinite(normalizedArticleId) || normalizedArticleId <= 0) return null;
+
+  if (normalizedArticleId === 4) return 'religious_fundamentals';
+  if (normalizedArticleId === 5) return 'profanity';
+  if (normalizedArticleId === 6) {
+    if (normalizedAtomId.includes('4')) return 'bullying';
+    if (normalizedAtomId.includes('3')) return 'child_disability_harm';
+    return 'children_crime';
+  }
+  if (normalizedArticleId === 7) return 'women_abuse';
+  if (normalizedArticleId === 8) return 'society_identity';
+  if (normalizedArticleId === 9) {
+    if (normalizedAtomId.includes('4')) return 'inappropriate_sexual_content';
+    return 'explicit_sexual_scenes';
+  }
+  if (normalizedArticleId === 10) return 'drugs_alcohol';
+  if (normalizedArticleId === 12) return 'national_security';
+  if (normalizedArticleId === 13) return 'political_leadership';
+  if (normalizedArticleId === 16) return 'historical_unreliable';
+  if (normalizedArticleId === 17) {
+    if (normalizedAtomId.includes('14')) return 'parents_abuse';
+    if (normalizedAtomId.includes('15')) return 'elderly_abuse';
+    if (normalizedAtomId.includes('16')) return 'bullying';
+    return 'family_values';
+  }
+
+  return null;
+}

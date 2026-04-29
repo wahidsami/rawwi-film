@@ -8,6 +8,7 @@ import { Badge } from './Badge';
 import { Button } from './Button';
 import { cn } from '@/utils/cn';
 import { ShieldAlert, AlertTriangle, AlertCircle, Edit2, RotateCcw, MapPin, EyeOff, CheckCircle, ExternalLink } from 'lucide-react';
+import { getViolationTypeIdFromLegacyPolicyArticle, resolveViolationTypeId, violationTypeLabel } from '@/data/violationTypes';
 import { displayPageForFinding } from '@/utils/viewerPageFromOffset';
 import { formatResolvedSceneLabel, resolveSceneLabelFromOffset } from '@/utils/sceneLabelFromOffset';
 
@@ -55,6 +56,15 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick, scriptVi
     scriptViewerPages ?? null,
     finding.pageNumber != null && Number.isFinite(Number(finding.pageNumber)) ? Number(finding.pageNumber) : null
   );
+  const resolvedViolationType =
+    getViolationTypeIdFromLegacyPolicyArticle(finding.articleId, finding.subAtomId ?? null)
+    ?? resolveViolationTypeId(finding.titleAr)
+    ?? resolveViolationTypeId(finding.descriptionAr)
+    ?? resolveViolationTypeId(finding.evidenceSnippet)
+    ?? resolveViolationTypeId(finding.excerpt);
+  const titleLabel = resolvedViolationType
+    ? violationTypeLabel(resolvedViolationType, lang)
+    : (lang === 'ar' ? finding.titleAr || 'ملاحظة' : finding.titleEn || 'Finding');
   const resolvedSceneLabel = formatResolvedSceneLabel(
     resolveSceneLabelFromOffset(finding.startOffsetGlobal, scriptViewerPages ?? null),
     lang
@@ -85,11 +95,8 @@ export function FindingCard({ finding, onOverrideClick, onRestoreClick, scriptVi
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-mono text-xs font-bold px-1.5 py-0.5 rounded bg-background border border-border text-text-muted">
-                {lang === 'ar' ? 'مادة' : 'Art'} {finding.articleId}{finding.subAtomId ? `.${finding.subAtomId}` : ''}
-              </span>
               <h4 className="font-bold text-lg text-text-main">
-                {lang === 'ar' ? finding.titleAr || 'ملاحظة' : finding.titleEn || 'Finding'}
+                {titleLabel}
               </h4>
             </div>
             

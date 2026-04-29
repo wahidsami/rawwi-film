@@ -14,7 +14,14 @@ import { DocumentImportModal } from '@/components/import/DocumentImportModal';
 import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square, Search } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getActionablePolicyArticles } from '@/data/policyMap';
-import { getLegacyPolicyArticleIdForViolationTypeId, resolveViolationTypeId, violationTypesForChecklist, type ViolationTypeId } from '@/data/violationTypes';
+import {
+  getLegacyPolicyArticleIdForViolationTypeId,
+  getViolationTypeIdFromLegacyPolicyArticle,
+  resolveViolationTypeId,
+  violationTypeLabel,
+  violationTypesForChecklist,
+  type ViolationTypeId,
+} from '@/data/violationTypes';
 import { getScriptDecisionCapabilities } from '@/utils/scriptDecisionCapabilities';
 import { extractDocxWithPages } from '@/utils/documentExtract';
 import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
@@ -45,14 +52,32 @@ function getFindingDisplayTitle(finding: {
   descriptionAr?: string | null;
   excerpt?: string | null;
   evidenceSnippet?: string | null;
-}): string {
+  articleId?: number | null;
+  atomId?: string | null;
+  primaryPolicyAtomId?: string | null;
+  source?: string | null;
+}, lang: 'ar' | 'en' = 'ar'): string {
   const title = (finding.titleAr ?? "").trim();
-  if (title) return title;
   const description = (finding.descriptionAr ?? "").trim();
-  if (description) return description;
   const excerpt = (finding.excerpt ?? "").trim();
-  if (excerpt) return excerpt;
   const evidence = (finding.evidenceSnippet ?? "").trim();
+  const legacyType =
+    getViolationTypeIdFromLegacyPolicyArticle(
+      finding.articleId ?? null,
+      finding.atomId ?? finding.primaryPolicyAtomId ?? null
+  );
+  if (legacyType) {
+    return violationTypeLabel(legacyType, lang);
+  }
+
+  const resolvedType = resolveViolationTypeId(title) ?? resolveViolationTypeId(description) ?? resolveViolationTypeId(excerpt) ?? resolveViolationTypeId(evidence);
+  if (resolvedType) {
+    return violationTypeLabel(resolvedType, lang);
+  }
+
+  if (title) return title;
+  if (description) return description;
+  if (excerpt) return excerpt;
   if (evidence) return evidence;
   return "مخالفة محتوى";
 }
@@ -5660,7 +5685,7 @@ export function ScriptWorkspace() {
                     style={{ left: tooltipPos.x + 12, top: tooltipPos.y + 8 }}
                   >
                     <div className="text-xs font-semibold text-text-muted mb-1">
-                      {getFindingDisplayTitle(tooltipFinding)}
+                            {getFindingDisplayTitle(tooltipFinding, lang)}
                     </div>
                     <p className="text-sm text-text-main line-clamp-3" dir="rtl">{tooltipFinding.descriptionAr || tooltipFinding.evidenceSnippet}</p>
                     <Badge variant={tooltipFinding.reviewStatus === 'approved' ? 'success' : 'error'} className="mt-1.5 text-[10px]">
@@ -5959,7 +5984,7 @@ export function ScriptWorkspace() {
                             aria-label={lang === 'ar' ? 'تحديد الملاحظة' : 'Select finding'}
                           />
                           <span className="text-[10px] font-semibold text-text-main">
-                            {getFindingDisplayTitle(f)}
+                            {getFindingDisplayTitle(f, lang)}
                             {(() => {
                               const ws = findingWorkspaceResolve.get(f.id);
                               const dp =
@@ -6115,7 +6140,7 @@ export function ScriptWorkspace() {
                   "{f.excerpt}"
                 </p>
                 <div className="flex items-center justify-between mt-3 text-xs text-text-muted">
-                  <span className="font-medium text-text-main">{getFindingDisplayTitle(f as any)}</span>
+                  <span className="font-medium text-text-main">{getFindingDisplayTitle(f as any, lang)}</span>
                   {f.status !== 'open' && (
                     <Badge variant={f.status === 'accepted' ? 'success' : 'error'} className="text-[10px]">
                       {f.status}
@@ -6143,7 +6168,7 @@ export function ScriptWorkspace() {
                         "{f.excerpt}"
                       </p>
                       <div className="flex items-center justify-between mt-3 text-xs text-text-muted">
-                        <span className="font-medium text-text-main">{getFindingDisplayTitle(f as any)}</span>
+                        <span className="font-medium text-text-main">{getFindingDisplayTitle(f as any, lang)}</span>
                         {f.status === 'open' && (
                           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button 

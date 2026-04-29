@@ -35,6 +35,7 @@ import {
 } from '@/data/policyMap';
 import {
   resolveViolationTypeId,
+  getViolationTypeIdFromLegacyPolicyArticle,
   getLegacyPolicyArticleIdForViolationTypeId,
   violationTypeLabel,
   violationTypesForChecklist,
@@ -1447,6 +1448,7 @@ export function Results() {
 
   function displayFindingTitle(params: {
     title: string | null | undefined;
+    description?: string | null;
     source?: string | null;
     evidenceSnippet?: string | null;
     articleId: number;
@@ -1456,6 +1458,7 @@ export function Results() {
     const title = (params.title ?? '').trim();
     const source = params.source ?? 'ai';
     const evidenceSnippet = (params.evidenceSnippet ?? '').trim();
+    const description = (params.description ?? '').trim();
     void params.articleId;
     void params.atomId;
     void params.primaryPolicyAtomId;
@@ -1467,7 +1470,11 @@ export function Results() {
         : (lang === 'ar' ? 'مطابقة من قاموس المصطلحات' : 'Glossary match');
     }
 
-    const resolvedType = resolveViolationTypeId(title) ?? resolveViolationTypeId(evidenceSnippet);
+    const resolvedType =
+      getViolationTypeIdFromLegacyPolicyArticle(params.articleId, params.atomId ?? params.primaryPolicyAtomId ?? null)
+      ?? resolveViolationTypeId(title)
+      ?? resolveViolationTypeId(description)
+      ?? resolveViolationTypeId(evidenceSnippet);
     if (resolvedType) {
       return violationTypeLabel(resolvedType, lang);
     }
@@ -1497,10 +1504,11 @@ export function Results() {
     );
     const displayTitle = displayFindingTitle({
       title: f.titleAr,
+      description: f.descriptionAr ?? null,
       source: f.source ?? 'ai',
       evidenceSnippet: f.evidenceSnippet,
       articleId: primaryArticle,
-      atomId: f.atomId,
+      atomId: f.atomId ?? null,
       primaryPolicyAtomId: v3.primary_policy_atom_id as string | undefined,
     });
     return (
@@ -1610,6 +1618,7 @@ export function Results() {
     );
     const displayTitle = displayFindingTitle({
       title: f.titleAr,
+      description: f.descriptionAr ?? null,
       source: f.sourceKind === 'glossary' ? 'lexicon_mandatory' : f.sourceKind === 'manual' ? 'manual' : 'ai',
       evidenceSnippet: f.evidenceSnippet,
       articleId: f.primaryArticleId,
@@ -1823,9 +1832,11 @@ export function Results() {
                           <span className="font-semibold text-text-main text-sm">
                             {displayFindingTitle({
                               title: f.title_ar,
+                              description: f.description_ar ?? null,
                               source: f.source ?? 'ai',
                               evidenceSnippet: f.evidence_snippet,
                               articleId: art.article_id,
+                              atomId: f.primary_policy_atom_id ?? null,
                             })}
                           </span>
                           <div className="flex items-center gap-2">
@@ -1898,12 +1909,14 @@ export function Results() {
                         <div key={`${f.canonical_finding_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold text-text-main text-sm">
-                              {displayFindingTitle({
-                                title: f.title_ar,
-                                source: f.source ?? 'ai',
-                                evidenceSnippet: f.evidence_snippet,
-                                articleId,
-                              })}
+                            {displayFindingTitle({
+                              title: f.title_ar,
+                              description: f.description_ar ?? null,
+                              source: f.source ?? 'ai',
+                              evidenceSnippet: f.evidence_snippet,
+                              articleId,
+                              atomId: f.primary_policy_atom_id ?? null,
+                            })}
                             </span>
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
