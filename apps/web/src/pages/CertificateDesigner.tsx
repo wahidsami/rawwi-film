@@ -5,6 +5,7 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
+  ArrowLeft,
   CalendarDays,
   FileImage,
   Image as ImageIcon,
@@ -25,6 +26,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { useLangStore } from '@/store/langStore';
@@ -61,7 +63,7 @@ function snap(value: number, enabled: boolean) {
   return enabled ? Math.round(value / GRID_SIZE) * GRID_SIZE : value;
 }
 
-function makeElement(type: CertificateElementType): CertificateTemplateElement {
+function makeElement(type: CertificateElementType, lang: 'ar' | 'en'): CertificateTemplateElement {
   const id = `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const base = {
     id,
@@ -82,9 +84,18 @@ function makeElement(type: CertificateElementType): CertificateTemplateElement {
   if (type === 'qr') return { ...base, width: 120, height: 120 };
   if (type === 'image') return { ...base, width: 180, height: 120 };
   if (type === 'date') return { ...base, width: 220, height: 48, text: '{{issued_at}}' };
-  if (type === 'footer') return { ...base, width: 520, height: 56, text: 'Certificate footer text' };
-  if (type === 'paragraph') return { ...base, width: 520, height: 120, text: 'This certifies that {{script_title}} has been approved for {{company_name}}.' };
-  return { ...base, width: 520, height: 70, text: 'Certificate of Approval' };
+  if (type === 'footer') return { ...base, width: 520, height: 56, text: lang === 'ar' ? 'نص تذييل الشهادة' : 'Certificate footer text' };
+  if (type === 'paragraph') {
+    return {
+      ...base,
+      width: 520,
+      height: 120,
+      text: lang === 'ar'
+        ? 'تشهد راوي فيلم بأن {{script_title}} قد تمت الموافقة عليه لصالح {{company_name}}.'
+        : 'This certifies that {{script_title}} has been approved for {{company_name}}.',
+    };
+  }
+  return { ...base, width: 520, height: 70, text: lang === 'ar' ? 'شهادة اعتماد' : 'Certificate of Approval' };
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
@@ -156,6 +167,8 @@ export function CertificateDesigner() {
   const [selectedId, setSelectedId] = useState('');
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(true);
+  const [savedTemplateKey, setSavedTemplateKey] = useState('');
+  const [showBackWarning, setShowBackWarning] = useState(false);
   const dragState = useRef<{
     id: string;
     mode: DragMode;
@@ -171,6 +184,7 @@ export function CertificateDesigner() {
       try {
         const response = await certificatesApi.getTemplate(templateId);
         setTemplate(response.template);
+        setSavedTemplateKey(JSON.stringify(response.template));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unable to load template');
       } finally {
@@ -179,6 +193,55 @@ export function CertificateDesigner() {
     };
     if (templateId) void load();
   }, [templateId]);
+
+  const text = useMemo(() => ({
+    back: lang === 'ar' ? 'العودة إلى الشهادات' : 'Back to certificates',
+    preview: lang === 'ar' ? 'معاينة' : 'Preview',
+    save: lang === 'ar' ? 'حفظ' : 'Save',
+    tools: lang === 'ar' ? 'الأدوات' : 'Tools',
+    pageSize: lang === 'ar' ? 'حجم الصفحة' : 'Page size',
+    orientation: lang === 'ar' ? 'الاتجاه' : 'Orientation',
+    landscape: lang === 'ar' ? 'أفقي' : 'Landscape',
+    portrait: lang === 'ar' ? 'عمودي' : 'Portrait',
+    showGrid: lang === 'ar' ? 'إظهار الشبكة' : 'Show grid',
+    snapToGrid: lang === 'ar' ? 'الالتقاط للشبكة' : 'Snap to grid',
+    backgroundColor: lang === 'ar' ? 'لون الخلفية' : 'Background color',
+    backgroundImage: lang === 'ar' ? 'صورة الخلفية' : 'Background image',
+    imageFit: lang === 'ar' ? 'ملاءمة الصورة' : 'Image fit',
+    cover: lang === 'ar' ? 'تغطية' : 'Cover',
+    contain: lang === 'ar' ? 'احتواء' : 'Contain',
+    tile: lang === 'ar' ? 'تكرار' : 'Tile',
+    backgroundOpacity: lang === 'ar' ? 'شفافية الخلفية' : 'Background opacity',
+    logo: lang === 'ar' ? 'الشعار' : 'Logo',
+    title: lang === 'ar' ? 'العنوان' : 'Title',
+    text: lang === 'ar' ? 'نص' : 'Text',
+    image: lang === 'ar' ? 'صورة' : 'Image',
+    date: lang === 'ar' ? 'التاريخ' : 'Date',
+    footer: lang === 'ar' ? 'التذييل' : 'Footer',
+    settings: lang === 'ar' ? 'الإعدادات' : 'Settings',
+    templateName: lang === 'ar' ? 'اسم القالب' : 'Template name',
+    description: lang === 'ar' ? 'الوصف' : 'Description',
+    selectElement: lang === 'ar' ? 'اختر عنصراً من مساحة التصميم لتعديل مكانه وتنسيقه.' : 'Select an element on the canvas to edit its placement and styling.',
+    width: lang === 'ar' ? 'العرض' : 'Width',
+    height: lang === 'ar' ? 'الارتفاع' : 'Height',
+    font: lang === 'ar' ? 'الخط' : 'Font',
+    size: lang === 'ar' ? 'الحجم' : 'Size',
+    color: lang === 'ar' ? 'اللون' : 'Color',
+    logoSource: lang === 'ar' ? 'مصدر الشعار' : 'Logo source',
+    filmCommission: lang === 'ar' ? 'هيئة الأفلام' : 'Film Commission',
+    clientLogo: lang === 'ar' ? 'شعار العميل' : 'Client Logo',
+    uploadedLogo: lang === 'ar' ? 'شعار مرفوع' : 'Uploaded Logo',
+    uploadLogo: lang === 'ar' ? 'رفع شعار' : 'Upload logo',
+    uploadImage: lang === 'ar' ? 'رفع صورة' : 'Upload image',
+    opacity: lang === 'ar' ? 'الشفافية' : 'Opacity',
+    deleteElement: lang === 'ar' ? 'حذف العنصر' : 'Delete element',
+    unsavedTitle: lang === 'ar' ? 'لديك تغييرات غير محفوظة' : 'You have unsaved changes',
+    unsavedMessage: lang === 'ar'
+      ? 'إذا عدت إلى صفحة الشهادات الآن، ستفقد التغييرات التي لم تحفظها.'
+      : 'If you go back to the certificates page now, your unsaved changes will be lost.',
+    stay: lang === 'ar' ? 'البقاء في المصمم' : 'Stay in designer',
+    leave: lang === 'ar' ? 'الخروج دون حفظ' : 'Leave without saving',
+  }), [lang]);
 
   const selected = useMemo(
     () => template?.templateData.elements.find((element) => element.id === selectedId) ?? null,
@@ -191,11 +254,26 @@ export function CertificateDesigner() {
     return template.orientation === 'portrait' ? 1 / ratio : ratio;
   }, [template]);
 
+  const currentTemplateKey = useMemo(() => template ? JSON.stringify(template) : '', [template]);
+  const hasUnsavedChanges = Boolean(template && savedTemplateKey && currentTemplateKey !== savedTemplateKey);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   const updateTemplate = (patch: Partial<CertificateTemplate>) => {
+    setSuccess('');
     setTemplate((current) => current ? { ...current, ...patch } : current);
   };
 
   const updateElement = (id: string, patch: Partial<CertificateTemplateElement>) => {
+    setSuccess('');
     setTemplate((current) => {
       if (!current) return current;
       return {
@@ -210,7 +288,8 @@ export function CertificateDesigner() {
   };
 
   const addElement = (type: CertificateElementType, x = 120, y = 120) => {
-    const element = { ...makeElement(type), x: snap(x, snapToGrid), y: snap(y, snapToGrid) };
+    setSuccess('');
+    const element = { ...makeElement(type, lang), x: snap(x, snapToGrid), y: snap(y, snapToGrid) };
     setTemplate((current) => current ? {
       ...current,
       templateData: { elements: [...current.templateData.elements, element] },
@@ -234,6 +313,7 @@ export function CertificateDesigner() {
 
   const removeSelected = () => {
     if (!selectedId) return;
+    setSuccess('');
     setTemplate((current) => current ? {
       ...current,
       templateData: { elements: current.templateData.elements.filter((element) => element.id !== selectedId) },
@@ -296,6 +376,7 @@ export function CertificateDesigner() {
         templateData: template.templateData,
       });
       setTemplate(response.template);
+      setSavedTemplateKey(JSON.stringify(response.template));
       setSuccess(lang === 'ar' ? 'تم حفظ القالب.' : 'Template saved.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to save template');
@@ -312,6 +393,14 @@ export function CertificateDesigner() {
   const uploadElementImage = async (file?: File) => {
     if (!file || !selected) return;
     updateElement(selected.id, { imageUrl: await readFileAsDataUrl(file), logoSource: selected.type === 'logo' ? 'uploaded' : selected.logoSource });
+  };
+
+  const goBackToCertificates = () => {
+    if (hasUnsavedChanges) {
+      setShowBackWarning(true);
+      return;
+    }
+    navigate('/app/certificates');
   };
 
   if (isLoading) {
@@ -335,15 +424,16 @@ export function CertificateDesigner() {
           <p className="mt-1 text-sm text-text-muted">{lang === 'ar' ? 'مصمم قالب الشهادة' : 'Certificate template designer'}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => navigate('/app/certificates')}>
-            {lang === 'ar' ? 'رجوع' : 'Back'}
+          <Button variant="outline" onClick={goBackToCertificates}>
+            <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
+            {text.back}
           </Button>
           <Button variant="outline" onClick={() => setSelectedId('')}>
-            {lang === 'ar' ? 'معاينة' : 'Preview'}
+            {text.preview}
           </Button>
           <Button onClick={() => void saveTemplate()} isLoading={isSaving}>
             <Save className="me-2 h-4 w-4" />
-            {lang === 'ar' ? 'حفظ' : 'Save'}
+            {text.save}
           </Button>
         </div>
       </div>
@@ -354,37 +444,37 @@ export function CertificateDesigner() {
       <div className="grid min-h-[calc(100vh-12rem)] grid-cols-1 gap-4 xl:grid-cols-[260px_minmax(0,1fr)_300px]">
         <Card>
           <CardContent className="space-y-3 p-4">
-            <p className="text-sm font-semibold uppercase tracking-wide text-text-muted">Tools</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-text-muted">{text.tools}</p>
             <Select
-              label="Page size"
+              label={text.pageSize}
               value={template.pageSize}
               onChange={(event) => updateTemplate({ pageSize: event.target.value as CertificatePageSize })}
               options={[{ label: 'A4', value: 'A4' }, { label: 'A5', value: 'A5' }, { label: 'Letter', value: 'Letter' }]}
             />
             <Select
-              label="Orientation"
+              label={text.orientation}
               value={template.orientation}
               onChange={(event) => updateTemplate({ orientation: event.target.value as CertificateOrientation })}
-              options={[{ label: 'Landscape', value: 'landscape' }, { label: 'Portrait', value: 'portrait' }]}
+              options={[{ label: text.landscape, value: 'landscape' }, { label: text.portrait, value: 'portrait' }]}
             />
             <label className="flex items-center justify-between rounded-[var(--radius)] border border-border p-2 text-sm">
-              <span>Show grid</span>
+              <span>{text.showGrid}</span>
               <input type="checkbox" checked={showGrid} onChange={(event) => setShowGrid(event.target.checked)} />
             </label>
             <label className="flex items-center justify-between rounded-[var(--radius)] border border-border p-2 text-sm">
-              <span>Snap to grid</span>
+              <span>{text.snapToGrid}</span>
               <input type="checkbox" checked={snapToGrid} onChange={(event) => setSnapToGrid(event.target.checked)} />
             </label>
-            <Input label="Background color" type="color" value={template.backgroundColor} onChange={(event) => updateTemplate({ backgroundColor: event.target.value })} />
-            <Input label="Background image" type="file" accept="image/*" onChange={(event) => void uploadBackground(event.target.files?.[0])} />
+            <Input label={text.backgroundColor} type="color" value={template.backgroundColor} onChange={(event) => updateTemplate({ backgroundColor: event.target.value })} />
+            <Input label={text.backgroundImage} type="file" accept="image/*" onChange={(event) => void uploadBackground(event.target.files?.[0])} />
             <Select
-              label="Image fit"
+              label={text.imageFit}
               value={template.backgroundImageFit}
               onChange={(event) => updateTemplate({ backgroundImageFit: event.target.value as CertificateBackgroundFit })}
-              options={[{ label: 'Cover', value: 'cover' }, { label: 'Contain', value: 'contain' }, { label: 'Tile', value: 'tile' }]}
+              options={[{ label: text.cover, value: 'cover' }, { label: text.contain, value: 'contain' }, { label: text.tile, value: 'tile' }]}
             />
             <Input
-              label="Background opacity"
+              label={text.backgroundOpacity}
               type="range"
               min="0"
               max="1"
@@ -393,13 +483,13 @@ export function CertificateDesigner() {
               onChange={(event) => updateTemplate({ backgroundImageOpacity: Number(event.target.value) })}
             />
             <div className="grid grid-cols-2 gap-2 pt-2">
-              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'logo')} onClick={() => addElement('logo')}><ImageIcon className="me-2 h-4 w-4" />Logo</Button>
-              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'title')} onClick={() => addElement('title')}><Type className="me-2 h-4 w-4" />Title</Button>
-              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'paragraph')} onClick={() => addElement('paragraph')}><Type className="me-2 h-4 w-4" />Text</Button>
+              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'logo')} onClick={() => addElement('logo')}><ImageIcon className="me-2 h-4 w-4" />{text.logo}</Button>
+              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'title')} onClick={() => addElement('title')}><Type className="me-2 h-4 w-4" />{text.title}</Button>
+              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'paragraph')} onClick={() => addElement('paragraph')}><Type className="me-2 h-4 w-4" />{text.text}</Button>
               <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'qr')} onClick={() => addElement('qr')}><QrCode className="me-2 h-4 w-4" />QR</Button>
-              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'image')} onClick={() => addElement('image')}><FileImage className="me-2 h-4 w-4" />Image</Button>
-              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'date')} onClick={() => addElement('date')}><CalendarDays className="me-2 h-4 w-4" />Date</Button>
-              <Button draggable variant="outline" size="sm" className="col-span-2" onDragStart={(event) => onToolDragStart(event, 'footer')} onClick={() => addElement('footer')}>Footer</Button>
+              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'image')} onClick={() => addElement('image')}><FileImage className="me-2 h-4 w-4" />{text.image}</Button>
+              <Button draggable variant="outline" size="sm" onDragStart={(event) => onToolDragStart(event, 'date')} onClick={() => addElement('date')}><CalendarDays className="me-2 h-4 w-4" />{text.date}</Button>
+              <Button draggable variant="outline" size="sm" className="col-span-2" onDragStart={(event) => onToolDragStart(event, 'footer')} onClick={() => addElement('footer')}>{text.footer}</Button>
             </div>
           </CardContent>
         </Card>
@@ -448,7 +538,7 @@ export function CertificateDesigner() {
                     QR
                   </div>
                 ) : element.type === 'image' || element.type === 'logo' ? (
-                  element.imageUrl ? <img src={element.imageUrl} alt="" className="h-full w-full object-contain" /> : <div className="flex h-full items-center justify-center border border-dashed border-text-muted text-xs">Image</div>
+                  element.imageUrl ? <img src={element.imageUrl} alt="" className="h-full w-full object-contain" /> : <div className="flex h-full items-center justify-center border border-dashed border-text-muted text-xs">{text.image}</div>
                 ) : (
                   <div className="h-full w-full overflow-hidden whitespace-pre-wrap">{renderElementLabel(element)}</div>
                 )}
@@ -463,32 +553,32 @@ export function CertificateDesigner() {
 
         <Card>
           <CardContent className="space-y-3 p-4">
-            <p className="text-sm font-semibold uppercase tracking-wide text-text-muted">Settings</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-text-muted">{text.settings}</p>
             {!selected ? (
               <div className="space-y-3">
-                <Input label="Template name" value={template.name} onChange={(event) => updateTemplate({ name: event.target.value })} />
-                <Textarea label="Description" value={template.description ?? ''} onChange={(event) => updateTemplate({ description: event.target.value })} />
-                <p className="text-sm text-text-muted">Select an element on the canvas to edit its placement and styling.</p>
+                <Input label={text.templateName} value={template.name} onChange={(event) => updateTemplate({ name: event.target.value })} />
+                <Textarea label={text.description} value={template.description ?? ''} onChange={(event) => updateTemplate({ description: event.target.value })} />
+                <p className="text-sm text-text-muted">{text.selectElement}</p>
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   <Input label="X" type="number" value={selected.x} onChange={(event) => updateElement(selected.id, { x: Number(event.target.value) })} />
                   <Input label="Y" type="number" value={selected.y} onChange={(event) => updateElement(selected.id, { y: Number(event.target.value) })} />
-                  <Input label="Width" type="number" value={selected.width} onChange={(event) => updateElement(selected.id, { width: Number(event.target.value) })} />
-                  <Input label="Height" type="number" value={selected.height} onChange={(event) => updateElement(selected.id, { height: Number(event.target.value) })} />
+                  <Input label={text.width} type="number" value={selected.width} onChange={(event) => updateElement(selected.id, { width: Number(event.target.value) })} />
+                  <Input label={text.height} type="number" value={selected.height} onChange={(event) => updateElement(selected.id, { height: Number(event.target.value) })} />
                 </div>
                 {(selected.type === 'title' || selected.type === 'paragraph' || selected.type === 'date' || selected.type === 'footer') && (
                   <>
-                    <Textarea label="Text" value={selected.text ?? ''} onChange={(event) => updateElement(selected.id, { text: event.target.value })} />
+                    <Textarea label={text.text} value={selected.text ?? ''} onChange={(event) => updateElement(selected.id, { text: event.target.value })} />
                     <Select
-                      label="Font"
+                      label={text.font}
                       value={selected.fontFamily ?? "'Cairo', Tahoma, sans-serif"}
                       onChange={(event) => updateElement(selected.id, { fontFamily: event.target.value })}
                       options={CERTIFICATE_FONT_OPTIONS}
                     />
-                    <Input label="Size" type="number" value={selected.fontSize ?? 18} onChange={(event) => updateElement(selected.id, { fontSize: Number(event.target.value) })} />
-                    <Input label="Color" type="color" value={selected.color ?? '#111827'} onChange={(event) => updateElement(selected.id, { color: event.target.value })} />
+                    <Input label={text.size} type="number" value={selected.fontSize ?? 18} onChange={(event) => updateElement(selected.id, { fontSize: Number(event.target.value) })} />
+                    <Input label={text.color} type="color" value={selected.color ?? '#111827'} onChange={(event) => updateElement(selected.id, { color: event.target.value })} />
                     <div className="flex gap-2">
                       <Button variant={selected.bold ? 'primary' : 'outline'} size="sm" onClick={() => updateElement(selected.id, { bold: !selected.bold })}>B</Button>
                       <Button variant={selected.italic ? 'primary' : 'outline'} size="sm" onClick={() => updateElement(selected.id, { italic: !selected.italic })}>I</Button>
@@ -501,7 +591,7 @@ export function CertificateDesigner() {
                 {selected.type === 'logo' && (
                   <>
                     <Select
-                      label="Logo source"
+                      label={text.logoSource}
                       value={selected.logoSource ?? 'film_commission'}
                       onChange={(event) => {
                         const logoSource = event.target.value as 'film_commission' | 'client' | 'uploaded';
@@ -510,14 +600,14 @@ export function CertificateDesigner() {
                           imageUrl: logoSource === 'film_commission' ? FILM_LOGO_PLACEHOLDER : selected.imageUrl,
                         });
                       }}
-                      options={[{ label: 'Film Commission', value: 'film_commission' }, { label: 'Client Logo', value: 'client' }, { label: 'Uploaded Logo', value: 'uploaded' }]}
+                      options={[{ label: text.filmCommission, value: 'film_commission' }, { label: text.clientLogo, value: 'client' }, { label: text.uploadedLogo, value: 'uploaded' }]}
                     />
-                    <Input label="Upload logo" type="file" accept="image/*" onChange={(event) => void uploadElementImage(event.target.files?.[0])} />
+                    <Input label={text.uploadLogo} type="file" accept="image/*" onChange={(event) => void uploadElementImage(event.target.files?.[0])} />
                   </>
                 )}
-                {selected.type === 'image' && <Input label="Upload image" type="file" accept="image/*" onChange={(event) => void uploadElementImage(event.target.files?.[0])} />}
+                {selected.type === 'image' && <Input label={text.uploadImage} type="file" accept="image/*" onChange={(event) => void uploadElementImage(event.target.files?.[0])} />}
                 <Input
-                  label="Opacity"
+                  label={text.opacity}
                   type="range"
                   min="0"
                   max="1"
@@ -525,12 +615,30 @@ export function CertificateDesigner() {
                   value={selected.opacity ?? 1}
                   onChange={(event) => updateElement(selected.id, { opacity: Number(event.target.value) })}
                 />
-                <Button variant="danger" size="sm" onClick={removeSelected}>Delete element</Button>
+                <Button variant="danger" size="sm" onClick={removeSelected}>{text.deleteElement}</Button>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      <Modal
+        isOpen={showBackWarning}
+        onClose={() => setShowBackWarning(false)}
+        title={text.unsavedTitle}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-muted">{text.unsavedMessage}</p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowBackWarning(false)}>
+              {text.stay}
+            </Button>
+            <Button variant="danger" onClick={() => navigate('/app/certificates')}>
+              {text.leave}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
