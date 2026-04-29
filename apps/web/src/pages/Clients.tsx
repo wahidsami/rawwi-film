@@ -68,7 +68,6 @@ export function Clients() {
   });
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [creators, setCreators] = useState<Record<string, string>>({});
   const [reviewClient, setReviewClient] = useState<Company | null>(null);
@@ -138,18 +137,16 @@ export function Clients() {
   };
 
   const handleOpenAddModal = () => {
-    setEditingCompanyId(null);
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (event: React.MouseEvent, client: Company) => {
+  const handleOpenEditPage = (event: React.MouseEvent, client: Company) => {
     event.stopPropagation();
     if ((client.source ?? 'internal') !== 'internal') {
       toast.error(lang === 'ar' ? 'يمكن تعديل العملاء الداخليين فقط من هنا' : 'Only internal clients can be edited here');
       return;
     }
-    setEditingCompanyId(client.companyId);
-    setIsModalOpen(true);
+    navigate(`/clients/${client.companyId}/edit`);
   };
 
   const handleDeleteClient = async (event: React.MouseEvent, client: Company) => {
@@ -240,7 +237,7 @@ export function Clients() {
     return (
       <div className="flex items-center justify-end gap-0.5">
         <button
-          onClick={(event) => handleOpenEditModal(event, client)}
+          onClick={(event) => handleOpenEditPage(event, client)}
           className="rounded-md p-1.5 text-text-muted transition-colors hover:bg-primary/10 hover:text-primary"
           aria-label="Edit Client"
         >
@@ -544,7 +541,7 @@ export function Clients() {
         </div>
       </Modal>
 
-      <ClientModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} companyId={editingCompanyId} />
+      <ClientModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} companyId={null} />
     </div>
   );
 }

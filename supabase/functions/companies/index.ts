@@ -582,6 +582,53 @@ Deno.serve(async (req: Request) => {
         }
         updates.representative_name = rep || null;
       }
+      if (body.website !== undefined) {
+        updates.website = typeof body.website === "string" ? body.website.trim() || null : null;
+      }
+      if (body.addressLine1 !== undefined) {
+        updates.address_line1 = typeof body.addressLine1 === "string" ? body.addressLine1.trim() || null : null;
+      }
+      if (body.addressLine2 !== undefined) {
+        updates.address_line2 = typeof body.addressLine2 === "string" ? body.addressLine2.trim() || null : null;
+      }
+      if (body.city !== undefined) {
+        updates.city = typeof body.city === "string" ? body.city.trim() || null : null;
+      }
+      if (body.postalCode !== undefined) {
+        updates.postal_code = typeof body.postalCode === "string" ? body.postalCode.trim() || null : null;
+      }
+      if (body.country !== undefined) {
+        updates.country = typeof body.country === "string" ? body.country.trim() || null : null;
+      }
+      if (body.contactEmail !== undefined) {
+        const contactEmail = normalizeEmail(typeof body.contactEmail === "string" ? body.contactEmail : null);
+        if (contactEmail) {
+          const contactEmailErr = validateEmail(contactEmail);
+          if (contactEmailErr) return jsonResponse({ error: `contactEmail ${contactEmailErr}` }, 400);
+        }
+        updates.contact_email = contactEmail;
+      }
+      if (body.contactMobile !== undefined) {
+        const contactMobile = normalizeMobile(typeof body.contactMobile === "string" ? body.contactMobile : null);
+        if (contactMobile && !/^05\d{8}$/.test(contactMobile)) {
+          return jsonResponse({ error: "contactMobile must match Saudi format 05XXXXXXXX" }, 400);
+        }
+        updates.contact_mobile = contactMobile;
+      }
+      if (body.about !== undefined) {
+        updates.about = typeof body.about === "string" ? body.about.trim() || null : null;
+      }
+      if (body.yearsOfExperience !== undefined) {
+        if (body.yearsOfExperience === null || body.yearsOfExperience === "") {
+          updates.years_of_experience = null;
+        } else {
+          const years = Number.parseInt(String(body.yearsOfExperience), 10);
+          if (!Number.isFinite(years) || years < 0) {
+            return jsonResponse({ error: "yearsOfExperience must be a non-negative integer" }, 400);
+          }
+          updates.years_of_experience = years;
+        }
+      }
       if (body.representativeTitle !== undefined) {
         const repTitle = typeof body.representativeTitle === "string" ? body.representativeTitle.trim() : "";
         if (repTitle) {

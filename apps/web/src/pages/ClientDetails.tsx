@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/Badge';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { CompanyAvatar } from '@/components/ui/CompanyAvatar';
-import { ClientModal } from '@/components/ClientModal';
 import { FileUpload } from '@/components/ui/FileUpload';
 import { scriptsApi, reportsApi } from '@/api';
 import toast from 'react-hot-toast';
@@ -119,7 +118,6 @@ export function ClientDetails() {
   };
 
   const [isUploadOpen, setIsUploadOpen] = useState(false); // Restored
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
   const isPortalClient = (company?.source ?? 'internal') === 'portal';
@@ -492,7 +490,7 @@ export function ClientDetails() {
           <h1 className="text-2xl font-bold tracking-tight text-text-main flex items-center gap-3">
             {lang === 'ar' ? company.nameAr : company.nameEn}
             {isAdmin && !isPortalClient && (
-              <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)} className="h-8 text-xs font-normal">
+              <Button variant="outline" size="sm" onClick={() => navigate(`/clients/${company.companyId}/edit`)} className="h-8 text-xs font-normal">
                 <Edit className="w-3.5 h-3.5 mr-1" />
                 {t('editData' as any)}
               </Button>
@@ -836,11 +834,6 @@ export function ClientDetails() {
         </div>
       </Modal>
 
-      <ClientModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        companyId={company.companyId}
-      />
     </div>
   );
 }
