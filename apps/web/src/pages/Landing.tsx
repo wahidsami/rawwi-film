@@ -698,7 +698,7 @@ export function Landing() {
                 <li><Link to="/client/login" className="transition hover:text-red-400">{isArabic ? 'دخول العملاء' : 'Client login'}</Link></li>
                 <li><Link to="/portal/register" className="transition hover:text-red-400">{isArabic ? 'تسجيل شركة جديدة' : 'Register company'}</Link></li>
                 <li><Link to="/login" className="transition hover:text-red-400">{isArabic ? 'دخول هيئة الأفلام' : 'Film Commission login'}</Link></li>
-                <li><Link to="/verify-certificate/DEMO-CERT-0001" className="transition hover:text-red-400">{isArabic ? 'التحقق من الشهادة' : 'Verify certificate'}</Link></li>
+                <li><a href="#contact" className="transition hover:text-red-400">{isArabic ? 'ابدأ الآن' : 'Get started'}</a></li>
               </ul>
             </div>
             <div className="text-right">

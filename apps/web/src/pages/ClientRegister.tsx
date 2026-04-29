@@ -69,6 +69,14 @@ export function ClientRegister() {
     return '';
   }, [lang, step]);
 
+  const steps = useMemo(() => ([
+    { id: 1, labelAr: 'بيانات الشركة', labelEn: 'Company' },
+    { id: 2, labelAr: 'التواصل والحساب', labelEn: 'Contact' },
+    { id: 3, labelAr: 'المستندات والشروط', labelEn: 'Documents' },
+  ]), []);
+
+  const isStepComplete = (targetStep: number) => validateStep(targetStep) == null;
+
   const validateStep = (targetStep: number): string | null => {
     if (targetStep === 1) {
       if (!form.companyNameAr.trim() || !form.companyNameEn.trim()) return lang === 'ar' ? 'يرجى إدخال اسم الشركة بالعربية والإنجليزية' : 'Please enter company name in Arabic and English';
@@ -194,6 +202,28 @@ export function ClientRegister() {
               : 'Your account will be activated after the admin team reviews and approves your request.'}
           </p>
           <p className="text-sm font-medium text-text-main">{`${lang === 'ar' ? 'الخطوة' : 'Step'} ${step}/3: ${stepTitle}`}</p>
+          <div className="mt-4 flex items-center gap-2">
+            {steps.map((item) => {
+              const isActive = step === item.id;
+              const done = isStepComplete(item.id);
+              return (
+                <div key={item.id} className="flex items-center gap-2">
+                  <div
+                    className={[
+                      'flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold transition-colors',
+                      done ? 'border-success bg-success text-white' : isActive ? 'border-primary bg-primary text-white' : 'border-border bg-background text-text-muted',
+                    ].join(' ')}
+                  >
+                    {done ? '✓' : item.id}
+                  </div>
+                  <span className={['text-xs', isActive ? 'text-text-main' : 'text-text-muted'].join(' ')}>
+                    {lang === 'ar' ? item.labelAr : item.labelEn}
+                  </span>
+                  {item.id < steps.length && <div className="mx-1 h-px w-6 bg-border" />}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
