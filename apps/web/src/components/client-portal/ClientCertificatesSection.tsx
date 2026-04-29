@@ -720,11 +720,38 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
         {!previewUrl ? (
           <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد معاينة متاحة' : 'No preview available'}</p>
         ) : (
-          <iframe
-            title="certificate-preview"
-            src={previewUrl}
-            className="h-[75vh] w-full rounded-md border border-border bg-white"
-          />
+          <div className="space-y-3">
+            <object
+              data={previewUrl}
+              type="application/pdf"
+              className="h-[75vh] w-full rounded-md border border-border bg-white"
+            >
+              <div className="flex h-[75vh] flex-col items-center justify-center gap-3 rounded-md border border-border bg-background p-4 text-center">
+                <p className="text-sm text-text-muted">
+                  {lang === 'ar'
+                    ? 'تعذر عرض المعاينة داخل الصفحة بسبب إعدادات المتصفح.'
+                    : 'Preview could not be shown inside this page due to browser settings.'}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => window.open(previewUrl, '_blank', 'noopener,noreferrer')}
+                  >
+                    {lang === 'ar' ? 'فتح المعاينة في تبويب جديد' : 'Open Preview in New Tab'}
+                  </Button>
+                </div>
+              </div>
+            </object>
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.open(previewUrl, '_blank', 'noopener,noreferrer')}
+              >
+                {lang === 'ar' ? 'فتح في تبويب جديد' : 'Open in New Tab'}
+              </Button>
+            </div>
+          </div>
         )}
       </Modal>
     </div>
