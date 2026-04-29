@@ -25,7 +25,8 @@ export function ProtectedRoute({ children, requiredPermission, requiredSection, 
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const loginPath = requiredUserType === 'client' ? '/client/login' : '/login';
+    return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
   if (requiredUserType === 'admin' && isClient()) {

@@ -48,7 +48,7 @@ export function ClientLanding() {
               <Link to="/portal/register">
                 <Button>{lang === 'ar' ? 'تسجيل مجاني' : 'Free Registration'}</Button>
               </Link>
-              <Link to="/login">
+              <Link to="/client/login">
                 <Button variant="outline">{lang === 'ar' ? 'تسجيل الدخول' : 'Login'}</Button>
               </Link>
             </div>

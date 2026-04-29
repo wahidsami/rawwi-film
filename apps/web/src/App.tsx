@@ -28,6 +28,8 @@ import { NotFound } from '@/pages/NotFound';
 import { QuickAnalysis } from '@/pages/QuickAnalysis';
 import { ClientLanding } from '@/pages/ClientLanding';
 import { ClientRegister } from '@/pages/ClientRegister';
+import { ClientLogin } from '@/pages/ClientLogin';
+import { ClientForgotPassword } from '@/pages/ClientForgotPassword';
 import { ClientPortal } from '@/pages/ClientPortal';
 import { ClientSubmissions } from '@/pages/ClientSubmissions';
 import { CertificateVerify } from '@/pages/CertificateVerify';
@@ -62,6 +64,8 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/set-password" element={<SetPassword />} />
         <Route path="/portal" element={<ClientLanding />} />
+        <Route path="/client/login" element={<ClientLogin />} />
+        <Route path="/client/forgot-password" element={<ClientForgotPassword />} />
         <Route path="/portal/register" element={<ClientRegister />} />
         <Route path="/verify-certificate/:certificateNumber" element={<CertificateVerify />} />
         <Route
