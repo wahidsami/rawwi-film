@@ -39,6 +39,7 @@ const PAGE_RATIOS: Record<CertificatePageSize, number> = {
 };
 
 const GRID_SIZE = 20;
+const CANVAS_BASE_WIDTH = 1000;
 const FILM_LOGO_PLACEHOLDER =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120"><rect width="240" height="120" rx="16" fill="#111827"/><text x="120" y="54" text-anchor="middle" font-family="Arial" font-size="18" fill="#ffffff">FILM</text><text x="120" y="80" text-anchor="middle" font-family="Arial" font-size="16" fill="#d1d5db">COMMISSION</text></svg>');
@@ -61,6 +62,28 @@ type DragMode = 'move' | 'resize';
 
 function snap(value: number, enabled: boolean) {
   return enabled ? Math.round(value / GRID_SIZE) * GRID_SIZE : value;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function canvasBaseHeightFromRatio(ratio: number) {
+  return CANVAS_BASE_WIDTH / ratio;
+}
+
+function clampElementToCanvas(
+  element: CertificateTemplateElement,
+  canvasWidth: number,
+  canvasHeight: number,
+): CertificateTemplateElement {
+  const minWidth = 40;
+  const minHeight = 32;
+  const width = clamp(Number.isFinite(element.width) ? element.width : minWidth, minWidth, canvasWidth);
+  const height = clamp(Number.isFinite(element.height) ? element.height : minHeight, minHeight, canvasHeight);
+  const x = clamp(Number.isFinite(element.x) ? element.x : 0, 0, Math.max(0, canvasWidth - width));
+  const y = clamp(Number.isFinite(element.y) ? element.y : 0, 0, Math.max(0, canvasHeight - height));
+  return { ...element, x, y, width, height };
 }
 
 function makeElement(type: CertificateElementType, lang: 'ar' | 'en'): CertificateTemplateElement {
@@ -276,11 +299,18 @@ export function CertificateDesigner() {
     setSuccess('');
     setTemplate((current) => {
       if (!current) return current;
+      const canvasHeight = canvasBaseHeightFromRatio(
+        current.orientation === 'portrait'
+          ? 1 / (PAGE_RATIOS[current.pageSize] ?? PAGE_RATIOS.A4)
+          : (PAGE_RATIOS[current.pageSize] ?? PAGE_RATIOS.A4),
+      );
       return {
         ...current,
         templateData: {
           elements: current.templateData.elements.map((element) =>
-            element.id === id ? { ...element, ...patch } : element,
+            element.id === id
+              ? clampElementToCanvas({ ...element, ...patch }, CANVAS_BASE_WIDTH, canvasHeight)
+              : element,
           ),
         },
       };
@@ -289,12 +319,20 @@ export function CertificateDesigner() {
 
   const addElement = (type: CertificateElementType, x = 120, y = 120) => {
     setSuccess('');
-    const element = { ...makeElement(type, lang), x: snap(x, snapToGrid), y: snap(y, snapToGrid) };
-    setTemplate((current) => current ? {
-      ...current,
-      templateData: { elements: [...current.templateData.elements, element] },
-    } : current);
-    setSelectedId(element.id);
+    setTemplate((current) => {
+      if (!current) return current;
+      const ratio = current.orientation === 'portrait'
+        ? 1 / (PAGE_RATIOS[current.pageSize] ?? PAGE_RATIOS.A4)
+        : (PAGE_RATIOS[current.pageSize] ?? PAGE_RATIOS.A4);
+      const canvasHeight = canvasBaseHeightFromRatio(ratio);
+      const rawElement = { ...makeElement(type, lang), x: snap(x, snapToGrid), y: snap(y, snapToGrid) };
+      const element = clampElementToCanvas(rawElement, CANVAS_BASE_WIDTH, canvasHeight);
+      setSelectedId(element.id);
+      return {
+        ...current,
+        templateData: { elements: [...current.templateData.elements, element] },
+      };
+    });
   };
 
   const onToolDragStart = (event: DragEvent, type: CertificateElementType) => {
@@ -308,7 +346,10 @@ export function CertificateDesigner() {
     if (!type) return;
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
-    addElement(type, event.clientX - rect.left, event.clientY - rect.top);
+    const canvasHeight = canvasBaseHeightFromRatio(canvasRatio);
+    const scaleX = CANVAS_BASE_WIDTH / rect.width;
+    const scaleY = canvasHeight / rect.height;
+    addElement(type, (event.clientX - rect.left) * scaleX, (event.clientY - rect.top) * scaleY);
   };
 
   const removeSelected = () => {
@@ -338,17 +379,20 @@ export function CertificateDesigner() {
   const onPointerMove = (event: PointerEvent) => {
     const state = dragState.current;
     if (!state) return;
-    const dx = event.clientX - state.startX;
-    const dy = event.clientY - state.startY;
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const canvasHeight = canvasBaseHeightFromRatio(canvasRatio);
+    const dx = (event.clientX - state.startX) * (CANVAS_BASE_WIDTH / rect.width);
+    const dy = (event.clientY - state.startY) * (canvasHeight / rect.height);
     if (state.mode === 'move') {
       updateElement(state.id, {
-        x: Math.max(0, snap(state.origin.x + dx, snapToGrid)),
-        y: Math.max(0, snap(state.origin.y + dy, snapToGrid)),
+        x: snap(state.origin.x + dx, snapToGrid),
+        y: snap(state.origin.y + dy, snapToGrid),
       });
     } else {
       updateElement(state.id, {
-        width: Math.max(40, snap(state.origin.width + dx, snapToGrid)),
-        height: Math.max(32, snap(state.origin.height + dy, snapToGrid)),
+        width: snap(state.origin.width + dx, snapToGrid),
+        height: snap(state.origin.height + dy, snapToGrid),
       });
     }
   };
@@ -519,10 +563,10 @@ export function CertificateDesigner() {
                   selectedId === element.id ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-primary/40',
                 )}
                 style={{
-                  left: element.x,
-                  top: element.y,
-                  width: element.width,
-                  height: element.height,
+                  left: `${(element.x / CANVAS_BASE_WIDTH) * 100}%`,
+                  top: `${(element.y / canvasBaseHeightFromRatio(canvasRatio)) * 100}%`,
+                  width: `${(element.width / CANVAS_BASE_WIDTH) * 100}%`,
+                  height: `${(element.height / canvasBaseHeightFromRatio(canvasRatio)) * 100}%`,
                   opacity: element.opacity ?? 1,
                   fontFamily: element.fontFamily,
                   fontSize: element.fontSize,
