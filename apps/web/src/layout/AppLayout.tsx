@@ -191,6 +191,23 @@ export function AppLayout() {
     }).catch(() => {});
   }, []);
 
+  const getNotifIcon = useCallback((type: string) => {
+    if (type === 'client_registration_arrived') return UserPlus;
+    if (type === 'client_submission' || type === 'script_assigned') return FileText;
+    if (type === 'certificate_payment_completed') return Receipt;
+    if (type === 'certificate_issued') return BadgeCheck;
+    return Bell;
+  }, []);
+
+  const getNotifTypeLabel = useCallback((type: string) => {
+    if (type === 'client_registration_arrived') return lang === 'ar' ? 'تسجيل عميل جديد' : 'New Client Registration';
+    if (type === 'client_submission') return lang === 'ar' ? 'تسليم من العميل' : 'Client Submission';
+    if (type === 'script_assigned') return lang === 'ar' ? 'إسناد نص' : 'Script Assigned';
+    if (type === 'certificate_payment_completed') return lang === 'ar' ? 'سداد رسوم الشهادة' : 'Certificate Payment';
+    if (type === 'certificate_issued') return lang === 'ar' ? 'إصدار شهادة' : 'Certificate Issued';
+    return lang === 'ar' ? 'إشعار' : 'Notification';
+  }, [lang]);
+
   return (
     <div className="dashboard-theme dashboard-shell flex h-screen overflow-hidden p-3 text-text-main md:p-5">
       {/* Sidebar */}
@@ -375,19 +392,3 @@ export function AppLayout() {
     </div>
   );
 }
-  const getNotifIcon = useCallback((type: string) => {
-    if (type === 'client_registration_arrived') return UserPlus;
-    if (type === 'client_submission' || type === 'script_assigned') return FileText;
-    if (type === 'certificate_payment_completed') return Receipt;
-    if (type === 'certificate_issued') return BadgeCheck;
-    return Bell;
-  }, []);
-
-  const getNotifTypeLabel = useCallback((type: string) => {
-    if (type === 'client_registration_arrived') return lang === 'ar' ? 'تسجيل عميل جديد' : 'New Client Registration';
-    if (type === 'client_submission') return lang === 'ar' ? 'تسليم من العميل' : 'Client Submission';
-    if (type === 'script_assigned') return lang === 'ar' ? 'إسناد نص' : 'Script Assigned';
-    if (type === 'certificate_payment_completed') return lang === 'ar' ? 'سداد رسوم الشهادة' : 'Certificate Payment';
-    if (type === 'certificate_issued') return lang === 'ar' ? 'إصدار شهادة' : 'Certificate Issued';
-    return lang === 'ar' ? 'إشعار' : 'Notification';
-  }, [lang]);
