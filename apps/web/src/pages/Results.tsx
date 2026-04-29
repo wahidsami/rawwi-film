@@ -34,10 +34,11 @@ import {
   atomIdNumeric,
 } from '@/data/policyMap';
 import {
-  getPrimarySemanticCategory,
-  getSemanticCategoriesForChecklist,
-  type SemanticCategoryId,
-} from '@/data/semanticCategories';
+  resolveViolationTypeId,
+  violationTypeLabel,
+  violationTypesForChecklist,
+  type ViolationTypeId,
+} from '@/data/violationTypes';
 import { displayPageForFinding } from '@/utils/viewerPageFromOffset';
 import { formatResolvedSceneLabel, resolveSceneLabelFromOffset } from '@/utils/sceneLabelFromOffset';
 
@@ -112,11 +113,45 @@ function pickFindingRationale(f: AnalysisFinding): string | null {
     f.descriptionAr ?? undefined,
   ];
   for (const candidate of candidates) {
-    if (!isWeakRationaleText(candidate)) return candidate!.trim();
+    if (!isWeakRationaleText(candidate)) return stripArticleAtomReferences(candidate!.trim());
   }
   for (const candidate of candidates) {
     const text = candidate?.trim();
-    if (text) return text;
+    if (text) return stripArticleAtomReferences(text);
+  }
+  return null;
+}
+
+function stripArticleAtomReferences(value: string | null | undefined): string {
+  const text = (value ?? '').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  return text
+    .replace(/(?:المادة|مادة|البند|Article|Art)\s*[\d]+(?:[.-]\d+)?(?:\s*[:：\-]?\s*[^\s،,.؛:()]+)?/gi, '')
+    .replace(/(?:atom|Atom)\s*[\w.-]+/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([،,.؛:])/g, '$1')
+    .trim();
+}
+
+function getViolationTypeIdFromFinding(
+  finding: Pick<AnalysisFinding, 'titleAr' | 'descriptionAr' | 'source'> & {
+    title_ar?: string | null;
+    description_ar?: string | null;
+    location?: Record<string, unknown> | null;
+  }
+): ViolationTypeId | null {
+  const v3 = ((finding.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
+  const candidates = [
+    finding.titleAr,
+    finding.title_ar,
+    finding.descriptionAr,
+    finding.description_ar,
+    typeof v3.title_ar === 'string' ? v3.title_ar : null,
+    typeof v3.title === 'string' ? v3.title : null,
+  ];
+  for (const candidate of candidates) {
+    const resolved = resolveViolationTypeId(candidate);
+    if (resolved) return resolved;
   }
   return null;
 }
@@ -776,35 +811,32 @@ export function Results() {
   const violationsDeduped = hasRealFindings ? dedupeRealFindings(violations) : [];
   const approvedFindingsDeduped = hasRealFindings ? dedupeRealFindings(approvedFindings) : [];
 
-  const semanticCategoriesOrdered = getSemanticCategoriesForChecklist();
+  const semanticCategoriesOrdered = violationTypesForChecklist();
   const categoryViolationCounts = (() => {
-    const m = new Map<SemanticCategoryId, number>();
-    const add = (id: SemanticCategoryId) => {
+    const m = new Map<ViolationTypeId, number>();
+    const add = (id: ViolationTypeId) => {
       m.set(id, (m.get(id) ?? 0) + 1);
     };
     if (hasReviewFindings) {
       for (const f of reviewViolations) {
-        add(getPrimarySemanticCategory(f.primaryArticleId, f.primaryAtomId ?? null, f.primaryAtomId ?? undefined));
+        add(getViolationTypeIdFromFinding({
+          titleAr: f.titleAr,
+          descriptionAr: f.descriptionAr,
+          source: f.sourceKind,
+          location: (f as { location?: Record<string, unknown> | null }).location ?? null,
+        }) ?? 'other');
       }
       return m;
     }
     if (hasRealFindings) {
       const rows = showAllFindingRows ? violations : violationsDeduped;
       for (const f of rows) {
-        const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
-        add(
-          getPrimarySemanticCategory(
-            f.articleId,
-            f.atomId,
-            v3.primary_policy_atom_id as string | undefined
-          )
-        );
+        add(getViolationTypeIdFromFinding(f) ?? 'other');
       }
       return m;
     }
     for (const cf of canonicalSummaryFindings) {
-      const aid = Number.isFinite(cf.primary_article_id) ? (cf.primary_article_id as number) : 0;
-      add(getPrimarySemanticCategory(aid, null, cf.primary_policy_atom_id));
+      add(resolveViolationTypeId(cf.title_ar) ?? resolveViolationTypeId(cf.rationale ?? null) ?? 'other');
     }
     return m;
   })();
@@ -1036,14 +1068,9 @@ export function Results() {
               } as unknown as AnalysisFinding))
             );
 
-      const groupsByCat = new Map<SemanticCategoryId, AnalysisFinding[]>();
+      const groupsByCat = new Map<ViolationTypeId, AnalysisFinding[]>();
       for (const f of findingList) {
-        const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
-        const cat = getPrimarySemanticCategory(
-          f.articleId,
-          f.atomId,
-          v3.primary_policy_atom_id as string | undefined
-        );
+        const cat = getViolationTypeIdFromFinding(f) ?? 'other';
         if (!groupsByCat.has(cat)) groupsByCat.set(cat, []);
         groupsByCat.get(cat)!.push(f);
       }
@@ -1454,10 +1481,15 @@ export function Results() {
     source?: string | null;
     evidenceSnippet?: string | null;
     articleId: number;
+    atomId?: string | null;
+    primaryPolicyAtomId?: string | null;
   }): string {
     const title = (params.title ?? '').trim();
     const source = params.source ?? 'ai';
     const evidenceSnippet = (params.evidenceSnippet ?? '').trim();
+    void params.articleId;
+    void params.atomId;
+    void params.primaryPolicyAtomId;
 
     if (source === 'lexicon_mandatory') {
       const term = evidenceSnippet || title.replace(/^.*?:\s*/, '').trim();
@@ -1466,13 +1498,12 @@ export function Results() {
         : (lang === 'ar' ? 'مطابقة من قاموس المصطلحات' : 'Glossary match');
     }
 
-    if (/^(مخالفة\s+معجمية|مطابقة\s+من\s+قاموس\s+المصطلحات)\s*:/u.test(title)) {
-      return lang === 'ar'
-        ? `مخالفة المحتوى الإعلامي — المادة ${params.articleId}`
-        : `Content finding — Article ${params.articleId}`;
+    const resolvedType = resolveViolationTypeId(title) ?? resolveViolationTypeId(evidenceSnippet);
+    if (resolvedType) {
+      return violationTypeLabel(resolvedType, lang);
     }
 
-    return title || (lang === 'ar' ? 'ملاحظة' : 'Finding');
+    return stripArticleAtomReferences(title) || (lang === 'ar' ? 'ملاحظة' : 'Finding');
   }
 
   function renderFindingCard(f: AnalysisFinding) {
@@ -1500,6 +1531,8 @@ export function Results() {
       source: f.source ?? 'ai',
       evidenceSnippet: f.evidenceSnippet,
       articleId: primaryArticle,
+      atomId: f.atomId,
+      primaryPolicyAtomId: v3.primary_policy_atom_id as string | undefined,
     });
     return (
       <div key={f.id} className={cn("border rounded-lg p-4", isApproved ? "bg-success/5 border-success/20" : "bg-surface border-border")}>
@@ -1612,7 +1645,7 @@ export function Results() {
       evidenceSnippet: f.evidenceSnippet,
       articleId: f.primaryArticleId,
     });
-    const rationale = !isWeakRationaleText(f.rationaleAr) ? f.rationaleAr?.trim() : null;
+    const rationale = !isWeakRationaleText(f.rationaleAr) ? stripArticleAtomReferences(f.rationaleAr?.trim()) : null;
     const confidence = matchedRaw ? Math.round((matchedRaw.confidence ?? 0) * 100) : null;
     const manualComment = (f.manualComment ?? '').trim();
     const isEdited = Boolean(f.editedAt || f.editedBy);
@@ -1777,9 +1810,9 @@ export function Results() {
         rows.push({ art, f, idx });
       });
     }
-    const byCat = new Map<SemanticCategoryId, typeof rows>();
+    const byCat = new Map<ViolationTypeId, typeof rows>();
     for (const row of rows) {
-      const cat = getPrimarySemanticCategory(row.art.article_id, null, null);
+      const cat = resolveViolationTypeId(row.f.title_ar) ?? resolveViolationTypeId(row.f.evidence_snippet) ?? 'other';
       if (!byCat.has(cat)) byCat.set(cat, []);
       byCat.get(cat)!.push(row);
     }
@@ -1840,10 +1873,6 @@ export function Results() {
                         <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">
                           &quot;{f.evidence_snippet}&quot;
                         </div>
-                        <div className="mt-2 text-xs text-text-muted">
-                          {lang === "ar" ? "المادة (مرجع قانوني): " : "Article (legal ref): "}
-                          <span className="text-text-main">{articleLabel(art.article_id)}</span>
-                        </div>
                       </div>
                     );
                   })()
@@ -1857,10 +1886,9 @@ export function Results() {
   }
 
   function renderFindingsFromCanonicalSummary(listInput: CanonicalSummaryFinding[] = canonicalSummaryFindings) {
-    const byCat = new Map<SemanticCategoryId, CanonicalSummaryFinding[]>();
+    const byCat = new Map<ViolationTypeId, CanonicalSummaryFinding[]>();
     for (const f of listInput) {
-      const articleId = Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0;
-      const cat = getPrimarySemanticCategory(articleId, null, f.primary_policy_atom_id);
+      const cat = resolveViolationTypeId(f.title_ar) ?? resolveViolationTypeId(f.rationale ?? null) ?? 'other';
       if (!byCat.has(cat)) byCat.set(cat, []);
       byCat.get(cat)!.push(f);
     }
@@ -1892,7 +1920,7 @@ export function Results() {
               <div className="p-4 space-y-3">
                 {artFindings.map((f, idx) => {
                   const articleId = Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0;
-                  const cardRationale = isWeakRationaleText(f.rationale) ? null : f.rationale;
+                  const cardRationale = isWeakRationaleText(f.rationale) ? null : stripArticleAtomReferences(f.rationale);
                   const sceneLabel = formatResolvedSceneLabel(
                     resolveSceneLabelFromOffset(f.start_offset_global ?? null, reportViewerPages),
                     lang
@@ -1994,14 +2022,9 @@ export function Results() {
   }
 
   function renderFindingsFromReal(list: AnalysisFinding[]) {
-    const byCat = new Map<SemanticCategoryId, AnalysisFinding[]>();
+    const byCat = new Map<ViolationTypeId, AnalysisFinding[]>();
     for (const f of list) {
-      const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
-      const cat = getPrimarySemanticCategory(
-        f.articleId,
-        f.atomId,
-        v3.primary_policy_atom_id as string | undefined
-      );
+      const cat = getViolationTypeIdFromFinding(f) ?? 'other';
       if (!byCat.has(cat)) byCat.set(cat, []);
       byCat.get(cat)!.push(f);
     }
@@ -2068,9 +2091,14 @@ export function Results() {
   }
 
   function renderFindingsFromReview(list: AnalysisReviewFinding[]) {
-    const byCat = new Map<SemanticCategoryId, AnalysisReviewFinding[]>();
+    const byCat = new Map<ViolationTypeId, AnalysisReviewFinding[]>();
     for (const f of list) {
-      const cat = getPrimarySemanticCategory(f.primaryArticleId, f.primaryAtomId ?? null, f.primaryAtomId ?? undefined);
+      const cat = getViolationTypeIdFromFinding({
+        titleAr: f.titleAr,
+        descriptionAr: f.descriptionAr,
+        source: f.sourceKind,
+        location: (f as { location?: Record<string, unknown> | null }).location ?? null,
+      }) ?? 'other';
       if (!byCat.has(cat)) byCat.set(cat, []);
       byCat.get(cat)!.push(f);
     }
@@ -2461,12 +2489,12 @@ export function Results() {
         <div className="lg:col-span-4 space-y-4">
           <div className="border-b border-border pb-2">
             <h3 className="font-bold text-lg text-text-main">
-              {lang === 'ar' ? 'قائمة التحقق (المجالات الدلالية)' : 'Compliance checklist (semantic areas)'}
+              {lang === 'ar' ? 'قائمة التحقق (أنواع المخالفات)' : 'Compliance checklist (violation types)'}
             </h3>
             <p className="text-xs text-text-muted mt-1">
               {lang === 'ar'
-                ? 'عدد المخالفات لكل مجال دلالي؛ المرجع القانوني (مادة/بند) يظهر في بطاقة كل مخالفة.'
-                : 'Violation count per semantic area; legal atom/article appears on each finding card.'}
+                ? 'عدد المخالفات لكل نوع من أنواع المخالفات؛ يظهر عنوان المخالفة فقط في بطاقة كل نتيجة.'
+                : 'Violation count per violation type; each finding card shows the violation title only.'}
             </p>
           </div>
           <div className="space-y-2 max-h-[min(75vh,32rem)] overflow-y-auto pe-1">
@@ -2625,8 +2653,7 @@ export function Results() {
                       </div>
                       <div className="bg-background/50 p-3 rounded-md border border-info/20 text-sm text-text-main italic" dir="rtl">"{f.evidenceSnippet}"</div>
                       <div className="mt-2 text-xs text-text-muted space-y-1">
-                        <div>{lang === 'ar' ? 'المادة:' : 'Article:'} <span className="text-text-main">{articleLabel(f.primaryArticleId)}</span></div>
-                        <div>{lang === 'ar' ? 'لماذا ليست مخالفة:' : 'Why not a violation:'} <span className="text-text-main">{f.rationaleAr ?? '—'}</span></div>
+                        <div>{lang === 'ar' ? 'لماذا ليست مخالفة:' : 'Why not a violation:'} <span className="text-text-main">{stripArticleAtomReferences(f.rationaleAr) || '—'}</span></div>
                       </div>
                     </div>
                   ))
@@ -2642,10 +2669,7 @@ export function Results() {
                       </div>
                       <div className="bg-background/50 p-3 rounded-md border border-info/20 text-sm text-text-main italic" dir="rtl">"{f.evidence_snippet}"</div>
                       <div className="mt-2 text-xs text-text-muted space-y-1">
-                        {f.primary_article_id && (
-                          <div>{lang === 'ar' ? 'المادة:' : 'Article:'} <span className="text-text-main">{articleLabel(f.primary_article_id)}</span></div>
-                        )}
-                        <div>{lang === 'ar' ? 'لماذا ليست مخالفة:' : 'Why not a violation:'} <span className="text-text-main">{f.rationale ?? '—'}</span></div>
+                        <div>{lang === 'ar' ? 'لماذا ليست مخالفة:' : 'Why not a violation:'} <span className="text-text-main">{stripArticleAtomReferences(f.rationale) || '—'}</span></div>
                       </div>
                     </div>
                   ))

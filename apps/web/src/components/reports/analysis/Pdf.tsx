@@ -1,13 +1,12 @@
 import React from "react";
 import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 import { formatDate, formatDateLong } from "@/utils/dateFormat";
-import { getPolicyArticle } from "@/data/policyMap";
 import {
-  getPrimarySemanticCategory,
-  getSemanticCategoriesForChecklist,
-  categoryLabel,
-  type SemanticCategoryId,
-} from "@/data/semanticCategories";
+  resolveViolationTypeId,
+  violationTypeLabel,
+  violationTypesForChecklist,
+  type ViolationTypeId,
+} from "@/data/violationTypes";
 import { analysisStyles as s } from "./styles";
 import type { AnalysisPdfFinding } from "./mapper";
 const A4_WIDTH = 595.28;
@@ -67,18 +66,17 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
       evidenceSnippet: f.evidenceSnippet ?? "",
     }));
 
-  const groups = safeFindings.reduce<Partial<Record<SemanticCategoryId, AnalysisPdfFinding[]>>>((acc, f) => {
-    const aid = Number.isFinite(f.primaryArticleId)
-      ? (f.primaryArticleId as number)
-      : Number.isFinite(f.articleId)
-        ? f.articleId
-        : 0;
-    const key = getPrimarySemanticCategory(aid, f.policyAtomId, f.policyAtomId);
+  const groups = safeFindings.reduce<Partial<Record<ViolationTypeId, AnalysisPdfFinding[]>>>((acc, f) => {
+    const key =
+      resolveViolationTypeId(f.titleAr) ??
+      resolveViolationTypeId(f.descriptionAr) ??
+      resolveViolationTypeId(f.evidenceSnippet) ??
+      "other";
     if (!acc[key]) acc[key] = [];
     acc[key].push(f);
     return acc;
   }, {});
-  const categoryOrder = getSemanticCategoriesForChecklist();
+  const categoryOrder = violationTypesForChecklist();
 
   const typeCounts = safeFindings.reduce(
     (acc, f) => {
@@ -95,12 +93,6 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
     if (source === "manual") return isAr ? "يدوي" : "Manual";
     if (source === "lexicon_mandatory" || source === "glossary") return isAr ? "معجم" : "Glossary";
     return isAr ? "تحليل آلي" : "AI Analysis";
-  };
-
-  const articleLabel = (articleId: number) => {
-    const art = getPolicyArticle(articleId);
-    if (!art) return isAr ? `مادة ${articleId}` : `Article ${articleId}`;
-    return isAr ? `مادة ${articleId}: ${art.title_ar}` : `Article ${articleId}: ${art.title_ar}`;
   };
 
   return (
@@ -175,11 +167,9 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
               return (
           <View key={cat.id} style={s.articleWrap}>
             <Text style={[s.articleHeader, rtl]}>
-              {categoryLabel(cat.id, isAr ? "ar" : "en")}
+              {violationTypeLabel(cat.id, isAr ? "ar" : "en")}
             </Text>
             {list.filter(Boolean).map((f, idx) => {
-              const primaryId = f.primaryArticleId ?? f.articleId;
-              const relatedIds = (f.relatedArticleIds ?? []).filter((id) => id !== primaryId);
               return (
                 <View key={`${f?.id ?? `finding-${idx}`}-${idx}`} style={s.finding}>
                   <Text style={[s.findingTitle, rtl]}>{f.titleAr || "—"}</Text>
@@ -206,16 +196,6 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                       {isAr
                         ? `السطر ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`
                         : `Line ${f.startLineChunk}${f.endLineChunk ? `-${f.endLineChunk}` : ""}`}
-                    </Text>
-                  )}
-                  <Text style={[s.findingMeta, rtl]}>
-                    {isAr ? "المادة الأساسية: " : "Primary article: "}
-                    {articleLabel(primaryId)}
-                  </Text>
-                  {relatedIds.length > 0 && (
-                    <Text style={[s.findingMeta, rtl]}>
-                      {isAr ? "مواد مرتبطة: " : "Related articles: "}
-                      {relatedIds.map(articleLabel).join(isAr ? "، " : ", ")}
                     </Text>
                   )}
                   {f.pillarId ? (
@@ -256,12 +236,6 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                   <Text style={[s.chip, s.chipInfo]}>{isAr ? "ملاحظة" : "Note"}</Text>
                   <Text style={[s.chip, s.chipInfo]}>{isAr ? "الثقة" : "Conf"} {Math.round((f.confidence || 0) * 100)}%</Text>
                 </View>
-                {f.primaryArticleId ? (
-                  <Text style={[s.findingMeta, rtl]}>
-                    {isAr ? "المادة: " : "Article: "}
-                    {f.primaryArticleId}
-                  </Text>
-                ) : null}
                 <Text style={[s.findingBody, rtl]}>
                   {isAr ? "لماذا ليست مخالفة: " : "Why not a violation: "}
                   {f.rationale || "—"}
