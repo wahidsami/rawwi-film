@@ -14,6 +14,7 @@ import { DocumentImportModal } from '@/components/import/DocumentImportModal';
 import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square, Search } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getActionablePolicyArticles } from '@/data/policyMap';
+import { getLegacyPolicyArticleIdForViolationTypeId, resolveViolationTypeId, violationTypesForChecklist, type ViolationTypeId } from '@/data/violationTypes';
 import { getScriptDecisionCapabilities } from '@/utils/scriptDecisionCapabilities';
 import { extractDocxWithPages } from '@/utils/documentExtract';
 import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
@@ -26,32 +27,8 @@ import {
 
 const policyArticlesForForm = getActionablePolicyArticles();
 const DEFAULT_ACTIONABLE_ARTICLE_ID = policyArticlesForForm[0]?.articleId ?? 4;
-const ARTICLES_CHECKLIST = policyArticlesForForm.map((a) => ({
-  id: String(a.articleId),
-  label: `Art ${a.articleId} - ${a.title_ar}`,
-  value: String(a.articleId),
-}));
-
-/** Atom options per article from PolicyMap (e.g. 4-1..4-8, 16-1..16-5). */
-const ARTICLE_ATOMS: Record<string, { value: string; label: string }[]> = {};
-for (const art of policyArticlesForForm) {
-  const id = String(art.articleId);
-  ARTICLE_ATOMS[id] = [
-    { value: '', label: '—' },
-    ...(art.atoms ?? []).map((atom) => ({ value: atom.atomId, label: `${atom.atomId} ${atom.title_ar}` })),
-  ];
-}
-
-function getArticleAtomOptions(articleId: string): { value: string; label: string }[] {
-  const fallbackKey = String(DEFAULT_ACTIONABLE_ARTICLE_ID);
-  return ARTICLE_ATOMS[articleId] ?? ARTICLE_ATOMS[fallbackKey] ?? [{ value: '', label: '—' }];
-}
-
-function sanitizeAtomSelection(articleId: string, atomId: string | null | undefined): string | null {
-  const raw = atomId?.trim() ?? '';
-  if (!raw) return null;
-  return getArticleAtomOptions(articleId).some((option) => option.value === raw) ? raw : null;
-}
+const VIOLATION_TYPES_OPTIONS = violationTypesForChecklist();
+const DEFAULT_VIOLATION_TYPE_ID = VIOLATION_TYPES_OPTIONS[0]?.id ?? 'other';
 
 /**
  * Display atom code for UI: PolicyMap style "X-Y" or legacy "X.Y".
@@ -1916,6 +1893,7 @@ export function ScriptWorkspace() {
   const [editReportFindingForm, setEditReportFindingForm] = useState({
     articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
     atomId: '',
+    violationTypeId: DEFAULT_VIOLATION_TYPE_ID,
     severity: 'medium',
     evidenceSnippet: '',
     rationaleAr: '',
@@ -1942,6 +1920,7 @@ export function ScriptWorkspace() {
     reportId: '',
     articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
     atomId: '' as string,
+    violationTypeId: DEFAULT_VIOLATION_TYPE_ID,
     severity: 'medium' as string,
     comment: '',
     excerpt: '',
@@ -2121,7 +2100,8 @@ export function ScriptWorkspace() {
     if (!editReportFindingModal) return;
     setEditReportFindingForm({
       articleId: String(editReportFindingModal.articleId || DEFAULT_ACTIONABLE_ARTICLE_ID),
-      atomId: editReportFindingModal.atomId ?? '',
+      atomId: '',
+      violationTypeId: resolveViolationTypeId(editReportFindingModal.titleAr) ?? resolveViolationTypeId(editReportFindingModal.descriptionAr) ?? resolveViolationTypeId(editReportFindingModal.evidenceSnippet) ?? 'other',
       severity: (editReportFindingModal.severity || 'medium').toLowerCase(),
       evidenceSnippet: editReportFindingModal.evidenceSnippet ?? '',
       rationaleAr: editReportFindingModal.rationaleAr ?? '',
@@ -2535,11 +2515,10 @@ export function ScriptWorkspace() {
     }
     setEditReportFindingSaving(true);
     try {
-      const normalizedAtomId = sanitizeAtomSelection(editReportFindingForm.articleId, editReportFindingForm.atomId);
       const res = await findingsApi.reclassifyFinding({
         findingId: editReportFindingModal.id,
         articleId: parseInt(editReportFindingForm.articleId, 10) || DEFAULT_ACTIONABLE_ARTICLE_ID,
-        atomId: normalizedAtomId,
+        atomId: null,
         severity: editReportFindingForm.severity,
         evidenceSnippet: editReportFindingForm.evidenceSnippet?.trim() || null,
         rationaleAr: editReportFindingForm.rationaleAr?.trim() || null,
@@ -2549,13 +2528,6 @@ export function ScriptWorkspace() {
         setReportFindings((prev) => prev.map((f) => (f.id === res.finding!.id ? res.finding! : f)));
       }
       await reloadSelectedReportReviewLayer();
-      if ((editReportFindingForm.atomId?.trim() ?? '') && !normalizedAtomId) {
-        toast(
-          lang === 'ar'
-            ? 'تمت إعادة ضبط البند الفرعي لأنه لا ينتمي إلى المادة المختارة.'
-            : 'The atom was reset because it does not belong to the selected article.',
-        );
-      }
       if (res.atomMappingWarning) {
         toast((t) => (
           <div className="max-w-sm text-sm">
@@ -3641,6 +3613,7 @@ export function ScriptWorkspace() {
       reportId: defaultReportId || prev.reportId,
       articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
       atomId: '',
+      violationTypeId: DEFAULT_VIOLATION_TYPE_ID,
       severity: 'medium',
       comment: '',
     }));
@@ -3655,7 +3628,6 @@ export function ScriptWorkspace() {
     }
     setManualSaving(true);
     try {
-      const normalizedAtomId = sanitizeAtomSelection(formData.articleId, formData.atomId);
       const created = await findingsApi.createManual({
         reportId: formData.reportId,
         scriptId: script.id,
@@ -3664,18 +3636,11 @@ export function ScriptWorkspace() {
         endOffsetGlobal: manualOffsets.endOffsetGlobal,
         excerpt: formData.excerpt,
         articleId: parseInt(formData.articleId, 10) || DEFAULT_ACTIONABLE_ARTICLE_ID,
-        atomId: normalizedAtomId,
+        atomId: null,
         severity: formData.severity,
         manualComment: formData.comment?.trim() || undefined,
       });
       toast.success(lang === 'ar' ? 'تمت إضافة الملاحظة اليدوية' : 'Manual finding added');
-      if ((formData.atomId?.trim() ?? '') && !normalizedAtomId) {
-        toast(
-          lang === 'ar'
-            ? 'تمت إعادة ضبط البند الفرعي لأنه لا ينتمي إلى المادة المختارة.'
-            : 'The atom was reset because it does not belong to the selected article.',
-        );
-      }
       // const report = reportHistory.find((r) => r.id === formData.reportId) ?? selectedReportForHighlights;
       // const jobId = (report as { jobId?: string })?.jobId ?? created.jobId;
       if (selectedReportForHighlights?.jobId === created.jobId) {
@@ -3725,8 +3690,6 @@ export function ScriptWorkspace() {
   /** Canonical text for offset-based highlights: script_text.content only. Offsets from AI are relative to this. */
   const canonicalContentForHighlights =
     (editorData?.content != null && editorData.content.trim() !== '') ? editorData.content : null;
-  const manualAtomOptions = getArticleAtomOptions(formData.articleId);
-  const editAtomOptions = getArticleAtomOptions(editReportFindingForm.articleId);
   const sections: EditorSectionResponse[] = editorData?.sections ?? [];
   const hasEditorContent = (editorData?.content != null && editorData.content.trim() !== '') || !!extractedText;
 
@@ -6368,24 +6331,23 @@ export function ScriptWorkspace() {
             <p className="text-xs text-text-muted">{lang === 'ar' ? 'قم بتشغيل التحليل أولاً لإنشاء تقرير.' : 'Run analysis first to create a report.'}</p>
           )}
           
-          <Select 
-            label={lang === 'ar' ? 'المادة (البند)' : 'Article'}
-            value={formData.articleId}
-            onChange={(e) => setFormData({ ...formData, articleId: e.target.value, atomId: '' })}
-            options={ARTICLES_CHECKLIST.map((a) => ({ label: a.label, value: a.id }))}
-          />
-
           <Select
-            label={lang === 'ar' ? 'البند الفرعي (اختياري)' : 'Atom (optional)'}
-            value={formData.atomId}
-            onChange={(e) => setFormData({ ...formData, atomId: e.target.value })}
-            options={manualAtomOptions}
+            label={lang === 'ar' ? 'نوع المخالفة' : 'Violation type'}
+            value={formData.violationTypeId}
+            onChange={(e) => {
+              const violationTypeId = e.target.value as ViolationTypeId;
+              setFormData((prev) => ({
+                ...prev,
+                violationTypeId,
+                articleId: String(getLegacyPolicyArticleIdForViolationTypeId(violationTypeId)),
+                atomId: '',
+              }));
+            }}
+            options={VIOLATION_TYPES_OPTIONS.map((item) => ({
+              label: lang === 'ar' ? item.titleAr : item.titleEn,
+              value: item.id,
+            }))}
           />
-          <p className="text-[11px] text-text-muted" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-            {lang === 'ar'
-              ? 'تُحمَّل البنود الفرعية من خريطة السياسة الحالية. إذا كانت قاعدة البيانات لم تُحدَّث بعد لبعض البنود، فسيُحفظ الإدخال على مستوى المادة فقط بدلاً من رفضه.'
-              : 'Atoms are loaded from the current policy map. If the database mapping is still behind for a specific atom, the finding will be saved at article level instead of being rejected.'}
-          </p>
 
           <Textarea 
             label={lang === 'ar' ? 'التعليق' : 'Comment'}
@@ -7045,17 +7007,21 @@ export function ScriptWorkspace() {
           />
 
           <Select
-            label={lang === 'ar' ? 'المادة (البند)' : 'Article'}
-            value={editReportFindingForm.articleId}
-            onChange={(e) => setEditReportFindingForm((prev) => ({ ...prev, articleId: e.target.value, atomId: '' }))}
-            options={ARTICLES_CHECKLIST.map((a) => ({ label: a.label, value: a.id }))}
-          />
-
-          <Select
-            label={lang === 'ar' ? 'البند الفرعي (اختياري)' : 'Atom (optional)'}
-            value={editReportFindingForm.atomId}
-            onChange={(e) => setEditReportFindingForm((prev) => ({ ...prev, atomId: e.target.value }))}
-            options={editAtomOptions}
+            label={lang === 'ar' ? 'نوع المخالفة' : 'Violation type'}
+            value={editReportFindingForm.violationTypeId}
+            onChange={(e) => {
+              const violationTypeId = e.target.value as ViolationTypeId;
+              setEditReportFindingForm((prev) => ({
+                ...prev,
+                violationTypeId,
+                articleId: String(getLegacyPolicyArticleIdForViolationTypeId(violationTypeId)),
+                atomId: '',
+              }));
+            }}
+            options={VIOLATION_TYPES_OPTIONS.map((item) => ({
+              label: lang === 'ar' ? item.titleAr : item.titleEn,
+              value: item.id,
+            }))}
           />
 
           <Textarea

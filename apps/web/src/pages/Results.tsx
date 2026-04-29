@@ -35,6 +35,7 @@ import {
 } from '@/data/policyMap';
 import {
   resolveViolationTypeId,
+  getLegacyPolicyArticleIdForViolationTypeId,
   violationTypeLabel,
   violationTypesForChecklist,
   type ViolationTypeId,
@@ -50,31 +51,8 @@ const policyArticles = getPolicyArticles().map((a) => ({
 
 const policyArticlesForForm = getActionablePolicyArticles();
 const DEFAULT_ACTIONABLE_ARTICLE_ID = policyArticlesForForm[0]?.articleId ?? 4;
-const RESULTS_ARTICLES_CHECKLIST = policyArticlesForForm.map((a) => ({
-  id: String(a.articleId),
-  label: `Art ${a.articleId} - ${a.title_ar}`,
-  value: String(a.articleId),
-}));
-
-const RESULTS_ARTICLE_ATOMS: Record<string, { value: string; label: string }[]> = {};
-for (const art of policyArticlesForForm) {
-  const id = String(art.articleId);
-  RESULTS_ARTICLE_ATOMS[id] = [
-    { value: '', label: '—' },
-    ...(art.atoms ?? []).map((atom) => ({ value: atom.atomId, label: `${atom.atomId} ${atom.title_ar}` })),
-  ];
-}
-
-function getResultsArticleAtomOptions(articleId: string): { value: string; label: string }[] {
-  const fallbackKey = String(DEFAULT_ACTIONABLE_ARTICLE_ID);
-  return RESULTS_ARTICLE_ATOMS[articleId] ?? RESULTS_ARTICLE_ATOMS[fallbackKey] ?? [{ value: '', label: '—' }];
-}
-
-function sanitizeResultsAtomSelection(articleId: string, atomId: string | null | undefined): string | null {
-  const raw = atomId?.trim() ?? '';
-  if (!raw) return null;
-  return getResultsArticleAtomOptions(articleId).some((option) => option.value === raw) ? raw : null;
-}
+const VIOLATION_TYPES_OPTIONS = violationTypesForChecklist();
+const DEFAULT_VIOLATION_TYPE_ID = VIOLATION_TYPES_OPTIONS[0]?.id ?? 'other';
 
 function formatAtomDisplayR(articleId: number, atomId: string | null): string {
   if (!atomId?.trim()) return String(articleId);
@@ -354,6 +332,7 @@ export function Results() {
   const [editFindingForm, setEditFindingForm] = useState({
     articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
     atomId: '',
+    violationTypeId: DEFAULT_VIOLATION_TYPE_ID,
     severity: 'medium',
     evidenceSnippet: '',
     rationaleAr: '',
@@ -363,8 +342,17 @@ export function Results() {
   useEffect(() => {
     if (!editFindingModal) return;
     setEditFindingForm({
-      articleId: String(editFindingModal.articleId || DEFAULT_ACTIONABLE_ARTICLE_ID),
-      atomId: editFindingModal.atomId ?? '',
+      articleId: String(getLegacyPolicyArticleIdForViolationTypeId(
+        resolveViolationTypeId(editFindingModal.titleAr) ??
+        resolveViolationTypeId(editFindingModal.descriptionAr) ??
+        resolveViolationTypeId(editFindingModal.evidenceSnippet) ??
+        'other'
+      )),
+      atomId: '',
+      violationTypeId: resolveViolationTypeId(editFindingModal.titleAr) ??
+        resolveViolationTypeId(editFindingModal.descriptionAr) ??
+        resolveViolationTypeId(editFindingModal.evidenceSnippet) ??
+        'other',
       severity: (editFindingModal.severity || 'medium').toLowerCase(),
       evidenceSnippet: editFindingModal.evidenceSnippet ?? '',
       rationaleAr: editFindingModal.rationaleAr ?? '',
@@ -875,7 +863,6 @@ export function Results() {
     : countFindingKinds(canonicalSummaryFindings);
   const displayApproved = useReviewFindingsUi ? reviewApproved.length : (report.approvedCount ?? 0);
   const displaySpecialNotes = useReviewFindingsUi ? reviewSpecialNotes.length : reportHints.length;
-  const editFindingAtomOptions = getResultsArticleAtomOptions(editFindingForm.articleId);
   const matchesFindingFilter = (finding: Pick<AnalysisFinding, 'source'> | Pick<CanonicalSummaryFinding, 'source'>) => {
     if (findingFilter === 'all') return true;
     if (findingFilter === 'special') return false;
@@ -1295,11 +1282,10 @@ export function Results() {
     }
     setEditFindingSaving(true);
     try {
-      const normalizedAtomId = sanitizeResultsAtomSelection(editFindingForm.articleId, editFindingForm.atomId);
       const res = await findingsApi.reclassifyFinding({
         findingId: editFindingModal.id,
         articleId: parseInt(editFindingForm.articleId, 10) || DEFAULT_ACTIONABLE_ARTICLE_ID,
-        atomId: normalizedAtomId,
+        atomId: null,
         severity: editFindingForm.severity,
         evidenceSnippet: editFindingForm.evidenceSnippet?.trim() || null,
         rationaleAr: editFindingForm.rationaleAr?.trim() || null,
@@ -1325,24 +1311,7 @@ export function Results() {
         } : prev);
       }
 
-      if ((editFindingForm.atomId?.trim() ?? '') && !normalizedAtomId) {
-        toast(
-          lang === 'ar'
-            ? 'تمت إعادة ضبط البند الفرعي لأنه لا ينتمي إلى المادة المختارة.'
-            : 'The atom was reset because it does not belong to the selected article.',
-        );
-      }
-
-      if (res.atomMappingWarning) {
-        toast((t) => (
-          <div className="max-w-sm text-sm">
-            <p className="font-semibold mb-1">{lang === 'ar' ? 'تم الحفظ مع ملاحظة' : 'Saved with note'}</p>
-            <p>{res.atomMappingWarning}</p>
-          </div>
-        ));
-      } else {
-        toast.success(lang === 'ar' ? 'تم تحديث التصنيف' : 'Finding classification updated');
-      }
+      toast.success(lang === 'ar' ? 'تم تحديث التصنيف' : 'Finding classification updated');
 
       setEditFindingSnippetValidation(null);
       setEditFindingModal(null);
@@ -2961,16 +2930,21 @@ export function Results() {
             placeholder={lang === 'ar' ? 'عدّل التعليل الظاهر في البطاقة…' : 'Edit the explanation shown on the card…'}
           />
           <Select
-            label={lang === 'ar' ? 'المادة' : 'Article'}
-            value={editFindingForm.articleId}
-            onChange={(e) => setEditFindingForm((prev) => ({ ...prev, articleId: e.target.value, atomId: '' }))}
-            options={RESULTS_ARTICLES_CHECKLIST}
-          />
-          <Select
-            label={lang === 'ar' ? 'البند الفرعي' : 'Atom'}
-            value={editFindingForm.atomId}
-            onChange={(e) => setEditFindingForm((prev) => ({ ...prev, atomId: e.target.value }))}
-            options={editFindingAtomOptions}
+            label={lang === 'ar' ? 'نوع المخالفة' : 'Violation type'}
+            value={editFindingForm.violationTypeId}
+            onChange={(e) => {
+              const violationTypeId = e.target.value as ViolationTypeId;
+              setEditFindingForm((prev) => ({
+                ...prev,
+                violationTypeId,
+                articleId: String(getLegacyPolicyArticleIdForViolationTypeId(violationTypeId)),
+                atomId: '',
+              }));
+            }}
+            options={VIOLATION_TYPES_OPTIONS.map((item) => ({
+              label: lang === 'ar' ? item.titleAr : item.titleEn,
+              value: item.id,
+            }))}
           />
           <Textarea
             label={lang === 'ar' ? 'ملاحظة المراجع' : 'Reviewer note'}

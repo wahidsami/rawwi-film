@@ -181,3 +181,43 @@ export function violationTypeLabel(id: ViolationTypeId, lang: "ar" | "en"): stri
 export function violationTypesForChecklist(): typeof VIOLATION_TYPES {
   return [...VIOLATION_TYPES].sort((a, b) => a.order - b.order);
 }
+
+export function getLegacyPolicyArticleIdForViolationTypeId(id: ViolationTypeId): number {
+  switch (id) {
+    case "religious_fundamentals":
+      return 4;
+    case "political_leadership":
+      return 13;
+    case "national_security":
+      return 12;
+    case "historical_unreliable":
+      return 16;
+    case "society_identity":
+      return 8;
+    case "children_crime":
+      return 6;
+    case "drugs_alcohol":
+      return 10;
+    case "child_disability_harm":
+      return 6;
+    case "inappropriate_sexual_content":
+      return 9;
+    case "explicit_sexual_scenes":
+      return 9;
+    case "profanity":
+      return 5;
+    case "women_abuse":
+      return 7;
+    case "family_values":
+      return 17;
+    case "parents_abuse":
+      return 17;
+    case "elderly_abuse":
+      return 17;
+    case "bullying":
+      return 17;
+    case "other":
+    default:
+      return 4;
+  }
+}
