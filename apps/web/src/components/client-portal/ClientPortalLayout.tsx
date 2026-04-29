@@ -20,6 +20,7 @@ export type ClientPortalSection =
   | 'overview'
   | 'scripts'
   | 'new-script'
+  | 'payment'
   | 'certificates'
   | 'notifications'
   | 'settings';

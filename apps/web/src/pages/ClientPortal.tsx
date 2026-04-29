@@ -24,7 +24,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { ClientPortalLayout, type ClientPortalSection } from '@/components/client-portal/ClientPortalLayout';
 import { ClientCertificatesSection } from '@/components/client-portal/ClientCertificatesSection';
-import { clientPortalApi, scriptsApi, type ClientPortalMeResponse, type ClientPortalSubmissionItem, type ClientPortalRejectionDetailsResponse } from '@/api';
+import { certificatesApi, clientPortalApi, scriptsApi, type ClientCertificatesResponse, type ClientPortalMeResponse, type ClientPortalSubmissionItem, type ClientPortalRejectionDetailsResponse } from '@/api';
 import { useAuthStore } from '@/store/authStore';
 import { useLangStore } from '@/store/langStore';
 import type { Script } from '@/api/models';
@@ -114,6 +114,17 @@ export function ClientPortal() {
   const [scriptsPage, setScriptsPage] = useState(1);
   const [scriptToDelete, setScriptToDelete] = useState<ClientPortalSubmissionItem | null>(null);
   const [editingDraft, setEditingDraft] = useState<ClientPortalSubmissionItem | null>(null);
+  const [paymentScriptId, setPaymentScriptId] = useState<string | null>(null);
+  const [paymentData, setPaymentData] = useState<ClientCertificatesResponse | null>(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
+  const [paymentSuccessOpen, setPaymentSuccessOpen] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({
+    cardHolder: '',
+    cardNumber: '',
+    expiry: '',
+    cvv: '',
+  });
 
   type RejectionReportBlock = {
     report: NonNullable<ClientPortalRejectionDetailsResponse['sharedReports']>[number]['report'];
@@ -483,6 +494,62 @@ export function ClientPortal() {
     setActiveSection('new-script');
   };
 
+  const openPaymentPage = async (scriptId: string) => {
+    setNotice('');
+    setError('');
+    setPaymentScriptId(scriptId);
+    setActiveSection('payment');
+    setPaymentLoading(true);
+    try {
+      const response = await certificatesApi.getClientDashboard();
+      setPaymentData(response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تحميل بيانات الدفع' : 'Unable to load payment data'));
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const submitPayment = async () => {
+    if (!paymentScriptId) return;
+    const cardNumber = paymentForm.cardNumber.replace(/\s+/g, '');
+    const cvv = paymentForm.cvv.trim();
+    if (!paymentForm.cardHolder.trim()) {
+      setError(lang === 'ar' ? 'اسم حامل البطاقة مطلوب' : 'Card holder name is required');
+      return;
+    }
+    if (!/^\d{16}$/.test(cardNumber)) {
+      setError(lang === 'ar' ? 'رقم البطاقة يجب أن يكون 16 رقمًا' : 'Card number must be 16 digits');
+      return;
+    }
+    if (!/^\d{2}\/\d{2}$/.test(paymentForm.expiry.trim())) {
+      setError(lang === 'ar' ? 'تاريخ الانتهاء يجب أن يكون MM/YY' : 'Expiry must be MM/YY');
+      return;
+    }
+    if (!/^\d{3,4}$/.test(cvv)) {
+      setError(lang === 'ar' ? 'رمز الأمان غير صالح' : 'Invalid security code');
+      return;
+    }
+
+    setError('');
+    setPaymentSubmitting(true);
+    try {
+      const res = await certificatesApi.processDemoPayment(paymentScriptId, 'visa_success');
+      if (!res.ok && !res.alreadyIssued) {
+        setError(res.error || (lang === 'ar' ? 'فشلت عملية الدفع' : 'Payment failed'));
+        return;
+      }
+      setPaymentSuccessOpen(true);
+      const refreshed = await certificatesApi.getClientDashboard();
+      setPaymentData(refreshed);
+      await loadProfileAndSubmissions();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر إتمام عملية الدفع' : 'Unable to complete payment'));
+    } finally {
+      setPaymentSubmitting(false);
+    }
+  };
+
   const openRejectionDetails = async (scriptId: string) => {
     setDetailsOpen(true);
     setDetailsLoading(true);
@@ -603,7 +670,7 @@ export function ClientPortal() {
                           ) : null}
                           <Button size="sm" variant="ghost" onClick={() => setScriptToDelete(item)} aria-label="delete"><Trash2 className="h-4 w-4 text-error" /></Button>
                           {!isDraft && !isSubmitted && canPay ? (
-                            <Button size="sm" variant="ghost" onClick={() => setActiveSection('certificates')} aria-label="payment"><CreditCard className="h-4 w-4 text-primary" /></Button>
+                            <Button size="sm" variant="ghost" onClick={() => void openPaymentPage(item.scriptId)} aria-label="payment"><CreditCard className="h-4 w-4 text-primary" /></Button>
                           ) : null}
                           {status === 'rejected' ? (
                             <Button size="sm" variant="outline" onClick={() => openRejectionDetails(item.scriptId)}>
@@ -934,10 +1001,88 @@ export function ClientPortal() {
     </Card>
   );
 
+  const renderPaymentPage = () => {
+    const paymentItem = paymentData?.items?.find((item) => item.scriptId === paymentScriptId) ?? null;
+    return (
+      <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+        <CardHeader>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>{lang === 'ar' ? 'صفحة دفع رسوم الشهادة' : 'Certificate Fee Payment'}</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setActiveSection('scripts')}>
+              {lang === 'ar' ? 'العودة إلى نصوصي' : 'Back to My Scripts'}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {paymentLoading ? (
+            <p className="text-sm text-text-muted">{lang === 'ar' ? 'جاري تحميل بيانات الدفع...' : 'Loading payment details...'}</p>
+          ) : !paymentItem ? (
+            <p className="text-sm text-text-muted">{lang === 'ar' ? 'هذا النص غير متاح للدفع الآن.' : 'This script is not ready for payment right now.'}</p>
+          ) : (
+            <>
+              <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-background/70 p-4">
+                <p className="font-semibold text-text-main">{paymentItem.scriptTitle}</p>
+                <p className="mt-1 text-sm text-text-muted">{paymentItem.scriptType}</p>
+                <p className="mt-3 text-sm">
+                  {lang === 'ar' ? 'المبلغ المطلوب:' : 'Payable amount:'}{' '}
+                  <span className="font-semibold text-primary">
+                    {new Intl.NumberFormat(lang === 'ar' ? 'ar-SA' : 'en-US', {
+                      style: 'currency',
+                      currency: paymentItem.certificateFee.currency,
+                      maximumFractionDigits: 2,
+                    }).format(paymentItem.certificateFee.totalAmount)}
+                  </span>
+                </p>
+              </div>
+
+              <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-surface p-4">
+                <p className="mb-3 text-sm font-semibold text-text-main">{lang === 'ar' ? 'الدفع عبر البطاقة البنكية' : 'Pay by Bank Card'}</p>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <Input
+                    label={lang === 'ar' ? 'اسم حامل البطاقة' : 'Card Holder Name'}
+                    value={paymentForm.cardHolder}
+                    onChange={(e) => setPaymentForm((prev) => ({ ...prev, cardHolder: e.target.value }))}
+                  />
+                  <Input
+                    label={lang === 'ar' ? 'رقم البطاقة' : 'Card Number'}
+                    value={paymentForm.cardNumber}
+                    onChange={(e) => setPaymentForm((prev) => ({ ...prev, cardNumber: e.target.value }))}
+                    placeholder="4111111111111111"
+                    maxLength={19}
+                  />
+                  <Input
+                    label={lang === 'ar' ? 'تاريخ الانتهاء' : 'Expiry Date'}
+                    value={paymentForm.expiry}
+                    onChange={(e) => setPaymentForm((prev) => ({ ...prev, expiry: e.target.value }))}
+                    placeholder="MM/YY"
+                    maxLength={5}
+                  />
+                  <Input
+                    label={lang === 'ar' ? 'رمز الأمان (CVV)' : 'CVV'}
+                    value={paymentForm.cvv}
+                    onChange={(e) => setPaymentForm((prev) => ({ ...prev, cvv: e.target.value }))}
+                    placeholder="123"
+                    maxLength={4}
+                  />
+                </div>
+                <div className="mt-4">
+                  <Button onClick={() => void submitPayment()} isLoading={paymentSubmitting}>
+                    {lang === 'ar' ? 'ادفع الآن' : 'Pay Now'}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
   const renderActiveSection = () => {
     if (activeSection === 'overview') return renderOverview();
     if (activeSection === 'scripts') return renderSubmissionList();
     if (activeSection === 'new-script') return renderNewScriptForm();
+    if (activeSection === 'payment') return renderPaymentPage();
     if (activeSection === 'certificates') {
       return <ClientCertificatesSection lang={lang} />;
     }
@@ -1112,6 +1257,27 @@ export function ClientPortal() {
             </Button>
             <Button variant="danger" onClick={handleDeleteScript}>
               {lang === 'ar' ? 'تأكيد الإلغاء' : 'Confirm Cancel'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={paymentSuccessOpen}
+        onClose={() => setPaymentSuccessOpen(false)}
+        title={lang === 'ar' ? 'تم الدفع بنجاح' : 'Payment Successful'}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-muted">
+            {lang === 'ar'
+              ? 'مبروك! تم استلام دفعتك بنجاح. يمكنك زيارة قسم الشهادات خلال 5 دقائق وستجد شهادتك هناك.'
+              : 'Congratulations! Your payment was completed successfully. Visit the Certificates section within 5 minutes to find your certificate.'}
+          </p>
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="outline" onClick={() => setPaymentSuccessOpen(false)}>
+              {lang === 'ar' ? 'إغلاق' : 'Close'}
+            </Button>
+            <Button onClick={() => { setPaymentSuccessOpen(false); setActiveSection('certificates'); }}>
+              {lang === 'ar' ? 'الذهاب إلى الشهادات' : 'Go to Certificates'}
             </Button>
           </div>
         </div>
