@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Switch } from '@/components/ui/Switch';
 import { Textarea } from '@/components/ui/Textarea';
-import { clientPortalApi } from '@/api';
+import { certificatesApi, clientPortalApi } from '@/api';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
@@ -54,6 +54,12 @@ export default function Settings() {
   const [creatingClassification, setCreatingClassification] = useState(false);
   const [clientTerms, setClientTerms] = useState({ ar: '', en: '' });
   const [savingClientTerms, setSavingClientTerms] = useState(false);
+  const [certificateFee, setCertificateFee] = useState({
+    baseAmount: '3500',
+    taxRatePercent: '15',
+    currency: 'SAR',
+  });
+  const [savingCertificateFee, setSavingCertificateFee] = useState(false);
 
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
 
@@ -100,6 +106,25 @@ export default function Settings() {
       });
   }, []);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    certificatesApi.getFeeSettings()
+      .then(({ feeConfig }) => {
+        setCertificateFee({
+          baseAmount: String(feeConfig.baseAmount ?? 3500),
+          taxRatePercent: String(Math.round((feeConfig.taxRate ?? 0.15) * 10000) / 100),
+          currency: feeConfig.currency || 'SAR',
+        });
+      })
+      .catch(() => {
+        setCertificateFee({
+          baseAmount: '3500',
+          taxRatePercent: '15',
+          currency: 'SAR',
+        });
+      });
+  }, [isAdmin]);
+
   const handleSaveClientTerms = async () => {
     if (!clientTerms.ar.trim() || !clientTerms.en.trim()) {
       toast.error(lang === 'ar' ? 'يرجى إدخال الشروط بالعربية والإنجليزية' : 'Please enter Arabic and English terms');
@@ -114,6 +139,37 @@ export default function Settings() {
       toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر حفظ الشروط' : 'Failed to save terms'));
     } finally {
       setSavingClientTerms(false);
+    }
+  };
+
+  const handleSaveCertificateFee = async () => {
+    const baseAmount = Number(certificateFee.baseAmount);
+    const taxRatePercent = Number(certificateFee.taxRatePercent);
+    if (!Number.isFinite(baseAmount) || baseAmount < 0) {
+      toast.error(lang === 'ar' ? 'رسوم الشهادة الأساسية غير صالحة' : 'Invalid base certificate fee');
+      return;
+    }
+    if (!Number.isFinite(taxRatePercent) || taxRatePercent < 0 || taxRatePercent > 100) {
+      toast.error(lang === 'ar' ? 'نسبة الضريبة يجب أن تكون بين 0 و100' : 'Tax percent must be between 0 and 100');
+      return;
+    }
+    setSavingCertificateFee(true);
+    try {
+      const response = await certificatesApi.updateFeeSettings({
+        baseAmount,
+        taxRate: taxRatePercent / 100,
+        currency: certificateFee.currency || 'SAR',
+      });
+      setCertificateFee({
+        baseAmount: String(response.feeConfig.baseAmount),
+        taxRatePercent: String(Math.round(response.feeConfig.taxRate * 10000) / 100),
+        currency: response.feeConfig.currency,
+      });
+      toast.success(lang === 'ar' ? 'تم حفظ رسوم الشهادة' : 'Certificate fee saved');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر حفظ رسوم الشهادة' : 'Failed to save certificate fee'));
+    } finally {
+      setSavingCertificateFee(false);
     }
   };
 
@@ -387,6 +443,47 @@ export default function Settings() {
                         />
                       </div>
                     </div>
+                  </div>
+
+                  <hr className="border-border" />
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-text-main">
+                      {lang === 'ar' ? 'رسوم الشهادة' : 'Certificate Fees'}
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <Input
+                        label={lang === 'ar' ? 'الرسوم الأساسية (ريال)' : 'Base Fee (SAR)'}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={certificateFee.baseAmount}
+                        onChange={(e) => setCertificateFee((state) => ({ ...state, baseAmount: e.target.value }))}
+                      />
+                      <Input
+                        label={lang === 'ar' ? 'الضريبة %' : 'Tax %'}
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={certificateFee.taxRatePercent}
+                        onChange={(e) => setCertificateFee((state) => ({ ...state, taxRatePercent: e.target.value }))}
+                      />
+                      <Input
+                        label={lang === 'ar' ? 'العملة' : 'Currency'}
+                        value={certificateFee.currency}
+                        maxLength={3}
+                        onChange={(e) => setCertificateFee((state) => ({ ...state, currency: e.target.value.toUpperCase() }))}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleSaveCertificateFee()}
+                      disabled={savingCertificateFee}
+                      className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {savingCertificateFee ? (lang === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (lang === 'ar' ? 'حفظ رسوم الشهادة' : 'Save Certificate Fee')}
+                    </button>
                   </div>
 
                   <hr className="border-border" />

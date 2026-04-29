@@ -228,6 +228,13 @@ export interface CertificateDashboardItem {
 export interface ClientCertificatesResponse {
   demoCards: CertificateDemoCard[];
   defaultTemplate?: CertificateTemplate | null;
+  feeConfig?: {
+    baseAmount: number;
+    taxRate: number;
+    taxAmount: number;
+    totalAmount: number;
+    currency: string;
+  };
   items: CertificateDashboardItem[];
 }
 
@@ -240,6 +247,16 @@ export interface AdminCertificatesResponse {
   };
   defaultTemplate?: CertificateTemplate | null;
   items: CertificateDashboardItem[];
+}
+
+export interface CertificateFeeConfigResponse {
+  feeConfig: {
+    baseAmount: number;
+    taxRate: number;
+    taxAmount: number;
+    totalAmount: number;
+    currency: string;
+  };
 }
 
 export interface ProcessDemoCertificatePaymentResponse {
@@ -427,6 +444,10 @@ export const certificatesApi = {
     demoCardId: string,
   ): Promise<ProcessDemoCertificatePaymentResponse> =>
     httpClient.post('/certificates/pay', { scriptId, demoCardId }),
+  getFeeSettings: (): Promise<CertificateFeeConfigResponse> =>
+    httpClient.get('/certificates/admin/fee-settings'),
+  updateFeeSettings: (payload: { baseAmount: number; taxRate: number; currency?: string }): Promise<{ ok: boolean; feeConfig: CertificateFeeConfigResponse['feeConfig'] }> =>
+    httpClient.put('/certificates/admin/fee-settings', payload),
 };
 
 export interface NotificationItem {

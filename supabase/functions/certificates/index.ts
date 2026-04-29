@@ -40,6 +40,15 @@ const CERTIFICATE_TAX_RATE = 0.15;
 const CERTIFICATE_TAX_AMOUNT = Number((CERTIFICATE_BASE_AMOUNT * CERTIFICATE_TAX_RATE).toFixed(2));
 const CERTIFICATE_TOTAL_AMOUNT = Number((CERTIFICATE_BASE_AMOUNT + CERTIFICATE_TAX_AMOUNT).toFixed(2));
 const CERTIFICATE_CURRENCY = "SAR";
+const CERTIFICATE_FEE_SETTINGS_KEY = "certificate_fee_settings";
+
+type CertificateFeeConfig = {
+  baseAmount: number;
+  taxRate: number;
+  taxAmount: number;
+  totalAmount: number;
+  currency: string;
+};
 
 const DEMO_CARDS: DemoCard[] = [
   {
@@ -251,11 +260,56 @@ function resolveClientCertificateStatus(latestPayment: any | null, certificate: 
   return "payment_pending";
 }
 
+function normalizeFeeConfig(raw: Record<string, unknown> | null | undefined): CertificateFeeConfig {
+  const baseAmount = typeof raw?.baseAmount === "number" && Number.isFinite(raw.baseAmount) && raw.baseAmount >= 0
+    ? raw.baseAmount
+    : CERTIFICATE_BASE_AMOUNT;
+  const taxRate = typeof raw?.taxRate === "number" && Number.isFinite(raw.taxRate) && raw.taxRate >= 0
+    ? raw.taxRate
+    : CERTIFICATE_TAX_RATE;
+  const currency = typeof raw?.currency === "string" && raw.currency.trim()
+    ? raw.currency.trim().toUpperCase()
+    : CERTIFICATE_CURRENCY;
+  const taxAmount = Number((baseAmount * taxRate).toFixed(2));
+  const totalAmount = Number((baseAmount + taxAmount).toFixed(2));
+  return { baseAmount, taxRate, taxAmount, totalAmount, currency };
+}
+
+async function loadCertificateFeeConfig(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+): Promise<CertificateFeeConfig> {
+  const { data } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", CERTIFICATE_FEE_SETTINGS_KEY)
+    .maybeSingle();
+  return normalizeFeeConfig(((data as any)?.value ?? null) as Record<string, unknown> | null);
+}
+
+async function loadLatestReportStatusMap(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  scriptIds: string[],
+): Promise<Map<string, string>> {
+  if (scriptIds.length === 0) return new Map();
+  const { data, error } = await supabase
+    .from("analysis_reports")
+    .select("script_id, review_status, created_at")
+    .in("script_id", scriptIds)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  const map = new Map<string, string>();
+  for (const row of (data ?? []) as Array<{ script_id: string; review_status?: string | null }>) {
+    if (!map.has(row.script_id)) map.set(row.script_id, (row.review_status ?? "").toLowerCase());
+  }
+  return map;
+}
+
 function mapCertificateItems(
   scripts: Array<{ id: string; title: string; type: string; status: string; created_at: string }>,
   approvedAtMap: Map<string, string>,
   latestPaymentsMap: Map<string, any>,
   certificatesMap: Map<string, any>,
+  feeConfig: CertificateFeeConfig,
 ) {
   return scripts.map((script) => {
     const latestPayment = latestPaymentsMap.get(script.id) ?? null;
@@ -268,10 +322,10 @@ function mapCertificateItems(
       scriptStatus: script.status,
       approvedAt: approvedAtMap.get(script.id) ?? script.created_at,
       certificateFee: {
-        baseAmount: CERTIFICATE_BASE_AMOUNT,
-        taxAmount: CERTIFICATE_TAX_AMOUNT,
-        totalAmount: CERTIFICATE_TOTAL_AMOUNT,
-        currency: CERTIFICATE_CURRENCY,
+        baseAmount: feeConfig.baseAmount,
+        taxAmount: feeConfig.taxAmount,
+        totalAmount: feeConfig.totalAmount,
+        currency: feeConfig.currency,
       },
       certificateStatus: status,
       latestPayment: latestPayment
@@ -310,6 +364,8 @@ async function issueCertificateForScript(
     companyNameEn: string | null;
     scriptTitle: string;
     paymentId: string;
+    amountPaid: number;
+    currency: string;
     issuedBy?: string | null;
     forceRegenerate?: boolean;
   },
@@ -333,8 +389,8 @@ async function issueCertificateForScript(
     company_name_en: params.companyNameEn,
     issued_at: new Date().toISOString(),
     certificate_number: certificateNumber,
-    amount_paid: CERTIFICATE_TOTAL_AMOUNT,
-    currency: CERTIFICATE_CURRENCY,
+    amount_paid: params.amountPaid,
+    currency: params.currency,
     regenerated_from_certificate_id: params.forceRegenerate ? existing.data?.id ?? null : null,
   };
 
@@ -517,13 +573,34 @@ Deno.serve(async (req: Request) => {
 
   if (method === "GET" && rest === "client") {
     if (!account) return json({ error: "Client portal account not found" }, 403);
-    const scripts = await loadApprovedScriptsForCompany(supabase, account.company_id);
+    const { data: scriptsData, error: scriptsError } = await supabase
+      .from("scripts")
+      .select("id, title, type, status, company_id, client_id, created_at")
+      .or(`company_id.eq.${account.company_id},client_id.eq.${account.company_id}`)
+      .order("created_at", { ascending: false });
+    if (scriptsError) return json({ error: scriptsError.message }, 500);
+    const allScripts = (scriptsData ?? []) as Array<{
+      id: string;
+      title: string;
+      type: string;
+      status: string;
+      company_id?: string | null;
+      client_id?: string | null;
+      created_at: string;
+    }>;
+    const reportStatusMap = await loadLatestReportStatusMap(supabase, allScripts.map((s) => s.id));
+    const scripts = allScripts.filter((row) => {
+      const status = (row.status ?? "").toLowerCase();
+      const reviewStatus = reportStatusMap.get(row.id) ?? "";
+      return status === "approved" || reviewStatus === "approved";
+    });
     const scriptIds = scripts.map((row) => row.id);
-    const [approvedAtMap, latestPaymentsMap, certificatesMap, defaultTemplate] = await Promise.all([
+    const [approvedAtMap, latestPaymentsMap, certificatesMap, defaultTemplate, feeConfig] = await Promise.all([
       loadApprovedAtMap(supabase, scriptIds),
       loadLatestPaymentsMap(supabase, scriptIds),
       loadCertificatesMap(supabase, scriptIds),
       loadDefaultCertificateTemplate(supabase),
+      loadCertificateFeeConfig(supabase),
     ]);
 
     return json({
@@ -535,7 +612,8 @@ Deno.serve(async (req: Request) => {
         maskedNumber: card.maskedNumber,
       })),
       defaultTemplate,
-      items: mapCertificateItems(scripts, approvedAtMap, latestPaymentsMap, certificatesMap),
+      feeConfig,
+      items: mapCertificateItems(scripts, approvedAtMap, latestPaymentsMap, certificatesMap, feeConfig),
     });
   }
 
@@ -565,9 +643,20 @@ Deno.serve(async (req: Request) => {
 
     const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
     if (ownerCompanyId !== account.company_id) return json({ error: "Forbidden" }, 403);
-    if ((script as any).status !== "approved") {
+    const { data: latestReport } = await supabase
+      .from("analysis_reports")
+      .select("review_status, created_at")
+      .eq("script_id", scriptId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const isApprovedByScript = ((script as any).status ?? "").toLowerCase() === "approved";
+    const isApprovedByReview = (((latestReport as any)?.review_status ?? "").toLowerCase() === "approved");
+    if (!isApprovedByScript && !isApprovedByReview) {
       return json({ error: "Certificate payment is only available for approved scripts" }, 409);
     }
+
+    const feeConfig = await loadCertificateFeeConfig(supabase);
 
     const existingCertificate = await supabase
       .from("script_certificates")
@@ -595,10 +684,10 @@ Deno.serve(async (req: Request) => {
       .insert({
         script_id: scriptId,
         payer_user_id: userId,
-        amount_base: CERTIFICATE_BASE_AMOUNT,
-        tax_amount: CERTIFICATE_TAX_AMOUNT,
-        total_amount: CERTIFICATE_TOTAL_AMOUNT,
-        currency: CERTIFICATE_CURRENCY,
+        amount_base: feeConfig.baseAmount,
+        tax_amount: feeConfig.taxAmount,
+        total_amount: feeConfig.totalAmount,
+        currency: feeConfig.currency,
         payment_status: paymentStatus,
         payment_method: "fake_card",
         payment_reference: paymentReference,
@@ -634,6 +723,8 @@ Deno.serve(async (req: Request) => {
       companyNameEn: (company as any)?.name_en ?? null,
       scriptTitle: (script as any).title,
       paymentId: payment.id,
+      amountPaid: Number((payment as any).total_amount ?? feeConfig.totalAmount),
+      currency: String((payment as any).currency ?? feeConfig.currency),
     });
 
     await notifyAdmins(supabase, {
@@ -678,6 +769,39 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  if (rest === "admin/fee-settings") {
+    if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    if (method === "GET") {
+      const feeConfig = await loadCertificateFeeConfig(supabase);
+      return json({ feeConfig });
+    }
+    if (method === "PUT") {
+      let body: Record<string, unknown>;
+      try {
+        body = await req.json();
+      } catch {
+        return json({ error: "Invalid JSON body" }, 400);
+      }
+      const feeConfig = normalizeFeeConfig(body);
+      if (feeConfig.baseAmount < 0) return json({ error: "baseAmount must be >= 0" }, 400);
+      if (feeConfig.taxRate < 0 || feeConfig.taxRate > 1) return json({ error: "taxRate must be between 0 and 1" }, 400);
+      const { error } = await supabase
+        .from("app_settings")
+        .upsert({
+          key: CERTIFICATE_FEE_SETTINGS_KEY,
+          value: {
+            baseAmount: feeConfig.baseAmount,
+            taxRate: feeConfig.taxRate,
+            currency: feeConfig.currency,
+          },
+          updated_at: new Date().toISOString(),
+          updated_by: userId,
+        }, { onConflict: "key" });
+      if (error) return json({ error: error.message }, 500);
+      return json({ ok: true, feeConfig });
+    }
+  }
+
   if (method === "GET" && rest === "admin") {
     if (!isAdmin) return json({ error: "Forbidden" }, 403);
 
@@ -689,12 +813,13 @@ Deno.serve(async (req: Request) => {
     if (scriptsError) return json({ error: scriptsError.message }, 500);
     const scriptIds = ((scripts ?? []) as Array<{ id: string }>).map((row) => row.id);
 
-    const [approvedAtMap, latestPaymentsMap, certificatesMap, companies, defaultTemplate] = await Promise.all([
+    const [approvedAtMap, latestPaymentsMap, certificatesMap, companies, defaultTemplate, feeConfig] = await Promise.all([
       loadApprovedAtMap(supabase, scriptIds),
       loadLatestPaymentsMap(supabase, scriptIds),
       loadCertificatesMap(supabase, scriptIds),
       supabase.from("clients").select("id, name_ar, name_en"),
       loadDefaultCertificateTemplate(supabase),
+      loadCertificateFeeConfig(supabase),
     ]);
 
     const companyMap = new Map<string, { name_ar?: string | null; name_en?: string | null }>();
@@ -717,10 +842,10 @@ Deno.serve(async (req: Request) => {
         companyNameAr: company?.name_ar ?? null,
         companyNameEn: company?.name_en ?? null,
         certificateFee: {
-          baseAmount: CERTIFICATE_BASE_AMOUNT,
-          taxAmount: CERTIFICATE_TAX_AMOUNT,
-          totalAmount: CERTIFICATE_TOTAL_AMOUNT,
-          currency: CERTIFICATE_CURRENCY,
+          baseAmount: feeConfig.baseAmount,
+          taxAmount: feeConfig.taxAmount,
+          totalAmount: feeConfig.totalAmount,
+          currency: feeConfig.currency,
         },
         certificateStatus: status,
         latestPayment: latestPayment
@@ -886,16 +1011,17 @@ Deno.serve(async (req: Request) => {
         return json({ ok: true, alreadyCompleted: true, payment: existingCompletedPayment });
       }
 
+      const feeConfig = await loadCertificateFeeConfig(supabase);
       const paymentReference = `ADMINFAKE-${Date.now()}-${scriptId.slice(0, 8).toUpperCase()}`;
       const { data: payment, error: paymentError } = await supabase
         .from("script_certificate_payments")
         .insert({
           script_id: scriptId,
           payer_user_id: context.account?.user_id ?? null,
-          amount_base: CERTIFICATE_BASE_AMOUNT,
-          tax_amount: CERTIFICATE_TAX_AMOUNT,
-          total_amount: CERTIFICATE_TOTAL_AMOUNT,
-          currency: CERTIFICATE_CURRENCY,
+          amount_base: feeConfig.baseAmount,
+          tax_amount: feeConfig.taxAmount,
+          total_amount: feeConfig.totalAmount,
+          currency: feeConfig.currency,
           payment_status: "completed",
           payment_method: "admin_confirmed_fake",
           payment_reference: paymentReference,
@@ -945,6 +1071,8 @@ Deno.serve(async (req: Request) => {
         companyNameEn: context.company?.name_en ?? null,
         scriptTitle: context.script.title,
         paymentId: payment.id,
+        amountPaid: Number((payment as any).total_amount ?? 0),
+        currency: String((payment as any).currency ?? CERTIFICATE_CURRENCY),
         issuedBy: userId,
         forceRegenerate,
       });

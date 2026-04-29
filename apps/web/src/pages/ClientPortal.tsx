@@ -1020,55 +1020,63 @@ export function ClientPortal() {
             <p className="text-sm text-text-muted">{lang === 'ar' ? 'هذا النص غير متاح للدفع الآن.' : 'This script is not ready for payment right now.'}</p>
           ) : (
             <>
-              <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-background/70 p-4">
-                <p className="font-semibold text-text-main">{paymentItem.scriptTitle}</p>
-                <p className="mt-1 text-sm text-text-muted">{paymentItem.scriptType}</p>
-                <p className="mt-3 text-sm">
-                  {lang === 'ar' ? 'المبلغ المطلوب:' : 'Payable amount:'}{' '}
-                  <span className="font-semibold text-primary">
-                    {new Intl.NumberFormat(lang === 'ar' ? 'ar-SA' : 'en-US', {
-                      style: 'currency',
-                      currency: paymentItem.certificateFee.currency,
-                      maximumFractionDigits: 2,
-                    }).format(paymentItem.certificateFee.totalAmount)}
-                  </span>
-                </p>
-              </div>
-
-              <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-surface p-4">
-                <p className="mb-3 text-sm font-semibold text-text-main">{lang === 'ar' ? 'الدفع عبر البطاقة البنكية' : 'Pay by Bank Card'}</p>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <Input
-                    label={lang === 'ar' ? 'اسم حامل البطاقة' : 'Card Holder Name'}
-                    value={paymentForm.cardHolder}
-                    onChange={(e) => setPaymentForm((prev) => ({ ...prev, cardHolder: e.target.value }))}
-                  />
-                  <Input
-                    label={lang === 'ar' ? 'رقم البطاقة' : 'Card Number'}
-                    value={paymentForm.cardNumber}
-                    onChange={(e) => setPaymentForm((prev) => ({ ...prev, cardNumber: e.target.value }))}
-                    placeholder="4111111111111111"
-                    maxLength={19}
-                  />
-                  <Input
-                    label={lang === 'ar' ? 'تاريخ الانتهاء' : 'Expiry Date'}
-                    value={paymentForm.expiry}
-                    onChange={(e) => setPaymentForm((prev) => ({ ...prev, expiry: e.target.value }))}
-                    placeholder="MM/YY"
-                    maxLength={5}
-                  />
-                  <Input
-                    label={lang === 'ar' ? 'رمز الأمان (CVV)' : 'CVV'}
-                    value={paymentForm.cvv}
-                    onChange={(e) => setPaymentForm((prev) => ({ ...prev, cvv: e.target.value }))}
-                    placeholder="123"
-                    maxLength={4}
-                  />
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-surface p-4">
+                  <p className="mb-3 text-sm font-semibold text-text-main">{lang === 'ar' ? 'بيانات الدفع' : 'Payment Details'}</p>
+                  <div className="grid grid-cols-1 gap-3">
+                    <Input
+                      label={lang === 'ar' ? 'اسم حامل البطاقة' : 'Card Holder Name'}
+                      value={paymentForm.cardHolder}
+                      onChange={(e) => setPaymentForm((prev) => ({ ...prev, cardHolder: e.target.value }))}
+                    />
+                    <Input
+                      label={lang === 'ar' ? 'رقم البطاقة' : 'Card Number'}
+                      value={paymentForm.cardNumber}
+                      onChange={(e) => setPaymentForm((prev) => ({ ...prev, cardNumber: e.target.value }))}
+                      placeholder="4111111111111111"
+                      maxLength={19}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        label={lang === 'ar' ? 'تاريخ الانتهاء' : 'Expiry Date'}
+                        value={paymentForm.expiry}
+                        onChange={(e) => setPaymentForm((prev) => ({ ...prev, expiry: e.target.value }))}
+                        placeholder="MM/YY"
+                        maxLength={5}
+                      />
+                      <Input
+                        label={lang === 'ar' ? 'رمز الأمان' : 'CVV'}
+                        value={paymentForm.cvv}
+                        onChange={(e) => setPaymentForm((prev) => ({ ...prev, cvv: e.target.value }))}
+                        placeholder="123"
+                        maxLength={4}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <Button className="w-full" onClick={() => void submitPayment()} isLoading={paymentSubmitting}>
+                      {lang === 'ar' ? 'ادفع الآن' : 'Pay Now'}
+                    </Button>
+                  </div>
                 </div>
-                <div className="mt-4">
-                  <Button onClick={() => void submitPayment()} isLoading={paymentSubmitting}>
-                    {lang === 'ar' ? 'ادفع الآن' : 'Pay Now'}
-                  </Button>
+
+                <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-background/70 p-4">
+                  <p className="font-semibold text-text-main">{paymentItem.scriptTitle}</p>
+                  <p className="mt-1 text-sm text-text-muted">{paymentItem.scriptType}</p>
+                  <div className="mt-4 space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-text-muted">{lang === 'ar' ? 'الرسوم الأساسية' : 'Base Fee'}</span>
+                      <span>{new Intl.NumberFormat(lang === 'ar' ? 'ar-SA' : 'en-US', { style: 'currency', currency: paymentItem.certificateFee.currency, maximumFractionDigits: 2 }).format(paymentItem.certificateFee.baseAmount)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-text-muted">{lang === 'ar' ? 'الضريبة' : 'Tax'}</span>
+                      <span>{new Intl.NumberFormat(lang === 'ar' ? 'ar-SA' : 'en-US', { style: 'currency', currency: paymentItem.certificateFee.currency, maximumFractionDigits: 2 }).format(paymentItem.certificateFee.taxAmount)}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between rounded-md bg-primary/10 px-3 py-2 text-base font-semibold text-primary">
+                      <span>{lang === 'ar' ? 'الإجمالي' : 'Total'}</span>
+                      <span>{new Intl.NumberFormat(lang === 'ar' ? 'ar-SA' : 'en-US', { style: 'currency', currency: paymentItem.certificateFee.currency, maximumFractionDigits: 2 }).format(paymentItem.certificateFee.totalAmount)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </>
