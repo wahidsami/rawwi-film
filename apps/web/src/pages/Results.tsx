@@ -2423,24 +2423,34 @@ export function Results() {
                   {lang === 'ar' ? 'إلغاء التحديد' : 'Clear selection'}
                 </button>
                 <div className="my-2 border-t border-border" />
-                <label className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-text-main hover:bg-background cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showAllFindingRows}
-                    onChange={(e) => setShowAllFindingRows(e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  <span>{lang === 'ar' ? 'إظهار التكرارات' : 'Show duplicates'}</span>
-                </label>
-                <label className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-text-main hover:bg-background cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={groupFindingsByAtom}
-                    onChange={(e) => setGroupFindingsByAtom(e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  <span>{lang === 'ar' ? 'تجميع حسب الذرة' : 'Group by atom'}</span>
-                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedFindingIds.length === 0) return;
+                    setReportActionsMenuOpen(false);
+                    setBulkReviewModal({ findingIds: selectedFindingIds, toStatus: 'approved' });
+                    setBulkReviewReason('');
+                  }}
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-text-main hover:bg-background disabled:opacity-50"
+                  disabled={selectedFindingIds.length === 0}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {lang === 'ar' ? 'اعتماد المحدد كآمن' : 'Mark selected as safe'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedFindingIds.length === 0) return;
+                    setReportActionsMenuOpen(false);
+                    setBulkReviewModal({ findingIds: selectedFindingIds, toStatus: 'violation' });
+                    setBulkReviewReason('');
+                  }}
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-text-main hover:bg-background disabled:opacity-50"
+                  disabled={selectedFindingIds.length === 0}
+                >
+                  <ShieldAlert className="w-4 h-4" />
+                  {lang === 'ar' ? 'إعادة المحدد كمخالفة' : 'Revert selected to violations'}
+                </button>
               </div>
             )}
           </div>
