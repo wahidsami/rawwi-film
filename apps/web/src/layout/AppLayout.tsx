@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Users,
+  UserPlus,
   ShieldCheck,
   FileText,
   Settings,
@@ -13,6 +14,8 @@ import {
   Globe,
   History,
   Award,
+  BadgeCheck,
+  Receipt,
   Bell,
   Wand2,
   PanelLeftClose,
@@ -315,7 +318,18 @@ export function AppLayout() {
                             !n.readAt && 'bg-primary/5'
                           )}
                         >
-                          <p className="text-sm font-medium text-text-main">{n.title}</p>
+                          <div className="flex items-start gap-2">
+                            <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary">
+                              {(() => {
+                                const Icon = getNotifIcon(n.type);
+                                return <Icon className="h-3.5 w-3.5" />;
+                              })()}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-text-main">{n.title}</p>
+                              <p className="text-[11px] text-text-muted">{getNotifTypeLabel(n.type)}</p>
+                            </div>
+                          </div>
                           {n.body && <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{n.body}</p>}
                           <p className="text-xs text-text-muted mt-1">{formatDateTime(new Date(n.createdAt), { lang })}</p>
                         </button>
@@ -361,3 +375,19 @@ export function AppLayout() {
     </div>
   );
 }
+  const getNotifIcon = useCallback((type: string) => {
+    if (type === 'client_registration_arrived') return UserPlus;
+    if (type === 'client_submission' || type === 'script_assigned') return FileText;
+    if (type === 'certificate_payment_completed') return Receipt;
+    if (type === 'certificate_issued') return BadgeCheck;
+    return Bell;
+  }, []);
+
+  const getNotifTypeLabel = useCallback((type: string) => {
+    if (type === 'client_registration_arrived') return lang === 'ar' ? 'تسجيل عميل جديد' : 'New Client Registration';
+    if (type === 'client_submission') return lang === 'ar' ? 'تسليم من العميل' : 'Client Submission';
+    if (type === 'script_assigned') return lang === 'ar' ? 'إسناد نص' : 'Script Assigned';
+    if (type === 'certificate_payment_completed') return lang === 'ar' ? 'سداد رسوم الشهادة' : 'Certificate Payment';
+    if (type === 'certificate_issued') return lang === 'ar' ? 'إصدار شهادة' : 'Certificate Issued';
+    return lang === 'ar' ? 'إشعار' : 'Notification';
+  }, [lang]);
