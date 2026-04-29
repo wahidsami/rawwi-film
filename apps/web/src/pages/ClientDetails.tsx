@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { CompanyAvatar } from '@/components/ui/CompanyAvatar';
 import { FileUpload } from '@/components/ui/FileUpload';
-import { scriptsApi, reportsApi } from '@/api';
+import { certificatesApi, scriptsApi, reportsApi, type CertificateDashboardItem } from '@/api';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '@/lib/env';
 import { supabase } from '@/lib/supabaseClient';
@@ -135,6 +135,9 @@ export function ClientDetails() {
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [reportCountByScriptId, setReportCountByScriptId] = useState<Record<string, number>>({});
+  const [companyCertificates, setCompanyCertificates] = useState<CertificateDashboardItem[]>([]);
+  const [certificatesLoading, setCertificatesLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'scripts' | 'certificates'>('scripts');
   const [exportingPdf, setExportingPdf] = useState(false);
 
   const { fetchInitialData } = useDataStore();
@@ -184,6 +187,21 @@ export function ClientDetails() {
   useEffect(() => {
     loadReportCounts();
   }, [loadReportCounts]);
+
+  useEffect(() => {
+    if (!company || !isPortalClient) {
+      setCompanyCertificates([]);
+      return;
+    }
+    setCertificatesLoading(true);
+    certificatesApi.getAdminDashboard()
+      .then((response) => {
+        const items = (response.items ?? []).filter((item) => item.companyId === company.companyId && item.certificateStatus === 'issued');
+        setCompanyCertificates(items);
+      })
+      .catch(() => setCompanyCertificates([]))
+      .finally(() => setCertificatesLoading(false));
+  }, [company, isPortalClient]);
 
   useEffect(() => {
     const defaultClassification = workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '';
@@ -543,6 +561,19 @@ export function ClientDetails() {
         </CardContent>
       </Card>
 
+      {isPortalClient && (
+        <div className="flex items-center gap-2">
+          <Button variant={activeTab === 'scripts' ? 'primary' : 'outline'} size="sm" onClick={() => setActiveTab('scripts')}>
+            {lang === 'ar' ? 'نصوص الشركة' : 'Company Scripts'}
+          </Button>
+          <Button variant={activeTab === 'certificates' ? 'primary' : 'outline'} size="sm" onClick={() => setActiveTab('certificates')}>
+            {lang === 'ar' ? 'الشهادات' : 'Certificates'}
+          </Button>
+        </div>
+      )}
+
+      {(activeTab === 'scripts' || !isPortalClient) && (
+      <>
       <div className="flex justify-between items-center pt-4">
         <h2 className="text-lg font-bold text-text-main">{lang === 'ar' ? 'النصوص' : 'Company Scripts'}</h2>
         {canAddScript && (
@@ -660,6 +691,43 @@ export function ClientDetails() {
               </tbody>
             </table>
           </div>
+        </Card>
+      )}
+      </>
+      )}
+
+      {isPortalClient && activeTab === 'certificates' && (
+        <Card>
+          <CardContent className="p-6">
+            {certificatesLoading ? (
+              <p className="text-sm text-text-muted">{lang === 'ar' ? 'جاري تحميل الشهادات...' : 'Loading certificates...'}</p>
+            ) : companyCertificates.length === 0 ? (
+              <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد شهادات صادرة بعد.' : 'No issued certificates yet.'}</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left rtl:text-right">
+                  <thead className="text-xs text-text-muted uppercase bg-background border-b border-border">
+                    <tr>
+                      <th className="px-4 py-3">{lang === 'ar' ? 'عنوان النص' : 'Script Title'}</th>
+                      <th className="px-4 py-3">{lang === 'ar' ? 'رقم الشهادة' : 'Certificate Number'}</th>
+                      <th className="px-4 py-3">{lang === 'ar' ? 'تاريخ الإصدار' : 'Issued At'}</th>
+                      <th className="px-4 py-3">{lang === 'ar' ? 'حالة الدفع' : 'Payment Status'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {companyCertificates.map((item) => (
+                      <tr key={item.scriptId} className="border-b border-border">
+                        <td className="px-4 py-3 text-text-main">{item.scriptTitle}</td>
+                        <td className="px-4 py-3 text-text-main">{item.certificate?.certificateNumber ?? '—'}</td>
+                        <td className="px-4 py-3 text-text-muted">{item.certificate?.issuedAt ? formatOptionalClientDate(item.certificate.issuedAt, lang === 'ar' ? 'ar' : 'en', settings?.platform?.dateFormat) : '—'}</td>
+                        <td className="px-4 py-3 text-text-muted">{item.latestPayment?.paymentStatus ?? 'completed'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
         </Card>
       )}
 

@@ -15,6 +15,8 @@ const SAUDI_MOBILE_REGEX = /^05\d{8}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LOGO_MIMES = new Set(['image/png', 'image/jpeg']);
 const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+const LEGAL_DOC_MIMES = new Set(['application/pdf', 'image/png', 'image/jpeg']);
+const LEGAL_DOC_MAX_BYTES = 10 * 1024 * 1024;
 
 export function InternalClientEdit() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +28,9 @@ export function InternalClientEdit() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const [crDocument, setCrDocument] = useState<File | null>(null);
+  const [licenseDocument, setLicenseDocument] = useState<File | null>(null);
+  const [nationalAddressDocument, setNationalAddressDocument] = useState<File | null>(null);
   const [form, setForm] = useState({
     companyNameAr: '',
     companyNameEn: '',
@@ -136,6 +141,15 @@ export function InternalClientEdit() {
       if (logoFile) {
         await companiesApi.uploadCompanyLogo(company.companyId, logoFile);
       }
+      if (crDocument) {
+        await companiesApi.uploadCompanyLegalDocument(company.companyId, 'cr', crDocument);
+      }
+      if (licenseDocument) {
+        await companiesApi.uploadCompanyLegalDocument(company.companyId, 'license', licenseDocument);
+      }
+      if (nationalAddressDocument) {
+        await companiesApi.uploadCompanyLegalDocument(company.companyId, 'national_address', nationalAddressDocument);
+      }
       await fetchInitialData();
       toast.success(lang === 'ar' ? 'تم تحديث بيانات العميل' : 'Client updated');
       navigate(`/clients/${company.companyId}`);
@@ -188,6 +202,73 @@ export function InternalClientEdit() {
           </div>
 
           <Textarea label={lang === 'ar' ? 'نبذة عن الشركة' : 'About the Company'} value={form.about} onChange={(e) => setField('about', e.target.value)} rows={4} />
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'السجل التجاري (PDF/JPEG/PNG)' : 'CR Document (PDF/JPEG/PNG)'}</label>
+              <input
+                type="file"
+                accept="application/pdf,image/png,image/jpeg"
+                className="block w-full text-sm text-text-muted file:me-3 file:rounded-md file:border file:border-border file:bg-background file:px-3 file:py-2 file:text-text-main"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  if (file && (!LEGAL_DOC_MIMES.has(file.type) || file.size > LEGAL_DOC_MAX_BYTES)) {
+                    toast.error(lang === 'ar' ? 'الصيغة المسموحة PDF/JPEG/PNG وبحجم أقصى 10MB' : 'Allowed format PDF/JPEG/PNG and max size 10MB');
+                    setCrDocument(null);
+                    return;
+                  }
+                  setCrDocument(file);
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'الرخصة (PDF/JPEG/PNG)' : 'License Document (PDF/JPEG/PNG)'}</label>
+              <input
+                type="file"
+                accept="application/pdf,image/png,image/jpeg"
+                className="block w-full text-sm text-text-muted file:me-3 file:rounded-md file:border file:border-border file:bg-background file:px-3 file:py-2 file:text-text-main"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  if (file && (!LEGAL_DOC_MIMES.has(file.type) || file.size > LEGAL_DOC_MAX_BYTES)) {
+                    toast.error(lang === 'ar' ? 'الصيغة المسموحة PDF/JPEG/PNG وبحجم أقصى 10MB' : 'Allowed format PDF/JPEG/PNG and max size 10MB');
+                    setLicenseDocument(null);
+                    return;
+                  }
+                  setLicenseDocument(file);
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'العنوان الوطني (PDF/JPEG/PNG)' : 'National Address (PDF/JPEG/PNG)'}</label>
+              <input
+                type="file"
+                accept="application/pdf,image/png,image/jpeg"
+                className="block w-full text-sm text-text-muted file:me-3 file:rounded-md file:border file:border-border file:bg-background file:px-3 file:py-2 file:text-text-main"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  if (file && (!LEGAL_DOC_MIMES.has(file.type) || file.size > LEGAL_DOC_MAX_BYTES)) {
+                    toast.error(lang === 'ar' ? 'الصيغة المسموحة PDF/JPEG/PNG وبحجم أقصى 10MB' : 'Allowed format PDF/JPEG/PNG and max size 10MB');
+                    setNationalAddressDocument(null);
+                    return;
+                  }
+                  setNationalAddressDocument(file);
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-background/60 p-4">
+            <p className="text-sm font-medium text-text-main">{lang === 'ar' ? 'المستندات المرفوعة حالياً' : 'Currently uploaded documents'}</p>
+            <div className="mt-2 space-y-1 text-sm text-text-muted">
+              {(company.legalDocuments ?? []).length > 0 ? (
+                company.legalDocuments?.map((doc) => (
+                  <p key={`${doc.type}-${doc.name}`}>{doc.type}: {doc.name}</p>
+                ))
+              ) : (
+                <p>—</p>
+              )}
+            </div>
+          </div>
 
           <div className="flex justify-end gap-2 border-t border-border pt-4">
             <Button variant="outline" onClick={() => navigate(`/clients/${company.companyId}`)}>{lang === 'ar' ? 'إلغاء' : 'Cancel'}</Button>

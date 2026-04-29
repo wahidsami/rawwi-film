@@ -480,6 +480,32 @@ export const companiesApi = {
   },
   /** Remove company logo. Returns updated company. */
   removeCompanyLogo: (companyId: string): Promise<Company> => httpClient.delete(`/companies/${companyId}/logo`),
+  /** Upload legal document for internal client (multipart). */
+  uploadCompanyLegalDocument: async (
+    companyId: string,
+    type: 'cr' | 'license' | 'national_address',
+    file: File,
+  ): Promise<Company> => {
+    const form = new FormData();
+    form.append('type', type);
+    form.append('file', file);
+    if (USE_MOCK_API) {
+      return httpClient.request(`/companies/${companyId}/legal-documents`, { method: 'POST', body: form });
+    }
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error('Unauthorized');
+    const res = await fetch(`${API_BASE_URL}/companies/${companyId}/legal-documents`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || res.statusText);
+    }
+    return res.json();
+  },
 };
 
 export type UploadUrlResponse = { url: string; path?: string };

@@ -14,6 +14,9 @@ import { isRegulatorOnly, isSuperAdminOrAdmin } from "../_shared/roleCheck.ts";
 const LOGO_BUCKET = "company-logos";
 const LOGO_MAX_BYTES = 2 * 1024 * 1024; // 2MB
 const LOGO_MIMES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const LEGAL_DOC_BUCKET = "company-legal-documents";
+const LEGAL_DOC_MAX_BYTES = 10 * 1024 * 1024; // 10MB
+const LEGAL_DOC_MIMES = new Set(["application/pdf", "image/png", "image/jpeg"]);
 const HTML_TAG_LIKE = /<|>/;
 const RESEND_API = "https://api.resend.com/emails";
 const FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
@@ -526,6 +529,73 @@ Deno.serve(async (req: Request) => {
         .select(CLIENT_SELECT)
         .single();
       if (updateErr) return jsonResponse({ error: updateErr.message }, 500);
+      return jsonResponse(toFrontend(updated as ClientRow));
+    }
+
+    // POST /companies/:id/legal-documents → upload legal document for internal client
+    if (method === "POST" && companyId && subPath === "legal-documents") {
+      const { data: clientRow, error: fetchErr } = await supabase
+        .from("clients")
+        .select("id, source, legal_documents")
+        .eq("id", companyId)
+        .single();
+      if (fetchErr || !clientRow) return jsonResponse({ error: "Client not found" }, 404);
+      if ((((clientRow as any).source ?? "internal") as string) !== "internal") {
+        return jsonResponse({ error: "Only internal clients can upload legal documents here" }, 403);
+      }
+
+      let formData: FormData;
+      try {
+        formData = await req.formData();
+      } catch {
+        return jsonResponse({ error: "Invalid form data" }, 400);
+      }
+      const file = formData.get("file");
+      const docTypeRaw = formData.get("type");
+      const docType = typeof docTypeRaw === "string" ? docTypeRaw.trim().toLowerCase() : "";
+      if (!["cr", "license", "national_address"].includes(docType)) {
+        return jsonResponse({ error: "type must be one of: cr, license, national_address" }, 400);
+      }
+      if (!(file instanceof File)) {
+        return jsonResponse({ error: "file is required" }, 400);
+      }
+      if (!LEGAL_DOC_MIMES.has(file.type)) {
+        return jsonResponse({ error: "Only PDF, PNG, JPEG are allowed" }, 400);
+      }
+      if (file.size > LEGAL_DOC_MAX_BYTES) {
+        return jsonResponse({ error: "File too large (max 10MB)" }, 400);
+      }
+
+      const rawExt = file.name.split(".").pop()?.toLowerCase();
+      const ext = rawExt && /^[a-z0-9]+$/.test(rawExt) ? rawExt : (file.type === "application/pdf" ? "pdf" : "jpg");
+      const objectName = `${companyId}/${docType}-${crypto.randomUUID()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from(LEGAL_DOC_BUCKET)
+        .upload(objectName, file, { contentType: file.type, upsert: true });
+      if (uploadErr) return jsonResponse({ error: uploadErr.message }, 500);
+
+      const existingDocs = Array.isArray((clientRow as any).legal_documents)
+        ? ((clientRow as any).legal_documents as Array<Record<string, unknown>>)
+        : [];
+      const nextDoc = {
+        type: docType,
+        name: file.name,
+        path: `${LEGAL_DOC_BUCKET}/${objectName}`,
+        size: file.size,
+        mimeType: file.type,
+      };
+      const mergedDocs = [
+        ...existingDocs.filter((doc) => String(doc.type ?? "").trim().toLowerCase() !== docType),
+        nextDoc,
+      ];
+
+      const { data: updated, error: updateErr } = await supabase
+        .from("clients")
+        .update({ legal_documents: mergedDocs })
+        .eq("id", companyId)
+        .select(CLIENT_SELECT)
+        .single();
+      if (updateErr || !updated) return jsonResponse({ error: updateErr?.message ?? "Failed to save legal document" }, 500);
       return jsonResponse(toFrontend(updated as ClientRow));
     }
 
