@@ -38,6 +38,7 @@ import {
   LEGACY_SCRIPT_CLASSIFICATION_OPTIONS,
   useScriptClassificationOptions,
 } from '@/lib/scriptClassificationOptions';
+import { cn } from '@/utils/cn';
 
 type UploadResult = {
   success: boolean;
