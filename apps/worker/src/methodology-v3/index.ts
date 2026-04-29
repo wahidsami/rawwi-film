@@ -5,6 +5,7 @@ import { applyDecisionPolicy } from "./decisionPolicy.js";
 import { attachLegalLinkMetadata } from "./legalMapper.js";
 import { runDeepAuditorPass } from "./deepAuditor.js";
 import { runAuditorV3Gate } from "./auditorV3.js";
+import { runAuditorV4Gate } from "./auditorV4.js";
 import { config } from "../config.js";
 import { logger } from "../logger.js";
 
@@ -43,13 +44,19 @@ export async function runHybridContextPipeline(args: {
     auditorContext: args.auditorContext,
     signal: args.signal,
   });
-  const auditorGate = config.AUDITOR_LAYER_VERSION === "v3"
-    ? runAuditorV3Gate({ findings: deepAudited, fullText: args.fullText })
-    : null;
-  if (auditorGate) {
-    logger.info("Auditor v3 gate applied", auditorGate.metrics);
+  const auditorV3Gate = config.AUDITOR_LAYER_VERSION === "v2"
+    ? null
+    : runAuditorV3Gate({ findings: deepAudited, fullText: args.fullText });
+  if (auditorV3Gate) {
+    logger.info("Auditor v3 gate applied", auditorV3Gate.metrics);
   }
-  const final = auditorGate?.findings ?? deepAudited;
+  const auditorV4Gate = config.AUDITOR_LAYER_VERSION === "v4"
+    ? runAuditorV4Gate({ findings: auditorV3Gate?.findings ?? deepAudited, fullText: args.fullText })
+    : null;
+  if (auditorV4Gate) {
+    logger.info("Auditor v4 gate applied", auditorV4Gate.metrics);
+  }
+  const final = auditorV4Gate?.findings ?? auditorV3Gate?.findings ?? deepAudited;
   const contextOkCount = final.filter((f) => f.final_ruling === "context_ok").length;
   const needsReviewCount = final.filter((f) => f.final_ruling === "needs_review").length;
   const violationCount = final.filter((f) => f.final_ruling === "violation").length;

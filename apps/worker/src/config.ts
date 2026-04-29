@@ -95,10 +95,15 @@ export const config = {
   ANALYSIS_DEEP_AUDITOR: (process.env.ANALYSIS_DEEP_AUDITOR ?? "true").toLowerCase() !== "false",
   /**
    * Auditor layer:
-   * - v2: existing behavior without deterministic v3 verification gate
+   * - v2: existing behavior without deterministic verification gate
    * - v3: deterministic hard verifier after the deep auditor pass
+   * - v4: category-signature verifier after the deep auditor pass
    */
-  AUDITOR_LAYER_VERSION: ((process.env.AUDITOR_LAYER_VERSION ?? "v3").toLowerCase() === "v2" ? "v2" : "v3") as "v2" | "v3",
+  AUDITOR_LAYER_VERSION: ((process.env.AUDITOR_LAYER_VERSION ?? "v4").toLowerCase() === "v2"
+    ? "v2"
+    : (process.env.AUDITOR_LAYER_VERSION ?? "v4").toLowerCase() === "v3"
+      ? "v3"
+      : "v4") as "v2" | "v3" | "v4",
   /**
    * Large-job gating:
    * - summary/revisit default to skip on very large jobs
