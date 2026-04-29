@@ -107,6 +107,41 @@ function buildBilingualClientEmail(params: {
   `.trim();
 }
 
+async function loadAdminUserIds(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+): Promise<string[]> {
+  const [{ data: roles }, { data: userRoles }] = await Promise.all([
+    supabase.from("roles").select("id, key").in("key", ["super_admin", "admin", "regulator"]),
+    supabase.from("user_roles").select("user_id, role_id"),
+  ]);
+  const roleIds = new Set((roles ?? []).map((r: { id: string }) => r.id));
+  return [...new Set((userRoles ?? [])
+    .filter((row: { user_id: string; role_id: string }) => roleIds.has(row.role_id))
+    .map((row: { user_id: string }) => row.user_id))];
+}
+
+async function notifyAdmins(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  payload: {
+    type: string;
+    title: string;
+    body: string;
+    metadata?: Record<string, unknown>;
+  },
+): Promise<void> {
+  const adminUserIds = await loadAdminUserIds(supabase);
+  if (adminUserIds.length === 0) return;
+  const rows = adminUserIds.map((userId) => ({
+    user_id: userId,
+    type: payload.type,
+    title: payload.title,
+    body: payload.body,
+    metadata: payload.metadata ?? {},
+  }));
+  const { error } = await supabase.from("notifications").insert(rows);
+  if (error) console.error("[client-portal] notify admins:", error.message);
+}
+
 async function loadClientTerms(supabase: ReturnType<typeof createSupabaseAdmin>): Promise<{ ar: string; en: string }> {
   const fallback = {
     ar: "أقر بأن جميع البيانات والمستندات المقدمة صحيحة، وأوافق على شروط استخدام منصة راوي فيلم وسياسة معالجة الطلبات.",
@@ -443,6 +478,19 @@ Deno.serve(async (req: Request) => {
           bodyEn: `Dear ${htmlEscape(name)},\nThank you for registering ${htmlEscape(companyNameEn)} with Raawi Film.\nYour request is now under review. We will email you once the admin team approves or rejects it.`,
           bodyAr: `عزيزي/عزيزتي ${htmlEscape(name)}،\nشكرًا لتسجيل شركة ${htmlEscape(companyNameAr)} في منصة راوي فيلم.\nطلبكم الآن قيد المراجعة، وسيصلكم بريد إلكتروني بعد قرار الاعتماد أو الرفض.`,
         }),
+      });
+
+      await notifyAdmins(supabase, {
+        type: "client_registration_arrived",
+        title: `New client registration: ${companyNameEn}`,
+        body: `A new registration request was submitted by ${companyNameAr} (${email}).`,
+        metadata: {
+          company_id: company.id,
+          company_name_ar: companyNameAr,
+          company_name_en: companyNameEn,
+          requester_email: email,
+          requester_name: name,
+        },
       });
 
       return json({

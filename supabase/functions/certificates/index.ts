@@ -92,6 +92,41 @@ function mapTemplate(row: CertificateTemplateRow) {
   };
 }
 
+async function loadAdminUserIds(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+): Promise<string[]> {
+  const [{ data: roles }, { data: userRoles }] = await Promise.all([
+    supabase.from("roles").select("id, key").in("key", ["super_admin", "admin", "regulator"]),
+    supabase.from("user_roles").select("user_id, role_id"),
+  ]);
+  const roleIds = new Set((roles ?? []).map((r: { id: string }) => r.id));
+  return [...new Set((userRoles ?? [])
+    .filter((row: { user_id: string; role_id: string }) => roleIds.has(row.role_id))
+    .map((row: { user_id: string }) => row.user_id))];
+}
+
+async function notifyAdmins(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  payload: {
+    type: string;
+    title: string;
+    body: string;
+    metadata?: Record<string, unknown>;
+  },
+): Promise<void> {
+  const adminUserIds = await loadAdminUserIds(supabase);
+  if (adminUserIds.length === 0) return;
+  const rows = adminUserIds.map((userId) => ({
+    user_id: userId,
+    type: payload.type,
+    title: payload.title,
+    body: payload.body,
+    metadata: payload.metadata ?? {},
+  }));
+  const { error } = await supabase.from("notifications").insert(rows);
+  if (error) console.error("[certificates] notify admins:", error.message);
+}
+
 function templatePayloadFromBody(body: Record<string, unknown>) {
   const update: Record<string, unknown> = {};
   if (typeof body.name === "string") update.name = body.name.trim();
@@ -601,6 +636,35 @@ Deno.serve(async (req: Request) => {
       paymentId: payment.id,
     });
 
+    await notifyAdmins(supabase, {
+      type: "certificate_payment_completed",
+      title: `Certificate payment completed: ${(script as any).title}`,
+      body: `Client payment was completed for script "${(script as any).title}".`,
+      metadata: {
+        script_id: scriptId,
+        script_title: (script as any).title,
+        company_id: account.company_id,
+        payment_id: payment.id,
+        payment_reference: payment.payment_reference,
+        total_amount: payment.total_amount,
+        currency: payment.currency,
+      },
+    });
+
+    await notifyAdmins(supabase, {
+      type: "certificate_issued",
+      title: `Certificate issued: ${(script as any).title}`,
+      body: `Certificate ${(certificate as any).certificate_number} was issued for "${(script as any).title}".`,
+      metadata: {
+        script_id: scriptId,
+        script_title: (script as any).title,
+        company_id: account.company_id,
+        payment_id: payment.id,
+        certificate_id: (certificate as any).id,
+        certificate_number: (certificate as any).certificate_number,
+      },
+    });
+
     return json({
       ok: true,
       payment: payment,
@@ -883,6 +947,22 @@ Deno.serve(async (req: Request) => {
         paymentId: payment.id,
         issuedBy: userId,
         forceRegenerate,
+      });
+
+      await notifyAdmins(supabase, {
+        type: "certificate_issued",
+        title: `Certificate issued: ${context.script.title}`,
+        body: `Certificate ${(certificate as any).certificate_number} was issued for "${context.script.title}".`,
+        metadata: {
+          script_id: scriptId,
+          script_title: context.script.title,
+          company_id: context.ownerCompanyId,
+          payment_id: payment.id,
+          certificate_id: (certificate as any).id,
+          certificate_number: (certificate as any).certificate_number,
+          issued_by: userId,
+          force_regenerate: forceRegenerate,
+        },
       });
 
       return json({
