@@ -1269,7 +1269,7 @@ export async function processChunkJudge(
   const deepAuditorEnabled =
     typeof jobConfig.deep_auditor_enabled === "boolean" ? jobConfig.deep_auditor_enabled : config.ANALYSIS_DEEP_AUDITOR;
   const rationaleModel = config.OPENAI_RATIONALE_MODEL;
-  const logicVersion = `pipeline:${PIPELINE_LOGIC_VERSION}|version:${pipelineVersion}${v2FeatureSignature}|evidenceGrounding:${PIPELINE_EVIDENCE_GROUNDING_VERSION}|profile:${analysisProfile}|engine:${analysisEngine}|mode:${hybridMode}|deepAuditor:${deepAuditorEnabled}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|violationSystem:${PROMPT_VERSIONS.violation_system}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}|passGating:${config.ANALYSIS_PASS_GATING_ENABLED ? PASS_GATING_VERSION : "off"}`;
+  const logicVersion = `pipeline:${PIPELINE_LOGIC_VERSION}|version:${pipelineVersion}${v2FeatureSignature}|evidenceGrounding:${PIPELINE_EVIDENCE_GROUNDING_VERSION}|profile:${analysisProfile}|engine:${analysisEngine}|mode:${hybridMode}|deepAuditor:${deepAuditorEnabled}|auditorLayer:${config.AUDITOR_LAYER_VERSION}|rationaleModel:${rationaleModel}|router:${PROMPT_VERSIONS.router}|judge:${PROMPT_VERSIONS.judge}|violationSystem:${PROMPT_VERSIONS.violation_system}|auditor:${PROMPT_VERSIONS.auditor}|schema:${PROMPT_VERSIONS.schema}|passes:${passSignature}|passGating:${config.ANALYSIS_PASS_GATING_ENABLED ? PASS_GATING_VERSION : "off"}`;
   const forceFresh = jobConfig.force_fresh === true;
   const routerModel = typeof jobConfig.router_model === "string" && jobConfig.router_model.trim().length > 0
     ? jobConfig.router_model

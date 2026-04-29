@@ -94,6 +94,12 @@ export const config = {
    */
   ANALYSIS_DEEP_AUDITOR: (process.env.ANALYSIS_DEEP_AUDITOR ?? "true").toLowerCase() !== "false",
   /**
+   * Auditor layer:
+   * - v2: existing behavior without deterministic v3 verification gate
+   * - v3: deterministic hard verifier after the deep auditor pass
+   */
+  AUDITOR_LAYER_VERSION: ((process.env.AUDITOR_LAYER_VERSION ?? "v3").toLowerCase() === "v2" ? "v2" : "v3") as "v2" | "v3",
+  /**
    * Large-job gating:
    * - summary/revisit default to skip on very large jobs
    * - deep auditor skip is opt-in because it can change final persisted rulings

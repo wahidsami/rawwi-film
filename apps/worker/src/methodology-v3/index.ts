@@ -4,6 +4,9 @@ import { reasonPolicyAtScriptLevel } from "./policyReasoner.js";
 import { applyDecisionPolicy } from "./decisionPolicy.js";
 import { attachLegalLinkMetadata } from "./legalMapper.js";
 import { runDeepAuditorPass } from "./deepAuditor.js";
+import { runAuditorV3Gate } from "./auditorV3.js";
+import { config } from "../config.js";
+import { logger } from "../logger.js";
 
 export type HybridPipelineResult = {
   findings: HybridFindingLike[];
@@ -33,13 +36,20 @@ export async function runHybridContextPipeline(args: {
   const policy = reasonPolicyAtScriptLevel(context, args.fullText);
   const decided = applyDecisionPolicy(policy.findings);
   const withLegal = attachLegalLinkMetadata(decided);
-  const final = await runDeepAuditorPass({
+  const deepAudited = await runDeepAuditorPass({
     findings: withLegal,
     fullText: args.fullText,
     enabled: args.deepAuditorEnabled,
     auditorContext: args.auditorContext,
     signal: args.signal,
   });
+  const auditorGate = config.AUDITOR_LAYER_VERSION === "v3"
+    ? runAuditorV3Gate({ findings: deepAudited, fullText: args.fullText })
+    : null;
+  if (auditorGate) {
+    logger.info("Auditor v3 gate applied", auditorGate.metrics);
+  }
+  const final = auditorGate?.findings ?? deepAudited;
   const contextOkCount = final.filter((f) => f.final_ruling === "context_ok").length;
   const needsReviewCount = final.filter((f) => f.final_ruling === "needs_review").length;
   const violationCount = final.filter((f) => f.final_ruling === "violation").length;
