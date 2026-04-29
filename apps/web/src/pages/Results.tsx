@@ -827,6 +827,7 @@ export function Results() {
   }
 
   const summary = report.summaryJson;
+  const analysisMeta = summary.analysis_meta;
   const partialReportMeta = summary.partial_report;
   const manualReviewContextMeta = summary.manual_review_context;
   const canonicalSummaryFindings: CanonicalSummaryFinding[] = (summary.canonical_findings || []).filter(Boolean);
@@ -2248,6 +2249,25 @@ export function Results() {
             <p className="text-text-muted mt-1 text-sm">
               {formatDateLong(new Date(report.createdAt), { lang })}
             </p>
+            {analysisMeta && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 print:hidden">
+                <Badge variant="outline" className="bg-background/70 text-text-muted border-border/70">
+                  {lang === 'ar'
+                    ? `المسار ${analysisMeta.auditor_layer_version.toUpperCase()}`
+                    : `Auditor ${analysisMeta.auditor_layer_version.toUpperCase()}`}
+                </Badge>
+                <Badge variant="outline" className="bg-background/70 text-text-muted border-border/70">
+                  {lang === 'ar'
+                    ? `المعالجة ${analysisMeta.analysis_pipeline_version.toUpperCase()}`
+                    : `Pipeline ${analysisMeta.analysis_pipeline_version.toUpperCase()}`}
+                </Badge>
+                <Badge variant="outline" className="bg-background/70 text-text-muted border-border/70">
+                  {lang === 'ar'
+                    ? `${analysisMeta.analysis_engine === 'hybrid' ? 'محرك هجين' : 'محرك v2'}`
+                    : `${analysisMeta.analysis_engine === 'hybrid' ? 'Hybrid engine' : 'v2 engine'}`}
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3 print:hidden flex-wrap">

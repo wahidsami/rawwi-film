@@ -95,6 +95,7 @@ export interface Script {
   type: 'Film' | 'Series';
   workClassification?: string;
   episodeCount?: number | null;
+  expectedRank?: 'low' | 'medium' | 'high' | string | null;
   receivedAt?: string | null;
   synopsis?: string;
   fileUrl?: string;
@@ -283,6 +284,14 @@ export interface Report {
     job_id: string;
     script_id: string;
     generated_at: string;
+    analysis_meta?: {
+      auditor_layer_version: 'v2' | 'v3' | 'v4';
+      violation_system_version: 'v2' | 'v3';
+      analysis_engine: 'v2' | 'hybrid';
+      analysis_pipeline_version: 'v1' | 'v2';
+      deep_auditor_enabled: boolean;
+      generated_by: 'worker';
+    };
     totals: {
       findings_count: number;
       severity_counts: { low: number; medium: number; high: number; critical: number };

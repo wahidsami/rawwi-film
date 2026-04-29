@@ -22,6 +22,14 @@ export type SummaryJson = {
   job_id: string;
   script_id: string;
   generated_at: string;
+  analysis_meta?: {
+    auditor_layer_version: "v2" | "v3" | "v4";
+    violation_system_version: "v2" | "v3";
+    analysis_engine: "v2" | "hybrid";
+    analysis_pipeline_version: "v1" | "v2";
+    deep_auditor_enabled: boolean;
+    generated_by: "worker";
+  };
   client_name?: string;
   script_title?: string;
   totals: {
@@ -1515,6 +1523,14 @@ export function buildSummaryJson(
     job_id: jobId,
     script_id: scriptId,
     generated_at,
+    analysis_meta: {
+      auditor_layer_version: config.AUDITOR_LAYER_VERSION,
+      violation_system_version: config.VIOLATION_SYSTEM_VERSION,
+      analysis_engine: config.ANALYSIS_ENGINE,
+      analysis_pipeline_version: config.ANALYSIS_PIPELINE_VERSION,
+      deep_auditor_enabled: config.ANALYSIS_DEEP_AUDITOR,
+      generated_by: "worker",
+    },
     client_name: clientName,
     script_title: scriptTitle,
     totals: {
