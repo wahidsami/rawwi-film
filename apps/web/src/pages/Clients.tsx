@@ -6,6 +6,7 @@ import { useDataStore } from '@/store/dataStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { CompanyAvatar } from '@/components/ui/CompanyAvatar';
 import { ClientModal } from '@/components/ClientModal';
