@@ -132,6 +132,18 @@ function getViolationTypeIdFromFinding(
     const resolved = resolveViolationTypeId(candidate);
     if (resolved) return resolved;
   }
+  const articleId = Number(v3.primary_article_id);
+  const atomId =
+    typeof v3.primary_policy_atom_id === 'string'
+      ? v3.primary_policy_atom_id
+      : typeof v3.atom_id === 'string'
+        ? v3.atom_id
+        : null;
+  const legacyResolved = getViolationTypeIdFromLegacyPolicyArticle(
+    Number.isFinite(articleId) ? articleId : null,
+    atomId,
+  );
+  if (legacyResolved) return legacyResolved;
   return null;
 }
 
@@ -806,7 +818,7 @@ export function Results() {
     const add = (id: ViolationTypeId) => {
       m.set(id, (m.get(id) ?? 0) + 1);
     };
-    if (hasReviewFindings) {
+  if (hasReviewFindings) {
       for (const f of reviewViolations) {
         add(getViolationTypeIdFromFinding({
           titleAr: f.titleAr,
@@ -820,12 +832,22 @@ export function Results() {
     if (hasRealFindings) {
       const rows = showAllFindingRows ? violations : violationsDeduped;
       for (const f of rows) {
-        add(getViolationTypeIdFromFinding(f) ?? 'other');
+        add(getViolationTypeIdFromFinding({
+          titleAr: f.titleAr,
+          descriptionAr: f.descriptionAr,
+          source: f.source,
+          location: (f as { location?: Record<string, unknown> | null }).location ?? null,
+        }) ?? 'other');
       }
       return m;
     }
     for (const cf of canonicalSummaryFindings) {
-      add(resolveViolationTypeId(cf.title_ar) ?? resolveViolationTypeId(cf.rationale ?? null) ?? 'other');
+      add(
+        getViolationTypeIdFromLegacyPolicyArticle(cf.primary_article_id, cf.primary_policy_atom_id ?? null)
+          ?? resolveViolationTypeId(cf.title_ar)
+          ?? resolveViolationTypeId(cf.rationale ?? null)
+          ?? 'other'
+      );
     }
     return m;
   })();
@@ -1790,7 +1812,11 @@ export function Results() {
     }
     const byCat = new Map<ViolationTypeId, typeof rows>();
     for (const row of rows) {
-      const cat = resolveViolationTypeId(row.f.title_ar) ?? resolveViolationTypeId(row.f.evidence_snippet) ?? 'other';
+      const cat =
+        getViolationTypeIdFromLegacyPolicyArticle(row.art.article_id, row.f.primary_policy_atom_id ?? null)
+        ?? resolveViolationTypeId(row.f.title_ar)
+        ?? resolveViolationTypeId(row.f.evidence_snippet)
+        ?? 'other';
       if (!byCat.has(cat)) byCat.set(cat, []);
       byCat.get(cat)!.push(row);
     }
@@ -1868,7 +1894,11 @@ export function Results() {
   function renderFindingsFromCanonicalSummary(listInput: CanonicalSummaryFinding[] = canonicalSummaryFindings) {
     const byCat = new Map<ViolationTypeId, CanonicalSummaryFinding[]>();
     for (const f of listInput) {
-      const cat = resolveViolationTypeId(f.title_ar) ?? resolveViolationTypeId(f.rationale ?? null) ?? 'other';
+      const cat =
+        getViolationTypeIdFromLegacyPolicyArticle(f.primary_article_id, f.primary_policy_atom_id ?? null)
+        ?? resolveViolationTypeId(f.title_ar)
+        ?? resolveViolationTypeId(f.rationale ?? null)
+        ?? 'other';
       if (!byCat.has(cat)) byCat.set(cat, []);
       byCat.get(cat)!.push(f);
     }
@@ -1909,14 +1939,14 @@ export function Results() {
                         <div key={`${f.canonical_finding_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold text-text-main text-sm">
-                            {displayFindingTitle({
-                              title: f.title_ar,
-                              description: f.description_ar ?? null,
-                              source: f.source ?? 'ai',
-                              evidenceSnippet: f.evidence_snippet,
-                              articleId,
-                              atomId: f.primary_policy_atom_id ?? null,
-                            })}
+                              {displayFindingTitle({
+                                title: f.title_ar,
+                                description: f.description_ar ?? null,
+                                source: f.source ?? 'ai',
+                                evidenceSnippet: f.evidence_snippet,
+                                articleId,
+                                atomId: f.primary_policy_atom_id ?? null,
+                              })}
                             </span>
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
