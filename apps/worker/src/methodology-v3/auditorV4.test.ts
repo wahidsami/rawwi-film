@@ -169,6 +169,42 @@ function run() {
   });
   assertRejected(religionDriftRejected, "rationale drift must be rejected");
 
+  const religionFalsePositive = runAuditorV4Gate({
+    fullText: text,
+    findings: [
+      finding({
+        title_ar: "المساس بالثوابت الدينية",
+        evidence_snippet: "أنا شاركت في هذا",
+        rationale_ar: "",
+      }),
+    ],
+  });
+  assertRejected(religionFalsePositive, "generic sentence must not become religion");
+
+  const historicalFalsePositive = runAuditorV4Gate({
+    fullText: text,
+    findings: [
+      finding({
+        title_ar: "المحتوى التاريخي غير الموثوق",
+        evidence_snippet: "اسكت! أنت سبب كل شيء. لو ما كنت فاشل",
+        rationale_ar: "",
+      }),
+    ],
+  });
+  assertRejected(historicalFalsePositive, "non-historical insult must not become historical");
+
+  const profanityFalsePositive = runAuditorV4Gate({
+    fullText: text,
+    findings: [
+      finding({
+        title_ar: "الألفاظ النابية",
+        evidence_snippet: "ناصر: اضحكوا",
+        rationale_ar: "",
+      }),
+    ],
+  });
+  assertRejected(profanityFalsePositive, "non-profanity should not become profanity");
+
   const otherRejected = runAuditorV4Gate({
     fullText: text,
     findings: [

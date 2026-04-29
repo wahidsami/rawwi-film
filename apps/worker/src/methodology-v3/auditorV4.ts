@@ -502,6 +502,13 @@ function categoryHasSignature(category: AuditorV4Category, evidence: string): bo
   }
 }
 
+function isSelfSufficient(category: AuditorV4Category, evidence: string): boolean {
+  const text = normalizeText(evidence);
+  if (!text) return false;
+  if (isWeakSnippet(text) && category !== "profanity" && category !== "bullying") return false;
+  return categoryHasSignature(category, text);
+}
+
 function titleCategory(title: string | null | undefined): AuditorV4Category | null {
   const text = normalizeText(title);
   if (!text) return null;
@@ -516,9 +523,8 @@ function scoreCategory(category: AuditorV4Category, evidence: string): number {
   if (!rule) return 0;
   const text = normalizeText(evidence);
   if (!text) return 0;
-  if (isWeakSnippet(text) && category !== "profanity" && category !== "bullying") return 0;
   if (tokenCount(text) < rule.minTokens && !(category === "profanity" && tokenCount(text) >= 1)) return 0;
-  if (!categoryHasSignature(category, text)) return 0;
+  if (!isSelfSufficient(category, text)) return 0;
   const score = rule.score(text);
   return score > 0 ? score : 0;
 }
