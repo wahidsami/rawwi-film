@@ -2,6 +2,7 @@ import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { isUserAdmin } from "../_shared/roleCheck.ts";
+import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 
 type ClientAccountRow = {
   user_id: string;
@@ -571,6 +572,93 @@ async function loadCertificateVerification(
   };
 }
 
+async function ensureCertificateGeneratedForApprovedScript(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  params: { scriptId: string; fallbackIssuedBy?: string | null },
+) {
+  const { data: existing, error: existingError } = await supabase
+    .from("script_certificates")
+    .select("id, certificate_number, certificate_data")
+    .eq("script_id", params.scriptId)
+    .maybeSingle();
+  if (existingError) throw new Error(existingError.message);
+  if (existing?.id) return existing;
+
+  const { data: script, error: scriptError } = await supabase
+    .from("scripts")
+    .select("id, title, status, company_id, client_id")
+    .eq("id", params.scriptId)
+    .maybeSingle();
+  if (scriptError) throw new Error(scriptError.message);
+  if (!script) throw new Error("Script not found");
+  if (((script as any).status ?? "").toLowerCase() !== "approved") {
+    throw new Error("Certificate generation is only allowed for approved scripts");
+  }
+
+  const ownerCompanyId = (((script as any).company_id ?? (script as any).client_id) ?? "").toString();
+  const { data: company } = ownerCompanyId
+    ? await supabase.from("clients").select("id, name_ar, name_en, logo_url").eq("id", ownerCompanyId).maybeSingle()
+    : { data: null };
+
+  const { data: certificateNumber, error: numberError } = await supabase.rpc("generate_script_certificate_number");
+  if (numberError || !certificateNumber) throw new Error(numberError?.message || "Failed to generate certificate number");
+
+  const issuedAt = new Date().toISOString();
+  const storagePath = `${params.scriptId}/${String(certificateNumber)}.pdf`;
+
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([841.89, 595.28]);
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  page.drawRectangle({ x: 20, y: 20, width: 801.89, height: 555.28, borderColor: rgb(0.46, 0.2, 0.4), borderWidth: 2 });
+  page.drawText("Script Approval Certificate", { x: 245, y: 520, size: 28, font, color: rgb(0.12, 0.12, 0.2) });
+  page.drawText(`Certificate Number: ${String(certificateNumber)}`, { x: 60, y: 470, size: 14, font });
+  page.drawText(`Script Title: ${String((script as any).title ?? "-")}`, { x: 60, y: 440, size: 14, font });
+  page.drawText(`Company: ${((company as any)?.name_en ?? (company as any)?.name_ar ?? "-").toString()}`, { x: 60, y: 410, size: 14, font });
+  page.drawText(`Script ID: ${params.scriptId}`, { x: 60, y: 380, size: 11, font, color: rgb(0.35, 0.35, 0.45) });
+  page.drawText(`Approved At: ${issuedAt}`, { x: 60, y: 355, size: 11, font, color: rgb(0.35, 0.35, 0.45) });
+  const pdfBytes = await pdfDoc.save();
+
+  const { error: uploadError } = await supabase.storage.from(CERTIFICATE_FILES_BUCKET).upload(storagePath, pdfBytes, {
+    contentType: "application/pdf",
+    upsert: true,
+  });
+  if (uploadError) throw new Error(`Failed to upload certificate PDF: ${uploadError.message}`);
+
+  const certificateData = {
+    script_id: params.scriptId,
+    script_title: String((script as any).title ?? ""),
+    company_id: ownerCompanyId,
+    company_name_ar: (company as any)?.name_ar ?? null,
+    company_name_en: (company as any)?.name_en ?? null,
+    company_logo_url: (company as any)?.logo_url ?? null,
+    approved_at: issuedAt,
+    issued_at: issuedAt,
+    certificate_number: String(certificateNumber),
+    amount_paid: 0,
+    currency: "SAR",
+    generated_on_approval: true,
+    file_bucket: CERTIFICATE_FILES_BUCKET,
+    file_path: storagePath,
+    generated_at: issuedAt,
+  };
+
+  const { data: created, error: createError } = await supabase
+    .from("script_certificates")
+    .insert({
+      script_id: params.scriptId,
+      payment_id: null,
+      owner_user_id: null,
+      certificate_number: String(certificateNumber),
+      issued_by: params.fallbackIssuedBy ?? null,
+      certificate_status: "issued",
+      certificate_data: certificateData,
+    })
+    .select("id, certificate_number, certificate_status, issued_at, certificate_data")
+    .single();
+  if (createError || !created) throw new Error(createError?.message || "Failed to create certificate record");
+  return created;
+}
+
 async function createCertificateFileSignedUrl(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   params: {
@@ -788,12 +876,15 @@ Deno.serve(async (req: Request) => {
       .eq("script_id", scriptId)
       .maybeSingle();
     if (existingCertificateError) return json({ error: existingCertificateError.message }, 500);
-    if (!existingCertificate?.id) {
-      return json({ error: "Certificate is not generated yet. Admin approval must complete first." }, 409);
-    }
+    const ensuredCertificate = existingCertificate?.id
+      ? existingCertificate
+      : await ensureCertificateGeneratedForApprovedScript(supabase, {
+        scriptId,
+        fallbackIssuedBy: userId,
+      });
 
     const mergedCertificateData = {
-      ...(((existingCertificate as any).certificate_data ?? {}) as Record<string, unknown>),
+      ...(((ensuredCertificate as any).certificate_data ?? {}) as Record<string, unknown>),
       amount_paid: Number((payment as any).total_amount ?? feeConfig.totalAmount),
       currency: String((payment as any).currency ?? feeConfig.currency),
       payment_completed_at: (payment as any).completed_at ?? new Date().toISOString(),
@@ -807,7 +898,7 @@ Deno.serve(async (req: Request) => {
         owner_user_id: userId,
         certificate_data: mergedCertificateData,
       })
-      .eq("id", (existingCertificate as any).id)
+      .eq("id", (ensuredCertificate as any).id)
       .select("id, certificate_number, certificate_status, issued_at, certificate_data")
       .single();
     if (linkCertificateError || !linkedCertificate) {
