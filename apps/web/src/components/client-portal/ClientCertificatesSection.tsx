@@ -33,6 +33,8 @@ type CertificateExportDebug = {
   usedFallbackLayout: boolean;
   values: ReturnType<typeof getCertificateValues>;
   skippedUnsupportedImages: number;
+  offCanvasElements: number;
+  zeroOpacityElements: number;
 };
 
 const fontBase = typeof window !== 'undefined' ? window.location.origin : '';
@@ -55,6 +57,10 @@ function formatCurrency(amount: number, currency: string, lang: 'ar' | 'en') {
 
 function formatDate(value: string, lang: 'ar' | 'en') {
   return new Date(value).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US');
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function statusBadgeVariant(status: CertificateStatus): 'success' | 'warning' | 'error' {
@@ -170,12 +176,20 @@ function elementStyle(element: CertificateTemplateElement, page: { width: number
     : 16 / 9;
   const baseWidth = 1000;
   const baseHeight = baseWidth / ratio;
+  const rawLeft = (element.x / baseWidth) * page.width;
+  const rawTop = (element.y / baseHeight) * page.height;
+  const rawWidth = (element.width / baseWidth) * page.width;
+  const rawHeight = (element.height / baseHeight) * page.height;
+  const width = clamp(rawWidth, 8, page.width);
+  const height = clamp(rawHeight, 8, page.height);
+  const left = clamp(rawLeft, 0, Math.max(0, page.width - width));
+  const top = clamp(rawTop, 0, Math.max(0, page.height - height));
   return {
     position: 'absolute' as const,
-    left: (element.x / baseWidth) * page.width,
-    top: (element.y / baseHeight) * page.height,
-    width: (element.width / baseWidth) * page.width,
-    height: (element.height / baseHeight) * page.height,
+    left,
+    top,
+    width,
+    height,
     opacity: element.opacity ?? 1,
   };
 }
@@ -344,7 +358,22 @@ async function generateCertificatePdfBlob(item: CertificateDashboardItem, lang: 
     usedFallbackLayout: false,
     values,
     skippedUnsupportedImages: 0,
+    offCanvasElements: 0,
+    zeroOpacityElements: 0,
   };
+  const page = pageDimensions(template);
+  debug.zeroOpacityElements = templateElements.filter((element) => (element.opacity ?? 1) <= 0.01).length;
+  debug.offCanvasElements = templateElements.filter((element) => {
+    const style = elementStyle(element, page, template);
+    const left = Number(style.left ?? 0);
+    const top = Number(style.top ?? 0);
+    const width = Number(style.width ?? 0);
+    const height = Number(style.height ?? 0);
+    if (!Number.isFinite(left) || !Number.isFinite(top) || !Number.isFinite(width) || !Number.isFinite(height)) return true;
+    if (width <= 0 || height <= 0) return true;
+    if (left > page.width || top > page.height) return true;
+    return false;
+  }).length;
   const unsupportedImageCount = templateElements.filter((element) => {
     if (element.type !== 'image' && element.type !== 'logo') return false;
     if (element.type === 'logo' && element.logoSource === 'film_commission') return false;
