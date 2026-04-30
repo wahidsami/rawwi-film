@@ -1305,7 +1305,7 @@ export async function processChunkJudge(
     ? { data: null as null }
     : await supabase
         .from("analysis_chunk_runs")
-        .select("ai_findings, router_candidates")
+        .select("ai_findings, raw_ai_findings, validated_ai_findings, truth_layer_meta, router_candidates")
         .eq("run_key", runKey)
         .maybeSingle();
 
@@ -1322,12 +1322,38 @@ export async function processChunkJudge(
   let selectedIds: number[];
   let routerOutputJson: any = null;
 
-  if (cachedRun) {
-    logger.info("Idempotency HIT: Using cached run results", { chunkId: chunk.id, runKey });
-    await setChunkPhase(chunk.id, "cached");
-    allFindings = sortFindingsStable(((cachedRun.ai_findings as any[]) || []) as FindingWithGlobal[]);
+  const cachedValidated = ((cachedRun?.validated_ai_findings as any[]) || []) as FindingWithGlobal[];
+  const cachedLegacy = ((cachedRun?.ai_findings as any[]) || []) as FindingWithGlobal[];
+  const cachedRaw = ((cachedRun?.raw_ai_findings as any[]) || []) as FindingWithGlobal[];
+  const hasValidatedCache = cachedValidated.length > 0;
+  const hasLegacyFinalCache = Boolean(cachedRun) && !hasValidatedCache && cachedRaw.length === 0 && cachedLegacy.length > 0;
+  const canUseCachedFinal = Boolean(cachedRun) && (hasValidatedCache || hasLegacyFinalCache);
+
+  if (canUseCachedFinal && cachedRun) {
+    const cachedMeta = (cachedRun.truth_layer_meta as Record<string, unknown> | null | undefined) ?? null;
+
+    if (hasValidatedCache || hasLegacyFinalCache) {
+      logger.info("Idempotency HIT: Using cached validated run results", {
+        chunkId: chunk.id,
+        runKey,
+        cachedValidatedCount: cachedValidated.length,
+        cachedLegacyCount: cachedLegacy.length,
+        truthLayerMeta: cachedMeta,
+      });
+      await setChunkPhase(chunk.id, "cached");
+      allFindings = sortFindingsStable((hasValidatedCache ? cachedValidated : cachedLegacy) as FindingWithGlobal[]);
+    }
   } else {
-    logger.info("Idempotency MISS: Executing AI pipeline", { chunkId: chunk.id, runKey });
+    if (cachedRun) {
+      logger.info("Idempotency cache contains advisory-only raw output; recomputing validation", {
+        chunkId: chunk.id,
+        runKey,
+        cachedRawCount: cachedRaw.length,
+        truthLayerMeta: (cachedRun.truth_layer_meta as Record<string, unknown> | null | undefined) ?? null,
+      });
+    } else {
+      logger.info("Idempotency MISS: Executing AI pipeline", { chunkId: chunk.id, runKey });
+    }
 
     // 2) Router (or high-recall bypass / deterministic no-op skip)
     const routerStartedAt = Date.now();
@@ -1594,14 +1620,23 @@ export async function processChunkJudge(
     let runErr: { message: string } | null = null;
     try {
       const result = await withOperationTimeout(
-        "Persist analysis_chunk_run",
+        "Persist advisory analysis_chunk_run",
         NON_CRITICAL_DB_TIMEOUT_MS,
-        supabase.from("analysis_chunk_runs").insert({
+        supabase.from("analysis_chunk_runs").upsert({
           run_key: runKey,
           job_id: jobId,
           router_candidates: routerOutputJson,
-          ai_findings: allFindings
-        })
+          ai_findings: allFindings,
+          raw_ai_findings: allFindings,
+          validated_ai_findings: null,
+          truth_layer_meta: {
+            architecture: "advisory_model_plus_validator",
+            stage: "advisory",
+            advisory_count: allFindings.length,
+            validated_count: null,
+            auditor_layer_version: config.AUDITOR_LAYER_VERSION,
+          },
+        }, { onConflict: "run_key" })
       );
       runErr = result.error;
     } catch (error) {
@@ -1628,6 +1663,8 @@ export async function processChunkJudge(
   let persistedFindings: FindingWithGlobal[] = baselineFindings;
   let hybridMetrics: Record<string, unknown> | null = null;
   const partialFinalizeRequested = await isPartialFinalizeRequested(jobId);
+  const truthValidationEnabled = config.AUDITOR_LAYER_VERSION === "v4";
+  const shouldRunValidatedTruthPipeline = truthValidationEnabled || (analysisEngine === "hybrid" && hybridMode !== "off");
   throwIfAborted(signal);
   if (partialFinalizeRequested) {
     logger.info("Partial finalize requested; skipping hybrid context pipeline for current chunk", {
@@ -1636,7 +1673,7 @@ export async function processChunkJudge(
       baselineFindings: baselineFindings.length,
     });
     hybridMetrics = { skipped_reason: "partial_finalize_requested" };
-  } else if (analysisEngine === "hybrid" && hybridMode !== "off") {
+  } else if (shouldRunValidatedTruthPipeline) {
     await setChunkPhase(chunk.id, "hybrid");
     const hybridStartedAt = Date.now();
     let hybridTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
@@ -1647,6 +1684,7 @@ export async function processChunkJudge(
       baselineFindings: baselineFindings.length,
       deepAuditorEnabled,
       hybridMode,
+      truthValidationEnabled,
       hardTimeoutMs: config.HYBRID_HARD_TIMEOUT_MS,
     });
     try {
@@ -1697,6 +1735,32 @@ export async function processChunkJudge(
         persistedCount: persistedFindings.length,
         persistedSource: hybridMode === "enforce" || config.AUDITOR_LAYER_VERSION === "v4" ? "validated_hybrid" : "baseline",
       });
+      try {
+        await withOperationTimeout(
+          "Persist validated analysis_chunk_run",
+          NON_CRITICAL_DB_TIMEOUT_MS,
+          supabase.from("analysis_chunk_runs").update({
+            ai_findings: persistedFindings,
+            validated_ai_findings: persistedFindings,
+            truth_layer_meta: {
+              architecture: "advisory_model_plus_validator",
+              stage: "validated",
+              advisory_count: baselineFindings.length,
+              validated_count: persistedFindings.length,
+              auditor_layer_version: config.AUDITOR_LAYER_VERSION,
+              persisted_source: hybridMode === "enforce" || config.AUDITOR_LAYER_VERSION === "v4" ? "validated_hybrid" : "baseline",
+            },
+          }).eq("run_key", runKey)
+        );
+      } catch (error) {
+        logger.warn("Failed to persist validated analysis_chunk_run", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          error: error instanceof Error ? error.message : String(error),
+          timeoutMs: NON_CRITICAL_DB_TIMEOUT_MS,
+        });
+      }
       if (config.ANALYSIS_EVAL_LOG) {
         const evalPayload = {
           job_id: jobId,
