@@ -36,6 +36,7 @@ type ClientPortalLayoutProps = {
   onToggleLanguage: () => void;
   onLogout: () => void;
   subscriptionLabel: string;
+  sectionBadges?: Partial<Record<ClientPortalSection, number>>;
   summary: {
     totalScripts: number;
     rejectedScripts: number;
@@ -121,6 +122,7 @@ export function ClientPortalLayout({
   onToggleLanguage,
   onLogout,
   subscriptionLabel,
+  sectionBadges,
   summary,
   children,
 }: ClientPortalLayoutProps) {
@@ -209,6 +211,7 @@ export function ClientPortalLayout({
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = item.id === activeSection;
+                const badgeValue = item.badge ?? sectionBadges?.[item.id];
                 return (
                   <button
                     key={item.id}
@@ -232,9 +235,9 @@ export function ClientPortalLayout({
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2 text-sm font-semibold">
                           {isArabic ? item.labelAr : item.labelEn}
-                          {typeof item.badge === 'number' && item.badge > 0 ? (
+                          {typeof badgeValue === 'number' && badgeValue > 0 ? (
                             <Badge variant="outline" className="px-2 py-0 text-[10px]">
-                              {item.badge}
+                              {badgeValue}
                             </Badge>
                           ) : null}
                         </span>
@@ -254,6 +257,7 @@ export function ClientPortalLayout({
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = item.id === activeSection;
+                const badgeValue = item.badge ?? sectionBadges?.[item.id];
                 return (
                   <button
                     key={item.id}
@@ -266,6 +270,11 @@ export function ClientPortalLayout({
                   >
                     <Icon className="h-4 w-4" />
                     <span>{isArabic ? item.labelAr : item.labelEn}</span>
+                    {typeof badgeValue === 'number' && badgeValue > 0 ? (
+                      <Badge variant="outline" className="px-2 py-0 text-[10px]">
+                        {badgeValue}
+                      </Badge>
+                    ) : null}
                   </button>
                 );
               })}

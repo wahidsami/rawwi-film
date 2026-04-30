@@ -4,6 +4,7 @@ import {
   ArrowUpRight,
   Award,
   BellRing,
+  Building2,
   CreditCard,
   Clock3,
   Eye,
@@ -24,7 +25,17 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { ClientPortalLayout, type ClientPortalSection } from '@/components/client-portal/ClientPortalLayout';
 import { ClientCertificatesSection } from '@/components/client-portal/ClientCertificatesSection';
-import { certificatesApi, clientPortalApi, scriptsApi, type ClientCertificatesResponse, type ClientPortalMeResponse, type ClientPortalSubmissionItem, type ClientPortalRejectionDetailsResponse } from '@/api';
+import {
+  certificatesApi,
+  clientPortalApi,
+  notificationsApi,
+  scriptsApi,
+  type ClientCertificatesResponse,
+  type ClientPortalMeResponse,
+  type ClientPortalSubmissionItem,
+  type ClientPortalRejectionDetailsResponse,
+  type NotificationItem,
+} from '@/api';
 import { useAuthStore } from '@/store/authStore';
 import { useLangStore } from '@/store/langStore';
 import type { Script } from '@/api/models';
@@ -69,6 +80,37 @@ function statusVariant(status: string): 'default' | 'success' | 'warning' | 'err
   if (key === 'rejected') return 'error';
   if (key === 'analysis_running' || key === 'review_required' || key === 'in_review') return 'warning';
   return 'outline';
+}
+
+function formatSubscriptionLabel(
+  subscription: ClientPortalMeResponse['subscription'] | null | undefined,
+  lang: 'ar' | 'en',
+): string {
+  if (!subscription) return '';
+  const plan = subscription.plan === 'free' ? (lang === 'ar' ? 'الخطة المجانية' : 'Free plan') : subscription.plan;
+  const status = subscription.status === 'active' ? (lang === 'ar' ? 'نشط' : 'Active') : (lang === 'ar' ? 'غير نشط' : 'Inactive');
+  return `${plan} • ${status}`;
+}
+
+type NotificationFilter = 'all' | 'unread' | 'read';
+
+function notificationTypeLabel(type: string, lang: 'ar' | 'en'): string {
+  const key = type.toLowerCase();
+  if (key.includes('payment')) return lang === 'ar' ? 'دفع' : 'Payment';
+  if (key.includes('certificate')) return lang === 'ar' ? 'شهادة' : 'Certificate';
+  if (key.includes('review')) return lang === 'ar' ? 'مراجعة' : 'Review';
+  if (key.includes('report')) return lang === 'ar' ? 'تقرير' : 'Report';
+  if (key.includes('script')) return lang === 'ar' ? 'نص' : 'Script';
+  if (key.includes('system')) return lang === 'ar' ? 'نظام' : 'System';
+  return lang === 'ar' ? 'تنبيه' : 'Alert';
+}
+
+function formatNotificationDate(value: string, lang: 'ar' | 'en'): string {
+  const date = new Date(value);
+  return new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA' : 'en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
 }
 
 function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
@@ -499,6 +541,11 @@ export function ClientPortal() {
 
   const [profile, setProfile] = useState<ClientPortalMeResponse | null>(null);
   const [submissions, setSubmissions] = useState<ClientPortalSubmissionItem[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [notificationsUnreadCount, setNotificationsUnreadCount] = useState(0);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState('');
+  const [notificationFilter, setNotificationFilter] = useState<NotificationFilter>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -545,6 +592,42 @@ export function ClientPortal() {
     expiry: '',
     cvv: '',
   });
+
+  const subscriptionLabel = useMemo(
+    () => formatSubscriptionLabel(profile?.subscription ?? null, lang),
+    [lang, profile?.subscription],
+  );
+  const notificationsFiltered = useMemo(() => {
+    if (notificationFilter === 'unread') return notifications.filter((item) => !item.readAt);
+    if (notificationFilter === 'read') return notifications.filter((item) => Boolean(item.readAt));
+    return notifications;
+  }, [notificationFilter, notifications]);
+  const scriptStatusSummary = useMemo(() => {
+    const summary = {
+      total: submissions.length,
+      approved: 0,
+      rejected: 0,
+      draft: 0,
+      inFlight: 0,
+    };
+    submissions.forEach((item) => {
+      const status = String(item.latestReportReviewStatus || item.status || '').toLowerCase();
+      if (status === 'approved') summary.approved += 1;
+      else if (status === 'rejected') summary.rejected += 1;
+      else if (status === 'draft') summary.draft += 1;
+      else summary.inFlight += 1;
+    });
+    return summary;
+  }, [submissions]);
+  const notificationStats = useMemo(() => {
+    const unread = notificationsUnreadCount;
+    const total = notifications.length;
+    return {
+      total,
+      unread,
+      read: Math.max(total - unread, 0),
+    };
+  }, [notifications.length, notificationsUnreadCount]);
 
   type RejectionReportBlock = {
     report: NonNullable<ClientPortalRejectionDetailsResponse['sharedReports']>[number]['report'];
@@ -692,9 +775,54 @@ export function ClientPortal() {
     }
   }, []);
 
+  const loadNotifications = useCallback(async () => {
+    setNotificationsLoading(true);
+    setNotificationsError('');
+    try {
+      const response = await notificationsApi.getList();
+      setNotifications(response.data ?? []);
+      setNotificationsUnreadCount(response.unreadCount ?? 0);
+    } catch (err) {
+      setNotificationsError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تحميل الإشعارات' : 'Unable to load notifications'));
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, [lang]);
+
+  const markNotificationRead = useCallback(async (notificationId: string) => {
+    try {
+      await notificationsApi.markRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((item) =>
+          item.id === notificationId
+            ? { ...item, readAt: item.readAt ?? new Date().toISOString() }
+            : item,
+        ),
+      );
+      setNotificationsUnreadCount((prev) => Math.max(prev - 1, 0));
+    } catch (err) {
+      setNotificationsError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تحديث الإشعار' : 'Unable to update notification'));
+    }
+  }, [lang]);
+
+  const markAllNotificationsRead = useCallback(async () => {
+    try {
+      await notificationsApi.markAllRead();
+      const now = new Date().toISOString();
+      setNotifications((prev) => prev.map((item) => (item.readAt ? item : { ...item, readAt: now })));
+      setNotificationsUnreadCount(0);
+    } catch (err) {
+      setNotificationsError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تحديث الإشعارات' : 'Unable to update notifications'));
+    }
+  }, [lang]);
+
   useEffect(() => {
     loadProfileAndSubmissions();
   }, [loadProfileAndSubmissions]);
+
+  useEffect(() => {
+    void loadNotifications();
+  }, [loadNotifications]);
 
   useEffect(() => {
     const defaultClassification = workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '';
@@ -737,6 +865,12 @@ export function ClientPortal() {
       supabase.removeChannel(channel);
     };
   }, [profile?.company?.companyId, refreshSubmissionsSilently]);
+
+  useEffect(() => {
+    if (activeSection === 'notifications') {
+      void loadNotifications();
+    }
+  }, [activeSection, loadNotifications]);
 
   const uploadScriptDocument = async (scriptId: string, companyId: string, uploadFile: File): Promise<UploadResult> => {
     let { data: { session } } = await supabase.auth.getSession();
@@ -1470,6 +1604,424 @@ export function ClientPortal() {
     </Card>
   );
 
+  const renderNotificationsSection = () => {
+    const isArabic = lang === 'ar';
+    return (
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="space-y-4">
+          <Card className="overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+            <CardHeader>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <CardTitle>{isArabic ? 'الإشعارات' : 'Notifications'}</CardTitle>
+                  <p className="mt-2 max-w-3xl text-sm leading-7 text-text-muted">
+                    {isArabic
+                      ? 'متابعة التنبيهات الواردة من المنصة، مع إبراز الجديد أولًا وإمكانية وضع علامة قراءة مباشرة.'
+                      : 'Track platform alerts in one place, with unread items surfaced first and quick read actions.'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline">{isArabic ? `الكل: ${notificationStats.total}` : `Total: ${notificationStats.total}`}</Badge>
+                  <Badge variant={notificationStats.unread > 0 ? 'warning' : 'success'}>
+                    {isArabic ? `غير المقروء: ${notificationStats.unread}` : `Unread: ${notificationStats.unread}`}
+                  </Badge>
+                  <Button variant="outline" size="sm" onClick={() => void loadNotifications()} isLoading={notificationsLoading}>
+                    {isArabic ? 'تحديث' : 'Refresh'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void markAllNotificationsRead()}
+                    disabled={notificationStats.unread === 0 || notificationsLoading}
+                  >
+                    {isArabic ? 'تمييز الكل كمقروء' : 'Mark all read'}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'all' as const, label: isArabic ? 'الكل' : 'All' },
+                  { value: 'unread' as const, label: isArabic ? 'غير المقروء' : 'Unread' },
+                  { value: 'read' as const, label: isArabic ? 'المقروء' : 'Read' },
+                ].map((option) => {
+                  const active = notificationFilter === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setNotificationFilter(option.value)}
+                      className={cn(
+                        'rounded-full border px-4 py-2 text-sm font-medium transition',
+                        active
+                          ? 'border-primary bg-primary text-white shadow-[0_10px_24px_rgba(103,42,85,0.16)]'
+                          : 'border-border bg-background text-text-main hover:bg-surface',
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {notificationsLoading ? (
+                <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-surface/70 p-4 text-sm text-text-muted">
+                  {isArabic ? 'جاري تحميل الإشعارات...' : 'Loading notifications...'}
+                </div>
+              ) : notificationsError ? (
+                <div className="rounded-[calc(var(--radius)+0.35rem)] border border-error/20 bg-error/10 p-4 text-sm text-error">
+                  {notificationsError}
+                </div>
+              ) : notificationsFiltered.length === 0 ? (
+                <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-surface/70 p-5 text-sm leading-7 text-text-muted">
+                  {isArabic
+                    ? 'لا توجد إشعارات ضمن هذا الفلتر الآن. ستظهر التنبيهات الجديدة هنا عندما تصل.'
+                    : 'No notifications match this filter right now. New alerts will appear here when they arrive.'}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notificationsFiltered.map((item) => {
+                    const unread = !item.readAt;
+                    const summaryLabels = [
+                      typeof item.metadata?.scriptTitle === 'string' ? item.metadata.scriptTitle : null,
+                      typeof item.metadata?.script_title === 'string' ? item.metadata.script_title : null,
+                      typeof item.metadata?.reportTitle === 'string' ? item.metadata.reportTitle : null,
+                      typeof item.metadata?.report_title === 'string' ? item.metadata.report_title : null,
+                    ].filter((value): value is string => Boolean(value && value.trim()));
+
+                    return (
+                      <Card
+                        key={item.id}
+                        className={cn(
+                          'overflow-hidden border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.05)] transition-all duration-300',
+                          unread && 'border-primary/35 bg-primary/5',
+                        )}
+                      >
+                        <CardContent className="space-y-3 p-5">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Badge variant={unread ? 'warning' : 'outline'}>{notificationTypeLabel(item.type, lang)}</Badge>
+                                {unread ? <Badge variant="success">{isArabic ? 'غير مقروء' : 'Unread'}</Badge> : <Badge variant="outline">{isArabic ? 'مقروء' : 'Read'}</Badge>}
+                              </div>
+                              <h3 className="text-base font-semibold leading-6 text-text-main">{item.title}</h3>
+                              {item.body ? <p className="text-sm leading-7 text-text-muted">{item.body}</p> : null}
+                              {summaryLabels.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                  {summaryLabels.slice(0, 2).map((label) => (
+                                    <span key={label} className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-text-muted">
+                                      {label}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </div>
+                            <div className="text-end text-xs text-text-muted">
+                              <p>{formatNotificationDate(item.createdAt, lang)}</p>
+                              <p className="mt-1">{item.id.slice(0, 8)}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3">
+                            <p className="text-xs leading-6 text-text-muted">
+                              {isArabic
+                                ? 'يمكنك مراجعة الإشعار أو وضعه كمقروء بعد الاطلاع عليه.'
+                                : 'Review the notification and mark it as read when you are done.'}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              {unread ? (
+                                <Button size="sm" variant="outline" onClick={() => void markNotificationRead(item.id)}>
+                                  {isArabic ? 'اعتماد كمقروء' : 'Mark read'}
+                                </Button>
+                              ) : null}
+                              <Button
+                                size="sm"
+                                variant={unread ? 'default' : 'outline'}
+                                onClick={() => void markNotificationRead(item.id)}
+                                disabled={!unread}
+                              >
+                                {isArabic ? 'فتح' : 'Open'}
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-4">
+          <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+            <CardContent className="space-y-4 p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <BellRing className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text-main">{isArabic ? 'ملخص الإشعارات' : 'Notification summary'}</p>
+                  <p className="text-xs text-text-muted">{isArabic ? 'نظرة سريعة على الحالة الحالية' : 'Quick view of the current inbox state'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: isArabic ? 'الإجمالي' : 'Total', value: notificationStats.total },
+                  { label: isArabic ? 'غير المقروء' : 'Unread', value: notificationStats.unread },
+                  { label: isArabic ? 'المقروء' : 'Read', value: notificationStats.read },
+                  { label: isArabic ? 'الفعال' : 'Active', value: notificationStats.unread > 0 ? notificationStats.unread : 0 },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-[calc(var(--radius)+0.25rem)] border border-border bg-surface/80 p-3">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-text-muted">{item.label}</p>
+                    <p className="mt-1 text-2xl font-semibold text-text-main">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+            <CardContent className="space-y-3 p-5">
+              <p className="text-sm font-semibold text-text-main">{isArabic ? 'روابط سريعة' : 'Quick links'}</p>
+              <div className="space-y-2">
+                {[
+                  { labelAr: 'النصوص', labelEn: 'Scripts', section: 'scripts' as const },
+                  { labelAr: 'إضافة نص', labelEn: 'Add Script', section: 'new-script' as const },
+                  { labelAr: 'الشهادات', labelEn: 'Certificates', section: 'certificates' as const },
+                  { labelAr: 'إرشادات الامتثال', labelEn: 'Compliance Guidelines', section: 'compliance-guidelines' as const },
+                ].map((item) => (
+                  <Button
+                    key={item.section}
+                    variant="outline"
+                    className="w-full justify-between"
+                    onClick={() => setActiveSection(item.section)}
+                  >
+                    <span>{isArabic ? item.labelAr : item.labelEn}</span>
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
+  const renderSettingsSection = () => {
+    const isArabic = lang === 'ar';
+    const company = profile?.company;
+    return (
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-4">
+          <Card className="overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+            <CardHeader>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <CardTitle>{isArabic ? 'الإعدادات' : 'Settings'}</CardTitle>
+                  <p className="mt-2 max-w-3xl text-sm leading-7 text-text-muted">
+                    {isArabic
+                      ? 'ملخص الحساب والشركة داخل البوابة. البيانات هنا للعرض والمراجعة السريعة، بينما التعديلات الإدارية تُدار من القناة الداخلية.'
+                      : 'A summary of your account and company inside the portal. This view is for review and reference, while administrative updates are handled internally.'}
+                  </p>
+                </div>
+                {subscriptionLabel ? <Badge variant="success">{subscriptionLabel}</Badge> : null}
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-background/90 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <Settings2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-text-main">{isArabic ? 'الحساب' : 'Account'}</p>
+                    <p className="text-xs text-text-muted">{isArabic ? 'بيانات الدخول والهوية' : 'Login and identity details'}</p>
+                  </div>
+                </div>
+                <dl className="mt-4 space-y-3 text-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'الاسم' : 'Name'}</dt>
+                    <dd className="text-end font-medium text-text-main">{profile?.user.name ?? '-'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'البريد' : 'Email'}</dt>
+                    <dd className="text-end font-medium text-text-main">{profile?.user.email ?? '-'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'الدور' : 'Role'}</dt>
+                    <dd className="text-end font-medium text-text-main">{profile?.user.role ?? '-'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'الخطة' : 'Plan'}</dt>
+                    <dd className="text-end font-medium text-text-main">{profile?.subscription.plan ?? '-'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'الحالة' : 'Status'}</dt>
+                    <dd className="text-end font-medium text-text-main">{profile?.subscription.status ?? '-'}</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-background/90 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-success/10 text-success">
+                    <Building2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-text-main">{isArabic ? 'الشركة' : 'Company'}</p>
+                    <p className="text-xs text-text-muted">{isArabic ? 'الملف المرتبط بالحساب' : 'Profile linked to this account'}</p>
+                  </div>
+                </div>
+                <dl className="mt-4 space-y-3 text-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'الاسم العربي' : 'Arabic name'}</dt>
+                    <dd className="text-end font-medium text-text-main">{company?.nameAr ?? '-'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'الاسم الإنجليزي' : 'English name'}</dt>
+                    <dd className="text-end font-medium text-text-main">{company?.nameEn ?? '-'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'الجهة الممثلة' : 'Representative'}</dt>
+                    <dd className="text-end font-medium text-text-main">{company?.representativeName ?? '-'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'الصفة' : 'Title'}</dt>
+                    <dd className="text-end font-medium text-text-main">{company?.representativeTitle ?? '-'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'البريد' : 'Email'}</dt>
+                    <dd className="text-end font-medium text-text-main">{company?.email ?? '-'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'الجوال' : 'Mobile'}</dt>
+                    <dd className="text-end font-medium text-text-main">{company?.mobile ?? '-'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-text-muted">{isArabic ? 'تاريخ الانضمام' : 'Joined'}</dt>
+                    <dd className="text-end font-medium text-text-main">{company?.createdAt ? formatNotificationDate(company.createdAt, lang) : '-'}</dd>
+                  </div>
+                </dl>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+              <CardContent className="space-y-4 p-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-warning/10 text-warning">
+                    <FolderKanban className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-text-main">{isArabic ? 'نشاط النصوص' : 'Script activity'}</p>
+                    <p className="text-xs text-text-muted">{isArabic ? 'حالة سريعة للنصوص المرسلة' : 'A quick snapshot of submitted scripts'}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: isArabic ? 'إجمالي' : 'Total', value: scriptStatusSummary.total },
+                    { label: isArabic ? 'مقبول' : 'Approved', value: scriptStatusSummary.approved },
+                    { label: isArabic ? 'مرفوض' : 'Rejected', value: scriptStatusSummary.rejected },
+                    { label: isArabic ? 'قيد المعالجة' : 'In review', value: scriptStatusSummary.inFlight },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-[calc(var(--radius)+0.25rem)] border border-border bg-surface/80 p-3">
+                      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-text-muted">{item.label}</p>
+                      <p className="mt-1 text-2xl font-semibold text-text-main">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+              <CardContent className="space-y-4 p-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <CreditCard className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-text-main">{isArabic ? 'الاشتراك' : 'Subscription'}</p>
+                    <p className="text-xs text-text-muted">{isArabic ? 'تفاصيل الخطة والحالة' : 'Plan and status details'}</p>
+                  </div>
+                </div>
+                <div className="space-y-3 rounded-[calc(var(--radius)+0.35rem)] border border-border bg-surface/80 p-4">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-text-muted">{isArabic ? 'الخطة' : 'Plan'}</span>
+                    <span className="font-medium text-text-main">{profile?.subscription.plan ?? '-'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-text-muted">{isArabic ? 'الحالة' : 'Status'}</span>
+                    <span className="font-medium text-text-main">{profile?.subscription.status ?? '-'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-text-muted">{isArabic ? 'الرسوم' : 'Price'}</span>
+                    <span className="font-medium text-text-main">
+                      {new Intl.NumberFormat(lang === 'ar' ? 'ar-SA' : 'en-US', {
+                        style: 'currency',
+                        currency: 'SAR',
+                        maximumFractionDigits: 0,
+                      }).format(profile?.subscription.price ?? 0)}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+            <CardContent className="space-y-3 p-5">
+              <p className="text-sm font-semibold text-text-main">{isArabic ? 'إجراءات سريعة' : 'Quick actions'}</p>
+              <div className="space-y-2">
+                {[
+                  { labelAr: 'الإشعارات', labelEn: 'Notifications', section: 'notifications' as const },
+                  { labelAr: 'نصوصي', labelEn: 'My Scripts', section: 'scripts' as const },
+                  { labelAr: 'الشهادات', labelEn: 'Certificates', section: 'certificates' as const },
+                  { labelAr: 'إرشادات الامتثال', labelEn: 'Compliance Guidelines', section: 'compliance-guidelines' as const },
+                ].map((item) => (
+                  <Button
+                    key={item.section}
+                    variant="outline"
+                    className="w-full justify-between"
+                    onClick={() => setActiveSection(item.section)}
+                  >
+                    <span>{isArabic ? item.labelAr : item.labelEn}</span>
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+            <CardContent className="space-y-3 p-5">
+              <p className="text-sm font-semibold text-text-main">{isArabic ? 'ملاحظات مهمة' : 'Important notes'}</p>
+              <div className="space-y-3 text-sm leading-7 text-text-muted">
+                <p>
+                  {isArabic
+                    ? 'هذه الصفحة تعرض البيانات المتاحة للحساب والشركة داخل البوابة. أي تعديل إداري على الملف يتم عبر القناة الداخلية.'
+                    : 'This page shows the account and company data available inside the portal. Administrative file updates are handled through the internal channel.'}
+                </p>
+                <p>
+                  {isArabic
+                    ? 'إذا احتجت تنبيهًا جديدًا أو تحديثًا على حالة نص، ستجده أولًا في قسم الإشعارات أو نصوصي.'
+                    : 'If you need a new alert or a script status update, you will find it first in Notifications or My Scripts.'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
   const renderPaymentPage = () => {
     const paymentItem = paymentData?.items?.find((item) => item.scriptId === paymentScriptId) ?? null;
     return (
@@ -1564,22 +2116,12 @@ export function ClientPortal() {
       return <ClientCertificatesSection lang={lang} />;
     }
     if (activeSection === 'notifications') {
-      return renderPlaceholderSection(
-        'قسم الإشعارات',
-        'Notifications Section',
-        'سنفصل الإشعارات هنا في مرحلة لاحقة. حاليًا يمكنك متابعة آخر الحالات مباشرة من قسم النصوص.',
-        'Notifications will be separated here in a later phase. For now, you can track the latest statuses from the scripts section.',
-      );
+      return renderNotificationsSection();
     }
     if (activeSection === 'compliance-guidelines') {
       return <ComplianceGuidelinesSection lang={lang} />;
     }
-    return renderPlaceholderSection(
-      'قسم الإعدادات',
-      'Settings Section',
-      'الإعدادات ستأتي لاحقًا بصياغة أقرب للنظام القديم، مع الحفاظ على الربط الحالي مع بيانات الحساب والشركة.',
-      'Settings will come later in a structure closer to the old dashboard, while preserving the current account and company wiring.',
-    );
+    return renderSettingsSection();
   };
 
   return (
@@ -1595,7 +2137,10 @@ export function ClientPortal() {
       onSectionChange={setActiveSection}
       onToggleLanguage={toggleLang}
       onLogout={handleLogout}
-      subscriptionLabel=""
+      subscriptionLabel={subscriptionLabel}
+      sectionBadges={{
+        notifications: notificationsUnreadCount,
+      }}
       summary={{
         totalScripts: submissions.length,
         rejectedScripts: totalRejected,
