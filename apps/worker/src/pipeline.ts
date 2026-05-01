@@ -52,7 +52,7 @@ type AnalysisEngineMode = "v2" | "hybrid";
 type HybridRunMode = "off" | "shadow" | "enforce";
 
 const MAX_EVIDENCE_SPAN = 280;
-const PIPELINE_LOGIC_VERSION = "v2.8";
+const PIPELINE_LOGIC_VERSION = "v2.9";
 const MAX_EVIDENCE_LEN = 260;
 const NON_CRITICAL_DB_TIMEOUT_MS = 30_000;
 const CRITICAL_DB_TIMEOUT_MS = 60_000;
@@ -1726,27 +1726,24 @@ export async function processChunkJudge(
       if (hybridTimeoutHandle) clearTimeout(hybridTimeoutHandle);
       throwIfAborted(signal);
       hybridMetrics = hybrid.metrics;
-      if (hybridMode === "enforce") {
+      const persistValidatedFindings = hybridMode === "enforce";
+      if (persistValidatedFindings) {
         persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
       } else {
-        const persistValidatedFindings = config.AUDITOR_LAYER_VERSION === "v4";
-        if (persistValidatedFindings) {
-          // Auditor V4 is the hard truth gate, so persist the validated hybrid output
-          // even when the job is running in shadow comparison mode.
-          persistedFindings = sortFindingsStable(hybrid.findings as FindingWithGlobal[]);
-        } else {
-          // True shadow mode: evaluate hybrid output, but keep persisting baseline results.
-          persistedFindings = baselineFindings;
-        }
+        // True shadow mode: evaluate validator output, but persist baseline findings.
+        // The validator metrics remain available for tuning without erasing AI detections.
+        persistedFindings = baselineFindings;
       }
+      const persistedSource = persistValidatedFindings ? "validated_hybrid" : "baseline_shadow";
       logger.info("Hybrid context pipeline completed", {
         jobId,
         chunkId: chunk.id,
         runKey,
         hybridDurationMs: Date.now() - hybridStartedAt,
         baselineCount: baselineFindings.length,
+        hybridCount: hybrid.findings.length,
         persistedCount: persistedFindings.length,
-        persistedSource: hybridMode === "enforce" || config.AUDITOR_LAYER_VERSION === "v4" ? "validated_hybrid" : "baseline",
+        persistedSource,
       });
       try {
         await withOperationTimeout(
@@ -1759,9 +1756,9 @@ export async function processChunkJudge(
               architecture: "advisory_model_plus_validator",
               stage: "validated",
               advisory_count: baselineFindings.length,
-              validated_count: persistedFindings.length,
+              validated_count: hybrid.findings.length,
               auditor_layer_version: config.AUDITOR_LAYER_VERSION,
-              persisted_source: hybridMode === "enforce" || config.AUDITOR_LAYER_VERSION === "v4" ? "validated_hybrid" : "baseline",
+              persisted_source: persistedSource,
             },
           }).eq("run_key", runKey)
         );
