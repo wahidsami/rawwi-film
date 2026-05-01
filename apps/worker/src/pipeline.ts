@@ -21,7 +21,7 @@ import { getScriptStandardRouterList } from "./gcam.js";
 import { ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG, injectLexiconIntoPrompts, PROMPT_VERSIONS } from "./aiConstants.js";
 import { runMultiPassDetection, DETECTION_PASSES, planDetectionPassExecution, type LexiconTerm } from "./multiPassJudge.js";
 import { PASS_GATING_VERSION } from "./passGating.js";
-import { normalizeMisusedGlossaryPassTitle } from "./findingTitleNormalize.js";
+import { normalizeFindingTitleAgainstRationale, normalizeMisusedGlossaryPassTitle } from "./findingTitleNormalize.js";
 import { runHybridContextPipeline } from "./methodology-v3/index.js";
 import { upsertFindingPolicyLinks } from "./policyLinks.js";
 import { calculateSeverity } from "./severityRulebook.js";
@@ -52,7 +52,7 @@ type AnalysisEngineMode = "v2" | "hybrid";
 type HybridRunMode = "off" | "shadow" | "enforce";
 
 const MAX_EVIDENCE_SPAN = 280;
-const PIPELINE_LOGIC_VERSION = "v2.9";
+const PIPELINE_LOGIC_VERSION = "v2.10";
 const MAX_EVIDENCE_LEN = 260;
 const NON_CRITICAL_DB_TIMEOUT_MS = 30_000;
 const CRITICAL_DB_TIMEOUT_MS = 60_000;
@@ -1987,12 +1987,19 @@ export async function processChunkJudge(
         return [];
       }
 
-      const title_ar = normalizeMisusedGlossaryPassTitle({
+      const glossarySafeTitle = normalizeMisusedGlossaryPassTitle({
         titleAr: f.title_ar,
         rationaleAr: f.rationale_ar ?? null,
         detectionPass: (f as { detection_pass?: string }).detection_pass ?? null,
         evidenceSnippet: excerpt,
         articleId: f.article_id,
+      });
+      const title_ar = normalizeFindingTitleAgainstRationale({
+        titleAr: glossarySafeTitle,
+        rationaleAr: f.rationale_ar ?? null,
+        descriptionAr: f.description_ar ?? null,
+        evidenceSnippet: excerpt,
+        source: f.source ?? "ai",
       });
       const h = evidenceHash(
         f.article_id,
