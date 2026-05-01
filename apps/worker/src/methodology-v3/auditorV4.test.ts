@@ -46,6 +46,10 @@ function run() {
     "اسكتي",
     "اللي ما يحترم النظام… ينكسر",
     "يلعن",
+    "العن أمك",
+    "أنت مجرد نصاب",
+    "يا حرامي",
+    "كلهم كذابين",
     "الآن أنت آمن",
   ].join("\n");
 
@@ -144,6 +148,44 @@ function run() {
   });
   assert.equal(profanityAccepted.findings.length, 1, "profanity should accept direct curse");
   assert.equal(profanityAccepted.findings[0].title_ar, "الألفاظ النابية");
+
+  const directCurseAccepted = runAuditorV4Gate({
+    fullText: text,
+    findings: [
+      finding({
+        title_ar: "الألفاظ النابية",
+        evidence_snippet: "العن أمك",
+        rationale_ar: "",
+      }),
+    ],
+  });
+  assertSingleCategory(directCurseAccepted, "الألفاظ النابية", "direct imperative curse should be accepted");
+
+  const insultAccusationAccepted = runAuditorV4Gate({
+    fullText: text,
+    findings: [
+      finding({
+        title_ar: "التنمر الجارح والسخرية",
+        evidence_snippet: "أنت مجرد نصاب",
+        rationale_ar: "",
+      }),
+      finding({
+        title_ar: "التنمر الجارح والسخرية",
+        evidence_snippet: "يا حرامي",
+        rationale_ar: "",
+      }),
+      finding({
+        title_ar: "التنمر الجارح والسخرية",
+        evidence_snippet: "كلهم كذابين",
+        rationale_ar: "",
+      }),
+    ],
+  });
+  assert.equal(insultAccusationAccepted.findings.length, 3, "common insult accusations should be accepted");
+  assert.deepEqual(
+    insultAccusationAccepted.findings.map((item) => item.title_ar),
+    ["التنمر الجارح والسخرية", "التنمر الجارح والسخرية", "التنمر الجارح والسخرية"],
+  );
 
   const bullyingFromInsult = runAuditorV4Gate({
     fullText: text,
