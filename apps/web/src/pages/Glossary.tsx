@@ -29,6 +29,7 @@ import {
   parseGlossaryCsv,
   glossaryCsvTemplate,
 } from '@/utils/glossaryCsv';
+import { RAAWI_AI_NOT_CONNECTED_MESSAGE, isRaawiAiConnectionIssue } from '@/utils/raawiAiError';
 
 function normalizeLexiconTerm(term: string): string {
   return term
@@ -654,12 +655,8 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
       setFormData({ ...formData, term_variants: combined });
     } catch (e: unknown) {
       const msg = (e as { message?: string })?.message ?? String(e);
-      if (msg.includes('503') || msg.includes('not configured') || msg.includes('Conjugation service')) {
-        setError(
-          lang === 'ar'
-            ? 'توليد التصريفات غير مفعّل. في Supabase: الإعدادات → Edge Functions → Secrets → أضف OPENAI_API_KEY (مفتاح OpenAI). المفتاح في إعدادات المشروع وليس في ملف الويب. أو أضف التصريفات يدوياً.'
-            : 'Generate conjugations needs OPENAI_API_KEY in Supabase: Project Settings → Edge Functions → Secrets (project secrets, not your web app .env). Or add variants manually.'
-        );
+      if (msg.includes('503') || msg.includes('not configured') || msg.includes('Conjugation service') || isRaawiAiConnectionIssue(msg)) {
+        setError(RAAWI_AI_NOT_CONNECTED_MESSAGE);
       } else {
         setError(lang === 'ar' ? 'فشل توليد التصريفات' : 'Failed to generate conjugations');
       }
@@ -690,12 +687,8 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
       setGeneratedVariantsText(serializeGeneratedVariantsInput(variants));
     } catch (e: unknown) {
       const msg = (e as { message?: string })?.message ?? String(e);
-      if (msg.includes('503') || msg.includes('not configured') || msg.includes('OPENAI_API_KEY')) {
-        setError(
-          lang === 'ar'
-            ? 'توليد الكلمات من الطلب غير مفعّل. في Supabase: الإعدادات → Edge Functions → Secrets → أضف OPENAI_API_KEY، أو أدخل الكلمات يدوياً.'
-            : 'Prompt-based glossary generation needs OPENAI_API_KEY in Supabase Edge Function secrets, or enter the variants manually.'
-        );
+      if (msg.includes('503') || msg.includes('not configured') || msg.includes('OPENAI_API_KEY') || isRaawiAiConnectionIssue(msg)) {
+        setError(RAAWI_AI_NOT_CONNECTED_MESSAGE);
       } else {
         setError(lang === 'ar' ? 'فشل توليد الكلمات من الطلب' : 'Failed to generate variants from prompt');
       }

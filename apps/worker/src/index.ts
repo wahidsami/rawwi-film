@@ -28,7 +28,7 @@ type ChunkProcessResult = {
   error?: string;
 };
 
-const AI_OVERLOAD_PUBLIC_MESSAGE = "Raawi AI overloading issue, code 101";
+const AI_OVERLOAD_PUBLIC_MESSAGE = "Raawi AI is not connected";
 const AI_OVERLOAD_RETRY_MARKER = "__ai_overload_retry:";
 const CHUNK_TIMEOUT_REQUEUED_PUBLIC_MESSAGE = "Analysis chunk timed out and was re-queued";
 const CHUNK_TIMEOUT_FAILED_PUBLIC_MESSAGE = "Analysis chunk timed out repeatedly and the job failed";
@@ -69,7 +69,7 @@ function getRuntimeConfigLogPayload() {
 }
 
 function isAiOverloadIssue(errorMessage: string): boolean {
-  return /429|rate limit|tokens per min|requests per min|insufficient[_\s-]?quota|quota|credit|billing|timeout|timed out|etimedout|fetch failed|socket hang up|connection error|overloaded|service unavailable|temporarily unavailable|server overloaded|api key|unauthorized|authentication/i.test(
+  return /openai|open ai|ai provider|429|rate limit|tokens per min|requests per min|insufficient[_\s-]?quota|quota|credit|billing|payment required|timeout|timed out|etimedout|fetch failed|socket hang up|connection error|overloaded|service unavailable|temporarily unavailable|server overloaded|api key|unauthorized|authentication/i.test(
     errorMessage,
   );
 }

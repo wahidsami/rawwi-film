@@ -29,6 +29,7 @@ import {
   DEFAULT_SCRIPT_EDITOR_FONT_STACK,
   sanitizeFontStackForCss,
 } from '@/utils/pdfDisplayFont';
+import { getPublicAnalysisErrorMessage } from '@/utils/raawiAiError';
 
 
 
@@ -1745,10 +1746,11 @@ export function ScriptWorkspace() {
         if (isTerminalJobStatus(job.status)) {
           stopPolling();
           if (job.status === 'failed' && job.errorMessage) {
-            const alertKey = `${job.id}:${job.errorMessage}`;
+            const publicErrorMessage = getPublicAnalysisErrorMessage(job.errorMessage) ?? job.errorMessage;
+            const alertKey = `${job.id}:${publicErrorMessage}`;
             if (lastFailedAnalysisAlertRef.current !== alertKey) {
               lastFailedAnalysisAlertRef.current = alertKey;
-              toast.error(job.errorMessage);
+              toast.error(publicErrorMessage);
             }
           }
           // Fetch the report id so "View Report" navigates correctly (by=id preferred)
@@ -6702,7 +6704,7 @@ export function ScriptWorkspace() {
           <section className="space-y-4">
             {analysisJob?.errorMessage && (
               <div className="p-3 bg-error/5 border border-error/20 rounded-md text-sm text-error">
-                {analysisJob.errorMessage}
+                {getPublicAnalysisErrorMessage(analysisJob.errorMessage)}
               </div>
             )}
 
@@ -6826,7 +6828,14 @@ export function ScriptWorkspace() {
                               {lang === 'ar' ? 'منذ' : 'since'} {formatOptionalTimeValue(c.judgingStartedAt)}
                             </span>
                           )}
-                          {c.lastError && <span className="text-error truncate" title={c.lastError}>{c.lastError}</span>}
+                          {c.lastError && (
+                            <span
+                              className="text-error truncate"
+                              title={getPublicAnalysisErrorMessage(c.lastError) ?? undefined}
+                            >
+                              {getPublicAnalysisErrorMessage(c.lastError)}
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>

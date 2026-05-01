@@ -408,7 +408,7 @@ export async function notifyAdminAiOverload(job: {
     user_id: userId,
     type: "analysis_ai_overload",
     title: publicMessage,
-    body: "Analysis stopped because the AI provider was unavailable, overloaded, or out of quota.",
+    body: publicMessage,
     metadata: {
       job_id: job.id,
       script_id: job.script_id,
