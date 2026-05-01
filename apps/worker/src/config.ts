@@ -71,7 +71,7 @@ export const config = {
    * - v2: current live prompts
    * - v3: new policy-driven prompt overlay built from the updated violation handbook
    */
-  VIOLATION_SYSTEM_VERSION: ((process.env.VIOLATION_SYSTEM_VERSION ?? "v2").toLowerCase() === "v3" ? "v3" : "v2") as "v2" | "v3",
+  VIOLATION_SYSTEM_VERSION: ((process.env.VIOLATION_SYSTEM_VERSION ?? "v3").toLowerCase() === "v2" ? "v2" : "v3") as "v2" | "v3",
   /**
    * Pipeline version:
    * - v1: current production-safe pipeline

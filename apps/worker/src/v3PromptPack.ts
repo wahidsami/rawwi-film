@@ -17,7 +17,19 @@ const DEFAULT_SHARED_OVERLAY = `=== Violations System v3 ===
 10. في rationale_ar، اشرح لماذا العبارة مخالفة من المعنى المباشر أو من السياق القريب فقط، من دون سرد أسماء الشخصيات أو إعادة كتابة الحبكة.
 11. إذا كان الدليل ضعيفاً أو غامضاً أو يعتمد على استنتاج، فأعد فارغاً بدل التخمين.`;
 
-const DOC_ROOT = resolve(process.cwd(), "docs", "V3 prompts");
+function resolveDocRoot(): string {
+  const candidates = [
+    resolve(process.cwd(), "docs", "V3 prompts"),
+    resolve(process.cwd(), "..", "docs", "V3 prompts"),
+    resolve(process.cwd(), "..", "..", "docs", "V3 prompts"),
+    resolve(process.cwd(), "..", "..", "..", "docs", "V3 prompts"),
+    resolve("/app", "docs", "V3 prompts"),
+  ];
+
+  return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0];
+}
+
+const DOC_ROOT = resolveDocRoot();
 
 const PASS_FILES: Record<string, string[]> = {
   glossary: [],
@@ -32,6 +44,136 @@ const PASS_FILES: Record<string, string[]> = {
   misinformation: ["04_historical_unreliable.md"],
   international_relations: ["05_society_identity.md"],
 };
+
+export type V3SubjectDefinition = {
+  name: string;
+  titleAr: string;
+  fileName: string;
+  articleIds: number[];
+  model: "gpt-4.1" | "gpt-4.1-mini";
+};
+
+export const V3_SUBJECT_DEFINITIONS: V3SubjectDefinition[] = [
+  {
+    name: "v3_01_religious_fundamentals",
+    titleAr: "المساس بالثوابت الدينية",
+    fileName: "01_religious_fundamentals.md",
+    articleIds: [4, 16],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_02_political_leadership",
+    titleAr: "المساس بالقيادة السياسية",
+    fileName: "02_political_leadership.md",
+    articleIds: [13, 14],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_03_national_security",
+    titleAr: "الإضرار بالأمن الوطني",
+    fileName: "03_national_security.md",
+    articleIds: [4, 12, 13, 14, 15],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_04_historical_unreliable",
+    titleAr: "المحتوى التاريخي غير الموثوق",
+    fileName: "04_historical_unreliable.md",
+    articleIds: [16],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_05_society_identity",
+    titleAr: "الإساءة للمجتمع أو الهوية الوطنية",
+    fileName: "05_society_identity.md",
+    articleIds: [4, 8, 12, 17, 18],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_06_children_crime",
+    titleAr: "محتوى الجرائم الموجه للأطفال",
+    fileName: "06_children_crime.md",
+    articleIds: [6],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_07_drugs_alcohol",
+    titleAr: "الترويج للمخدرات والمسكرات",
+    fileName: "07_drugs_alcohol.md",
+    articleIds: [5, 10],
+    model: "gpt-4.1-mini",
+  },
+  {
+    name: "v3_08_child_disability_harm",
+    titleAr: "إيذاء الطفل وذوي الإعاقة",
+    fileName: "08_child_disability_harm.md",
+    articleIds: [6, 17],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_09_inappropriate_sexual_content",
+    titleAr: "المحتوى الجنسي غير المناسب",
+    fileName: "09_inappropriate_sexual_content.md",
+    articleIds: [5, 9, 23, 24],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_10_explicit_sexual_scenes",
+    titleAr: "المشاهد الجنسية الصريحة",
+    fileName: "10_explicit_sexual_scenes.md",
+    articleIds: [9, 23, 24],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_11_profanity",
+    titleAr: "الألفاظ النابية",
+    fileName: "11_profanity.md",
+    articleIds: [4, 5, 17],
+    model: "gpt-4.1-mini",
+  },
+  {
+    name: "v3_12_women_abuse",
+    titleAr: "الإساءة إلى المرأة أو تعنيفها",
+    fileName: "12_women_abuse.md",
+    articleIds: [7],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_13_family_values",
+    titleAr: "تقويض قيم الأسرة",
+    fileName: "13_family_values.md",
+    articleIds: [4, 12],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_14_parents_abuse",
+    titleAr: "الإساءة إلى الوالدين",
+    fileName: "14_parents_abuse.md",
+    articleIds: [4, 17],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_15_elderly_abuse",
+    titleAr: "الإساءة إلى كبار السن",
+    fileName: "15_elderly_abuse.md",
+    articleIds: [4, 17],
+    model: "gpt-4.1",
+  },
+  {
+    name: "v3_16_bullying",
+    titleAr: "التنمر الجارح والسخرية",
+    fileName: "16_bullying.md",
+    articleIds: [5, 6, 17],
+    model: "gpt-4.1-mini",
+  },
+  {
+    name: "v3_17_other",
+    titleAr: "أخرى",
+    fileName: "17_other.md",
+    articleIds: [4, 11, 16, 17, 19, 20, 21, 22],
+    model: "gpt-4.1",
+  },
+];
 
 function loadMarkdown(fileName: string): string | null {
   const filePath = resolve(DOC_ROOT, fileName);
@@ -56,4 +198,17 @@ export function buildV3PromptOverlay(passName: string): string | null {
   ]);
 
   return overlay.trim().length > 0 ? overlay : null;
+}
+
+export function buildV3SubjectPromptSection(subject: V3SubjectDefinition): string {
+  const shared = loadMarkdown("shared_overview.md") ?? DEFAULT_SHARED_OVERLAY;
+  const subjectPrompt = loadMarkdown(subject.fileName) ?? `# ${subject.titleAr}
+
+استخرج فقط المخالفات التي تندرج تحت هذا العنوان. إذا لم يكن المقتطف يثبت هذا النوع مباشرة فأرجع {"findings":[]}.`;
+
+  return joinSections([
+    shared,
+    `=== Violation Subject: ${subject.titleAr} ===`,
+    subjectPrompt,
+  ]);
 }
