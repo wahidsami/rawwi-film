@@ -259,6 +259,65 @@ function run() {
   });
   assertRejected(otherRejected, "weak normal sentence must not become other");
 
+  const abuseContextText = [
+    "المشهد 4 — داخلي — منزل — مساء",
+    "ريم زوجته تقف في الزاوية وهي خائفة.",
+    "يضربها سامي بقوة وتبكي أمام الجميع.",
+    "المشهد 5 — داخلي — مدرسة — صباح",
+    "الطالب الصغير يقف وحيداً أمام المدير.",
+    "يدفعه المدير بقسوة ويسخر منه أمام الطلاب.",
+    "المشهد 6 — خارجي — حارة — عصر",
+    "طفل يسرق من البقالة ويضحك معه أصحابه.",
+  ].join("\n");
+
+  const womenAbuseAcceptedFromContext = runAuditorV4Gate({
+    fullText: abuseContextText,
+    findings: [
+      finding({
+        title_ar: "الإساءة إلى المرأة أو تعنيفها",
+        evidence_snippet: "يضربها سامي بقوة وتبكي أمام الجميع.",
+        rationale_ar: "",
+      }),
+    ],
+  });
+  assertSingleCategory(
+    womenAbuseAcceptedFromContext,
+    "الإساءة إلى المرأة أو تعنيفها",
+    "women abuse should survive when the target is established in nearby context",
+  );
+
+  const childHarmAcceptedFromContext = runAuditorV4Gate({
+    fullText: abuseContextText,
+    findings: [
+      finding({
+        title_ar: "إيذاء الطفل وذوي الإعاقة",
+        evidence_snippet: "يدفعه المدير بقسوة ويسخر منه أمام الطلاب.",
+        rationale_ar: "",
+      }),
+    ],
+  });
+  assertSingleCategory(
+    childHarmAcceptedFromContext,
+    "إيذاء الطفل وذوي الإعاقة",
+    "child abuse should survive when the child target is established in nearby context",
+  );
+
+  const childCrimeStaysChildCrime = runAuditorV4Gate({
+    fullText: abuseContextText,
+    findings: [
+      finding({
+        title_ar: "محتوى الجرائم الموجه للأطفال",
+        evidence_snippet: "طفل يسرق من البقالة ويضحك معه أصحابه.",
+        rationale_ar: "",
+      }),
+    ],
+  });
+  assertSingleCategory(
+    childCrimeStaysChildCrime,
+    "محتوى الجرائم الموجه للأطفال",
+    "child crime content should stay separate from child abuse",
+  );
+
   console.log("All auditor v4 tests passed.");
 }
 

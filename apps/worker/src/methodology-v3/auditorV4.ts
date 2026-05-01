@@ -11,6 +11,7 @@ export type AuditorV4Category =
   | "historical"
   | "society"
   | "children"
+  | "child_disability_harm"
   | "disability"
   | "women"
   | "parents"
@@ -54,6 +55,7 @@ const PRIORITY_ORDER: AuditorV4Category[] = [
   "religion",
   "historical",
   "society",
+  "child_disability_harm",
   "children",
   "disability",
   "women",
@@ -64,6 +66,11 @@ const PRIORITY_ORDER: AuditorV4Category[] = [
   "bullying",
   "other",
 ];
+
+const CHILD_TARGET_TERMS = ["طفل", "الطفل", "أطفال", "الأطفال", "طفلة", "الطفلة", "أولاد", "الأولاد", "ولد", "الولد", "بنت", "البنت", "طلاب", "الطلاب", "طالب", "الطالب", "تلميذ", "التلميذ", "قاصر", "القاصر", "قاصرين", "القاصرين", "صبي", "الصبي", "صبية", "الصبية", "ابن", "ابنه", "ابنته", "ابني", "ابنتي"];
+const DISABILITY_TARGET_TERMS = ["إعاقة", "معاق", "معاقة", "أعمى", "أصم", "بكم", "مقعد", "ذوي الإعاقة"];
+const WOMEN_TARGET_TERMS = ["امرأة", "المرأة", "نساء", "زوجة", "زوجته", "زوجها", "امرأته", "بنت", "بنات", "أنثى", "فتاة", "فتاه", "نسائية"];
+const HARM_TERMS = ["إهانة", "سخرية", "يسخر", "يسخرون", "ضرب", "يضرب", "يضربها", "يضربه", "ضربها", "ضربه", "صفع", "يصفع", "صفعها", "صفعه", "ركل", "يركل", "ركلها", "ركله", "دفع", "يدفع", "يدفعها", "يدفعه", "دفعها", "دفعه", "إيذاء", "احتقار", "تحقير", "تنمر", "استغلال", "تحرش", "تهديد", "يبكي", "تبكي", "بكى", "بكت"];
 
 const CATEGORY_RULES: Record<AuditorV4Category, CategoryRule> = {
   sexual_explicit: {
@@ -167,45 +174,59 @@ const CATEGORY_RULES: Record<AuditorV4Category, CategoryRule> = {
     titleAr: "محتوى الجرائم الموجه للأطفال",
     priority: 9,
     minTokens: 2,
-    signals: ["طفل", "أطفال", "طفلة", "أولاد", "ولد", "بنت", "طلاب", "طالب", "تلميذ", "قاصر", "قاصرين"],
+    signals: CHILD_TARGET_TERMS,
     phrases: ["طفل يسرق", "طفل يدخن", "تعاطي أمام الأطفال", "استغلال الأطفال"],
     negatives: [],
     score: (evidence) => {
-      const hasChild = containsAnyNormalized(evidence, ["طفل", "أطفال", "طفلة", "أولاد", "ولد", "بنت", "طلاب", "طالب", "تلميذ", "قاصر", "قاصرين"]);
+      const hasChild = containsAnyNormalized(evidence, CHILD_TARGET_TERMS);
       if (!hasChild) return 0;
-      if (!containsAnyNormalized(evidence, ["سرق", "يضحك", "يدخن", "تعاطي", "جرم", "جريمة", "عنف", "تنمر", "إهانة", "ضرب", "إيذاء"])) return 0;
+      if (!containsAnyNormalized(evidence, ["سرق", "يسرق", "سرقة", "يدخن", "تعاطي", "جرم", "جريمة", "عصابة", "مخدر", "مخدرات", "سلاح"])) return 0;
       return 2;
+    },
+  },
+  child_disability_harm: {
+    titleAr: "إيذاء الطفل وذوي الإعاقة",
+    priority: 10,
+    minTokens: 2,
+    signals: [...CHILD_TARGET_TERMS, ...DISABILITY_TARGET_TERMS],
+    phrases: ["ضرب الطفل", "إيذاء الطفل", "استغلال الأطفال", "تنمر على الطفل", "ذوي الإعاقة", "أعمى", "أصم", "بكم", "معاق", "معاقة"],
+    negatives: [],
+    score: (evidence) => {
+      const hasProtectedTarget = containsAnyNormalized(evidence, [...CHILD_TARGET_TERMS, ...DISABILITY_TARGET_TERMS]);
+      if (!hasProtectedTarget) return 0;
+      if (!containsAnyNormalized(evidence, HARM_TERMS)) return 0;
+      return 3;
     },
   },
   disability: {
     titleAr: "إيذاء الطفل وذوي الإعاقة",
-    priority: 10,
+    priority: 11,
     minTokens: 2,
-    signals: ["إعاقة", "معاق", "معاقة", "أعمى", "أصم", "بكم", "مقعد", "ذوي الإعاقة"],
+    signals: DISABILITY_TARGET_TERMS,
     phrases: ["ذوي الإعاقة", "أعمى", "أصم", "بكم", "معاق", "معاقة"],
     negatives: [],
     score: (evidence) => {
-      if (!containsAnyNormalized(evidence, ["إعاقة", "معاق", "معاقة", "أعمى", "أصم", "بكم", "مقعد", "ذوي الإعاقة"])) return 0;
-      if (!containsAnyNormalized(evidence, ["إهانة", "سخرية", "ضرب", "إيذاء", "احتقار", "تنمر"])) return 0;
+      if (!containsAnyNormalized(evidence, DISABILITY_TARGET_TERMS)) return 0;
+      if (!containsAnyNormalized(evidence, HARM_TERMS)) return 0;
       return 3;
     },
   },
   women: {
     titleAr: "الإساءة إلى المرأة أو تعنيفها",
-    priority: 11,
+    priority: 12,
     minTokens: 2,
-    signals: ["امرأة", "المرأة", "نساء", "زوجة", "بنت", "بنات", "أنثى", "نسائية"],
+    signals: WOMEN_TARGET_TERMS,
     phrases: ["مكانها المطبخ", "مكان المرأة", "المرأة ما تفهم", "المرأة أقل", "أقل من الرجل"],
     negatives: ["أبو", "أم", "المجتمع", "الدين"],
     score: (evidence) => {
-      if (!containsAnyNormalized(evidence, ["امرأة", "المرأة", "نساء", "زوجة", "بنت", "بنات", "أنثى", "نسائية"])) return 0;
-      if (!containsAnyNormalized(evidence, ["مكانها المطبخ", "مكان المرأة", "المرأة ما تفهم", "المرأة أقل", "أقل من الرجل", "تعنيف", "إهانة", "تحقير", "ضرب", "إيذاء"])) return 0;
+      if (!containsAnyNormalized(evidence, WOMEN_TARGET_TERMS)) return 0;
+      if (!containsAnyNormalized(evidence, ["مكانها المطبخ", "مكان المرأة", "المرأة ما تفهم", "المرأة أقل", "أقل من الرجل", "تعنيف", ...HARM_TERMS])) return 0;
       return 3;
     },
   },
   parents: {
     titleAr: "الإساءة إلى الوالدين",
-    priority: 12,
+    priority: 13,
     minTokens: 2,
     signals: ["أب", "أم", "أبوك", "أمك", "والد", "والدة", "والدين", "أبوي", "أمي"],
     phrases: ["أبوك غبي", "أمك", "الوالدين", "أبوي", "أمي"],
@@ -218,7 +239,7 @@ const CATEGORY_RULES: Record<AuditorV4Category, CategoryRule> = {
   },
   elderly: {
     titleAr: "الإساءة إلى كبار السن",
-    priority: 13,
+    priority: 14,
     minTokens: 2,
     signals: ["عجوز", "مسن", "مسنة", "كبير السن", "كبار السن", "شيخ", "جدة", "جد"],
     phrases: ["كبار السن", "العجوز", "مسن", "مسنة"],
@@ -231,7 +252,7 @@ const CATEGORY_RULES: Record<AuditorV4Category, CategoryRule> = {
   },
   family: {
     titleAr: "تقويض قيم الأسرة",
-    priority: 14,
+    priority: 15,
     minTokens: 2,
     signals: ["أسرة", "عائلة", "أهل", "أهلك", "الزواج", "زوج", "زوجة", "البيت"],
     phrases: ["اقطع علاقتك بأهلك", "اترك أهلك", "العائلة ما لها قيمة", "الزواج مضيعة وقت", "بدونهم", "استغني عن الأسرة"],
@@ -245,7 +266,7 @@ const CATEGORY_RULES: Record<AuditorV4Category, CategoryRule> = {
   },
   bullying: {
     titleAr: "التنمر الجارح والسخرية",
-    priority: 16,
+    priority: 17,
     minTokens: 2,
     signals: ["غبي", "أحمق", "فاشل", "ما تسوى", "لا أحد يبيك", "مقرف", "سخيف", "حقير", "وضيع", "جبان", "تافه", "عديم التربية", "اسكت", "اسكتي", "كذاب", "كذابين", "كاذب", "كاذبين", "حرامي", "حرامية", "نصاب", "نصابين", "نصابة", "محتال", "محتالين", "كلب", "حمار", "أهبل", "اهبل"],
     phrases: ["ما تسوى شيء", "لا أحد يبيك", "عديم التربية", "أنت غبي", "يا فاشل", "يا كذاب", "يا حرامي", "يا نصاب", "أنت نصاب", "أنت حرامي", "أنت كذاب", "كلهم كذابين", "كلهم كاذبين", "كلهم حرامية", "أنتم نصابين"],
@@ -258,7 +279,7 @@ const CATEGORY_RULES: Record<AuditorV4Category, CategoryRule> = {
   },
   profanity: {
     titleAr: "الألفاظ النابية",
-    priority: 15,
+    priority: 16,
     minTokens: 1,
     signals: ["يلعن", "العن", "لعن", "لعنة", "لعنك", "تبا", "تبًا", "تباً", "خرا", "وسخ", "قذر", "ساقط", "نذل", "خسيس", "لئيم"],
     phrases: ["يا حمار", "يا كلب", "يا خرا", "يلعن", "العن", "العن أمك", "العن امك", "العن والديك", "تبًا", "تبا"],
@@ -271,7 +292,7 @@ const CATEGORY_RULES: Record<AuditorV4Category, CategoryRule> = {
   },
   other: {
     titleAr: "أخرى",
-    priority: 17,
+    priority: 18,
     minTokens: 2,
     signals: ["فساد", "رشوة", "ابتزاز", "احتيال", "خيانة", "سرقة", "تسريب", "تحريض", "تهديد", "كذب", "كاذب", "فضيحة", "انتهاك", "مخالفة"],
     phrases: ["فساد", "رشوة", "ابتزاز", "احتيال", "خيانة", "سرقة", "تسريب", "فضيحة"],
@@ -425,8 +446,46 @@ function isWeakSnippet(text: string): boolean {
   return false;
 }
 
-function categoryHasSignature(category: AuditorV4Category, evidence: string): boolean {
-  const text = normalizeText(evidence);
+function buildEvidenceContext(fullText: string | null | undefined, evidence: string, radius = 360): string {
+  const source = fullText ?? "";
+  const snippet = evidence.trim();
+  if (!source || !snippet) return evidence;
+  const sceneHeadingPattern = /^\s*المشهد(?:\s|\d|$|[—-])/u;
+  const lines = source.split(/\r?\n/);
+  const lineIndex = lines.findIndex((line) => line.includes(snippet));
+  if (lineIndex >= 0) {
+    let startLine = lineIndex;
+    while (startLine > 0 && !sceneHeadingPattern.test(lines[startLine])) {
+      startLine--;
+      if (sceneHeadingPattern.test(lines[startLine])) break;
+    }
+    let endLine = lineIndex;
+    while (endLine < lines.length - 1) {
+      const nextLine = lines[endLine + 1] ?? "";
+      if (sceneHeadingPattern.test(nextLine)) break;
+      endLine++;
+    }
+    return lines.slice(startLine, endLine + 1).join("\n");
+  }
+  const index = source.indexOf(snippet);
+  if (index < 0) return evidence;
+  return source.slice(Math.max(0, index - radius), Math.min(source.length, index + snippet.length + radius));
+}
+
+function isContextSensitiveCategory(category: AuditorV4Category): boolean {
+  return category === "women" || category === "child_disability_harm" || category === "disability";
+}
+
+function scoringTextForCategory(category: AuditorV4Category, evidence: string, context: string | null | undefined): string {
+  if (!isContextSensitiveCategory(category)) return evidence;
+  const contextText = context?.trim();
+  if (!contextText || contextText === evidence.trim()) return evidence;
+  return `${contextText}\n${evidence}`;
+}
+
+function categoryHasSignature(category: AuditorV4Category, evidence: string, context?: string | null): boolean {
+  const candidate = scoringTextForCategory(category, evidence, context);
+  const text = normalizeText(candidate);
   if (!text) return false;
 
   switch (category) {
@@ -463,18 +522,23 @@ function categoryHasSignature(category: AuditorV4Category, evidence: string): bo
       );
     case "children":
       return (
-        containsAnyNormalized(text, ["طفل", "أطفال", "طفلة", "أولاد", "ولد", "بنت", "طلاب", "طالب", "تلميذ", "قاصر", "قاصرين"]) &&
-        containsAnyNormalized(text, ["سرق", "يضحك", "يدخن", "تعاطي", "جرم", "جريمة", "عنف", "تنمر", "إهانة", "ضرب", "إيذاء", "استغلال", "تحرش"])
+        containsAnyNormalized(text, CHILD_TARGET_TERMS) &&
+        containsAnyNormalized(text, ["سرق", "يسرق", "سرقة", "يدخن", "تعاطي", "جرم", "جريمة", "عصابة", "مخدر", "مخدرات", "سلاح"])
+      );
+    case "child_disability_harm":
+      return (
+        containsAnyNormalized(text, [...CHILD_TARGET_TERMS, ...DISABILITY_TARGET_TERMS]) &&
+        containsAnyNormalized(text, HARM_TERMS)
       );
     case "disability":
       return (
-        containsAnyNormalized(text, ["إعاقة", "معاق", "معاقة", "أعمى", "أصم", "بكم", "مقعد", "ذوي الإعاقة"]) &&
-        containsAnyNormalized(text, ["إهانة", "سخرية", "ضرب", "إيذاء", "احتقار", "تنمر"])
+        containsAnyNormalized(text, DISABILITY_TARGET_TERMS) &&
+        containsAnyNormalized(text, HARM_TERMS)
       );
     case "women":
       return (
-        containsAnyNormalized(text, ["امرأة", "المرأة", "نساء", "زوجة", "بنت", "بنات", "أنثى", "نسائية"]) &&
-        containsAnyNormalized(text, ["مكانها المطبخ", "مكان المرأة", "المرأة ما تفهم", "المرأة أقل", "أقل من الرجل", "تعنيف", "إهانة", "تحقير", "ضرب", "إيذاء", "احتقار"])
+        containsAnyNormalized(text, WOMEN_TARGET_TERMS) &&
+        containsAnyNormalized(text, ["مكانها المطبخ", "مكان المرأة", "المرأة ما تفهم", "المرأة أقل", "أقل من الرجل", "تعنيف", ...HARM_TERMS])
       );
     case "parents":
       return (
@@ -502,11 +566,18 @@ function categoryHasSignature(category: AuditorV4Category, evidence: string): bo
   }
 }
 
-function isSelfSufficient(category: AuditorV4Category, evidence: string): boolean {
+function isSelfSufficient(category: AuditorV4Category, evidence: string, context?: string | null): boolean {
   const text = normalizeText(evidence);
   if (!text) return false;
-  if (isWeakSnippet(text) && category !== "profanity" && category !== "bullying") return false;
-  return categoryHasSignature(category, text);
+  if (
+    isWeakSnippet(text) &&
+    category !== "profanity" &&
+    category !== "bullying" &&
+    !((isContextSensitiveCategory(category) || category === "children") && categoryHasSignature(category, text, context))
+  ) {
+    return false;
+  }
+  return categoryHasSignature(category, text, context);
 }
 
 function titleCategory(title: string | null | undefined): AuditorV4Category | null {
@@ -518,23 +589,25 @@ function titleCategory(title: string | null | undefined): AuditorV4Category | nu
   return null;
 }
 
-function scoreCategory(category: AuditorV4Category, evidence: string): number {
+function scoreCategory(category: AuditorV4Category, evidence: string, context?: string | null): number {
   const rule = CATEGORY_RULES[category];
   if (!rule) return 0;
   const text = normalizeText(evidence);
   if (!text) return 0;
-  if (tokenCount(text) < rule.minTokens && !(category === "profanity" && tokenCount(text) >= 1)) return 0;
-  if (!isSelfSufficient(category, text)) return 0;
-  const score = rule.score(text);
+  const scoringText = scoringTextForCategory(category, text, context);
+  const tokenBasis = isContextSensitiveCategory(category) ? scoringText : text;
+  if (tokenCount(tokenBasis) < rule.minTokens && !(category === "profanity" && tokenCount(text) >= 1)) return 0;
+  if (!isSelfSufficient(category, text, context)) return 0;
+  const score = rule.score(scoringText);
   return score > 0 ? score : 0;
 }
 
-function bestCategoryForEvidence(evidence: string): { category: AuditorV4Category | null; score: number } {
+function bestCategoryForEvidence(evidence: string, context?: string | null): { category: AuditorV4Category | null; score: number } {
   let winner: AuditorV4Category | null = null;
   let bestScore = 0;
   let bestPriority = Number.POSITIVE_INFINITY;
   for (const category of CATEGORY_ORDER) {
-    const score = scoreCategory(category, evidence);
+    const score = scoreCategory(category, evidence, context);
     if (score <= 0) continue;
     const priority = CATEGORY_RULES[category].priority;
     if (score > bestScore || (score === bestScore && priority < bestPriority)) {
@@ -550,15 +623,16 @@ function categoryTitle(category: AuditorV4Category): string {
   return CATEGORY_RULES[category]?.titleAr ?? "مخالفة محتوى";
 }
 
-function isGroundedRationale(evidence: string, rationale: string | null | undefined): boolean {
+function isGroundedRationale(evidence: string, rationale: string | null | undefined, context?: string | null): boolean {
   const text = normalizeText(rationale);
   if (!text) return true;
   if (/\bمادة\s+\d+/u.test(text)) return false;
+  const groundingText = normalizeText(context && context.trim() ? `${context}\n${evidence}` : evidence);
   const extractedNames = ["فهد", "سامي", "مها", "ناصر", "حسام", "ريم", "دلال"];
-  if (containsAnyNormalized(text, extractedNames) && !extractedNames.some((name) => evidence.includes(name))) return false;
+  if (containsAnyNormalized(text, extractedNames) && !extractedNames.some((name) => groundingText.includes(name))) return false;
   const rationaleTokens = lockTokens(text).filter((token) => token.length >= 3 && !GROUNDING_STOPWORDS.has(token));
   if (rationaleTokens.length === 0) return true;
-  if (rationaleTokens.some((token) => !normalizeText(evidence).includes(token))) return false;
+  if (rationaleTokens.some((token) => !groundingText.includes(token))) return false;
   return true;
 }
 
@@ -618,13 +692,14 @@ export function runAuditorV4Gate(args: {
       continue;
     }
 
-    const { category, score } = bestCategoryForEvidence(evidence);
+    const context = buildEvidenceContext(args.fullText, evidence);
+    const { category, score } = bestCategoryForEvidence(evidence, context);
     if (!category) {
       categoryRejected++;
       continue;
     }
 
-    if (!isGroundedRationale(evidence, finding.rationale_ar)) {
+    if (!isGroundedRationale(evidence, finding.rationale_ar, isContextSensitiveCategory(category) ? context : null)) {
       groundingRejected++;
       continue;
     }
