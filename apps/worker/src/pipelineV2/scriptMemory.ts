@@ -3,11 +3,18 @@ import type { AnalysisJob } from "../jobs.js";
 import { logger } from "../logger.js";
 import { generateScriptSummary, type ScriptSummaryPayload } from "../scriptSummary.js";
 
-export const PIPELINE_V2_SCRIPT_MEMORY_VERSION = "v1";
+export const PIPELINE_V2_SCRIPT_MEMORY_VERSION = "v2";
+
+export type SpeakerProfile = {
+  name: string;
+  lineCount: number;
+  sampleLines: string[];
+};
 
 export type ScriptMemoryPayload = {
   summary: ScriptSummaryPayload | null;
   speakerHints: string[];
+  speakerProfiles: SpeakerProfile[];
   sampledWindows: {
     opening: string | null;
     middle: string | null;
@@ -42,21 +49,33 @@ function sampleScriptWindows(fullText: string): ScriptMemoryPayload["sampledWind
   return { opening, middle, ending };
 }
 
-function extractTopScriptSpeakers(fullText: string): string[] {
+function extractTopScriptSpeakerProfiles(fullText: string): SpeakerProfile[] {
   const matches = [...fullText.matchAll(/(^|\n)\s*([^\n:]{1,40})\s*:\s*/g)];
-  const counts = new Map<string, number>();
+  const profiles = new Map<string, SpeakerProfile>();
   for (const match of matches) {
     const raw = match[2]?.replace(/\s+/g, " ").trim();
     if (!raw) continue;
     if (raw.length < 2 || raw.length > 32) continue;
     if (/^\d+$/.test(raw)) continue;
-    counts.set(raw, (counts.get(raw) ?? 0) + 1);
+
+    const lineStart = (match.index ?? 0) + match[0].length;
+    const lineEnd = fullText.indexOf("\n", lineStart);
+    const sampleRaw = fullText.slice(lineStart, lineEnd >= 0 ? lineEnd : Math.min(fullText.length, lineStart + 220));
+    const sample = compactText(sampleRaw, 160);
+
+    const existing = profiles.get(raw) ?? { name: raw, lineCount: 0, sampleLines: [] };
+    existing.lineCount++;
+    if (sample && existing.sampleLines.length < 3) existing.sampleLines.push(sample);
+    profiles.set(raw, existing);
   }
 
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ar"))
+  return [...profiles.values()]
+    .sort((a, b) => b.lineCount - a.lineCount || a.name.localeCompare(b.name, "ar"))
     .slice(0, 10)
-    .map(([name]) => name);
+    .map((profile) => ({
+      ...profile,
+      sampleLines: profile.sampleLines.filter(Boolean),
+    }));
 }
 
 function buildSampledSummaryInput(windows: ScriptMemoryPayload["sampledWindows"]): string {
@@ -78,12 +97,14 @@ export async function getCachedPipelineV2ScriptMemory(
   const pending = (async (): Promise<ScriptMemoryPayload> => {
     const text = normalizedText?.trim() ?? "";
     const sampledWindows = sampleScriptWindows(text);
-    const speakerHints = extractTopScriptSpeakers(text);
+    const speakerProfiles = extractTopScriptSpeakerProfiles(text);
+    const speakerHints = speakerProfiles.map((profile) => profile.name);
 
     if (!text) {
       return {
         summary: null,
         speakerHints,
+        speakerProfiles,
         sampledWindows,
         usedLlmSummary: false,
         skippedReason: "no_text",
@@ -98,6 +119,7 @@ export async function getCachedPipelineV2ScriptMemory(
       return {
         summary: null,
         speakerHints,
+        speakerProfiles,
         sampledWindows,
         usedLlmSummary: false,
         skippedReason: "large_job_skip",
@@ -110,6 +132,7 @@ export async function getCachedPipelineV2ScriptMemory(
       return {
         summary,
         speakerHints,
+        speakerProfiles,
         sampledWindows,
         usedLlmSummary: Boolean(summary),
         skippedReason: summary ? null : "summary_unavailable",
@@ -122,6 +145,7 @@ export async function getCachedPipelineV2ScriptMemory(
       return {
         summary: null,
         speakerHints,
+        speakerProfiles,
         sampledWindows,
         usedLlmSummary: false,
         skippedReason: "summary_failed",
@@ -140,9 +164,19 @@ export async function getCachedPipelineV2ScriptMemory(
 }
 
 export function buildScriptMemoryPromptContext(memory: ScriptMemoryPayload): string {
+  const speakerProfileSummary = memory.speakerProfiles.length > 0
+    ? memory.speakerProfiles
+        .map((profile) => {
+          const samples = profile.sampleLines.length > 0 ? ` samples: ${profile.sampleLines.map((line) => `"${line}"`).join(" / ")}` : "";
+          return `${profile.name} (${profile.lineCount} lines${samples})`;
+        })
+        .join(" | ")
+    : "none detected";
+
   const lines = [
     `- Script-level memory summary source: ${memory.usedLlmSummary ? "llm_sampled_overview" : "deterministic_only"}`,
     `- Frequent speakers across the script: ${memory.speakerHints.length > 0 ? memory.speakerHints.join("، ") : "none detected"}`,
+    `- Speaker profiles and sample dialogue: ${speakerProfileSummary}`,
     `- Opening memory excerpt: ${memory.sampledWindows.opening ?? "not available"}`,
     `- Middle memory excerpt: ${memory.sampledWindows.middle ?? "not available"}`,
     `- Ending memory excerpt: ${memory.sampledWindows.ending ?? "not available"}`,
@@ -150,6 +184,8 @@ export function buildScriptMemoryPromptContext(memory: ScriptMemoryPayload): str
 
   if (memory.summary) {
     lines.push(`- Script synopsis: ${memory.summary.synopsis_ar}`);
+    lines.push(`- Main characters: ${memory.summary.main_characters_ar ?? "not provided"}`);
+    lines.push(`- Relationship map: ${memory.summary.relationship_map_ar ?? "not provided"}`);
     lines.push(`- Key risky events: ${memory.summary.key_risky_events_ar ?? "not provided"}`);
     lines.push(`- Narrative stance: ${memory.summary.narrative_stance_ar ?? "not provided"}`);
     lines.push(`- Compliance posture: ${memory.summary.compliance_posture_ar ?? "not provided"}`);
@@ -158,6 +194,7 @@ export function buildScriptMemoryPromptContext(memory: ScriptMemoryPayload): str
   }
 
   lines.push("- Use this script memory to understand long-range context, character intent, and whether the current chunk fits a larger dramatic arc.");
+  lines.push("- Use speaker profiles to understand who is likely speaking and whether the target is a child, parent, woman, elderly person, authority figure, or public group when the current chunk supports that reading.");
   lines.push("- Do not use script-memory excerpts as literal evidence unless the quoted text also exists inside the current chunk.");
 
   return lines.join("\n");

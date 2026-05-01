@@ -1,6 +1,11 @@
 import type { AnalysisChunk, AnalysisJob } from "../jobs.js";
 
-export const PIPELINE_V2_MEMORY_VERSION = "v1";
+export const PIPELINE_V2_MEMORY_VERSION = "v2";
+
+export type DialogueTurnHint = {
+  speaker: string;
+  textPreview: string;
+};
 
 export type ChunkContextEnvelope = {
   pipelineVersion: "v2";
@@ -18,6 +23,7 @@ export type ChunkContextEnvelope = {
     previousExcerpt: string | null;
     nextExcerpt: string | null;
     speakerHints: string[];
+    dialogueTurns: DialogueTurnHint[];
     boundaryNote: string;
   };
 };
@@ -53,6 +59,25 @@ function extractSpeakerHints(chunkText: string): string[] {
   return [...seen];
 }
 
+function extractDialogueTurns(chunkText: string): DialogueTurnHint[] {
+  const turns: DialogueTurnHint[] = [];
+  const lines = chunkText.split(/\r?\n/);
+  for (const line of lines) {
+    const match = line.match(/^\s*([^\n:]{2,40})\s*:\s*(.+?)\s*$/u);
+    if (!match) continue;
+    const speaker = match[1]?.replace(/\s+/g, " ").trim();
+    const text = match[2]?.replace(/\s+/g, " ").trim();
+    if (!speaker || !text) continue;
+    if (/^\d+$/.test(speaker)) continue;
+    turns.push({
+      speaker,
+      textPreview: compactText(text, 180),
+    });
+    if (turns.length >= 12) break;
+  }
+  return turns;
+}
+
 export function buildChunkContextEnvelope(args: {
   job: AnalysisJob;
   chunk: AnalysisChunk;
@@ -73,6 +98,7 @@ export function buildChunkContextEnvelope(args: {
     args.chunk.end_offset + CONTEXT_RADIUS,
   );
   const speakerHints = extractSpeakerHints(args.chunk.text);
+  const dialogueTurns = extractDialogueTurns(args.chunk.text);
   const boundaryNote = previousExcerpt || nextExcerpt
     ? "Review this chunk as part of a continuing scene; connect it to adjacent text before deciding whether the content is endorsement, condemnation, neutral mention, dream logic, or narration."
     : "No adjacent-memory excerpt was available for this chunk.";
@@ -93,6 +119,7 @@ export function buildChunkContextEnvelope(args: {
       previousExcerpt,
       nextExcerpt,
       speakerHints,
+      dialogueTurns,
       boundaryNote,
     },
   };
@@ -104,6 +131,11 @@ export function buildChunkPromptContext(envelope: ChunkContextEnvelope): string 
     `- Boundary note: ${envelope.memory.boundaryNote}`,
     `- Manual review items carried from prior reviews: ${envelope.memory.carriedForwardManualCount}`,
     `- Speaker hints in this chunk: ${envelope.memory.speakerHints.length > 0 ? envelope.memory.speakerHints.join("، ") : "none detected"}`,
+    `- Current chunk dialogue turns: ${
+      envelope.memory.dialogueTurns.length > 0
+        ? envelope.memory.dialogueTurns.map((turn) => `${turn.speaker}: "${turn.textPreview}"`).join(" | ")
+        : "none detected"
+    }`,
     `- Previous chunk memory excerpt: ${envelope.memory.previousExcerpt ?? "not available"}`,
     `- Next chunk memory excerpt: ${envelope.memory.nextExcerpt ?? "not available"}`,
     "- Use this memory only to understand narrative continuity and intent.",

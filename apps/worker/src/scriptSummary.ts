@@ -4,6 +4,8 @@ import { logger } from "./logger.js";
 
 export type ScriptSummaryPayload = {
   synopsis_ar: string;
+  main_characters_ar?: string;
+  relationship_map_ar?: string;
   key_risky_events_ar?: string;
   narrative_stance_ar?: string;
   compliance_posture_ar?: string;
@@ -13,8 +15,10 @@ export type ScriptSummaryPayload = {
 const SYSTEM_MSG = `أنت مدقق محتوى. مهمتك فهم النص كقصة: أحداث، حوارات، أوصاف، وموقف السرد.
 أرجع JSON فقط بالشكل:
 {
-  "synopsis_ar": "ملخص موجز للحبكة والشخصيات والمسار العام (2-4 جمل)",
-  "key_risky_events_ar": "أهم المشاهد أو الأحداث التي قد تثير مخاوف امتثال (إن وُجدت)، بشكل مختصر",
+   "synopsis_ar": "ملخص موجز للحبكة والشخصيات والمسار العام (2-4 جمل)",
+   "main_characters_ar": "أسماء الشخصيات الرئيسية وأدوارها في القصة باختصار",
+   "relationship_map_ar": "العلاقات المهمة بين الشخصيات: أسرة، خصومة، سلطة، ضحية/معتدي، إن أمكن",
+   "key_risky_events_ar": "أهم المشاهد أو الأحداث التي قد تثير مخاوف امتثال (إن وُجدت)، بشكل مختصر",
   "narrative_stance_ar": "موقف السرد من السلوكيات الحساسة: إدانة، تطبيع، أو محايد",
   "compliance_posture_ar": "انطباع عام عن مدى توافق النص مع ضوابط المحتوى",
   "confidence": عدد بين 0 و 1
@@ -53,6 +57,8 @@ export async function generateScriptSummary(
       : 0.7;
     return {
       synopsis_ar: typeof parsed.synopsis_ar === "string" ? parsed.synopsis_ar : "—",
+      main_characters_ar: typeof parsed.main_characters_ar === "string" ? parsed.main_characters_ar : undefined,
+      relationship_map_ar: typeof parsed.relationship_map_ar === "string" ? parsed.relationship_map_ar : undefined,
       key_risky_events_ar: typeof parsed.key_risky_events_ar === "string" ? parsed.key_risky_events_ar : undefined,
       narrative_stance_ar: typeof parsed.narrative_stance_ar === "string" ? parsed.narrative_stance_ar : undefined,
       compliance_posture_ar: typeof parsed.compliance_posture_ar === "string" ? parsed.compliance_posture_ar : undefined,
