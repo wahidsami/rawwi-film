@@ -52,7 +52,7 @@ type AnalysisEngineMode = "v2" | "hybrid";
 type HybridRunMode = "off" | "shadow" | "enforce";
 
 const MAX_EVIDENCE_SPAN = 280;
-const PIPELINE_LOGIC_VERSION = "v2.7";
+const PIPELINE_LOGIC_VERSION = "v2.8";
 const MAX_EVIDENCE_LEN = 260;
 const NON_CRITICAL_DB_TIMEOUT_MS = 30_000;
 const CRITICAL_DB_TIMEOUT_MS = 60_000;
@@ -542,14 +542,27 @@ function hasViolenceKeywordEvidence(value: string | null | undefined): boolean {
   return /(ضرب|أضرب|بضرب|يضر|قتل|أقتل|بقتل|ذبح|طعن|ركل|صفع|دفع|عنف|يعنف|يعنفني|يضربني|بقتلك|جزمة|عصا|مسدس|سكين|دم)/u.test(text);
 }
 
-function getPassSpecificEvidenceIssue(finding: FindingWithGlobal, excerpt: string): string | null {
+function getSceneContextAtOffset(sceneIndex: SceneIndexEntry[], fullText: string | null, offset: number | null | undefined): string {
+  if (!fullText || !sceneIndex.length || typeof offset !== "number" || offset < 0) return "";
+  const scene = sceneIndex.find((entry) => offset >= entry.startOffset && offset < entry.endOffset);
+  if (!scene) return "";
+  return fullText.slice(scene.startOffset, scene.endOffset);
+}
+
+function getPassSpecificEvidenceIssue(
+  finding: FindingWithGlobal,
+  excerpt: string,
+  fullText?: string | null,
+  sceneIndex: SceneIndexEntry[] = [],
+): string | null {
   const pass = String(finding.detection_pass ?? "").trim().toLowerCase();
   const atom = String(finding.canonical_atom ?? "").trim().toUpperCase();
   const articleId = finding.article_id ?? 0;
   const source = String(finding.source ?? "ai").trim().toLowerCase();
   if (source === "lexicon_mandatory" || source === "manual") return null;
 
-  if ((pass === "women" || articleId === 7 || atom === "WOMEN") && !hasWomenSpecificEvidence(excerpt)) {
+  const sceneContext = getSceneContextAtOffset(sceneIndex, fullText ?? null, finding.start_offset_global ?? null);
+  if ((pass === "women" || articleId === 7 || atom === "WOMEN") && !hasWomenSpecificEvidence(`${sceneContext}\n${excerpt}`)) {
     return "women_not_self_proving";
   }
 
@@ -1934,7 +1947,7 @@ export async function processChunkJudge(
           return [];
         }
 
-        const passSpecificEvidenceIssue = getPassSpecificEvidenceIssue(f, excerpt);
+        const passSpecificEvidenceIssue = getPassSpecificEvidenceIssue(f, excerpt, normalizedText, sceneIndex);
         if (passSpecificEvidenceIssue) {
           postCanonicalEvidenceDroppedCount++;
           logger.warn("Pass-specific final evidence issue (dropping finding before insert)", {

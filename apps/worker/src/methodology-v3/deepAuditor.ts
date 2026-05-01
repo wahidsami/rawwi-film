@@ -125,19 +125,46 @@ function hasWomenSpecificEvidence(value: string | null | undefined): boolean {
   );
 }
 
+function buildEvidenceContext(fullText: string | null | undefined, evidence: string, radius = 360): string {
+  const source = fullText ?? "";
+  const snippet = evidence.trim();
+  if (!source || !snippet) return evidence;
+  const sceneHeadingPattern = /^\s*المشهد(?:\s|\d|$|[—-])/u;
+  const lines = source.split(/\r?\n/);
+  const lineIndex = lines.findIndex((line) => line.includes(snippet));
+  if (lineIndex >= 0) {
+    let startLine = lineIndex;
+    while (startLine > 0 && !sceneHeadingPattern.test(lines[startLine])) {
+      startLine--;
+      if (sceneHeadingPattern.test(lines[startLine])) break;
+    }
+    let endLine = lineIndex;
+    while (endLine < lines.length - 1) {
+      const nextLine = lines[endLine + 1] ?? "";
+      if (sceneHeadingPattern.test(nextLine)) break;
+      endLine++;
+    }
+    return lines.slice(startLine, endLine + 1).join("\n");
+  }
+  const index = source.indexOf(snippet);
+  if (index < 0) return evidence;
+  return source.slice(Math.max(0, index - radius), Math.min(source.length, index + snippet.length + radius));
+}
+
 function hasViolenceKeywordEvidence(value: string | null | undefined): boolean {
   const text = normalizeForCompare(value);
   if (!text) return false;
   return /(ضرب|أضرب|بضرب|يضر|قتل|أقتل|بقتل|ذبح|طعن|ركل|صفع|دفع|عنف|يعنف|يعنفني|يضربني|بقتلك|جزمة|عصا|مسدس|سكين|دم)/u.test(text);
 }
 
-function hasPassSpecificEvidenceProblem(finding: HybridFindingLike): boolean {
+function hasPassSpecificEvidenceProblem(finding: HybridFindingLike, fullText?: string | null): boolean {
   const pass = String((finding as { detection_pass?: string }).detection_pass ?? "").trim().toLowerCase();
   const atom = String((finding as { canonical_atom?: string | null }).canonical_atom ?? "").trim().toUpperCase();
   const articleId = finding.article_id ?? 0;
   const evidence = finding.evidence_snippet ?? "";
 
-  if ((pass === "women" || articleId === 7 || atom === "WOMEN") && !hasWomenSpecificEvidence(evidence)) {
+  const womenEvidenceContext = buildEvidenceContext(fullText, evidence);
+  if ((pass === "women" || articleId === 7 || atom === "WOMEN") && !hasWomenSpecificEvidence(`${womenEvidenceContext}\n${evidence}`)) {
     return true;
   }
 
@@ -445,7 +472,7 @@ export async function runDeepAuditorPass(args: {
     if (!exactEvidence) return false;
     if (isWeakRationaleText(finding.rationale_ar) && finding.final_ruling === "violation") return false;
     if (shouldDropArticleFourForSpecificOwner(finding, merged)) return false;
-    if (hasPassSpecificEvidenceProblem(finding)) return false;
+    if (hasPassSpecificEvidenceProblem(finding, fullText)) return false;
     return true;
   });
 
