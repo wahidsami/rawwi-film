@@ -177,6 +177,132 @@ async function runIngest(
   return { jobId: job.id };
 }
 
+async function notifyAdminsOnDuplicateScriptContent(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  params: {
+    scriptId: string;
+    versionId: string;
+    scriptTitle: string;
+    companyId: string;
+    contentHash: string | null;
+    submittedByUserId: string;
+  },
+): Promise<void> {
+  if (!params.contentHash) return;
+
+  const [{ data: roles }, { data: adminUserRoles }] = await Promise.all([
+    supabase.from("roles").select("id, key").in("key", ["super_admin", "admin", "regulator"]),
+    supabase.from("user_roles").select("user_id, role_id"),
+  ]);
+  const adminRoleIds = new Set((roles ?? []).map((r: { id: string }) => r.id));
+  const adminUserIds = [...new Set((adminUserRoles ?? [])
+    .filter((row: { role_id: string; user_id: string }) => adminRoleIds.has(row.role_id))
+    .map((row: { user_id: string }) => row.user_id))];
+  if (adminUserIds.length === 0) return;
+
+  const { data: duplicateTextRows } = await supabase
+    .from("script_text")
+    .select("version_id")
+    .eq("content_hash", params.contentHash)
+    .neq("version_id", params.versionId)
+    .limit(50);
+  const duplicateVersionIds = [...new Set(
+    (duplicateTextRows ?? [])
+      .map((row) => (row as { version_id?: string | null }).version_id)
+      .filter((value): value is string => typeof value === "string" && value.length > 0),
+  )];
+  if (duplicateVersionIds.length === 0) return;
+
+  const { data: versions } = await supabase
+    .from("script_versions")
+    .select("id, script_id, version_number, source_file_name, created_at")
+    .in("id", duplicateVersionIds);
+  const versionRows = (versions ?? []) as Array<{
+    id: string;
+    script_id: string;
+    version_number: number;
+    source_file_name: string | null;
+    created_at: string;
+  }>;
+  const duplicateScriptIds = [...new Set(versionRows.map((row) => row.script_id))];
+  if (duplicateScriptIds.length === 0) return;
+
+  const { data: scripts } = await supabase
+    .from("scripts")
+    .select("id, title, company_id, client_id, created_by, is_quick_analysis")
+    .in("id", duplicateScriptIds);
+  const scriptRows = (scripts ?? []) as Array<{
+    id: string;
+    title: string;
+    company_id: string | null;
+    client_id: string | null;
+    created_by: string | null;
+    is_quick_analysis?: boolean | null;
+  }>;
+
+  const clientIds = [...new Set(scriptRows.map((row) => row.company_id ?? row.client_id).filter((value): value is string => typeof value === "string" && value.length > 0))];
+  const creatorIds = [...new Set(scriptRows.map((row) => row.created_by).filter((value): value is string => typeof value === "string" && value.length > 0))];
+  const [{ data: clients }, { data: creators }] = await Promise.all([
+    clientIds.length > 0 ? supabase.from("clients").select("id, name_ar, name_en").in("id", clientIds) : Promise.resolve({ data: [] as never[] }),
+    creatorIds.length > 0 ? supabase.from("profiles").select("user_id, name").in("user_id", creatorIds) : Promise.resolve({ data: [] as never[] }),
+  ]);
+  const companyNameById = new Map(
+    ((clients ?? []) as Array<{ id: string; name_ar?: string | null; name_en?: string | null }>).map((row) => [
+      row.id,
+      row.name_ar?.trim() || row.name_en?.trim() || null,
+    ]),
+  );
+  const creatorNameById = new Map(
+    ((creators ?? []) as Array<{ user_id: string; name?: string | null }>).map((row) => [row.user_id, row.name?.trim() || null]),
+  );
+
+  const matchRows = versionRows
+    .map((versionRow) => {
+      const scriptRow = scriptRows.find((row) => row.id === versionRow.script_id);
+      if (!scriptRow) return null;
+      const ownerCompanyId = scriptRow.company_id ?? scriptRow.client_id ?? null;
+      return {
+        scriptId: scriptRow.id,
+        scriptTitle: scriptRow.title,
+        versionId: versionRow.id,
+        versionNumber: versionRow.version_number,
+        createdAt: versionRow.created_at,
+        companyId: ownerCompanyId,
+        companyName: ownerCompanyId ? companyNameById.get(ownerCompanyId) ?? null : null,
+        submittedByUserId: scriptRow.created_by ?? null,
+        submittedByName: scriptRow.created_by ? creatorNameById.get(scriptRow.created_by) ?? null : null,
+        origin: scriptRow.is_quick_analysis ? "imported" : "submitted",
+      };
+    })
+    .filter((value): value is NonNullable<typeof value> => value != null)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
+
+  if (matchRows.length === 0) return;
+
+  const firstMatch = matchRows[0];
+  const body = firstMatch
+    ? `Duplicate script content detected for "${params.scriptTitle}". It matches earlier ${firstMatch.origin} content from ${firstMatch.submittedByName ?? "an unknown user"} on ${new Date(firstMatch.createdAt).toISOString()}.`
+    : `Duplicate script content detected for "${params.scriptTitle}". Found ${matchRows.length} earlier matching submission(s)/import(s).`;
+  const notifications = adminUserIds.map((adminUserId) => ({
+    user_id: adminUserId,
+    type: "duplicate_script_content",
+    title: `Duplicate script content: ${params.scriptTitle}`,
+    body,
+    metadata: {
+      script_id: params.scriptId,
+      script_title: params.scriptTitle,
+      company_id: params.companyId,
+      submitted_by_user_id: params.submittedByUserId,
+      content_hash: params.contentHash,
+      matches: matchRows,
+    },
+  }));
+
+  const { error } = await supabase.from("notifications").insert(notifications);
+  if (error) console.warn("[extract] duplicate content notification error:", error.message);
+}
+
 const PAGE_JOIN = "\n\n";
 
 /** CSS font-family stack from client; strip anything that could break inline styles. */
@@ -605,6 +731,23 @@ async function persistMultipageExtract(
   );
   if (editorSave.error) {
     console.warn(`[extract] correlationId=${correlationId} script_text save failed:`, editorSave.error);
+  }
+
+  if (canonicalContent.trim()) {
+    const { data: scriptMeta } = await supabase
+      .from("scripts")
+      .select("title, company_id, client_id")
+      .eq("id", scriptId)
+      .maybeSingle();
+    const scriptMetaRow = (scriptMeta as { title?: string | null; company_id?: string | null; client_id?: string | null } | null) ?? null;
+    notifyAdminsOnDuplicateScriptContent(supabase, {
+      scriptId,
+      versionId,
+      scriptTitle: scriptMetaRow?.title ?? scriptId,
+      companyId: scriptMetaRow?.company_id ?? scriptMetaRow?.client_id ?? "",
+      contentHash: extractedTextHash,
+      submittedByUserId: userId,
+    }).catch((e) => console.warn(`[extract] correlationId=${correlationId} duplicate notification error:`, e));
   }
 
   if (enqueueAnalysis) {

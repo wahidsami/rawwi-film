@@ -591,7 +591,7 @@ Deno.serve(async (req: Request) => {
     if (!account) return json({ error: "Client portal account not found" }, 403);
     const { data: scripts, error: scriptsErr } = await supabase
       .from("scripts")
-      .select("id, title, type, status, created_at, received_at, current_version_id, company_id, client_id")
+      .select("id, title, type, status, created_at, expected_rank, received_at, current_version_id, company_id, client_id")
       .or(`company_id.eq.${account.company_id},client_id.eq.${account.company_id}`)
       .eq("is_quick_analysis", false)
       .order("created_at", { ascending: false });
@@ -622,6 +622,7 @@ Deno.serve(async (req: Request) => {
         type: row.type,
         status: effectiveStatus,
         createdAt: row.created_at,
+        expectedRank: row.expected_rank ?? null,
         receivedAt: row.received_at,
         currentVersionId: row.current_version_id,
         latestReportId: latestReport?.id ?? null,
@@ -654,7 +655,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: scriptRows, error: scriptErr } = await supabase
       .from("scripts")
-      .select("id, title, type, status, created_at, received_at, current_version_id, created_by, assignee_id, company_id, client_id, synopsis")
+      .select("id, title, type, status, created_at, expected_rank, received_at, current_version_id, created_by, assignee_id, company_id, client_id, synopsis")
       .eq("is_quick_analysis", false)
       .order("created_at", { ascending: false })
       .limit(500);
@@ -723,6 +724,7 @@ Deno.serve(async (req: Request) => {
         status: effectiveStatus,
         synopsis: row.synopsis ?? null,
         submittedAt: row.created_at,
+        expectedRank: row.expected_rank ?? null,
         receivedAt: row.received_at ?? null,
         currentVersionId: row.current_version_id ?? null,
         companyId: scriptCompanyId,

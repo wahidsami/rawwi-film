@@ -1,0 +1,2298 @@
+### FILE: apps\worker\README.md
+# Raawi Worker (Phase 1B)
+## Env
+## Commands
+## Flow
+## Lexicon
+
+### FILE: benchmarks\complaint-pack\README.md
+# Complaint Benchmark Pack
+## Contents
+## What This Measures
+## Suggested Workflow
+## Notes
+
+### FILE: benchmarks\human-vs-ai\README.md
+# Human vs AI Scorecard Pack
+## Goal
+## Files
+## Dataset columns
+## Existing-report mode
+## Fresh-run mode
+## What the scorer reports
+## Recommended workflow with the entity
+
+### FILE: CODE_LEVEL_PIPELINE_AND_MECHANISMS.md
+# Code-Level: Prompts, Pipeline, Schemas, Lexicon, and Job States
+## 1. Prompts and Pipeline Steps
+### 1.1 Overview
+### 1.2 Router Prompt (Article Selection)
+### 1.3 Judge Prompt (Atom Checking)
+### 1.4 Repair JSON Prompt
+### 1.5 Pipeline Steps (Worker) — Per Chunk
+### 1.6 Ingest Pipeline (Edge Function)
+## 2. Schemas: Findings, Overrides, summary_json, report_html
+### 2.1 raawi_analysis_findings (per-row schema)
+### 2.2 raawi_finding_overrides (event log)
+### 2.3 summary_json (structure)
+### 2.4 report_html (worker-built)
+### 2.5 raawi_analysis_reports (table)
+## 3. Lexicon Cache: Mandatory vs Soft Signal
+### 3.1 Cache lifecycle
+### 3.2 Matching (findMatches)
+### 3.3 Mandatory vs soft (lexiconMatcher)
+### 3.4 Use in worker (processChunkJudge)
+### 3.5 Summary table
+## 4. Job States and Retry Logic
+### 4.1 Job status values
+### 4.2 Chunk status values
+### 4.3 Claim and progress
+### 4.4 Aggregation trigger
+### 4.5 Retry logic
+### 4.6 Event log (raawi_analysis_events)
+
+### FILE: comments.md
+## ملاحظة مقترحة تضاف في واجهة الاستيراد
+
+### FILE: docs\AGENT_01_ANALYSIS_PIPELINE.md
+# Analysis Pipeline — Technical Reference for Agent Implementation
+## 1. Overview
+## 2. Task Creation (Edge / API)
+## 3. Per-Chunk Processing (Worker)
+### 3.1 Lexicon (no LLM)
+### 3.2 Router (optional, one LLM call)
+### 3.3 Multi-Pass Judge (multiple parallel LLM calls)
+### 3.4 Deep Auditor (optional, one LLM call per chunk in hybrid mode)
+### 3.5 Rationale-only pass (optional, one LLM call)
+### 3.6 Chunk completion
+## 4. Aggregation (once per job)
+## 5. Data Shapes (Summary)
+## 6. Configuration Snapshot (Job)
+## 7. Report Output Structure
+
+### FILE: docs\AGENT_02_PROMPTS_REFERENCE.md
+# Prompts Reference — Full Text for Agent Implementation
+## 1. Router (اختيار المواد)
+### System: ROUTER_SYSTEM_MSG
+## 2. Judge — Single-Pass (JUDGE_SYSTEM_MSG)
+### System: JUDGE_SYSTEM_MSG (full)
+## 3. Multi-Pass Judge (المسارات المتخصصة)
+## 4. Deep Auditor (مدقق السياق)
+### System: AUDITOR_SYSTEM_MSG (full)
+## 5. Rationale-only (ملء التعليل فقط)
+### System: RATIONALE_ONLY_SYSTEM_MSG
+## 6. Revisit Spotter (كلمات/عبارات للمراجعة)
+### System: REVISIT_SPOTTER_SYSTEM
+## 7. Repair (JSON fix)
+## 8. Lexicon injection
+
+### FILE: docs\AGENT_03_ARTICLES_AND_ATOMS_DETAILED.md
+# GCAM Articles and Atoms — Detailed Reference for Agent (Law + Film + Language)
+## Article 1 — التعريفات (Definitions)
+## Article 2 — نطاق التطبيق (Scope of application)
+## Article 3 — المسؤولية (Responsibility)
+## Article 4 — ضوابط المحتوى الإعلامي (Content rules — sub-rules)
+## Article 5 — التصنيف العمري (Age classification)
+## Article 6 — حماية الطفل (Child protection)
+## Article 7 — حقوق المرأة (Women’s rights)
+## Article 8 — الكراهية والتمييز (Hatred and discrimination)
+## Article 9 — العنف والمحتوى المحظور (Violence and prohibited content)
+## Article 10 — التبغ والكحول والمخدرات (Tobacco, alcohol, drugs)
+## Articles 11–24 — Summary table and agent guidance
+### Article 11 — المصداقية الإعلامية (Media credibility)
+### Article 12 — النظام العام (Public order)
+### Article 13 — ثوابت الحكم (Constants of governance)
+### Article 14 — التحريض على قلب نظام الحكم أو الدعوة إلى العنف
+### Article 15 — الجماعات المحظورة (Banned groups)
+### Article 16 — الشائعات والمعلومات المضللة (Rumours and misinformation)
+### Article 17 — الكرامة والسمعة والخصوصية (Dignity, reputation, privacy)
+### Article 18 — العلاقات الدولية (International relations)
+### Article 19 — الاقتصاد والاستقرار المالي (Economy and financial stability)
+### Article 20 — الإفلاس والقضايا التجارية (Bankruptcy and commercial issues)
+### Article 21 — الوثائق والمعلومات السرية (Documents and classified information)
+### Article 22 — الاتفاقيات والمعاهدات (Agreements and treaties)
+### Article 23 — المظهر العام (General appearance)
+### Article 24 — الزي والاحتشام (Dress and modesty)
+## Article 25 — الالتزام بالترخيص (Licensing compliance)
+## Article 26 — الجزاءات (Sanctions)
+## Cross-cutting guidance for the agent
+
+### FILE: docs\AGENT_KNOWLEDGE_README.md
+# Agent-Oriented Knowledge Base for Script Compliance Analysis
+## Document Index
+## Suggested Use for an Agent Implementation
+## Current vs. Agent Vision
+
+### FILE: docs\AI_ANALYSIS_VERIFICATION.md
+# AI Analysis System - Final Verification
+## ✅ Confirmed: Glossary Integration is ACTIVE
+### Flow Verification:
+#### 1. **Glossary Terms Fetched** ✅
+#### 2. **Terms Injected into Prompts** ✅
+#### 3. **Injected Prompts Passed to OpenAI** ✅
+#### 4. **OpenAI Uses Custom Prompts** ✅
+## 🎯 What Happens During Analysis:
+### Step-by-Step:
+## 🔥 Current Capabilities:
+### The AI Now Detects:
+## 📊 Verification Checklist:
+## 🎯 Expected Behavior:
+## 🧪 Testing:
+## 🚀 Status:
+## 📝 Summary:
+
+### FILE: docs\AI_QUALITY_AND_TRUST_ROADMAP_2026-03-27.md
+# AI Quality and Trust Roadmap
+## Purpose
+## The Six Pain Points
+### 1. Same scan gives slightly different results
+### 2. Weak or unclear reason on finding cards
+### 3. Weak understanding of some atoms
+### 4. Weak understanding of story flow
+### 5. Analysis time is too long
+### 6. Bad words written in obfuscated Arabic are missed
+## Core Strategy
+## Phase 1: Trust First
+### 1A. Make production scans deterministic
+### 1B. Add Arabic detection normalization
+### 1C. Build a regression suite from known complaints
+## Phase 2: Better Explanations
+### 2A. Replace free-form reasons with a structured rationale format
+### 2B. Generate reasons from richer local context
+### 2C. Add rationale quality checks
+## Phase 3: Atom Precision
+### 3A. Build an atom playbook
+### 3B. Create atom-level benchmark tests
+### 3C. Add atom-specific prompts or confirmers
+## Phase 4: Story Understanding
+### 4A. Add a script-level narrative pass
+### 4B. Add scene/page-level context modeling
+### 4C. Use narrative reasoning only where needed
+## Phase 5: Speed and Scale
+### 5A. Fix the router or remove it
+### 5B. Add chunk concurrency
+### 5C. Cache job-level data
+### 5D. Gate expensive enrichments for large scripts
+### 5E. Add pass gating
+## Safe Rollout Plan
+### Step 1. Build evaluation before changing defaults
+### Step 2. Ship behind flags or shadow mode
+### Step 3. Promote only when metrics improve
+## How To Prove AI Is Better Than a Human Auditor
+### The right benchmark
+### Where AI should outperform
+### Where humans should still be used during rollout
+### The message to stakeholders
+## Practical Priorities
+### Priority 1
+### Priority 2
+### Priority 3
+### Priority 4
+## Suggested First 30 Days
+### Week 1
+### Week 2
+### Week 3
+### Week 4
+## Final Position
+
+### FILE: docs\ANALYSIS_AUDITOR_CALIBRATION.md
+# Auditor Calibration Gate (Saudi)
+## Inputs
+## Mismatch Classes
+## Promotion Thresholds (2 consecutive runs)
+## SQL Pack (Supabase)
+## Execution Steps
+
+### FILE: docs\ANALYSIS_ENHANCEMENT_PLAN.md
+# Analysis enhancement plan — speed, rationale quality, multi-pass strategy
+## Current architecture (baseline)
+## Goal 1 — Reduce analysis time
+### 1.1 Highest leverage (ops, no code)
+### 1.2 Code / config (lower risk)
+### 1.3 Code (medium effort)
+### Operations checklist (apply in deployment)
+## Goal 2 — Fix nonsensical “why violation” text
+### 2.1 Root causes observed in code
+### 2.2 Recommendations (phased)
+## Goal 3 — Best approach for multi-passes per chunk
+### 3.1 What you have today
+### 3.2 Strategy options
+### 3.3 Recommended direction (incremental)
+## Implementation order (suggested)
+## References (code)
+
+### FILE: docs\ANALYSIS_HYBRID_ROLLOUT.md
+# Hybrid V3 Rollout Guide
+## Runtime Flags
+## Modes
+## Shadow KPIs
+## Suggested Graduation Criteria
+## Activation Sequence
+## Import Rollback Guardrails
+
+### FILE: docs\ANALYSIS_MISSED_VIOLATIONS_DEBUG.md
+# Why did analysis only report 1 violation for "ظِلّ المدينة"?
+## Script content (expected violations)
+## How analysis works (reminder)
+## What to do
+### 1. Confirm chunk count and status
+### 2. Enable high recall (recommended)
+### 3. Optional: increase router candidates
+### 4. Re-run and compare
+## Summary
+
+### FILE: docs\ANALYSIS_ROLLOUT_ROLLBACK_RUNBOOK.md
+# Analysis Rollout and Rollback Runbook
+## Purpose
+## Current Release Chain (latest first)
+## Deployment Order (strict)
+## Checkpoints (must pass before next step)
+### Checkpoint A: tasks function deployed
+### Checkpoint B: worker healthy
+### Checkpoint C: analysis behavior
+### Checkpoint D: UI behavior
+## Runtime Verification Queries
+## Rollback Strategy
+### Fast rollback (service-level)
+### Git rollback (source-of-truth)
+## Rollback Acceptance Criteria
+## Notes
+
+### FILE: docs\ANALYSIS_V2_BASELINE_AUDIT.md
+# Analysis V2 Baseline Audit
+## Scope
+## Current V2 Flow
+## Why false positives happen in V2
+## Instrumentation Hooks Added
+## Compatibility Notes
+
+### FILE: docs\api-contract.md
+# API Contract (apps/web)
+## 1. Auth
+## 2. Companies (Clients)
+## 3. Scripts
+## 4. Tasks (Assignments)
+## 5. Findings
+## 6. Lexicon
+## 7. Reports
+## 8. Users
+## 9. Dashboard & Activity (services)
+## 10. Override (alternative API — not used in UI)
+## Mock-only services (no HTTP in use)
+## Summary: API layer files
+## Mock service shapes (for DB/backend alignment)
+
+### FILE: docs\ARCHITECTURE_ISSUES_PERFORMANCE_HANDOFF_2026-03-26.md
+# Architecture, Issues, and Performance Handoff
+## Executive Summary
+## Document Intake Coverage
+## Rollback-Safe Rollout Notes
+## Architecture Map
+### Frontend
+### Backend / Supabase Functions
+### Worker
+## Large-Script Runtime Diagnosis
+### Current chunking model
+### Calls per chunk
+### Why a 400-page script feels slow
+## High-Impact Issues
+### 1. Router is effectively a no-op for pruning
+### 2. Worker processes one chunk at a time
+### 3. Every chunk runs all detector passes
+### 4. Multi-worker scaling is weaker than it should be
+### 5. Expensive work is repeated inside each chunk
+### 6. Aggregation is checked after every chunk
+### 7. Overlap makes downstream full-text reconstruction incorrect
+### 8. Page-aware chunking exists but is off by default
+### 9. Hybrid "shadow" mode still persists hybrid output
+### 10. Test isolation is weak
+### 11. Comments/docs have drifted from runtime behavior
+## Recommended Optimization Roadmap
+### Immediate Wins
+#### A. Fix router pruning or remove the router temporarily
+#### B. Parallelize chunks across workers
+#### C. Cache job-level data instead of refetching per chunk
+#### D. Stop reconstructing full script from overlapped chunks
+#### E. Defer expensive report extras for very large jobs
+### Medium-Term Improvements
+#### F. Pass gating
+#### G. Two-stage model strategy
+#### H. Better chunking
+### Larger Redesign Ideas
+#### I. Hierarchical analysis
+#### J. Split "compliance report" from "full enrichment"
+## Suggested Experiments
+## Recommended First Sprint
+## Files Most Relevant To The Performance Problem
+## QA Closure Tracker
+### Closed
+### Validation
+### Open
+### Current Highest-Priority Validation Targets
+### Recommended Next Implementation Order
+## Human-Audit Inspired Expansion
+### What Human Auditors Are Clearly Doing
+### New Dimensions To Add
+#### 1. Editorial / Script Integrity Signals
+#### 2. Dialect / Localization Compliance
+#### 3. Religious / Cultural Formula Compliance
+#### 4. Sensitive Historical / Political Alignment
+### Proposed System Modules
+### Proposed Status Tracker
+#### Open
+### Phased Delivery Plan
+#### Phase 1 — Metadata Plumbing and Safe Scaffolding
+#### Phase 2 — Struck-Through / Editorial Deletion Detection
+#### Phase 3 — Saudi Sensitivity Alignment Layer
+#### Phase 4 — Dialect / Localization Layer
+#### Phase 5 — Cultural / Religious Formula Layer
+#### Recommended Build Order
+### Notes On Implementation Direction
+
+### FILE: docs\ARTICLES_AND_ATOMS_WHAT_TO_FIND.md
+# مواد GCAM والبنود (Atoms) — دليل "ماذا نبحث عنه"
+## المادة 1 — التعريفات
+## المادة 2 — نطاق التطبيق
+## المادة 3 — المسؤولية
+## المادة 4 — ضوابط المحتوى الإعلامي — تفصيل القواعد الفرعية
+## المادة 5 — التصنيف العمري
+## المادة 6 — حماية الطفل
+## المادة 7 — حقوق المرأة
+## المادة 8 — الكراهية والتمييز
+## المادة 9 — العنف والمحتوى المحظور
+## المادة 10 — التبغ والكحول والمخدرات
+## المادة 11 — المصداقية الإعلامية
+## المادة 12 — النظام العام
+## المادة 13 — ثوابت الحكم
+## المادة 14 — التحريض على قلب نظام الحكم أو الدعوة إلى العنف
+## المادة 15 — الجماعات المحظورة
+## المادة 16 — الشائعات والمعلومات المضللة
+## المادة 17 — الكرامة والسمعة والخصوصية
+## المادة 18 — العلاقات الدولية
+## المادة 19 — الاقتصاد والاستقرار المالي
+## المادة 20 — الإفلاس والقضايا التجارية
+## المادة 21 — الوثائق والمعلومات السرية
+## المادة 22 — الاتفاقيات والمعاهدات
+## المادة 23 — المظهر العام
+## المادة 24 — الزي والاحتشام
+## المادة 25 — الالتزام بالترخيص
+## المادة 26 — الجزاءات
+# أوامر التحليل المرسلة إلى OpenAI وكيف يعمل المسار
+## 1. كيف يعمل التحليل (المسار)
+## 2. الأوامر المرسلة إلى OpenAI (Prompts)
+### 2.1 Router (اختيار المواد المرتبطة بالقطعة)
+### 2.2 Judge (كاشف المخالفات) — النسخة الأحادية (JUDGE_SYSTEM_MSG)
+### 2.3 Multi-Pass Judge (المسارات المتخصصة)
+### 2.4 Deep Auditor (مدقق السياق)
+### 2.5 Rationale-only (ملء التعليل فقط)
+### 2.6 Revisit Spotter (كلمات/عبارات للمراجعة)
+## 3. ملخص تدفق الاستدعاءات لكل قطعة
+## ملاحظات للاستخدام
+
+### FILE: docs\ARTICLES_ATOMS_TAXONOMY_AUDIT.md
+# Articles + Atoms Taxonomy Audit
+## 1. Current Articles
+## 2. Current Atoms
+## 3. UI Usage
+## 4. Prompt / Backend Usage
+## 5. Known Inconsistencies
+## Summary Table
+
+### FILE: docs\CANONICAL_HASH_CONTRACT.md
+# Canonical Hash Contract
+## Canonical text
+## Stored on the job
+## Finding excerpts
+## Viewer behaviour
+## Rule: no canonical rewrite in /tasks
+## Summary
+
+### FILE: docs\Captain tars response.md
+
+### FILE: docs\CAPTAIN_TARS_PROMPT_V2_HANDOFF_2026-04-06.md
+# Captain TARS Prompt V2 Handoff
+## 1. Exact JSON Shape Expected From A Detection Pass
+## 2. Minimal Safe Contract For A Prompt Rewrite
+## 3. Exact Allowed `canonical_atom` Values
+### For the `insults` pass specifically
+## 4. Language Rules
+### Must remain Arabic
+### Must remain exact enum/code strings
+### `evidence_snippet`
+## 5. Strict vs Flexible Schema
+### Important nuance
+## 6. Evidence Rules
+### Required behavior
+### Practical evidence length limit
+### Best operational rule for TARS
+## 7. Empty Response Behavior
+## 8. Current Insults Pass Context
+## 9. Good Test Input Chunk
+## 10. One Safe Example Output For Insults-Only Behavior
+## 11. What Captain TARS Should Not Change In The Prompt Contract
+## 12. Practical Conclusion
+
+### FILE: docs\COMMIT_AND_PUSH_GUIDE.md
+# What to commit and push — Phases 1–4 + error handling
+## 1. Files to commit (all phases + error handling)
+### Phase 1 — Arabic font & DOCX
+### Phase 2 — Script pages (schema, extract, API, client)
+### Phase 3 — Page-based workspace UI
+### Phase 4 — Finding page number & report “Page X”
+### Error handling — No script card when import fails
+### Docs / tracker
+## 2. Git commands
+# From repo root: d:\Waheed\MypProjects\Raawifilm fix
+# Stage all changed/new files
+# Commit
+# Push
+## 3. After push — deploy steps
+### 3.1 Database migrations
+### 3.2 Edge functions
+### 3.3 Web app
+## 4. Quick verification
+
+### FILE: docs\CURRENT_AI_ANALYSIS_PROMPTS_2026-04-06.md
+# Current AI Analysis Prompts
+## Executive Summary
+## Prompt Assembly Flow
+### 1. Per-pass system prompt
+### 2. Judge user prompt
+### 3. V2 context injection
+### 4. Auditor prompt
+## What Article Data The Judge Actually Sees
+## Current Common Prompt Rules
+### A. Maximum detection language
+### B. Structured rationale instructions
+### C. Chunk-level formatting rules
+## Active Non-Glossary Passes
+### 1. `insults`
+### 2. `violence`
+### 3. `sexual_content`
+### 4. `drugs_alcohol`
+### 5. `discrimination_incitement`
+### 6. `national_security`
+### 7. `extremism_banned_groups`
+### 8. `misinformation`
+### 9. `international_relations`
+### Pass map definition
+## Router Prompt
+## Auditor Prompt
+## Current Prompt-Design Risks
+### 1. Article explanations are too thin
+### 2. Prompts are scanner-like, not auditor-like
+### 3. Maximum-detection framing may be overpowering precision
+### 4. Some nuanced women/coercion cases depend on implication, not keyword
+### 5. The system still allows broad semantic candidate generation before exact proof
+## Practical Conclusion
+## Immediate Next Focus
+## Exact Prompt Surface And Character Limits
+### Summary Table
+## Point-By-Point Explanation
+### 1. Chunk creation
+### 2. Router
+### 3. Multi-pass judge
+### 4. Judge article payload
+### 5. V2 chunk memory
+### 6. V2 scene memory
+### 7. V2 script memory
+### 8. Auditor
+### 9. Rationale-only pass
+### 10. Repair pass
+### 11. Revisit spotter
+## The Real Practical Answer
+## Most Important Operational Insight
+
+### FILE: docs\CURRENT_DOCX_ANALYSIS_AND_HIGHLIGHTING_STATE_2026-04-06.md
+# Current DOCX Analysis And Highlighting State
+## Purpose
+## Executive Summary
+## Shared Architecture
+## Source Of Truth Layers
+### 1. Raw findings
+### 2. Report snapshot
+### 3. Unified review layer
+## DOCX Import Flow
+## Frontend import
+## Backend Extract Flow
+## What Exactly Is Sent To AI?
+## Analysis Job Creation
+## How Findings Come Back
+### A. Raw findings
+### B. Report summary
+### C. Unified review rows
+## How Cards Are Made Today
+### Results page
+### Workspace findings tab
+## Viewer Technology
+### DOCX / extracted text view
+### PDF original viewer
+### Export rendering
+## Highlighting Mechanism In The Workspace
+### Goal
+### Current strategy
+### Inputs used for resolution
+### Resolution order, conceptually
+### Rendering modes
+### Current user-facing coverage messaging
+### Resolved root cause
+## Why Page Jump Can Work But Highlight Still Fail
+## Why Some Findings Say “Not Found” Even Though The Text Is On The Page
+### 1. Same page, wrong local span
+### 2. Duplicate phrase problem
+### 3. Canonical-vs-view mismatch
+### 4. Weak evidence snippet
+### 5. DOM rendering complexity
+## Current Known Strengths
+## Current Known Weaknesses
+## Current Consultant-Facing Diagnosis
+## Technologies Involved
+### Frontend
+### DOCX extraction
+### PDF viewing
+### PDF export
+### Word export
+### Backend / storage / auth / DB
+### AI analysis
+## Important Files
+### Import / extraction
+### Analysis / worker
+### Review layer / findings
+### Results / workspace
+### Exports
+## Practical Current Conclusion
+## Recommended Immediate Focus
+
+### FILE: docs\DASHBOARD_METRICS_VERIFICATION.md
+# Dashboard metrics verification
+## Root cause (fixed)
+## Files changed
+## SQL verification (Supabase SQL editor)
+## How the dashboard API matches
+## How to verify in production
+## Optional debug (Edge function)
+
+### FILE: docs\DATABASE_SCHEMA_VERIFICATION.md
+# Database Schema Verification for Multi-Pass System
+## ✅ Schema Compatibility Check
+### **Required Tables:**
+#### 1. `slang_lexicon` ✅
+#### 2. `analysis_jobs` ✅
+#### 3. `analysis_findings` ✅
+#### 4. `analysis_reports` ✅
+## 🎯 Conclusion
+### **Database Schema Status: ✅ READY**
+### **Why No Changes Needed:**
+## 🚀 Deployment Steps
+
+### FILE: docs\DEBUG_ZERO_FINDINGS_AND_CONSOLE.md
+# How to Debug Zero Findings & Console Errors
+## 1. Browser console errors (403 on /users)
+### What you saw
+### Cause
+### Fix applied
+### Other console lines
+## 2. Zero findings – how to debug
+### Step 1: Get worker logs (Coolify)
+### Step 2: Search for debug lines
+### Step 3: Interpret the logs
+### Step 4: Quick DB checks
+## 3. Checklist before asking for more help
+
+### FILE: docs\DEPLOYMENT_CHECKLIST.md
+# Multi-Pass v2.0 Deployment Checklist
+## 📋 Pre-Deployment
+## 🚀 Deployment Steps
+### **1. Coolify Auto-Deploy** ⏳
+### **2. Verify Deployment** ⏳
+### **3. Test Analysis** ⏳
+## 🔍 Monitoring
+### **Key Metrics to Watch:**
+## ✅ Success Criteria
+### **System is working correctly if:**
+## 🆘 Rollback Plan
+## 📊 Version History
+## 🎯 Next Steps
+
+### FILE: docs\DETECTION_ISSUES_DIAGNOSIS.md
+# AI Detection Issues - Root Cause Analysis
+## 🔍 Problem Statement
+## 🚨 Root Causes Identified
+### **Issue #1: PROMPT COMPLEXITY OVERLOAD** ⚠️⚠️⚠️
+### **Issue #2: EXCEPTION-FIRST STRUCTURE** ⚠️⚠️
+### **Issue #3: VERBATIM FILTER TOO STRICT** ⚠️⚠️⚠️
+### **Issue #4: CONTRADICTORY INSTRUCTIONS** ⚠️
+### **Issue #5: MISSING DIRECT COMMAND** ⚠️
+## 💡 Solutions
+### **Solution #1: RADICAL SIMPLIFICATION**
+### **Solution #2: RELAX VERBATIM FILTER**
+### **Solution #3: DETECTION-FIRST STRUCTURE**
+### **Solution #4: REMOVE CONTRADICTIONS**
+### **Solution #5: USE IMPERATIVE VERBS**
+## 🎯 Recommended Action Plan
+### **Quick Win (Low Risk):**
+### **Medium Win (Moderate Risk):**
+### **Full Fix (Best Results):**
+## 📊 Testing Strategy
+## 🔥 Immediate Next Step
+
+### FILE: docs\editor-highlights-and-manual-findings-audit.md
+# Editor Highlights and Manual Findings Audit (RaawiFilm)
+## 1. Current editor implementation
+### What is used
+### File path
+### Implementation details
+## 2. Highlight spans logic (offset-based and HTML)
+### Two highlight paths
+### Path A: Segment-based (report findings)
+### Path B: HTML injection (script findings)
+### Section markers
+## 3. Findings schema: where AI findings live and location fields
+### Table: `analysis_findings`
+## 4. Report linkage: how findings connect to reports
+## 5. Existing UI: context menu and manual-finding modal
+### Context menu (right-click / selection)
+### Manual-finding modal (“Mark as Violation”)
+## 6. APIs / Edge Functions for findings; manual in schema
+### Findings Edge Function
+### Manual findings in schema
+### Frontend API
+## 7. Gaps vs desired UX and recommendations
+### Desired UX (short)
+### Current state vs desired
+### Offset strategy
+### Editor library choice
+### Tooltip implementation
+### Suggested small improvements
+
+### FILE: docs\ENV_PLACEMENT.md
+# Environment variables — where they live (Phase 5, no surprises)
+## 1) Supabase Edge Functions (invites, upload, companies, …)
+## 2) Worker (Node/tsx)
+## 3) Frontend (Vite)
+## Quick reference
+## Acceptance
+
+### FILE: docs\EXECUTION_PLAN_AI_AUDIT_SYSTEM_2026-03-27.md
+# Execution Plan: AI Audit System Upgrade
+## Mission
+## Guiding Rules
+## Phase Structure
+### Phase 0: Baseline and Measurement
+### Phase 1: Trust and Stability
+### Phase 2: Explanation and Auditability
+### Phase 3: Atom Precision
+### Phase 4: Story and Narrative Understanding
+### Phase 5: Performance and Scale
+### Phase 6: Proof and Rollout
+## First Sprint Recommendation
+## Sprint-by-Sprint TODO Board
+### Sprint 1
+### Sprint 2
+### Sprint 3
+### Sprint 4
+### Sprint 5
+### Sprint 6
+## Scorecard We Should Track Every Week
+### Quality
+### Performance
+### Trust
+## What We Must Not Do
+## Definition of Success
+
+### FILE: docs\FINDING_SOURCE_RULES.md
+# Finding source rules (Manual vs AI)
+## Goal
+## Schema
+## Writers and what they set
+## UI rules (no guessing)
+## Backfill (optional)
+## Verification (smoke test)
+# B) No auto-analysis on import
+## Rule
+## Contract
+## Verification (smoke test)
+
+### FILE: docs\FLEXIBILITY_ASSESSMENT_ANALYSIS_RECONSTRUCTION.md
+# Flexibility Assessment: Can We Reconstruct Analysis on New Principles?
+## Short Answer
+## 1. Shared Atoms / Multiple Articles — Where the Confusion Comes From
+### Current behaviour
+### What we have in code (flexibility)
+## 2. Second Analysis: “Words to Pick According to Articles” (Including Non-Violations)
+### What the owners asked for
+### What we already have (flexibility)
+## 3. Reconstructing on New Principles — What Changes
+### Principle 1: One card can show multiple (article, atom) pairs clearly
+### Principle 2: Two “analyses” in one report
+## 4. Summary Table
+## 5. Conclusion
+
+### FILE: docs\FORMATTED_ONLY_HIGHLIGHTS.md
+# Formatted-only viewer with accurate highlights (Option B)
+## Overview
+## Canonical text derivation (Strategy A)
+## Mapping approach
+## Normalization
+## Offset validation guard
+## Known limitations
+## Files
+
+### FILE: docs\frontend-models.md
+# Frontend Models (TypeScript interfaces & enums)
+## 1. Company / Client
+## 2. User (app profile)
+## 3. Script
+## 4. ScriptVersion
+## 5. Task (assignments)
+## 6. Finding
+## 7. Override (embedded in Finding)
+## 8. Report (summary_json + report_html)
+## 9. ReportListItem (list view)
+## 10. Lexicon term
+## 11. Lexicon history
+## 12. Job / Chunk
+## 13. Dashboard & Activity (service types)
+## File reference
+
+### FILE: docs\GCAM Canonical Atom Framework (v1).md
+
+### FILE: docs\GCAM Severity Rulebook (v1).md
+
+### FILE: docs\GCAM_COVERAGE_ANALYSIS.md
+# GCAM Article Coverage Analysis
+## ✅ **COMPLETE GCAM COVERAGE ACHIEVED**
+## 📊 Multi-Pass System Coverage (10 Passes)
+### **All Scannable Articles Covered:**
+### **Unique Articles Covered:**
+## 📋 Articles NOT Scanned (By Design)
+### **Excluded Articles:**
+## 🎯 Complete Article Breakdown
+### **Scannable Articles (20 total):**
+## 🚀 System Strength
+### **Multi-Layer Detection:**
+### **Coverage Guarantee:**
+## 🎯 Result
+
+### FILE: docs\glossary_add_term_popup_ar.md
+# دليل نافذة "إضافة مصطلح" في قسم القاموس
+## الهدف من النافذة
+## متى تستخدم "إضافة مصطلح"؟
+## مكونات النافذة
+## 1. حقل "المصطلح"
+### ماذا أكتب فيه؟
+### أمثلة
+#### في الإدخال اليدوي
+#### في وضع "إضافة من طلب"
+### نصيحة
+## 2. خيار "إضافة من طلب"
+### ماذا يحدث عند تفعيله؟
+### متى أستخدمه؟
+### أمثلة مناسبة
+### متى لا أستخدمه؟
+## 3. نوع المخالفة (إطار الذرات)
+### أمثلة على الأنواع
+### متى أختار "أخرى"؟
+### أمثلة
+#### مثال 1
+#### مثال 2
+#### مثال 3
+## 4. حقل "النوع"
+## شرح الأنواع الثلاثة بالتفصيل
+### أولًا: كلمة
+### كيف يعمل؟
+### متى أستخدمه؟
+### أمثلة صحيحة
+### أمثلة غير مناسبة
+### أفضل استخدام
+### ثانيًا: عبارة
+### كيف يعمل؟
+### متى أستخدمه؟
+### أمثلة صحيحة
+### أفضل استخدام
+### ثالثًا: نمط
+### كيف يعمل؟
+### متى أستخدمه؟
+### أمثلة تقريبية على الاستخدام
+### متى لا أستخدمه؟
+### توصية مهمة
+## كيف أختار بين كلمة / عبارة / نمط؟
+### أمثلة سريعة
+#### مثال 1
+#### مثال 2
+#### مثال 3
+## 5. التصنيف
+### كيف أستخدمه؟
+### أمثلة
+### ملاحظة
+## 6. الطلب (في وضع "إضافة من طلب")
+### كيف أكتب الطلب؟
+### أمثلة جيدة
+### نصائح
+## 7. زر "توليد الكلمات"
+### ماذا أفعل بعد التوليد؟
+### مبدأ مهم
+## 8. حقل "الكلمات المولدة"
+### كيف يُستخدم؟
+### كيف تُحفظ هذه العناصر؟
+### مثال
+### كيف يتعامل معها التحليل؟
+## 9. تصريفات / أشكال
+### مثال
+## 10. زر "توليد تصريفات"
+### ماذا يفعل؟
+### متى أستخدمه؟
+### مثال مناسب
+### بعد التوليد
+## 11. الوصف
+### لماذا أستخدمه؟
+### أمثلة
+### فائدته
+## 12. مثال على الاستخدام
+### الغرض منه
+### أمثلة
+### فائدته
+## ما الذي يحدث في الخلفية؟
+### أولًا: الربط بالمادة والذرة
+### ثانيًا: التطبيع العربي
+### ثالثًا: وضع "إضافة من طلب"
+## سيناريوهات استخدام عملية
+## السيناريو 1: إضافة شتيمة مباشرة
+### المطلوب
+### الاختيارات المناسبة
+### لماذا؟
+## السيناريو 2: إضافة عبارة تمييزية كاملة
+### المطلوب
+### الاختيارات المناسبة
+### لماذا؟
+## السيناريو 3: بناء قائمة كاملة بالذكاء الاصطناعي
+### المطلوب
+### الطريقة
+### النتيجة
+## السيناريو 4: توسيع الكلمة بصيغ متعددة
+### المطلوب
+### الطريقة
+### الفائدة
+## أفضل الممارسات
+## أخطاء شائعة يجب تجنبها
+## خلاصة سريعة
+
+### FILE: docs\GLOSSARY_AUDIT.md
+# Glossary Section – Audit
+## Summary
+## Issues Found and Fixed
+### 1. HistoryModal: `settings` undefined (bug)
+### 2. HistoryModal: History never loaded
+### 3. TermModal: Duplicate check on edit
+### 4. Localization
+### 5. Category filter incomplete
+## Not Changed (by design or deferred)
+## Files Touched
+## How to Verify
+
+### FILE: docs\GLOSSARY_CSV_FORMAT.md
+# Glossary CSV import / export
+
+### FILE: docs\GLOSSARY_DEBUG_PATCH_PLAN.md
+# Glossary / Slang Lexicon — Debug & Patch Plan
+## 1. Why “Glossary additions are not considered by AI”
+### 1.1 Broken path (persistence)
+### 1.2 Broken path (highlights)
+### 1.3 What already works
+## 2. Patch plan (file-by-file)
+### 2.1 Backend: `supabase/functions/lexicon/index.ts`
+### 2.2 Worker: `apps/worker/src/pipeline.ts`
+### 2.2.1 Coordinate system (confirmed alignment)
+### 2.2.2 Matching normalization contract
+### 2.3 Frontend: ScriptWorkspace highlight DOM and debug
+### 2.4 GCAM articles / atoms and pipeline consistency
+### 2.5 Soft signals
+## 3. Verification checklist
+## 4. Optional: History trigger and changed_by / change_reason
+## 5. Arabic normalization (current: none)
+## 6. File list (summary)
+
+### FILE: docs\GLOSSARY_END_TO_END_VERIFICATION.md
+# Glossary / Lexicon — End-to-End Verification
+## 1. Verified flow: UI → API → DB → Worker → Findings → Highlighting
+## 2. Code paths (files + key functions)
+## 3. Screenshot / console evidence expectations
+### 3.1 Terms persist after refresh
+### 3.2 Report includes lexicon finding
+### 3.3 Elements search for `data-finding-id` is NOT 0/0 after Highlight
+### 3.4 Worker cache refresh
+## 4. Known limitations
+## 5. QA checklist (regression testing)
+## 6. Acceptance criteria (mapping)
+
+### FILE: docs\GLOSSARY_LEXICON_FLOW.md
+# Glossary (Slang Lexicon) Flow — End-to-End
+## 1) Where the page reads/writes data
+### UI → API calls
+### File locations
+## 2) Data model
+### Table: `slang_lexicon`
+### Table: `slang_lexicon_history`
+### Frontend model
+## 3) Matching logic (worker)
+### When lexicon is applied
+### Matching rules (by `term_type`)
+### How start/end offsets are computed
+## 4) How lexicon becomes findings
+### Pipeline stage
+### Which terms produce findings?
+### Where `source` is set
+### Fields set on lexicon findings
+## 5) Caching / freshness
+### Where cache lives
+### When it is loaded and refreshed
+### When a new term affects results
+### Invalidation
+## 6) What the user should expect
+### Report findings list
+### Highlights in viewer
+### Severity / article on finding card
+## Flow diagram (bullet)
+## File list (read-only audit)
+## Exact matching rules (worker)
+## Gaps / bugs
+## Optional minimal fix (lexicon highlights)
+
+### FILE: docs\GLOSSARY_REPORT.md
+# Glossary (Slang Lexicon) — Complete Report
+## 1. What the Glossary Is
+## 2. Current Situation — Executive Summary
+## 3. What We Have — In Depth
+### 3.1 Database
+### 3.2 Glossary UI (Frontend)
+### 3.3 Backend API (Edge Function)
+### 3.4 Worker (Analysis Pipeline)
+### 3.5 How Lexicon Findings Appear to the User
+## 4. End-to-End Flow (What Exists Today)
+## 5. Gaps and Implications
+## 6. File Reference (Quick Index)
+## 7. Summary Table — “If I add a word today?”
+
+### FILE: docs\golden-saudi-scripts\README.md
+# Saudi Golden Script Set (Phase 1)
+## Contents
+## How to run
+## Notes
+
+### FILE: docs\HARD_ATOM_PLAYBOOK_PRIORITY_2026-03-27.md
+# Hard Atom Playbook: Priority Set
+## Why These Atoms First
+## Atom 5-2
+## Atom 7-2
+## Atom 7-3
+## Atom 7-4
+## Atom 9-1
+## Atom 17-1
+## First Review Rules
+## Next Atoms To Add
+
+### FILE: docs\HASH_MISMATCH_INVESTIGATION.md
+# Hash Mismatch Investigation: AI Highlights Never Work
+## Step 1 — Reproduction (expected outcome)
+## Step 2 — How hashes are computed and stored
+### A) `editorData.contentHash` (viewer side)
+### B) `analysis_jobs.script_content_hash` (job side)
+## Step 3 — Comparison and root cause
+## Step 4 — Fix (minimal and robust)
+## Summary
+## Implementation summary (done)
+
+### FILE: docs\HIGHLIGHT_ALIGNMENT_DEBUG.md
+# Highlight alignment debug report
+## 1. One normalize implementation
+## 2. Build index only on unwrapped DOM
+## 3. Stronger offset validation (skip + log)
+## 4. Overlapping findings
+## Summary: minimal fixes applied
+## How to use this for debugging
+
+### FILE: docs\HIGHLIGHTS_DOM_PERSISTENCE.md
+# Highlights DOM Persistence
+## Problem
+## 1) Root cause: React re-writing innerHTML
+### Container identity (diagnostics added)
+## 2) Render paths that overwrite the viewer HTML
+## 3) Fix: stop React from owning the div content (approach A)
+## 4) Acceptance
+## Follow-up: highlights disappearing when selecting text or opening "Add finding" modal
+## Files changed
+
+### FILE: docs\IMPLEMENTATION_NOTES_import_and_add_to_findings.md
+# Implementation notes: Import (DOCX/PDF) and “Add to findings” UX
+## Overview
+## A) DOCX/PDF import
+### Goal
+### Client-side parsing
+### Scanned PDF / empty text
+### TXT flow
+### Import does not auto-create analysis reports
+### Error handling
+## B) Context menu and “Add to findings”
+### Label change
+### “Add Note” behaviour (Option 1)
+## C) Article-dependent Atom dropdown
+## C.1) Formatted view: sanitization and highlights hint
+### Sanitization (XSS hardening)
+### Formatted-mode hint
+## D) atom_id as enterprise-safe compound code (e.g. "4.1")
+### Goal
+### Write path (new manual findings)
+### Read path (display)
+### Backward compatibility
+### Backend
+## Files touched
+## Verification
+
+### FILE: docs\IMPLEMENTATION_TRACKER_SCRIPT_PAGES.md
+# Implementation Tracker: Script Pages, Formatting & PDF-like Workspace
+## Phase 1 — Quick wins (no schema change)
+### 1.1 Arabic display in workspace
+### 1.2 Formatting (DOCX)
+## Phase 2 — Page storage and extraction
+### 2.1 Schema
+### 2.2 Backend: extract Edge function
+### 2.3 Backend: GET editor / script pages API
+### 2.4 Client: PDF extraction per page
+### 2.5 Client: DOCX and “pages”
+### 2.6 Client: call extract with pages
+### 2.7 Offset → page (for later use)
+## Phase 3 — Page-based workspace UI
+### 3.1 State and data
+### 3.2 Toolbar component
+### 3.3 Viewer: render current page
+### 3.4 Highlights on current page only
+### 3.5 “Go to page of finding”
+### 3.6 Backward compatibility (no pages)
+## Phase 4 — Finding page number and reports (optional)
+### 4.1 Store page_number on findings
+### 4.2 Report: show “Page X”
+## Checklist summary
+
+### FILE: docs\INVITE_SECURITY.md
+# Invite flow — Security and “no surprises” notes (Phase 7)
+## 1. Never store invite token in DB — only hash
+## 2. Crypto-safe token generator
+## 3. Invite creation: requireAuth() + permission check
+## 4. Consume endpoint: no auth, but rate-limited and strongly validated
+## 5. Audit logging
+## Quick checklist
+
+### FILE: docs\INVITE_TESTING_CHECKLIST.md
+# Invite flow — Testing checklist (Phase 6)
+## Prerequisites
+## 1. Admin creates user in UI → Resend accepted
+## 2. User receives email → opens link → sets password
+## 3. User can login
+## 4. Invite token cannot be reused
+## 5. Expired token fails
+## 6. Non-admin cannot call invite endpoint
+## Quick reference
+## Optional: Resend dashboard
+
+### FILE: docs\LEXICON_AI_ENHANCEMENT.md
+# Lexicon-Enhanced AI Analysis
+## Problem
+## Solution
+## Changes Made
+### 1. **Updated AI Prompts** (`supabase/functions/_shared/aiConstants.ts` & `apps/worker/src/aiConstants.ts`)
+#### Router Prompt (v1.0 → v1.1)
+#### Judge Prompt (v1.1 → v1.2)
+### 2. **Added Helper Functions**
+### 3. **Modified Worker Pipeline** (`apps/worker/src/pipeline.ts`)
+### 4. **Updated OpenAI Calls** (`apps/worker/src/openai.ts`)
+## How It Works
+### Before (Generic Prompt)
+### After (Lexicon-Injected Prompt)
+## Example Lexicon Entry
+## Deployment Steps
+### 1. Deploy Edge Functions
+### 2. Rebuild & Deploy Worker
+# Deploy to your worker environment (Railway, Heroku, etc.)
+### 3. Add Lexicon Terms
+### 4. Test
+## Benefits
+## Monitoring
+## Related Files
+## Version History
+## Notes
+
+### FILE: docs\LEXICON_ANALYSIS_DEBUG_REPORT.md
+# Lexicon / Glossary Terms Not Appearing in AI Analysis — Debug Report
+## 1) Findings (bullet list)
+## 2) Evidence (file paths + line numbers)
+## 3) Root cause (most likely + why)
+## 4) Fix plan (exact code changes, env vars, SQL, redeploy)
+### 4.1 Align worker with production DB (primary)
+### 4.2 Disable mock API in production
+### 4.3 Optional: Env override for lexicon refresh interval
+### 4.4 Diagnostic logging (already added)
+### 4.5 No SQL change
+### 4.6 Redeploy
+## 5) Verification checklist (API calls + expected outputs)
+## Summary table
+
+### FILE: docs\MULTI_PASS_DETECTION_DESIGN.md
+# Multi-Pass Detection System Design
+## 🎯 Concept: Specialized Scanners
+## 🏗️ Architecture
+### Current (Single-Pass):
+### Proposed (Multi-Pass):
+## 📋 Pass Definitions
+### **Pass 1: Lexicon + Insults** (Priority: CRITICAL)
+### **Pass 2: Violence** (Priority: HIGH)
+### **Pass 3: Sexual Content** (Priority: HIGH)
+### **Pass 4: Drugs & Alcohol** (Priority: MEDIUM)
+### **Pass 5: Discrimination & Incitement** (Priority: MEDIUM)
+## 🔧 Implementation Strategy
+### **Architecture Changes:**
+#### 1. **New Function: `runMultiPassJudge()`**
+#### 2. **Prompt Builders** (One per category)
+#### 3. **Deduplication Logic**
+## 📊 Benefits of Multi-Pass:
+### **1. Higher Detection Rate**
+### **2. Parallel Execution**
+### **3. Better Debugging**
+### **4. Scalability**
+### **5. Cost-Effective**
+## 🎯 Implementation Plan
+### **Phase 1: Core Multi-Pass System**
+### **Phase 2: Optimize**
+### **Phase 3: Fine-Tune**
+## 🚀 Expected Results
+### **Before (Single-Pass):**
+### **After (Multi-Pass):**
+## 💰 Cost Consideration
+## 🎯 Recommendation
+
+### FILE: docs\MULTI_PASS_IMPLEMENTATION.md
+# Multi-Pass Detection System - Implementation Complete ✅
+## 🎯 Overview
+### **Pass 0: Glossary Scanner** 🔍
+### **Pass 1: Insults Scanner** 💬
+### **Pass 2: Violence Scanner** ⚔️
+### **Pass 3: Sexual Content Scanner** 🚫
+### **Pass 4: Drugs & Alcohol Scanner** 💊
+### **Pass 5: Discrimination & Incitement Scanner** ⚖️
+### **Pass 6: National Security & Governance Scanner** 🛡️
+### **Pass 7: Extremism & Banned Groups Scanner** 🚨
+### **Pass 8: Misinformation & Credibility Scanner** 📰
+### **Pass 9: International Relations Scanner** 🌍
+## 🏗️ Architecture
+### **Before (Single-Pass):**
+### **After (Multi-Pass):**
+## 📁 Files Created/Modified
+### **New Files:**
+### **Modified Files:**
+## 🚀 Key Improvements
+### **1. Specialized Prompts**
+### **2. Parallel Execution**
+### **3. Relaxed Verbatim Filter**
+### **4. Smart Model Selection**
+### **5. Deduplication**
+## 📊 Expected Performance
+### **Detection Rate:**
+### **Speed:**
+### **Cost:**
+## 🧪 Testing Checklist
+### **Test Script 1: Insults**
+### **Test Script 2: Violence**
+### **Test Script 3: Sexual Content**
+### **Test Script 4: Drugs**
+### **Test Script 5: Multiple Violations**
+## 🔧 Deployment Steps
+### **1. Build Worker**
+### **2. Test Locally (Optional)**
+# Set environment variables
+# Run worker
+### **3. Push to GitHub**
+### **4. Coolify Auto-Deploy**
+### **5. Monitor Logs**
+## 📈 Monitoring & Metrics
+### **Key Metrics to Watch:**
+## 🎯 Success Criteria
+## 🔄 Rollback Plan
+## 🚀 Status
+
+### FILE: docs\MULTI_PASS_SUMMARY.md
+# Multi-Pass Detection System - Executive Summary
+## 🎯 What Changed
+## 🔥 The 10 Scanners (100% GCAM Coverage)
+### **Scanner 0: Glossary** 📚
+### **Scanner 1: Insults** 💬
+### **Scanner 2: Violence** ⚔️
+### **Scanner 3: Sexual Content** 🚫
+### **Scanner 4: Drugs/Alcohol** 💊
+### **Scanner 5: Discrimination/Incitement** ⚖️
+### **Scanner 6: National Security & Governance** 🛡️
+### **Scanner 7: Extremism & Banned Groups** 🚨
+### **Scanner 8: Misinformation & Credibility** 📰
+### **Scanner 9: International Relations** 🌍
+## 💡 Why This Works
+### **Problem with Old System:**
+### **Solution:**
+## 📈 Expected Improvement
+### **Before (v1.4 - Single Pass):**
+### **After (v2.0 - Multi-Pass):**
+## 🎯 Coverage Summary
+### **GCAM Articles Covered:**
+### **Total Scannable Articles:** 20
+### **Total Covered:** 20 ✅
+## 🚀 Deployment
+### **Files Changed:**
+### **Next Steps:**
+## ✅ Verification
+
+### FILE: docs\NORMALIZE_SPEC.md
+# Normalization spec (canonical text for offsets)
+## Transform (identical backend + frontend)
+## Where it is used
+## htmlToText (tag-strip only)
+## Assertion (dev)
+
+### FILE: docs\OFFSET_CANONICAL_TEXT.md
+# Offset canonical text: single source for AI highlights
+## Problem
+## Canonical source
+## Normalization (single function)
+## Content hash check strategy
+## Summary
+
+### FILE: docs\OFFSETS_AND_PAGES.md
+# Script offsets and page numbers
+## Canonical content
+## Separator between pages
+## Mapping offset → page
+## No per-page rows
+## Optional: `ANALYSIS_CHUNK_BY_PAGE`
+
+### FILE: docs\OFFSETS_GLOBAL_VS_CHUNK.md
+# Offsets: global vs chunk-local coordinate system
+## Summary
+## Where offsets are defined and used
+### 1. Canonical text (base for all global offsets)
+### 2. Chunks (analysis_chunks)
+### 3. Worker pipeline (Judge → findings)
+### 4. Lexicon findings
+### 5. Manual findings
+## How to tell global vs chunk-local
+## If highlights still don’t appear
+## No change needed for coordinate system
+
+### FILE: docs\PDF_DISPLAY_FONT.md
+# PDF → workspace font (display hint)
+## What we can and cannot do
+## What we implemented
+## Operations
+## Extending the mapper
+
+### FILE: docs\PDF_EXPORT_REPORT.md
+# PDF Export Functionality — Complete Report
+## 1. Overview
+## 2. Architecture
+### 2.1 Main components
+### 2.2 Data flow
+### 2.3 Font strategy
+## 3. How It Started
+## 4. Issues Encountered and Modifications
+### 4.1 pdfmake loading in Edge (Deno)
+### 4.2 createPdf options type
+### 4.3 getBuffer API (Promise vs callback)
+### 4.4 CORS on PDF responses
+### 4.5 Roboto fonts “not defined”
+### 4.6 Cairo fonts “not defined” / path not found
+### 4.7 “Cannot read properties of undefined (reading 'toLowerCase')”
+## 5. Current Implementation Summary
+### 5.1 pdfMake.ts
+### 5.2 pdfVfs.ts (generated)
+### 5.3 pdfTemplates.ts
+### 5.4 reports/index.ts
+## 6. Build and Deploy
+### 6.1 Fonts and VFS (required before PDF works)
+### 6.2 Local run
+### 6.3 Deploy (hosted Supabase)
+## 7. API Endpoints (summary)
+## 8. Verification and Troubleshooting
+## 9. File Reference
+
+### FILE: docs\PERMISSIONS_AUDIT_AND_DISCOVERY.md
+# Permissions, User Types, and Visibility — Audit & Discovery Report
+## 1. User types (roles)
+## 2. Where “admin” is checked (two places)
+## 3. What each role can see (intended vs current)
+### 3.1 Scripts
+### 3.2 Reports (analysis_reports)
+### 3.3 Dashboard (GET /dashboard/stats)
+### 3.4 Clients
+## 4. Root cause summary
+## 5. Fix applied: RLS aligned with user_roles
+## 6. Recommendation: single source of truth
+## 7. Quick verification checklist (after migration)
+## 8. User creation and role-based visibility
+### 8.1 How users are created
+### 8.2 What each role can see (backend vs UI)
+### 8.3 Add User modal: role dropdown vs section toggles
+
+### FILE: docs\PERMISSIONS_MAP.md
+# Permissions Map (RBAC Baseline)
+## Source of truth references
+### DB tables
+### RPCs
+### Edge functions
+### Frontend
+## Role → permissions (which sections/actions they enable)
+## Access matrix (by area)
+## Actions
+## Notes
+
+### FILE: docs\PHASE0_POLICY_WORKSHOP_SPEC.md
+# Phase 0 Policy Workshop Spec
+## Objective
+## Pillar Model (Top-Level)
+## Mandatory Decisions Per Finding
+## Severity Rubric Baseline
+## Primary vs Related Article Rule
+## Ambiguity Escalation Rule
+## Rollout Guardrails
+
+### FILE: docs\phase1a-test-steps.md
+# Phase 1A – Manual test steps and expected DB state
+## Prerequisites
+## 1. Create script (POST /scripts)
+# Replace CLIENT_UUID with a real clients.id (uuid)
+## 2. Create version (POST /scripts/versions)
+# Use SCRIPT_ID from step 1
+# After you have PATH from POST /upload (step 3), you can create version with path:
+# Or create version first, then in a real flow you'd PATCH the version with path after upload.
+# For MVP with extract text-only, path is optional.
+## 3. POST /upload (signed URL + path)
+## 4. Upload file (optional; can skip in docs)
+## 5. POST /extract (complete pipeline)
+## 6. GET /scripts (list)
+## 7. Optional: x-correlation-id
+## 8. Phase 1B — Worker (run after extract)
+
+### FILE: docs\PIPELINE_V2_ROLLOUT_PLAN_2026-04-06.md
+# Pipeline V2 Rollout Plan
+## Goal
+## Rollout Model
+### V1
+### V2
+## Control Points
+### 1. Runtime default
+### 2. Per-job override
+## V2 Profile Mapping
+### `turbo`
+### `balanced`
+### `quality`
+## Dispatch Strategy
+## Rollback Plan
+## Recommended Rollout Phases
+### Phase 1: Foundation
+### Phase 2: Internal testing
+### Phase 3: Shadow evaluation
+### Phase 4: Limited production exposure
+### Phase 5: Promotion
+## V2 Development Priorities
+## Implemented So Far
+## Design Principle
+## Deployment Memory
+
+### FILE: docs\PLAN_FIX_ARTICLE_FINDING_AND_DUPLICATION.md
+# Plan: Fix Article–Finding Relation and Duplication (Pre-Coding)
+## 1. Desired End State
+## 2. Current State (Root Causes)
+### 2.1 Why the same incident appears many times
+### 2.2 Why primary article is often 4 or 5
+### 2.3 Why summary and findings disagree
+## 3. Enhancements (What to Do)
+### 3.1 Use canonical list as main source for the report (Frontend + contract)
+### 3.2 Build findings_by_article from canonical_findings (Backend)
+### 3.3 Prefer specific articles over 4/5 in primary selection (Backend)
+### 3.4 Job-level canonical IDs for persisted findings (Backend, optional but recommended)
+### 3.5 Use script summary in ruling (Backend)
+### 3.6 PDF and print view use canonical data (Frontend)
+## 4. How Each Enhancement Moves Us Toward the Desired Result
+## 5. Recommended Order of Implementation
+## 6. Out of Scope for This Plan
+## 7. Success Criteria (Checklist)
+
+### FILE: docs\PLAN_SCRIPT_PAGES_AND_FORMATTING.md
+# Plan: Script Pages, Formatting, and PDF-like Workspace
+## Are these doable?
+## 1. Arabic letters not connected (image 1 vs 2)
+## 2. Formatting (match original document)
+## 3. Pages (one page in doc = one page in workspace)
+## 4. Workspace: page view + toolbar (like image 3)
+## 5. Phased implementation plan
+### Phase 1 — Quick wins (no schema change)
+### Phase 2 — Page storage and extraction
+### Phase 3 — Page-based workspace UI
+## 6. Risks and mitigations
+## 7. Adapting the system without breaking anything
+### 7.1 What the analysis pipeline depends on today
+### 7.2 Strategy: keep one canonical content; add pages as a view
+### 7.3 Backward compatibility
+### 7.4 What to add for "finding on page X" and reports
+### 7.5 Analysis pipeline: what to change vs what to leave as-is
+### 7.6 Summary: safe adoption path
+## 8. Summary
+
+### FILE: docs\PLAN_WORKSPACE_A4_AND_FORMAT_FIDELITY.md
+# Plan: A4 workspace page + higher format fidelity (import)
+## Phase 1 — A4 page frame in the workspace (layout only)
+## Phase 2 — Typography tokens inside the A4 frame (readability, not Word clone)
+## Phase 3 — DOCX: richer structure preservation (Mammoth + post-process)
+## Phase 4 — PDF: structure + light styling from `getTextContent()`
+## Phase 5 — Optional: true layout fidelity paths (later / niche)
+## Suggested order
+## Dependencies
+## Open product questions
+## Implementation status (done)
+
+### FILE: docs\policy_diff.md
+# PolicyMap vs DOCX (bible) taxonomy diff
+## 1. Missing in PolicyMap (in DOCX only)
+## 2. Extra in PolicyMap (not in DOCX)
+## 3. Article title mismatches
+## 4. Missing atoms in PolicyMap (in DOCX only)
+## 5. Extra atoms in PolicyMap (not in DOCX)
+## 6. Atom title mismatches (same id, different title)
+## 7. Numbering gaps (DOCX)
+## 8. Recommended fixes
+
+### FILE: docs\policy_patch_report.md
+# PolicyMap patch from bible_taxonomy.json
+## Diff summary
+## Atoms in one file but not the other
+
+### FILE: docs\PRODUCT_BACKLOG.md
+# Product backlog — Raawi
+## TODO (Later) #1 — Audit Log (Show All + full table)
+### Requirements
+### Acceptance criteria
+## TODO (Later) #2 — PDF Report Export Suite (Arabic + English)
+### Requirements
+### Acceptance criteria
+## TODO (Later) #3 — Audit Event Schema + Taxonomy (Foundation)
+### Requirements
+### Acceptance criteria
+
+### FILE: docs\prompts\01_violence_fix.md
+
+### FILE: docs\prompts\02_sexual_content_fix.md
+
+### FILE: docs\prompts\03_drugs_alcohol_fix.md
+
+### FILE: docs\prompts\04_discrimination_incitement_fix.md
+
+### FILE: docs\prompts\05_national_security_fix.md
+
+### FILE: docs\prompts\06_extremism_banned_groups_fix.md
+
+### FILE: docs\prompts\07_misinformation_fix.md
+
+### FILE: docs\prompts\08_international_relations_fix.md
+
+### FILE: docs\prompts\09_women_fix.md
+
+### FILE: docs\prompts\10_article4_fallback_fix.md
+
+### FILE: docs\prompts\README.md
+# Current Remaining Judge Prompts
+
+### FILE: docs\prompts\The auditor layer.md
+
+### FILE: docs\QA_CHECKLIST_IMPORT_ANALYSIS_EXPORT.md
+# QA checklist — PDF import · Analysis · Report export
+## Lane A — Importing PDF (upload → extract → editor)
+## Lane B — Analysis time & job behavior
+## Lane C — Analysis report export (PDF / print)
+## Cross-lane sanity (one pass)
+## Troubleshooting: `unsupported Unicode escape sequence` on `/extract` (500)
+## References (code / docs)
+
+### FILE: docs\QA_REMEDIATION_REPORT.md
+# QA remediation report — handoff
+## Deploy notes
+## Suggested QA re-test
+
+### FILE: docs\QA_ROLE_PERMISSIONS_FIX_REPORT.md
+# QA Role & Permissions Fix Report
+## Per-issue: root cause, fix, files touched, verify in prod
+### A. Regulator gets error toast when opening Access Control
+### B. Regulator label shows “Admin” even when role is Regulator
+### C. Task fails to open after clicking it (for all users)
+### D. Approve/Reject option disappears quickly for Regulator/Admin
+### E. Review status fails to update on company profile after approve/reject
+### F. Script upload fails when assigning user during “Add new script” flow (works when importing in analyze window)
+### G. Scripts filter page does not update by status; scripts remain draft
+### H. Glossary: after deleting a term, user cannot add same term again (“already exists”)
+### I. Client screen status not updating (pending/approved not reflected)
+### J. Reports status not updating anywhere
+## Files changed (summary)
+## Smoke checks (key cases)
+## Constraints
+## After changes
+
+### FILE: docs\QA_SMOKE_CHECKS.md
+# QA Smoke Checks — RBAC & Status Refresh
+## 1. Regulator cannot access Access Control
+## 2. Regulator sees correct role label
+## 3. Assignee can open task & script
+## 4. Approve/reject buttons stable
+## 5. Status refresh after decision
+## 6. Glossary re-add after soft delete
+## Optional: Script upload when assigning user
+
+### FILE: docs\QA_TEST_PLAN.md
+# RawwiFilm — End-to-End QA Test Plan
+## Master checklist (Excel-friendly)
+## 1. Authentication
+### A1 — Login with seeded user
+### A2 — Login with wrong password
+### A3 — Logout
+### A4 — Protected route without login
+### A5 — Forgot password
+## 2. Overview / Dashboard
+### O1 — Dashboard loads
+### O2 — Recent Activity "Show all"
+## 3. Clients (Companies)
+### C1 — List clients
+### C2 — Add new client
+### C3 — Edit client
+### C4 — Search clients
+### C5 — Export PDF (manage_companies)
+### C6 — Client details → scripts
+## 4. Scripts & Analysis
+### S1 — Upload script (DOCX)
+### S2 — Open script workspace
+### S3 — Start analysis
+### S4 — View report after analysis
+### S5 — Manual finding: select text → Mark violation
+### S6 — Manual finding: Article 4 / 16 atoms
+## 5. Reports
+### R1 — List reports (by script)
+### R2 — Open report HTML
+### R3 — Export Analysis PDF
+### R4 — Report finding source badges
+### R5 — Report grouping & order
+## 6. Glossary / Lexicon
+### G1 — List terms
+### G2 — Add term
+### G3 — Edit / deactivate term
+### G4 — Import CSV
+### G5 — Export CSV
+### G6 — Export PDF (manage_glossary)
+## 7. Tasks
+### T1 — My Queue loads
+### T2 — Assign task
+## 8. Audit Log
+### U1 — Audit page loads (view_audit)
+### U2 — Audit filters
+### U3 — Export CSV
+### U4 — Export PDF (view_audit)
+## 9. Access Control
+### X1 — Users list (manage_users)
+### X2 — Add user / invite
+### X3 — Role/permission visibility
+## 10. Settings
+### Y1 — Settings page loads
+### Y2 — Change language (AR/EN)
+### Y3 — Save platform settings
+## 11. Localisation & PDFs
+### L1 — Arabic UI
+### L2 — English UI
+### L3 — PDF language follows app
+## Quick reference — Permissions
+
+### FILE: docs\QUICK_ANALYSIS_ROLLOUT_ROLLBACK.md
+# Quick Analysis Rollout and Rollback
+## Feature Flag
+## Safe Rollout Order
+## Fast Rollback Sequence
+## Notes
+
+### FILE: docs\RECOVERY_PHASE1_SOURCE_OF_TRUTH_MATRIX_2026-04-06.md
+# Recovery Phase 1: Source-of-Truth Matrix
+## 1. Core Data Objects in the Current System
+### `scripts`
+### `script_text`
+### `script_pages`
+### `analysis_jobs`
+### `analysis_findings`
+### `analysis_reports.summary_json.canonical_findings`
+## 2. Current Writers and Readers by User Journey
+## Import and Extraction
+## AI Analysis Run
+## Report Page
+## Workspace
+## Manual Findings
+## Reclassification / Mark Safe
+## Reanalysis
+## 3. Current Source-of-Truth Matrix
+## 4. Conflict Points
+### Conflict A: One card, two identities
+### Conflict B: Counts from one source, cards from another
+### Conflict C: Reanalysis only carries partial reviewer intent
+### Conflict D: Quick Analysis is storage-compatible but not semantically unified
+## 5. Required Recovery Direction
+## 6. Immediate Phase 1 Conclusion
+
+### FILE: docs\RECOVERY_PHASE2_REVIEW_FINDINGS_SCHEMA_AND_API_DRAFT_2026-04-06.md
+# Recovery Phase 2: `analysis_review_findings` Schema and API Draft
+## 1. Design Goal
+## 2. Proposed Table: `analysis_review_findings`
+## Identity and ownership
+## Canonical linkage
+## Policy/reviewer-visible classification
+## Reviewer-visible text
+## Anchor fields
+## Review/edit metadata
+## Reanalysis lineage
+## Recommended indexes
+## 3. Optional Link Table: `analysis_review_finding_sources`
+## 4. Lifecycle Contract
+### 4.1 New analysis job
+### 4.2 Report page
+### 4.3 Workspace
+### 4.4 Manual finding
+### 4.5 Reclassify / mark safe
+### 4.6 Reanalysis
+## 5. Minimal Backend Changes
+## 5.1 Aggregation
+## 5.2 Findings Edge Function
+## 5.3 Reports Edge Function
+## 5.4 Tasks Edge Function
+## 5.5 Scripts Edge Function
+## 6. Minimal Frontend Changes
+## 6.1 API layer
+## 6.2 Workspace
+## 6.3 Report Page
+## 6.4 Quick Analysis
+## 7. Migration Strategy
+### Step 1
+### Step 2
+### Step 3
+### Step 4
+### Step 5
+### Step 6
+### Step 7
+## 8. Transitional Compatibility Rules
+## 9. Definition of Ready for Implementation
+## 10. Immediate Next Implementation Move
+
+### FILE: docs\RECOVERY_PLAN_UNIFIED_REVIEW_WORKFLOW_2026-04-06.md
+# Unified Review Workflow Recovery Plan
+## 1. Executive Summary
+## 2. Recovery Strategy Decision
+## 3. Current Architecture Audit
+### 3.1 Entry Points
+### 3.2 Import and Extraction
+### 3.3 Raw Findings Persistence
+### 3.4 Canonical Report Summary
+### 3.5 Report Page
+### 3.6 Workspace
+### 3.7 Review Actions
+### 3.8 Reanalysis
+## 4. Core Problem Statement
+## 5. Target Architecture
+### 5.1 Source-of-Truth Model
+### 5.2 Responsibilities by Layer
+## 6. Proposed Schema
+### 6.1 New Table: `analysis_review_findings`
+### 6.2 Optional Mapping Table
+## 7. Unified Flow Contract
+## 8. Phase Plan
+### Phase 0: Stabilization Freeze
+### Phase 1: Repository Audit and Contracts
+### Phase 2: Schema Introduction
+### Phase 3: Materialization at Aggregation Time
+### Phase 4: Workspace Rebuild
+### Phase 5: Report Page Rebuild
+### Phase 6: DOCX Exactness Recovery
+### Phase 7: Review Actions Migration
+### Phase 8: Reanalysis Preservation
+### Phase 9: Export Unification
+### Phase 10: Quick Analysis / Client Analysis Service Unification
+### Phase 11: Rollout and Legacy Compatibility
+### Phase 12: UAT and Trust Recovery
+## 9. Implementation Order
+## 10. Risks and Mitigations
+## 11. Definition of Done
+## 12. Immediate Next Step
+
+### FILE: docs\REPORT_PRINT_EXPORT_MAP.md
+# Report Print / Export — Implementation Map & Fix Targets
+## A) Current Implementation Map
+### 1. Button location and handlers
+### 2. Route(s) involved
+### 3. API calls (Analysis report only)
+### 4. HTML generation method (Analysis report)
+### 5. CSS controlling A4 printing
+## B) “Old behaviour” reconstruction
+## C) Fix targets
+### Top 3 files that likely need changes
+### Exact missing/incorrect CSS (for A4 wrapping) — identification only
+## Cross-check with repo (Edge PDF and docs)
+## Summary
+
+### FILE: docs\ROLLBACK_URL_CORS_FIXES.md
+# Rollback: URL & CORS fixes (Feb 2026)
+## Option A: Revert entire change set (Git)
+# See the commit that applied these fixes
+# Revert that commit (creates a new commit that undoes it)
+## Option B: Manual rollback by area
+### 1. Web app: single API_BASE_URL
+### 2. Edge Functions: localhost fallback
+### 3. Edge Functions: CORS (optionsResponse + origin)
+## What to test after rollback
+
+### FILE: docs\route-audit-BUG-06.md
+# Route Audit (BUG-06 – Incorrect 404 Routing)
+## Summary
+## Frontend routes (App.tsx)
+## Backend (Supabase Edge Functions)
+## Static assets
+## Auth
+
+### FILE: docs\SANITY_CHECK_ANALYSIS_OPTIONS.md
+# Sanity Check: Analysis Options (بطاقة لكل موقع vs بطاقة لكل ظهور)
+## 1. Flow Overview
+## 2. Option Behaviour (Backend)
+### 2.1 Stored value
+### 2.2 Aggregation (`apps/worker/src/aggregation.ts`)
+## 3. UI and Export
+## 4. Edge Cases Checked
+## 5. Potential Improvements (Optional)
+## 6. Summary
+
+### FILE: docs\SCRIPT_DECISION_POLICY.md
+# Script Accept / Reject (Decision) Policy
+## TASK A — Implementation locations
+### Edge Function: decision endpoint
+### Permission SQL (who can approve/reject)
+### Database-level (scripts table)
+### Frontend
+## TASK B — Truth table (who can accept/reject)
+## TASK C — Why you got blocked
+## TASK D — Recommended final policy
+## TASK E — Implemented changes
+### 1. Edge Function: Regulator assignee + Super Admin–only override
+### 2. UI: capabilities object and DecisionBar
+### 3. Error message
+## Verification
+
+### FILE: docs\SCRIPT_DECISION_REPORT.md
+# Script Decision Policy — Current vs Desired & Changes
+## Short report: current vs desired behavior
+### Truth table (who can approve/reject)
+## Exact files changed
+## How to test manually in production
+
+### FILE: docs\SCRIPT_DECISION_VERIFICATION.md
+# Script Decision Policy — Verification & Manual Tests
+## Current vs desired behavior (aligned)
+## Deterministic checks (expected outcomes)
+## Audit logging
+## How to test manually in production
+## Single source of truth (GET decision/can + POST decision)
+## Smoke tests (minimum)
+## Files changed (summary)
+
+### FILE: docs\SCRIPT_WORKSPACE_AND_VIEWER.md
+# Script workspace: import, pages, viewer, and findings
+## 1. What the script workspace is
+## 2. How imported documents are processed
+### 2.1 Upload flow (high level)
+### 2.2 TXT
+### 2.3 PDF
+### 2.4 DOCX
+## 3. Canonical text, offsets, and “page 1”
+## 4. Nature of the script viewer
+### 4.1 Page mode (`pages.length > 0`)
+### 4.2 Scroll mode (no `pages`)
+### 4.3 What the viewer is *not*
+## 5. Finding cards after analysis — expected behaviour
+### 5.1 Where findings come from
+### 5.2 What a finding card should do
+### 5.3 Why highlights sometimes look “wrong” or missing
+## 6. Related docs
+## 7. Summary diagram (mental model)
+
+### FILE: docs\script-import-and-editor-audit.md
+# Script Import and Editor Audit (RaawiFilm)
+## 1. Overview
+## 2. Frontend: Script creation & upload flow
+### File paths
+### File input and accept
+### Upload handler: `handleFileUpload` (lines 346–406)
+### UI state used
+### Validation rules
+### Preview logic
+## 3. Backend/Edge: Endpoints and handlers
+### Route mapping (Supabase Edge: path = `/functions/v1/<name>`)
+### POST /upload
+### POST /scripts/versions
+### POST /extract
+### GET /scripts/editor
+### POST /tasks
+### Request/response payloads (concise)
+### Error handling
+## 4. Database: Tables, columns, constraints, RLS
+### Tables involved
+### scripts (0001_init + 0003_phase1a)
+### script_versions (0001_init + 0003_phase1a)
+### script_text (0008_script_editor)
+### script_sections (0008_script_editor)
+### Where “current version” is determined
+### Where canonical script text lives
+### Unique constraints
+### Triggers / RLS
+## 5. Script page: Rendering/editor details
+### File path
+### How content is loaded
+### Component structure (main viewer)
+### State management & data loading
+### Autosave
+### Where an editor could be embedded
+## 6. Analysis pipeline: Integration points
+### Trigger
+### Source text for analysis
+### Chunking
+### Normalization/cleaning
+## 7. DOCX/PDF parsing options (client vs server)
+### Should parsing run client-side or server-side?
+### Runtime constraints
+### Storage bucket
+### Recommended parsing location
+### Suggested libraries
+### Arabic PDFs: risks and mitigation
+## 8. Rich text editor options & recommendation
+### Existing UI stack
+### Editor framework recommendation
+### What to store
+### Where to integrate toolbar and editor
+### Migration needs
+### Minimal viable editor plan
+## 9. Implementation checklist
+### Frontend: file input and import
+### Backend: import and parsing
+### Storage and DB
+### Rich text editor
+### Tests and manual verification
+### Edge cases
+
+### FILE: docs\script.md
+
+### FILE: docs\SECURITY_VALIDATION_REPORT.md
+# Security Validation Report
+## RaawiFilm Platform
+## 1) Executive Readout (Simple + Direct)
+## 2) Validation Methodology
+## 3) Analyst Claims — High-Tech but Clear Verdict
+## 4) Technical Evidence (Readable Form)
+### 4.1 Authentication Coverage
+### 4.2 Edge Security Signals
+### 4.3 Key Hardening Gap Found
+### 4.4 Monitoring Reality
+## 5) Impact of Closed Government Internal Deployment
+### 5.1 Risk Reduction Areas
+### 5.2 Risks That Remain High
+### 5.3 Local AI Integration Considerations
+## 6) Risk Classification
+## 7) Priority Remediation Plan (Business + Technical)
+### P1 — Immediate (High Priority)
+### P2 — Near Term
+### P3 — Operational Maturity
+## 8) Plain Statement for Leadership
+## 9) Confidence Level
+
+### FILE: docs\SELECTION_BUG_INVESTIGATION.md
+# Selection bug investigation: text selection snaps away in script viewer
+## Problem
+## Step 1 — DOM element that renders the script text
+## Step 2 — CSS that could affect selection
+## Step 3 — Re-render as the cause
+## Step 4 — Minimal fix (single change)
+## Summary
+
+### FILE: docs\session-timeout-BUG-08.md
+# Session Timeout (BUG-08)
+## What was fixed (app)
+## Supabase (project-level)
+
+### FILE: docs\SETTINGS_AUDIT.md
+# Settings Page — Audit (What Works vs What’s Not Applied)
+## 1. Working (saved and effective)
+## 2. Applied (wired to the app)
+## 3. Not applied (deferred)
+## 4. Summary
+
+### FILE: docs\SITICH_RESPONSE_REPORT.md
+# Formal Response to SITICH Security Claims
+## RaawiFilm Platform — Technical Clarification and Validation Position
+## 1) Respectful Acknowledgement
+## 2) Scope Clarification (What can and cannot be concluded)
+### 2.1 What SITICH likely observed
+### 2.2 What requires additional proof before final conclusion
+## 3) Position on Core Question
+### "Is it valid to apply strong security procedures now if the system will later be local/internal?"
+## 4) Claim Validation Summary (Polite and Evidence-Based)
+## 5) Code/API Ground Truth (Repository-Based)
+## 6) Why VPS Findings May Differ from Final Internal Deployment
+## 7) Recommended Professional Closing to SITICH
+## 8) Team Commitments (Constructive Next Steps)
+## 9) Final Statement
+
+### FILE: docs\STRICT_MODE_UPGRADE.md
+# STRICT MODE AI Analysis Upgrade
+## Overview
+## Key Changes
+### Judge Prompt: v1.2 → v1.3 (STRICT MODE)
+#### What Changed:
+#### Philosophy Shift:
+## Strict Mode Rules
+### Phase 1: Lexicon Checking (100% Mandatory)
+### Phase 2: Article Violations (Strict & Direct)
+### Exceptions (Technical Metadata Only)
+## Impact
+### Detection Strength
+### Use Cases
+### Trade-offs
+## Files Modified
+## Deployment
+### Required Steps:
+   # Deploy to your environment
+## Rollback Plan
+## Future Enhancements
+## Version Timeline
+## Testing Checklist
+
+### FILE: docs\TAXONOMY_EXTRACTION_VALIDATION.md
+# Taxonomy extraction – validation summary
+## Counts
+## Per-article atom counts
+## Numbering gaps
+## Output file
+
+### FILE: docs\TEST_SCRIPT_ANALYSIS.md
+# Test Script Analysis - "وحيد أبو نغم (الجزء الرابع)"
+## Script Content Summary:
+## Expected Violations (What AI Should Detect):
+### 🚨 VIOLATION #1: Insult/Defamation (نصاب)
+## ✅ Clean Content (No Violations Expected):
+### Technical Metadata:
+### Neutral Descriptions:
+### Story Elements (Not Violations):
+## 🎯 AI Detection Test:
+### With Current v1.4 MAXIMUM DETECTION Mode:
+## 📋 Verification Checklist:
+## 🎯 Summary:
+## 🔍 Why Only 1 Violation?
+
+### FILE: docs\TROUBLESHOOTING_CORS.md
+# Why you see “CORS policy: No 'Access-Control-Allow-Origin' header” on Access Control
+## What’s going on
+## How local Supabase works
+## Fix 1: Run Edge Functions with JWT verification disabled (required for CORS from browser)
+## Fix 2: Use the mock API (no backend, no CORS)
+## Summary
+
+### FILE: docs\UNICODE_EXTRACT_PIPELINE.md
+# Unicode & PDF text extraction — what to expect
+## Honest scope
+## Strategy (best practice for this product)
+## Where it lives
+## QA matrix (recommended)
+## If something still breaks
+
+### FILE: docs\UPLOAD_ASSIGN_FIX_REPORT.md
+# Admin assign + upload fix — root cause and deliverables
+## Root cause (why Invalid JWT only in isAssigning path)
+## Files changed
+## Verification checklist
+## Proof
+## After fix
+
+### FILE: docs\USER_CREATION_SIMPLIFICATION.md
+# User Creation Simplification — Design & Standards
+## 1. Principle: Single source of truth
+## 2. Why remove section toggles
+## 3. What stays the same (no breaking changes)
+## 4. Implementation checklist
+## 5. Default sections per role (reference)
+
+### FILE: docs\user-guide\أدوار_الموافقة_والرفض.md
+# أدوار المستخدمين في الموافقة على النصوص ورفضها
+## نظرة عامة
+## من يمكنه الموافقة أو الرفض؟
+## قاعدة تضارب المصالح
+## الجهة الرقابية (المراجع)
+## المشرف (Admin)
+## المشرف الأعلى (Super Admin)
+## ملخص سريع للمراجعين
+
+### FILE: docs\VERIFICATION.md
+# Verification — PolicyMap taxonomy & source badges
+## 0) Audit Log MVP (optional)
+## 0.4) Audit Log PDF export (AR/EN)
+## 0.48) Glossary / Lexicon PDF export (AR/EN)
+## 0.47) Clients PDF export (AR/EN) — v1 complete
+## 0.5) Analysis Report PDF export (AR/EN)
+## 1) Source badge on finding cards
+## 2) PolicyMap atoms in manual finding modal (titles = bible)
+## 3) API/network JSON snippet (finding object)
+## 4) Results report — PolicyMap titles, order, dedupe
+## 5) Checklist
+
+### FILE: docs\ZERO_FINDINGS_DEBUG.md
+# Zero Findings Debug Guide
+## 🚨 Issue: Analysis returns 0 findings
+### Root Cause Identified:
+## ✅ Fix Applied
+## 🔍 Verification Steps
+### **1. Check Worker Logs**
+### **2. Check for Errors**
+### **3. Check Router Output**
+## 🐛 Other Possible Causes
+### **Cause 1: No Lexicon Terms in Database**
+### **Cause 2: OpenAI API Issues**
+### **Cause 3: Text Chunking Issues**
+### **Cause 4: Findings Filtered Out**
+## 🎯 Quick Diagnostic
+## 🚀 Expected After Fix
+## 📝 Deployment Status
+
+### FILE: docs\خيارات_تجميع_التحليل.md
+# خيارات تجميع نتائج التحليل
+## الخيار الأول: بطاقة واحدة لكل موقع (موصى به)
+### ماذا يعني؟
+### الإيجابيات
+### السلبيات
+## الخيار الثاني: بطاقة لكل ظهور
+### ماذا يعني؟
+### الإيجابيات
+### السلبيات
+## مقارنة سريعة
+## ما الذي تختاره؟
+
+### FILE: docs\كيف_يعمل_التحليل_لغير_المختصين.md
+# كيف يعمل تحليل النص في المنصة؟
+## ماذا يفعل التحليل؟
+## المراحل الرئيسية للتحليل
+### المرحلة ١ — القائمة الثابتة (المعجم)
+### المرحلة ٢ — اختيار المواد الأكثر صلة (المرشّح)
+### المرحلة ٣ — الفحص المتخصص (المسارات المتعددة)
+### المرحلة ٤ — المدقق (فهم السياق والحكم النهائي)
+### المرحلة ٥ — تعليل إضافي (إن لزم)
+### المرحلة ٦ — التجميع وبناء التقرير
+## ملخص سريع للمراحل
+## ما الذي يراه المستخدم في النهاية؟
+
+### FILE: docs\مواد_ومفردات_GCAM.md
+# مواد ومفردات نظام GCAM المستخدمة في التحليل
+## نظرة عامة
+## المواد من 1 إلى 24 (ضمن نطاق التحليل)
+### المادة 1 — التعريفات
+### المادة 2 — نطاق التطبيق
+### المادة 3 — المسؤولية
+### المادة 4 — ضوابط المحتوى الإعلامي (تفصيل القواعد الفرعية)
+### المادة 5 — التصنيف العمري
+### المادة 6 — حماية الطفل
+### المادة 7 — حقوق المرأة
+### المادة 8 — الكراهية والتمييز
+### المادة 9 — العنف والمحتوى المحظور
+### المادة 10 — التبغ والكحول والمخدرات
+### المادة 11 — المصداقية الإعلامية
+### المادة 12 — النظام العام
+### المادة 13 — ثوابت الحكم
+### المادة 14 — التحريض على قلب نظام الحكم أو الدعوة إلى العنف
+### المادة 15 — الجماعات المحظورة
+### المادة 16 — الشائعات والمعلومات المضللة
+### المادة 17 — الكرامة والسمعة والخصوصية
+### المادة 18 — العلاقات الدولية
+### المادة 19 — الاقتصاد والاستقرار المالي
+### المادة 20 — الإفلاس والقضايا التجارية
+### المادة 21 — الوثائق والمعلومات السرية
+### المادة 22 — الاتفاقيات والمعاهدات
+### المادة 23 — المظهر العام
+### المادة 24 — الزي والاحتشام
+## مواد خارج نطاق تقرير المخالفات
+
+### FILE: enhancement plan.md
+
+### FILE: implementation_plan.md
+# Production Readiness & Stabilization Plan
+## Proposed Changes
+### 1. Environment & Localhost Hygiene
+#### [MODIFY] [cors.ts](file:///d:/Waheed/MypProjects/RawwiFilm/supabase/functions/_shared/cors.ts)
+#### [MODIFY] [env.ts](file:///d:/Waheed/MypProjects/RawwiFilm/apps/web/src/lib/env.ts)
+#### [MODIFY] [upload/index.ts](file:///d:/Waheed/MypProjects/RawwiFilm/supabase/functions/upload/index.ts)
+### 2. Runtime Crash Fixes
+#### [MODIFY] [CompanyAvatar.tsx](file:///d:/Waheed/MypProjects/RawwiFilm/apps/web/src/components/ui/CompanyAvatar.tsx)
+#### [MODIFY] [ClientDetails.tsx](file:///d:/Waheed/MypProjects/RawwiFilm/apps/web/src/pages/ClientDetails.tsx)
+### 3. Docker & Deployment Correctness
+#### [NEW] [.dockerignore](file:///d:/Waheed/MypProjects/RawwiFilm/apps/web/.dockerignore)
+#### [NEW] [.dockerignore](file:///d:/Waheed/MypProjects/RawwiFilm/apps/worker/.dockerignore)
+### 4. Database Normalization
+#### [MODIFY] [20260215120000_fix_logo_urls.sql](file:///d:/Waheed/MypProjects/RawwiFilm/supabase/migrations/20260215120000_fix_logo_urls.sql)
+## Verification Plan
+### Automated Tests
+### Manual Verification
+
+### FILE: issues.md
+# Raawifilm — Code Audit & Issues Report
+## Summary
+## 1. Critical Issues
+### 1.1 Clients.tsx — Wrong hook: `useState` used instead of `useEffect` for side effect
+### 1.2 Scripts.tsx — Wrong property names: `clientId` and `c.id` (API uses `companyId`)
+### 1.3 Audit.tsx — Use of `supabase.auth.admin` in the browser
+### 1.4 ClientDetails.tsx — Duplicate table header "Reports" / "التقارير"
+## 2. High Priority Issues
+### 2.1 Overview.tsx & export report — XSS in generated HTML
+### 2.2 Clients.tsx & ClientDetails.tsx — XSS in PDF/HTML export
+### 2.3 Login.tsx — "Remember me" has no effect
+### 2.4 ProtectedRoute — Hardcoded English messages
+### 2.5 ClientDetails.tsx — Unstable dependency in `loadReportCounts`
+### 2.6 ClientDetails — `handleDeleteScript` sets `setDeletingId(null)` after catch
+### 2.7 dataStore — `updateScript` does not call the API
+### 2.8 SetPassword.tsx — Password validation inconsistent with ResetPassword
+### 2.9 Tasks.tsx — Useless try/catch and `(task as any)`
+### 2.10 Reports.tsx — Export CSV button has no handler
+## 3. Medium Priority Issues
+### 3.1 App.tsx — 404 and Certificates route
+### 3.2 Overview — Possible mismatch with dashboard stats shape
+### 3.3 Script status casing — Scripts page vs ClientDetails / API
+### 3.4 Settings — Change password form non-functional
+### 3.5 Settings — Role translation key
+### 3.6 Glossary TermModal — Stale form when opening edit
+### 3.7 Glossary — Policy article `title_en`
+### 3.8 Audit — Pagination "Apply" does not refetch
+### 3.9 Reports — handleOpen uses report id vs jobId
+### 3.10 Results.tsx — Finding review response typed as `any`
+### 3.11 ScriptWorkspace — Incomplete block after job completed
+### 3.12 AppLayout — Tasks nav always hidden
+### 3.13 ClientDetails — Table column order vs headers
+### 3.14 ForgotPassword / ResetPassword / SetPassword — `err: any` in catch
+## 4. Low / UX and Consistency
+### 4.1 Login — Dev credentials in UI
+### 4.2 Overview — "Scripts in Review" card links to /clients
+### 4.3 Clients — Pending Scripts / Approved Scripts stats hardcoded to 0
+### 4.4 Input — RTL and icon position
+### 4.5 Audit — "Previous" / "Next" not translated
+### 4.6 AccessControl — "Manage user roles and permissions" and "Actions" not translated
+### 4.7 dataStore — Toasts in English only
+### 4.8 ClientDetails — Debug console.logs
+### 4.9 Reports — "Retry" and empty state not translated
+### 4.10 Nav section vs permission — "scripts" section
+### 4.11 Certificate route — Placeholder content
+### 4.12 ResetPassword — Hash vs query params
+## 5. Recommendations
+
+### FILE: MemoryFile.md
+
+### FILE: PDF_EXPORT_ARCHITECTURE.md
+# RaawiX PDF Export System Architecture
+## Overview
+## Architecture Diagram
+## Key Components
+### 1. API Endpoint (`pdf-export.ts`)
+### 2. Rendering Engine (`pdf-template-renderer.ts`)
+### 3. HTML Template (`report-template.html`)
+### 4. Content Generator (`report-content-generator.ts`)
+### 5. Internationalization (`pdf-i18n.ts`)
+## Dependencies
+## How to Reuse This Method
+### Step 1: Create the HTML Template
+### Step 2: Implement the Renderer
+### Step 3: Prepare the Data
+### Step 4: String Replacement
+### Step 5: (Optional) AI Integration
+## Advantages of This Method for RaawiX
+# Full Implementation Code
+## 1. HTML Template (with CSS)
+## 2. Renderer Service (`pdf-template-renderer.ts`)
+
+### FILE: prod-audit.md
+# Production Readiness Audit Report - RaawiFilm
+## 1. Localhost & Environment Hygiene
+## 2. Runtime Stability (Frontend)
+## 3. Docker & Deployment
+## 4. Database URL Hygiene
+## Next Steps
+
+### FILE: SCRIPT_ANALYSIS_FEATURE_REPORT1.md
+# Script Analysis Feature — Technical Report
+## 1. Executive Summary
+## 2. AI Model Used
+## 3. Pipeline Overview
+### 3.1 High-Level Flow
+### 3.2 Detailed Pipeline
+## 4. Key Files and Roles
+## 5. The Analysis Prompt
+### 5.1 Location
+### 5.2 Complete Prompt (Full Text)
+### 5.3 Placeholders
+### 5.4 Output Format
+### 5.5 Generation Config
+## 6. How the Script Analysis Works
+### 6.1 End-to-End Flow
+### 6.2 Prompt Assembly
+### 6.3 API Request
+### 6.4 Response Handling
+### 6.5 Error Handling and Fallbacks
+### 6.6 Mock Analysis Fallback
+### 6.7 Database Persistence
+### 6.8 Display
+## 7. Articles and Regulations the Analysis Depends On
+### 7.1 Explicit References in the Code
+### 7.2 Implicit Regulatory Basis
+### 7.3 No Direct Article References
+### 7.4 Risk Levels and Triggers
+## 8. Text Extraction
+### 8.1 Current Flow
+### 8.2 Prepared but Unused
+## 9. Database Schema
+### 9.1 Tables
+### 9.2 Migration
+## 10. Dependencies
+## 11. Summary Table
+## 12. Recommendations
+
+### FILE: SCRIPT_ANALYSIS_FEATURE_REPORT2.md
+# Script Analysis Feature — Technical Report
+## 1. Executive Summary
+## 2. AI Model Used
+## 3. Pipeline Overview
+### 3.1 High-Level Flow
+### 3.2 Detailed Pipeline
+## 4. Key Files and Roles
+## 5. The Analysis Prompt
+### 5.1 Location
+### 5.2 Prompt Structure
+### 5.3 Placeholders
+### 5.4 Output Format
+### 5.5 Generation Config
+## 6. Articles and Regulations the Analysis Depends On
+### 6.1 Explicit References in the Code
+### 6.2 Implicit Regulatory Basis
+### 6.3 No Direct Article References
+### 6.4 Risk Levels and Triggers
+## 7. Text Extraction
+### 7.1 Current Flow
+### 7.2 Prepared but Unused
+## 8. Database Schema
+### 8.1 Tables
+### 8.2 Migration
+## 9. Dependencies
+## 10. Summary Table
+## 11. Recommendations
+
+### FILE: supabase\functions\_shared\fonts\README.md
+# PDF Fonts (Roboto + Cairo)
+

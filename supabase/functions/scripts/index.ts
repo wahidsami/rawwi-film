@@ -66,6 +66,7 @@ type ScriptRow = {
   type: string;
   work_classification: string | null;
   episode_count: number | null;
+  expected_rank: string | null;
   received_at: string | null;
   status: string;
   synopsis: string | null;
@@ -86,6 +87,7 @@ function toScriptFrontend(row: ScriptRow) {
     type,
     workClassification: row.work_classification ?? undefined,
     episodeCount: row.episode_count ?? null,
+    expectedRank: row.expected_rank ?? null,
     receivedAt: row.received_at ?? null,
     synopsis: row.synopsis ?? undefined,
     fileUrl: row.file_url ?? undefined,
@@ -697,7 +699,7 @@ Deno.serve(async (req: Request) => {
   if (method === "GET" && rest === "") {
     let query = supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("is_quick_analysis", false)
       .order("created_at", { ascending: false });
     const seeAll = await isSuperAdminOrAdmin(supabase, uid);
@@ -749,7 +751,10 @@ Deno.serve(async (req: Request) => {
       synopsis: typeof body.synopsis === "string" ? body.synopsis.trim() || null : null,
       work_classification: normalizeWorkClassification(body.workClassification ?? body.work_classification),
       episode_count: normalizeEpisodeCount(body.episodeCount ?? body.episode_count),
-      received_at: normalizeReceivedAt(body.receivedAt ?? body.received_at),
+      expected_rank: typeof body.expectedRank === "string" && body.expectedRank.trim()
+        ? body.expectedRank.trim().toLowerCase()
+        : (typeof body.expected_rank === "string" && body.expected_rank.trim() ? body.expected_rank.trim().toLowerCase() : "medium"),
+      received_at: normalizeReceivedAt(body.receivedAt ?? body.received_at ?? new Date().toISOString()),
       file_url: null,
       created_by: uid,
       assignee_id: uid,
@@ -758,7 +763,7 @@ Deno.serve(async (req: Request) => {
     const { data: row, error } = await supabase
       .from("scripts")
       .insert(insert)
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .single();
     if (error || !row) {
       console.error(`[scripts] correlationId=${correlationId} quick insert error=`, error?.message);
@@ -782,7 +787,7 @@ Deno.serve(async (req: Request) => {
   if (method === "GET" && rest === "quick") {
     const { data: rows, error } = await supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("is_quick_analysis", true)
       .eq("created_by", uid)
       .order("created_at", { ascending: false });
@@ -1304,7 +1309,7 @@ Deno.serve(async (req: Request) => {
     const scriptId = rest.trim();
     const { data: row, error } = await supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("id", scriptId)
       .maybeSingle();
     if (error) return json({ error: error.message }, 500);
@@ -1406,7 +1411,7 @@ Deno.serve(async (req: Request) => {
           scriptId: row.id,
           scriptTitle: row.title,
           createdAt: row.created_at,
-          contextType: row.is_quick_analysis === true ? "quick_analysis" as const : "client" as const,
+          contextType: row.is_quick_analysis === true ? "quick_analysis" : "client",
           contextLabel: row.is_quick_analysis === true
             ? "Quick Analysis"
             : (duplicateCompanyId ? duplicateClientNameById.get(duplicateCompanyId) ?? null : null),
@@ -1446,7 +1451,10 @@ Deno.serve(async (req: Request) => {
       type: normalizeType(type),
       work_classification: workClassification,
       episode_count: normalizeEpisodeCount(body.episodeCount ?? body.episode_count),
-      received_at: normalizeReceivedAt(body.receivedAt ?? body.received_at),
+      expected_rank: typeof body.expectedRank === "string" && body.expectedRank.trim()
+        ? body.expectedRank.trim().toLowerCase()
+        : (typeof body.expected_rank === "string" && body.expected_rank.trim() ? body.expected_rank.trim().toLowerCase() : "medium"),
+      received_at: normalizeReceivedAt(body.receivedAt ?? body.received_at ?? new Date().toISOString()),
       status: normalizeStatus(status),
       synopsis: typeof body.synopsis === "string" ? body.synopsis.trim() || null : null,
       file_url: typeof body.fileUrl === "string" ? body.fileUrl.trim() || null : null,
@@ -1814,7 +1822,7 @@ Deno.serve(async (req: Request) => {
     // Fetch updated script
     const { data: updated } = await supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
       .eq("id", scriptId)
       .single();
 
@@ -1867,6 +1875,12 @@ Deno.serve(async (req: Request) => {
     if (body.episodeCount !== undefined || body.episode_count !== undefined) {
       updates.episode_count = normalizeEpisodeCount(body.episodeCount ?? body.episode_count);
     }
+    if (body.expectedRank !== undefined || body.expected_rank !== undefined) {
+      const expectedRankValue = typeof (body.expectedRank ?? body.expected_rank) === "string"
+        ? String(body.expectedRank ?? body.expected_rank).trim().toLowerCase()
+        : "";
+      if (expectedRankValue) updates.expected_rank = expectedRankValue;
+    }
     if (body.receivedAt !== undefined || body.received_at !== undefined) {
       updates.received_at = normalizeReceivedAt(body.receivedAt ?? body.received_at);
     }
@@ -1905,7 +1919,7 @@ Deno.serve(async (req: Request) => {
       .from("scripts")
       .update(updates)
       .eq("id", scriptId)
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
       .single();
 
     if (updateErr) {
@@ -1942,7 +1956,7 @@ Deno.serve(async (req: Request) => {
       .from("scripts")
       .update({ status: "canceled" })
       .eq("id", scriptId)
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .single();
     if (updateErr || !updated) {
       console.error(`[scripts] correlationId=${correlationId} soft-cancel error=`, updateErr?.message);

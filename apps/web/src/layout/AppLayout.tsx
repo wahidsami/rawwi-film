@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { formatDateTime } from '@/utils/dateFormat';
+import { supabase } from '@/lib/supabaseClient';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useDataStore } from '@/store/dataStore';
@@ -138,6 +139,27 @@ export function AppLayout() {
     notificationsApi.getUnreadCount().then(r => setNotifUnreadCount(r.unreadCount)).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`notifications:${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
+        notificationsApi.getUnreadCount().then(r => setNotifUnreadCount(r.unreadCount)).catch(() => {});
+        if (notifOpen) {
+          notificationsApi.getList().then(r => {
+            setNotifList(r.data);
+            setNotifUnreadCount(r.unreadCount);
+          }).catch(() => {});
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, notifOpen]);
+
   const openNotifPanel = useCallback(() => {
     const nextOpen = !notifOpen;
     if (!notifOpen) {
@@ -194,6 +216,7 @@ export function AppLayout() {
   const getNotifIcon = useCallback((type: string) => {
     if (type === 'client_registration_arrived') return UserPlus;
     if (type === 'client_submission' || type === 'script_assigned') return FileText;
+    if (type === 'duplicate_script_content') return FileText;
     if (type === 'certificate_payment_completed') return Receipt;
     if (type === 'certificate_issued') return BadgeCheck;
     return Bell;
@@ -205,6 +228,7 @@ export function AppLayout() {
     if (type === 'script_assigned') return lang === 'ar' ? 'إسناد نص' : 'Script Assigned';
     if (type === 'certificate_payment_completed') return lang === 'ar' ? 'سداد رسوم الشهادة' : 'Certificate Payment';
     if (type === 'certificate_issued') return lang === 'ar' ? 'إصدار شهادة' : 'Certificate Issued';
+    if (type === 'duplicate_script_content') return lang === 'ar' ? 'تكرار نص' : 'Duplicate Script';
     return lang === 'ar' ? 'إشعار' : 'Notification';
   }, [lang]);
 
