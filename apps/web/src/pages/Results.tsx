@@ -1126,11 +1126,17 @@ export function Results() {
     }
     const evidence = compactWhitespace(rf.evidenceSnippet);
     if (evidence.length < 4) return undefined;
-    return findings.find((f) => {
+    const byArticle = findings.find((f) => {
       const snippet = compactWhitespace(f.evidenceSnippet);
       if (!snippet) return false;
       const articleMatches = (f.articleId ?? 0) === (rf.primaryArticleId ?? 0);
       return articleMatches && (snippet.includes(evidence) || evidence.includes(snippet));
+    });
+    if (byArticle) return byArticle;
+    return findings.find((f) => {
+      const snippet = compactWhitespace(f.evidenceSnippet);
+      if (!snippet) return false;
+      return snippet.includes(evidence) || evidence.includes(snippet);
     });
   }
 
@@ -1143,11 +1149,17 @@ export function Results() {
     }
     const evidence = compactWhitespace(raw.evidenceSnippet);
     if (evidence.length < 4) return undefined;
-    return reviewFindings.find((review) => {
+    const byArticle = reviewFindings.find((review) => {
       const snippet = compactWhitespace(review.evidenceSnippet);
       if (!snippet) return false;
       const articleMatches = (review.primaryArticleId ?? 0) === (raw.articleId ?? 0);
       return articleMatches && (snippet.includes(evidence) || evidence.includes(snippet));
+    });
+    if (byArticle) return byArticle;
+    return reviewFindings.find((review) => {
+      const snippet = compactWhitespace(review.evidenceSnippet);
+      if (!snippet) return false;
+      return snippet.includes(evidence) || evidence.includes(snippet);
     });
   }
 

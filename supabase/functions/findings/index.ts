@@ -202,11 +202,28 @@ async function findReviewFindingIdsForRawFinding(
     .from("analysis_review_findings")
     .select("id, evidence_snippet")
     .eq("report_id", reportId)
+    .eq("source_kind", sourceKind)
+    .eq("is_hidden", false);
+  const candidates = ((data ?? []) as Array<{ id: string; evidence_snippet?: string | null }>)
+    .filter((item) => {
+      const candidate = compactWhitespace(item.evidence_snippet);
+      if (!candidate || !evidence) return false;
+      return candidate.includes(evidence) || evidence.includes(candidate);
+    });
+
+  if (candidates.length > 0) {
+    return candidates.map((item) => item.id).filter(Boolean);
+  }
+
+  const { data: articleScoped } = await supabase
+    .from("analysis_review_findings")
+    .select("id, evidence_snippet")
+    .eq("report_id", reportId)
     .eq("primary_article_id", articleId)
     .eq("source_kind", sourceKind)
     .eq("is_hidden", false);
 
-  return ((data ?? []) as Array<{ id: string; evidence_snippet?: string | null }>)
+  return ((articleScoped ?? []) as Array<{ id: string; evidence_snippet?: string | null }>)
     .filter((item) => {
       const candidate = compactWhitespace(item.evidence_snippet);
       if (!candidate || !evidence) return false;

@@ -23,7 +23,8 @@ function row(overrides: Partial<Parameters<typeof normalizeReviewFindingConsiste
   });
   const result = normalizeReviewFindingConsistency(input, "ناصر: حضربك لين اسيل دمك. طالب يضحك.");
   assert.equal(result.title_ar, "إيذاء الطفل وذوي الإعاقة");
-  assert.equal(result.primary_article_id, 8);
+  assert.equal(result.primary_article_id, 6);
+  assert.equal(result.primary_atom_id, "6-3");
   assert.match(result.rationale_ar ?? "", /إيذاء الطفل/);
   assert.ok((result.anchor_confidence ?? 1) < 1);
 }
@@ -36,7 +37,7 @@ function row(overrides: Partial<Parameters<typeof normalizeReviewFindingConsiste
   });
   const result = normalizeReviewFindingConsistency(input, "فهد يخاطب مها: سمعت إنك تتكلمين! تبي تفضحيني؟! يمسك ذراعها بقوة.");
   assert.equal(result.title_ar, "الإساءة إلى المرأة أو تعنيفها");
-  assert.equal(result.primary_article_id, 12);
+  assert.equal(result.primary_article_id, 7);
   assert.match(result.rationale_ar ?? "", /مرأة/);
 }
 
@@ -48,7 +49,8 @@ function row(overrides: Partial<Parameters<typeof normalizeReviewFindingConsiste
   });
   const result = normalizeReviewFindingConsistency(input, "أستاذ… عيب… هو طفل. سامي كان خائفًا من تهديد المعلم.");
   assert.equal(result.title_ar, "إيذاء الطفل وذوي الإعاقة");
-  assert.equal(result.primary_article_id, 8);
+  assert.equal(result.primary_article_id, 6);
+  assert.equal(result.primary_atom_id, "6-3");
 }
 
 {
@@ -59,7 +61,7 @@ function row(overrides: Partial<Parameters<typeof normalizeReviewFindingConsiste
   });
   const result = normalizeReviewFindingConsistency(input, "فهد: يلعن امها دولة.");
   assert.equal(result.title_ar, "الإساءة للمجتمع أو الهوية الوطنية");
-  assert.equal(result.primary_article_id, 5);
+  assert.equal(result.primary_article_id, 8);
 }
 
 console.log("All review finding consistency tests passed.");

@@ -751,8 +751,13 @@ function matchWorkspaceRawFindingForReview(
   const articleId = Number.isFinite(reviewFinding.primaryArticleId) ? Number(reviewFinding.primaryArticleId) : null;
   const snippet = (reviewFinding.evidenceSnippet ?? '').replace(/\s+/g, ' ').trim();
   if (!snippet || snippet.length < 4) return undefined;
-  return findings.find((finding) => {
+  const byArticle = findings.find((finding) => {
     if (articleId != null && finding.articleId !== articleId) return false;
+    const evidence = (finding.evidenceSnippet ?? '').replace(/\s+/g, ' ').trim();
+    return evidence.includes(snippet) || snippet.includes(evidence);
+  });
+  if (byArticle) return byArticle;
+  return findings.find((finding) => {
     const evidence = (finding.evidenceSnippet ?? '').replace(/\s+/g, ' ').trim();
     return evidence.includes(snippet) || snippet.includes(evidence);
   });

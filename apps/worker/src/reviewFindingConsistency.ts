@@ -1,6 +1,7 @@
 type ReviewFindingLike = {
   source_kind: "ai" | "glossary" | "manual" | "special";
   primary_article_id: number;
+  primary_atom_id?: string | null;
   title_ar: string;
   rationale_ar: string | null;
   evidence_snippet: string;
@@ -9,24 +10,24 @@ type ReviewFindingLike = {
   anchor_confidence: number | null;
 };
 
-const TITLE_PRIMARY_ARTICLE_MAP: Array<{ pattern: RegExp; articleId: number }> = [
-  { pattern: /المساس\s+بالثوابت\s+الدينية/u, articleId: 1 },
-  { pattern: /المساس\s+بالقيادة\s+السياسية/u, articleId: 2 },
-  { pattern: /الإضرار\s+بالأمن\s+الوطني/u, articleId: 3 },
-  { pattern: /المحتوى\s+التاريخي\s+غير\s+الموثوق/u, articleId: 4 },
-  { pattern: /الإساءة\s+للمجتمع\s+أو\s+الهوية\s+الوطنية/u, articleId: 5 },
-  { pattern: /محتوى\s+الجرائم\s+الموجه\s+للأطفال/u, articleId: 6 },
-  { pattern: /الترويج\s+للمخدرات\s+والمسكرات/u, articleId: 7 },
-  { pattern: /إيذاء\s+الطفل\s+وذوي\s+الإعاقة/u, articleId: 8 },
-  { pattern: /المحتوى\s+الجنسي\s+غير\s+المناسب/u, articleId: 9 },
-  { pattern: /المشاهد\s+الجنسية\s+الصريحة/u, articleId: 10 },
-  { pattern: /الألفاظ\s+النابية/u, articleId: 11 },
-  { pattern: /الإساءة\s+إلى\s+المرأة\s+أو\s+تعنيفها/u, articleId: 12 },
-  { pattern: /تقويض\s+قيم\s+الأسرة/u, articleId: 13 },
-  { pattern: /الإساءة\s+إلى\s+الوالدين/u, articleId: 14 },
-  { pattern: /الإساءة\s+إلى\s+كبار\s+السن/u, articleId: 15 },
-  { pattern: /التنمر\s+الجارح\s+والسخرية/u, articleId: 16 },
-  { pattern: /^مخالفة\s+محتوى$|^أخرى$/u, articleId: 17 },
+const TITLE_PRIMARY_ARTICLE_MAP: Array<{ pattern: RegExp; articleId: number; atomId?: string | null }> = [
+  { pattern: /المساس\s+بالثوابت\s+الدينية/u, articleId: 4, atomId: null },
+  { pattern: /المساس\s+بالقيادة\s+السياسية/u, articleId: 13, atomId: null },
+  { pattern: /الإضرار\s+بالأمن\s+الوطني/u, articleId: 12, atomId: null },
+  { pattern: /المحتوى\s+التاريخي\s+غير\s+الموثوق/u, articleId: 16, atomId: null },
+  { pattern: /الإساءة\s+للمجتمع\s+أو\s+الهوية\s+الوطنية/u, articleId: 8, atomId: null },
+  { pattern: /محتوى\s+الجرائم\s+الموجه\s+للأطفال/u, articleId: 6, atomId: "6-2" },
+  { pattern: /الترويج\s+للمخدرات\s+والمسكرات/u, articleId: 10, atomId: null },
+  { pattern: /إيذاء\s+الطفل\s+وذوي\s+الإعاقة/u, articleId: 6, atomId: "6-3" },
+  { pattern: /المحتوى\s+الجنسي\s+غير\s+المناسب/u, articleId: 9, atomId: "9-4" },
+  { pattern: /المشاهد\s+الجنسية\s+الصريحة/u, articleId: 9, atomId: null },
+  { pattern: /الألفاظ\s+النابية/u, articleId: 5, atomId: null },
+  { pattern: /الإساءة\s+إلى\s+المرأة\s+أو\s+تعنيفها/u, articleId: 7, atomId: null },
+  { pattern: /تقويض\s+قيم\s+الأسرة/u, articleId: 17, atomId: null },
+  { pattern: /الإساءة\s+إلى\s+الوالدين/u, articleId: 17, atomId: "17-14" },
+  { pattern: /الإساءة\s+إلى\s+كبار\s+السن/u, articleId: 17, atomId: "17-15" },
+  { pattern: /التنمر\s+الجارح\s+والسخرية/u, articleId: 17, atomId: "17-16" },
+  { pattern: /^مخالفة\s+محتوى$|^أخرى$/u, articleId: 4, atomId: null },
 ];
 
 const QUOTED_TEXT_RE = /["“”'‘’«»]([^"“”'‘’«»]{2,160})["“”'‘’«»]/gu;
@@ -151,10 +152,14 @@ function fallbackRationale(title: string, evidence: string): string {
   return "يتطلب تقييم مراجع مختص.";
 }
 
-function inferPrimaryArticleIdFromTitle(title: string, fallbackId: number): number {
+function inferPrimaryArticleMappingFromTitle(
+  title: string,
+  fallbackId: number,
+): { articleId: number; atomId?: string | null } {
   const compactTitle = compact(title);
   const hit = TITLE_PRIMARY_ARTICLE_MAP.find((item) => item.pattern.test(compactTitle));
-  return hit?.articleId ?? fallbackId;
+  if (!hit) return { articleId: fallbackId };
+  return { articleId: hit.articleId, atomId: hit.atomId };
 }
 
 export function normalizeReviewFindingConsistency<T extends ReviewFindingLike>(
@@ -192,11 +197,12 @@ export function normalizeReviewFindingConsistency<T extends ReviewFindingLike>(
     title !== row.title_ar || rationale_ar !== row.rationale_ar
       ? Math.min(row.anchor_confidence ?? 1, 0.72)
       : row.anchor_confidence;
-  const primary_article_id = inferPrimaryArticleIdFromTitle(title, row.primary_article_id);
+  const remapped = inferPrimaryArticleMappingFromTitle(title, row.primary_article_id);
 
   return {
     ...row,
-    primary_article_id,
+    primary_article_id: remapped.articleId,
+    ...(remapped.atomId !== undefined ? { primary_atom_id: remapped.atomId } : {}),
     title_ar: title,
     rationale_ar,
     anchor_confidence,
