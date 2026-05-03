@@ -17,6 +17,7 @@ import { clearCachedJobResources } from "./jobAnalysisCache.js";
 import { shouldSkipRevisitForJob, shouldSkipScriptSummaryForJob } from "./performanceGating.js";
 import { config } from "./config.js";
 import { containsAnyNormalized } from "./textDetectionNormalize.js";
+import { normalizeReviewFindingConsistency } from "./reviewFindingConsistency.js";
 
 export type SummaryJson = {
   job_id: string;
@@ -670,9 +671,11 @@ async function materializeReviewFindings(
   reportId: string,
   summary: SummaryJson,
   versionId: string,
+  fullScriptText: string | null = null,
 ): Promise<void> {
   const priorRows = await loadPriorReviewFindingRows(reportId, summary.script_id, versionId);
-  const baseRows = buildReviewFindingRows(reportId, summary, versionId);
+  const baseRows = buildReviewFindingRows(reportId, summary, versionId)
+    .map((row) => normalizeReviewFindingConsistency(row, fullScriptText));
   const carriedRows = baseRows.map((row) => applyPriorReviewState(row, pickPriorReviewFindingMatch(row, priorRows)));
   const manualRows = (await buildManualReviewRowsForJob(reportId, summary, versionId)).map((row) =>
     applyPriorReviewState(row, pickPriorReviewFindingMatch(row, priorRows))
@@ -1909,7 +1912,7 @@ export async function runAggregation(jobId: string): Promise<void> {
   }
   const reportId = (savedReport as { id?: string } | null)?.id ?? null;
   if (reportId) {
-    await materializeReviewFindings(reportId, summary, job.version_id);
+    await materializeReviewFindings(reportId, summary, job.version_id, fullScriptText);
   }
 
   if (!isPartialReport) {
