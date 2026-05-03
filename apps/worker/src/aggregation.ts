@@ -520,8 +520,7 @@ function applyPriorReviewState(
 
   const hasPersistentReviewerEdit =
     prior.source_kind === "manual" ||
-    Boolean(prior.edited_at) ||
-    Boolean(prior.edited_by);
+    prior.is_manual === true;
 
   const carried: ReviewFindingInsertRow = {
     ...row,
@@ -539,6 +538,9 @@ function applyPriorReviewState(
     return carried;
   }
 
+  // Only manual rows carry prior classification text/metadata.
+  // For AI/glossary rows, stale prior edits (e.g. action text edits) must not override
+  // freshly materialized evidence-based classification.
   return {
     ...carried,
     primary_article_id: prior.primary_article_id || row.primary_article_id,
@@ -676,7 +678,9 @@ async function materializeReviewFindings(
   const priorRows = await loadPriorReviewFindingRows(reportId, summary.script_id, versionId);
   const baseRows = buildReviewFindingRows(reportId, summary, versionId)
     .map((row) => normalizeReviewFindingConsistency(row, fullScriptText));
-  const carriedRows = baseRows.map((row) => applyPriorReviewState(row, pickPriorReviewFindingMatch(row, priorRows)));
+  const carriedRows = baseRows
+    .map((row) => applyPriorReviewState(row, pickPriorReviewFindingMatch(row, priorRows)))
+    .map((row) => normalizeReviewFindingConsistency(row, fullScriptText));
   const manualRows = (await buildManualReviewRowsForJob(reportId, summary, versionId)).map((row) =>
     applyPriorReviewState(row, pickPriorReviewFindingMatch(row, priorRows))
   );
