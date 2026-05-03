@@ -9,6 +9,26 @@ type ReviewFindingLike = {
   anchor_confidence: number | null;
 };
 
+const TITLE_PRIMARY_ARTICLE_MAP: Array<{ pattern: RegExp; articleId: number }> = [
+  { pattern: /المساس\s+بالثوابت\s+الدينية/u, articleId: 1 },
+  { pattern: /المساس\s+بالقيادة\s+السياسية/u, articleId: 2 },
+  { pattern: /الإضرار\s+بالأمن\s+الوطني/u, articleId: 3 },
+  { pattern: /المحتوى\s+التاريخي\s+غير\s+الموثوق/u, articleId: 4 },
+  { pattern: /الإساءة\s+للمجتمع\s+أو\s+الهوية\s+الوطنية/u, articleId: 5 },
+  { pattern: /محتوى\s+الجرائم\s+الموجه\s+للأطفال/u, articleId: 6 },
+  { pattern: /الترويج\s+للمخدرات\s+والمسكرات/u, articleId: 7 },
+  { pattern: /إيذاء\s+الطفل\s+وذوي\s+الإعاقة/u, articleId: 8 },
+  { pattern: /المحتوى\s+الجنسي\s+غير\s+المناسب/u, articleId: 9 },
+  { pattern: /المشاهد\s+الجنسية\s+الصريحة/u, articleId: 10 },
+  { pattern: /الألفاظ\s+النابية/u, articleId: 11 },
+  { pattern: /الإساءة\s+إلى\s+المرأة\s+أو\s+تعنيفها/u, articleId: 12 },
+  { pattern: /تقويض\s+قيم\s+الأسرة/u, articleId: 13 },
+  { pattern: /الإساءة\s+إلى\s+الوالدين/u, articleId: 14 },
+  { pattern: /الإساءة\s+إلى\s+كبار\s+السن/u, articleId: 15 },
+  { pattern: /التنمر\s+الجارح\s+والسخرية/u, articleId: 16 },
+  { pattern: /^مخالفة\s+محتوى$|^أخرى$/u, articleId: 17 },
+];
+
 const QUOTED_TEXT_RE = /["“”'‘’«»]([^"“”'‘’«»]{2,160})["“”'‘’«»]/gu;
 const RELIGIOUS_RE = /(الله|الرب|الدين|الإسلام|مسلم|مسلمين|قرآن|القرآن|النبي|رسول|الصلاة|المسجد|الحرم|الكعبة|الشريعة|العقيدة|العبادة|المقدسات|ثوابت\s+دينية)/u;
 const POLITICAL_RE = /(القيادة|الحكم|النظام|الرئيس|الملك|ولي\s+العهد|الحكومة|الدولة|السلطة|انقلاب|إسقاط|انتفاضة|تمرد|ثورة|الخروج\s+للشارع|جهة\s+رسمية|الجهات\s+الرسمية)/u;
@@ -131,6 +151,12 @@ function fallbackRationale(title: string, evidence: string): string {
   return "يتطلب تقييم مراجع مختص.";
 }
 
+function inferPrimaryArticleIdFromTitle(title: string, fallbackId: number): number {
+  const compactTitle = compact(title);
+  const hit = TITLE_PRIMARY_ARTICLE_MAP.find((item) => item.pattern.test(compactTitle));
+  return hit?.articleId ?? fallbackId;
+}
+
 export function normalizeReviewFindingConsistency<T extends ReviewFindingLike>(
   row: T,
   fullText: string | null | undefined,
@@ -166,9 +192,11 @@ export function normalizeReviewFindingConsistency<T extends ReviewFindingLike>(
     title !== row.title_ar || rationale_ar !== row.rationale_ar
       ? Math.min(row.anchor_confidence ?? 1, 0.72)
       : row.anchor_confidence;
+  const primary_article_id = inferPrimaryArticleIdFromTitle(title, row.primary_article_id);
 
   return {
     ...row,
+    primary_article_id,
     title_ar: title,
     rationale_ar,
     anchor_confidence,
