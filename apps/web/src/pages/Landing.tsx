@@ -13,7 +13,9 @@ import {
   LogIn,
   MapPin,
   Menu,
+  ShieldCheck,
   Shield,
+  UserRound,
   UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -295,11 +297,21 @@ export function Landing() {
               </button>
             ) : (
               <>
-                <Link to="/client/login" className="hidden text-red-500 transition hover:text-red-400 md:inline-flex">
-                  <UserPlus className="h-5 w-5" />
+                <Link
+                  to="/client/login"
+                  className="hidden text-sky-300 transition hover:text-sky-200 md:inline-flex"
+                  aria-label={isArabic ? 'تسجيل دخول العملاء' : 'Client login'}
+                  title={isArabic ? 'تسجيل دخول العملاء' : 'Client login'}
+                >
+                  <UserRound className="h-5 w-5" />
                 </Link>
-                <Link to="/login" className="text-white transition hover:text-red-500">
-                  <LogIn className="h-5 w-5" />
+                <Link
+                  to="/login"
+                  className="text-amber-400 transition hover:text-amber-300"
+                  aria-label={isArabic ? 'تسجيل دخول الإدارة' : 'Admin login'}
+                  title={isArabic ? 'تسجيل دخول الإدارة' : 'Admin login'}
+                >
+                  <ShieldCheck className="h-5 w-5" />
                 </Link>
               </>
             )}
