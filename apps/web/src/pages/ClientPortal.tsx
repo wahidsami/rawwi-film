@@ -945,6 +945,7 @@ export function ClientPortal() {
       const created = await scriptsApi.addScript(scriptPayload);
 
       createdScriptId = created.id;
+      const duplicateTitleWarning = created.warnings?.find((warning) => warning.code === 'duplicate_title_same_client');
       if (entryMode === 'upload') {
         const upload = await uploadScriptDocument(created.id, profile.company.companyId, file!);
         if (!upload.versionId) {
@@ -995,9 +996,11 @@ export function ClientPortal() {
       setManualText('');
       setEntryMode('upload');
       setUploaderKey((v) => v + 1);
-      setNotice(lang === 'ar'
-        ? 'تم إرسال النص بنجاح، وسيتم مراجعته من فريق الإدارة.'
-        : 'Script submitted successfully and sent to admin review.');
+      setNotice(duplicateTitleWarning
+        ? (lang === 'ar' ? duplicateTitleWarning.message : (duplicateTitleWarning.messageEn ?? duplicateTitleWarning.message))
+        : (lang === 'ar'
+          ? 'تم إرسال النص بنجاح، وسيتم مراجعته من فريق الإدارة.'
+          : 'Script submitted successfully and sent to admin review.'));
       setActiveSection('scripts');
       await loadProfileAndSubmissions();
     } catch (err) {
@@ -1045,9 +1048,13 @@ export function ClientPortal() {
           status: 'draft',
           createdAt: new Date().toISOString(),
         };
-        await scriptsApi.addScript(scriptPayload);
+        const created = await scriptsApi.addScript(scriptPayload);
+        const duplicateTitleWarning = created.warnings?.find((warning) => warning.code === 'duplicate_title_same_client');
+        if (duplicateTitleWarning) {
+          setNotice(lang === 'ar' ? duplicateTitleWarning.message : (duplicateTitleWarning.messageEn ?? duplicateTitleWarning.message));
+        }
       }
-      setNotice(lang === 'ar' ? 'تم حفظ النص كمسودة.' : 'Script saved as draft.');
+      setNotice((current) => current || (lang === 'ar' ? 'تم حفظ النص كمسودة.' : 'Script saved as draft.'));
       setEditingDraft(null);
       await loadProfileAndSubmissions();
       setActiveSection('scripts');
@@ -1427,15 +1434,15 @@ export function ClientPortal() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <p className="text-xs font-medium uppercase tracking-[0.24em] text-white/70">
-              {lang === 'ar' ? 'مرحلة التأسيس' : 'Foundation Phase'}
+              {lang === 'ar' ? 'مرحباً بك في بوابة راوي' : 'Welcome to Raawi'}
             </p>
             <h2 className="mt-3 text-2xl font-bold md:text-3xl">
-              {lang === 'ar' ? 'لوحة عميل جديدة على نفس العمود الفقري للنظام' : 'A new client dashboard on the same system backbone'}
+              {lang === 'ar' ? 'مساحتك الجديدة لإرسال النصوص ومتابعة التقارير' : 'Your workspace for submissions, reports, and certificates'}
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80 md:text-base">
               {lang === 'ar'
-                ? 'هذا الإصدار يضع الغلاف الجديد والأقسام الأساسية دون كسر الربط الحالي مع الإدارة والتقارير. سنضيف المحرر والتقسيم الذكي للمشاهد على مراحل آمنة.'
-                : 'This phase introduces the new shell and core sections without breaking the current admin/report wiring. Editor and smart scene splitting will follow in safe phases.'}
+                ? 'أصبحت بوابة العميل جاهزة لاستقبال أعمالك ومتابعة حالتها خطوة بخطوة، من رفع النص وحتى التقرير والشهادات، بتجربة واضحة ومرتبطة مباشرة بفريق المراجعة.'
+                : 'Your client portal is ready for new work, with clear tracking from script upload through review reports and certificates, all connected directly to the review team.'}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 md:min-w-[300px]">

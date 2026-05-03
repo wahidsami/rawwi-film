@@ -399,6 +399,70 @@ async function notifyAdminsOnClientSubmission(
   }
 }
 
+async function notifyAdminsOnDuplicateClientScriptTitle(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  payload: {
+    scriptId: string;
+    scriptTitle: string;
+    companyId: string;
+    submittedByUserId: string;
+    duplicateMatches: Array<{
+      scriptId: string;
+      scriptTitle: string;
+      createdAt: string;
+      companyId: string | null;
+      contextType: "client" | "quick_analysis";
+      contextLabel: string | null;
+    }>;
+  },
+): Promise<void> {
+  if (payload.duplicateMatches.length === 0) return;
+
+  const [{ data: roles }, { data: adminUserRoles }, { data: company }, { data: profile }] = await Promise.all([
+    supabase.from("roles").select("id, key").in("key", ["super_admin", "admin", "regulator"]),
+    supabase.from("user_roles").select("user_id, role_id"),
+    supabase.from("clients").select("id, name_ar, name_en").eq("id", payload.companyId).maybeSingle(),
+    supabase.from("profiles").select("name").eq("user_id", payload.submittedByUserId).maybeSingle(),
+  ]);
+
+  const adminRoleIds = new Set((roles ?? []).map((r: { id: string }) => r.id));
+  const adminUserIds = [...new Set((adminUserRoles ?? [])
+    .filter((row: { role_id: string; user_id: string }) => adminRoleIds.has(row.role_id))
+    .map((row: { user_id: string }) => row.user_id))];
+  if (adminUserIds.length === 0) return;
+
+  const companyName =
+    ((company as { name_ar?: string | null; name_en?: string | null } | null)?.name_ar ??
+      (company as { name_ar?: string | null; name_en?: string | null } | null)?.name_en ??
+      "Client").trim() || "Client";
+  const submitterName =
+    ((profile as { name?: string | null } | null)?.name ?? "Client").trim() || "Client";
+
+  const title = `Duplicate script title: ${payload.scriptTitle}`;
+  const body = `${companyName} (${submitterName}) submitted a script title that already exists under another client.`;
+  const notifications = adminUserIds.map((adminUserId) => ({
+    user_id: adminUserId,
+    type: "duplicate_script_title",
+    title,
+    body,
+    metadata: {
+      script_id: payload.scriptId,
+      script_title: payload.scriptTitle,
+      company_id: payload.companyId,
+      company_name: companyName,
+      submitted_by: payload.submittedByUserId,
+      submitted_by_name: submitterName,
+      duplicate_count: payload.duplicateMatches.length,
+      duplicate_matches: payload.duplicateMatches.slice(0, 10),
+    },
+  }));
+
+  const { error } = await supabase.from("notifications").insert(notifications);
+  if (error) {
+    console.error("[scripts] notify admins on duplicate client script title:", error.message);
+  }
+}
+
 async function notifyAdminsOnClientScriptCanceled(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   payload: { scriptId: string; scriptTitle: string; companyId: string; canceledByUserId: string }
@@ -1295,6 +1359,15 @@ Deno.serve(async (req: Request) => {
     const clientId = companyId.trim();
     const normalizedTitle = String(title).trim().normalize("NFC");
     const comparableTitle = normalizeScriptTitleComparable(normalizedTitle);
+    const creationWarnings: Array<{ code: string; message: string; messageEn?: string; count?: number }> = [];
+    let crossClientDuplicateTitleMatches: Array<{
+      scriptId: string;
+      scriptTitle: string;
+      createdAt: string;
+      companyId: string | null;
+      contextType: "client" | "quick_analysis";
+      contextLabel: string | null;
+    }> = [];
     const { data: duplicateTitleRows, error: duplicateTitleErr } = await supabase
       .from("scripts")
       .select("id, title, created_at, client_id, company_id, is_quick_analysis")
@@ -1311,28 +1384,60 @@ Deno.serve(async (req: Request) => {
     }>).filter((row) => normalizeScriptTitleComparable(row.title) === comparableTitle);
     if (duplicateTitleMatches.length > 0) {
       const duplicateClientIds = [...new Set(duplicateTitleMatches.map((row) => row.company_id ?? row.client_id).filter((value): value is string => typeof value === "string" && value.length > 0))];
-      const { data: duplicateClients } = duplicateClientIds.length > 0
+      const duplicateClientsResult = duplicateClientIds.length > 0
         ? await supabase.from("clients").select("id, name_ar, name_en").in("id", duplicateClientIds)
-        : { data: [], error: null };
+        : { data: [] };
+      const duplicateClients = duplicateClientsResult.data;
       const duplicateClientNameById = new Map(
         ((duplicateClients ?? []) as Array<{ id: string; name_ar?: string | null; name_en?: string | null }>).map((row) => [
           row.id,
           row.name_ar?.trim() || row.name_en?.trim() || null,
         ]),
       );
-      const matches = duplicateTitleMatches.map((row) => {
+      const matches: Array<{
+        scriptId: string;
+        scriptTitle: string;
+        createdAt: string;
+        contextType: "client" | "quick_analysis";
+        contextLabel: string | null;
+      }> = duplicateTitleMatches.map((row) => {
         const duplicateCompanyId = row.company_id ?? row.client_id ?? null;
         return {
           scriptId: row.id,
           scriptTitle: row.title,
           createdAt: row.created_at,
-          contextType: row.is_quick_analysis === true ? "quick_analysis" : "client",
+          contextType: row.is_quick_analysis === true ? "quick_analysis" as const : "client" as const,
           contextLabel: row.is_quick_analysis === true
             ? "Quick Analysis"
             : (duplicateCompanyId ? duplicateClientNameById.get(duplicateCompanyId) ?? null : null),
         };
       });
-      return json({ error: "title already exists", matches }, 409);
+      const duplicateCompanyByScriptId = new Map(
+        duplicateTitleMatches.map((row) => [row.id, row.company_id ?? row.client_id ?? null]),
+      );
+      const sameClientMatches = matches.filter((match) => duplicateCompanyByScriptId.get(match.scriptId) === clientId);
+      if (sameClientMatches.length > 0) {
+        creationWarnings.push({
+          code: "duplicate_title_same_client",
+          message: sameClientMatches.length === 1
+            ? `تنبيه: سبق إرسال نص بنفس العنوان من حسابكم. تم قبول الإرسال ولن يؤثر ذلك على المتابعة.`
+            : `تنبيه: سبق إرسال ${sameClientMatches.length} نصوص بنفس العنوان من حسابكم. تم قبول الإرسال ولن يؤثر ذلك على المتابعة.`,
+          messageEn: sameClientMatches.length === 1
+            ? "Warning: your account has already submitted a script with this title. The submission was accepted and will continue normally."
+            : `Warning: your account has already submitted ${sameClientMatches.length} scripts with this title. The submission was accepted and will continue normally.`,
+          count: sameClientMatches.length,
+        });
+      }
+      crossClientDuplicateTitleMatches = matches
+        .filter((match) => duplicateCompanyByScriptId.get(match.scriptId) !== clientId)
+        .map((match) => ({
+          scriptId: match.scriptId,
+          scriptTitle: match.scriptTitle,
+          createdAt: match.createdAt,
+          companyId: duplicateCompanyByScriptId.get(match.scriptId) ?? null,
+          contextType: match.contextType,
+          contextLabel: match.contextLabel,
+        }));
     }
     const insert = {
       client_id: clientId,
@@ -1373,6 +1478,15 @@ Deno.serve(async (req: Request) => {
         companyId: created.company_id ?? created.client_id,
         submittedByUserId: uid,
       });
+      if (crossClientDuplicateTitleMatches.length > 0) {
+        await notifyAdminsOnDuplicateClientScriptTitle(supabase, {
+          scriptId: created.id,
+          scriptTitle: created.title,
+          companyId: created.company_id ?? created.client_id,
+          submittedByUserId: uid,
+          duplicateMatches: crossClientDuplicateTitleMatches,
+        });
+      }
     }
     logAuditCanonical(supabase, {
       event_type: "SCRIPT_CREATED",
@@ -1384,7 +1498,10 @@ Deno.serve(async (req: Request) => {
       correlation_id: correlationId,
       metadata: { company_id: created.company_id ?? created.client_id, type: created.type },
     }).catch((e) => console.warn("[scripts] audit SCRIPT_CREATED:", e));
-    return json(toScriptFrontend(created));
+    return json({
+      ...toScriptFrontend(created),
+      ...(creationWarnings.length > 0 ? { warnings: creationWarnings } : {}),
+    });
   }
 
   // POST /scripts/versions

@@ -155,7 +155,11 @@ export function ClientPortalLayout({
             </div>
 
             <div className="flex flex-wrap items-center gap-2 md:gap-3">
-              {subscriptionLabel ? <Badge variant="success">{subscriptionLabel}</Badge> : null}
+              {subscriptionLabel ? (
+                <span className="hidden" aria-hidden="true">
+                  <Badge variant="success">{subscriptionLabel}</Badge>
+                </span>
+              ) : null}
               <Badge variant="outline">
                 {isArabic ? `إجمالي النصوص: ${summary.totalScripts}` : `Total Scripts: ${summary.totalScripts}`}
               </Badge>

@@ -107,6 +107,12 @@ export interface Script {
   created_by?: string;
   currentVersionId?: string;
   isQuickAnalysis?: boolean;
+  warnings?: Array<{
+    code: string;
+    message: string;
+    messageEn?: string;
+    count?: number;
+  }>;
 }
 
 /** Assignment task (script assigned to user for review) — used by addTask / legacy UI. */
