@@ -295,7 +295,7 @@ export function Landing() {
               </button>
             ) : (
               <>
-                <Link to="/portal/register" className="hidden text-red-500 transition hover:text-red-400 md:inline-flex">
+                <Link to="/client/login" className="hidden text-red-500 transition hover:text-red-400 md:inline-flex">
                   <UserPlus className="h-5 w-5" />
                 </Link>
                 <Link to="/login" className="text-white transition hover:text-red-500">
