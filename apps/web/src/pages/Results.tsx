@@ -1900,6 +1900,32 @@ export function Results() {
       : (f.sourceKind === 'manual' ? (lang === 'ar' ? 'تعليق يدوي:' : 'Manual comment:') : (lang === 'ar' ? 'ملاحظة المراجع:' : 'Reviewer note:'));
     const isExcludedFromReport = f.includeInReport === false;
     const isReportVisibilitySaving = reportVisibilitySavingId === f.id;
+    const reportInclusionToggle = (
+      <div
+        className={cn(
+          "inline-flex h-8 items-center gap-2 rounded-lg border px-2.5 text-[11px] transition-colors",
+          isExcludedFromReport
+            ? "border-error/30 bg-error/5 text-error"
+            : "border-success/30 bg-success/5 text-success"
+        )}
+      >
+        {isReportVisibilitySaving && <Loader2 className="h-3 w-3 animate-spin" />}
+        <span className="font-medium whitespace-nowrap">
+          {lang === 'ar' ? 'تضمين في التقرير' : 'Include in report'}
+        </span>
+        <Switch
+          checked={!isExcludedFromReport}
+          onCheckedChange={() => handleToggleReviewFindingReportVisibility(f)}
+          disabled={isReportVisibilitySaving}
+          aria-label={lang === 'ar' ? 'تضمين الملاحظة في التقرير' : 'Include finding in report'}
+        />
+        <span className="min-w-12 text-center font-semibold whitespace-nowrap">
+          {isExcludedFromReport
+            ? (lang === 'ar' ? 'مستبعد' : 'Excluded')
+            : (lang === 'ar' ? 'مضمن' : 'Included')}
+        </span>
+      </div>
+    );
 
     return (
       <div key={f.id} className={cn("border rounded-lg p-4", isApproved ? "bg-success/5 border-success/20" : "bg-surface border-border")}>
@@ -2017,25 +2043,7 @@ export function Results() {
               <Search className="w-3 h-3" />
               {lang === 'ar' ? 'التتبع' : 'Trace'}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className={cn(
-                "h-7 text-[11px] gap-1 border text-white",
-                isExcludedFromReport
-                  ? "bg-error border-error hover:bg-error/90"
-                  : "bg-success border-success hover:bg-success/90"
-              )}
-              onClick={() => handleToggleReviewFindingReportVisibility(f)}
-              disabled={isReportVisibilitySaving}
-            >
-              {isReportVisibilitySaving ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
-              ) : null}
-              {isExcludedFromReport
-                ? (lang === 'ar' ? 'مستبعد' : 'Excluded')
-                : (lang === 'ar' ? 'ضمن التقرير' : 'In Report')}
-            </Button>
+            {reportInclusionToggle}
             {!isApproved && (
               <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 text-success border-success/30 hover:bg-success/10"
                 onClick={() => { setReviewModal({ findingId: matchedRaw.id, toStatus: 'approved', titleAr: f.titleAr }); setReviewReason(''); }}>
@@ -2061,25 +2069,7 @@ export function Results() {
           </div>
         ) : (
           <div className="flex items-center gap-2 mt-2 print:hidden">
-            <Button
-              size="sm"
-              variant="outline"
-              className={cn(
-                "h-7 text-[11px] gap-1 border text-white",
-                isExcludedFromReport
-                  ? "bg-error border-error hover:bg-error/90"
-                  : "bg-success border-success hover:bg-success/90"
-              )}
-              onClick={() => handleToggleReviewFindingReportVisibility(f)}
-              disabled={isReportVisibilitySaving}
-            >
-              {isReportVisibilitySaving ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
-              ) : null}
-              {isExcludedFromReport
-                ? (lang === 'ar' ? 'مستبعد' : 'Excluded')
-                : (lang === 'ar' ? 'ضمن التقرير' : 'In Report')}
-            </Button>
+            {reportInclusionToggle}
             <p className="text-[10px] text-text-muted">
               {lang === 'ar'
                 ? 'ستظهر إجراءات الاعتماد والتعديل عندما يتوفر ربط مباشر مع سجل الملاحظة الخام.'
