@@ -1545,29 +1545,69 @@ function hasGovernanceAnchor(text: string): boolean {
   );
 }
 
+function normalizeEvidenceForPassDedupe(value: string | null | undefined): string {
+  return (value ?? "")
+    .normalize("NFC")
+    .replace(/[\s"'“”«»„:;,.!?()\[\]{}\-–—_]+/gu, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function hasAcceptableEvidenceQuality(value: string | null | undefined): boolean {
+  const text = (value ?? "").trim();
+  if (text.length < 4) return false;
+  if (!/[\p{L}]/u.test(text)) return false;
+  const tokens = text.split(/\s+/).filter(Boolean);
+  if (tokens.length >= 3 && tokens.some((token) => token.length === 1)) return false;
+  return true;
+}
+
+function getPerPassMaxFindings(passName: string): number {
+  if (passName === "v3_02_political_leadership" || passName === "v3_03_national_security") return 14;
+  if (passName === "v3_12_women_abuse" || passName === "v3_08_child_disability_harm") return 16;
+  return 20;
+}
+
 function applyEarlyPassFilters(passName: string, findings: JudgeFinding[]): { filtered: JudgeFinding[]; dropped: number } {
   if (!findings.length) return { filtered: findings, dropped: 0 };
 
   const subject = V3_SUBJECT_DEFINITIONS.find((item) => item.name === passName);
   let dropped = 0;
-  const filtered = findings.filter((finding) => {
+  const kept: JudgeFinding[] = [];
+  const seen = new Set<string>();
+
+  for (const finding of findings) {
+    if (!hasAcceptableEvidenceQuality(finding.evidence_snippet)) {
+      dropped++;
+      continue;
+    }
+
     if (subject && typeof finding.article_id === "number" && !subject.articleIds.includes(finding.article_id)) {
       dropped++;
-      return false;
+      continue;
     }
 
     if (passName === "v3_02_political_leadership" || passName === "v3_03_national_security") {
       const local = `${finding.evidence_snippet ?? ""}\n${finding.rationale_ar ?? ""}`;
       if (!hasGovernanceAnchor(local)) {
         dropped++;
-        return false;
+        continue;
       }
     }
 
-    return true;
-  });
+    const key = `${finding.article_id}|${normalizeEvidenceForPassDedupe(finding.evidence_snippet)}`;
+    if (seen.has(key)) {
+      dropped++;
+      continue;
+    }
+    seen.add(key);
+    kept.push(finding);
+  }
 
-  return { filtered, dropped };
+  const capped = sortJudgeFindingsStable(kept).slice(0, getPerPassMaxFindings(passName));
+  dropped += Math.max(0, kept.length - capped.length);
+
+  return { filtered: capped, dropped };
 }
 
 function throwIfAborted(signal?: AbortSignal): void {
