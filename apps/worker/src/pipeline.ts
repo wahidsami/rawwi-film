@@ -35,6 +35,7 @@ import { PIPELINE_V2_MEMORY_VERSION } from "./pipelineV2/contextMemory.js";
 import { PIPELINE_V2_SCENE_MEMORY_VERSION } from "./pipelineV2/sceneMemory.js";
 import { PIPELINE_V2_SCRIPT_MEMORY_VERSION } from "./pipelineV2/scriptMemory.js";
 import { PIPELINE_EVIDENCE_GROUNDING_VERSION, groundFindingEvidenceToChunk } from "./evidenceGrounding.js";
+import { V3_SUBJECT_DEFINITIONS } from "./v3PromptPack.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
@@ -881,6 +882,13 @@ function getPassSpecificEvidenceIssue(
   const articleId = finding.article_id ?? 0;
   const source = String(finding.source ?? "ai").trim().toLowerCase();
   if (source === "lexicon_mandatory" || source === "manual") return null;
+
+  if (pass.startsWith("v3_")) {
+    const subject = V3_SUBJECT_DEFINITIONS.find((item) => item.name.toLowerCase() === pass);
+    if (subject && !subject.articleIds.includes(articleId)) {
+      return "pass_article_mismatch";
+    }
+  }
 
   const sceneContext = getSceneContextAtOffset(sceneIndex, fullText ?? null, finding.start_offset_global ?? null);
   if ((pass === "women" || articleId === 7 || atom === "WOMEN") && !hasWomenSpecificEvidence(`${sceneContext}\n${excerpt}`)) {
