@@ -168,6 +168,13 @@ ${prompt}`;
 function buildV3SubjectPrompt(subject: V3SubjectDefinition, articles: GCAMArticle[]): string {
   const articlePayload = buildArticlePayload(articles);
   const subjectPrompt = buildV3SubjectPromptSection(subject);
+  const subjectHardRules =
+    subject.name === "v3_02_political_leadership" || subject.name === "v3_03_national_security"
+      ? [
+          "8. لا تُرجع finding في هذا الموضوع إلا إذا احتوى المقتطف نفسه على قرينة سياسية/حكومية صريحة (مثل: نظام الحكم، القيادة السياسية، الحكومة، الدولة، الملك، ولي العهد، انقلاب، تمرد، إسقاط).",
+          "9. وجود كلمة \"النظام\" وحدها لا يكفي. إذا كان السياق مدرسي/انضباطي (معلم، طلاب، فصل، مدرسة) فأعد findings فارغة لهذا الموضوع.",
+        ].join("\n")
+      : "";
 
   return `${subjectPrompt}
 
@@ -184,6 +191,7 @@ ${articlePayload}
 5. إذا كان المقتطف يثبت مخالفة واضحة ضمن هذا الموضوع فأرجع finding.
 6. إذا كان الحكم يحتاج مراجعة بشرية بسبب سياق معقد، أرجع finding مع final_ruling = "needs_review" بدل إسقاطه.
 7. إذا اتضح من المقتطف والسياق القريب أن النص لا يعد مخالفة، فأرجع findings فارغة.
+${subjectHardRules}
 
 أرجع JSON فقط بالشكل المطلوب. إذا لم توجد مخالفات لهذا الموضوع:
 { "findings": [] }`;
@@ -1531,6 +1539,37 @@ interface PassResult {
   error?: string;
 }
 
+function hasGovernanceAnchor(text: string): boolean {
+  return /(نظام\s+الحكم|القيادة\s+السياسية|الحكومة|الدولة|الملك|ولي\s+العهد|انقلاب|انتفاض|إسقاط|تمرد|الأمن\s+الوطني|مؤسسات\s+الحكم)/u.test(
+    text,
+  );
+}
+
+function applyEarlyPassFilters(passName: string, findings: JudgeFinding[]): { filtered: JudgeFinding[]; dropped: number } {
+  if (!findings.length) return { filtered: findings, dropped: 0 };
+
+  const subject = V3_SUBJECT_DEFINITIONS.find((item) => item.name === passName);
+  let dropped = 0;
+  const filtered = findings.filter((finding) => {
+    if (subject && typeof finding.article_id === "number" && !subject.articleIds.includes(finding.article_id)) {
+      dropped++;
+      return false;
+    }
+
+    if (passName === "v3_02_political_leadership" || passName === "v3_03_national_security") {
+      const local = `${finding.evidence_snippet ?? ""}\n${finding.rationale_ar ?? ""}`;
+      if (!hasGovernanceAnchor(local)) {
+        dropped++;
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  return { filtered, dropped };
+}
+
 function throwIfAborted(signal?: AbortSignal): void {
   if (!signal?.aborted) return;
   const reason = signal.reason;
@@ -1916,7 +1955,7 @@ export async function runMultiPassDetection(
 
   // Run planned passes in parallel (completion order is arbitrary; UI shows debounced count)
   let completed = 0;
-  const activeResults = await Promise.all(
+  const activeResultsRaw = await Promise.all(
     plan.activePasses.map((pass) =>
       runSinglePassWithHardTimeout(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig, promptContext, signal).then(
         (result) => {
@@ -1929,6 +1968,21 @@ export async function runMultiPassDetection(
       )
     )
   );
+  const activeResults = activeResultsRaw.map((result) => {
+    const early = applyEarlyPassFilters(result.passName, result.findings);
+    if (early.dropped > 0) {
+      logger.warn("Early pass filter dropped findings before merge", {
+        pass: result.passName,
+        before: result.findings.length,
+        after: early.filtered.length,
+        dropped: early.dropped,
+      });
+    }
+    return {
+      ...result,
+      findings: early.filtered,
+    };
+  });
   throwIfAborted(signal);
 
   if (progressOpts?.chunkId) {
