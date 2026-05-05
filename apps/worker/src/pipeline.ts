@@ -536,6 +536,18 @@ function hasPoliticalAnchorForClassification(text: string): boolean {
   return /(نظام\s+الحكم|القيادة\s+السياسية|الحكومة|الدولة|الملك|ولي\s+العهد|انقلاب|انتفاض|إسقاط|تمرد|قلب\s+نظام|مؤسسات\s+الحكم|الأمن\s+الوطني)/u.test(text);
 }
 
+function hasPoliticalClaimLanguage(text: string): boolean {
+  return /(قلب\s+نظام|نظام\s+الحكم|الانتفاض|انتفاض|التمرد|تمرد|إسقاط\s+الحكم|الأمن\s+الوطني|زعزعة\s+النظام|الإعلام\s+الرسمي|أوامر\s+سرية|مؤسسات\s+الحكم|الخروج\s+للشارع)/u.test(
+    text,
+  );
+}
+
+function hasSexualAnchorContext(text: string): boolean {
+  return /(جنسي|جنسية|علاقة\s+جنسية|ممارسة\s+جنسية|تحرش|اغتصاب|إيحاء\s+جنسي|عري|مشهد\s+حميمي|فعل\s+فاضح|ألفاظ\s+جنسية)/u.test(
+    text,
+  );
+}
+
 function isPoliticalOrSecurityFinding(f: FindingWithGlobal): boolean {
   const title = String(f.title_ar ?? "");
   const rationale = String(f.rationale_ar ?? "");
@@ -546,8 +558,17 @@ function isPoliticalOrSecurityFinding(f: FindingWithGlobal): boolean {
   );
 }
 
+function isSexualFinding(f: FindingWithGlobal): boolean {
+  const title = String(f.title_ar ?? "");
+  const rationale = String(f.rationale_ar ?? "");
+  return (
+    f.article_id === 10 ||
+    /المشاهد\s+الجنسية\s+الصريحة|محتوى\s+جنسي/u.test(`${title} ${rationale}`)
+  );
+}
+
 function hasOutOfWindowRationaleClaim(rationale: string, localWindow: string): boolean {
-  const claims = [
+  const exactClaims = [
     "قلب نظام الحكم",
     "الانتفاض",
     "إسقاط الحكم",
@@ -560,7 +581,16 @@ function hasOutOfWindowRationaleClaim(rationale: string, localWindow: string): b
     "إشعال الفوضى",
     "زعزعة النظام العام",
   ];
-  return claims.some((claim) => rationale.includes(claim) && !localWindow.includes(claim));
+  const exactDrift = exactClaims.some((claim) => rationale.includes(claim) && !localWindow.includes(claim));
+  if (exactDrift) return true;
+
+  // Regex-based drift catches morphology/wording variations.
+  const patternDrift = [
+    /قلب\s+نظام|إسقاط\s+الحكم|الانتفاض|انتفاض|التمرد|تمرد/u,
+    /الإعلام\s+الرسمي|مؤسسات\s+الحكم|أوامر\s+سرية|الوضع\s+الاقتصادي/u,
+    /تحريض\s+الناس|إشعال\s+الفوضى|زعزعة\s+النظام/u,
+  ].some((re) => re.test(rationale) && !re.test(localWindow));
+  return patternDrift;
 }
 
 function applyMemory2SanityGuards(
@@ -613,6 +643,31 @@ function applyMemory2SanityGuards(
       !hasPoliticalGovernanceContext(combinedLocal)
     ) {
       logger.warn("Memory2 sanity guard dropped political/security finding due to school-order context", {
+        article: finding.article_id,
+        title: finding.title_ar,
+        evidence: (finding.evidence_snippet ?? "").slice(0, 120),
+      });
+      continue;
+    }
+
+    // Any political/security rationale language must be present in local context.
+    if (
+      hasPoliticalClaimLanguage(rationale) &&
+      !hasPoliticalAnchorForClassification(combinedLocal)
+    ) {
+      logger.warn("Memory2 sanity guard dropped finding due to ungrounded political/security rationale", {
+        article: finding.article_id,
+        title: finding.title_ar,
+        rationale: rationale.slice(0, 180),
+        evidence: (finding.evidence_snippet ?? "").slice(0, 120),
+      });
+      continue;
+    }
+
+    // Sexual category must be grounded by explicit sexual anchors in local context.
+    // This blocks child-abuse or bullying snippets from leaking into article 10.
+    if (isSexualFinding(finding) && !hasSexualAnchorContext(combinedLocal)) {
+      logger.warn("Memory2 sanity guard dropped sexual finding without sexual anchors", {
         article: finding.article_id,
         title: finding.title_ar,
         evidence: (finding.evidence_snippet ?? "").slice(0, 120),
