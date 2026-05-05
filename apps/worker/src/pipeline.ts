@@ -593,12 +593,27 @@ function hasOutOfWindowRationaleClaim(rationale: string, localWindow: string): b
   return patternDrift;
 }
 
+type Memory2GuardRejection = {
+  reason:
+    | "missing_political_anchor"
+    | "school_context_not_governance"
+    | "school_system_word_not_governance"
+    | "ungrounded_political_rationale"
+    | "missing_sexual_anchor"
+    | "rationale_local_mismatch";
+  article: number;
+  title: string | null | undefined;
+  evidence: string;
+  rationale: string;
+};
+
 function applyMemory2SanityGuards(
   findings: FindingWithGlobal[],
   normalizedText: string | null,
   chunkText: string,
-): FindingWithGlobal[] {
+): { accepted: FindingWithGlobal[]; rejected: Memory2GuardRejection[] } {
   const guarded: FindingWithGlobal[] = [];
+  const rejected: Memory2GuardRejection[] = [];
   for (const finding of findings) {
     const localWindow = extractLocalWindow(
       normalizedText,
@@ -614,6 +629,13 @@ function applyMemory2SanityGuards(
       isPoliticalOrSecurityFinding(finding) &&
       !hasPoliticalAnchorForClassification(combinedLocal)
     ) {
+      rejected.push({
+        reason: "missing_political_anchor",
+        article: finding.article_id,
+        title: finding.title_ar,
+        evidence: (finding.evidence_snippet ?? "").slice(0, 220),
+        rationale: rationale.slice(0, 260),
+      });
       logger.warn("Memory2 sanity guard dropped political/security finding without governance anchors", {
         article: finding.article_id,
         title: finding.title_ar,
@@ -628,6 +650,13 @@ function applyMemory2SanityGuards(
       hasSchoolOrderContext(combinedLocal) &&
       !hasPoliticalGovernanceContext(combinedLocal)
     ) {
+      rejected.push({
+        reason: "school_context_not_governance",
+        article: finding.article_id,
+        title: finding.title_ar,
+        evidence: (finding.evidence_snippet ?? "").slice(0, 220),
+        rationale: rationale.slice(0, 260),
+      });
       logger.warn("Memory2 sanity guard dropped political/security finding in school context", {
         article: finding.article_id,
         title: finding.title_ar,
@@ -642,6 +671,13 @@ function applyMemory2SanityGuards(
       hasSchoolOrderContext(combinedLocal) &&
       !hasPoliticalGovernanceContext(combinedLocal)
     ) {
+      rejected.push({
+        reason: "school_system_word_not_governance",
+        article: finding.article_id,
+        title: finding.title_ar,
+        evidence: (finding.evidence_snippet ?? "").slice(0, 220),
+        rationale: rationale.slice(0, 260),
+      });
       logger.warn("Memory2 sanity guard dropped political/security finding due to school-order context", {
         article: finding.article_id,
         title: finding.title_ar,
@@ -655,6 +691,13 @@ function applyMemory2SanityGuards(
       hasPoliticalClaimLanguage(rationale) &&
       !hasPoliticalAnchorForClassification(combinedLocal)
     ) {
+      rejected.push({
+        reason: "ungrounded_political_rationale",
+        article: finding.article_id,
+        title: finding.title_ar,
+        evidence: (finding.evidence_snippet ?? "").slice(0, 220),
+        rationale: rationale.slice(0, 260),
+      });
       logger.warn("Memory2 sanity guard dropped finding due to ungrounded political/security rationale", {
         article: finding.article_id,
         title: finding.title_ar,
@@ -667,6 +710,13 @@ function applyMemory2SanityGuards(
     // Sexual category must be grounded by explicit sexual anchors in local context.
     // This blocks child-abuse or bullying snippets from leaking into article 10.
     if (isSexualFinding(finding) && !hasSexualAnchorContext(combinedLocal)) {
+      rejected.push({
+        reason: "missing_sexual_anchor",
+        article: finding.article_id,
+        title: finding.title_ar,
+        evidence: (finding.evidence_snippet ?? "").slice(0, 220),
+        rationale: rationale.slice(0, 260),
+      });
       logger.warn("Memory2 sanity guard dropped sexual finding without sexual anchors", {
         article: finding.article_id,
         title: finding.title_ar,
@@ -676,6 +726,13 @@ function applyMemory2SanityGuards(
     }
 
     if (rationale && hasOutOfWindowRationaleClaim(rationale, combinedLocal)) {
+      rejected.push({
+        reason: "rationale_local_mismatch",
+        article: finding.article_id,
+        title: finding.title_ar,
+        evidence: (finding.evidence_snippet ?? "").slice(0, 220),
+        rationale: rationale.slice(0, 260),
+      });
       logger.warn("Memory2 sanity guard dropped finding due to rationale/local-window mismatch", {
         article: finding.article_id,
         title: finding.title_ar,
@@ -687,7 +744,50 @@ function applyMemory2SanityGuards(
 
     guarded.push(finding);
   }
-  return guarded;
+  return { accepted: guarded, rejected };
+}
+
+async function persistMemory2SanityTrace(args: {
+  job: AnalysisJob;
+  chunk: AnalysisChunk;
+  beforeCount: number;
+  acceptedCount: number;
+  rejected: Memory2GuardRejection[];
+}): Promise<void> {
+  if (!isMemory2Mode(args.job)) return;
+  const rejectedByReason = args.rejected.reduce<Record<string, number>>((acc, item) => {
+    acc[item.reason] = (acc[item.reason] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const traceRow = {
+    job_id: args.job.id,
+    script_id: args.job.script_id,
+    version_id: args.job.version_id,
+    chunk_id: args.chunk.id,
+    chunk_index: args.chunk.chunk_index,
+    pass_name: "memory2_sanity_guard",
+    memory_version: PIPELINE_V2_MEMORY_VERSION,
+    trace_payload: {
+      before_count: args.beforeCount,
+      accepted_count: args.acceptedCount,
+      dropped_count: args.rejected.length,
+      rejected_by_reason: rejectedByReason,
+      rejected_samples: args.rejected.slice(0, 8),
+    },
+  };
+
+  const { error } = await supabase
+    .from("analysis_memory_traces")
+    .upsert(traceRow, { onConflict: "job_id,chunk_id,pass_name" });
+
+  if (error) {
+    logger.warn("Memory2 sanity trace upsert failed", {
+      jobId: args.job.id,
+      chunkId: args.chunk.id,
+      error: error.message,
+    });
+  }
 }
 
 function compactNormalizedEvidence(value: string | null | undefined): string {
@@ -2078,10 +2178,9 @@ export async function processChunkJudge(
 
   if (isMemory2Mode(job)) {
     const beforeGuard = resolvedFindings.length;
-    resolvedFindings = sortFindingsStable(
-      applyMemory2SanityGuards(resolvedFindings, normalizedText, chunk.text)
-    );
-    const droppedByGuard = beforeGuard - resolvedFindings.length;
+    const guardResult = applyMemory2SanityGuards(resolvedFindings, normalizedText, chunk.text);
+    resolvedFindings = sortFindingsStable(guardResult.accepted);
+    const droppedByGuard = guardResult.rejected.length;
     if (droppedByGuard > 0) {
       logger.warn("Memory2 sanity guards dropped findings before persistence", {
         jobId,
@@ -2091,6 +2190,13 @@ export async function processChunkJudge(
         afterGuard: resolvedFindings.length,
       });
     }
+    await persistMemory2SanityTrace({
+      job,
+      chunk,
+      beforeCount: beforeGuard,
+      acceptedCount: resolvedFindings.length,
+      rejected: guardResult.rejected,
+    });
   }
 
   throwIfAborted(signal);
