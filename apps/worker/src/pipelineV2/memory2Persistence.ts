@@ -24,7 +24,21 @@ type PersistArgs = {
 };
 
 export async function persistMemory2Artifacts(args: PersistArgs): Promise<void> {
-  if (!isMemory2Job(args.job)) return;
+  if (!isMemory2Job(args.job)) {
+    logger.info("Memory2 persistence skipped: job not in memory2 mode", {
+      jobId: args.job.id,
+      chunkId: args.chunk.id,
+      mode: (args.job.config_snapshot as { analysis_memory_mode?: string } | null)?.analysis_memory_mode ?? null,
+    });
+    return;
+  }
+
+  logger.info("Memory2 persistence starting", {
+    jobId: args.job.id,
+    chunkId: args.chunk.id,
+    chunkIndex: args.chunk.chunk_index,
+    memoryVersion: MEMORY2_VERSION,
+  });
 
   const unitRows = [
     {
@@ -107,6 +121,12 @@ export async function persistMemory2Artifacts(args: PersistArgs): Promise<void> 
       chunkId: args.chunk.id,
       error: unitsErr.message,
     });
+  } else {
+    logger.info("Memory2 units upsert succeeded", {
+      jobId: args.job.id,
+      chunkId: args.chunk.id,
+      rows: unitRows.length,
+    });
   }
 
   const traceRow = {
@@ -139,6 +159,12 @@ export async function persistMemory2Artifacts(args: PersistArgs): Promise<void> 
       jobId: args.job.id,
       chunkId: args.chunk.id,
       error: traceErr.message,
+    });
+  } else {
+    logger.info("Memory2 trace upsert succeeded", {
+      jobId: args.job.id,
+      chunkId: args.chunk.id,
+      passName: traceRow.pass_name,
     });
   }
 }

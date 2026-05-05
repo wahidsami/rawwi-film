@@ -593,6 +593,18 @@ function hasOutOfWindowRationaleClaim(rationale: string, localWindow: string): b
   return patternDrift;
 }
 
+function extractQuotedPhrases(text: string): string[] {
+  return [...text.matchAll(/["“”«»]([^"“”«»]{2,120})["“”«»]/g)]
+    .map((match) => (match[1] ?? "").trim())
+    .filter(Boolean);
+}
+
+function hasUngroundedRationaleQuotes(rationale: string, localWindow: string): boolean {
+  const quotes = extractQuotedPhrases(rationale);
+  if (quotes.length === 0) return false;
+  return quotes.some((quote) => !localWindow.includes(quote));
+}
+
 type Memory2GuardRejection = {
   reason:
     | "missing_political_anchor"
@@ -742,6 +754,23 @@ function applyMemory2SanityGuards(
       continue;
     }
 
+    if (rationale && hasUngroundedRationaleQuotes(rationale, combinedLocal)) {
+      rejected.push({
+        reason: "rationale_local_mismatch",
+        article: finding.article_id,
+        title: finding.title_ar,
+        evidence: (finding.evidence_snippet ?? "").slice(0, 220),
+        rationale: rationale.slice(0, 260),
+      });
+      logger.warn("Memory2 sanity guard dropped finding due to ungrounded rationale quote", {
+        article: finding.article_id,
+        title: finding.title_ar,
+        rationale: rationale.slice(0, 180),
+        evidence: (finding.evidence_snippet ?? "").slice(0, 120),
+      });
+      continue;
+    }
+
     guarded.push(finding);
   }
   return { accepted: guarded, rejected };
@@ -787,7 +816,14 @@ async function persistMemory2SanityTrace(args: {
       chunkId: args.chunk.id,
       error: error.message,
     });
+    return;
   }
+  logger.info("Memory2 sanity trace upsert succeeded", {
+    jobId: args.job.id,
+    chunkId: args.chunk.id,
+    dropped: args.rejected.length,
+    accepted: args.acceptedCount,
+  });
 }
 
 function compactNormalizedEvidence(value: string | null | undefined): string {
@@ -849,6 +885,27 @@ function getPassSpecificEvidenceIssue(
   const sceneContext = getSceneContextAtOffset(sceneIndex, fullText ?? null, finding.start_offset_global ?? null);
   if ((pass === "women" || articleId === 7 || atom === "WOMEN") && !hasWomenSpecificEvidence(`${sceneContext}\n${excerpt}`)) {
     return "women_not_self_proving";
+  }
+
+  if (
+    (pass === "v3_03_national_security" || pass === "national_security" || articleId === 3 || atom === "NATIONAL_SECURITY") &&
+    !hasPoliticalAnchorForClassification(`${sceneContext}\n${excerpt}`)
+  ) {
+    return "security_not_self_proving";
+  }
+
+  if (
+    (pass === "v3_02_political_leadership" || pass === "political_leadership" || articleId === 2 || atom === "POLITICAL_LEADERSHIP") &&
+    !hasPoliticalAnchorForClassification(`${sceneContext}\n${excerpt}`)
+  ) {
+    return "political_not_self_proving";
+  }
+
+  if (
+    (pass === "v3_10_explicit_sex" || articleId === 10 || atom === "EXPLICIT_SEX") &&
+    !hasSexualAnchorContext(`${sceneContext}\n${excerpt}`)
+  ) {
+    return "sexual_not_self_proving";
   }
 
   const tokenCount = tokenizeEvidence(excerpt).length;
@@ -924,6 +981,54 @@ function getStoredEvidenceQualityIssue(
   }
 
   return null;
+}
+
+function normalizeEvidenceSpanToWordBoundaries(
+  fullText: string | null,
+  startOffsetGlobal: number | null | undefined,
+  endOffsetGlobal: number | null | undefined,
+): { start: number; end: number; excerpt: string } | null {
+  if (
+    typeof fullText !== "string" ||
+    typeof startOffsetGlobal !== "number" ||
+    typeof endOffsetGlobal !== "number" ||
+    startOffsetGlobal < 0 ||
+    endOffsetGlobal <= startOffsetGlobal ||
+    endOffsetGlobal > fullText.length
+  ) {
+    return null;
+  }
+
+  let start = startOffsetGlobal;
+  let end = endOffsetGlobal;
+  const maxExpansion = 24;
+  const originalStart = start;
+  const originalEnd = end;
+
+  while (
+    start > 0 &&
+    (originalStart - start) < maxExpansion &&
+    isWordLikeChar(fullText[start - 1]) &&
+    isWordLikeChar(fullText[start])
+  ) {
+    start--;
+  }
+
+  while (
+    end < fullText.length &&
+    (end - originalEnd) < maxExpansion &&
+    isWordLikeChar(fullText[end - 1]) &&
+    isWordLikeChar(fullText[end])
+  ) {
+    end++;
+  }
+
+  if (end <= start || (end - start) > MAX_EVIDENCE_SPAN) return null;
+  return {
+    start,
+    end,
+    excerpt: compactEvidenceText(fullText.slice(start, end)),
+  };
 }
 
 function normalizeEvidenceCompareText(value: string | null | undefined): string {
@@ -2215,8 +2320,10 @@ export async function processChunkJudge(
     let canonicalModelMismatchDroppedCount = 0;
     let explicitSceneMismatchDroppedCount = 0;
     const rows = resolvedFindings.flatMap((f) => {
-      const start = f.start_offset_global ?? 0;
-      const end = f.end_offset_global ?? start;
+      const initialStart = f.start_offset_global ?? 0;
+      const initialEnd = f.end_offset_global ?? initialStart;
+      let start = initialStart;
+      let end = initialEnd;
       const hasSaneGlobalOffsets =
         normalizedText != null &&
         start >= 0 &&
@@ -2225,18 +2332,46 @@ export async function processChunkJudge(
         (end - start) <= MAX_EVIDENCE_SPAN;
 
       const modelSnippet = compactEvidenceText(f.evidence_snippet ?? "");
-      const canonicalSnippet = hasSaneGlobalOffsets
+      let canonicalSnippet = hasSaneGlobalOffsets
         ? compactEvidenceText(normalizedText!.slice(start, end))
         : "";
       // Prefer canonical script text whenever offsets are sane so report evidence stays literal.
-      const excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
+      let excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
 
-      const finalEvidenceIssue = getStoredEvidenceQualityIssue(
+      let finalEvidenceIssue = getStoredEvidenceQualityIssue(
         excerpt,
         normalizedText,
         hasSaneGlobalOffsets ? start : null,
         hasSaneGlobalOffsets ? end : null,
       );
+      if (
+        finalEvidenceIssue &&
+        (finalEvidenceIssue === "starts_mid_word" || finalEvidenceIssue === "ends_mid_word") &&
+        hasSaneGlobalOffsets &&
+        normalizedText
+      ) {
+        const repaired = normalizeEvidenceSpanToWordBoundaries(normalizedText, start, end);
+        if (repaired) {
+          start = repaired.start;
+          end = repaired.end;
+          canonicalSnippet = repaired.excerpt;
+          excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
+          finalEvidenceIssue = getStoredEvidenceQualityIssue(excerpt, normalizedText, start, end);
+          if (!finalEvidenceIssue) {
+            logger.info("Auto-repaired evidence span to word boundaries", {
+              jobId,
+              chunkId: chunk.id,
+              runKey,
+              article: f.article_id,
+              oldStart: initialStart,
+              oldEnd: initialEnd,
+              newStart: start,
+              newEnd: end,
+              excerpt: excerpt.slice(0, 120),
+            });
+          }
+        }
+      }
         if (finalEvidenceIssue) {
           postCanonicalEvidenceDroppedCount++;
         logger.warn("Low-quality final evidence excerpt (dropping finding before insert)", {
@@ -2312,11 +2447,11 @@ export async function processChunkJudge(
       const h = evidenceHash(
         f.article_id,
         f.atom_id ?? null,
-        f.start_offset_global,
-        f.end_offset_global,
+        start,
+        end,
         excerpt
       );
-      const findingPageNumber = pageNumAt(f.start_offset_global ?? 0);
+      const findingPageNumber = pageNumAt(start);
       return [{
         job_id: jobId,
         script_id: scriptId,
@@ -2329,8 +2464,8 @@ export async function processChunkJudge(
         title_ar,
         description_ar: f.description_ar ?? "",
         evidence_snippet: excerpt,
-        start_offset_global: f.start_offset_global,
-        end_offset_global: f.end_offset_global,
+        start_offset_global: start,
+        end_offset_global: end,
         start_line_chunk: f.location?.start_line ?? null,
         end_line_chunk: f.location?.end_line ?? null,
         location: {
@@ -2364,17 +2499,15 @@ export async function processChunkJudge(
         audience_risk: f.audience_risk ?? null,
         page_number: findingPageNumber,
         ...(() => {
-          const s = f.start_offset_global ?? 0;
-          const e = f.end_offset_global ?? s;
-          const pl = computePageLocalSpan(s, e, pageRows);
+          const pl = computePageLocalSpan(start, end, pageRows);
           return {
             start_offset_page: pl.start_offset_page,
             end_offset_page: pl.end_offset_page,
           };
         })(),
         ...buildCanonicalAnchorPayload({
-          startGlobal: f.start_offset_global,
-          endGlobal: f.end_offset_global,
+          startGlobal: start,
+          endGlobal: end,
           pageNumber: findingPageNumber,
           pageRows,
           anchorText: excerpt,
