@@ -505,6 +505,136 @@ function sortFindingsStable(findings: FindingWithGlobal[]): FindingWithGlobal[] 
   return [...findings].sort(compareFindingsStable);
 }
 
+function isMemory2Mode(job: AnalysisJob): boolean {
+  const mode = (job.config_snapshot as { analysis_memory_mode?: string } | null)?.analysis_memory_mode;
+  return String(mode ?? "").toLowerCase() === "memory2";
+}
+
+function extractLocalWindow(
+  normalizedText: string | null,
+  startOffsetGlobal: number | null | undefined,
+  endOffsetGlobal: number | null | undefined,
+  radius = 220,
+): string {
+  if (!normalizedText) return "";
+  if (typeof startOffsetGlobal !== "number" || typeof endOffsetGlobal !== "number") return "";
+  const start = Math.max(0, startOffsetGlobal - radius);
+  const end = Math.min(normalizedText.length, endOffsetGlobal + radius);
+  if (end <= start) return "";
+  return normalizedText.slice(start, end);
+}
+
+function hasSchoolOrderContext(text: string): boolean {
+  return /(مدرسة|المدرسة|معلم|المعلم|طلاب|الطلاب|فصل|الطابور|أستاذ|ساحة\s+المدرسة|واجب|درجة)/u.test(text);
+}
+
+function hasPoliticalGovernanceContext(text: string): boolean {
+  return /(نظام\s+الحكم|القيادة\s+السياسية|الحكومة|الدولة|الملك|ولي\s+العهد|انقلاب|انتفاض|إسقاط|قلب\s+نظام)/u.test(text);
+}
+
+function hasPoliticalAnchorForClassification(text: string): boolean {
+  return /(نظام\s+الحكم|القيادة\s+السياسية|الحكومة|الدولة|الملك|ولي\s+العهد|انقلاب|انتفاض|إسقاط|تمرد|قلب\s+نظام|مؤسسات\s+الحكم|الأمن\s+الوطني)/u.test(text);
+}
+
+function isPoliticalOrSecurityFinding(f: FindingWithGlobal): boolean {
+  const title = String(f.title_ar ?? "");
+  const rationale = String(f.rationale_ar ?? "");
+  return (
+    f.article_id === 2 ||
+    f.article_id === 3 ||
+    /المساس\s+بالقيادة\s+السياسية|الإضرار\s+بالأمن\s+الوطني|قلب\s+نظام\s+الحكم/u.test(`${title} ${rationale}`)
+  );
+}
+
+function hasOutOfWindowRationaleClaim(rationale: string, localWindow: string): boolean {
+  const claims = [
+    "قلب نظام الحكم",
+    "الانتفاض",
+    "إسقاط الحكم",
+    "أوامر سرية",
+    "الإعلام الرسمي",
+    "الوضع الاقتصادي",
+    "مؤسسات الحكم",
+    "التمرد ضد النظام",
+    "تحريض الناس",
+    "إشعال الفوضى",
+    "زعزعة النظام العام",
+  ];
+  return claims.some((claim) => rationale.includes(claim) && !localWindow.includes(claim));
+}
+
+function applyMemory2SanityGuards(
+  findings: FindingWithGlobal[],
+  normalizedText: string | null,
+  chunkText: string,
+): FindingWithGlobal[] {
+  const guarded: FindingWithGlobal[] = [];
+  for (const finding of findings) {
+    const localWindow = extractLocalWindow(
+      normalizedText,
+      finding.start_offset_global ?? null,
+      finding.end_offset_global ?? null,
+    );
+    const combinedLocal = `${localWindow}\n${chunkText}\n${finding.evidence_snippet ?? ""}`;
+    const rationale = String(finding.rationale_ar ?? "");
+
+    // For political/security classes, require explicit governance anchors in the local context.
+    // This blocks category-first hallucinations in school/discipline scenes.
+    if (
+      isPoliticalOrSecurityFinding(finding) &&
+      !hasPoliticalAnchorForClassification(combinedLocal)
+    ) {
+      logger.warn("Memory2 sanity guard dropped political/security finding without governance anchors", {
+        article: finding.article_id,
+        title: finding.title_ar,
+        evidence: (finding.evidence_snippet ?? "").slice(0, 120),
+      });
+      continue;
+    }
+
+    // Extra hard fence: school-order context with no governance anchors cannot be political/security.
+    if (
+      isPoliticalOrSecurityFinding(finding) &&
+      hasSchoolOrderContext(combinedLocal) &&
+      !hasPoliticalGovernanceContext(combinedLocal)
+    ) {
+      logger.warn("Memory2 sanity guard dropped political/security finding in school context", {
+        article: finding.article_id,
+        title: finding.title_ar,
+        evidence: (finding.evidence_snippet ?? "").slice(0, 120),
+      });
+      continue;
+    }
+
+    if (
+      isPoliticalOrSecurityFinding(finding) &&
+      /النظام/u.test(combinedLocal) &&
+      hasSchoolOrderContext(combinedLocal) &&
+      !hasPoliticalGovernanceContext(combinedLocal)
+    ) {
+      logger.warn("Memory2 sanity guard dropped political/security finding due to school-order context", {
+        article: finding.article_id,
+        title: finding.title_ar,
+        evidence: (finding.evidence_snippet ?? "").slice(0, 120),
+      });
+      continue;
+    }
+
+    if (rationale && hasOutOfWindowRationaleClaim(rationale, combinedLocal)) {
+      logger.warn("Memory2 sanity guard dropped finding due to rationale/local-window mismatch", {
+        article: finding.article_id,
+        title: finding.title_ar,
+        rationale: rationale.slice(0, 180),
+        evidence: (finding.evidence_snippet ?? "").slice(0, 120),
+      });
+      continue;
+    }
+
+    guarded.push(finding);
+  }
+  return guarded;
+}
+
 function compactNormalizedEvidence(value: string | null | undefined): string {
   return (value ?? "").normalize("NFC").replace(/\s+/g, " ").trim();
 }
@@ -1847,7 +1977,7 @@ export async function processChunkJudge(
   }
 
   // 7) Resolve article_id/atom_id from canonical_atom when missing; compute severity from factors when present.
-  const resolvedFindings = sortFindingsStable(persistedFindings.map((f) => {
+  let resolvedFindings = sortFindingsStable(persistedFindings.map((f) => {
     let article_id = f.article_id;
     let atom_id = f.atom_id ?? null;
     let severity = f.severity ?? null;
@@ -1890,6 +2020,23 @@ export async function processChunkJudge(
       audience_risk,
     };
   }));
+
+  if (isMemory2Mode(job)) {
+    const beforeGuard = resolvedFindings.length;
+    resolvedFindings = sortFindingsStable(
+      applyMemory2SanityGuards(resolvedFindings, normalizedText, chunk.text)
+    );
+    const droppedByGuard = beforeGuard - resolvedFindings.length;
+    if (droppedByGuard > 0) {
+      logger.warn("Memory2 sanity guards dropped findings before persistence", {
+        jobId,
+        chunkId: chunk.id,
+        droppedByGuard,
+        beforeGuard,
+        afterGuard: resolvedFindings.length,
+      });
+    }
+  }
 
   throwIfAborted(signal);
   await setChunkPhase(chunk.id, "aggregating");

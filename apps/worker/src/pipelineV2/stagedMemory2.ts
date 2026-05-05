@@ -112,6 +112,8 @@ export function buildMemory2StagePromptContext(bundle: Memory2StageBundle): stri
     `- Total staged memory chars: ${bundle.usedChars.total}`,
     "- Use staged memory only for interpretation and continuity.",
     "- Evidence must still be literal text from the current chunk.",
+    "- يجب تفسير كلمة \"النظام\" بحسب السياق المحلي: نظام المدرسة/الانضباط المدرسي لا يُصنف تلقائياً كقيادة سياسية أو نظام حكم.",
+    "- قبل إصدار أي مخالفة، اقرأ العبارة نفسها + جملة قبلها + جملة بعدها داخل نفس السياق المحلي ثم علّل القرار.",
+    "- إذا كان التعليل يعتمد على ادعاء غير موجود حرفياً في السياق المحلي فلا تُخرج المخالفة.",
   ].join("\n");
 }
-
