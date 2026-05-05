@@ -49,6 +49,21 @@ type ScriptVersionRow = {
   created_at: string;
 };
 
+type AnalysisMemoryMode = "memory1" | "memory2";
+const ANALYSIS_MEMORY_KEY = "analysis_memory_mode";
+
+async function loadAnalysisMemoryMode(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+): Promise<AnalysisMemoryMode> {
+  const { data } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", ANALYSIS_MEMORY_KEY)
+    .maybeSingle();
+  const mode = ((data as { value?: { mode?: string } } | null)?.value?.mode ?? "").toLowerCase();
+  return mode === "memory2" ? "memory2" : "memory1";
+}
+
 /** Strip accidental `scripts/` or `uploads/` prefix; object key is path within bucket. */
 function normalizeStorageObjectPath(raw: string): string {
   const t = raw.trim();
@@ -120,6 +135,7 @@ async function runIngest(
     : chunkText(safeNormalized);
   const progressTotal = chunks.length + 1;
   const progressPercent = 0;
+  const analysisMemoryMode = await loadAnalysisMemoryMode(supabase);
 
   const { data: job, error: jobErr } = await supabase
     .from("analysis_jobs")
@@ -135,6 +151,7 @@ async function runIngest(
       script_content_hash: contentHash,
       config_snapshot: {
         ...DEFAULT_DETERMINISTIC_CONFIG,
+        analysis_memory_mode: analysisMemoryMode,
         router_prompt_version: PROMPT_VERSIONS.router,
         router_prompt_hash: await sha256Hash(ROUTER_SYSTEM_MSG),
         judge_prompt_version: PROMPT_VERSIONS.judge,

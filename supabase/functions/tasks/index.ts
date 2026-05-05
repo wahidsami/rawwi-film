@@ -76,6 +76,9 @@ type JobRow = {
   canonical_length?: number | null;
 };
 
+type AnalysisMemoryMode = "memory1" | "memory2";
+const ANALYSIS_MEMORY_KEY = "analysis_memory_mode";
+
 const ANALYSIS_PROFILE_PRESETS = {
   quality: {
     analysisProfile: "quality" as const,
@@ -102,6 +105,18 @@ const ANALYSIS_PROFILE_PRESETS = {
     hybridMode: "off" as const,
   },
 };
+
+async function loadAnalysisMemoryMode(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+): Promise<AnalysisMemoryMode> {
+  const { data } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", ANALYSIS_MEMORY_KEY)
+    .maybeSingle();
+  const mode = ((data as { value?: { mode?: string } } | null)?.value?.mode ?? "").toLowerCase();
+  return mode === "memory2" ? "memory2" : "memory1";
+}
 
 type ManualReviewSnapshotItem = {
   article_id: number;
@@ -277,6 +292,7 @@ function toCamel(job: JobRow) {
     versionId: job.version_id,
     status: isStopping ? "stopping" : (isPaused ? "paused" : job.status),
     analysisMode: job.config_snapshot?.analysis_profile ?? "balanced",
+    analysisMemoryMode: job.config_snapshot?.analysis_memory_mode ?? "memory1",
     pipelineVersion: job.config_snapshot?.pipeline_version ?? "v1",
     analysisEngine: job.config_snapshot?.analysis_engine ?? null,
     hybridMode: job.config_snapshot?.hybrid_mode ?? null,
@@ -635,7 +651,9 @@ Deno.serve(async (req: Request) => {
 
   const versionId = body?.versionId;
   const forceFresh = body?.forceFresh === true;
-  const defaultPipelineVersion = (Deno.env.get("ANALYSIS_PIPELINE_VERSION") ?? "v2").toLowerCase() === "v1" ? "v1" : "v2";
+  const analysisMemoryMode = await loadAnalysisMemoryMode(supabase);
+  const envDefaultPipelineVersion = (Deno.env.get("ANALYSIS_PIPELINE_VERSION") ?? "v2").toLowerCase() === "v1" ? "v1" : "v2";
+  const defaultPipelineVersion = analysisMemoryMode === "memory2" ? "v2" : envDefaultPipelineVersion;
   const requestedPipelineVersion = body?.pipelineVersion === "v2" || body?.pipelineVersion === "v1"
     ? body.pipelineVersion
     : defaultPipelineVersion;
@@ -781,6 +799,7 @@ Deno.serve(async (req: Request) => {
       canonical_length,
       config_snapshot: {
         ...DEFAULT_DETERMINISTIC_CONFIG,
+        analysis_memory_mode: analysisMemoryMode,
         pipeline_version: requestedPipelineVersion,
         force_fresh: forceFresh,
         analysis_profile: analysisProfilePreset.analysisProfile,

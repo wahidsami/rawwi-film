@@ -7,7 +7,9 @@ import { processChunkJudgeV2 } from "./pipelineV2.js";
 export type AnalysisPipelineVersion = "v1" | "v2";
 
 export function resolvePipelineVersion(job: AnalysisJob): AnalysisPipelineVersion {
-  const requested = (job.config_snapshot as { pipeline_version?: string } | null)?.pipeline_version;
+  const snapshot = job.config_snapshot as { pipeline_version?: string; analysis_memory_mode?: string } | null;
+  if (snapshot?.analysis_memory_mode === "memory2") return "v2";
+  const requested = snapshot?.pipeline_version;
   return requested === "v2" ? "v2" : config.ANALYSIS_PIPELINE_VERSION;
 }
 

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Switch } from '@/components/ui/Switch';
 import { Textarea } from '@/components/ui/Textarea';
-import { certificatesApi, clientPortalApi } from '@/api';
+import { certificatesApi, clientPortalApi, settingsApi } from '@/api';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
@@ -60,6 +60,8 @@ export default function Settings() {
     currency: 'SAR',
   });
   const [savingCertificateFee, setSavingCertificateFee] = useState(false);
+  const [savingMemoryMode, setSavingMemoryMode] = useState(false);
+  const [analysisMemoryLoaded, setAnalysisMemoryLoaded] = useState(false);
 
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
 
@@ -124,6 +126,32 @@ export default function Settings() {
         });
       });
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin || analysisMemoryLoaded) return;
+    settingsApi.getAnalysisMemoryMode()
+      .then(({ mode }) => {
+        updateSettings({ platform: { ...settings.platform, analysisMemoryMode: mode } });
+        setAnalysisMemoryLoaded(true);
+      })
+      .catch(() => {
+        // keep local fallback
+        setAnalysisMemoryLoaded(true);
+      });
+  }, [analysisMemoryLoaded, isAdmin, settings.platform, updateSettings]);
+
+  const handleAnalysisMemoryModeChange = async (mode: 'memory1' | 'memory2') => {
+    updateSection('platform', { analysisMemoryMode: mode });
+    setSavingMemoryMode(true);
+    try {
+      await settingsApi.updateAnalysisMemoryMode(mode);
+      toast.success(lang === 'ar' ? 'تم تحديث وضع الذاكرة' : 'Analysis memory mode updated');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تحديث وضع الذاكرة' : 'Failed to update analysis memory mode'));
+    } finally {
+      setSavingMemoryMode(false);
+    }
+  };
 
   const handleSaveClientTerms = async () => {
     if (!clientTerms.ar.trim() || !clientTerms.en.trim()) {
@@ -441,6 +469,26 @@ export default function Settings() {
                           dir="ltr"
                           className="text-start"
                         />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-text-muted mb-1.5">
+                          {lang === 'ar' ? 'وضع ذاكرة التحليل' : 'Analysis Memory Mode'}
+                        </label>
+                        <Select
+                          value={settings.platform.analysisMemoryMode}
+                          onChange={(e) => void handleAnalysisMemoryModeChange(e.target.value as 'memory1' | 'memory2')}
+                          options={[
+                            { value: 'memory1', label: 'Memory1 (Current)' },
+                            { value: 'memory2', label: 'Memory2 (New)' },
+                          ]}
+                        />
+                        <p className="text-xs text-text-muted mt-1">
+                          {savingMemoryMode
+                            ? (lang === 'ar' ? 'جاري حفظ وضع الذاكرة...' : 'Saving memory mode...')
+                            : (lang === 'ar'
+                              ? 'هذا الخيار يحدد محرك الذاكرة المستخدم في التحليل القادم.'
+                              : 'This controls which memory engine is used for upcoming analyses.')}
+                        </p>
                       </div>
                     </div>
                   </div>

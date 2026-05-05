@@ -7,6 +7,7 @@ export interface PlatformSettings {
   dateFormat: string;
   createVersionOnFileReplace: boolean;
   requireOverrideReason: boolean;
+  analysisMemoryMode: 'memory1' | 'memory2';
 }
 
 export interface SecuritySettings {
@@ -49,6 +50,7 @@ const defaultSettings: AppSettings = {
     dateFormat: 'DD/MM/YYYY',
     createVersionOnFileReplace: true,
     requireOverrideReason: true,
+    analysisMemoryMode: 'memory1',
   },
   security: {
     sessionTimeoutMinutes: 60,

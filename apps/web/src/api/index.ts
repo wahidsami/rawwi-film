@@ -21,6 +21,15 @@ export const authApi = {
   getMe: (): Promise<MeResponse> => httpClient.get('/me'),
 };
 
+export type AnalysisMemoryMode = 'memory1' | 'memory2';
+
+export const settingsApi = {
+  getAnalysisMemoryMode: (): Promise<{ mode: AnalysisMemoryMode }> =>
+    httpClient.get('/settings/analysis-memory'),
+  updateAnalysisMemoryMode: (mode: AnalysisMemoryMode): Promise<{ ok: true; mode: AnalysisMemoryMode }> =>
+    httpClient.put('/settings/analysis-memory', { mode }),
+};
+
 export interface ClientPortalRegisterBody {
   name: string;
   email: string;
