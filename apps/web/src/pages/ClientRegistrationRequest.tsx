@@ -57,6 +57,7 @@ export function ClientRegistrationRequest() {
   const [rejectionReason, setRejectionReason] = useState('');
 
   const company = useMemo(() => companies.find((c) => c.companyId === id), [companies, id]);
+  const isIndividual = (company?.beneficiaryType ?? 'company') === 'individual';
 
   if (!company || (company.source ?? 'internal') !== 'portal') {
     return <div className="p-8 text-center text-text-muted">{lang === 'ar' ? 'لم يتم العثور على طلب التسجيل' : 'Registration request not found'}</div>;
@@ -118,20 +119,52 @@ export function ClientRegistrationRequest() {
     }
   };
 
-  const detailRows = [
-    [lang === 'ar' ? 'اسم الشركة بالعربية' : 'Company Arabic Name', company.nameAr],
-    [lang === 'ar' ? 'اسم الشركة بالإنجليزية' : 'Company English Name', company.nameEn],
-    [lang === 'ar' ? 'الموقع الإلكتروني' : 'Website', company.website || '—'],
-    [lang === 'ar' ? 'البريد الإلكتروني' : 'Email', company.email || '—'],
-    [lang === 'ar' ? 'رقم الشركة' : 'Company Phone', company.phone || company.mobile || '—'],
-    [lang === 'ar' ? 'العنوان الوطني' : 'Saudi Address', [company.addressLine1, company.addressLine2, company.city, company.postalCode].filter(Boolean).join(', ') || '—'],
-    [lang === 'ar' ? 'مسؤول التواصل' : 'Contact Person', company.representativeName || '—'],
-    [lang === 'ar' ? 'المنصب' : 'Position', company.representativeTitle || '—'],
-    [lang === 'ar' ? 'بريد مسؤول التواصل' : 'Contact Email', company.contactEmail || '—'],
-    [lang === 'ar' ? 'جوال مسؤول التواصل' : 'Contact Mobile', company.contactMobile || '—'],
-    [lang === 'ar' ? 'سنوات الخبرة' : 'Years of Experience', company.yearsOfExperience?.toString() || '—'],
-    [lang === 'ar' ? 'عن الشركة' : 'About', company.about || '—'],
-  ];
+  const detailRows = isIndividual
+    ? [
+        [lang === 'ar' ? 'نوع المستفيد' : 'Beneficiary Type', lang === 'ar' ? 'فرد' : 'Individual'],
+        [lang === 'ar' ? 'الاسم الكامل' : 'Full Name', company.individualProfile?.fullName || company.nameAr || company.nameEn || '—'],
+        [lang === 'ar' ? 'تاريخ الميلاد' : 'Date of Birth', company.individualProfile?.dateOfBirth || '—'],
+        [lang === 'ar' ? 'الجنسية' : 'Nationality', company.individualProfile?.nationality || '—'],
+        [lang === 'ar' ? 'رقم الهوية/الإقامة' : 'National ID / Iqama', company.individualProfile?.nationalIdOrIqama || '—'],
+        [lang === 'ar' ? 'البريد الإلكتروني' : 'Email', company.contactEmail || company.email || '—'],
+        [lang === 'ar' ? 'الجوال' : 'Mobile', company.contactMobile || company.mobile || '—'],
+        [lang === 'ar' ? 'المدينة' : 'City', company.city || '—'],
+      ]
+    : [
+        [lang === 'ar' ? 'نوع المستفيد' : 'Beneficiary Type', lang === 'ar' ? 'شركة' : 'Company'],
+        [lang === 'ar' ? 'اسم الشركة بالعربية' : 'Company Arabic Name', company.nameAr],
+        [lang === 'ar' ? 'اسم الشركة بالإنجليزية' : 'Company English Name', company.nameEn],
+        [lang === 'ar' ? 'الموقع الإلكتروني' : 'Website', company.website || '—'],
+        [lang === 'ar' ? 'البريد الإلكتروني' : 'Email', company.email || '—'],
+        [lang === 'ar' ? 'رقم الشركة' : 'Company Phone', company.phone || company.mobile || '—'],
+        [lang === 'ar' ? 'العنوان الوطني' : 'Saudi Address', [company.addressLine1, company.addressLine2, company.city, company.postalCode].filter(Boolean).join(', ') || '—'],
+        [lang === 'ar' ? 'مسؤول التواصل' : 'Contact Person', company.representativeName || '—'],
+        [lang === 'ar' ? 'المنصب' : 'Position', company.representativeTitle || '—'],
+        [lang === 'ar' ? 'بريد مسؤول التواصل' : 'Contact Email', company.contactEmail || '—'],
+        [lang === 'ar' ? 'جوال مسؤول التواصل' : 'Contact Mobile', company.contactMobile || '—'],
+        [lang === 'ar' ? 'سنوات الخبرة' : 'Years of Experience', company.yearsOfExperience?.toString() || '—'],
+        [lang === 'ar' ? 'عن الشركة' : 'About', company.about || '—'],
+      ];
+
+  const legalDocumentTypeLabel = (type: string) => {
+    const mapAr: Record<string, string> = {
+      cr: 'السجل التجاري',
+      license: 'الرخصة',
+      national_address: 'العنوان الوطني',
+      media_content_production_license: 'رخصة إنتاج المحتوى الإعلامي المرئي والمسموع',
+      cv: 'السيرة الذاتية',
+      national_id_or_iqama: 'الهوية/الإقامة',
+    };
+    const mapEn: Record<string, string> = {
+      cr: 'Commercial Registration',
+      license: 'License',
+      national_address: 'National Address',
+      media_content_production_license: 'Audio-Visual Media Content Production License',
+      cv: 'CV',
+      national_id_or_iqama: 'National ID / Iqama',
+    };
+    return lang === 'ar' ? (mapAr[type] ?? type) : (mapEn[type] ?? type);
+  };
 
   return (
     <div className="space-y-6">
@@ -166,14 +199,14 @@ export function ClientRegistrationRequest() {
 
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-text-main">{lang === 'ar' ? 'المستندات القانونية' : 'Legal Documents'}</h2>
+          <h2 className="text-lg font-semibold text-text-main">{lang === 'ar' ? 'المستندات المرفقة' : 'Attached Documents'}</h2>
           <div className="mt-4 space-y-2">
             {(company.legalDocuments ?? []).length > 0 ? (
               company.legalDocuments?.map((doc) => (
                 <div key={`${doc.type}-${doc.name}`} className="dashboard-item-card flex items-center justify-between gap-3 p-3">
                   <div className="min-w-0">
                     <p className="truncate font-medium text-text-main">{doc.name}</p>
-                    <p className="text-xs text-text-muted">{doc.type}</p>
+                    <p className="text-xs text-text-muted">{legalDocumentTypeLabel(doc.type)}</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => void downloadDocument(doc)}>
                     <Download className="me-1 h-4 w-4" />
