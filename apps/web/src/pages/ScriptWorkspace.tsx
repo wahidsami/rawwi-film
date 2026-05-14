@@ -191,6 +191,20 @@ type ImportDocumentCases = {
   htmlTableDetected: boolean;
 };
 
+type RevisionHistorySnapshot = {
+  exportedAt: string;
+  versions: Array<{
+    id: string;
+    versionNumber: number;
+    sourceFileName?: string | null;
+    sourceFileType?: string | null;
+    sourceFileSize?: number | null;
+    sourceFileUrl?: string | null;
+    createdAt: string;
+  }>;
+  cycles: Array<Record<string, unknown>>;
+};
+
 function parseImportDocumentCases(progress: Record<string, unknown> | undefined): ImportDocumentCases | null {
   const raw = progress?.documentCases;
   if (!raw || typeof raw !== 'object') return null;
@@ -1919,10 +1933,13 @@ export function ScriptWorkspace() {
   }, [script?.id, startPolling]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Report history ──
-  const [sidebarTab, setSidebarTab] = useState<'findings' | 'reports'>('findings');
+  const [sidebarTab, setSidebarTab] = useState<'findings' | 'reports' | 'cycles'>('findings');
   const [reportHistory, setReportHistory] = useState<ReportListItem[]>([]);
   const [revisionCycleSummary, setRevisionCycleSummary] = useState<ScriptRevisionCycleSummaryItem[]>([]);
   const [revisionCycleSummaryLoading, setRevisionCycleSummaryLoading] = useState(false);
+  const [revisionHistorySnapshot, setRevisionHistorySnapshot] = useState<RevisionHistorySnapshot | null>(null);
+  const [revisionHistorySnapshotLoading, setRevisionHistorySnapshotLoading] = useState(false);
+  const [selectedCycleDetails, setSelectedCycleDetails] = useState<ScriptRevisionCycleSummaryItem | null>(null);
   const [revisionHistoryExporting, setRevisionHistoryExporting] = useState(false);
   const [approveDecisionReportId, setApproveDecisionReportId] = useState<string | null>(null);
   const [approveDecisionSubmitting, setApproveDecisionSubmitting] = useState(false);
@@ -2061,6 +2078,55 @@ export function ScriptWorkspace() {
     };
   }, [reportHistory, user?.id, lang, formatOptionalReportDate, safeDateFromValue]);
   const hasGeneratedReport = reportHistory.length > 0 || !!reportIdWhenJobCompleted;
+  const revisionHistoryVersionById = useMemo(() => {
+    const entries = revisionHistorySnapshot?.versions ?? [];
+    return new Map(entries.map((version) => [version.id, version]));
+  }, [revisionHistorySnapshot]);
+  const firstSubmittedVersion = useMemo(() => {
+    const versions = revisionHistorySnapshot?.versions ?? [];
+    return [...versions].sort((a, b) => a.versionNumber - b.versionNumber)[0] ?? null;
+  }, [revisionHistorySnapshot]);
+
+  const getCycleStatusLabel = useCallback((status: string | null | undefined) => {
+    const statusKey = String(status ?? '').toLowerCase();
+    if (statusKey === 'sent') return lang === 'ar' ? 'مرسلة للمستفيد' : 'Sent to Beneficiary';
+    if (statusKey === 'returned') return lang === 'ar' ? 'عاد من المستفيد' : 'Returned by Beneficiary';
+    if (statusKey === 'reanalyzed') return lang === 'ar' ? 'أعيد تحليله' : 'Reanalyzed';
+    if (statusKey === 'closed') return lang === 'ar' ? 'مغلقة' : 'Closed';
+    return status || (lang === 'ar' ? 'غير معروف' : 'Unknown');
+  }, [lang]);
+
+  const getCycleVersionCandidates = useCallback((cycle: ScriptRevisionCycleSummaryItem) => {
+    const rawCycle = (revisionHistorySnapshot?.cycles ?? []).find((entry) => {
+      const rawCycleNumber = Number(
+        (entry.cycleNumber ?? entry.cycle_number ?? entry.number ?? entry.index ?? 0) as number,
+      );
+      return rawCycleNumber === cycle.cycleNumber;
+    }) ?? null;
+
+    const rawVersionIds = rawCycle
+      ? [
+          rawCycle.sourceVersionId,
+          rawCycle.source_version_id,
+          rawCycle.returnedVersionId,
+          rawCycle.returned_version_id,
+          rawCycle.baselineVersionId,
+          rawCycle.baseline_version_id,
+          rawCycle.revisedVersionId,
+          rawCycle.revised_version_id,
+          rawCycle.reanalyzedVersionId,
+          rawCycle.reanalyzed_version_id,
+        ].filter((value): value is string => typeof value === 'string' && value.length > 0)
+      : [];
+
+    const resolved = rawVersionIds
+      .map((versionId) => revisionHistoryVersionById.get(versionId) ?? null)
+      .filter((version): version is NonNullable<typeof version> => Boolean(version));
+
+    if (resolved.length > 0) return resolved;
+    return firstSubmittedVersion ? [firstSubmittedVersion] : [];
+  }, [firstSubmittedVersion, revisionHistorySnapshot, revisionHistoryVersionById]);
+
   const missingReportReason = lang === 'ar'
     ? 'لا يمكن تنفيذ هذا الإجراء قبل تشغيل التحليل وإنشاء أول تقرير.'
     : 'You cannot do this before running the analysis and generating the first report.';
@@ -2220,6 +2286,23 @@ export function ScriptWorkspace() {
     }
   }, [id]);
 
+  const loadRevisionHistorySnapshot = useCallback(async () => {
+    if (!id) return;
+    setRevisionHistorySnapshotLoading(true);
+    try {
+      const payload = await scriptsApi.getRevisionHistoryExport(id);
+      setRevisionHistorySnapshot({
+        exportedAt: payload.exportedAt,
+        versions: Array.isArray(payload.versions) ? payload.versions : [],
+        cycles: Array.isArray(payload.cycles) ? payload.cycles : [],
+      });
+    } catch {
+      setRevisionHistorySnapshot(null);
+    } finally {
+      setRevisionHistorySnapshotLoading(false);
+    }
+  }, [id]);
+
   const handleExportRevisionHistory = useCallback(async () => {
     if (!id) return;
     setRevisionHistoryExporting(true);
@@ -2266,6 +2349,12 @@ export function ScriptWorkspace() {
   useEffect(() => {
     if (sidebarTab === 'reports') loadRevisionCycleSummary();
   }, [sidebarTab, loadRevisionCycleSummary]);
+  useEffect(() => {
+    if (sidebarTab === 'cycles') {
+      loadRevisionCycleSummary();
+      loadRevisionHistorySnapshot();
+    }
+  }, [sidebarTab, loadRevisionCycleSummary, loadRevisionHistorySnapshot]);
 
   // Reset restore flag when switching to another script
   useEffect(() => {
@@ -2286,6 +2375,11 @@ export function ScriptWorkspace() {
   useEffect(() => {
     if (isSuccessfulJobStatus(analysisJob?.status)) loadRevisionCycleSummary();
   }, [analysisJob?.status, loadRevisionCycleSummary]);
+  useEffect(() => {
+    if (isSuccessfulJobStatus(analysisJob?.status) && sidebarTab === 'cycles') {
+      loadRevisionHistorySnapshot();
+    }
+  }, [analysisJob?.status, sidebarTab, loadRevisionHistorySnapshot]);
 
   const openRejectDecisionModal = useCallback((reportId: string) => {
     const hasReport = reportHistory.some((report) => report.id === reportId);
@@ -5951,7 +6045,7 @@ export function ScriptWorkspace() {
         </div>
 
         {/* Right: Sidebar Panel */}
-        <div className="w-80 flex-shrink-0 bg-surface border-s border-border flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
+        <div className="w-[26rem] flex-shrink-0 bg-surface border-s border-border flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
 
           {/* Sidebar tab bar */}
           <div className="flex border-b border-border bg-background/50">
@@ -5976,6 +6070,15 @@ export function ScriptWorkspace() {
               <FileText className="w-3.5 h-3.5" />
               {lang === 'ar' ? 'التقارير' : 'Reports'}
               {reportHistory.length > 0 && <Badge variant="outline" className="text-[10px] px-1.5">{reportHistory.length}</Badge>}
+            </button>
+            <button
+              className={cn("flex-1 py-3 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5",
+                sidebarTab === 'cycles' ? 'text-primary border-b-2 border-primary' : 'text-text-muted hover:text-text-main')}
+              onClick={() => setSidebarTab('cycles')}
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              {lang === 'ar' ? 'سجل الدورات' : 'Cycle History'}
+              {revisionCycleSummary.length > 0 && <Badge variant="outline" className="text-[10px] px-1.5">{revisionCycleSummary.length}</Badge>}
             </button>
           </div>
 
@@ -6531,83 +6634,6 @@ export function ScriptWorkspace() {
                     : (lang === 'ar' ? 'تنزيل تقرير تاريخ الدورات' : 'Download Revision History')}
                 </Button>
               </div>
-              {revisionCycleSummaryLoading ? (
-                <div className="rounded-xl border border-border bg-surface p-3 text-xs text-text-muted">
-                  {lang === 'ar' ? 'جاري تحميل ملخص دورات المراجعة...' : 'Loading revision cycle summary...'}
-                </div>
-              ) : null}
-              {revisionCycleSummary.length > 0 ? (
-                <div className="rounded-xl border border-border bg-surface p-3 space-y-2">
-                  <p className="text-xs font-semibold text-text-main">
-                    {lang === 'ar' ? 'ملخص مقارنة دورات المراجعة' : 'Revision Cycle Comparison Summary'}
-                  </p>
-                  <div className="space-y-2">
-                    {revisionCycleSummary.slice(0, 3).map((cycle) => {
-                      const statusKey = String(cycle.status ?? '').toLowerCase();
-                      const statusLabel =
-                        statusKey === 'sent'
-                          ? (lang === 'ar' ? 'مرسلة للمستفيد' : 'Sent to Beneficiary')
-                          : statusKey === 'returned'
-                            ? (lang === 'ar' ? 'عاد من المستفيد' : 'Returned by Beneficiary')
-                            : statusKey === 'reanalyzed'
-                              ? (lang === 'ar' ? 'أعيد تحليله' : 'Reanalyzed')
-                              : statusKey === 'closed'
-                                ? (lang === 'ar' ? 'مغلقة' : 'Closed')
-                                : cycle.status;
-                      const delta = cycle.findingsDelta;
-                      const deltaPrefix = typeof delta === 'number' && delta > 0 ? '+' : '';
-                      return (
-                        <div key={cycle.id} className="rounded-lg border border-border/60 bg-background/40 p-2 text-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-text-main">
-                              {lang === 'ar' ? `الدورة ${cycle.cycleNumber}` : `Cycle ${cycle.cycleNumber}`}
-                            </span>
-                            <Badge variant={statusKey === 'reanalyzed' ? 'success' : 'outline'} className="text-[10px]">
-                              {statusLabel}
-                            </Badge>
-                          </div>
-                          <div className="mt-1 text-text-muted">
-                            {lang === 'ar' ? 'المرجعي: ' : 'Baseline: '}
-                            <span className="text-text-main">{cycle.baselineFindings}</span>
-                            {lang === 'ar' ? ' • بعد الإعادة: ' : ' • Reanalysis: '}
-                            <span className="text-text-main">{cycle.reanalyzedFindings ?? '—'}</span>
-                            {typeof delta === 'number' ? (
-                              <>
-                                {lang === 'ar' ? ' • الفرق: ' : ' • Delta: '}
-                                <span className={cn(delta <= 0 ? 'text-success' : 'text-warning')}>
-                                  {`${deltaPrefix}${delta}`}
-                                </span>
-                              </>
-                            ) : null}
-                          </div>
-                          {cycle.comparisonSummary?.canonical ? (
-                            <div className="mt-1 text-text-muted">
-                              {lang === 'ar' ? 'المقارنة النوعية: ' : 'Canonical diff: '}
-                              <span className="text-success">
-                                {lang === 'ar'
-                                  ? `معالجة ${cycle.comparisonSummary.canonical.resolved_count ?? 0}`
-                                  : `resolved ${cycle.comparisonSummary.canonical.resolved_count ?? 0}`}
-                              </span>
-                              {' • '}
-                              <span className="text-warning">
-                                {lang === 'ar'
-                                  ? `مستمرة ${cycle.comparisonSummary.canonical.persisting_count ?? 0}`
-                                  : `persisting ${cycle.comparisonSummary.canonical.persisting_count ?? 0}`}
-                              </span>
-                              {' • '}
-                              <span className="text-error">
-                                {lang === 'ar'
-                                  ? `جديدة ${cycle.comparisonSummary.canonical.new_count ?? 0}`
-                                  : `new ${cycle.comparisonSummary.canonical.new_count ?? 0}`}
-                              </span>
-                            </div>
-                          ) : null}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : null}
               {/* reports tab */}
               {reportHistory.length === 0 ? (
                 <div className="text-center p-8 text-text-muted text-sm border-2 border-dashed border-border rounded-xl">
@@ -6702,6 +6728,102 @@ export function ScriptWorkspace() {
                   );
                 })
               )}
+            </div>
+          )}
+
+          {/* ── Cycle History tab ── */}
+          {sidebarTab === 'cycles' && (
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background/30">
+              <div className="flex justify-end">
+                <Button size="sm" variant="outline" onClick={handleExportRevisionHistory} disabled={revisionHistoryExporting || !id}>
+                  <Download className="w-3 h-3 mr-1" />
+                  {revisionHistoryExporting
+                    ? (lang === 'ar' ? 'جاري التحضير...' : 'Preparing...')
+                    : (lang === 'ar' ? 'تنزيل تقرير تاريخ الدورات' : 'Download Revision History')}
+                </Button>
+              </div>
+              {(revisionCycleSummaryLoading || revisionHistorySnapshotLoading) ? (
+                <div className="rounded-xl border border-border bg-surface p-3 text-xs text-text-muted">
+                  {lang === 'ar' ? 'جاري تحميل سجل الدورات...' : 'Loading cycle history...'}
+                </div>
+              ) : null}
+              {revisionCycleSummary.length === 0 && !revisionCycleSummaryLoading ? (
+                <div className="text-center p-8 text-text-muted text-sm border-2 border-dashed border-border rounded-xl">
+                  {lang === 'ar' ? 'لا توجد دورات مراجعة مسجلة بعد.' : 'No revision cycles recorded yet.'}
+                </div>
+              ) : null}
+              {revisionCycleSummary.map((cycle) => {
+                const statusKey = String(cycle.status ?? '').toLowerCase();
+                const statusLabel = getCycleStatusLabel(cycle.status);
+                const delta = cycle.findingsDelta;
+                const deltaPrefix = typeof delta === 'number' && delta > 0 ? '+' : '';
+                const cycleVersions = getCycleVersionCandidates(cycle);
+                return (
+                  <button
+                    type="button"
+                    key={cycle.id}
+                    onClick={() => setSelectedCycleDetails(cycle)}
+                    className="w-full text-start rounded-xl border border-border bg-surface p-3 space-y-2 shadow-sm hover:border-primary/40 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-text-main">
+                        {lang === 'ar' ? `الدورة ${cycle.cycleNumber}` : `Cycle ${cycle.cycleNumber}`}
+                      </span>
+                      <Badge variant={statusKey === 'reanalyzed' ? 'success' : 'outline'} className="text-[10px]">
+                        {statusLabel}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-text-muted">
+                      <span>{lang === 'ar' ? 'الإرسال: ' : 'Sent: '}{formatOptionalReportDate(cycle.sentAt)} {formatOptionalTimeValue(cycle.sentAt)}</span>
+                      <span>{lang === 'ar' ? ' • المرجعي: ' : ' • Baseline: '}<span className="text-text-main">{cycle.baselineFindings}</span></span>
+                      <span>{lang === 'ar' ? ' • بعد الإعادة: ' : ' • Reanalysis: '}<span className="text-text-main">{cycle.reanalyzedFindings ?? '—'}</span></span>
+                      {typeof delta === 'number' && (
+                        <span>
+                          {lang === 'ar' ? ' • الفرق: ' : ' • Delta: '}
+                          <span className={cn(delta <= 0 ? 'text-success' : 'text-warning')}>{`${deltaPrefix}${delta}`}</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {cycleVersions.slice(0, 2).map((version) => (
+                        <a
+                          key={`${cycle.id}-${version.id}`}
+                          href={version.sourceFileUrl ?? '#'}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[11px] px-2 py-1 rounded border border-border hover:border-primary/40 text-text-main"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!version.sourceFileUrl) e.preventDefault();
+                          }}
+                        >
+                          {lang === 'ar'
+                            ? `مستند النص V${version.versionNumber}`
+                            : `Script DOCX V${version.versionNumber}`}
+                        </a>
+                      ))}
+                      {cycle.sourceReportId && (
+                        <a
+                          href={`/report/${cycle.sourceReportId}?by=id`}
+                          className="text-[11px] px-2 py-1 rounded border border-border hover:border-primary/40 text-text-main"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {lang === 'ar' ? 'تقرير الإرسال' : 'Sent Report'}
+                        </a>
+                      )}
+                      {cycle.reanalyzedReportId && (
+                        <a
+                          href={`/report/${cycle.reanalyzedReportId}?by=id`}
+                          className="text-[11px] px-2 py-1 rounded border border-border hover:border-primary/40 text-text-main"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {lang === 'ar' ? 'تقرير الإعادة' : 'Reanalysis Report'}
+                        </a>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -7593,6 +7715,92 @@ export function ScriptWorkspace() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!selectedCycleDetails}
+        onClose={() => setSelectedCycleDetails(null)}
+        title={selectedCycleDetails ? (lang === 'ar' ? `تفاصيل الدورة ${selectedCycleDetails.cycleNumber}` : `Cycle ${selectedCycleDetails.cycleNumber} Details`) : ''}
+        className="max-w-2xl"
+      >
+        {selectedCycleDetails && (
+          <div className="space-y-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg border border-border bg-background/40 p-3">
+                <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'الحالة' : 'Status'}</p>
+                <p className="font-semibold text-text-main">{getCycleStatusLabel(selectedCycleDetails.status)}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-background/40 p-3">
+                <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'أُرسلت في' : 'Sent at'}</p>
+                <p className="font-semibold text-text-main">{formatOptionalReportDate(selectedCycleDetails.sentAt)} {formatOptionalTimeValue(selectedCycleDetails.sentAt)}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-background/40 p-3">
+                <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'رجعت في' : 'Returned at'}</p>
+                <p className="font-semibold text-text-main">{selectedCycleDetails.returnedAt ? `${formatOptionalReportDate(selectedCycleDetails.returnedAt)} ${formatOptionalTimeValue(selectedCycleDetails.returnedAt)}` : '—'}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-background/40 p-3">
+                <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'أعيد تحليلها في' : 'Reanalyzed at'}</p>
+                <p className="font-semibold text-text-main">{selectedCycleDetails.reanalyzedAt ? `${formatOptionalReportDate(selectedCycleDetails.reanalyzedAt)} ${formatOptionalTimeValue(selectedCycleDetails.reanalyzedAt)}` : '—'}</p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border bg-background/40 p-3">
+              <p className="text-xs text-text-muted mb-2">{lang === 'ar' ? 'ملفات النص للدورة' : 'Cycle script documents'}</p>
+              <div className="flex flex-wrap gap-2">
+                {getCycleVersionCandidates(selectedCycleDetails).map((version) => (
+                  <a
+                    key={`${selectedCycleDetails.id}-modal-${version.id}`}
+                    href={version.sourceFileUrl ?? '#'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs px-2 py-1 rounded border border-border hover:border-primary/40 text-text-main"
+                    onClick={(e) => {
+                      if (!version.sourceFileUrl) e.preventDefault();
+                    }}
+                  >
+                    {version.sourceFileName?.trim() || (lang === 'ar' ? `مستند النص V${version.versionNumber}` : `Script DOCX V${version.versionNumber}`)}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border bg-background/40 p-3">
+              <p className="text-xs text-text-muted mb-2">{lang === 'ar' ? 'تقارير الدورة' : 'Cycle reports'}</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedCycleDetails.sourceReportId && (
+                  <a
+                    href={`/report/${selectedCycleDetails.sourceReportId}?by=id`}
+                    className="text-xs px-2 py-1 rounded border border-border hover:border-primary/40 text-text-main"
+                  >
+                    {lang === 'ar' ? 'تقرير الإرسال للمراجعة' : 'Sent-for-review report'}
+                  </a>
+                )}
+                {selectedCycleDetails.reanalyzedReportId && (
+                  <a
+                    href={`/report/${selectedCycleDetails.reanalyzedReportId}?by=id`}
+                    className="text-xs px-2 py-1 rounded border border-border hover:border-primary/40 text-text-main"
+                  >
+                    {lang === 'ar' ? 'تقرير إعادة التحليل' : 'Reanalysis report'}
+                  </a>
+                )}
+                {!selectedCycleDetails.sourceReportId && !selectedCycleDetails.reanalyzedReportId && (
+                  <p className="text-xs text-text-muted">{lang === 'ar' ? 'لا توجد تقارير مرتبطة بهذه الدورة بعد.' : 'No reports linked to this cycle yet.'}</p>
+                )}
+              </div>
+            </div>
+
+            {selectedCycleDetails.comparisonSummary?.canonical ? (
+              <div className="rounded-lg border border-border bg-background/40 p-3">
+                <p className="text-xs text-text-muted mb-2">{lang === 'ar' ? 'مقارنة النتائج' : 'Findings comparison'}</p>
+                <div className="text-sm text-text-main flex flex-wrap gap-3">
+                  <span className="text-success">{lang === 'ar' ? `معالجة: ${selectedCycleDetails.comparisonSummary.canonical.resolved_count ?? 0}` : `Resolved: ${selectedCycleDetails.comparisonSummary.canonical.resolved_count ?? 0}`}</span>
+                  <span className="text-warning">{lang === 'ar' ? `مستمرة: ${selectedCycleDetails.comparisonSummary.canonical.persisting_count ?? 0}` : `Persisting: ${selectedCycleDetails.comparisonSummary.canonical.persisting_count ?? 0}`}</span>
+                  <span className="text-error">{lang === 'ar' ? `جديدة: ${selectedCycleDetails.comparisonSummary.canonical.new_count ?? 0}` : `New: ${selectedCycleDetails.comparisonSummary.canonical.new_count ?? 0}`}</span>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
       </Modal>
 
       {/* Persistent Selection Overlay */}
