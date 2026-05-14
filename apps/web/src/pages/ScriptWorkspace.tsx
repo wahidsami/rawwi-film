@@ -1956,6 +1956,15 @@ export function ScriptWorkspace() {
   const [sendReviewDecisionShareFormats, setSendReviewDecisionShareFormats] = useState<Array<'pdf' | 'docx'>>(['pdf', 'docx']);
   const [sendReviewDecisionReportIds, setSendReviewDecisionReportIds] = useState<string[]>([]);
   const [sendReviewDecisionSubmitting, setSendReviewDecisionSubmitting] = useState(false);
+  const [isScriptDetailsModalOpen, setIsScriptDetailsModalOpen] = useState(false);
+  const [scriptDetailsVersions, setScriptDetailsVersions] = useState<Array<{
+    id: string;
+    versionNumber: number;
+    source_file_name?: string;
+    source_file_url?: string;
+    createdAt?: string;
+  }>>([]);
+  const [scriptDetailsLoading, setScriptDetailsLoading] = useState(false);
 
   // ── Report findings (for editor highlights) ──
   const [selectedReportForHighlights, setSelectedReportForHighlights] = useState<ReportListItem | null>(null);
@@ -2078,6 +2087,17 @@ export function ScriptWorkspace() {
     };
   }, [reportHistory, user?.id, lang, formatOptionalReportDate, safeDateFromValue]);
   const hasGeneratedReport = reportHistory.length > 0 || !!reportIdWhenJobCompleted;
+  const getFileNameFromUrl = useCallback((url?: string | null) => {
+    if (!url) return '';
+    try {
+      const pathname = new URL(url).pathname;
+      const candidate = pathname.split('/').filter(Boolean).pop() ?? '';
+      return decodeURIComponent(candidate);
+    } catch {
+      const candidate = String(url).split('/').filter(Boolean).pop() ?? '';
+      return decodeURIComponent(candidate);
+    }
+  }, []);
   const revisionHistoryVersionById = useMemo(() => {
     const entries = revisionHistorySnapshot?.versions ?? [];
     return new Map(entries.map((version) => [version.id, version]));
@@ -2165,6 +2185,26 @@ export function ScriptWorkspace() {
       reasonIfDisabled: missingReportReason,
     };
   }, [showDecisionBar, decisionCan, user, script, hasPermission, hasGeneratedReport, missingReportReason]);
+
+  const openScriptDetailsModal = useCallback(async () => {
+    if (!script?.id) return;
+    setIsScriptDetailsModalOpen(true);
+    setScriptDetailsLoading(true);
+    try {
+      const versions = await scriptsApi.getScriptVersions(script.id);
+      setScriptDetailsVersions(versions.map((version) => ({
+        id: version.id,
+        versionNumber: version.versionNumber,
+        source_file_name: version.source_file_name,
+        source_file_url: version.source_file_url,
+        createdAt: version.createdAt,
+      })));
+    } catch {
+      setScriptDetailsVersions([]);
+    } finally {
+      setScriptDetailsLoading(false);
+    }
+  }, [script?.id]);
   const selectedWorkspaceReportReviewStatus =
     selectedReportSummary?.reviewStatus ?? selectedReportForHighlights?.reviewStatus ?? null;
   const workspaceDecisionStatus = selectedWorkspaceReportReviewStatus ?? script?.status ?? 'draft';
@@ -5572,6 +5612,15 @@ export function ScriptWorkspace() {
               )}
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void openScriptDetailsModal()}
+            className="hidden sm:flex gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            {lang === 'ar' ? 'تفاصيل النص' : 'Script Details'}
+          </Button>
           <div className="relative hidden sm:block">
             <Button
               variant="outline"
@@ -7744,6 +7793,97 @@ export function ScriptWorkspace() {
                 ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…')
                 : (lang === 'ar' ? 'حفظ التعديل' : 'Save changes')}
             </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isScriptDetailsModalOpen}
+        onClose={() => setIsScriptDetailsModalOpen(false)}
+        title={lang === 'ar' ? 'تفاصيل النص المرسل' : 'Submitted Script Details'}
+        className="max-w-4xl"
+      >
+        <div className="space-y-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="rounded-lg border border-border bg-background/40 p-3">
+              <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'عنوان النص' : 'Script title'}</p>
+              <p className="text-sm font-semibold text-text-main break-words">{script.title || '—'}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background/40 p-3">
+              <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'نوع الإنتاج' : 'Production type'}</p>
+              <p className="text-sm font-semibold text-text-main">{script.type || '—'}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background/40 p-3">
+              <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'تصنيف العمل' : 'Work classification'}</p>
+              <p className="text-sm font-semibold text-text-main">{script.workClassification || '—'}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background/40 p-3">
+              <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'الحالة الحالية' : 'Current status'}</p>
+              <p className="text-sm font-semibold text-text-main">{script.status || '—'}</p>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-background/40 p-3">
+            <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'ملخص القصة' : 'Story summary'}</p>
+            <p className="text-sm text-text-main whitespace-pre-wrap">{script.storySummary || script.synopsis || '—'}</p>
+          </div>
+
+          <div className="rounded-lg border border-border bg-background/40 p-3">
+            <p className="text-xs text-text-muted mb-2">{lang === 'ar' ? 'المرفقات المرسلة' : 'Submitted attachments'}</p>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-text-main">{lang === 'ar' ? 'ملف ملخص النص (PDF)' : 'Script summary file (PDF)'}</span>
+                {script.scriptSummaryPdfUrl ? (
+                  <a href={script.scriptSummaryPdfUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline break-all text-xs">
+                    {getFileNameFromUrl(script.scriptSummaryPdfUrl) || (lang === 'ar' ? 'تنزيل الملف' : 'Download file')}
+                  </a>
+                ) : <span className="text-text-muted">—</span>}
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-text-main">{lang === 'ar' ? 'هل يحتوي على مشاهد أمنية؟' : 'Contains security scenes?'}</span>
+                <span className="text-text-muted">
+                  {script.hasSecurityScenes == null ? '—' : script.hasSecurityScenes ? (lang === 'ar' ? 'نعم' : 'Yes') : (lang === 'ar' ? 'لا' : 'No')}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-text-main">{lang === 'ar' ? 'مرفق المحتوى الأمني' : 'Security content attachment'}</span>
+                {script.securityContentAttachmentUrl ? (
+                  <a href={script.securityContentAttachmentUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline break-all text-xs">
+                    {getFileNameFromUrl(script.securityContentAttachmentUrl) || (lang === 'ar' ? 'تنزيل الملف' : 'Download file')}
+                  </a>
+                ) : <span className="text-text-muted">—</span>}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-background/40 p-3">
+            <p className="text-xs text-text-muted mb-2">{lang === 'ar' ? 'نسخ ملف النص (DOCX)' : 'Script document versions (DOCX)'}</p>
+            {scriptDetailsLoading ? (
+              <p className="text-sm text-text-muted">{lang === 'ar' ? 'جاري تحميل النسخ...' : 'Loading versions...'}</p>
+            ) : scriptDetailsVersions.length === 0 ? (
+              <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد نسخ متاحة حالياً.' : 'No versions available yet.'}</p>
+            ) : (
+              <div className="space-y-2">
+                {scriptDetailsVersions.map((version) => (
+                  <div key={version.id} className="flex items-center justify-between gap-3 rounded border border-border/70 bg-surface px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-text-main truncate">
+                        {version.source_file_name || (lang === 'ar' ? `مستند النص V${version.versionNumber}` : `Script DOCX V${version.versionNumber}`)}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        {lang === 'ar' ? 'النسخة' : 'Version'} {version.versionNumber}
+                        {version.createdAt ? ` • ${formatOptionalReportDate(version.createdAt)} ${formatOptionalTimeValue(version.createdAt)}` : ''}
+                      </p>
+                    </div>
+                    {version.source_file_url ? (
+                      <a href={version.source_file_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
+                        {lang === 'ar' ? 'تنزيل' : 'Download'}
+                      </a>
+                    ) : <span className="text-xs text-text-muted">—</span>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Modal>
