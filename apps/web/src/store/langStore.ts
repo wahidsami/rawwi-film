@@ -158,8 +158,8 @@ const translations = {
     openScript: 'فتح النص',
     draft: 'مسودة',
     assigned: 'تم الإسناد',
-    analysis_running: 'جاري التحليل',
-    review_required: 'يتطلب المراجعة',
+    analysis_running: 'قيد المراجعة',
+    review_required: 'قيد المراجعة',
     completed: 'مكتمل',
     // Glossary
     lexiconManagement: 'إدارة قاموس المصطلحات العامية',
@@ -401,8 +401,8 @@ const translations = {
     openScript: 'Open Script',
     draft: 'Draft',
     assigned: 'Assigned',
-    analysis_running: 'Analysis Running',
-    review_required: 'Review Required',
+    analysis_running: 'In Review',
+    review_required: 'In Review',
     completed: 'Completed',
     // Glossary
     lexiconManagement: 'Slang Lexicon Management',

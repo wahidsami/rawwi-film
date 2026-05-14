@@ -25,8 +25,8 @@ function statusLabel(status: string, lang: 'ar' | 'en'): string {
   if (key === 'approved') return lang === 'ar' ? 'مفسوح' : 'Approved';
   if (key === 'rejected') return lang === 'ar' ? 'مرفوض' : 'Rejected';
   if (key === 'in_review') return lang === 'ar' ? 'قيد المراجعة' : 'In Review';
-  if (key === 'review_required') return lang === 'ar' ? 'بحاجة مراجعة' : 'Needs Review';
-  if (key === 'analysis_running') return lang === 'ar' ? 'التحليل جارٍ' : 'Analysis Running';
+  if (key === 'review_required') return lang === 'ar' ? 'قيد المراجعة' : 'In Review';
+  if (key === 'analysis_running') return lang === 'ar' ? 'قيد المراجعة' : 'In Review';
   if (key === 'draft') return lang === 'ar' ? 'مسودة' : 'Draft';
   return status;
 }
