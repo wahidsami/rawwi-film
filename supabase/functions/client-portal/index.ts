@@ -333,7 +333,17 @@ Deno.serve(async (req: Request) => {
     const yearsOfExperience = Number.parseInt(field(body, "yearsOfExperience") ?? "0", 10);
     const acceptedTerms = body.acceptedTerms === true || body.acceptedTerms === "true";
     const acceptedRegulations = body.acceptedRegulations === true || body.acceptedRegulations === "true";
-    const beneficiaryType = (typeof body.beneficiaryType === "string" && body.beneficiaryType.trim().toLowerCase() === "individual")
+    const beneficiaryTypeRaw = typeof body.beneficiaryType === "string" ? body.beneficiaryType.trim().toLowerCase() : "";
+    const individualSignals =
+      Boolean(field(body, "individualFullName")) ||
+      Boolean(field(body, "individualDateOfBirth")) ||
+      Boolean(field(body, "individualNationality")) ||
+      Boolean(field(body, "individualNationalIdOrIqama")) ||
+      Boolean(field(body, "individualCity")) ||
+      Boolean(field(body, "individualMobile")) ||
+      Boolean(individualCvFile) ||
+      Boolean(individualIdDocumentFile);
+    const beneficiaryType = beneficiaryTypeRaw === "individual" || (beneficiaryTypeRaw === "" && individualSignals)
       ? "individual"
       : "company";
     const individualFullName = field(body, "individualFullName");

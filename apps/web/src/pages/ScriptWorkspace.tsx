@@ -11,7 +11,7 @@ import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
 import { DocumentImportModal } from '@/components/import/DocumentImportModal';
-import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square, Search } from 'lucide-react';
+import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square, Search, MoreVertical } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getActionablePolicyArticles } from '@/data/policyMap';
 import {
@@ -1926,6 +1926,7 @@ export function ScriptWorkspace() {
   const [bulkReportFindingReviewSaving, setBulkReportFindingReviewSaving] = useState(false);
   const [reportFindingReviewReason, setReportFindingReviewReason] = useState('');
   const [reportFindingReviewSaving, setReportFindingReviewSaving] = useState(false);
+  const [findingActionsMenuId, setFindingActionsMenuId] = useState<string | null>(null);
   const findingCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   /** So we only restore saved highlight once per script (not on every reportHistory change). */
   const restoredHighlightRef = useRef(false);
@@ -2525,6 +2526,62 @@ export function ScriptWorkspace() {
     user?.id,
     reloadSelectedReportReviewLayer,
   ]);
+
+  const handleWorkspaceSetFindingAction = useCallback(async (finding: AnalysisFinding) => {
+    const current = ((finding as unknown as { actionText?: string | null }).actionText ?? '').trim();
+    const next = window.prompt(
+      lang === 'ar' ? 'اكتب الإجراء المطلوب لهذه الملاحظة:' : 'Enter action text for this finding:',
+      current
+    );
+    if (next === null) return;
+    try {
+      const res = await findingsApi.setFindingAction({
+        reviewFindingId: finding.id,
+        actionText: next.trim(),
+      });
+      if (res.reviewFinding) {
+        setReportReviewFindings((prev) => prev.map((row) => row.id === res.reviewFinding!.id ? res.reviewFinding! : row));
+      }
+      toast.success(lang === 'ar' ? 'تم حفظ الإجراء' : 'Action saved');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      toast.error(message || (lang === 'ar' ? 'تعذر حفظ الإجراء' : 'Failed to save action'));
+    }
+  }, [lang]);
+
+  const handleWorkspaceToggleInclusion = useCallback(async (finding: AnalysisFinding) => {
+    const isExcluded = ((finding as unknown as { includeInReport?: boolean | null }).includeInReport) === false;
+    try {
+      const res = await findingsApi.setReviewFindingReportVisibility({
+        reviewFindingId: finding.id,
+        includeInReport: isExcluded,
+      });
+      if (res.reviewFinding) {
+        setReportReviewFindings((prev) => prev.map((row) => row.id === res.reviewFinding!.id ? res.reviewFinding! : row));
+      }
+      toast.success(
+        isExcluded
+          ? (lang === 'ar' ? 'تم تضمين الملاحظة في التقرير' : 'Finding included in report')
+          : (lang === 'ar' ? 'تم استبعاد الملاحظة من التقرير' : 'Finding excluded from report')
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      toast.error(message || (lang === 'ar' ? 'تعذر تحديث حالة التقرير' : 'Failed to update report visibility'));
+    }
+  }, [lang]);
+
+  const handleWorkspaceDeleteFindingCard = useCallback(async (finding: AnalysisFinding) => {
+    const ok = window.confirm(lang === 'ar' ? 'هل تريد حذف بطاقة الملاحظة؟' : 'Delete this finding card?');
+    if (!ok) return;
+    try {
+      await findingsApi.deleteFindingCard({ reviewFindingId: finding.id });
+      setReportReviewFindings((prev) => prev.filter((row) => row.id !== finding.id));
+      toast.success(lang === 'ar' ? 'تم حذف بطاقة الملاحظة' : 'Finding card deleted');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      toast.error(message || (lang === 'ar' ? 'تعذر حذف بطاقة الملاحظة' : 'Failed to delete finding card'));
+    }
+  }, [lang]);
 
   const handleEditReportFindingSubmit = useCallback(async () => {
     if (!editReportFindingModal) return;
@@ -5973,7 +6030,7 @@ export function ScriptWorkspace() {
                             })()}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="relative flex items-center gap-1">
                           {f.source === 'manual' ? (
                             <Badge variant="outline" className="text-[10px]">{lang === 'ar' ? 'يدوي' : 'Manual'}</Badge>
                           ) : (f.source === 'ai' || f.source === 'lexicon_mandatory') ? (
@@ -6000,6 +6057,113 @@ export function ScriptWorkspace() {
                           <Badge variant={f.reviewStatus === 'approved' ? 'success' : 'error'} className="text-[10px]">
                             {f.reviewStatus === 'approved' ? (lang === 'ar' ? 'آمن' : 'Safe') : (lang === 'ar' ? 'مخالفة' : 'Violation')}
                           </Badge>
+                          {!isWorkspaceActionDisabledFinding(f) && (
+                            <>
+                              <button
+                                type="button"
+                                className="inline-flex h-6 w-6 items-center justify-center rounded border border-border bg-background text-text-muted hover:bg-surface"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFindingActionsMenuId((prev) => (prev === f.id ? null : f.id));
+                                }}
+                                aria-label={lang === 'ar' ? 'خيارات الملاحظة' : 'Finding actions'}
+                              >
+                                <MoreVertical className="h-3.5 w-3.5" />
+                              </button>
+                              {findingActionsMenuId === f.id && (
+                                <div
+                                  className="absolute right-0 top-7 z-20 min-w-[200px] rounded-md border border-border bg-background p-1 shadow-lg"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <button
+                                    type="button"
+                                    className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                                    onClick={() => {
+                                      void handleWorkspaceSetFindingAction(f);
+                                      setFindingActionsMenuId(null);
+                                    }}
+                                  >
+                                    {lang === 'ar' ? 'الإجراء' : 'Action'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                                    onClick={() => {
+                                      handleFindingCardClick(f);
+                                      setFindingActionsMenuId(null);
+                                    }}
+                                  >
+                                    {lang === 'ar' ? 'التتبع' : 'Trace'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                                    onClick={() => {
+                                      void handleWorkspaceToggleInclusion(f);
+                                      setFindingActionsMenuId(null);
+                                    }}
+                                  >
+                                    {(((f as unknown as { includeInReport?: boolean | null }).includeInReport) === false)
+                                      ? (lang === 'ar' ? 'تضمين في التقرير' : 'Include in report')
+                                      : (lang === 'ar' ? 'استبعاد من التقرير' : 'Exclude from report')}
+                                  </button>
+                                  {(() => {
+                                    const matchedRaw = matchWorkspaceRawFindingForReview(f, reportFindings);
+                                    if (!matchedRaw) return null;
+                                    return (
+                                      <>
+                                        {f.reviewStatus !== 'approved' ? (
+                                          <button
+                                            type="button"
+                                            className="w-full rounded px-2 py-1.5 text-start text-xs text-success hover:bg-success/10"
+                                            onClick={() => {
+                                              setReportFindingReviewModal({ findingId: matchedRaw.id, toStatus: 'approved', titleAr: f.titleAr || f.descriptionAr || '' });
+                                              setReportFindingReviewReason('');
+                                              setFindingActionsMenuId(null);
+                                            }}
+                                          >
+                                            {lang === 'ar' ? 'اعتماد كآمن' : 'Mark safe'}
+                                          </button>
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            className="w-full rounded px-2 py-1.5 text-start text-xs text-error hover:bg-error/10"
+                                            onClick={() => {
+                                              setReportFindingReviewModal({ findingId: matchedRaw.id, toStatus: 'violation', titleAr: f.titleAr || f.descriptionAr || '' });
+                                              setReportFindingReviewReason('');
+                                              setFindingActionsMenuId(null);
+                                            }}
+                                          >
+                                            {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert'}
+                                          </button>
+                                        )}
+                                        <button
+                                          type="button"
+                                          className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                                          onClick={() => {
+                                            setEditReportFindingModal(matchedRaw);
+                                            setFindingActionsMenuId(null);
+                                          }}
+                                        >
+                                          {lang === 'ar' ? 'تعديل' : 'Edit'}
+                                        </button>
+                                      </>
+                                    );
+                                  })()}
+                                  <button
+                                    type="button"
+                                    className="w-full rounded px-2 py-1.5 text-start text-xs text-error hover:bg-error/10"
+                                    onClick={() => {
+                                      void handleWorkspaceDeleteFindingCard(f);
+                                      setFindingActionsMenuId(null);
+                                    }}
+                                  >
+                                    {lang === 'ar' ? 'حذف' : 'Delete'}
+                                  </button>
+                                </div>
+                              )}
+                            </>
+                          )}
                         </div>
                       </div>
                       {cardPrimaryText && (
@@ -6035,48 +6199,6 @@ export function ScriptWorkspace() {
                             ? 'اضغط على البطاقة للانتقال إلى موضعها وتمييزها داخل النص.'
                             : 'Click the card to jump to and highlight its location in the script.'}
                       </p>
-                      {f.source !== 'manual' && !isWorkspaceActionDisabledFinding(f) && (
-                        <div className="flex flex-wrap gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-[10px] px-2"
-                            onClick={() => setEditReportFindingModal(f)}
-                          >
-                            {lang === 'ar' ? 'تعديل' : 'Edit'}
-                          </Button>
-                          {f.reviewStatus !== 'approved' ? (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-[10px] px-2 text-success border-success/30 hover:bg-success/10"
-                              onClick={() => {
-                                setReportFindingReviewModal({ findingId: f.id, toStatus: 'approved', titleAr: f.titleAr || f.descriptionAr || '' });
-                                setReportFindingReviewReason('');
-                              }}
-                            >
-                              <CheckCircle2 className="w-3 h-3 me-1" />
-                              {lang === 'ar' ? 'اعتماد كآمن' : 'Mark safe'}
-                            </Button>
-                          ) : (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-[10px] px-2 text-error border-error/30 hover:bg-error/10"
-                              onClick={() => {
-                                setReportFindingReviewModal({ findingId: f.id, toStatus: 'violation', titleAr: f.titleAr || f.descriptionAr || '' });
-                                setReportFindingReviewReason('');
-                              }}
-                            >
-                              <ShieldAlert className="w-3 h-3 me-1" />
-                              {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert'}
-                            </Button>
-                          )}
-                        </div>
-                      )}
                       {f.reviewStatus === 'approved' && f.reviewReason && (
                         <p className="text-[10px] text-success mt-1.5" dir="rtl">
                           {lang === 'ar' ? 'السبب:' : 'Reason:'} {f.reviewReason}

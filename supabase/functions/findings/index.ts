@@ -33,14 +33,12 @@ async function selectFindings(
     .from("analysis_findings")
     .select(extCols)
     .eq("job_id", jobId)
-    .eq("is_hidden", false)
     .order("article_id", { ascending: true });
   if (!error) return { data, error: null };
   const fb = await supabase
     .from("analysis_findings")
     .select(FINDING_COLS)
     .eq("job_id", jobId)
-    .eq("is_hidden", false)
     .order("article_id", { ascending: true });
   return fb;
 }
