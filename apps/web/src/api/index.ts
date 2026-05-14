@@ -777,6 +777,31 @@ export interface ScriptRevisionCycleSummaryResponse {
   cycles: ScriptRevisionCycleSummaryItem[];
 }
 
+export interface ScriptRevisionHistoryExportResponse {
+  exportedAt: string;
+  script: {
+    id: string;
+    title: string;
+    status: string;
+    currentVersionId?: string | null;
+    createdAt: string;
+    companyId?: string | null;
+    companyNameAr?: string | null;
+    companyNameEn?: string | null;
+  };
+  versions: Array<{
+    id: string;
+    versionNumber: number;
+    sourceFileName?: string | null;
+    sourceFileType?: string | null;
+    sourceFileSize?: number | null;
+    sourceFileUrl?: string | null;
+    extractionStatus?: string | null;
+    createdAt: string;
+  }>;
+  cycles: Array<Record<string, unknown>>;
+}
+
 export const scriptsApi = {
   getScripts: (): Promise<Script[]> => httpClient.get('/scripts'),
   getQuickScripts: (): Promise<Script[]> => httpClient.get('/scripts/quick'),
@@ -814,6 +839,8 @@ export const scriptsApi = {
     httpClient.get(`/scripts/${encodeURIComponent(scriptId)}/versions`, { signal: options?.signal }),
   getRevisionCycleSummary: (scriptId: string): Promise<ScriptRevisionCycleSummaryResponse> =>
     httpClient.get(`/scripts/${encodeURIComponent(scriptId)}/revision-cycles/summary`),
+  getRevisionHistoryExport: (scriptId: string): Promise<ScriptRevisionHistoryExportResponse> =>
+    httpClient.get(`/scripts/${encodeURIComponent(scriptId)}/revision-history`),
   createVersion: (scriptId: string, versionData: any, options?: { signal?: AbortSignal }): Promise<any> =>
     httpClient.post('/scripts/versions', { ...versionData, scriptId }, { signal: options?.signal }),
   /** Get signed upload URL; returns { url, path? }. */

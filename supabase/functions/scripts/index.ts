@@ -1960,6 +1960,148 @@ Deno.serve(async (req: Request) => {
       }),
     });
   }
+
+  // GET /scripts/:id/revision-history
+  const revisionHistoryMatch = rest.match(/^([^/]+)\/revision-history$/);
+  if (method === "GET" && revisionHistoryMatch) {
+    const scriptId = revisionHistoryMatch[1].trim();
+    const { data: scriptRow, error: scriptErr } = await supabase
+      .from("scripts")
+      .select("id, title, status, created_by, assignee_id, company_id, client_id, current_version_id, created_at")
+      .eq("id", scriptId)
+      .maybeSingle();
+    if (scriptErr || !scriptRow) return json({ error: "Script not found" }, 404);
+
+    const scriptAccess = scriptRow as { created_by: string | null; assignee_id: string | null };
+    const isAdminForCycles = await isUserAdmin(supabase, uid);
+    if (!isAdminForCycles && scriptAccess.created_by !== uid && scriptAccess.assignee_id !== uid) {
+      return json({ error: "Forbidden" }, 403);
+    }
+
+    const companyId = ((scriptRow as any).company_id ?? (scriptRow as any).client_id ?? "").toString();
+    const [{ data: company }, { data: versions }, { data: cycles, error: cyclesErr }] = await Promise.all([
+      companyId
+        ? supabase.from("clients").select("id, name_ar, name_en").eq("id", companyId).maybeSingle()
+        : Promise.resolve({ data: null as any }),
+      supabase
+        .from("script_versions")
+        .select("id, version_number, source_file_name, source_file_type, source_file_size, source_file_url, extraction_status, created_at")
+        .eq("script_id", scriptId)
+        .order("version_number", { ascending: true }),
+      supabase
+        .from("script_revision_cycles")
+        .select("id, cycle_number, status, sent_by, sent_at, returned_at, reanalyzed_at, source_report_id, source_job_id, reanalyzed_job_id, reanalyzed_report_id, beneficiary_returned_version_id, admin_note, created_at, updated_at")
+        .eq("script_id", scriptId)
+        .order("cycle_number", { ascending: true }),
+    ]);
+    if (cyclesErr) return json({ error: cyclesErr.message }, 500);
+
+    const cycleIds = (cycles ?? []).map((row: any) => row.id);
+    const reportIds = [...new Set(
+      (cycles ?? [])
+        .flatMap((row: any) => [row.source_report_id, row.reanalyzed_report_id])
+        .filter((v: unknown): v is string => typeof v === "string" && v.trim().length > 0),
+    )];
+    const actorIds = [...new Set((cycles ?? []).map((row: any) => row.sent_by).filter(Boolean))];
+
+    const [{ data: events }, { data: snapshots }, { data: comparisons }, { data: reports }, { data: actors }] = await Promise.all([
+      cycleIds.length > 0
+        ? supabase
+            .from("script_revision_cycle_events")
+            .select("id, cycle_id, event_type, actor_user_id, payload, created_at")
+            .in("cycle_id", cycleIds)
+            .order("created_at", { ascending: true })
+        : Promise.resolve({ data: [] as any[] }),
+      cycleIds.length > 0
+        ? supabase
+            .from("script_revision_cycle_snapshots")
+            .select("id, cycle_id, report_id, job_id, findings_total, findings_approved, findings_violation, severity_counts, type_counts, created_at")
+            .in("cycle_id", cycleIds)
+        : Promise.resolve({ data: [] as any[] }),
+      cycleIds.length > 0
+        ? supabase
+            .from("script_revision_cycle_comparisons")
+            .select("id, cycle_id, old_report_id, new_report_id, comparison_summary, comparison_payload, created_at")
+            .in("cycle_id", cycleIds)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] }),
+      reportIds.length > 0
+        ? supabase
+            .from("analysis_reports")
+            .select("id, job_id, review_status, review_notes, findings_count, severity_counts, created_at")
+            .in("id", reportIds)
+        : Promise.resolve({ data: [] as any[] }),
+      actorIds.length > 0
+        ? supabase.from("profiles").select("user_id, name, email").in("user_id", actorIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
+    const eventsByCycle = new Map<string, any[]>();
+    for (const row of events ?? []) {
+      const bucket = eventsByCycle.get(row.cycle_id) ?? [];
+      bucket.push(row);
+      eventsByCycle.set(row.cycle_id, bucket);
+    }
+    const snapshotsByCycle = new Map<string, any[]>();
+    for (const row of snapshots ?? []) {
+      const bucket = snapshotsByCycle.get(row.cycle_id) ?? [];
+      bucket.push(row);
+      snapshotsByCycle.set(row.cycle_id, bucket);
+    }
+    const comparisonByCycle = new Map<string, any>();
+    for (const row of comparisons ?? []) {
+      if (!comparisonByCycle.has(row.cycle_id)) comparisonByCycle.set(row.cycle_id, row);
+    }
+    const reportById = new Map((reports ?? []).map((row: any) => [row.id, row]));
+    const actorById = new Map((actors ?? []).map((row: any) => [row.user_id, row]));
+
+    return json({
+      exportedAt: new Date().toISOString(),
+      script: {
+        id: (scriptRow as any).id,
+        title: (scriptRow as any).title,
+        status: (scriptRow as any).status,
+        currentVersionId: (scriptRow as any).current_version_id ?? null,
+        createdAt: (scriptRow as any).created_at,
+        companyId,
+        companyNameAr: (company as any)?.name_ar ?? null,
+        companyNameEn: (company as any)?.name_en ?? null,
+      },
+      versions: (versions ?? []).map((row: any) => ({
+        id: row.id,
+        versionNumber: row.version_number,
+        sourceFileName: row.source_file_name ?? null,
+        sourceFileType: row.source_file_type ?? null,
+        sourceFileSize: row.source_file_size ?? null,
+        sourceFileUrl: row.source_file_url ?? null,
+        extractionStatus: row.extraction_status ?? null,
+        createdAt: row.created_at,
+      })),
+      cycles: (cycles ?? []).map((cycle: any) => ({
+        id: cycle.id,
+        cycleNumber: cycle.cycle_number,
+        status: cycle.status,
+        sentBy: cycle.sent_by,
+        sentByName: actorById.get(cycle.sent_by)?.name ?? null,
+        sentAt: cycle.sent_at,
+        returnedAt: cycle.returned_at ?? null,
+        reanalyzedAt: cycle.reanalyzed_at ?? null,
+        sourceReportId: cycle.source_report_id ?? null,
+        sourceJobId: cycle.source_job_id ?? null,
+        reanalyzedJobId: cycle.reanalyzed_job_id ?? null,
+        reanalyzedReportId: cycle.reanalyzed_report_id ?? null,
+        beneficiaryReturnedVersionId: cycle.beneficiary_returned_version_id ?? null,
+        adminNote: cycle.admin_note ?? null,
+        createdAt: cycle.created_at,
+        updatedAt: cycle.updated_at,
+        sourceReport: cycle.source_report_id ? reportById.get(cycle.source_report_id) ?? null : null,
+        reanalyzedReport: cycle.reanalyzed_report_id ? reportById.get(cycle.reanalyzed_report_id) ?? null : null,
+        snapshots: snapshotsByCycle.get(cycle.id) ?? [],
+        events: eventsByCycle.get(cycle.id) ?? [],
+        comparison: comparisonByCycle.get(cycle.id) ?? null,
+      })),
+    });
+  }
   // ──────────────── GET /scripts/:id/decision/can (policy predicate for UI) ────────────────
   const decisionCanMatch = rest.match(/^([^/]+)\/decision\/can$/);
   if (method === "GET" && decisionCanMatch) {

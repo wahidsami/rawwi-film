@@ -1868,6 +1868,7 @@ export function ScriptWorkspace() {
   const [reportHistory, setReportHistory] = useState<ReportListItem[]>([]);
   const [revisionCycleSummary, setRevisionCycleSummary] = useState<ScriptRevisionCycleSummaryItem[]>([]);
   const [revisionCycleSummaryLoading, setRevisionCycleSummaryLoading] = useState(false);
+  const [revisionHistoryExporting, setRevisionHistoryExporting] = useState(false);
   const [approveDecisionReportId, setApproveDecisionReportId] = useState<string | null>(null);
   const [approveDecisionSubmitting, setApproveDecisionSubmitting] = useState(false);
   const [rejectDecisionReportId, setRejectDecisionReportId] = useState<string | null>(null);
@@ -2162,6 +2163,27 @@ export function ScriptWorkspace() {
       setRevisionCycleSummaryLoading(false);
     }
   }, [id]);
+
+  const handleExportRevisionHistory = useCallback(async () => {
+    if (!id) return;
+    setRevisionHistoryExporting(true);
+    try {
+      const payload = await scriptsApi.getRevisionHistoryExport(id);
+      const safeTitle = String(payload.script?.title ?? id).replace(/[\\/:*?"<>|]+/g, '_').trim().slice(0, 80) || id;
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `revision-history-${safeTitle}-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(lang === 'ar' ? 'تم تنزيل تقرير تاريخ دورات المراجعة.' : 'Revision history report downloaded.');
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذر تنزيل تقرير تاريخ دورات المراجعة.' : 'Unable to download revision history report.'));
+    } finally {
+      setRevisionHistoryExporting(false);
+    }
+  }, [id, lang]);
 
   const reloadSelectedReportReviewLayer = useCallback(async () => {
     if (!selectedReportSummary?.id && !selectedReportForHighlights?.jobId) return;
@@ -6441,6 +6463,14 @@ export function ScriptWorkspace() {
           {/* ── Reports tab ── */}
           {sidebarTab === 'reports' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background/30">
+              <div className="flex justify-end">
+                <Button size="sm" variant="outline" onClick={handleExportRevisionHistory} disabled={revisionHistoryExporting || !id}>
+                  <Download className="w-3 h-3 mr-1" />
+                  {revisionHistoryExporting
+                    ? (lang === 'ar' ? 'جاري التحضير...' : 'Preparing...')
+                    : (lang === 'ar' ? 'تنزيل تقرير تاريخ الدورات' : 'Download Revision History')}
+                </Button>
+              </div>
               {revisionCycleSummaryLoading ? (
                 <div className="rounded-xl border border-border bg-surface p-3 text-xs text-text-muted">
                   {lang === 'ar' ? 'جاري تحميل ملخص دورات المراجعة...' : 'Loading revision cycle summary...'}
