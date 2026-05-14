@@ -42,7 +42,30 @@ function resolveWordExportFindingData(params: DownloadAnalysisWordParams) {
         primary_article_id: hint.primaryArticleId ?? hint.articleId ?? null,
       }))
     : (params.reportHints ?? []);
-  return { findings, reportHints };
+  const rawMappedFindings = mapAnalysisFindingsForPdf(
+    params.findings,
+    params.findingsByArticle,
+    params.findings && params.findings.length > 0 ? undefined : params.canonicalFindings
+  );
+  const rawActionByKey = new Map<string, string>();
+  for (const row of rawMappedFindings) {
+    const action = plainText(row.actionText);
+    if (!action) continue;
+    const key = `${plainText(row.evidenceSnippet)}|${row.pageNumber ?? ""}|${row.articleId ?? ""}`;
+    rawActionByKey.set(key, action);
+    if (row.id) rawActionByKey.set(`id:${row.id}`, action);
+  }
+  const normalizedFindings = findings.map((row) => {
+    const directAction = plainText(row.actionText);
+    if (directAction) return { ...row, actionText: directAction };
+    const byId = row.id ? rawActionByKey.get(`id:${row.id}`) : "";
+    if (byId) return { ...row, actionText: byId };
+    const key = `${plainText(row.evidenceSnippet)}|${row.pageNumber ?? ""}|${row.articleId ?? ""}`;
+    const byKey = rawActionByKey.get(key) ?? "";
+    return byKey ? { ...row, actionText: byKey } : row;
+  });
+
+  return { findings: normalizedFindings, reportHints };
 }
 
 export interface DownloadAnalysisWordParams {

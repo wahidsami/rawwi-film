@@ -89,12 +89,6 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
   );
   const specialNotesCount = (data.reportHints ?? []).length;
 
-  const sourceLabel = (source?: string) => {
-    if (source === "manual") return isAr ? "يدوي" : "Manual";
-    if (source === "lexicon_mandatory" || source === "glossary") return isAr ? "معجم" : "Glossary";
-    return isAr ? "آلي" : "Automated";
-  };
-
   return (
     <Document>
       <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
@@ -173,15 +167,6 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                   <Text style={[s.findingSnippet, rtl]}>
                     {isAr ? "النص المخالف: " : "Violation text: "}
                     "{f.evidenceSnippet || "—"}"
-                  </Text>
-                  <View style={[s.findingChipsRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
-                    <Text style={[s.chip, s.chipInfo]}>{sourceLabel(f.source)}</Text>
-                    <Text style={[s.chip, s.chipInfo]}>
-                      {isAr ? "الثقة" : "Confidence"} {Math.round((f.confidence || 0) * 100)}%
-                    </Text>
-                  </View>
-                  <Text style={[s.findingMeta, rtl]}>
-                    {isAr ? "النوع: " : "Type: "}{sourceLabel(f.source)}
                   </Text>
                   {(f.pageNumber != null && f.pageNumber > 0) && (
                     <Text style={[s.findingMeta, rtl]}>
