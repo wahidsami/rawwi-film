@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 import { useLangStore } from '@/store/langStore';
 import { useDataStore, Finding, type Script } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
@@ -2098,6 +2099,27 @@ export function ScriptWorkspace() {
       return decodeURIComponent(candidate);
     }
   }, []);
+  const getPrettyStoredFileName = useCallback((url?: string | null) => {
+    const rawName = getFileNameFromUrl(url);
+    if (!rawName) return '';
+    const withoutPrefix = rawName.replace(/^file_[0-9a-fA-F-]{8,}[_-]/, '');
+    const withoutTimestamp = withoutPrefix.replace(/[_-]\d{8,}(?=\.[a-zA-Z0-9]+$)/, '');
+    return withoutTimestamp || rawName;
+  }, [getFileNameFromUrl]);
+  const openStoredDocument = useCallback(async (pathOrUrl?: string | null) => {
+    if (!pathOrUrl) return;
+    const value = pathOrUrl.trim();
+    if (!value) return;
+    if (/^https?:\/\//i.test(value)) {
+      window.open(value, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    const { data, error } = await supabase.storage.from('scripts').createSignedUrl(value, 60 * 10);
+    if (error || !data?.signedUrl) {
+      throw new Error(error?.message || (lang === 'ar' ? 'تعذر فتح الملف' : 'Unable to open file'));
+    }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+  }, [lang]);
   const revisionHistoryVersionById = useMemo(() => {
     const entries = revisionHistorySnapshot?.versions ?? [];
     return new Map(entries.map((version) => [version.id, version]));
@@ -7823,9 +7845,15 @@ export function ScriptWorkspace() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-background/40 p-3">
-            <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'ملخص القصة' : 'Story summary'}</p>
-            <p className="text-sm text-text-main whitespace-pre-wrap">{script.storySummary || script.synopsis || '—'}</p>
+          <div className="rounded-lg border border-border bg-background/40 p-3 space-y-3">
+            <div>
+              <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'ملخص القصة' : 'Story summary'}</p>
+              <p className="text-sm text-text-main whitespace-pre-wrap">{script.synopsis || '—'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'ملخص النص' : 'Script summary'}</p>
+              <p className="text-sm text-text-main whitespace-pre-wrap">{script.storySummary || '—'}</p>
+            </div>
           </div>
 
           <div className="rounded-lg border border-border bg-background/40 p-3">
@@ -7834,9 +7862,13 @@ export function ScriptWorkspace() {
               <div className="flex items-center justify-between gap-3">
                 <span className="text-text-main">{lang === 'ar' ? 'ملف ملخص النص (PDF)' : 'Script summary file (PDF)'}</span>
                 {script.scriptSummaryPdfUrl ? (
-                  <a href={script.scriptSummaryPdfUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline break-all text-xs">
-                    {getFileNameFromUrl(script.scriptSummaryPdfUrl) || (lang === 'ar' ? 'تنزيل الملف' : 'Download file')}
-                  </a>
+                  <button
+                    type="button"
+                    onClick={() => { void openStoredDocument(script.scriptSummaryPdfUrl); }}
+                    className="text-primary hover:underline break-all text-xs"
+                  >
+                    {getPrettyStoredFileName(script.scriptSummaryPdfUrl) || (lang === 'ar' ? 'تنزيل الملف' : 'Download file')}
+                  </button>
                 ) : <span className="text-text-muted">—</span>}
               </div>
               <div className="flex items-center justify-between gap-3">
@@ -7848,9 +7880,13 @@ export function ScriptWorkspace() {
               <div className="flex items-center justify-between gap-3">
                 <span className="text-text-main">{lang === 'ar' ? 'مرفق المحتوى الأمني' : 'Security content attachment'}</span>
                 {script.securityContentAttachmentUrl ? (
-                  <a href={script.securityContentAttachmentUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline break-all text-xs">
-                    {getFileNameFromUrl(script.securityContentAttachmentUrl) || (lang === 'ar' ? 'تنزيل الملف' : 'Download file')}
-                  </a>
+                  <button
+                    type="button"
+                    onClick={() => { void openStoredDocument(script.securityContentAttachmentUrl); }}
+                    className="text-primary hover:underline break-all text-xs"
+                  >
+                    {getPrettyStoredFileName(script.securityContentAttachmentUrl) || (lang === 'ar' ? 'تنزيل الملف' : 'Download file')}
+                  </button>
                 ) : <span className="text-text-muted">—</span>}
               </div>
             </div>
@@ -7868,7 +7904,7 @@ export function ScriptWorkspace() {
                   <div key={version.id} className="flex items-center justify-between gap-3 rounded border border-border/70 bg-surface px-3 py-2">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-text-main truncate">
-                        {version.source_file_name || (lang === 'ar' ? `مستند النص V${version.versionNumber}` : `Script DOCX V${version.versionNumber}`)}
+                        {getPrettyStoredFileName(version.source_file_name || null) || version.source_file_name || (lang === 'ar' ? `مستند النص V${version.versionNumber}` : `Script DOCX V${version.versionNumber}`)}
                       </p>
                       <p className="text-xs text-text-muted">
                         {lang === 'ar' ? 'النسخة' : 'Version'} {version.versionNumber}
@@ -7876,9 +7912,13 @@ export function ScriptWorkspace() {
                       </p>
                     </div>
                     {version.source_file_url ? (
-                      <a href={version.source_file_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
+                      <button
+                        type="button"
+                        onClick={() => { void openStoredDocument(version.source_file_url); }}
+                        className="text-xs text-primary hover:underline"
+                      >
                         {lang === 'ar' ? 'تنزيل' : 'Download'}
-                      </a>
+                      </button>
                     ) : <span className="text-xs text-text-muted">—</span>}
                   </div>
                 ))}
