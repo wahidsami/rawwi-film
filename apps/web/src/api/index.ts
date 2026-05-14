@@ -93,6 +93,52 @@ export interface ClientPortalSubmissionItem {
   latestReportCreatedAt?: string | null;
 }
 
+export interface ClientPortalRevisionCycleEvent {
+  id: string;
+  eventType: string;
+  actorUserId?: string | null;
+  payload?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface ClientPortalRevisionCycleSnapshot {
+  id: string;
+  findingsTotal: number;
+  findingsApproved: number;
+  findingsViolation: number;
+  severityCounts?: Record<string, number>;
+  typeCounts?: Record<string, number>;
+  createdAt: string;
+}
+
+export interface ClientPortalRevisionCycleItem {
+  id: string;
+  cycleNumber: number;
+  sourceReportId?: string | null;
+  sourceJobId?: string | null;
+  sentBy: string;
+  sentByName?: string | null;
+  sentAt: string;
+  returnedAt?: string | null;
+  status: 'sent' | 'returned' | 'reanalyzed' | 'closed' | string;
+  adminNote?: string | null;
+  beneficiaryReturnedVersionId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  snapshots: ClientPortalRevisionCycleSnapshot[];
+  events: ClientPortalRevisionCycleEvent[];
+}
+
+export interface ClientPortalRevisionCyclesResponse {
+  script: {
+    id: string;
+    title: string;
+    status: string;
+    fileUrl?: string | null;
+  };
+  cycles: ClientPortalRevisionCycleItem[];
+}
+
 export interface AdminClientSubmissionItem {
   scriptId: string;
   title: string;
@@ -506,6 +552,17 @@ export const clientPortalApi = {
     httpClient.get('/client-portal/admin/submissions'),
   getRejectionDetails: (scriptId: string): Promise<ClientPortalRejectionDetailsResponse> =>
     httpClient.get(`/client-portal/rejections/${encodeURIComponent(scriptId)}`),
+  getRevisionCycles: (scriptId: string): Promise<ClientPortalRevisionCyclesResponse> =>
+    httpClient.get(`/client-portal/scripts/${encodeURIComponent(scriptId)}/revision-cycles`),
+  resubmitRevisionCycle: (
+    scriptId: string,
+    cycleId: string,
+    payload: { revisedFileUrl: string; beneficiaryComment?: string },
+  ): Promise<{ ok: true; scriptId: string; cycleId: string; cycleNumber: number; scriptStatus: string; cycleStatus: string }> =>
+    httpClient.post(
+      `/client-portal/scripts/${encodeURIComponent(scriptId)}/revision-cycles/${encodeURIComponent(cycleId)}/resubmit`,
+      payload,
+    ),
 };
 
 export const certificatesApi = {

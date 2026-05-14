@@ -836,7 +836,7 @@ Deno.serve(async (req: Request) => {
     if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
     const { data: scripts, error: scriptsErr } = await supabase
       .from("scripts")
-      .select("id, title, type, status, created_at, expected_rank, received_at, current_version_id, company_id, client_id")
+      .select("id, title, type, status, created_at, expected_rank, received_at, current_version_id, company_id, client_id, work_classification, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url")
       .or(`company_id.eq.${account.company_id},client_id.eq.${account.company_id}`)
       .eq("is_quick_analysis", false)
       .order("created_at", { ascending: false });
@@ -870,6 +870,13 @@ Deno.serve(async (req: Request) => {
         expectedRank: row.expected_rank ?? null,
         receivedAt: row.received_at,
         currentVersionId: row.current_version_id,
+        workClassification: row.work_classification ?? null,
+        synopsis: row.synopsis ?? null,
+        storySummary: row.story_summary ?? null,
+        scriptSummaryPdfUrl: row.script_summary_pdf_url ?? null,
+        hasSecurityScenes: row.has_security_scenes === true,
+        securityContentAttachmentUrl: row.security_content_attachment_url ?? null,
+        fileUrl: row.file_url ?? null,
         latestReportId: latestReport?.id ?? null,
         latestReportReviewStatus: latestReport?.review_status ?? null,
         latestReportCreatedAt: latestReport?.created_at ?? null,
@@ -908,6 +915,8 @@ Deno.serve(async (req: Request) => {
 
     const submissions = (scriptRows ?? []).filter((row: any) => {
       const scriptCompanyId = (row.company_id ?? row.client_id ?? "").toString();
+      const status = String(row.status ?? "").toLowerCase();
+      if (status === "draft") return false;
       return clientUserIds.has(row.created_by) || companyIds.has(scriptCompanyId);
     });
     if (submissions.length === 0) return json([]);
@@ -991,6 +1000,204 @@ Deno.serve(async (req: Request) => {
         subscriptionStatus: plan.status,
       };
     }));
+  }
+
+  // GET /client-portal/scripts/:scriptId/revision-cycles
+  const cyclesMatch = rest.match(/^scripts\/([^/]+)\/revision-cycles$/);
+  if (method === "GET" && cyclesMatch) {
+    if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
+    const scriptId = cyclesMatch[1].trim();
+    if (!scriptId) return json({ error: "scriptId is required" }, 400);
+
+    const { data: scriptRow } = await supabase
+      .from("scripts")
+      .select("id, title, status, company_id, client_id, file_url")
+      .eq("id", scriptId)
+      .maybeSingle();
+    if (!scriptRow) return json({ error: "Script not found" }, 404);
+    const scriptCompanyId = ((scriptRow as any).company_id ?? (scriptRow as any).client_id ?? "").toString();
+    if (scriptCompanyId !== account.company_id) return json({ error: "Forbidden" }, 403);
+
+    const { data: cycles, error: cyclesErr } = await supabase
+      .from("script_revision_cycles")
+      .select("id, cycle_number, source_report_id, source_job_id, sent_by, sent_at, returned_at, status, admin_note, beneficiary_returned_version_id, created_at, updated_at")
+      .eq("script_id", scriptId)
+      .order("cycle_number", { ascending: false });
+    if (cyclesErr) return json({ error: cyclesErr.message }, 500);
+
+    const cycleIds = (cycles ?? []).map((row: any) => row.id);
+    const [{ data: events }, { data: snapshots }, { data: profiles }] = await Promise.all([
+      cycleIds.length > 0
+        ? supabase
+            .from("script_revision_cycle_events")
+            .select("id, cycle_id, script_id, event_type, actor_user_id, payload, created_at")
+            .in("cycle_id", cycleIds)
+            .order("created_at", { ascending: true })
+        : Promise.resolve({ data: [] as any[] }),
+      cycleIds.length > 0
+        ? supabase
+            .from("script_revision_cycle_snapshots")
+            .select("id, cycle_id, findings_total, findings_approved, findings_violation, severity_counts, type_counts, created_at")
+            .in("cycle_id", cycleIds)
+        : Promise.resolve({ data: [] as any[] }),
+      (() => {
+        const ids = [...new Set((cycles ?? []).map((row: any) => row.sent_by).filter(Boolean))];
+        return ids.length > 0
+          ? supabase.from("profiles").select("user_id, name").in("user_id", ids)
+          : Promise.resolve({ data: [] as any[] });
+      })(),
+    ]);
+
+    const eventsByCycle = new Map<string, any[]>();
+    for (const row of events ?? []) {
+      const bucket = eventsByCycle.get(row.cycle_id) ?? [];
+      bucket.push(row);
+      eventsByCycle.set(row.cycle_id, bucket);
+    }
+    const snapshotsByCycle = new Map<string, any[]>();
+    for (const row of snapshots ?? []) {
+      const bucket = snapshotsByCycle.get(row.cycle_id) ?? [];
+      bucket.push(row);
+      snapshotsByCycle.set(row.cycle_id, bucket);
+    }
+    const profileNameById = new Map((profiles ?? []).map((row: any) => [row.user_id, row.name ?? null]));
+
+    return json({
+      script: {
+        id: (scriptRow as any).id,
+        title: (scriptRow as any).title,
+        status: (scriptRow as any).status,
+        fileUrl: (scriptRow as any).file_url ?? null,
+      },
+      cycles: (cycles ?? []).map((cycle: any) => ({
+        id: cycle.id,
+        cycleNumber: cycle.cycle_number,
+        sourceReportId: cycle.source_report_id ?? null,
+        sourceJobId: cycle.source_job_id ?? null,
+        sentBy: cycle.sent_by,
+        sentByName: profileNameById.get(cycle.sent_by) ?? null,
+        sentAt: cycle.sent_at,
+        returnedAt: cycle.returned_at ?? null,
+        status: cycle.status,
+        adminNote: cycle.admin_note ?? null,
+        beneficiaryReturnedVersionId: cycle.beneficiary_returned_version_id ?? null,
+        createdAt: cycle.created_at,
+        updatedAt: cycle.updated_at,
+        snapshots: (snapshotsByCycle.get(cycle.id) ?? []).map((snapshot: any) => ({
+          id: snapshot.id,
+          findingsTotal: snapshot.findings_total ?? 0,
+          findingsApproved: snapshot.findings_approved ?? 0,
+          findingsViolation: snapshot.findings_violation ?? 0,
+          severityCounts: snapshot.severity_counts ?? {},
+          typeCounts: snapshot.type_counts ?? {},
+          createdAt: snapshot.created_at,
+        })),
+        events: (eventsByCycle.get(cycle.id) ?? []).map((event: any) => ({
+          id: event.id,
+          eventType: event.event_type,
+          actorUserId: event.actor_user_id ?? null,
+          payload: event.payload ?? {},
+          createdAt: event.created_at,
+        })),
+      })),
+    });
+  }
+
+  // POST /client-portal/scripts/:scriptId/revision-cycles/:cycleId/resubmit
+  const cycleResubmitMatch = rest.match(/^scripts\/([^/]+)\/revision-cycles\/([^/]+)\/resubmit$/);
+  if (method === "POST" && cycleResubmitMatch) {
+    if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
+    const scriptId = cycleResubmitMatch[1].trim();
+    const cycleId = cycleResubmitMatch[2].trim();
+    if (!scriptId || !cycleId) return json({ error: "scriptId and cycleId are required" }, 400);
+
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+    const revisedFileUrl = typeof body.revisedFileUrl === "string" ? body.revisedFileUrl.trim() : "";
+    const beneficiaryComment = typeof body.beneficiaryComment === "string" ? body.beneficiaryComment.trim() : "";
+    if (!revisedFileUrl) return json({ error: "revisedFileUrl is required" }, 400);
+
+    const { data: scriptRow } = await supabase
+      .from("scripts")
+      .select("id, title, status, company_id, client_id, file_url")
+      .eq("id", scriptId)
+      .maybeSingle();
+    if (!scriptRow) return json({ error: "Script not found" }, 404);
+    const scriptCompanyId = ((scriptRow as any).company_id ?? (scriptRow as any).client_id ?? "").toString();
+    if (scriptCompanyId !== account.company_id) return json({ error: "Forbidden" }, 403);
+
+    const { data: cycleRow, error: cycleErr } = await supabase
+      .from("script_revision_cycles")
+      .select("id, script_id, cycle_number, status")
+      .eq("id", cycleId)
+      .eq("script_id", scriptId)
+      .maybeSingle();
+    if (cycleErr) return json({ error: cycleErr.message }, 500);
+    if (!cycleRow) return json({ error: "Revision cycle not found" }, 404);
+    if ((cycleRow as any).status !== "sent") {
+      return json({ error: "Only active sent cycles can be resubmitted" }, 409);
+    }
+
+    const nowIso = new Date().toISOString();
+    const { error: updateScriptErr } = await supabase
+      .from("scripts")
+      .update({
+        status: "resubmitted",
+        file_url: revisedFileUrl,
+        updated_at: nowIso,
+      })
+      .eq("id", scriptId);
+    if (updateScriptErr) return json({ error: updateScriptErr.message }, 500);
+
+    const { error: cycleUpdateErr } = await supabase
+      .from("script_revision_cycles")
+      .update({
+        status: "returned",
+        returned_at: nowIso,
+        updated_at: nowIso,
+      })
+      .eq("id", cycleId);
+    if (cycleUpdateErr) return json({ error: cycleUpdateErr.message }, 500);
+
+    const { error: eventErr } = await supabase
+      .from("script_revision_cycle_events")
+      .insert({
+        cycle_id: cycleId,
+        script_id: scriptId,
+        event_type: "beneficiary_resubmitted",
+        actor_user_id: userId,
+        payload: {
+          revised_file_url: revisedFileUrl,
+          beneficiary_comment: beneficiaryComment || null,
+          previous_file_url: (scriptRow as any).file_url ?? null,
+        },
+      });
+    if (eventErr) return json({ error: eventErr.message }, 500);
+
+    await notifyAdmins(supabase, {
+      type: "script_revision_resubmitted",
+      title: "Beneficiary resubmitted revised script",
+      body: `A revised script was submitted for "${(scriptRow as any).title}" (cycle ${(cycleRow as any).cycle_number}).`,
+      metadata: {
+        script_id: scriptId,
+        cycle_id: cycleId,
+        cycle_number: (cycleRow as any).cycle_number,
+        company_id: scriptCompanyId,
+      },
+    });
+
+    return json({
+      ok: true,
+      scriptId,
+      cycleId,
+      cycleNumber: (cycleRow as any).cycle_number,
+      scriptStatus: "resubmitted",
+      cycleStatus: "returned",
+    });
   }
 
   // GET /client-portal/rejections/:scriptId

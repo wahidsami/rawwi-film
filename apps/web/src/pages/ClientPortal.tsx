@@ -30,6 +30,8 @@ import {
   scriptsApi,
   type ClientCertificatesResponse,
   type ClientPortalMeResponse,
+  type ClientPortalRevisionCycleItem,
+  type ClientPortalRevisionCyclesResponse,
   type ClientPortalSubmissionItem,
   type ClientPortalRejectionDetailsResponse,
   type NotificationItem,
@@ -56,6 +58,8 @@ function statusLabel(status: string, lang: 'ar' | 'en'): string {
   if (key === 'rejected') return lang === 'ar' ? 'مرفوض' : 'Rejected';
   if (key === 'analysis_running') return lang === 'ar' ? 'التحليل جارٍ' : 'Analysis Running';
   if (key === 'review_required') return lang === 'ar' ? 'بحاجة لمراجعة' : 'Needs Review';
+  if (key === 'revision_requested') return lang === 'ar' ? 'قيد المراجعة' : 'In Review';
+  if (key === 'resubmitted') return lang === 'ar' ? 'قيد المراجعة' : 'In Review';
   if (key === 'in_review') return lang === 'ar' ? 'قيد المراجعة' : 'In Review';
   if (key === 'draft') return lang === 'ar' ? 'مسودة' : 'Draft';
   return status;
@@ -65,8 +69,17 @@ function statusVariant(status: string): 'default' | 'success' | 'warning' | 'err
   const key = status.toLowerCase();
   if (key === 'approved') return 'success';
   if (key === 'rejected') return 'error';
-  if (key === 'analysis_running' || key === 'review_required' || key === 'in_review') return 'warning';
+  if (key === 'analysis_running' || key === 'review_required' || key === 'in_review' || key === 'revision_requested' || key === 'resubmitted') return 'warning';
   return 'outline';
+}
+
+function revisionCycleStatusLabel(status: string, lang: 'ar' | 'en'): string {
+  const key = status.toLowerCase();
+  if (key === 'sent') return lang === 'ar' ? 'مرسلة للمستفيد' : 'Sent to Beneficiary';
+  if (key === 'returned') return lang === 'ar' ? 'أعيدت من المستفيد' : 'Resubmitted by Beneficiary';
+  if (key === 'reanalyzed') return lang === 'ar' ? 'أعيد تحليلها' : 'Reanalyzed';
+  if (key === 'closed') return lang === 'ar' ? 'مغلقة' : 'Closed';
+  return status;
 }
 
 function formatSubscriptionLabel(
@@ -578,6 +591,11 @@ export function ClientPortal() {
   const [scriptToDelete, setScriptToDelete] = useState<ClientPortalSubmissionItem | null>(null);
   const [submissionDetailsItem, setSubmissionDetailsItem] = useState<ClientPortalSubmissionItem | null>(null);
   const [submissionDetailsLoading, setSubmissionDetailsLoading] = useState(false);
+  const [submissionRevisionCycles, setSubmissionRevisionCycles] = useState<ClientPortalRevisionCycleItem[]>([]);
+  const [submissionRevisionCyclesLoading, setSubmissionRevisionCyclesLoading] = useState(false);
+  const [revisionResubmitFile, setRevisionResubmitFile] = useState<File | null>(null);
+  const [revisionResubmitComment, setRevisionResubmitComment] = useState('');
+  const [revisionResubmitting, setRevisionResubmitting] = useState(false);
   const [editingDraft, setEditingDraft] = useState<ClientPortalSubmissionItem | null>(null);
   const [paymentScriptId, setPaymentScriptId] = useState<string | null>(null);
   const [paymentData, setPaymentData] = useState<ClientCertificatesResponse | null>(null);
@@ -1103,10 +1121,17 @@ export function ClientPortal() {
 
   const openSubmissionDetails = async (item: ClientPortalSubmissionItem) => {
     setSubmissionDetailsLoading(true);
+    setSubmissionRevisionCyclesLoading(true);
+    setSubmissionRevisionCycles([]);
+    setRevisionResubmitFile(null);
+    setRevisionResubmitComment('');
     setSubmissionDetailsItem(item);
     setActiveSection('script-view');
     try {
-      const full = await scriptsApi.getScript(item.scriptId);
+      const [full, cyclePayload] = await Promise.all([
+        scriptsApi.getScript(item.scriptId),
+        clientPortalApi.getRevisionCycles(item.scriptId).catch(() => null as ClientPortalRevisionCyclesResponse | null),
+      ]);
       setSubmissionDetailsItem({
         ...item,
         title: full.title ?? item.title,
@@ -1121,10 +1146,12 @@ export function ClientPortal() {
         securityContentAttachmentUrl: full.securityContentAttachmentUrl ?? item.securityContentAttachmentUrl ?? null,
         fileUrl: full.fileUrl ?? item.fileUrl ?? null,
       });
+      setSubmissionRevisionCycles(cyclePayload?.cycles ?? []);
     } catch {
       // Keep initial snapshot shown in modal.
     } finally {
       setSubmissionDetailsLoading(false);
+      setSubmissionRevisionCyclesLoading(false);
     }
   };
 
@@ -1207,7 +1234,7 @@ export function ClientPortal() {
   const totalRejected = useMemo(() => submissions.filter((s) => s.status.toLowerCase() === 'rejected').length, [submissions]);
   const totalApproved = useMemo(() => submissions.filter((s) => s.status.toLowerCase() === 'approved').length, [submissions]);
   const totalPending = useMemo(
-    () => submissions.filter((s) => ['analysis_running', 'review_required', 'in_review'].includes(s.status.toLowerCase())).length,
+    () => submissions.filter((s) => ['analysis_running', 'review_required', 'in_review', 'revision_requested', 'resubmitted'].includes(s.status.toLowerCase())).length,
     [submissions],
   );
   const recentSubmissions = useMemo(() => submissions.slice(0, 5), [submissions]);
@@ -1220,7 +1247,7 @@ export function ClientPortal() {
     return visibleSubmissions.filter((item) => {
       const status = item.status.toLowerCase();
       const isDraft = status === 'draft';
-      const isSubmitted = ['in_review', 'analysis_running', 'review_required'].includes(status);
+      const isSubmitted = ['in_review', 'analysis_running', 'review_required', 'revision_requested', 'resubmitted'].includes(status);
       const passStatus =
         scriptsStatusFilter === 'all' ||
         (scriptsStatusFilter === 'draft' && isDraft) ||
@@ -1293,7 +1320,7 @@ export function ClientPortal() {
                 {pagedSubmissions.map((item, index) => {
                   const status = item.status.toLowerCase();
                   const isDraft = status === 'draft';
-                  const isSubmitted = ['in_review', 'analysis_running', 'review_required'].includes(status);
+                  const isSubmitted = ['in_review', 'analysis_running', 'review_required', 'revision_requested', 'resubmitted'].includes(status);
                   const hasCertificate = paidScriptIds.has(item.scriptId);
                   return (
                     <tr key={item.scriptId} className="border-b border-border/70 last:border-b-0">
@@ -1312,7 +1339,7 @@ export function ClientPortal() {
                                 void openRejectionDetails(item.scriptId);
                                 return;
                               }
-                              if (isDraft) {
+                              if (isDraft || isSubmitted) {
                                 void openSubmissionDetails(item);
                                 return;
                               }
@@ -1320,9 +1347,7 @@ export function ClientPortal() {
                                 setActiveSection('certificates');
                                 return;
                               }
-                              setNotice(lang === 'ar'
-                                ? 'عرض التفاصيل الكاملة لهذا النص داخل بوابة المستفيد سيكون متاحاً قريباً. يمكنك حالياً متابعة الحالة من قائمة نصوصي.'
-                                : 'Full in-portal script details will be available soon. For now, you can track status from My Scripts.');
+                              void openSubmissionDetails(item);
                             }}
                           >
                             <Eye className="h-4 w-4" />
@@ -2057,6 +2082,44 @@ export function ClientPortal() {
     );
   };
 
+  const handleResubmitRevisionCycle = async () => {
+    if (!submissionDetailsItem) return;
+    const activeCycle = submissionRevisionCycles.find((cycle) => cycle.status.toLowerCase() === 'sent');
+    if (!activeCycle) {
+      setError(lang === 'ar' ? 'لا توجد دورة مراجعة نشطة حالياً.' : 'There is no active revision cycle right now.');
+      return;
+    }
+    if (!revisionResubmitFile) {
+      setError(lang === 'ar' ? 'يرجى رفع ملف النص المعدل بصيغة Word (DOCX).' : 'Please upload the revised script as a Word (DOCX) file.');
+      return;
+    }
+
+    const fileName = revisionResubmitFile.name.toLowerCase();
+    if (!fileName.endsWith('.docx')) {
+      setError(lang === 'ar' ? 'الملف المطلوب يجب أن يكون DOCX.' : 'The revised file must be DOCX.');
+      return;
+    }
+
+    setRevisionResubmitting(true);
+    setError('');
+    setNotice('');
+    try {
+      const uploadPath = await uploadSupportingDocument(revisionResubmitFile);
+      await clientPortalApi.resubmitRevisionCycle(submissionDetailsItem.scriptId, activeCycle.id, {
+        revisedFileUrl: uploadPath,
+        beneficiaryComment: revisionResubmitComment.trim() || undefined,
+      });
+      setNotice(lang === 'ar' ? 'تم إرسال النسخة المعدلة بنجاح.' : 'Revised script submitted successfully.');
+      setRevisionResubmitFile(null);
+      setRevisionResubmitComment('');
+      await Promise.all([loadProfileAndSubmissions(), openSubmissionDetails(submissionDetailsItem)]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر إرسال النسخة المعدلة' : 'Unable to submit revised script'));
+    } finally {
+      setRevisionResubmitting(false);
+    }
+  };
+
   const renderPaymentPage = () => {
     const paymentItem = paymentData?.items?.find((item) => item.scriptId === paymentScriptId) ?? null;
     return (
@@ -2251,6 +2314,86 @@ export function ClientPortal() {
               </div>
             </div>
           </div>
+
+          <div className="rounded-md border border-border bg-background p-3 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-text-main">{lang === 'ar' ? 'دورات المراجعة' : 'Revision Cycles'}</p>
+              {submissionRevisionCyclesLoading ? (
+                <span className="text-xs text-text-muted">{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</span>
+              ) : null}
+            </div>
+
+            {!submissionRevisionCyclesLoading && submissionRevisionCycles.length === 0 ? (
+              <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد دورات مراجعة على هذا النص حالياً.' : 'No revision cycles yet for this script.'}</p>
+            ) : (
+              <div className="space-y-2">
+                {submissionRevisionCycles.map((cycle) => {
+                  const latestSnapshot = cycle.snapshots?.[0];
+                  return (
+                    <div key={cycle.id} className="rounded-md border border-border bg-surface p-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-text-main">
+                          {lang === 'ar' ? `الدورة ${cycle.cycleNumber}` : `Cycle ${cycle.cycleNumber}`}
+                        </p>
+                        <Badge variant={cycle.status.toLowerCase() === 'sent' ? 'warning' : 'outline'}>
+                          {revisionCycleStatusLabel(cycle.status, lang)}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-text-muted">
+                        {lang === 'ar' ? 'تاريخ الإرسال: ' : 'Sent at: '}
+                        {new Date(cycle.sentAt).toLocaleString()}
+                      </p>
+                      {cycle.adminNote ? (
+                        <p className="mt-1 whitespace-pre-wrap text-xs text-text-main">
+                          {lang === 'ar' ? 'ملاحظة الإدارة: ' : 'Admin note: '}
+                          {cycle.adminNote}
+                        </p>
+                      ) : null}
+                      {latestSnapshot ? (
+                        <p className="mt-1 text-xs text-text-muted">
+                          {lang === 'ar' ? 'إجمالي الملاحظات المرسلة في هذه الدورة: ' : 'Findings snapshot in this cycle: '}
+                          {latestSnapshot.findingsTotal}
+                        </p>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {submissionRevisionCycles.find((cycle) => cycle.status.toLowerCase() === 'sent') ? (
+            <div className="rounded-md border border-border bg-background p-3 space-y-3">
+              <p className="text-sm font-semibold text-text-main">{lang === 'ar' ? 'إرسال نسخة معدلة' : 'Submit Revised Script'}</p>
+              <p className="text-xs text-text-muted">
+                {lang === 'ar'
+                  ? 'ارفع نسخة DOCX المعدلة لإعادة النص إلى الإدارة للمراجعة.'
+                  : 'Upload the revised DOCX file to return this script to admin review.'}
+              </p>
+              <FileUpload
+                label={lang === 'ar' ? 'ملف النص المعدل (DOCX)' : 'Revised Script File (DOCX)'}
+                onChange={(f) => setRevisionResubmitFile(f)}
+                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                helperText={lang === 'ar' ? 'الملف المدعوم: Word DOCX' : 'Supported file: Word DOCX'}
+              />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-text-main">
+                  {lang === 'ar' ? 'ملاحظة للمراجع (اختياري)' : 'Comment to reviewer (optional)'}
+                </label>
+                <Textarea
+                  value={revisionResubmitComment}
+                  onChange={(e) => setRevisionResubmitComment(e.target.value)}
+                  rows={3}
+                  placeholder={lang === 'ar' ? 'أضف أي توضيح حول التعديلات المنفذة' : 'Add any notes about your revisions'}
+                />
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={() => void handleResubmitRevisionCycle()} isLoading={revisionResubmitting}>
+                  {lang === 'ar' ? 'إرسال النسخة المعدلة' : 'Submit Revised Version'}
+                </Button>
+              </div>
+            </div>
+          ) : null}
 
           <div className="flex items-center justify-end gap-2">
             <Button variant="outline" onClick={() => setActiveSection('scripts')}>
