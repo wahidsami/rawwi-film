@@ -599,7 +599,7 @@ Deno.serve(async (req: Request) => {
       supabase.auth.admin.getUserById(userId),
       supabase
         .from("clients")
-        .select("id, name_ar, name_en, representative_name, representative_title, email, mobile, created_at")
+        .select("id, name_ar, name_en, representative_name, representative_title, email, mobile, website, phone, city, country, contact_email, contact_mobile, about, years_of_experience, created_at")
         .eq("id", account.company_id)
         .maybeSingle(),
     ]);
@@ -626,9 +626,120 @@ Deno.serve(async (req: Request) => {
             representativeTitle: (company as any).representative_title,
             email: (company as any).email,
             mobile: (company as any).mobile,
+            website: (company as any).website,
+            phone: (company as any).phone,
+            city: (company as any).city,
+            country: (company as any).country,
+            contactEmail: (company as any).contact_email,
+            contactMobile: (company as any).contact_mobile,
+            about: (company as any).about,
+            yearsOfExperience: (company as any).years_of_experience,
             createdAt: (company as any).created_at,
           }
         : null,
+    });
+  }
+
+  if (method === "PUT" && rest === "me") {
+    if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
+    if (account.subscription_status !== "active") return json({ error: "Beneficiary portal account is not active" }, 403);
+
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+
+    const text = (value: unknown, max = 400): string | null => {
+      if (typeof value !== "string") return null;
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      return trimmed.slice(0, max);
+    };
+
+    const yearsRaw = body.yearsOfExperience;
+    const years =
+      typeof yearsRaw === "number"
+        ? yearsRaw
+        : typeof yearsRaw === "string" && yearsRaw.trim()
+          ? Number.parseInt(yearsRaw.trim(), 10)
+          : null;
+    const normalizedYears = Number.isFinite(years as number) ? Math.max(0, Math.min(200, Number(years))) : null;
+
+    const companyUpdates: Record<string, unknown> = {
+      name_ar: text(body.companyNameAr, 200),
+      name_en: text(body.companyNameEn, 200),
+      representative_name: text(body.representativeName, 200),
+      representative_title: text(body.representativeTitle, 200),
+      email: text(body.companyEmail, 320),
+      mobile: text(body.companyMobile, 64),
+      website: text(body.website, 320),
+      phone: text(body.phone, 64),
+      city: text(body.city, 120),
+      country: text(body.country, 120),
+      contact_mobile: text(body.contactMobile, 64),
+      about: text(body.about, 4000),
+      years_of_experience: normalizedYears,
+    };
+
+    const { error: updateErr } = await supabase
+      .from("clients")
+      .update(companyUpdates)
+      .eq("id", account.company_id);
+    if (updateErr) return json({ error: updateErr.message }, 500);
+
+    const userName = text(body.userName, 200);
+    if (userName) {
+      await supabase.auth.admin.updateUserById(userId, { user_metadata: { name: userName } }).catch(() => {});
+      await supabase.from("profiles").update({ name: userName }).eq("user_id", userId).catch(() => {});
+    }
+
+    const [{ data: userResult }, { data: company }] = await Promise.all([
+      supabase.auth.admin.getUserById(userId),
+      supabase
+        .from("clients")
+        .select("id, name_ar, name_en, representative_name, representative_title, email, mobile, website, phone, city, country, contact_email, contact_mobile, about, years_of_experience, created_at")
+        .eq("id", account.company_id)
+        .maybeSingle(),
+    ]);
+
+    const appUser = userResult.user;
+    return json({
+      ok: true,
+      profile: {
+        user: {
+          id: userId,
+          email: appUser?.email ?? "",
+          name: (appUser?.user_metadata?.name as string) ?? appUser?.email?.split("@")[0] ?? "Client",
+          role: "Client",
+        },
+        subscription: {
+          plan: account.subscription_plan,
+          status: account.subscription_status,
+          price: 0,
+        },
+        company: company
+          ? {
+              companyId: (company as any).id,
+              nameAr: (company as any).name_ar,
+              nameEn: (company as any).name_en,
+              representativeName: (company as any).representative_name,
+              representativeTitle: (company as any).representative_title,
+              email: (company as any).email,
+              mobile: (company as any).mobile,
+              website: (company as any).website,
+              phone: (company as any).phone,
+              city: (company as any).city,
+              country: (company as any).country,
+              contactEmail: (company as any).contact_email,
+              contactMobile: (company as any).contact_mobile,
+              about: (company as any).about,
+              yearsOfExperience: (company as any).years_of_experience,
+              createdAt: (company as any).created_at,
+            }
+          : null,
+      },
     });
   }
 

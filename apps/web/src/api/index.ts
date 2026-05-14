@@ -187,8 +187,33 @@ export interface ClientPortalMeResponse {
     representativeTitle?: string | null;
     email?: string | null;
     mobile?: string | null;
+    website?: string | null;
+    phone?: string | null;
+    city?: string | null;
+    country?: string | null;
+    contactEmail?: string | null;
+    contactMobile?: string | null;
+    about?: string | null;
+    yearsOfExperience?: number | null;
     createdAt: string;
   } | null;
+}
+
+export interface ClientPortalMeUpdateBody {
+  userName?: string;
+  companyNameAr?: string;
+  companyNameEn?: string;
+  representativeName?: string;
+  representativeTitle?: string;
+  companyEmail?: string;
+  companyMobile?: string;
+  website?: string;
+  phone?: string;
+  city?: string;
+  country?: string;
+  contactMobile?: string;
+  about?: string;
+  yearsOfExperience?: number | null;
 }
 
 export interface CertificateDemoCard {
@@ -426,6 +451,8 @@ export const clientPortalApi = {
     httpClient.put('/client-portal/admin/regulations', regulations),
   getMe: (): Promise<ClientPortalMeResponse> =>
     httpClient.get('/client-portal/me'),
+  updateMe: (payload: ClientPortalMeUpdateBody): Promise<{ ok: true; profile: ClientPortalMeResponse }> =>
+    httpClient.put('/client-portal/me', payload),
   getSubmissions: (): Promise<ClientPortalSubmissionItem[]> =>
     httpClient.get('/client-portal/submissions'),
   getAdminSubmissions: (): Promise<AdminClientSubmissionItem[]> =>

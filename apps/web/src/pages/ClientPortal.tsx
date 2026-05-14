@@ -4,8 +4,6 @@ import {
   ArrowUpRight,
   Award,
   BellRing,
-  Building2,
-  CreditCard,
   Clock3,
   Eye,
   FileCheck2,
@@ -601,6 +599,24 @@ export function ClientPortal() {
     expiry: '',
     cvv: '',
   });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settingsForm, setSettingsForm] = useState({
+    userName: '',
+    companyNameAr: '',
+    companyNameEn: '',
+    representativeName: '',
+    representativeTitle: '',
+    companyEmail: '',
+    companyMobile: '',
+    website: '',
+    phone: '',
+    city: '',
+    country: '',
+    contactEmail: '',
+    contactMobile: '',
+    yearsOfExperience: '',
+    about: '',
+  });
 
   const subscriptionLabel = useMemo(
     () => formatSubscriptionLabel(profile?.subscription ?? null, lang),
@@ -637,6 +653,27 @@ export function ClientPortal() {
       read: Math.max(total - unread, 0),
     };
   }, [notifications.length, notificationsUnreadCount]);
+
+  useEffect(() => {
+    if (!profile) return;
+    setSettingsForm({
+      userName: profile.user.name ?? '',
+      companyNameAr: profile.company?.nameAr ?? '',
+      companyNameEn: profile.company?.nameEn ?? '',
+      representativeName: profile.company?.representativeName ?? '',
+      representativeTitle: profile.company?.representativeTitle ?? '',
+      companyEmail: profile.company?.email ?? '',
+      companyMobile: profile.company?.mobile ?? '',
+      website: profile.company?.website ?? '',
+      phone: profile.company?.phone ?? '',
+      city: profile.company?.city ?? '',
+      country: profile.company?.country ?? '',
+      contactEmail: profile.user.email ?? profile.company?.contactEmail ?? '',
+      contactMobile: profile.company?.contactMobile ?? '',
+      yearsOfExperience: profile.company?.yearsOfExperience != null ? String(profile.company.yearsOfExperience) : '',
+      about: profile.company?.about ?? '',
+    });
+  }, [profile]);
 
   type RejectionReportBlock = {
     report: NonNullable<ClientPortalRejectionDetailsResponse['sharedReports']>[number]['report'];
@@ -1985,211 +2022,67 @@ export function ClientPortal() {
 
   const renderSettingsSection = () => {
     const isArabic = lang === 'ar';
-    const company = profile?.company;
+    const saveSettings = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError('');
+      setNotice('');
+      setIsSavingSettings(true);
+      try {
+        const response = await clientPortalApi.updateMe({
+          userName: settingsForm.userName,
+          companyNameAr: settingsForm.companyNameAr,
+          companyNameEn: settingsForm.companyNameEn,
+          representativeName: settingsForm.representativeName,
+          representativeTitle: settingsForm.representativeTitle,
+          companyEmail: settingsForm.companyEmail,
+          companyMobile: settingsForm.companyMobile,
+          website: settingsForm.website,
+          phone: settingsForm.phone,
+          city: settingsForm.city,
+          country: settingsForm.country,
+          contactMobile: settingsForm.contactMobile,
+          about: settingsForm.about,
+          yearsOfExperience: settingsForm.yearsOfExperience.trim() ? Number(settingsForm.yearsOfExperience) : null,
+        });
+        setProfile(response.profile);
+        setNotice(isArabic ? 'تم حفظ بيانات الإعدادات بنجاح.' : 'Settings saved successfully.');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : (isArabic ? 'تعذر حفظ الإعدادات' : 'Unable to save settings'));
+      } finally {
+        setIsSavingSettings(false);
+      }
+    };
+
     return (
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-4">
-          <Card className="overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
-            <CardHeader>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <CardTitle>{isArabic ? 'الإعدادات' : 'Settings'}</CardTitle>
-                  <p className="mt-2 max-w-3xl text-sm leading-7 text-text-muted">
-                    {isArabic
-                      ? 'ملخص الحساب والشركة داخل البوابة. البيانات هنا للعرض والمراجعة السريعة، بينما التعديلات الإدارية تُدار من القناة الداخلية.'
-                      : 'A summary of your account and company inside the portal. This view is for review and reference, while administrative updates are handled internally.'}
-                  </p>
-                </div>
-                {subscriptionLabel ? <Badge variant="success">{subscriptionLabel}</Badge> : null}
-              </div>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-background/90 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                    <Settings2 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-text-main">{isArabic ? 'الحساب' : 'Account'}</p>
-                    <p className="text-xs text-text-muted">{isArabic ? 'بيانات الدخول والهوية' : 'Login and identity details'}</p>
-                  </div>
-                </div>
-                <dl className="mt-4 space-y-3 text-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'الاسم' : 'Name'}</dt>
-                    <dd className="text-end font-medium text-text-main">{profile?.user.name ?? '-'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'البريد' : 'Email'}</dt>
-                    <dd className="text-end font-medium text-text-main">{profile?.user.email ?? '-'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'الدور' : 'Role'}</dt>
-                    <dd className="text-end font-medium text-text-main">{profile?.user.role ?? '-'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'الخطة' : 'Plan'}</dt>
-                    <dd className="text-end font-medium text-text-main">{profile?.subscription.plan ?? '-'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'الحالة' : 'Status'}</dt>
-                    <dd className="text-end font-medium text-text-main">{profile?.subscription.status ?? '-'}</dd>
-                  </div>
-                </dl>
-              </div>
-
-              <div className="rounded-[calc(var(--radius)+0.35rem)] border border-border bg-background/90 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-success/10 text-success">
-                    <Building2 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-text-main">{isArabic ? 'الشركة' : 'Company'}</p>
-                    <p className="text-xs text-text-muted">{isArabic ? 'الملف المرتبط بالحساب' : 'Profile linked to this account'}</p>
-                  </div>
-                </div>
-                <dl className="mt-4 space-y-3 text-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'الاسم العربي' : 'Arabic name'}</dt>
-                    <dd className="text-end font-medium text-text-main">{company?.nameAr ?? '-'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'الاسم الإنجليزي' : 'English name'}</dt>
-                    <dd className="text-end font-medium text-text-main">{company?.nameEn ?? '-'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'الجهة الممثلة' : 'Representative'}</dt>
-                    <dd className="text-end font-medium text-text-main">{company?.representativeName ?? '-'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'الصفة' : 'Title'}</dt>
-                    <dd className="text-end font-medium text-text-main">{company?.representativeTitle ?? '-'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'البريد' : 'Email'}</dt>
-                    <dd className="text-end font-medium text-text-main">{company?.email ?? '-'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'الجوال' : 'Mobile'}</dt>
-                    <dd className="text-end font-medium text-text-main">{company?.mobile ?? '-'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-text-muted">{isArabic ? 'تاريخ الانضمام' : 'Joined'}</dt>
-                    <dd className="text-end font-medium text-text-main">{company?.createdAt ? formatNotificationDate(company.createdAt, lang) : '-'}</dd>
-                  </div>
-                </dl>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
-              <CardContent className="space-y-4 p-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-warning/10 text-warning">
-                    <FolderKanban className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-text-main">{isArabic ? 'نشاط النصوص' : 'Script activity'}</p>
-                    <p className="text-xs text-text-muted">{isArabic ? 'حالة سريعة للنصوص المرسلة' : 'A quick snapshot of submitted scripts'}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: isArabic ? 'إجمالي' : 'Total', value: scriptStatusSummary.total },
-                    { label: isArabic ? 'مقبول' : 'Approved', value: scriptStatusSummary.approved },
-                    { label: isArabic ? 'مرفوض' : 'Rejected', value: scriptStatusSummary.rejected },
-                    { label: isArabic ? 'قيد المعالجة' : 'In review', value: scriptStatusSummary.inFlight },
-                  ].map((item) => (
-                    <div key={item.label} className="rounded-[calc(var(--radius)+0.25rem)] border border-border bg-surface/80 p-3">
-                      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-text-muted">{item.label}</p>
-                      <p className="mt-1 text-2xl font-semibold text-text-main">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
-              <CardContent className="space-y-4 p-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                    <CreditCard className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-text-main">{isArabic ? 'الاشتراك' : 'Subscription'}</p>
-                    <p className="text-xs text-text-muted">{isArabic ? 'تفاصيل الخطة والحالة' : 'Plan and status details'}</p>
-                  </div>
-                </div>
-                <div className="space-y-3 rounded-[calc(var(--radius)+0.35rem)] border border-border bg-surface/80 p-4">
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="text-text-muted">{isArabic ? 'الخطة' : 'Plan'}</span>
-                    <span className="font-medium text-text-main">{profile?.subscription.plan ?? '-'}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="text-text-muted">{isArabic ? 'الحالة' : 'Status'}</span>
-                    <span className="font-medium text-text-main">{profile?.subscription.status ?? '-'}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="text-text-muted">{isArabic ? 'الرسوم' : 'Price'}</span>
-                    <span className="font-medium text-text-main">
-                      {new Intl.NumberFormat(lang === 'ar' ? 'ar-SA' : 'en-US', {
-                        style: 'currency',
-                        currency: 'SAR',
-                        maximumFractionDigits: 0,
-                      }).format(profile?.subscription.price ?? 0)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
-            <CardContent className="space-y-3 p-5">
-              <p className="text-sm font-semibold text-text-main">{isArabic ? 'إجراءات سريعة' : 'Quick actions'}</p>
-              <div className="space-y-2">
-                {[
-                  { labelAr: 'الإشعارات', labelEn: 'Notifications', section: 'notifications' as const },
-                  { labelAr: 'نصوصي', labelEn: 'My Scripts', section: 'scripts' as const },
-                  { labelAr: 'الشهادات', labelEn: 'Certificates', section: 'certificates' as const },
-                  { labelAr: 'إرشادات الامتثال', labelEn: 'Compliance Guidelines', section: 'compliance-guidelines' as const },
-                ].map((item) => (
-                  <Button
-                    key={item.section}
-                    variant="outline"
-                    className="w-full justify-between"
-                    onClick={() => setActiveSection(item.section)}
-                  >
-                    <span>{isArabic ? item.labelAr : item.labelEn}</span>
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
-            <CardContent className="space-y-3 p-5">
-              <p className="text-sm font-semibold text-text-main">{isArabic ? 'ملاحظات مهمة' : 'Important notes'}</p>
-              <div className="space-y-3 text-sm leading-7 text-text-muted">
-                <p>
-                  {isArabic
-                    ? 'هذه الصفحة تعرض البيانات المتاحة للحساب والشركة داخل البوابة. أي تعديل إداري على الملف يتم عبر القناة الداخلية.'
-                    : 'This page shows the account and company data available inside the portal. Administrative file updates are handled through the internal channel.'}
-                </p>
-                <p>
-                  {isArabic
-                    ? 'إذا احتجت تنبيهًا جديدًا أو تحديثًا على حالة نص، ستجده أولًا في قسم الإشعارات أو نصوصي.'
-                    : 'If you need a new alert or a script status update, you will find it first in Notifications or My Scripts.'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <Card className="overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+        <CardHeader>
+          <CardTitle>{isArabic ? 'الإعدادات' : 'Settings'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={saveSettings} className="grid gap-4 md:grid-cols-2">
+            <Input label={isArabic ? 'اسم المستخدم' : 'User Name'} value={settingsForm.userName} onChange={(e) => setSettingsForm((p) => ({ ...p, userName: e.target.value }))} />
+            <Input label={isArabic ? 'بريد جهة الاتصال (تسجيل الدخول)' : 'Contact Email (Login)'} value={settingsForm.contactEmail} disabled />
+            <Input label={isArabic ? 'اسم الشركة بالعربية' : 'Company Name (Arabic)'} value={settingsForm.companyNameAr} onChange={(e) => setSettingsForm((p) => ({ ...p, companyNameAr: e.target.value }))} />
+            <Input label={isArabic ? 'اسم الشركة بالإنجليزية' : 'Company Name (English)'} value={settingsForm.companyNameEn} onChange={(e) => setSettingsForm((p) => ({ ...p, companyNameEn: e.target.value }))} />
+            <Input label={isArabic ? 'اسم ممثل الجهة' : 'Representative Name'} value={settingsForm.representativeName} onChange={(e) => setSettingsForm((p) => ({ ...p, representativeName: e.target.value }))} />
+            <Input label={isArabic ? 'الصفة الوظيفية' : 'Representative Title'} value={settingsForm.representativeTitle} onChange={(e) => setSettingsForm((p) => ({ ...p, representativeTitle: e.target.value }))} />
+            <Input label={isArabic ? 'بريد الشركة' : 'Company Email'} value={settingsForm.companyEmail} onChange={(e) => setSettingsForm((p) => ({ ...p, companyEmail: e.target.value }))} />
+            <Input label={isArabic ? 'جوال الشركة' : 'Company Mobile'} value={settingsForm.companyMobile} onChange={(e) => setSettingsForm((p) => ({ ...p, companyMobile: e.target.value }))} />
+            <Input label={isArabic ? 'موقع إلكتروني' : 'Website'} value={settingsForm.website} onChange={(e) => setSettingsForm((p) => ({ ...p, website: e.target.value }))} />
+            <Input label={isArabic ? 'هاتف' : 'Phone'} value={settingsForm.phone} onChange={(e) => setSettingsForm((p) => ({ ...p, phone: e.target.value }))} />
+            <Input label={isArabic ? 'المدينة' : 'City'} value={settingsForm.city} onChange={(e) => setSettingsForm((p) => ({ ...p, city: e.target.value }))} />
+            <Input label={isArabic ? 'الدولة' : 'Country'} value={settingsForm.country} onChange={(e) => setSettingsForm((p) => ({ ...p, country: e.target.value }))} />
+            <Input label={isArabic ? 'جوال جهة الاتصال' : 'Contact Mobile'} value={settingsForm.contactMobile} onChange={(e) => setSettingsForm((p) => ({ ...p, contactMobile: e.target.value }))} />
+            <Input label={isArabic ? 'سنوات الخبرة' : 'Years of Experience'} type="number" min={0} value={settingsForm.yearsOfExperience} onChange={(e) => setSettingsForm((p) => ({ ...p, yearsOfExperience: e.target.value }))} />
+            <div className="md:col-span-2">
+              <Textarea label={isArabic ? 'نبذة' : 'About'} rows={4} value={settingsForm.about} onChange={(e) => setSettingsForm((p) => ({ ...p, about: e.target.value }))} />
+            </div>
+            <div className="md:col-span-2 flex justify-end">
+              <Button type="submit" isLoading={isSavingSettings}>{isArabic ? 'حفظ التعديلات' : 'Save Changes'}</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     );
   };
 
