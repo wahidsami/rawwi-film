@@ -245,7 +245,15 @@ async function loadCertificatesMap(
 }
 
 function resolveClientCertificateStatus(latestPayment: any | null, certificate: any | null): "payment_pending" | "payment_failed" | "issued" {
-  if (certificate && certificate.certificate_status === "issued") return "issued";
+  if (certificate) {
+    const rawStatus = String(certificate.certificate_status ?? "").trim().toLowerCase();
+    const hasCertificateIdentity = Boolean(
+      String(certificate.certificate_number ?? "").trim() ||
+      String(certificate.issued_at ?? "").trim() ||
+      String((certificate.certificate_data ?? {}).file_path ?? "").trim(),
+    );
+    if (rawStatus === "issued" || hasCertificateIdentity) return "issued";
+  }
   if (latestPayment?.payment_status === "failed") return "payment_failed";
   return "payment_pending";
 }
