@@ -290,6 +290,25 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
     },
   ], [isArabic]);
 
+  const violationEnglishCopy = useMemo<Record<number, { body: string; examples: string }>>(() => ({
+    1: { body: 'Any content that mocks, distorts, or disrespects core Islamic principles and rituals.', examples: 'Mocking prayer, ridicule of religious symbols, or sarcastic misuse of verses/hadith.' },
+    2: { body: 'Any direct or indirect insult toward political leadership or state symbols.', examples: 'Satirical attacks on leadership or scenes encouraging rebellion against state authority.' },
+    3: { body: 'Content that may harm national security or public stability.', examples: 'Incitement to unrest, glorification of violence, or practical harmful instructions.' },
+    4: { body: 'Historical content that is inaccurate or presented without trusted references.', examples: 'Distorting known national/Islamic events or presenting fabricated facts as true history.' },
+    5: { body: 'Generalized or derogatory portrayal of Saudi society or national identity.', examples: 'Negative stereotyping of communities, tribes, or families as a whole.' },
+    6: { body: 'Children-focused content that normalizes crime or dangerous behavior.', examples: 'Criminal characters shown as role models without consequences.' },
+    7: { body: 'Content promoting drugs, intoxicants, or their production/use.', examples: 'Step-by-step drug references or portraying substance use as a solution to problems.' },
+    8: { body: 'Abuse, exploitation, or mockery targeting children or persons with disabilities.', examples: 'Bullying, humiliating language, or violent exploitation of vulnerable groups.' },
+    9: { body: 'Inappropriate sexual references or normalization of unsuitable sexual behavior.', examples: 'Suggestive sexual dialogue or themes not suitable for general audiences.' },
+    10: { body: 'Explicit sexual scenes or direct visual/verbal sexual depiction.', examples: 'Detailed portrayals of intimate acts or explicit sexual context.' },
+    11: { body: 'Profanity or offensive language with harmful social impact.', examples: 'Repeated insults, explicit profanity, or degrading verbal abuse.' },
+    12: { body: 'Degrading portrayal of women or normalization of violence against women.', examples: 'Justifying abuse, repeated humiliation, or violence without clear condemnation.' },
+    13: { body: 'Narratives that undermine family cohesion and social values.', examples: 'Promoting family estrangement or framing family bonds as inherently harmful.' },
+    14: { body: 'Content that legitimizes criminal conduct or moral corruption.', examples: 'Glorifying crime and presenting offenders as admirable without accountability.' },
+    15: { body: 'Content that promotes extremism, hatred, or sectarian conflict.', examples: 'Calls for violence, exclusion, or hostility against groups or identities.' },
+    16: { body: 'Any additional harmful content violating public media regulations.', examples: 'Material that conflicts with approved regulatory and ethical standards.' },
+  }), []);
+
   const renderCardText = (ar: string, en: string) => (isArabic ? ar : en);
 
   return (
@@ -394,11 +413,15 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
                         </Badge>
                         <h3 className="text-base font-bold leading-6 text-text-main">{renderCardText(item.titleAr, item.titleEn)}</h3>
                       </div>
-                      <p className="mt-2 text-sm leading-7 text-text-muted">{renderCardText(item.bodyAr, item.bodyAr)}</p>
+                      <p className="mt-2 text-sm leading-7 text-text-muted">
+                        {isArabic ? item.bodyAr : (violationEnglishCopy[item.number]?.body ?? item.titleEn)}
+                      </p>
                     </div>
                   </div>
                   <div className="rounded-[calc(var(--radius)+0.2rem)] border border-border/70 bg-surface/80 p-4">
-                    <p className="text-sm leading-7 text-text-main">{renderCardText(item.examplesAr, item.examplesAr)}</p>
+                    <p className="text-sm leading-7 text-text-main">
+                      {isArabic ? item.examplesAr : (violationEnglishCopy[item.number]?.examples ?? item.titleEn)}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -2193,30 +2216,6 @@ export function ClientPortal() {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
-            <CardContent className="space-y-3 p-5">
-              <p className="text-sm font-semibold text-text-main">{isArabic ? 'روابط سريعة' : 'Quick links'}</p>
-              <div className="space-y-2">
-                {[
-                  { labelAr: 'النصوص', labelEn: 'Scripts', section: 'scripts' as const },
-                  { labelAr: 'إضافة نص', labelEn: 'Add Script', section: 'new-script' as const },
-                  { labelAr: 'الشهادات', labelEn: 'Certificates', section: 'certificates' as const },
-                  { labelAr: 'إرشادات الامتثال', labelEn: 'Compliance Guidelines', section: 'compliance-guidelines' as const },
-                ].map((item) => (
-                  <Button
-                    key={item.section}
-                    variant="outline"
-                    className="w-full justify-between"
-                    onClick={() => setActiveSection(item.section)}
-                  >
-                    <span>{isArabic ? item.labelAr : item.labelEn}</span>
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     );
@@ -2790,9 +2789,11 @@ export function ClientPortal() {
       sectionBadges={{
         notifications: notificationsUnreadCount,
       }}
-      summary={{
-        totalScripts: submissions.length,
-        rejectedScripts: totalRejected,
+      notificationsMenu={{
+        unreadCount: notificationsUnreadCount,
+        items: notifications.slice(0, 6),
+        onOpenNotifications: () => setActiveSection('notifications'),
+        onMarkRead: (id) => { void markNotificationRead(id); },
       }}
     >
       <div className="space-y-4">

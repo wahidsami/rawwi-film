@@ -39,9 +39,16 @@ type ClientPortalLayoutProps = {
   onLogout: () => void;
   subscriptionLabel: string;
   sectionBadges?: Partial<Record<ClientPortalSection, number>>;
-  summary: {
-    totalScripts: number;
-    rejectedScripts: number;
+  notificationsMenu?: {
+    unreadCount: number;
+    items: Array<{
+      id: string;
+      title: string;
+      createdAt: string;
+      readAt?: string;
+    }>;
+    onOpenNotifications: () => void;
+    onMarkRead?: (id: string) => void;
   };
   children: ReactNode;
 };
@@ -126,12 +133,13 @@ export function ClientPortalLayout({
   onLogout,
   subscriptionLabel,
   sectionBadges,
-  summary,
+  notificationsMenu,
   children,
 }: ClientPortalLayoutProps) {
   const isArabic = lang === 'ar';
   const isIndividual = beneficiaryType === 'individual';
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isNotifMenuOpen, setIsNotifMenuOpen] = useState(false);
   const CollapseIcon = isArabic
     ? (isSidebarCollapsed ? ChevronLeft : ChevronRight)
     : (isSidebarCollapsed ? ChevronRight : ChevronLeft);
@@ -164,13 +172,68 @@ export function ClientPortalLayout({
                   <Badge variant="success">{subscriptionLabel}</Badge>
                 </span>
               ) : null}
-              <Badge variant="outline">
-                {isArabic ? `إجمالي النصوص: ${summary.totalScripts}` : `Total Scripts: ${summary.totalScripts}`}
-              </Badge>
-              <Badge variant={summary.rejectedScripts > 0 ? 'warning' : 'outline'}>
-                {isArabic ? `المرفوض: ${summary.rejectedScripts}` : `Rejected: ${summary.rejectedScripts}`}
-              </Badge>
               {userName ? <span className="px-2 text-sm text-text-muted">{userName}</span> : null}
+              {notificationsMenu ? (
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsNotifMenuOpen((v) => !v)}
+                    className="relative"
+                  >
+                    <Bell className="h-4 w-4" />
+                    {notificationsMenu.unreadCount > 0 ? (
+                      <span className="absolute -right-2 -top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-white">
+                        {notificationsMenu.unreadCount}
+                      </span>
+                    ) : null}
+                  </Button>
+                  {isNotifMenuOpen ? (
+                    <div className="absolute end-0 top-full z-[1200] mt-2 w-[360px] rounded-xl border border-border bg-background p-3 shadow-[0_24px_60px_rgba(31,23,36,0.25)]">
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="text-sm font-semibold text-text-main">{isArabic ? 'الإشعارات' : 'Notifications'}</p>
+                        <button
+                          type="button"
+                          className="text-xs text-primary"
+                          onClick={() => {
+                            setIsNotifMenuOpen(false);
+                            notificationsMenu.onOpenNotifications();
+                          }}
+                        >
+                          {isArabic ? 'عرض الكل' : 'View all'}
+                        </button>
+                      </div>
+                      <div className="max-h-64 space-y-2 overflow-auto">
+                        {notificationsMenu.items.length === 0 ? (
+                          <p className="py-3 text-center text-xs text-text-muted">{isArabic ? 'لا توجد إشعارات' : 'No notifications'}</p>
+                        ) : (
+                          notificationsMenu.items.map((item) => {
+                            const unread = !item.readAt;
+                            return (
+                              <button
+                                key={item.id}
+                                type="button"
+                                className={cn(
+                                  'block w-full rounded-lg border p-2 text-start text-xs',
+                                  unread ? 'border-primary/40 bg-primary/5' : 'border-border bg-surface',
+                                )}
+                                onClick={() => {
+                                  notificationsMenu.onMarkRead?.(item.id);
+                                  setIsNotifMenuOpen(false);
+                                  notificationsMenu.onOpenNotifications();
+                                }}
+                              >
+                                <p className="font-semibold text-text-main">{item.title}</p>
+                                <p className="mt-1 text-text-muted">{new Date(item.createdAt).toLocaleString()}</p>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
               <Button variant="outline" size="sm" onClick={onToggleLanguage}>
                 <Globe className="me-2 h-4 w-4" />
                 {isArabic ? 'English' : 'عربي'}
