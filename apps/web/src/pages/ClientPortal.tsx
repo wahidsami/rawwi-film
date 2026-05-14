@@ -62,6 +62,8 @@ type UploadResult = {
 };
 
 type ComplianceTabKey = 'guidelines' | 'age';
+type ExpectedRank = 'G' | 'PG' | 'PG12' | 'PG15' | 'R15' | 'R18';
+const EXPECTED_RANK_VALUES: ReadonlyArray<ExpectedRank> = ['G', 'PG', 'PG12', 'PG15', 'R15', 'R18'];
 
 function statusLabel(status: string, lang: 'ar' | 'en'): string {
   const key = status.toLowerCase();
@@ -530,11 +532,14 @@ export function ClientPortal() {
   );
   const expectedRankOptions = useMemo(
     () => [
-      { value: 'high', label: lang === 'ar' ? 'عالية' : 'High' },
-      { value: 'medium', label: lang === 'ar' ? 'متوسطة' : 'Medium' },
-      { value: 'low', label: lang === 'ar' ? 'منخفضة' : 'Low' },
+      { value: 'G', label: 'G' },
+      { value: 'PG', label: 'PG' },
+      { value: 'PG12', label: 'PG12' },
+      { value: 'PG15', label: 'PG15' },
+      { value: 'R15', label: 'R15' },
+      { value: 'R18', label: 'R18' },
     ],
-    [lang],
+    [],
   );
 
   const [profile, setProfile] = useState<ClientPortalMeResponse | null>(null);
@@ -556,7 +561,7 @@ export function ClientPortal() {
     title: string;
     type: 'Film' | 'Series';
     workClassification: string;
-    expectedRank: 'low' | 'medium' | 'high';
+    expectedRank: ExpectedRank;
     synopsis: string;
     storySummary: string;
     hasSecurityScenes: 'yes' | 'no';
@@ -564,7 +569,7 @@ export function ClientPortal() {
     title: '',
     type: 'Film' as 'Film' | 'Series',
     workClassification: LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
-    expectedRank: 'medium',
+    expectedRank: 'PG',
     synopsis: '',
     storySummary: '',
     hasSecurityScenes: 'no',
@@ -1036,7 +1041,7 @@ export function ClientPortal() {
         title: '',
         type: 'Film',
         workClassification: workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
-        expectedRank: 'medium',
+        expectedRank: 'PG',
         synopsis: '',
         storySummary: '',
         hasSecurityScenes: 'no',
@@ -1163,12 +1168,16 @@ export function ClientPortal() {
   };
 
   const startEditDraft = (item: ClientPortalSubmissionItem) => {
+    const incomingExpectedRank = (item as ClientPortalSubmissionItem & { expectedRank?: string | null }).expectedRank;
+    const normalizedExpectedRank: ExpectedRank = EXPECTED_RANK_VALUES.includes(incomingExpectedRank as ExpectedRank)
+      ? (incomingExpectedRank as ExpectedRank)
+      : 'PG';
     setEditingDraft(item);
     setForm((prev) => ({
       ...prev,
       title: item.title ?? '',
       type: item.type === 'Series' ? 'Series' : 'Film',
-      expectedRank: (item as ClientPortalSubmissionItem & { expectedRank?: 'low' | 'medium' | 'high' | null }).expectedRank ?? prev.expectedRank ?? 'medium',
+      expectedRank: normalizedExpectedRank,
       synopsis: prev.synopsis ?? '',
     }));
     setActiveSection('new-script');
@@ -1484,7 +1493,7 @@ export function ClientPortal() {
             <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'الرتبة المتوقعة' : 'Expected Rank'}</label>
             <select
               value={form.expectedRank}
-              onChange={(e) => setForm((prev) => ({ ...prev, expectedRank: e.target.value as 'low' | 'medium' | 'high' }))}
+              onChange={(e) => setForm((prev) => ({ ...prev, expectedRank: e.target.value as ExpectedRank }))}
               className="h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 text-sm"
             >
               {expectedRankOptions.map((option) => (

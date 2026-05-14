@@ -121,6 +121,13 @@ export function ClientDetails() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
   const isPortalClient = (company?.source ?? 'internal') === 'portal';
+  const visibleCompanyScripts = useMemo(
+    () => companyScripts.filter((script) => {
+      if (!isPortalClient) return true;
+      return String(script.status ?? '').toLowerCase() !== 'draft';
+    }),
+    [companyScripts, isPortalClient],
+  );
   const canAddScript = isAdmin && hasPermission('upload_scripts') && !isPortalClient;
   const [formData, setFormData] = useState({
     title: '',
@@ -170,11 +177,11 @@ export function ClientDetails() {
   }, [user, hasPermission]);
 
   const loadReportCounts = useCallback(async () => {
-    if (companyScripts.length === 0) return;
+    if (visibleCompanyScripts.length === 0) return;
     const counts: Record<string, number> = {};
     const effectiveStatuses: Record<string, string> = {};
     await Promise.all(
-      companyScripts.map(async (script) => {
+      visibleCompanyScripts.map(async (script) => {
         try {
           const list = await reportsApi.listByScript(script.id);
           counts[script.id] = list.length;
@@ -191,7 +198,7 @@ export function ClientDetails() {
     );
     setReportCountByScriptId((prev) => ({ ...prev, ...counts }));
     setEffectiveStatusByScriptId((prev) => ({ ...prev, ...effectiveStatuses }));
-  }, [companyScripts]);
+  }, [visibleCompanyScripts]);
 
   useEffect(() => {
     loadReportCounts();
@@ -491,7 +498,7 @@ export function ClientDetails() {
     try {
       await downloadClientDetailsPdf({
         company,
-        scripts: companyScripts,
+        scripts: visibleCompanyScripts,
         reportCountByScriptId,
         users: availableUsers.map((u) => ({ id: u.id, name: u.name || u.email || "Unknown" })),
         lang: lang === 'ar' ? 'ar' : 'en',
@@ -558,7 +565,7 @@ export function ClientDetails() {
               </div>
               <div>
                 <p className="text-xs text-text-muted uppercase mb-1">{t('scriptsCount')}</p>
-                <p className="font-medium text-text-main">{companyScripts.length}</p>
+                <p className="font-medium text-text-main">{visibleCompanyScripts.length}</p>
               </div>
               <div className="flex items-end">
                 <Button variant="outline" size="sm" onClick={() => navigate(`/clients/${company.companyId}/info`)}>
@@ -593,7 +600,7 @@ export function ClientDetails() {
         )}
       </div>
 
-      {companyScripts.length === 0 ? (
+      {visibleCompanyScripts.length === 0 ? (
         <Card className="border-dashed border-2 bg-background/50">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-16 h-16 bg-surface border border-border rounded-2xl flex items-center justify-center mb-4 shadow-sm">
@@ -633,7 +640,7 @@ export function ClientDetails() {
                 </tr>
               </thead>
               <tbody>
-                {companyScripts.map((script) => (
+                {visibleCompanyScripts.map((script) => (
                   (() => {
                     const effectiveStatus = effectiveStatusByScriptId[script.id] ?? script.status;
                     const normalized = String(effectiveStatus).toLowerCase();
