@@ -2107,6 +2107,9 @@ export function ClientPortal() {
       const uploadPath = await uploadSupportingDocument(revisionResubmitFile);
       await clientPortalApi.resubmitRevisionCycle(submissionDetailsItem.scriptId, activeCycle.id, {
         revisedFileUrl: uploadPath,
+        revisedFileName: revisionResubmitFile.name,
+        revisedFileType: revisionResubmitFile.type || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        revisedFileSize: revisionResubmitFile.size,
         beneficiaryComment: revisionResubmitComment.trim() || undefined,
       });
       setNotice(lang === 'ar' ? 'تم إرسال النسخة المعدلة بنجاح.' : 'Revised script submitted successfully.');

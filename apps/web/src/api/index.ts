@@ -596,8 +596,14 @@ export const clientPortalApi = {
   resubmitRevisionCycle: (
     scriptId: string,
     cycleId: string,
-    payload: { revisedFileUrl: string; beneficiaryComment?: string },
-  ): Promise<{ ok: true; scriptId: string; cycleId: string; cycleNumber: number; scriptStatus: string; cycleStatus: string }> =>
+    payload: {
+      revisedFileUrl: string;
+      revisedFileName?: string;
+      revisedFileType?: string;
+      revisedFileSize?: number;
+      beneficiaryComment?: string;
+    },
+  ): Promise<{ ok: true; scriptId: string; cycleId: string; newVersionId: string; cycleNumber: number; scriptStatus: string; cycleStatus: string }> =>
     httpClient.post(
       `/client-portal/scripts/${encodeURIComponent(scriptId)}/revision-cycles/${encodeURIComponent(cycleId)}/resubmit`,
       payload,

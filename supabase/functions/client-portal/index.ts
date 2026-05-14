@@ -1206,6 +1206,9 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Invalid JSON body" }, 400);
     }
     const revisedFileUrl = typeof body.revisedFileUrl === "string" ? body.revisedFileUrl.trim() : "";
+    const revisedFileName = typeof body.revisedFileName === "string" ? body.revisedFileName.trim().normalize("NFC") : null;
+    const revisedFileType = typeof body.revisedFileType === "string" ? body.revisedFileType.trim() : null;
+    const revisedFileSize = typeof body.revisedFileSize === "number" && Number.isFinite(body.revisedFileSize) ? Number(body.revisedFileSize) : null;
     const beneficiaryComment = typeof body.beneficiaryComment === "string" ? body.beneficiaryComment.trim() : "";
     if (!revisedFileUrl) return json({ error: "revisedFileUrl is required" }, 400);
 
@@ -1231,11 +1234,39 @@ Deno.serve(async (req: Request) => {
     }
 
     const nowIso = new Date().toISOString();
+    const { data: maxVersion } = await supabase
+      .from("script_versions")
+      .select("version_number")
+      .eq("script_id", scriptId)
+      .order("version_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const nextVersionNumber = Number((maxVersion as any)?.version_number ?? 0) + 1;
+
+    const { data: newVersion, error: versionErr } = await supabase
+      .from("script_versions")
+      .insert({
+        script_id: scriptId,
+        version_number: nextVersionNumber,
+        source_file_name: revisedFileName,
+        source_file_type: revisedFileType,
+        source_file_size: revisedFileSize,
+        source_file_path: revisedFileUrl,
+        source_file_url: revisedFileUrl,
+        extraction_status: "pending",
+      })
+      .select("id")
+      .single();
+    if (versionErr || !newVersion?.id) {
+      return json({ error: versionErr?.message || "Failed to create revision version" }, 500);
+    }
+
     const { error: updateScriptErr } = await supabase
       .from("scripts")
       .update({
         status: "resubmitted",
         file_url: revisedFileUrl,
+        current_version_id: newVersion.id,
         updated_at: nowIso,
       })
       .eq("id", scriptId);
@@ -1246,6 +1277,7 @@ Deno.serve(async (req: Request) => {
       .update({
         status: "returned",
         returned_at: nowIso,
+        beneficiary_returned_version_id: newVersion.id,
         updated_at: nowIso,
       })
       .eq("id", cycleId);
@@ -1260,6 +1292,7 @@ Deno.serve(async (req: Request) => {
         actor_user_id: userId,
         payload: {
           revised_file_url: revisedFileUrl,
+          revised_version_id: newVersion.id,
           beneficiary_comment: beneficiaryComment || null,
           previous_file_url: (scriptRow as any).file_url ?? null,
         },
@@ -1282,6 +1315,7 @@ Deno.serve(async (req: Request) => {
       ok: true,
       scriptId,
       cycleId,
+      newVersionId: newVersion.id,
       cycleNumber: (cycleRow as any).cycle_number,
       scriptStatus: "resubmitted",
       cycleStatus: "returned",
