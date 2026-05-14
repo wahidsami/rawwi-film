@@ -2241,6 +2241,10 @@ export function ClientPortal() {
     const activeRevisionCycle = submissionRevisionCycles.find((cycle) => cycle.status.toLowerCase() === 'sent') ?? null;
     const hasRevisionCycles = submissionRevisionCycles.length > 0;
     const isRevisionReadOnly = hasRevisionCycles && !activeRevisionCycle;
+    const latestCycleStatus = (submissionRevisionCycles[0]?.status ?? '').toLowerCase();
+    const showActionRequiredBanner = latestCycleStatus === 'sent';
+    const showUnderAdminBanner = ['returned', 'resubmitted', 'analysis_running', 'in_review', 'review_required'].includes(latestCycleStatus);
+    const showCompletedBanner = ['reanalyzed', 'closed', 'approved', 'rejected'].includes(latestCycleStatus);
     return (
       <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
         <CardHeader>
@@ -2252,6 +2256,27 @@ export function ClientPortal() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {showActionRequiredBanner ? (
+            <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">
+              {lang === 'ar'
+                ? 'هذا النص يحتاج إجراء منك حالياً: راجع ملاحظات الإدارة وأعد إرسال النسخة المعدلة.'
+                : 'Action required: review admin feedback and submit your revised script.'}
+            </div>
+          ) : null}
+          {showUnderAdminBanner ? (
+            <div className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary">
+              {lang === 'ar'
+                ? 'النص حالياً تحت إعادة التحليل من قبل الإدارة.'
+                : 'This script is currently under admin reanalysis.'}
+            </div>
+          ) : null}
+          {showCompletedBanner ? (
+            <div className="rounded-md border border-success/40 bg-success/10 px-3 py-2 text-xs text-success">
+              {lang === 'ar'
+                ? 'اكتملت دورة المراجعة الحالية. يمكنك متابعة النتيجة من حالة النص.'
+                : 'The current revision cycle is completed. You can follow the final status from this script record.'}
+            </div>
+          ) : null}
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="rounded-md border border-border bg-surface p-3">
               <p className="text-xs text-text-muted">{lang === 'ar' ? 'عنوان النص' : 'Title'}</p>
@@ -2432,11 +2457,16 @@ export function ClientPortal() {
                   value={revisionResubmitComment}
                   onChange={(e) => setRevisionResubmitComment(e.target.value)}
                   rows={3}
+                  disabled={revisionResubmitting}
                   placeholder={lang === 'ar' ? 'أضف أي توضيح حول التعديلات المنفذة' : 'Add any notes about your revisions'}
                 />
               </div>
               <div className="flex justify-end">
-                <Button onClick={() => void handleResubmitRevisionCycle()} isLoading={revisionResubmitting}>
+                <Button
+                  onClick={() => void handleResubmitRevisionCycle()}
+                  isLoading={revisionResubmitting}
+                  disabled={revisionResubmitting || !revisionResubmitFile}
+                >
                   {lang === 'ar' ? 'إرسال النسخة المعدلة' : 'Submit Revised Version'}
                 </Button>
               </div>

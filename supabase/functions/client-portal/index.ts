@@ -1230,7 +1230,7 @@ Deno.serve(async (req: Request) => {
     if (cycleErr) return json({ error: cycleErr.message }, 500);
     if (!cycleRow) return json({ error: "Revision cycle not found" }, 404);
     if ((cycleRow as any).status !== "sent") {
-      return json({ error: "Only active sent cycles can be resubmitted" }, 409);
+      return json({ error: "This revision cycle was already submitted or is no longer active." }, 409);
     }
 
     const nowIso = new Date().toISOString();
