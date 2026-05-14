@@ -200,6 +200,31 @@ export default function Settings() {
     }
   };
 
+  const handleNumberedListKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== 'Enter') return;
+    const target = event.currentTarget;
+    const { selectionStart, selectionEnd, value } = target;
+    if (selectionStart !== selectionEnd) return;
+
+    const before = value.slice(0, selectionStart);
+    const lineStart = before.lastIndexOf('\n') + 1;
+    const currentLine = before.slice(lineStart);
+    const match = currentLine.match(/^(\s*)(\d+)\.\s/);
+    if (!match) return;
+
+    event.preventDefault();
+    const indent = match[1] ?? '';
+    const nextNumber = Number(match[2] ?? '0') + 1;
+    const insertion = `\n${indent}${nextNumber}. `;
+    const after = value.slice(selectionStart);
+    const nextValue = `${before}${insertion}${after}`;
+
+    target.value = nextValue;
+    const nextCursor = selectionStart + insertion.length;
+    target.setSelectionRange(nextCursor, nextCursor);
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
   const handleSaveCertificateFee = async () => {
     const baseAmount = Number(certificateFee.baseAmount);
     const taxRatePercent = Number(certificateFee.taxRatePercent);
@@ -576,14 +601,21 @@ export default function Settings() {
                         rows={6}
                         value={clientTerms.ar}
                         onChange={(e) => setClientTerms((state) => ({ ...state, ar: e.target.value }))}
+                        onKeyDown={handleNumberedListKeyDown}
                       />
                       <Textarea
                         label={lang === 'ar' ? 'الشروط بالإنجليزية' : 'English Terms'}
                         rows={6}
                         value={clientTerms.en}
                         onChange={(e) => setClientTerms((state) => ({ ...state, en: e.target.value }))}
+                        onKeyDown={handleNumberedListKeyDown}
                       />
                     </div>
+                    <p className="text-xs text-text-muted">
+                      {lang === 'ar'
+                        ? 'لإضافة تعداد رقمي: ابدأ السطر بـ "1. " ثم اضغط Enter للترقيم التلقائي.'
+                        : 'For numeric bullets: start a line with "1. " then press Enter for auto-numbering.'}
+                    </p>
                     <button
                       type="button"
                       onClick={() => void handleSaveClientTerms()}
@@ -598,7 +630,7 @@ export default function Settings() {
 
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-text-main">
-                      {lang === 'ar' ? 'ضوابط تسجيل المستفيدين' : 'Beneficiary Registration Regulations'}
+                      {lang === 'ar' ? 'الضوابط العامة للأعمال الدرامية والوثائقية' : 'General Regulations for Dramatic and Documentary'}
                     </h3>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <Textarea
@@ -606,14 +638,21 @@ export default function Settings() {
                         rows={6}
                         value={clientRegulations.ar}
                         onChange={(e) => setClientRegulations((state) => ({ ...state, ar: e.target.value }))}
+                        onKeyDown={handleNumberedListKeyDown}
                       />
                       <Textarea
                         label={lang === 'ar' ? 'الضوابط بالإنجليزية' : 'English Regulations'}
                         rows={6}
                         value={clientRegulations.en}
                         onChange={(e) => setClientRegulations((state) => ({ ...state, en: e.target.value }))}
+                        onKeyDown={handleNumberedListKeyDown}
                       />
                     </div>
+                    <p className="text-xs text-text-muted">
+                      {lang === 'ar'
+                        ? 'لإضافة تعداد رقمي: ابدأ السطر بـ "1. " ثم اضغط Enter للترقيم التلقائي.'
+                        : 'For numeric bullets: start a line with "1. " then press Enter for auto-numbering.'}
+                    </p>
                     <button
                       type="button"
                       onClick={() => void handleSaveClientRegulations()}
