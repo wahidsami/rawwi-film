@@ -1254,7 +1254,7 @@ Deno.serve(async (req: Request) => {
         scriptId,
         userId,
         isAdmin: false,
-        requireCompletedPayment: true,
+        requireCompletedPayment: false,
         download: new URL(req.url).searchParams.get("download") === "1",
       });
       return json({ ok: true, ...payload });
