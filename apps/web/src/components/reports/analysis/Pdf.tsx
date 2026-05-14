@@ -99,13 +99,10 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
     <Document>
       <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
         <View style={{ width: A4_WIDTH, height: A4_HEIGHT, position: "relative" }}>
-          {coverImageDataUrl ? (
-            <Image
-              src={coverImageDataUrl}
-              style={{ position: "absolute", top: -2, left: -2, width: A4_WIDTH + 4, height: A4_HEIGHT + 4, objectFit: "cover" }}
-            />
-          ) : null}
-          <View style={{ position: "absolute", left: 44, right: 44, bottom: 92 }}>
+          <View style={{ position: "absolute", left: 44, right: 44, top: 70, alignItems: "center" }}>
+            {logoUrl ? <Image src={logoUrl} style={{ width: 130, height: 42, objectFit: "contain", marginBottom: 22 }} /> : null}
+          </View>
+          <View style={{ position: "absolute", left: 44, right: 44, bottom: 110 }}>
             <View style={s.coverMetaBlock}>
               <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير التحليل" : "Analysis Report"}</Text>
               <Text style={[s.coverText, rtl]}>{data.scriptTitle}</Text>

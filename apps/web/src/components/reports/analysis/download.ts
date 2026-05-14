@@ -91,9 +91,9 @@ export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Pr
         startLineChunk: f.start_line_chunk ?? undefined,
         endLineChunk: f.end_line_chunk ?? undefined,
       }));
-  const [coverImageDataUrl, logoDataUrl] = await Promise.all([
-    toDataUrl(`${origin}/cover.jpg`),
-    toDataUrl(params.logoUrl || `${origin}/dashboardlogo.png`),
+  const [, logoDataUrl] = await Promise.all([
+    Promise.resolve<string | null>(null),
+    toDataUrl(`${origin}/fclogo.png`),
   ]);
   const doc = React.createElement(AnalysisSectionPdf, {
     data: {
@@ -108,7 +108,7 @@ export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Pr
     },
     dateFormat: params.dateFormat,
     logoUrl: logoDataUrl ?? undefined,
-    coverImageDataUrl,
+    coverImageDataUrl: null,
   });
   const blob = await pdf(doc).toBlob();
   /** Empty/corrupt react-pdf output is often under ~300 bytes; real reports are larger. */

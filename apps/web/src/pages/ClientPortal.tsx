@@ -958,6 +958,20 @@ export function ClientPortal() {
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
   };
 
+  const extractStoredFileName = (pathOrUrl: string | null | undefined): string => {
+    if (!pathOrUrl) return '';
+    const raw = pathOrUrl.trim();
+    if (!raw) return '';
+    try {
+      const value = /^https?:\/\//i.test(raw) ? new URL(raw).pathname : raw;
+      const candidate = decodeURIComponent(value.split('/').pop() || '').trim();
+      return candidate || '';
+    } catch {
+      const candidate = decodeURIComponent(raw.split('/').pop() || '').trim();
+      return candidate || '';
+    }
+  };
+
   const requiresStorySummary = useMemo(() => {
     const normalized = (form.workClassification || '').trim().toLowerCase();
     return ['سياسي', 'وثائقي', 'امني', 'أمني', 'تاريخي', 'political', 'documentary', 'security', 'historical'].some((token) =>
@@ -1215,6 +1229,23 @@ export function ClientPortal() {
       setExistingScriptSummaryPdfUrl(null);
       setExistingSecurityContentAttachmentUrl(null);
       setExistingScriptFileUrl(null);
+      await loadProfileAndSubmissions();
+      setActiveSection('scripts');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل إرسال النص' : 'Failed to submit script'));
+    } finally {
+      setIsSubmittingScript(false);
+    }
+  };
+
+  const handleSubmitFromScriptView = async () => {
+    if (!submissionDetailsItem?.scriptId) return;
+    setNotice('');
+    setError('');
+    setIsSubmittingScript(true);
+    try {
+      await scriptsApi.updateScript(submissionDetailsItem.scriptId, { status: 'in_review' } as Partial<Script>);
+      setNotice(lang === 'ar' ? 'تم إرسال النص للإدارة بنجاح.' : 'Script submitted to admin successfully.');
       await loadProfileAndSubmissions();
       setActiveSection('scripts');
     } catch (err) {
@@ -1595,6 +1626,10 @@ export function ClientPortal() {
               />
               {editingDraft && existingScriptSummaryPdfUrl ? (
                 <div className="mt-1 space-y-1 text-xs text-text-muted">
+                  <p className="text-text-main">
+                    {lang === 'ar' ? 'اسم الملف الحالي: ' : 'Current file name: '}
+                    <span className="font-medium">{extractStoredFileName(existingScriptSummaryPdfUrl) || '-'}</span>
+                  </p>
                   <p>
                     {lang === 'ar' ? 'ملف الملخص الحالي محفوظ. ارفع ملفًا جديدًا فقط إذا رغبت بالاستبدال.' : 'Current summary file is preserved. Upload a new file only if you want to replace it.'}
                   </p>
@@ -1637,6 +1672,10 @@ export function ClientPortal() {
               />
               {editingDraft && existingSecurityContentAttachmentUrl ? (
                 <div className="mt-1 space-y-1 text-xs text-text-muted">
+                  <p className="text-text-main">
+                    {lang === 'ar' ? 'اسم الملف الحالي: ' : 'Current file name: '}
+                    <span className="font-medium">{extractStoredFileName(existingSecurityContentAttachmentUrl) || '-'}</span>
+                  </p>
                   <p>
                     {lang === 'ar' ? 'مرفق المحتوى الأمني الحالي محفوظ. ارفع ملفًا جديدًا فقط إذا رغبت بالاستبدال.' : 'Current security attachment is preserved. Upload a new file only if you want to replace it.'}
                   </p>
@@ -1662,6 +1701,10 @@ export function ClientPortal() {
                 />
                 {editingDraft && existingScriptFileUrl ? (
                   <div className="mt-1 space-y-1 text-xs text-text-muted">
+                    <p className="text-text-main">
+                      {lang === 'ar' ? 'اسم الملف الحالي: ' : 'Current file name: '}
+                      <span className="font-medium">{extractStoredFileName(existingScriptFileUrl) || '-'}</span>
+                    </p>
                     <p>
                       {lang === 'ar' ? 'ملف النص الحالي محفوظ. ارفع ملفًا جديدًا فقط إذا رغبت بالاستبدال.' : 'Current script file is preserved. Upload a new file only if you want to replace it.'}
                     </p>
@@ -2434,37 +2477,52 @@ export function ClientPortal() {
               <div>
                 <span className="text-text-muted">{lang === 'ar' ? 'ملخص النص PDF: ' : 'Script Summary PDF: '}</span>
                 {submissionDetailsItem.scriptSummaryPdfUrl ? (
-                  <button
-                    type="button"
-                    className="text-primary underline"
-                    onClick={() => void openStoredDocument(submissionDetailsItem.scriptSummaryPdfUrl)}
-                  >
-                    {lang === 'ar' ? 'عرض الملف' : 'View file'}
-                  </button>
+                  <span className="inline-flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="text-primary underline"
+                      onClick={() => void openStoredDocument(submissionDetailsItem.scriptSummaryPdfUrl)}
+                    >
+                      {lang === 'ar' ? 'عرض الملف' : 'View file'}
+                    </button>
+                    <span className="text-text-main">
+                      ({extractStoredFileName(submissionDetailsItem.scriptSummaryPdfUrl) || (lang === 'ar' ? 'بدون اسم' : 'Unnamed')})
+                    </span>
+                  </span>
                 ) : <span>{lang === 'ar' ? 'غير مرفق' : 'Not attached'}</span>}
               </div>
               <div>
                 <span className="text-text-muted">{lang === 'ar' ? 'مرفق المحتوى الأمني: ' : 'Security Content Attachment: '}</span>
                 {submissionDetailsItem.securityContentAttachmentUrl ? (
-                  <button
-                    type="button"
-                    className="text-primary underline"
-                    onClick={() => void openStoredDocument(submissionDetailsItem.securityContentAttachmentUrl)}
-                  >
-                    {lang === 'ar' ? 'عرض الملف' : 'View file'}
-                  </button>
+                  <span className="inline-flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="text-primary underline"
+                      onClick={() => void openStoredDocument(submissionDetailsItem.securityContentAttachmentUrl)}
+                    >
+                      {lang === 'ar' ? 'عرض الملف' : 'View file'}
+                    </button>
+                    <span className="text-text-main">
+                      ({extractStoredFileName(submissionDetailsItem.securityContentAttachmentUrl) || (lang === 'ar' ? 'بدون اسم' : 'Unnamed')})
+                    </span>
+                  </span>
                 ) : <span>{lang === 'ar' ? 'غير مرفق' : 'Not attached'}</span>}
               </div>
               <div>
                 <span className="text-text-muted">{lang === 'ar' ? 'ملف النص الأصلي: ' : 'Original Script File: '}</span>
                 {submissionDetailsItem.fileUrl ? (
-                  <button
-                    type="button"
-                    className="text-primary underline"
-                    onClick={() => void openStoredDocument(submissionDetailsItem.fileUrl)}
-                  >
-                    {lang === 'ar' ? 'عرض الملف' : 'View file'}
-                  </button>
+                  <span className="inline-flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="text-primary underline"
+                      onClick={() => void openStoredDocument(submissionDetailsItem.fileUrl)}
+                    >
+                      {lang === 'ar' ? 'عرض الملف' : 'View file'}
+                    </button>
+                    <span className="text-text-main">
+                      ({extractStoredFileName(submissionDetailsItem.fileUrl) || (lang === 'ar' ? 'بدون اسم' : 'Unnamed')})
+                    </span>
+                  </span>
                 ) : <span>{lang === 'ar' ? 'غير مرفق' : 'Not attached'}</span>}
               </div>
             </div>
@@ -2609,6 +2667,15 @@ export function ClientPortal() {
             <Button variant="outline" onClick={() => setActiveSection('scripts')}>
               {lang === 'ar' ? 'رجوع' : 'Back'}
             </Button>
+            {String(submissionDetailsItem.status ?? '').toLowerCase() === 'draft' ? (
+              <Button
+                onClick={() => setSubmitConfirmOpen(true)}
+                isLoading={isSubmittingScript}
+                disabled={isRevisionReadOnly}
+              >
+                {lang === 'ar' ? 'إرسال للإدارة' : 'Submit to Admin'}
+              </Button>
+            ) : null}
             <Button onClick={() => void startEditDraft(submissionDetailsItem)} disabled={isRevisionReadOnly}>
               {lang === 'ar' ? 'تعديل' : 'Edit'}
             </Button>
@@ -2800,7 +2867,11 @@ export function ClientPortal() {
             <Button
               onClick={() => {
                 setSubmitConfirmOpen(false);
-                void handleSubmitToAdmin();
+                if (activeSection === 'script-view' && submissionDetailsItem) {
+                  void handleSubmitFromScriptView();
+                } else {
+                  void handleSubmitToAdmin();
+                }
               }}
               isLoading={isSubmittingScript}
               disabled={isSavingDraft}
