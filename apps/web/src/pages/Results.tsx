@@ -391,6 +391,7 @@ export function Results() {
   const [editFindingSnippetValidation, setEditFindingSnippetValidation] = useState<string | null>(null);
   const [reportVisibilitySavingId, setReportVisibilitySavingId] = useState<string | null>(null);
   const [reportActionsMenuOpen, setReportActionsMenuOpen] = useState(false);
+  const [findingActionsMenuId, setFindingActionsMenuId] = useState<string | null>(null);
   const [checklistModalOpen, setChecklistModalOpen] = useState(false);
   const [summaryModalOpen, setSummaryModalOpen] = useState(false);
   const reportActionsMenuRef = useRef<HTMLDivElement | null>(null);
@@ -1584,6 +1585,28 @@ export function Results() {
     }
   };
 
+  const handleDeleteFindingCard = async (payload: { findingId?: string; reviewFindingId?: string }) => {
+    const confirmMessage = lang === 'ar'
+      ? 'هل تريد حذف بطاقة الملاحظة؟'
+      : 'Do you want to delete this finding card?';
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      await findingsApi.deleteFindingCard(payload);
+      if (payload.findingId) {
+        setFindings((prev) => prev.filter((item) => item.id !== payload.findingId));
+      }
+      if (payload.reviewFindingId) {
+        setReviewFindings((prev) => prev.filter((item) => item.id !== payload.reviewFindingId));
+      }
+      setFindingActionsMenuId(null);
+      toast.success(lang === 'ar' ? 'تم حذف بطاقة الملاحظة' : 'Finding card deleted');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : null;
+      toast.error(message || (lang === 'ar' ? 'تعذر حذف بطاقة الملاحظة' : 'Failed to delete finding card'));
+    }
+  };
+
   const handleDownloadWord = async () => {
     if (!report) return;
     setIsDownloadingWord(true);
@@ -1758,7 +1781,7 @@ export function Results() {
             )}
             <span className="font-semibold text-text-main text-sm">{displayTitle}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] text-text-muted border-border/60">{findingSourceLabel(f.source ?? 'ai')}</Badge>
             {isEdited && (
               <Badge variant="outline" className="text-[10px] bg-info/10 text-info border-info/30">
@@ -1768,6 +1791,105 @@ export function Results() {
             {isApproved && (
               <Badge className="text-[10px] bg-success/10 text-success border-success/20 border">{lang === 'ar' ? 'آمن' : 'Safe'}</Badge>
             )}
+            <button
+              type="button"
+              className="inline-flex h-6 w-6 items-center justify-center rounded border border-border bg-background text-text-muted hover:bg-surface"
+              onClick={(e) => {
+                e.stopPropagation();
+                setFindingActionsMenuId((prev) => (prev === `raw:${f.id}` ? null : `raw:${f.id}`));
+              }}
+              aria-label={lang === 'ar' ? 'خيارات الملاحظة' : 'Finding actions'}
+            >
+              <MoreVertical className="h-3.5 w-3.5" />
+            </button>
+            {findingActionsMenuId === `raw:${f.id}` ? (
+              <div className="absolute right-0 top-7 z-20 min-w-[180px] rounded-md border border-border bg-background p-1 shadow-lg">
+                {matchedReview ? (
+                  <button
+                    type="button"
+                    className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                    onClick={() => {
+                      setActionModal({ findingId: f.id, titleAr: f.titleAr, actionText });
+                      setFindingActionsMenuId(null);
+                    }}
+                  >
+                    {lang === 'ar' ? 'الإجراء' : 'Action'}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                  onClick={() => {
+                    openFindingTrace({
+                      titleAr: f.titleAr,
+                      evidenceSnippet: f.evidenceSnippet,
+                      rationale,
+                      sourceLabel: findingSourceLabel(f.source ?? 'ai'),
+                      confidence: f.confidence ?? null,
+                      pageNumber: f.pageNumber ?? null,
+                      lines: f.startLineChunk != null ? `${f.startLineChunk}${f.endLineChunk != null && f.endLineChunk !== f.startLineChunk ? `-${f.endLineChunk}` : ''}` : null,
+                      statusLabel: isApproved ? (lang === 'ar' ? 'آمن' : 'Safe') : (lang === 'ar' ? 'مخالف' : 'Violation'),
+                      reviewReason: f.reviewReason ?? null,
+                      sourceKind: f.source ?? null,
+                      primaryArticleId: primaryArticle,
+                      primaryAtomId: f.atomId ?? null,
+                      canonicalFindingId: (v3.canonical_finding_id as string | undefined) ?? null,
+                      finalRuling: (v3.final_ruling as string | undefined) ?? null,
+                      articleTitle: policyArticles.find((a) => a.id === primaryArticle)?.titleAr ?? null,
+                      reportTitle: report?.scriptTitle ?? null,
+                      reviewedAt: f.reviewedAt ?? null,
+                      reviewedBy: f.reviewedBy ?? null,
+                      createdAt: report?.createdAt ?? null,
+                    });
+                    setFindingActionsMenuId(null);
+                  }}
+                >
+                  {lang === 'ar' ? 'التتبع' : 'Trace'}
+                </button>
+                {!isApproved ? (
+                  <button
+                    type="button"
+                    className="w-full rounded px-2 py-1.5 text-start text-xs text-success hover:bg-success/10"
+                    onClick={() => {
+                      setReviewModal({ findingId: f.id, toStatus: 'approved', titleAr: f.titleAr });
+                      setReviewReason('');
+                      setFindingActionsMenuId(null);
+                    }}
+                  >
+                    {lang === 'ar' ? 'اعتماد كآمن' : 'Mark Safe'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="w-full rounded px-2 py-1.5 text-start text-xs text-error hover:bg-error/10"
+                    onClick={() => {
+                      setReviewModal({ findingId: f.id, toStatus: 'violation', titleAr: f.titleAr });
+                      setReviewReason('');
+                      setFindingActionsMenuId(null);
+                    }}
+                  >
+                    {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert to Violation'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                  onClick={() => {
+                    setEditFindingModal(f);
+                    setFindingActionsMenuId(null);
+                  }}
+                >
+                  {lang === 'ar' ? 'تعديل' : 'Edit'}
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded px-2 py-1.5 text-start text-xs text-error hover:bg-error/10"
+                  onClick={() => void handleDeleteFindingCard({ findingId: f.id })}
+                >
+                  {lang === 'ar' ? 'حذف' : 'Delete'}
+                </button>
+              </div>
+            ) : null}
             <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
           </div>
         </div>
@@ -1809,79 +1931,6 @@ export function Results() {
             {f.reviewedAt && <span className="text-text-muted ms-2">({formatDate(new Date(f.reviewedAt), { lang, format: dateFormat })})</span>}
           </div>
         )}
-        {/* Action buttons */}
-        <div className="flex items-center gap-2 mt-2 print:hidden">
-          {matchedReview && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-[11px] gap-1"
-              onClick={() =>
-                setActionModal({
-                  findingId: f.id,
-                  titleAr: f.titleAr,
-                  actionText,
-                })
-              }
-            >
-              <FileText className="w-3 h-3" />
-              {lang === 'ar' ? 'الإجراء' : 'Action'}
-            </Button>
-          )}
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 text-[11px] gap-1"
-            onClick={() =>
-              openFindingTrace({
-                titleAr: f.titleAr,
-                evidenceSnippet: f.evidenceSnippet,
-                rationale,
-                sourceLabel: findingSourceLabel(f.source ?? 'ai'),
-                confidence: f.confidence ?? null,
-                pageNumber: f.pageNumber ?? null,
-                lines: f.startLineChunk != null ? `${f.startLineChunk}${f.endLineChunk != null && f.endLineChunk !== f.startLineChunk ? `-${f.endLineChunk}` : ''}` : null,
-                statusLabel: isApproved ? (lang === 'ar' ? 'آمن' : 'Safe') : (lang === 'ar' ? 'مخالف' : 'Violation'),
-                reviewReason: f.reviewReason ?? null,
-                sourceKind: f.source ?? null,
-                primaryArticleId: primaryArticle,
-                primaryAtomId: f.atomId ?? null,
-                canonicalFindingId: (v3.canonical_finding_id as string | undefined) ?? null,
-                finalRuling: (v3.final_ruling as string | undefined) ?? null,
-                articleTitle: policyArticles.find((a) => a.id === primaryArticle)?.titleAr ?? null,
-                reportTitle: report?.scriptTitle ?? null,
-                reviewedAt: f.reviewedAt ?? null,
-                reviewedBy: f.reviewedBy ?? null,
-                createdAt: report?.createdAt ?? null,
-              })
-            }
-          >
-            <Search className="w-3 h-3" />
-            {lang === 'ar' ? 'التتبع' : 'Trace'}
-          </Button>
-          {!isApproved && (
-            <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 text-success border-success/30 hover:bg-success/10"
-              onClick={() => { setReviewModal({ findingId: f.id, toStatus: 'approved', titleAr: f.titleAr }); setReviewReason(''); }}>
-              <CheckCircle2 className="w-3 h-3" />
-              {lang === 'ar' ? 'اعتماد كآمن' : 'Mark Safe'}
-            </Button>
-          )}
-          {isApproved && (
-            <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 text-error border-error/30 hover:bg-error/10"
-              onClick={() => { setReviewModal({ findingId: f.id, toStatus: 'violation', titleAr: f.titleAr }); setReviewReason(''); }}>
-              <ShieldAlert className="w-3 h-3" />
-              {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert to Violation'}
-            </Button>
-          )}
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 text-[11px] gap-1"
-            onClick={() => setEditFindingModal(f)}
-          >
-            {lang === 'ar' ? 'تعديل' : 'Edit'}
-          </Button>
-        </div>
       </div>
     );
   }
@@ -1959,7 +2008,7 @@ export function Results() {
             )}
             <span className="font-semibold text-text-main text-sm">{displayTitle}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] text-text-muted border-border/60">{reviewFindingSourceLabel(f.sourceKind)}</Badge>
             {isEdited && (
               <Badge variant="outline" className="text-[10px] bg-info/10 text-info border-info/30">
@@ -1969,6 +2018,125 @@ export function Results() {
             {isApproved && (
               <Badge className="text-[10px] bg-success/10 text-success border-success/20 border">{lang === 'ar' ? 'آمن' : 'Safe'}</Badge>
             )}
+            <button
+              type="button"
+              className="inline-flex h-6 w-6 items-center justify-center rounded border border-border bg-background text-text-muted hover:bg-surface"
+              onClick={(e) => {
+                e.stopPropagation();
+                setFindingActionsMenuId((prev) => (prev === `review:${f.id}` ? null : `review:${f.id}`));
+              }}
+              aria-label={lang === 'ar' ? 'خيارات الملاحظة' : 'Finding actions'}
+            >
+              <MoreVertical className="h-3.5 w-3.5" />
+            </button>
+            {findingActionsMenuId === `review:${f.id}` ? (
+              <div className="absolute right-0 top-7 z-20 min-w-[200px] rounded-md border border-border bg-background p-1 shadow-lg">
+                {matchedRaw ? (
+                  <button
+                    type="button"
+                    className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                    onClick={() => {
+                      setActionModal({
+                        reviewFindingId: f.id,
+                        titleAr: f.titleAr,
+                        actionText: f.actionText ?? '',
+                      });
+                      setFindingActionsMenuId(null);
+                    }}
+                  >
+                    {lang === 'ar' ? 'الإجراء' : 'Action'}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                  onClick={() => {
+                    openFindingTrace({
+                      titleAr: f.titleAr,
+                      evidenceSnippet: f.evidenceSnippet,
+                      rationale,
+                      sourceLabel: reviewFindingSourceLabel(f.sourceKind),
+                      confidence: confidence != null ? confidence / 100 : null,
+                      pageNumber: f.pageNumber ?? null,
+                      lines: f.startOffsetGlobal != null ? `${f.startOffsetGlobal}${f.endOffsetGlobal != null && f.endOffsetGlobal !== f.startOffsetGlobal ? `-${f.endOffsetGlobal}` : ''}` : null,
+                      statusLabel: isApproved ? (lang === 'ar' ? 'آمن' : 'Safe') : (lang === 'ar' ? 'مخالف' : 'Violation'),
+                      reviewReason: f.approvedReason ?? null,
+                      sourceKind: f.sourceKind ?? null,
+                      primaryArticleId: f.primaryArticleId ?? null,
+                      primaryAtomId: f.primaryAtomId ?? null,
+                      canonicalFindingId: f.canonicalFindingId ?? null,
+                      finalRuling: f.reviewStatus ?? null,
+                      articleTitle: policyArticles.find((a) => a.id === f.primaryArticleId)?.titleAr ?? null,
+                      reportTitle: report?.scriptTitle ?? null,
+                      reviewedAt: f.reviewedAt ?? null,
+                      reviewedBy: f.reviewedBy ?? null,
+                      createdAt: report?.createdAt ?? null,
+                    });
+                    setFindingActionsMenuId(null);
+                  }}
+                >
+                  {lang === 'ar' ? 'التتبع' : 'Trace'}
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                  onClick={() => {
+                    void handleToggleReviewFindingReportVisibility(f);
+                    setFindingActionsMenuId(null);
+                  }}
+                >
+                  {f.includeInReport === false
+                    ? (lang === 'ar' ? 'تضمين في التقرير' : 'Include in report')
+                    : (lang === 'ar' ? 'استبعاد من التقرير' : 'Exclude from report')}
+                </button>
+                {matchedRaw ? (
+                  !isApproved ? (
+                    <button
+                      type="button"
+                      className="w-full rounded px-2 py-1.5 text-start text-xs text-success hover:bg-success/10"
+                      onClick={() => {
+                        setReviewModal({ findingId: matchedRaw.id, toStatus: 'approved', titleAr: f.titleAr });
+                        setReviewReason('');
+                        setFindingActionsMenuId(null);
+                      }}
+                    >
+                      {lang === 'ar' ? 'اعتماد كآمن' : 'Mark Safe'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="w-full rounded px-2 py-1.5 text-start text-xs text-error hover:bg-error/10"
+                      onClick={() => {
+                        setReviewModal({ findingId: matchedRaw.id, toStatus: 'violation', titleAr: f.titleAr });
+                        setReviewReason('');
+                        setFindingActionsMenuId(null);
+                      }}
+                    >
+                      {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert to Violation'}
+                    </button>
+                  )
+                ) : null}
+                {matchedRaw ? (
+                  <button
+                    type="button"
+                    className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                    onClick={() => {
+                      setEditFindingModal(matchedRaw);
+                      setFindingActionsMenuId(null);
+                    }}
+                  >
+                    {lang === 'ar' ? 'تعديل' : 'Edit'}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="w-full rounded px-2 py-1.5 text-start text-xs text-error hover:bg-error/10"
+                  onClick={() => void handleDeleteFindingCard({ reviewFindingId: f.id })}
+                >
+                  {lang === 'ar' ? 'حذف' : 'Delete'}
+                </button>
+              </div>
+            ) : null}
             {confidence != null && (
               <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {confidence}%</span>
             )}
@@ -2007,79 +2175,7 @@ export function Results() {
             {f.reviewedAt && <span className="text-text-muted ms-2">({formatDate(new Date(f.reviewedAt), { lang, format: dateFormat })})</span>}
           </div>
         )}
-        {matchedRaw ? (
-          <div className="flex items-center gap-2 mt-2 print:hidden">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-[11px] gap-1"
-              onClick={() =>
-                setActionModal({
-                  reviewFindingId: f.id,
-                  titleAr: f.titleAr,
-                  actionText: f.actionText ?? '',
-                })
-              }
-            >
-              <FileText className="w-3 h-3" />
-              {lang === 'ar' ? 'الإجراء' : 'Action'}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-[11px] gap-1"
-              onClick={() =>
-                openFindingTrace({
-                  titleAr: f.titleAr,
-                  evidenceSnippet: f.evidenceSnippet,
-                  rationale,
-                  sourceLabel: reviewFindingSourceLabel(f.sourceKind),
-                  confidence: confidence != null ? confidence / 100 : null,
-                  pageNumber: f.pageNumber ?? null,
-                  lines: f.startOffsetGlobal != null ? `${f.startOffsetGlobal}${f.endOffsetGlobal != null && f.endOffsetGlobal !== f.startOffsetGlobal ? `-${f.endOffsetGlobal}` : ''}` : null,
-                  statusLabel: isApproved ? (lang === 'ar' ? 'آمن' : 'Safe') : (lang === 'ar' ? 'مخالف' : 'Violation'),
-                  reviewReason: f.approvedReason ?? null,
-                  sourceKind: f.sourceKind ?? null,
-                  primaryArticleId: f.primaryArticleId ?? null,
-                  primaryAtomId: f.primaryAtomId ?? null,
-                  canonicalFindingId: f.canonicalFindingId ?? null,
-                  finalRuling: f.reviewStatus ?? null,
-                  articleTitle: policyArticles.find((a) => a.id === f.primaryArticleId)?.titleAr ?? null,
-                  reportTitle: report?.scriptTitle ?? null,
-                  reviewedAt: f.reviewedAt ?? null,
-                  reviewedBy: f.reviewedBy ?? null,
-                  createdAt: report?.createdAt ?? null,
-                })
-              }
-            >
-              <Search className="w-3 h-3" />
-              {lang === 'ar' ? 'التتبع' : 'Trace'}
-            </Button>
-            {reportInclusionToggle}
-            {!isApproved && (
-              <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 text-success border-success/30 hover:bg-success/10"
-                onClick={() => { setReviewModal({ findingId: matchedRaw.id, toStatus: 'approved', titleAr: f.titleAr }); setReviewReason(''); }}>
-                <CheckCircle2 className="w-3 h-3" />
-                {lang === 'ar' ? 'اعتماد كآمن' : 'Mark Safe'}
-              </Button>
-            )}
-            {isApproved && (
-              <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 text-error border-error/30 hover:bg-error/10"
-                onClick={() => { setReviewModal({ findingId: matchedRaw.id, toStatus: 'violation', titleAr: f.titleAr }); setReviewReason(''); }}>
-                <ShieldAlert className="w-3 h-3" />
-                {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert to Violation'}
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-[11px] gap-1"
-              onClick={() => setEditFindingModal(matchedRaw)}
-            >
-              {lang === 'ar' ? 'تعديل' : 'Edit'}
-            </Button>
-          </div>
-        ) : (
+        {matchedRaw ? null : (
           <div className="flex items-center gap-2 mt-2 print:hidden">
             {reportInclusionToggle}
             <p className="text-[10px] text-text-muted">

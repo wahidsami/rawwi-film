@@ -33,12 +33,14 @@ async function selectFindings(
     .from("analysis_findings")
     .select(extCols)
     .eq("job_id", jobId)
+    .eq("is_hidden", false)
     .order("article_id", { ascending: true });
   if (!error) return { data, error: null };
   const fb = await supabase
     .from("analysis_findings")
     .select(FINDING_COLS)
     .eq("job_id", jobId)
+    .eq("is_hidden", false)
     .order("article_id", { ascending: true });
   return fb;
 }
@@ -1024,6 +1026,110 @@ Deno.serve(async (req: Request) => {
         reviewFindings: (updatedRows ?? []).map((row) => camelReviewFinding(row as Record<string, unknown>)),
         updatedIds: ids,
       });
+    }
+
+    if (method === "POST" && rest === "delete") {
+      let body: {
+        findingId?: string;
+        reviewFindingId?: string;
+      };
+      try {
+        body = await req.json();
+      } catch {
+        return json({ error: "Invalid JSON" }, 400);
+      }
+
+      const findingId = body.findingId?.trim();
+      const reviewFindingId = body.reviewFindingId?.trim();
+      if (!findingId && !reviewFindingId) {
+        return json({ error: "findingId or reviewFindingId required" }, 400);
+      }
+
+      if (reviewFindingId) {
+        const { data: reviewFinding } = await supabase
+          .from("analysis_review_findings")
+          .select("id, job_id")
+          .eq("id", reviewFindingId)
+          .maybeSingle();
+        if (!reviewFinding) return json({ error: "Review finding not found" }, 404);
+
+        const reviewRow = reviewFinding as { id: string; job_id: string };
+        const { data: job } = await supabase
+          .from("analysis_jobs")
+          .select("created_by")
+          .eq("id", reviewRow.job_id)
+          .maybeSingle();
+        if (!job) return json({ error: "Job not found" }, 404);
+        const isOwner = (job as { created_by?: string | null }).created_by === uid;
+        if (!isAdmin && !isOwner) return json({ error: "Forbidden" }, 403);
+
+        const nowIso = new Date().toISOString();
+        const { error: hideErr } = await supabase
+          .from("analysis_review_findings")
+          .update({
+            is_hidden: true,
+            edited_by: uid,
+            edited_at: nowIso,
+            updated_at: nowIso,
+          })
+          .eq("id", reviewFindingId);
+        if (hideErr) return json({ error: hideErr.message }, 500);
+
+        await logAuditCanonical(supabase, {
+          event_type: "FINDING_DELETED",
+          actor_user_id: uid,
+          actor_role: "user",
+          target_type: "report",
+          target_id: reviewRow.job_id,
+          target_label: reviewFindingId,
+          result_status: "success",
+          metadata: { reviewFindingId },
+        }).catch((e) => console.warn("[findings] delete audit canonical:", e));
+
+        return json({ ok: true, reviewFindingId });
+      }
+
+      const { data: rawFinding } = await supabase
+        .from("analysis_findings")
+        .select("id, job_id")
+        .eq("id", findingId)
+        .maybeSingle();
+      if (!rawFinding) return json({ error: "Finding not found" }, 404);
+
+      const rawRow = rawFinding as { id: string; job_id: string };
+      const { data: job } = await supabase
+        .from("analysis_jobs")
+        .select("created_by")
+        .eq("id", rawRow.job_id)
+        .maybeSingle();
+      if (!job) return json({ error: "Job not found" }, 404);
+      const isOwner = (job as { created_by?: string | null }).created_by === uid;
+      if (!isAdmin && !isOwner) return json({ error: "Forbidden" }, 403);
+
+      const nowIso = new Date().toISOString();
+      const { error: hideErr } = await supabase
+        .from("analysis_findings")
+        .update({
+          is_hidden: true,
+          reviewed_by: uid,
+          reviewed_at: nowIso,
+          reviewed_role: "user",
+        })
+        .eq("id", findingId);
+      if (hideErr) return json({ error: hideErr.message }, 500);
+
+      await logAuditCanonical(supabase, {
+        event_type: "FINDING_DELETED",
+        actor_user_id: uid,
+        actor_role: "user",
+        target_type: "report",
+        target_id: rawRow.job_id,
+        target_label: findingId,
+        result_status: "success",
+        metadata: { findingId },
+      }).catch((e) => console.warn("[findings] delete audit canonical:", e));
+
+      return json({ ok: true, findingId });
     }
 
     // ── POST /findings/reclassify (or POST /findings with { action: "reclassify" }) ──

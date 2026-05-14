@@ -967,6 +967,11 @@ export interface SetFindingActionResponse {
   updatedIds?: string[];
 }
 
+export interface DeleteFindingCardBody {
+  findingId?: string;
+  reviewFindingId?: string;
+}
+
 export const findingsApi = {
   getFindings: (): Promise<Finding[]> => httpClient.get('/findings'),
   /** List findings for a specific job (with review status). */
@@ -991,6 +996,8 @@ export const findingsApi = {
     httpClient.post('/findings/report-visibility', body),
   setFindingAction: (body: SetFindingActionBody): Promise<SetFindingActionResponse> =>
     httpClient.post('/findings/action', body),
+  deleteFindingCard: (body: DeleteFindingCardBody): Promise<{ ok: true; findingId?: string; reviewFindingId?: string }> =>
+    httpClient.post('/findings/delete', body),
   reclassifyFinding: async (body: ReclassifyFindingBody): Promise<ReclassifyFindingResponse> => {
     try {
       return await httpClient.post('/findings/reclassify', body);
