@@ -97,10 +97,10 @@ const navItems: NavItem[] = [
   },
   {
     id: 'compliance-guidelines',
-    labelAr: 'ارشادات الامتثال',
-    labelEn: 'Compliance Guidelines',
-    descriptionAr: 'إرشادات الامتثال والضوابط',
-    descriptionEn: 'Compliance guidance and controls',
+    labelAr: 'الضوابط العامة للأعمال الدرامية والوثائقية',
+    labelEn: 'General Regulations for Dramatic and Documentary Works',
+    descriptionAr: 'الضوابط العامة المنظمة للأعمال الدرامية والوثائقية',
+    descriptionEn: 'General regulations governing dramatic and documentary works',
     icon: ShieldCheck,
   },
   {

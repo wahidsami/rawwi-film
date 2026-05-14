@@ -309,7 +309,7 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
             </Badge>
             <div>
               <h2 className="text-3xl font-bold text-text-main md:text-4xl">
-                {renderCardText('ارشادات الامتثال', 'Compliance Guidelines')}
+                {renderCardText('الضوابط العامة للأعمال الدرامية والوثائقية', 'General Regulations for Dramatic and Documentary Works')}
               </h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-text-muted md:text-base">
                 {renderCardText(
@@ -318,17 +318,7 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
                 )}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="success" className="px-3 py-1 text-[11px]">
-                {renderCardText('مرجع رقابي', 'Review reference')}
-              </Badge>
-              <Badge variant="outline" className="px-3 py-1 text-[11px]">
-                {renderCardText('محتوى مرئي ومباشر', 'Visual and direct content')}
-              </Badge>
-              <Badge variant="outline" className="px-3 py-1 text-[11px]">
-                {renderCardText('قابل للتحديث لاحقًا', 'Upgradeable later')}
-              </Badge>
-            </div>
+            <div />
           </div>
           <div className="grid gap-3 self-end">
             <Card className="border-border/70 bg-background/85">
@@ -337,7 +327,7 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
                   <FileCheck2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-text-main">{renderCardText('مخالفات النصوص', 'Text Violations')}</p>
+                  <p className="text-sm font-semibold text-text-main">{renderCardText('الضوابط العامة للأعمال الدرامية والوثائقية', 'General Regulations')}</p>
                   <p className="text-xs text-text-muted">{renderCardText('16 بندًا مرجعيًا', '16 reference items')}</p>
                 </div>
               </CardContent>
@@ -366,7 +356,7 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
             activeTab === 'guidelines' ? 'bg-primary text-white shadow-[0_12px_30px_rgba(103,42,85,0.18)]' : 'hover:bg-surface text-text-main',
           )}
         >
-          <p className="text-sm font-semibold">{renderCardText('Compliance Guidelines / مخالفات النصوص', 'Compliance Guidelines / Text Violations')}</p>
+          <p className="text-sm font-semibold">{renderCardText('الضوابط العامة للأعمال الدرامية والوثائقية', 'General Regulations for Dramatic and Documentary Works')}</p>
           <p className={cn('mt-1 text-xs', activeTab === 'guidelines' ? 'text-white/80' : 'text-text-muted')}>
             {renderCardText('تصنيف البنود الرقابية وإبراز أمثلة المخالفات', 'Regulatory items and examples of violations')}
           </p>
@@ -451,6 +441,13 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
           </div>
         </div>
       ) : (
+        <>
+        <p className="rounded-[calc(var(--radius)+0.35rem)] border border-border/70 bg-background/80 px-4 py-3 text-sm leading-7 text-text-main">
+          {renderCardText(
+            'من المهم الحصول على التصنيف العمري للنصوص و الأعمال الدرامية و الوثائقية من قبل الهيئة العامة لتنظيم الإعلام.',
+            'It is important to obtain age classification for scripts and dramatic/documentary works from the General Authority for Media Regulation.',
+          )}
+        </p>
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="grid gap-4 md:grid-cols-2">
             {ageRatings.map((item) => (
@@ -516,6 +513,7 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
             </Card>
           </div>
         </div>
+        </>
       )}
     </div>
   );
