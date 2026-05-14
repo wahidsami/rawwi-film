@@ -73,7 +73,7 @@ function statusBadgeVariant(status: CertificateStatus): 'success' | 'warning' | 
 function statusLabel(status: CertificateStatus, lang: 'ar' | 'en') {
   if (status === 'issued') return lang === 'ar' ? 'صادرة' : 'Issued';
   if (status === 'payment_failed') return lang === 'ar' ? 'الدفع فشل' : 'Payment failed';
-  return lang === 'ar' ? 'بانتظار الدفع' : 'Awaiting payment';
+  return lang === 'ar' ? 'جاري تجهيز الشهادة' : 'Preparing certificate';
 }
 
 const PDF_PAGE_SIZE: Record<string, { width: number; height: number }> = {
@@ -631,11 +631,6 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
                           <p className="text-sm text-success">
                             {lang === 'ar' ? 'رقم الشهادة:' : 'Certificate number:'} {item.certificate.certificateNumber}
                           </p>
-                          {item.certificateStatus !== 'issued' ? (
-                            <Badge variant="warning" className="text-[11px]">
-                              {lang === 'ar' ? 'مولدة - بانتظار الدفع' : 'Generated - Pending Payment'}
-                            </Badge>
-                          ) : null}
                         </div>
                       ) : null}
                     </div>
@@ -668,7 +663,7 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
                         </>
                       ) : (
                         <Badge variant="outline">
-                          {lang === 'ar' ? 'قيد المعالجة من الإدارة' : 'Pending admin issuance'}
+                          {lang === 'ar' ? 'جاري تجهيز الشهادة' : 'Preparing certificate'}
                         </Badge>
                       )}
                     </div>

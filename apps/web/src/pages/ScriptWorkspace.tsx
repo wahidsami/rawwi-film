@@ -1944,6 +1944,7 @@ export function ScriptWorkspace() {
   const [revisionHistoryExporting, setRevisionHistoryExporting] = useState(false);
   const [approveDecisionReportId, setApproveDecisionReportId] = useState<string | null>(null);
   const [approveDecisionSubmitting, setApproveDecisionSubmitting] = useState(false);
+  const [approveSuccessModalOpen, setApproveSuccessModalOpen] = useState(false);
   const [rejectDecisionReportId, setRejectDecisionReportId] = useState<string | null>(null);
   const [rejectDecisionReason, setRejectDecisionReason] = useState('');
   const [rejectDecisionClientComment, setRejectDecisionClientComment] = useState('');
@@ -2600,6 +2601,7 @@ export function ScriptWorkspace() {
       toast.success(lang === 'ar' ? 'تم اعتماد النص وتوليد الشهادة' : 'Script approved and certificate generation started');
       await Promise.all([loadReportHistory(), fetchInitialData()]);
       closeApproveDecisionConfirm(true);
+      setApproveSuccessModalOpen(true);
     } catch (err: any) {
       toast.error(err?.message ?? (lang === 'ar' ? 'فشل تنفيذ قرار القبول' : 'Failed to approve script'));
     } finally {
@@ -2613,17 +2615,6 @@ export function ScriptWorkspace() {
     loadReportHistory,
     script?.id,
   ]);
-
-  const submitSendReviewDecision = useCallback(async () => {
-    if (!script?.id || !sendReviewDecisionReportId) return;
-    const reason = sendReviewDecisionReason.trim();
-    if (!reason) {
-      toast.error(lang === 'ar' ? 'يرجى إدخال سبب الإعادة للمراجعة' : 'Please enter a review-return reason');
-      return;
-    }
-    setSendReviewDecisionSubmitting(true);
-    try {
-      await scriptsApi.makeDecision(
         script.id,
         'send_for_review',
         reason,
@@ -7038,8 +7029,8 @@ export function ScriptWorkspace() {
         <div className="space-y-4">
           <p className="text-sm leading-7 text-text-muted">
             {lang === 'ar'
-              ? 'هل تريد توليد وإرسال الشهادة إلى المستفيد؟ إذا اخترت "لا"، لن يتم اعتماد النص وسيبقى في حالته الحالية.'
-              : 'Do you want to generate and send the certificate to the beneficiary? If you choose "No", the script will not be approved and will remain in its current status.'}
+              ? 'هل تريد اعتماد النص وإصدار الشهادة؟'
+              : 'Do you want to approve the script and issue the certificate?'}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -7047,14 +7038,33 @@ export function ScriptWorkspace() {
               isLoading={approveDecisionSubmitting}
               onClick={() => void submitApproveDecision()}
             >
-              {lang === 'ar' ? 'نعم، اعتمد' : 'Yes, approve'}
+              {lang === 'ar' ? 'متابعة' : 'Continue'}
             </Button>
             <Button
               variant="outline"
               onClick={closeApproveDecisionConfirm}
               disabled={approveDecisionSubmitting}
             >
-              {lang === 'ar' ? 'لا' : 'No'}
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={approveSuccessModalOpen}
+        onClose={() => setApproveSuccessModalOpen(false)}
+        title={lang === 'ar' ? 'تم إرسال الشهادة' : 'Certificate Sent'}
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-7 text-text-muted">
+            {lang === 'ar'
+              ? 'تم ارسال شهادة فسح النص الى المستفيد'
+              : 'The script approval certificate was sent to the beneficiary.'}
+          </p>
+          <div className="flex justify-end">
+            <Button onClick={() => setApproveSuccessModalOpen(false)}>
+              {lang === 'ar' ? 'حسنًا' : 'Close'}
             </Button>
           </div>
         </div>

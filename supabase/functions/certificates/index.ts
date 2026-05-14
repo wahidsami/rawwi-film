@@ -245,7 +245,7 @@ async function loadCertificatesMap(
 }
 
 function resolveClientCertificateStatus(latestPayment: any | null, certificate: any | null): "payment_pending" | "payment_failed" | "issued" {
-  if (latestPayment?.payment_status === "completed" && certificate && certificate.certificate_status === "issued") return "issued";
+  if (certificate && certificate.certificate_status === "issued") return "issued";
   if (latestPayment?.payment_status === "failed") return "payment_failed";
   return "payment_pending";
 }
