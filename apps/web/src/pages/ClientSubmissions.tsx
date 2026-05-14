@@ -78,7 +78,7 @@ export function ClientSubmissions() {
       if (!q) return true;
       return (
         row.title.toLowerCase().includes(q) ||
-        (row.companyNameAr ?? '').includes(search.trim()) ||
+        (row.companyNameAr ?? '').toLowerCase().includes(q) ||
         (row.companyNameEn ?? '').toLowerCase().includes(q) ||
         (row.submittedByName ?? '').toLowerCase().includes(q) ||
         (row.submittedByEmail ?? '').toLowerCase().includes(q)

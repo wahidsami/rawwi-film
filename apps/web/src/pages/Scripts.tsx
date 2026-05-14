@@ -48,17 +48,18 @@ export function Scripts() {
 
   const filteredScripts = useMemo(() => {
     let filtered = scripts;
+    const companyById = new Map(companies.map((company) => [company.companyId, company]));
     const norm = (st: string) => normalizeScriptStatusForFilter(st);
     if (statusFilter === 'approved') filtered = filtered.filter((s) => norm(s.status) === 'approved');
     else if (statusFilter === 'rejected') filtered = filtered.filter((s) => norm(s.status) === 'rejected');
     else if (statusFilter === 'pending') filtered = filtered.filter((s) => ['draft', 'pending', 'review_required', 'in_review'].includes(norm(s.status)));
 
     if (search.trim()) {
-      const q = search.toLowerCase();
+      const q = search.trim().toLowerCase();
       filtered = filtered.filter((s) =>
         s.title?.toLowerCase().includes(q) ||
-        companies.find((c) => c.companyId === s.companyId)?.nameEn?.toLowerCase().includes(q) ||
-        companies.find((c) => c.companyId === s.companyId)?.nameAr?.includes(search),
+        companyById.get(s.companyId)?.nameEn?.toLowerCase().includes(q) ||
+        companyById.get(s.companyId)?.nameAr?.toLowerCase().includes(q),
       );
     }
 

@@ -80,9 +80,11 @@ function Reports() {
   }, [canManageUsers]);
 
   const filteredReports = reports.filter(r => {
-    const matchSearch = (r.scriptTitle ?? '').toLowerCase().includes(search.toLowerCase()) ||
-      (r.companyNameAr ?? '').includes(search) ||
-      (r.companyNameEn ?? '').toLowerCase().includes(search.toLowerCase());
+    const q = search.trim().toLowerCase();
+    const matchSearch = !q ||
+      (r.scriptTitle ?? '').toLowerCase().includes(q) ||
+      (r.companyNameAr ?? '').toLowerCase().includes(q) ||
+      (r.companyNameEn ?? '').toLowerCase().includes(q);
     const matchCompany = companyId === 'all' || r.companyId === companyId;
     const matchDecision = decision === 'all' || r.reviewStatus === decision;
     const matchUser = userFilter === 'all' || r.reportCreatorId === userFilter;
@@ -97,7 +99,7 @@ function Reports() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, companyId, decision, userFilter]);
+  }, [search, companyId, decision, userFilter, pageSize]);
 
   const handleOpen = (report: ReportListItem) => {
     const path = `/report/${report.jobId ?? report.id}?by=${report.jobId ? 'job' : 'id'}`;

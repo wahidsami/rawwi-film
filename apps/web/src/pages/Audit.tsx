@@ -182,7 +182,7 @@ export function Audit() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
             <Input
               label={t('filterByDate') + ' (from)'}
               type="datetime-local"
@@ -218,6 +218,21 @@ export function Audit() {
                 <option value="">—</option>
                 {TARGET_TYPES.map((tt) => (
                   <option key={tt} value={tt}>{tt}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-main mb-1.5">{lang === 'ar' ? 'المستخدم' : 'User'}</label>
+              <select
+                className="flex h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-sm text-text-main"
+                value={filters.userId ?? ''}
+                onChange={(e) => setFilters((f) => ({ ...f, userId: e.target.value || '' }))}
+              >
+                <option value="">—</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.email}
+                  </option>
                 ))}
               </select>
             </div>

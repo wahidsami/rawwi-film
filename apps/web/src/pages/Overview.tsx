@@ -11,10 +11,8 @@ import { Button } from '../components/ui/Button';
 import { RecentDecisionsWidget } from '../components/RecentDecisionsWidget';
 import { useNavigate } from 'react-router-dom';
 import {
-  ClipboardList,
   FileText,
   BarChart2,
-  AlertTriangle,
   Plus,
   UploadCloud,
   PlayCircle,
@@ -162,23 +160,6 @@ export function Overview() {
       <div
         className={`grid gap-4 sm:gap-5 ${isRegulator ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4'}`}
       >
-        {!isRegulator && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-text-muted">{t('pendingTasks')}</CardTitle>
-              <ClipboardList className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-text-main">{stats?.pendingTasks || 0}</div>
-              {hasSection('tasks') && (
-                <button onClick={() => navigate('/tasks')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
-                  {t('viewTasks')} <ArrowIcon className="h-3 w-3" />
-                </button>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-text-muted">{t('scriptsInReview')}</CardTitle>
@@ -205,23 +186,6 @@ export function Overview() {
               {hasSection('reports') && (
                 <button onClick={() => navigate('/reports')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
                   {t('goToReports')} <ArrowIcon className="h-3 w-3" />
-                </button>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {!isRegulator && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-text-muted">{t('totalFindings')}</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-error" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-text-main">{stats?.totalFindings || 0}</div>
-              {hasSection('reports') && (
-                <button onClick={() => navigate('/reports')} className="mt-4 text-xs text-primary hover:underline flex items-center gap-1">
-                  {t('viewResults')} <ArrowIcon className="h-3 w-3" />
                 </button>
               )}
             </CardContent>

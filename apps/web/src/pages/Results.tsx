@@ -2566,15 +2566,6 @@ export function Results() {
             ))}
           </div>
           <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-background/70 text-sm text-text-muted">
-              <input
-                type="checkbox"
-                checked={updateScriptStatus}
-                onChange={(e) => setUpdateScriptStatus(e.target.checked)}
-                className="w-4 h-4 rounded border-border"
-              />
-              <span>{lang === 'ar' ? 'تحديث حالة النص تلقائياً' : 'Also update script status'}</span>
-            </label>
             <Button
               size="sm"
               variant="outline"

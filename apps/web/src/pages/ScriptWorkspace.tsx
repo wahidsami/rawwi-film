@@ -443,20 +443,6 @@ const ANALYSIS_MODE_OPTIONS: Array<{
     hintAr: 'تغطية أوسع وتجميع أكثر تفصيلاً.',
     hintEn: 'Broader coverage with more detailed grouping.',
   },
-  {
-    value: 'balanced',
-    labelAr: 'متوازن',
-    labelEn: 'Balanced',
-    hintAr: 'أفضل توازن بين الدقة والسرعة.',
-    hintEn: 'Best balance between quality and speed.',
-  },
-  {
-    value: 'turbo',
-    labelAr: 'توربو',
-    labelEn: 'Turbo',
-    hintAr: 'أسرع، مع تقليل بعض العمق لخفض الزمن.',
-    hintEn: 'Fastest mode, with some depth reduced to save time.',
-  },
 ];
 
 const ANALYSIS_PIPELINE_OPTIONS: Array<{
@@ -1632,7 +1618,7 @@ export function ScriptWorkspace() {
   /** When job completes, we fetch the report id so "View Report" can use by=id. */
   const [reportIdWhenJobCompleted, setReportIdWhenJobCompleted] = useState<string | null>(null);
   const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
-  const [analysisModeProfile, setAnalysisModeProfile] = useState<AnalysisModeProfile>('balanced');
+  const analysisModeProfile: AnalysisModeProfile = 'quality';
   const [analysisPipelineVersion] = useState<'v2'>('v2');
   const [analysisControlBusy, setAnalysisControlBusy] = useState<'pause' | 'resume' | 'stop' | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
@@ -3139,7 +3125,7 @@ export function ScriptWorkspace() {
           : 'text-primary';
 
   const selectedAnalysisModeMeta = useMemo(
-    () => ANALYSIS_MODE_OPTIONS.find((option) => option.value === (analysisJob?.analysisMode ?? analysisModeProfile)) ?? ANALYSIS_MODE_OPTIONS[1],
+    () => ANALYSIS_MODE_OPTIONS.find((option) => option.value === (analysisJob?.analysisMode ?? analysisModeProfile)) ?? ANALYSIS_MODE_OPTIONS[0],
     [analysisJob?.analysisMode, analysisModeProfile]
   );
   const selectedPipelineMeta = useMemo(
@@ -5198,29 +5184,6 @@ export function ScriptWorkspace() {
               )}
             </Button>
           )}
-          <div className="hidden sm:flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold text-text-main">
-                {lang === 'ar' ? 'نمط التحليل' : 'Analysis mode'}
-              </p>
-              <p className="text-[10px] text-text-muted truncate max-w-[10rem]">
-                {lang === 'ar' ? selectedAnalysisModeMeta.hintAr : selectedAnalysisModeMeta.hintEn}
-              </p>
-            </div>
-            <select
-              value={analysisModeProfile}
-              onChange={(e) => setAnalysisModeProfile(e.target.value as AnalysisModeProfile)}
-              className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm text-text-main focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-              disabled={isAnalyzing || isAnalysisRunning || isClientCanceledScript}
-              title={lang === 'ar' ? 'اختر نمط التحليل قبل بدء الفحص' : 'Choose an analysis mode before starting'}
-            >
-              {ANALYSIS_MODE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {lang === 'ar' ? option.labelAr : option.labelEn}
-                </option>
-              ))}
-            </select>
-          </div>
           <div className="relative hidden sm:block">
             <Button
               variant="outline"

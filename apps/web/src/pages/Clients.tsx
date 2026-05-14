@@ -103,8 +103,8 @@ export function Clients() {
     const q = search.trim().toLowerCase();
     if (!q) return tabClients;
     return tabClients.filter((client) =>
-      client.nameAr.includes(search.trim()) ||
-      client.nameEn.toLowerCase().includes(q) ||
+      (client.nameAr ?? '').toLowerCase().includes(q) ||
+      (client.nameEn ?? '').toLowerCase().includes(q) ||
       (client.email ?? '').toLowerCase().includes(q) ||
       (client.representativeName ?? '').toLowerCase().includes(q)
     );

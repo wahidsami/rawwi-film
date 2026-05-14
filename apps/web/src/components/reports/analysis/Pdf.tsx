@@ -92,7 +92,7 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
   const sourceLabel = (source?: string) => {
     if (source === "manual") return isAr ? "يدوي" : "Manual";
     if (source === "lexicon_mandatory" || source === "glossary") return isAr ? "معجم" : "Glossary";
-    return isAr ? "تحليل آلي" : "AI Analysis";
+    return isAr ? "آلي" : "Automated";
   };
 
   return (
@@ -124,7 +124,7 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
         <Text style={[s.subtitle, rtl]}>{isAr ? `إجمالي الملاحظات: ${safeFindings.length}` : `Total findings: ${safeFindings.length}`}</Text>
 
         <View style={s.row}>
-          <View style={s.stat}><Text style={s.statValue}>{typeCounts.ai}</Text><Text style={s.statLabel}>{isAr ? "ملاحظات آلية" : "AI findings"}</Text></View>
+          <View style={s.stat}><Text style={s.statValue}>{typeCounts.ai}</Text><Text style={s.statLabel}>{isAr ? "ملاحظات آلية" : "Automated findings"}</Text></View>
           <View style={s.stat}><Text style={s.statValue}>{typeCounts.glossary}</Text><Text style={s.statLabel}>{isAr ? "مطابقات القاموس" : "Glossary findings"}</Text></View>
           <View style={s.stat}><Text style={s.statValue}>{typeCounts.manual}</Text><Text style={s.statLabel}>{isAr ? "ملاحظات يدوية" : "Manual findings"}</Text></View>
           <View style={s.stat}><Text style={s.statValue}>{specialNotesCount}</Text><Text style={s.statLabel}>{isAr ? "ملاحظات خاصة" : "Special notes"}</Text></View>
@@ -132,7 +132,7 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
 
         {data.scriptSummary && (
           <View style={{ marginBottom: 14 }}>
-            <Text style={[s.sectionTitle, rtl]}>{isAr ? "فهم النص (ملخص الذكاء الاصطناعي)" : "Script understanding (AI summary)"}</Text>
+            <Text style={[s.sectionTitle, rtl]}>{isAr ? "فهم النص (ملخص آلي)" : "Script understanding (automated summary)"}</Text>
             <Text style={[s.findingBody, rtl]}>{data.scriptSummary.synopsis_ar}</Text>
             {data.scriptSummary.key_risky_events_ar ? (
               <Text style={[s.findingMeta, rtl]}>{isAr ? "أهم المشاهد الحساسة: " : "Key risky events: "}{data.scriptSummary.key_risky_events_ar}</Text>
