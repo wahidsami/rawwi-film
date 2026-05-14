@@ -367,6 +367,8 @@ Deno.serve(async (req: Request) => {
   const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
   if (req.method === "OPTIONS") return optionsResponse(req);
 
+  try {
+
   const auth = await requireAuth(req);
   if (auth instanceof Response) return auth;
 
@@ -951,4 +953,9 @@ Deno.serve(async (req: Request) => {
     manualReviewContextCount: clonedManualFindings,
     linkedRevisionCycleNumber,
   });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[tasks] unhandled error:", message);
+    return json({ error: message }, 500);
+  }
 });
