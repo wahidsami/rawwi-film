@@ -625,26 +625,7 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
                       <p className="text-sm text-text-muted">
                         {item.scriptType} • {lang === 'ar' ? 'تاريخ الاعتماد' : 'Approved on'} {formatDate(item.approvedAt, lang)}
                       </p>
-                      <div className="flex flex-wrap gap-3 text-sm text-text-muted">
-                        <span>
-                          {lang === 'ar' ? 'رسوم الشهادة:' : 'Certificate fee:'}{' '}
-                          <strong className="text-text-main">
-                            {formatCurrency(item.certificateFee.totalAmount, item.certificateFee.currency, lang)}
-                          </strong>
-                        </span>
-                        <span>
-                          {lang === 'ar' ? 'الأساس' : 'Base'} {formatCurrency(item.certificateFee.baseAmount, item.certificateFee.currency, lang)}
-                        </span>
-                        <span>
-                          {lang === 'ar' ? 'الضريبة' : 'Tax'} {formatCurrency(item.certificateFee.taxAmount, item.certificateFee.currency, lang)}
-                        </span>
-                      </div>
-                      {item.latestPayment ? (
-                        <p className="text-xs text-text-muted">
-                          {lang === 'ar' ? 'آخر دفعة:' : 'Latest payment:'} {item.latestPayment.paymentReference}
-                          {item.latestPayment.cardLast4 ? ` • **** ${item.latestPayment.cardLast4}` : ''}
-                        </p>
-                      ) : null}
+                      
                       {item.certificate ? (
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="text-sm text-success">

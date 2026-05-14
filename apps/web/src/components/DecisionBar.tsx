@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from './ui/Button';
 import { Textarea } from './ui/Textarea';
+import { Modal } from './ui/Modal';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useLangStore } from '../store/langStore';
 import { useAuthStore } from '../store/authStore';
@@ -33,6 +34,7 @@ export function DecisionBar({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showReasonInput, setShowReasonInput] = useState(false);
     const [pendingDecision, setPendingDecision] = useState<'approve' | 'reject' | null>(null);
+    const [showApproveWarning, setShowApproveWarning] = useState(false);
 
     const isAr = lang === 'ar';
 
@@ -88,38 +90,24 @@ export function DecisionBar({
         setShowReasonInput(true);
     };
 
-    const handleSubmitDecision = async () => {
-        if (!pendingDecision) return;
-
+    const executeDecision = async (decision: 'approve' | 'reject') => {
         if (!reason.trim()) {
             toast.error(isAr ? 'يرجى إدخال سبب القرار' : 'Please enter a reason for your decision');
             return;
         }
-
         setIsSubmitting(true);
         try {
-            if (pendingDecision === 'approve') {
-                const shouldGenerate = window.confirm(
-                    isAr
-                        ? 'توليد وإرسال الشهادة إلى المستفيد؟\nاختر موافق للاعتماد مع إصدار الشهادة، أو إلغاء لإيقاف الاعتماد.'
-                        : 'Generate and send the certificate to the beneficiary?\nChoose OK to approve with certificate issuance, or Cancel to stop approval.'
-                );
-                if (!shouldGenerate) {
-                    setIsSubmitting(false);
-                    return;
-                }
-            }
             const { scriptsApi } = await import('../api');
             await scriptsApi.makeDecision(
                 scriptId,
-                pendingDecision,
+                decision,
                 reason.trim(),
                 relatedReportId,
-                pendingDecision === 'approve' ? { issueCertificate: true } : undefined,
+                decision === 'approve' ? { issueCertificate: true } : undefined,
             );
 
             toast.success(
-                pendingDecision === 'approve'
+                decision === 'approve'
                     ? isAr ? 'تمت الموافقة على النص بنجاح' : 'Script approved successfully'
                     : isAr ? 'تم رفض النص' : 'Script rejected'
             );
@@ -128,10 +116,11 @@ export function DecisionBar({
             setReason('');
             setShowReasonInput(false);
             setPendingDecision(null);
+            setShowApproveWarning(false);
 
             // Notify parent (can refetch scripts / update state)
             if (onDecisionMade) {
-                onDecisionMade(pendingDecision === 'approve' ? 'approved' : 'rejected');
+                onDecisionMade(decision === 'approve' ? 'approved' : 'rejected');
             }
         } catch (error: any) {
             console.error('Decision error:', error);
@@ -141,14 +130,31 @@ export function DecisionBar({
         }
     };
 
+    const handleSubmitDecision = async () => {
+        if (!pendingDecision) return;
+
+        if (!reason.trim()) {
+            toast.error(isAr ? 'يرجى إدخال سبب القرار' : 'Please enter a reason for your decision');
+            return;
+        }
+
+        if (pendingDecision === 'approve') {
+            setShowApproveWarning(true);
+            return;
+        }
+        await executeDecision(pendingDecision);
+    };
+
     const handleCancel = () => {
         setShowReasonInput(false);
         setPendingDecision(null);
         setReason('');
+        setShowApproveWarning(false);
     };
 
     if (compact) {
         return (
+            <>
             <div className="flex flex-col gap-3 p-4 bg-surface-elevated rounded-lg border border-border">
                 <div className="flex items-center gap-2">
                     <AlertCircle className="w-5 h-5 text-warning" />
@@ -219,11 +225,34 @@ export function DecisionBar({
                     </div>
                 )}
             </div>
+            <Modal
+                isOpen={showApproveWarning}
+                onClose={() => !isSubmitting && setShowApproveWarning(false)}
+                title={isAr ? 'تأكيد الاعتماد' : 'Approval Confirmation'}
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-text-muted">
+                        {isAr
+                            ? 'هذا الإجراء سيصدر الشهادة لهذا النص. هل تريد المتابعة؟'
+                            : 'This action will issue the certificate for this script. Do you want to continue?'}
+                    </p>
+                    <div className="flex items-center justify-end gap-2">
+                        <Button variant="outline" onClick={() => setShowApproveWarning(false)} disabled={isSubmitting}>
+                            {isAr ? 'إلغاء' : 'Cancel'}
+                        </Button>
+                        <Button onClick={() => void executeDecision('approve')} isLoading={isSubmitting}>
+                            {isAr ? 'متابعة' : 'Continue'}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+            </>
         );
     }
 
     // Full version for ScriptWorkspace
     return (
+        <>
         <div className="bg-surface-elevated rounded-lg border border-border p-6">
             <div className="flex items-center gap-3 mb-4">
                 <AlertCircle className="w-6 h-6 text-warning" />
@@ -308,5 +337,27 @@ export function DecisionBar({
                 </div>
             )}
         </div>
+        <Modal
+            isOpen={showApproveWarning}
+            onClose={() => !isSubmitting && setShowApproveWarning(false)}
+            title={isAr ? 'تأكيد الاعتماد' : 'Approval Confirmation'}
+        >
+            <div className="space-y-4">
+                <p className="text-sm text-text-muted">
+                    {isAr
+                        ? 'هذا الإجراء سيصدر الشهادة لهذا النص. هل تريد المتابعة؟'
+                        : 'This action will issue the certificate for this script. Do you want to continue?'}
+                </p>
+                <div className="flex items-center justify-end gap-2">
+                    <Button variant="outline" onClick={() => setShowApproveWarning(false)} disabled={isSubmitting}>
+                        {isAr ? 'إلغاء' : 'Cancel'}
+                    </Button>
+                    <Button onClick={() => void executeDecision('approve')} isLoading={isSubmitting}>
+                        {isAr ? 'متابعة' : 'Continue'}
+                    </Button>
+                </div>
+            </div>
+        </Modal>
+        </>
     );
 }

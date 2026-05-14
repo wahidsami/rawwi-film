@@ -168,7 +168,18 @@ function normalizeType(t: unknown): string {
 
 function normalizeStatus(s: unknown): string {
   const v = String(s).toLowerCase().replace(/\s+/g, "_");
-  const allowed = ["draft", "in_review", "analysis_running", "review_required", "approved", "rejected", "canceled", "cancelled"];
+  const allowed = [
+    "draft",
+    "in_review",
+    "analysis_running",
+    "review_required",
+    "revision_requested",
+    "resubmitted",
+    "approved",
+    "rejected",
+    "canceled",
+    "cancelled",
+  ];
   return allowed.includes(v) ? v : "draft";
 }
 
@@ -690,6 +701,105 @@ async function ensureCertificateGeneratedOnApproval(
   }
 }
 
+async function notifyBeneficiaryRevisionRequested(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  params: {
+    scriptId: string;
+    scriptTitle: string;
+    companyId: string;
+    cycleNumber: number;
+    note: string;
+  },
+) {
+  const [{ data: account }, { data: beneficiaryClient }] = await Promise.all([
+    supabase
+      .from("client_portal_accounts")
+      .select("user_id")
+      .eq("company_id", params.companyId)
+      .maybeSingle(),
+    supabase
+      .from("clients")
+      .select("contact_email, email")
+      .eq("id", params.companyId)
+      .maybeSingle(),
+  ]);
+
+  const beneficiaryUserId = ((account as { user_id?: string | null } | null)?.user_id ?? null);
+  if (beneficiaryUserId) {
+    await supabase.from("notifications").insert({
+      user_id: beneficiaryUserId,
+      type: "script_revision_requested",
+      title: "Script returned for revision",
+      body: `Your script "${params.scriptTitle}" was returned for revision (cycle ${params.cycleNumber}).`,
+      metadata: {
+        script_id: params.scriptId,
+        script_title: params.scriptTitle,
+        company_id: params.companyId,
+        cycle_number: params.cycleNumber,
+        note: params.note || null,
+      },
+    });
+  }
+
+  const beneficiaryEmail =
+    ((beneficiaryClient as { contact_email?: string | null; email?: string | null } | null)?.contact_email ??
+      (beneficiaryClient as { contact_email?: string | null; email?: string | null } | null)?.email ??
+      "").trim();
+  const resendKey = Deno.env.get("RESEND_API_KEY");
+  if (resendKey && beneficiaryEmail) {
+    const appUrl = (Deno.env.get("APP_PUBLIC_URL") ?? "https://raawifilm.com").replace(/\/+$/, "");
+    const html = `
+      <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#111827;">
+        <h2>Script Returned for Revision</h2>
+        <p>Your script "<strong>${params.scriptTitle}</strong>" has been returned for revision.</p>
+        <p>Cycle: <strong>${params.cycleNumber}</strong></p>
+        <p>Open Beneficiary Portal and upload the revised script from My Scripts.</p>
+        <hr />
+        <h2 dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">تمت إعادة النص للمراجعة</h2>
+        <p dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">
+          تم إرجاع النص "<strong>${params.scriptTitle}</strong>" لإجراء التعديلات المطلوبة.
+        </p>
+        <p dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">
+          رقم الدورة: <strong>${params.cycleNumber}</strong>
+        </p>
+        <p dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">
+          يرجى الدخول إلى بوابة المستفيد، ثم نصوصي، ورفع النسخة المعدلة.
+        </p>
+        <p><a href="${appUrl}/client">Open Beneficiary Portal</a></p>
+      </div>
+    `.trim();
+    const res = await fetch(RESEND_API, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: NOTIFY_FROM_EMAIL,
+        to: [beneficiaryEmail],
+        subject: "Script returned for revision | تمت إعادة النص للمراجعة",
+        html,
+      }),
+    });
+    if (!res.ok) {
+      console.error("[scripts] revision requested email:", res.status, await res.text());
+    }
+  }
+}
+
+function normalizeExpectedRank(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const raw = value.trim();
+  if (!raw) return null;
+  const upper = raw.toUpperCase();
+  const legacy = raw.toLowerCase();
+  const modernAllowed = new Set(["G", "PG", "PG12", "PG15", "R15", "R18"]);
+  const legacyAllowed = new Set(["low", "medium", "high"]);
+  if (modernAllowed.has(upper)) return upper;
+  if (legacyAllowed.has(legacy)) return legacy;
+  return null;
+}
+
 function normalizeOptionalText(value: unknown, maxLength: number): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim().normalize("NFC");
@@ -847,9 +957,7 @@ Deno.serve(async (req: Request) => {
       synopsis: typeof body.synopsis === "string" ? body.synopsis.trim() || null : null,
       work_classification: normalizeWorkClassification(body.workClassification ?? body.work_classification),
       episode_count: normalizeEpisodeCount(body.episodeCount ?? body.episode_count),
-      expected_rank: typeof body.expectedRank === "string" && body.expectedRank.trim()
-        ? body.expectedRank.trim().toLowerCase()
-        : (typeof body.expected_rank === "string" && body.expected_rank.trim() ? body.expected_rank.trim().toLowerCase() : "medium"),
+      expected_rank: normalizeExpectedRank(body.expectedRank ?? body.expected_rank),
       received_at: normalizeReceivedAt(body.receivedAt ?? body.received_at ?? new Date().toISOString()),
       file_url: null,
       created_by: uid,
@@ -1563,9 +1671,7 @@ Deno.serve(async (req: Request) => {
       type: normalizeType(type),
       work_classification: workClassification,
       episode_count: normalizeEpisodeCount(body.episodeCount ?? body.episode_count),
-      expected_rank: typeof body.expectedRank === "string" && body.expectedRank.trim()
-        ? body.expectedRank.trim().toLowerCase()
-        : (typeof body.expected_rank === "string" && body.expected_rank.trim() ? body.expected_rank.trim().toLowerCase() : "medium"),
+      expected_rank: normalizeExpectedRank(body.expectedRank ?? body.expected_rank),
       received_at: normalizeReceivedAt(body.receivedAt ?? body.received_at ?? new Date().toISOString()),
       status: normalizeStatus(status),
       synopsis: typeof body.synopsis === "string" ? body.synopsis.trim() || null : null,
@@ -1595,7 +1701,9 @@ Deno.serve(async (req: Request) => {
       await notifyScriptAssigned(supabase, created.assignee_id, created.id, created.title, assignerName ?? "");
     }
     const createdByClient = await isClientUser(supabase, uid);
-    if (createdByClient) {
+    const createdStatus = String(created.status ?? "").trim().toLowerCase();
+    const isDraftCreation = createdStatus === "draft";
+    if (createdByClient && !isDraftCreation) {
       await notifyAdminsOnClientSubmission(supabase, {
         scriptId: created.id,
         scriptTitle: created.title,
@@ -1780,7 +1888,7 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // ──────────────── POST /scripts/:id/decision (Approve/Reject) ────────────────
+  // ──────────────── POST /scripts/:id/decision (Approve/Reject/Send for Review) ────────────────
   const decisionMatch = rest.match(/^([^/]+)\/decision$/);
   if (method === "POST" && decisionMatch) {
     const scriptId = decisionMatch[1].trim();
@@ -1793,8 +1901,8 @@ Deno.serve(async (req: Request) => {
 
     // Validate decision
     const decision = typeof body.decision === 'string' ? body.decision.trim().toLowerCase() : '';
-    if (!['approve', 'reject'].includes(decision)) {
-      return json({ error: "decision must be 'approve' or 'reject'" }, 400);
+    if (!['approve', 'reject', 'send_for_review'].includes(decision)) {
+      return json({ error: "decision must be 'approve', 'reject', or 'send_for_review'" }, 400);
     }
 
     const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
@@ -1820,13 +1928,18 @@ Deno.serve(async (req: Request) => {
     if (findErr || !script) return json({ error: "Script not found" }, 404);
 
     const currentStatus = (script as any).status || 'draft';
-    const newStatus = decision === 'approve' ? 'approved' : 'rejected';
+    const newStatus =
+      decision === 'approve'
+        ? 'approved'
+        : decision === 'reject'
+          ? 'rejected'
+          : 'revision_requested';
     if (decision === "approve" && !issueCertificate) {
       return json({ error: "Approval requires certificate generation confirmation." }, 409);
     }
     let sharedReportIds: string[] = [];
 
-    if (decision === 'reject' && shareReportsToClient) {
+    if ((decision === 'reject' || decision === 'send_for_review') && shareReportsToClient) {
       const candidateIds = [
         ...new Set<string>([
           ...requestedShareReportIds,
@@ -1865,7 +1978,12 @@ Deno.serve(async (req: Request) => {
       canReject: can.canReject,
     });
 
-    const allowed = decision === 'approve' ? can.canApprove : can.canReject;
+    const allowed =
+      decision === 'approve'
+        ? can.canApprove
+        : decision === 'reject'
+          ? can.canReject
+          : (can.canApprove || can.canReject);
     if (!allowed) {
       const msg = can.reasonIfDisabled ?? `You do not have permission to ${decision} this script.`;
       return json({ error: msg }, 403);
@@ -1894,8 +2012,8 @@ Deno.serve(async (req: Request) => {
         decision,
         correlationId,
         client_comment: clientComment || null,
-        share_reports_to_client: decision === 'reject' ? shareReportsToClient : false,
-        shared_report_ids: decision === 'reject' ? sharedReportIds : [],
+        share_reports_to_client: (decision === 'reject' || decision === 'send_for_review') ? shareReportsToClient : false,
+        shared_report_ids: (decision === 'reject' || decision === 'send_for_review') ? sharedReportIds : [],
       }
     });
 
@@ -1924,9 +2042,103 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    if (decision === "send_for_review") {
+      const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
+      if (ownerCompanyId) {
+        const sourceReportId = relatedReportId ?? sharedReportIds[0] ?? null;
+        let sourceJobId: string | null = null;
+        let findingsCount = 0;
+        let severityCounts: Record<string, unknown> = {};
+        let summaryJson: Record<string, unknown> = {};
+
+        if (sourceReportId) {
+          const { data: reportRow } = await supabase
+            .from("analysis_reports")
+            .select("id, job_id, findings_count, severity_counts, summary_json")
+            .eq("id", sourceReportId)
+            .maybeSingle();
+          if (reportRow) {
+            sourceJobId = (reportRow as any).job_id ?? null;
+            findingsCount = Number((reportRow as any).findings_count ?? 0) || 0;
+            severityCounts = ((reportRow as any).severity_counts ?? {}) as Record<string, unknown>;
+            summaryJson = ((reportRow as any).summary_json ?? {}) as Record<string, unknown>;
+          }
+        }
+
+        const { data: maxCycleRow } = await supabase
+          .from("script_revision_cycles")
+          .select("cycle_number")
+          .eq("script_id", scriptId)
+          .order("cycle_number", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const nextCycle = maxCycleRow ? Number((maxCycleRow as any).cycle_number ?? 0) + 1 : 1;
+
+        const { data: cycleRow, error: cycleErr } = await supabase
+          .from("script_revision_cycles")
+          .insert({
+            script_id: scriptId,
+            cycle_number: nextCycle,
+            source_report_id: sourceReportId,
+            source_job_id: sourceJobId,
+            sent_by: uid,
+            sent_at: new Date().toISOString(),
+            status: "sent",
+            admin_note: clientComment || reason,
+          })
+          .select("id")
+          .single();
+
+        if (cycleErr || !cycleRow) {
+          console.error(`[scripts] correlationId=${correlationId} revision cycle insert error=`, cycleErr?.message);
+        } else {
+          const cycleId = (cycleRow as { id: string }).id;
+          await supabase
+            .from("script_revision_cycle_events")
+            .insert({
+              cycle_id: cycleId,
+              script_id: scriptId,
+              event_type: "sent_for_review",
+              actor_user_id: uid,
+              payload: {
+                reason,
+                admin_note: clientComment || null,
+                source_report_id: sourceReportId,
+                shared_report_ids: sharedReportIds,
+              },
+            });
+
+          if (sourceReportId && sourceJobId) {
+            await supabase
+              .from("script_revision_cycle_snapshots")
+              .insert({
+                cycle_id: cycleId,
+                script_id: scriptId,
+                report_id: sourceReportId,
+                job_id: sourceJobId,
+                findings_total: findingsCount,
+                findings_approved: 0,
+                findings_violation: findingsCount,
+                severity_counts: severityCounts,
+                type_counts: {},
+                snapshot_payload: summaryJson,
+              });
+          }
+
+          await notifyBeneficiaryRevisionRequested(supabase, {
+            scriptId,
+            scriptTitle: (script as any).title,
+            companyId: ownerCompanyId,
+            cycleNumber: nextCycle,
+            note: clientComment || reason,
+          });
+        }
+      }
+    }
+
     // If related report, optionally update report status
     if (relatedReportId) {
-      const reportStatus = decision === 'approve' ? 'approved' : 'rejected';
+      const reportStatus = decision === 'approve' ? 'approved' : decision === 'reject' ? 'rejected' : 'needs_review';
       await supabase
         .from("analysis_reports")
         .update({
@@ -1949,9 +2161,12 @@ Deno.serve(async (req: Request) => {
     return json({
       success: true,
       script: updated ? toScriptFrontend(updated as ScriptRow) : null,
-      message: decision === 'approve'
-        ? `Script approved successfully`
-        : `Script rejected: ${reason}`
+      message:
+        decision === 'approve'
+          ? `Script approved successfully`
+          : decision === 'reject'
+            ? `Script rejected: ${reason}`
+            : `Script sent back to beneficiary for revision`
     });
   }
 
@@ -2011,10 +2226,7 @@ Deno.serve(async (req: Request) => {
       updates.episode_count = normalizeEpisodeCount(body.episodeCount ?? body.episode_count);
     }
     if (body.expectedRank !== undefined || body.expected_rank !== undefined) {
-      const expectedRankValue = typeof (body.expectedRank ?? body.expected_rank) === "string"
-        ? String(body.expectedRank ?? body.expected_rank).trim().toLowerCase()
-        : "";
-      if (expectedRankValue) updates.expected_rank = expectedRankValue;
+      updates.expected_rank = normalizeExpectedRank(body.expectedRank ?? body.expected_rank);
     }
     if (body.receivedAt !== undefined || body.received_at !== undefined) {
       updates.received_at = normalizeReceivedAt(body.receivedAt ?? body.received_at);
