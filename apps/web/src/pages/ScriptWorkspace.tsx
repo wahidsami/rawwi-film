@@ -11,7 +11,7 @@ import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
 import { DocumentImportModal } from '@/components/import/DocumentImportModal';
-import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square, Search, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square, Search, MoreVertical, RotateCcw } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getActionablePolicyArticles } from '@/data/policyMap';
 import {
@@ -1874,6 +1874,12 @@ export function ScriptWorkspace() {
   const [rejectDecisionShareReports, setRejectDecisionShareReports] = useState(true);
   const [rejectDecisionReportIds, setRejectDecisionReportIds] = useState<string[]>([]);
   const [rejectDecisionSubmitting, setRejectDecisionSubmitting] = useState(false);
+  const [sendReviewDecisionReportId, setSendReviewDecisionReportId] = useState<string | null>(null);
+  const [sendReviewDecisionReason, setSendReviewDecisionReason] = useState('');
+  const [sendReviewDecisionClientComment, setSendReviewDecisionClientComment] = useState('');
+  const [sendReviewDecisionShareReports, setSendReviewDecisionShareReports] = useState(true);
+  const [sendReviewDecisionReportIds, setSendReviewDecisionReportIds] = useState<string[]>([]);
+  const [sendReviewDecisionSubmitting, setSendReviewDecisionSubmitting] = useState(false);
 
   // ── Report findings (for editor highlights) ──
   const [selectedReportForHighlights, setSelectedReportForHighlights] = useState<ReportListItem | null>(null);
@@ -1901,6 +1907,7 @@ export function ScriptWorkspace() {
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [reportFindingReviewModal, setReportFindingReviewModal] = useState<{
     findingId: string;
+    reviewFindingId?: string;
     toStatus: 'approved' | 'violation';
     titleAr: string;
   } | null>(null);
@@ -2206,6 +2213,30 @@ export function ScriptWorkspace() {
     setRejectDecisionReportIds([]);
   }, [rejectDecisionSubmitting]);
 
+  const openSendReviewDecisionModal = useCallback((reportId: string) => {
+    const defaultReportId = reportId || reportHistory[0]?.id || null;
+    setSendReviewDecisionReportId(reportId);
+    setSendReviewDecisionReason('');
+    setSendReviewDecisionClientComment('');
+    setSendReviewDecisionShareReports(true);
+    setSendReviewDecisionReportIds(defaultReportId ? [defaultReportId] : []);
+  }, [reportHistory]);
+
+  const closeSendReviewDecisionModal = useCallback(() => {
+    if (sendReviewDecisionSubmitting) return;
+    setSendReviewDecisionReportId(null);
+    setSendReviewDecisionReason('');
+    setSendReviewDecisionClientComment('');
+    setSendReviewDecisionShareReports(true);
+    setSendReviewDecisionReportIds([]);
+  }, [sendReviewDecisionSubmitting]);
+
+  const toggleSendReviewDecisionReportId = useCallback((reportId: string) => {
+    setSendReviewDecisionReportIds((prev) =>
+      prev.includes(reportId) ? prev.filter((id) => id !== reportId) : [...prev, reportId],
+    );
+  }, []);
+
   const toggleRejectDecisionReportId = useCallback((reportId: string) => {
     setRejectDecisionReportIds((prev) =>
       prev.includes(reportId) ? prev.filter((id) => id !== reportId) : [...prev, reportId]
@@ -2304,6 +2335,64 @@ export function ScriptWorkspace() {
     lang,
     loadReportHistory,
     script?.id,
+  ]);
+
+  const submitSendReviewDecision = useCallback(async () => {
+    if (!script?.id || !sendReviewDecisionReportId) return;
+    const reason = sendReviewDecisionReason.trim();
+    if (!reason) {
+      toast.error(lang === 'ar' ? 'يرجى إدخال سبب الإعادة للمراجعة' : 'Please enter a review-return reason');
+      return;
+    }
+    setSendReviewDecisionSubmitting(true);
+    try {
+      await scriptsApi.makeDecision(
+        script.id,
+        'send_for_review',
+        reason,
+        sendReviewDecisionReportId,
+        {
+          clientComment: sendReviewDecisionClientComment.trim(),
+          shareReportsToClient: sendReviewDecisionShareReports,
+          shareReportIds: sendReviewDecisionShareReports ? sendReviewDecisionReportIds : [],
+        },
+      );
+      toast.success(lang === 'ar' ? 'تم إرسال النص للمستفيد للمراجعة' : 'Script sent to beneficiary for review');
+      if (selectedReportForHighlights?.id === sendReviewDecisionReportId) {
+        setSelectedReportForHighlights((prev) =>
+          prev && prev.id === sendReviewDecisionReportId
+            ? { ...prev, reviewStatus: 'needs_review' as any }
+            : prev,
+        );
+      }
+      setReportHistory((prev) =>
+        prev.map((report) =>
+          report.id === sendReviewDecisionReportId
+            ? {
+                ...report,
+                reviewStatus: 'needs_review' as any,
+                reviewedAt: new Date().toISOString(),
+                reviewNotes: reason,
+              }
+            : report,
+        ),
+      );
+      closeSendReviewDecisionModal();
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'فشل إرسال النص للمراجعة' : 'Failed to send script for review'));
+    } finally {
+      setSendReviewDecisionSubmitting(false);
+    }
+  }, [
+    closeSendReviewDecisionModal,
+    lang,
+    script?.id,
+    selectedReportForHighlights?.id,
+    sendReviewDecisionClientComment,
+    sendReviewDecisionReason,
+    sendReviewDecisionReportId,
+    sendReviewDecisionReportIds,
+    sendReviewDecisionShareReports,
   ]);
 
   const handleReview = async (reportId: string, status: ReviewStatus, notes?: string) => {
@@ -2437,7 +2526,11 @@ export function ScriptWorkspace() {
     }
     setReportFindingReviewSaving(true);
     try {
-      await findingsApi.reviewFinding(reportFindingReviewModal.findingId, reportFindingReviewModal.toStatus, reason || '');
+      if (reportFindingReviewModal.reviewFindingId) {
+        await findingsApi.reviewReviewFinding(reportFindingReviewModal.reviewFindingId, reportFindingReviewModal.toStatus, reason || '');
+      } else {
+        await findingsApi.reviewFinding(reportFindingReviewModal.findingId, reportFindingReviewModal.toStatus, reason || '');
+      }
       setReportFindings((prev) =>
         prev.map((f) =>
           f.id === reportFindingReviewModal.findingId
@@ -2592,7 +2685,8 @@ export function ScriptWorkspace() {
     setEditReportFindingSaving(true);
     try {
       const res = await findingsApi.reclassifyFinding({
-        findingId: editReportFindingModal.id,
+        findingId: reportReviewFindings.some((row) => row.id === editReportFindingModal.id) ? undefined : editReportFindingModal.id,
+        reviewFindingId: reportReviewFindings.some((row) => row.id === editReportFindingModal.id) ? editReportFindingModal.id : undefined,
         articleId: parseInt(editReportFindingForm.articleId, 10) || DEFAULT_ACTIONABLE_ARTICLE_ID,
         atomId: null,
         severity: editReportFindingForm.severity,
@@ -2602,6 +2696,9 @@ export function ScriptWorkspace() {
       });
       if (res.finding) {
         setReportFindings((prev) => prev.map((f) => (f.id === res.finding!.id ? res.finding! : f)));
+      }
+      if (res.reviewFinding) {
+        setReportReviewFindings((prev) => prev.map((row) => (row.id === res.reviewFinding!.id ? res.reviewFinding! : row)));
       }
       await reloadSelectedReportReviewLayer();
       if (res.atomMappingWarning) {
@@ -2625,6 +2722,14 @@ export function ScriptWorkspace() {
 
   const handleValidateEditedReportFindingSnippet = useCallback(async () => {
     if (!editReportFindingModal) return;
+    if (reportReviewFindings.some((row) => row.id === editReportFindingModal.id)) {
+      setEditReportFindingSnippetValidation(
+        lang === 'ar'
+          ? 'التحقق الدقيق للنص متاح عند ربط البطاقة بسجل النص الخام، ويمكنك الحفظ الآن مباشرة.'
+          : 'Exact snippet validation is available when linked to a raw finding row; you can save directly now.'
+      );
+      return;
+    }
     const snippet = editReportFindingForm.evidenceSnippet.trim();
     if (!snippet) {
       toast.error(lang === 'ar' ? 'أدخل النص أولاً للتحقق منه' : 'Enter snippet text first');
@@ -2660,7 +2765,7 @@ export function ScriptWorkspace() {
     } finally {
       setEditReportFindingValidatingSnippet(false);
     }
-  }, [editReportFindingForm.evidenceSnippet, editReportFindingModal, lang]);
+  }, [editReportFindingForm.evidenceSnippet, editReportFindingModal, lang, reportReviewFindings]);
 
   // Restore saved highlight preference when report list is ready (persists across logout/login)
   useEffect(() => {
@@ -6107,49 +6212,54 @@ export function ScriptWorkspace() {
                                       ? (lang === 'ar' ? 'تضمين في التقرير' : 'Include in report')
                                       : (lang === 'ar' ? 'استبعاد من التقرير' : 'Exclude from report')}
                                   </button>
-                                  {(() => {
-                                    const matchedRaw = matchWorkspaceRawFindingForReview(f, reportFindings);
-                                    if (!matchedRaw) return null;
-                                    return (
-                                      <>
-                                        {f.reviewStatus !== 'approved' ? (
-                                          <button
-                                            type="button"
-                                            className="w-full rounded px-2 py-1.5 text-start text-xs text-success hover:bg-success/10"
-                                            onClick={() => {
-                                              setReportFindingReviewModal({ findingId: matchedRaw.id, toStatus: 'approved', titleAr: f.titleAr || f.descriptionAr || '' });
-                                              setReportFindingReviewReason('');
-                                              setFindingActionsMenuId(null);
-                                            }}
-                                          >
-                                            {lang === 'ar' ? 'اعتماد كآمن' : 'Mark safe'}
-                                          </button>
-                                        ) : (
-                                          <button
-                                            type="button"
-                                            className="w-full rounded px-2 py-1.5 text-start text-xs text-error hover:bg-error/10"
-                                            onClick={() => {
-                                              setReportFindingReviewModal({ findingId: matchedRaw.id, toStatus: 'violation', titleAr: f.titleAr || f.descriptionAr || '' });
-                                              setReportFindingReviewReason('');
-                                              setFindingActionsMenuId(null);
-                                            }}
-                                          >
-                                            {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert'}
-                                          </button>
-                                        )}
-                                        <button
-                                          type="button"
-                                          className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
-                                          onClick={() => {
-                                            setEditReportFindingModal(matchedRaw);
-                                            setFindingActionsMenuId(null);
-                                          }}
-                                        >
-                                          {lang === 'ar' ? 'تعديل' : 'Edit'}
-                                        </button>
-                                      </>
-                                    );
-                                  })()}
+                                  {f.reviewStatus !== 'approved' ? (
+                                    <button
+                                      type="button"
+                                      className="w-full rounded px-2 py-1.5 text-start text-xs text-success hover:bg-success/10"
+                                      onClick={() => {
+                                        const matchedRaw = matchWorkspaceRawFindingForReview(f, reportFindings);
+                                        setReportFindingReviewModal({
+                                          findingId: matchedRaw?.id ?? f.id,
+                                          reviewFindingId: matchedRaw ? undefined : f.id,
+                                          toStatus: 'approved',
+                                          titleAr: f.titleAr || f.descriptionAr || '',
+                                        });
+                                        setReportFindingReviewReason('');
+                                        setFindingActionsMenuId(null);
+                                      }}
+                                    >
+                                      {lang === 'ar' ? 'اعتماد كآمن' : 'Mark safe'}
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="w-full rounded px-2 py-1.5 text-start text-xs text-error hover:bg-error/10"
+                                      onClick={() => {
+                                        const matchedRaw = matchWorkspaceRawFindingForReview(f, reportFindings);
+                                        setReportFindingReviewModal({
+                                          findingId: matchedRaw?.id ?? f.id,
+                                          reviewFindingId: matchedRaw ? undefined : f.id,
+                                          toStatus: 'violation',
+                                          titleAr: f.titleAr || f.descriptionAr || '',
+                                        });
+                                        setReportFindingReviewReason('');
+                                        setFindingActionsMenuId(null);
+                                      }}
+                                    >
+                                      {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert'}
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    className="w-full rounded px-2 py-1.5 text-start text-xs hover:bg-surface"
+                                    onClick={() => {
+                                      const matchedRaw = matchWorkspaceRawFindingForReview(f, reportFindings);
+                                      setEditReportFindingModal(matchedRaw ?? f);
+                                      setFindingActionsMenuId(null);
+                                    }}
+                                  >
+                                    {lang === 'ar' ? 'تعديل' : 'Edit'}
+                                  </button>
                                   <button
                                     type="button"
                                     className="w-full rounded px-2 py-1.5 text-start text-xs text-error hover:bg-error/10"
@@ -6185,8 +6295,8 @@ export function ScriptWorkspace() {
                       <p className="mt-2 text-[11px] text-text-muted" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                         {isReviewLayerOnlyWorkspaceFinding(f)
                           ? lang === 'ar'
-                            ? 'هذه البطاقة موجودة في طبقة المراجعة الموحدة، لكن لم يُعثر بعد على صف الملاحظة الخام المرتبط بها لتنفيذ الاعتماد أو التعديل.'
-                            : 'This card exists in the unified review layer, but its linked raw finding row is not available yet for review actions.'
+                            ? 'هذه البطاقة موجودة في طبقة المراجعة الموحدة ويمكن تنفيذ إجراءاتها مباشرة من قائمة الخيارات.'
+                            : 'This card is in the unified review layer, and its actions are available directly from the options menu.'
                           : isSyntheticWorkspaceFinding(f)
                           ? lang === 'ar'
                             ? 'هذه البطاقة جاءت من التقرير النهائي لأن صف الملاحظة التفصيلي لم يُحمّل بعد. ستبقى ظاهرة للمراجعة ولن تتيح إجراءات الاعتماد حتى تتوفر البيانات التفصيلية.'
@@ -6353,6 +6463,12 @@ export function ScriptWorkspace() {
                             {lang === 'ar' ? 'قبول' : 'Approve'}
                           </Button>
                         )}
+                        {r.reviewStatus !== 'approved' && (
+                          <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2 text-warning hover:text-warning" onClick={() => openSendReviewDecisionModal(r.id)}>
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            {lang === 'ar' ? 'إرسال للمراجعة' : 'Send for Review'}
+                          </Button>
+                        )}
                         {r.reviewStatus !== 'rejected' && (
                           <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2 text-error hover:text-error" onClick={() => handleReview(r.id, 'rejected')}>
                             <XCircle className="w-3 h-3 mr-1" />
@@ -6508,6 +6624,87 @@ export function ScriptWorkspace() {
               disabled={approveDecisionSubmitting}
             >
               {lang === 'ar' ? 'لا' : 'No'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={sendReviewDecisionReportId != null}
+        onClose={closeSendReviewDecisionModal}
+        title={lang === 'ar' ? 'إرسال النص للمستفيد للمراجعة' : 'Send Script for Beneficiary Review'}
+      >
+        <div className="space-y-4">
+          <Textarea
+            label={lang === 'ar' ? 'سبب الإعادة للمراجعة (داخلي)' : 'Review-return reason (internal)'}
+            value={sendReviewDecisionReason}
+            onChange={(e) => setSendReviewDecisionReason(e.target.value)}
+            rows={4}
+            placeholder={lang === 'ar' ? 'اكتب سبب الإعادة للمراجعة…' : 'Write the reason for sending back to review…'}
+          />
+
+          <Textarea
+            label={lang === 'ar' ? 'ملاحظة للمستفيد (اختياري)' : 'Beneficiary comment (optional)'}
+            value={sendReviewDecisionClientComment}
+            onChange={(e) => setSendReviewDecisionClientComment(e.target.value)}
+            rows={3}
+            placeholder={lang === 'ar' ? 'سيظهر هذا النص للمستفيد في بوابة المستفيد.' : 'This message will be shown to the beneficiary in their portal.'}
+          />
+
+          <div className="rounded-md border border-border bg-background p-3 space-y-3">
+            <label className="inline-flex items-center gap-2 text-sm font-medium text-text-main">
+              <input
+                type="checkbox"
+                checked={sendReviewDecisionShareReports}
+                onChange={(e) => setSendReviewDecisionShareReports(e.target.checked)}
+              />
+              <span>{lang === 'ar' ? 'إرفاق تقارير/مخرجات التحليل مع الإعادة للمراجعة' : 'Attach analysis report(s) to this review return'}</span>
+            </label>
+
+            {sendReviewDecisionShareReports && (
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {reportHistory.length === 0 ? (
+                  <p className="text-xs text-text-muted">
+                    {lang === 'ar' ? 'لا توجد تقارير متاحة لهذا النص حالياً.' : 'No reports available for this script yet.'}
+                  </p>
+                ) : (
+                  reportHistory.map((report) => (
+                    <label key={report.id} className="flex items-start gap-2 text-sm text-text-main rounded border border-border bg-surface p-2">
+                      <input
+                        type="checkbox"
+                        checked={sendReviewDecisionReportIds.includes(report.id)}
+                        onChange={() => toggleSendReviewDecisionReportId(report.id)}
+                      />
+                      <span>
+                        {(lang === 'ar' ? 'تقرير' : 'Report')} #{report.id.slice(0, 8)}
+                        {' • '}
+                        {new Date(report.createdAt).toLocaleString()}
+                        {' • '}
+                        {(lang === 'ar' ? 'الحالة' : 'Status')}: {report.reviewStatus}
+                        {' • '}
+                        {(lang === 'ar' ? 'المخالفات' : 'Findings')}: {report.findingsCount}
+                      </span>
+                    </label>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="primary"
+              isLoading={sendReviewDecisionSubmitting}
+              onClick={submitSendReviewDecision}
+            >
+              {lang === 'ar' ? 'تأكيد الإرسال للمراجعة' : 'Confirm Send for Review'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={closeSendReviewDecisionModal}
+              disabled={sendReviewDecisionSubmitting}
+            >
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
             </Button>
           </div>
         </div>

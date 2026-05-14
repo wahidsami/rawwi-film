@@ -81,6 +81,13 @@ export interface ClientPortalSubmissionItem {
   expectedRank?: 'low' | 'medium' | 'high' | string | null;
   receivedAt?: string | null;
   currentVersionId?: string | null;
+  workClassification?: string | null;
+  synopsis?: string | null;
+  storySummary?: string | null;
+  scriptSummaryPdfUrl?: string | null;
+  hasSecurityScenes?: boolean;
+  securityContentAttachmentUrl?: string | null;
+  fileUrl?: string | null;
   latestReportId?: string | null;
   latestReportReviewStatus?: string | null;
   latestReportCreatedAt?: string | null;
@@ -644,7 +651,7 @@ export const scriptsApi = {
   /** Make approval/rejection decision on a script */
   makeDecision: (
     id: string,
-    decision: 'approve' | 'reject',
+    decision: 'approve' | 'reject' | 'send_for_review',
     reason: string,
     relatedReportId?: string,
     options?: {
@@ -909,7 +916,8 @@ export interface ManualFindingResponse extends AnalysisFinding {
 }
 
 export interface ReclassifyFindingBody {
-  findingId: string;
+  findingId?: string;
+  reviewFindingId?: string;
   articleId: number;
   atomId?: string | null;
   severity: string;
@@ -980,6 +988,7 @@ export interface AnalysisReviewFinding {
 export interface ReclassifyFindingResponse {
   ok: true;
   finding?: AnalysisFinding;
+  reviewFinding?: AnalysisReviewFinding;
   atomMappingWarning?: string | null;
   reportAggregates?: FindingReviewResponse['reportAggregates'];
 }
@@ -1032,6 +1041,8 @@ export const findingsApi = {
   /** Approve (mark safe) or revert a finding. */
   reviewFinding: (findingId: string, toStatus: 'approved' | 'violation', reason: string): Promise<FindingReviewResponse> =>
     httpClient.post('/findings/review', { findingId, toStatus, reason }),
+  reviewReviewFinding: (reviewFindingId: string, toStatus: 'approved' | 'violation', reason: string): Promise<FindingReviewResponse> =>
+    httpClient.post('/findings/review', { reviewFindingId, toStatus, reason }),
   setReviewFindingReportVisibility: (body: SetReviewFindingReportVisibilityBody): Promise<SetReviewFindingReportVisibilityResponse> =>
     httpClient.post('/findings/report-visibility', body),
   setFindingAction: (body: SetFindingActionBody): Promise<SetFindingActionResponse> =>
