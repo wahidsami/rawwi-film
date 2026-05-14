@@ -6880,23 +6880,31 @@ export function ScriptWorkspace() {
                         </span>
                       )}
                     </div>
+                    {cycle.comparisonSummary?.canonical ? (
+                      <div className="text-[11px] text-text-muted">
+                        <span>{lang === 'ar' ? 'المقارنة القانونية (فريدة): ' : 'Canonical incidents compared: '}</span>
+                        <span className="text-success">{lang === 'ar' ? `معالجة ${cycle.comparisonSummary.canonical.resolved_count ?? 0}` : `resolved ${cycle.comparisonSummary.canonical.resolved_count ?? 0}`}</span>
+                        {' • '}
+                        <span className="text-warning">{lang === 'ar' ? `مستمرة ${cycle.comparisonSummary.canonical.persisting_count ?? 0}` : `persisting ${cycle.comparisonSummary.canonical.persisting_count ?? 0}`}</span>
+                        {' • '}
+                        <span className="text-error">{lang === 'ar' ? `جديدة ${cycle.comparisonSummary.canonical.new_count ?? 0}` : `new ${cycle.comparisonSummary.canonical.new_count ?? 0}`}</span>
+                      </div>
+                    ) : null}
                     <div className="flex flex-wrap gap-1.5">
                       {cycleVersions.slice(0, 2).map((version) => (
-                        <a
+                        <button
+                          type="button"
                           key={`${cycle.id}-${version.id}`}
-                          href={version.sourceFileUrl ?? '#'}
-                          target="_blank"
-                          rel="noreferrer"
                           className="text-[11px] px-2 py-1 rounded border border-border hover:border-primary/40 text-text-main"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (!version.sourceFileUrl) e.preventDefault();
+                            void openStoredDocument(version.sourceFileUrl ?? null);
                           }}
                         >
                           {lang === 'ar'
                             ? `مستند النص V${version.versionNumber}`
                             : `Script DOCX V${version.versionNumber}`}
-                        </a>
+                        </button>
                       ))}
                       {cycle.sourceReportId && (
                         <a
@@ -7977,18 +7985,17 @@ export function ScriptWorkspace() {
               <p className="text-xs text-text-muted mb-2">{lang === 'ar' ? 'ملفات النص للدورة' : 'Cycle script documents'}</p>
               <div className="flex flex-wrap gap-2">
                 {getCycleVersionCandidates(selectedCycleDetails).map((version) => (
-                  <a
+                  <button
+                    type="button"
                     key={`${selectedCycleDetails.id}-modal-${version.id}`}
-                    href={version.sourceFileUrl ?? '#'}
-                    target="_blank"
-                    rel="noreferrer"
                     className="text-xs px-2 py-1 rounded border border-border hover:border-primary/40 text-text-main"
                     onClick={(e) => {
-                      if (!version.sourceFileUrl) e.preventDefault();
+                      e.stopPropagation();
+                      void openStoredDocument(version.sourceFileUrl ?? null);
                     }}
                   >
                     {version.sourceFileName?.trim() || (lang === 'ar' ? `مستند النص V${version.versionNumber}` : `Script DOCX V${version.versionNumber}`)}
-                  </a>
+                  </button>
                 ))}
               </div>
             </div>
@@ -8021,6 +8028,11 @@ export function ScriptWorkspace() {
             {selectedCycleDetails.comparisonSummary?.canonical ? (
               <div className="rounded-lg border border-border bg-background/40 p-3">
                 <p className="text-xs text-text-muted mb-2">{lang === 'ar' ? 'مقارنة النتائج' : 'Findings comparison'}</p>
+                <p className="text-xs text-text-muted mb-2">
+                  {lang === 'ar'
+                    ? `إجمالي الملاحظات (المرجعي/الإعادة): ${selectedCycleDetails.baselineFindings} / ${selectedCycleDetails.reanalyzedFindings ?? '—'}`
+                    : `Raw findings total (baseline/reanalysis): ${selectedCycleDetails.baselineFindings} / ${selectedCycleDetails.reanalyzedFindings ?? '—'}`}
+                </p>
                 <div className="text-sm text-text-main flex flex-wrap gap-3">
                   <span className="text-success">{lang === 'ar' ? `معالجة: ${selectedCycleDetails.comparisonSummary.canonical.resolved_count ?? 0}` : `Resolved: ${selectedCycleDetails.comparisonSummary.canonical.resolved_count ?? 0}`}</span>
                   <span className="text-warning">{lang === 'ar' ? `مستمرة: ${selectedCycleDetails.comparisonSummary.canonical.persisting_count ?? 0}` : `Persisting: ${selectedCycleDetails.comparisonSummary.canonical.persisting_count ?? 0}`}</span>

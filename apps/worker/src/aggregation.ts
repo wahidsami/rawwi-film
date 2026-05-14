@@ -1804,12 +1804,15 @@ export async function runAggregation(jobId: string): Promise<void> {
       const oldCanonical = Array.isArray((oldSummary as any).canonical_findings) ? ((oldSummary as any).canonical_findings as any[]) : [];
       const newCanonical = Array.isArray((newSummary as any).canonical_findings) ? ((newSummary as any).canonical_findings as any[]) : [];
       const canonicalKey = (row: any): string => {
+        const canonicalId = typeof row?.canonical_finding_id === "string" ? row.canonical_finding_id.trim() : "";
+        if (canonicalId) return `cid:${canonicalId}`;
         const primary = Number(row?.primary_article_id ?? row?.article_id ?? 0) || 0;
         const atom = typeof row?.canonical_atom === "string" && row.canonical_atom.trim()
           ? row.canonical_atom.trim()
           : (typeof row?.atom_id === "string" ? row.atom_id.trim() : "");
         const title = typeof row?.title_ar === "string" ? row.title_ar.trim() : "";
-        return `${primary}|${atom}|${title}`;
+        const evidence = typeof row?.evidence_snippet === "string" ? row.evidence_snippet.trim().slice(0, 180) : "";
+        return `${primary}|${atom}|${title}|${evidence}`;
       };
       const oldKeys = new Set(oldCanonical.map(canonicalKey).filter(Boolean));
       const newKeys = new Set(newCanonical.map(canonicalKey).filter(Boolean));
