@@ -767,7 +767,7 @@ export function ClientPortal() {
         scriptTitle: details.script.title || (lang === 'ar' ? 'تقرير النص' : 'Script Report'),
         clientName: profile?.company
           ? (lang === 'ar' ? profile.company.nameAr : profile.company.nameEn)
-          : (lang === 'ar' ? 'شركة الإنتاج' : 'Production Company'),
+          : (lang === 'ar' ? 'المستفيد' : 'Beneficiary'),
         createdAt: block.report.createdAt,
         findingsByArticle: summary?.findings_by_article ?? null,
         canonicalFindings,
@@ -980,7 +980,7 @@ export function ClientPortal() {
     setError('');
 
     if (!profile?.company?.companyId) {
-      setError(lang === 'ar' ? 'تعذّر تحديد الشركة الحالية' : 'Unable to resolve your company account');
+      setError(lang === 'ar' ? 'تعذّر تحديد حساب المستفيد الحالي' : 'Unable to resolve your beneficiary account');
       return;
     }
     if (!form.title.trim()) {
@@ -1118,7 +1118,7 @@ export function ClientPortal() {
     setNotice('');
     setError('');
     if (!profile?.company?.companyId) {
-      setError(lang === 'ar' ? 'تعذّر تحديد الشركة الحالية' : 'Unable to resolve your company account');
+      setError(lang === 'ar' ? 'تعذّر تحديد حساب المستفيد الحالي' : 'Unable to resolve your beneficiary account');
       return;
     }
     if (!form.title.trim()) {
@@ -1651,7 +1651,7 @@ export function ClientPortal() {
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80 md:text-base">
               {lang === 'ar'
                 ? 'أصبحت بوابة المستفيد جاهزة لاستقبال أعمالك ومتابعة حالتها خطوة بخطوة، من رفع النص وحتى التقرير والشهادات، بتجربة واضحة ومرتبطة مباشرة بفريق المراجعة.'
-                : 'Your beneficiary portal is ready for new work, with clear tracking from script upload through review reports and certificates, all connected directly to the review team.'}
+                : 'Your beneficiary portal is ready for new work, with clear tracking from script upload through review reports and certificates, connected directly to the review team.'}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 md:min-w-[300px]">
@@ -1661,7 +1661,7 @@ export function ClientPortal() {
               className="rounded-2xl border border-white/20 bg-white/12 px-4 py-4 text-start transition hover:bg-white/18"
             >
               <p className="text-sm font-semibold">{lang === 'ar' ? 'إضافة نص' : 'Add Script'}</p>
-              <p className="mt-1 text-xs text-white/70">{lang === 'ar' ? 'رفع ملف جديد للشركة' : 'Submit a new company script'}</p>
+              <p className="mt-1 text-xs text-white/70">{lang === 'ar' ? 'إضافة نص جديد' : 'Submit a new script'}</p>
             </button>
             <button
               type="button"
@@ -1798,7 +1798,7 @@ export function ClientPortal() {
                 <div>
                   <p className="font-semibold">{lang === 'ar' ? 'الإعدادات' : 'Settings'}</p>
                   <p className="mt-1 text-sm leading-6 text-text-muted">
-                    {lang === 'ar' ? 'إعدادات الحساب والشركة ستنتقل لاحقًا إلى صفحة مستقلة شبيهة بالنظام القديم.' : 'Account and company settings will move later into a dedicated page closer to the old dashboard.'}
+                    {lang === 'ar' ? 'إعدادات الحساب ستنتقل لاحقًا إلى صفحة مستقلة شبيهة بالنظام القديم.' : 'Account settings will move later into a dedicated page closer to the old dashboard.'}
                   </p>
                 </div>
               </div>
@@ -2226,8 +2226,9 @@ export function ClientPortal() {
       companyName={
         profile?.company
           ? (lang === 'ar' ? profile.company.nameAr : profile.company.nameEn)
-          : (lang === 'ar' ? 'جاري تحميل معلومات الشركة...' : 'Loading company profile...')
+          : (lang === 'ar' ? 'جاري تحميل معلومات المستفيد...' : 'Loading beneficiary profile...')
       }
+      beneficiaryType={(profile?.company?.beneficiaryType ?? 'company') as 'company' | 'individual'}
       userName={user?.name}
       activeSection={activeSection}
       onSectionChange={setActiveSection}

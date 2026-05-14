@@ -30,6 +30,7 @@ export type ClientPortalSection =
 type ClientPortalLayoutProps = {
   lang: 'ar' | 'en';
   companyName: string;
+  beneficiaryType?: 'company' | 'individual';
   userName?: string;
   activeSection: ClientPortalSection;
   onSectionChange: (section: ClientPortalSection) => void;
@@ -75,7 +76,7 @@ const navItems: NavItem[] = [
     id: 'new-script',
     labelAr: 'إضافة نص',
     labelEn: 'Add Script',
-    descriptionAr: 'رفع نص جديد للشركة',
+    descriptionAr: 'إضافة نص جديد',
     descriptionEn: 'Submit a new script',
     icon: PlusSquare,
   },
@@ -107,8 +108,8 @@ const navItems: NavItem[] = [
     id: 'settings',
     labelAr: 'الإعدادات',
     labelEn: 'Settings',
-    descriptionAr: 'بيانات الحساب والشركة',
-    descriptionEn: 'Account and company settings',
+    descriptionAr: 'بيانات الحساب',
+    descriptionEn: 'Account settings',
     icon: Settings,
   },
 ];
@@ -116,6 +117,7 @@ const navItems: NavItem[] = [
 export function ClientPortalLayout({
   lang,
   companyName,
+  beneficiaryType = 'company',
   userName,
   activeSection,
   onSectionChange,
@@ -127,6 +129,7 @@ export function ClientPortalLayout({
   children,
 }: ClientPortalLayoutProps) {
   const isArabic = lang === 'ar';
+  const isIndividual = beneficiaryType === 'individual';
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const CollapseIcon = isArabic
     ? (isSidebarCollapsed ? ChevronLeft : ChevronRight)
@@ -143,13 +146,13 @@ export function ClientPortalLayout({
               </div>
               <div className="space-y-1">
                 <p className="text-xs font-medium uppercase tracking-[0.24em] text-text-muted">
-                  {isArabic ? 'بوابة شركات الإنتاج' : 'Production Company Portal'}
+                  {isArabic ? (isIndividual ? 'بوابة المستفيد الفرد' : 'بوابة المستفيدين') : (isIndividual ? 'Individual Beneficiary Portal' : 'Beneficiary Portal')}
                 </p>
                 <h1 className="text-xl font-bold md:text-2xl">{companyName}</h1>
                 <p className="text-sm text-text-muted">
                   {isArabic
-                    ? 'لوحة الشركة لمتابعة النصوص والطلبات والوثائق'
-                    : 'Company dashboard for scripts, requests, and documents'}
+                    ? 'بوابة لمتابعة النصوص والطلبات والوثائق'
+                    : 'Dashboard for scripts, requests, and documents'}
                 </p>
               </div>
             </div>
