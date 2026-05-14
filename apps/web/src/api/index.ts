@@ -581,6 +581,7 @@ export const scriptsApi = {
     reason: string,
     relatedReportId?: string,
     options?: {
+      issueCertificate?: boolean;
       clientComment?: string;
       shareReportsToClient?: boolean;
       shareReportIds?: string[];
@@ -590,6 +591,7 @@ export const scriptsApi = {
       decision,
       reason,
       relatedReportId,
+      ...(options?.issueCertificate != null ? { issueCertificate: options.issueCertificate } : {}),
       ...(options?.clientComment != null ? { clientComment: options.clientComment } : {}),
       ...(options?.shareReportsToClient != null ? { shareReportsToClient: options.shareReportsToClient } : {}),
       ...(options?.shareReportIds != null ? { shareReportIds: options.shareReportIds } : {}),

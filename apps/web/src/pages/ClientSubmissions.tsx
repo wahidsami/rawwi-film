@@ -129,18 +129,29 @@ export function ClientSubmissions() {
     }
     setIsDeciding(true);
     try {
+      if (decisionAction === 'approve') {
+        const shouldGenerate = window.confirm(
+          lang === 'ar'
+            ? 'توليد وإرسال الشهادة إلى المستفيد؟ إذا اخترت إلغاء، لن يتم اعتماد النص.'
+            : 'Generate and send the certificate to the beneficiary? If you cancel, the script will not be approved.'
+        );
+        if (!shouldGenerate) {
+          setIsDeciding(false);
+          return;
+        }
+      }
       await scriptsApi.makeDecision(
         decisionScript.scriptId,
         decisionAction,
         decisionReason.trim(),
         decisionScript.latestReportId ?? undefined,
-        decisionAction === 'reject'
-          ? {
+        decisionAction === 'approve'
+          ? { issueCertificate: true }
+          : {
               clientComment: decisionClientComment.trim(),
               shareReportsToClient,
               shareReportIds: shareReportsToClient ? selectedSharedReportIds : [],
-            }
-          : undefined,
+            },
       );
       toast.success(
         decisionAction === 'approve'

@@ -1255,7 +1255,7 @@ export function ClientPortal() {
                   const status = item.status.toLowerCase();
                   const isDraft = status === 'draft';
                   const isSubmitted = ['in_review', 'analysis_running', 'review_required'].includes(status);
-                  const canPay = status === 'approved' && !paidScriptIds.has(item.scriptId);
+                  const hasCertificate = paidScriptIds.has(item.scriptId);
                   return (
                     <tr key={item.scriptId} className="border-b border-border/70 last:border-b-0">
                       <td className="px-4 py-3 text-text-muted">{(scriptsPage - 1) * scriptsPageSize + index + 1}</td>
@@ -1292,8 +1292,18 @@ export function ClientPortal() {
                             <Button size="sm" variant="ghost" onClick={() => startEditDraft(item)} aria-label="edit"><Pencil className="h-4 w-4" /></Button>
                           ) : null}
                           <Button size="sm" variant="ghost" onClick={() => setScriptToDelete(item)} aria-label="delete"><Trash2 className="h-4 w-4 text-error" /></Button>
-                          {!isDraft && !isSubmitted && canPay ? (
-                            <Button size="sm" variant="ghost" onClick={() => void openPaymentPage(item.scriptId)} aria-label="payment"><CreditCard className="h-4 w-4 text-primary" /></Button>
+                          {!isDraft && !isSubmitted && status === 'approved' ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setActiveSection('certificates')}
+                              aria-label="certificate"
+                              title={hasCertificate
+                                ? (lang === 'ar' ? 'عرض الشهادة' : 'View certificate')
+                                : (lang === 'ar' ? 'متابعة حالة الشهادة' : 'Check certificate status')}
+                            >
+                              <Award className="h-4 w-4 text-success" />
+                            </Button>
                           ) : null}
                           {status === 'rejected' ? (
                             <Button size="sm" variant="outline" onClick={() => openRejectionDetails(item.scriptId)}>

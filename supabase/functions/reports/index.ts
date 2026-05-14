@@ -500,6 +500,11 @@ Deno.serve(async (req: Request) => {
       }
 
       if (body.update_script_status === true && (row as { script_id?: string | null }).script_id) {
+        if (status === "approved") {
+          return json({
+            error: "Approving script status from report review is disabled. Use script decision approval flow with certificate confirmation.",
+          }, 409);
+        }
         const nextScriptStatus =
           status === "approved"
             ? "approved"

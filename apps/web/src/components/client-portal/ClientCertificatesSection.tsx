@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Document, Font, Image, Page, Text, View, pdf } from '@react-pdf/renderer';
 import QRCode from 'qrcode';
-import { Award, BadgeCheck, CreditCard, Download, Eye, Loader2, ShieldCheck } from 'lucide-react';
+import { Award, BadgeCheck, Download, Eye, Loader2, ShieldCheck } from 'lucide-react';
 import {
   certificatesApi,
   type CertificateDashboardItem,
@@ -686,12 +686,9 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
                           </Badge>
                         </>
                       ) : (
-                        <Button size="sm" onClick={() => setSelectedItem(item)}>
-                          <CreditCard className="me-2 h-4 w-4" />
-                          {item.certificateStatus === 'payment_failed'
-                            ? (lang === 'ar' ? 'إعادة المحاولة' : 'Retry payment')
-                            : (lang === 'ar' ? 'ادفع الآن' : 'Pay now')}
-                        </Button>
+                        <Badge variant="outline">
+                          {lang === 'ar' ? 'قيد المعالجة من الإدارة' : 'Pending admin issuance'}
+                        </Badge>
                       )}
                     </div>
                   </div>

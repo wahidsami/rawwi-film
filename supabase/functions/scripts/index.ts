@@ -595,21 +595,91 @@ async function ensureCertificateGeneratedOnApproval(
       })
       .eq("id", existing.data.id);
     if (error) throw new Error(error.message);
-    return;
+  } else {
+    const { error } = await supabase
+      .from("script_certificates")
+      .insert({
+        script_id: params.scriptId,
+        payment_id: null,
+        owner_user_id: null,
+        certificate_number: certificateNumber,
+        issued_by: params.approvedByUserId,
+        certificate_status: "issued",
+        certificate_data: mergedPayload,
+      });
+    if (error) throw new Error(error.message);
   }
 
-  const { error } = await supabase
-    .from("script_certificates")
-    .insert({
-      script_id: params.scriptId,
-      payment_id: null,
-      owner_user_id: null,
-      certificate_number: certificateNumber,
-      issued_by: params.approvedByUserId,
-      certificate_status: "issued",
-      certificate_data: mergedPayload,
+  const [{ data: account }, { data: beneficiaryClient }] = await Promise.all([
+    supabase
+      .from("client_portal_accounts")
+      .select("user_id")
+      .eq("company_id", params.companyId)
+      .maybeSingle(),
+    supabase
+      .from("clients")
+      .select("name_ar, name_en, contact_email, email")
+      .eq("id", params.companyId)
+      .maybeSingle(),
+  ]);
+
+  const beneficiaryUserId = ((account as { user_id?: string | null } | null)?.user_id ?? null);
+  if (beneficiaryUserId) {
+    const { error: notifyError } = await supabase.from("notifications").insert({
+      user_id: beneficiaryUserId,
+      type: "certificate_issued",
+      title: "Certificate issued",
+      body: `Your certificate for "${params.scriptTitle}" has been issued and is now available in the Certificates section.`,
+      metadata: {
+        script_id: params.scriptId,
+        script_title: params.scriptTitle,
+        company_id: params.companyId,
+        certificate_number: certificateNumber,
+      },
     });
-  if (error) throw new Error(error.message);
+    if (notifyError) console.error("[scripts] certificate issued notification:", notifyError.message);
+  }
+
+  const beneficiaryEmail =
+    ((beneficiaryClient as { contact_email?: string | null; email?: string | null } | null)?.contact_email ??
+      (beneficiaryClient as { contact_email?: string | null; email?: string | null } | null)?.email ??
+      "").trim();
+  const resendKey = Deno.env.get("RESEND_API_KEY");
+  if (resendKey && beneficiaryEmail) {
+    const appUrl = (Deno.env.get("APP_PUBLIC_URL") ?? "https://raawifilm.com").replace(/\/+$/, "");
+    const html = `
+      <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#111827;">
+        <h2>Congratulations - Certificate Issued</h2>
+        <p>Your script "<strong>${params.scriptTitle}</strong>" has been approved and its certificate has been issued.</p>
+        <p>You can view/download it from the Beneficiary Portal under Certificates.</p>
+        <hr />
+        <h2 dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">تهانينا - تم إصدار الشهادة</h2>
+        <p dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">
+          تم اعتماد النص "<strong>${params.scriptTitle}</strong>" وإصدار الشهادة الخاصة به.
+        </p>
+        <p dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">
+          يمكنك مشاهدة/تحميل الشهادة من بوابة المستفيد في قسم الشهادات.
+        </p>
+        <p><a href="${appUrl}/client">Open Beneficiary Portal</a></p>
+      </div>
+    `.trim();
+    const res = await fetch(RESEND_API, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: NOTIFY_FROM_EMAIL,
+        to: [beneficiaryEmail],
+        subject: "Certificate issued | تم إصدار الشهادة",
+        html,
+      }),
+    });
+    if (!res.ok) {
+      console.error("[scripts] certificate issued email:", res.status, await res.text());
+    }
+  }
 }
 
 /** Shared predicate for script decision: used by GET .../decision/can and POST .../decision. */
@@ -1689,6 +1759,7 @@ Deno.serve(async (req: Request) => {
     const relatedReportId = typeof body.relatedReportId === 'string' && body.relatedReportId.trim()
       ? body.relatedReportId.trim()
       : null;
+    const issueCertificate = body.issueCertificate === true;
     const clientComment = typeof body.clientComment === 'string' ? body.clientComment.trim().slice(0, 5000) : '';
     const shareReportsToClient = body.shareReportsToClient === true;
     const requestedShareReportIds = normalizeUuidList(body.shareReportIds);
@@ -1704,6 +1775,9 @@ Deno.serve(async (req: Request) => {
 
     const currentStatus = (script as any).status || 'draft';
     const newStatus = decision === 'approve' ? 'approved' : 'rejected';
+    if (decision === "approve" && !issueCertificate) {
+      return json({ error: "Approval requires certificate generation confirmation." }, 409);
+    }
     let sharedReportIds: string[] = [];
 
     if (decision === 'reject' && shareReportsToClient) {

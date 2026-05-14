@@ -98,12 +98,24 @@ export function DecisionBar({
 
         setIsSubmitting(true);
         try {
+            if (pendingDecision === 'approve') {
+                const shouldGenerate = window.confirm(
+                    isAr
+                        ? 'توليد وإرسال الشهادة إلى المستفيد؟\nاختر موافق للاعتماد مع إصدار الشهادة، أو إلغاء لإيقاف الاعتماد.'
+                        : 'Generate and send the certificate to the beneficiary?\nChoose OK to approve with certificate issuance, or Cancel to stop approval.'
+                );
+                if (!shouldGenerate) {
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
             const { scriptsApi } = await import('../api');
             await scriptsApi.makeDecision(
                 scriptId,
                 pendingDecision,
                 reason.trim(),
-                relatedReportId
+                relatedReportId,
+                pendingDecision === 'approve' ? { issueCertificate: true } : undefined,
             );
 
             toast.success(

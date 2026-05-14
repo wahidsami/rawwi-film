@@ -2286,6 +2286,7 @@ export function ScriptWorkspace() {
           ? 'تم اعتماد النص من الإدارة'
           : 'Script approved by administration',
         approveDecisionReportId,
+        { issueCertificate: true },
       );
       toast.success(lang === 'ar' ? 'تم اعتماد النص وتوليد الشهادة' : 'Script approved and certificate generation started');
       await Promise.all([loadReportHistory(), fetchInitialData()]);
@@ -6368,8 +6369,8 @@ export function ScriptWorkspace() {
         <div className="space-y-4">
           <p className="text-sm leading-7 text-text-muted">
             {lang === 'ar'
-              ? 'هذا الإجراء سيُنشئ شهادة الاعتماد تلقائياً، ثم تُحفظ حتى يدفع المستفيد رسوم الشهادة. هل تريد المتابعة؟'
-              : 'This action will generate the approval certificate automatically, then keep it stored until the client pays the certificate fee. Do you want to continue?'}
+              ? 'هل تريد توليد وإرسال الشهادة إلى المستفيد؟ إذا اخترت "لا"، لن يتم اعتماد النص وسيبقى في حالته الحالية.'
+              : 'Do you want to generate and send the certificate to the beneficiary? If you choose "No", the script will not be approved and will remain in its current status.'}
           </p>
           <div className="flex items-center gap-2">
             <Button
