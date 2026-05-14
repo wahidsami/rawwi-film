@@ -1727,12 +1727,70 @@ export async function runAggregation(jobId: string): Promise<void> {
   const clientName = scriptData?.clients?.name_ar || scriptData?.clients?.name_en;
   const scriptTitle = scriptData?.title;
 
+  const finalizeRevisionCycleReanalysis = async (reportId: string | null): Promise<void> => {
+    if (!reportId) return;
+    const scriptId = (job as { script_id: string }).script_id;
+    const { data: linkedCycle } = await supabase
+      .from("script_revision_cycles")
+      .select("id, status")
+      .eq("script_id", scriptId)
+      .eq("reanalyzed_job_id", jobId)
+      .order("cycle_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!linkedCycle) return;
+
+    const nextStatus = String((linkedCycle as { status?: string | null }).status ?? "").toLowerCase() === "closed"
+      ? "closed"
+      : "reanalyzed";
+    const reanalyzedAt = new Date().toISOString();
+    const { error: cycleUpdateErr } = await supabase
+      .from("script_revision_cycles")
+      .update({
+        status: nextStatus,
+        reanalyzed_report_id: reportId,
+        reanalyzed_at: reanalyzedAt,
+        updated_at: reanalyzedAt,
+      })
+      .eq("id", (linkedCycle as { id: string }).id);
+    if (cycleUpdateErr) {
+      logger.warn("Failed to update revision cycle with reanalysis result", {
+        jobId,
+        reportId,
+        error: cycleUpdateErr.message,
+      });
+      return;
+    }
+
+    const { error: cycleEventErr } = await supabase
+      .from("script_revision_cycle_events")
+      .insert({
+        cycle_id: (linkedCycle as { id: string }).id,
+        script_id: scriptId,
+        event_type: "admin_reanalysis_completed",
+        actor_user_id: (job as { created_by?: string | null }).created_by ?? null,
+        payload: {
+          job_id: jobId,
+          report_id: reportId,
+        },
+        created_at: reanalyzedAt,
+      });
+    if (cycleEventErr) {
+      logger.warn("Failed to write admin_reanalysis_completed event", {
+        jobId,
+        reportId,
+        error: cycleEventErr.message,
+      });
+    }
+  };
+
   const { data: existing } = await supabase
     .from("analysis_reports")
     .select("id")
     .eq("job_id", jobId)
     .single();
   if (existing) {
+    await finalizeRevisionCycleReanalysis((existing as { id?: string } | null)?.id ?? null);
     await supabase
       .from("analysis_jobs")
       .update({ status: "completed", completed_at: new Date().toISOString() })
@@ -1917,6 +1975,7 @@ export async function runAggregation(jobId: string): Promise<void> {
   const reportId = (savedReport as { id?: string } | null)?.id ?? null;
   if (reportId) {
     await materializeReviewFindings(reportId, summary, job.version_id, fullScriptText);
+    await finalizeRevisionCycleReanalysis(reportId);
   }
 
   if (!isPartialReport) {
