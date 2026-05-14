@@ -1441,7 +1441,7 @@ export function ClientPortal() {
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80 md:text-base">
               {lang === 'ar'
-                ? 'أصبحت بوابة العميل جاهزة لاستقبال أعمالك ومتابعة حالتها خطوة بخطوة، من رفع النص وحتى التقرير والشهادات، بتجربة واضحة ومرتبطة مباشرة بفريق المراجعة.'
+                ? 'أصبحت بوابة المستفيد جاهزة لاستقبال أعمالك ومتابعة حالتها خطوة بخطوة، من رفع النص وحتى التقرير والشهادات، بتجربة واضحة ومرتبطة مباشرة بفريق المراجعة.'
                 : 'Your client portal is ready for new work, with clear tracking from script upload through review reports and certificates, all connected directly to the review team.'}
             </p>
           </div>
@@ -1576,7 +1576,7 @@ export function ClientPortal() {
                 <div>
                   <p className="font-semibold">{lang === 'ar' ? 'الإشعارات' : 'Notifications'}</p>
                   <p className="mt-1 text-sm leading-6 text-text-muted">
-                    {lang === 'ar' ? 'سنفصل تنبيهات العميل لاحقًا بدل الاعتماد على متابعة الحالة يدويًا.' : 'Client notifications will be separated into their own stream in a later phase.'}
+                    {lang === 'ar' ? 'سنفصل تنبيهات المستفيد لاحقًا بدل الاعتماد على متابعة الحالة يدويًا.' : 'Beneficiary notifications will be separated into their own stream in a later phase.'}
                   </p>
                 </div>
               </div>

@@ -37,7 +37,7 @@ export function ClientForgotPassword() {
           <h1 className="text-2xl font-bold text-text-main">{lang === 'ar' ? 'تحقق من بريدك الإلكتروني' : 'Check your email'}</h1>
           <p className="text-text-muted">{email}</p>
           <Link to="/client/login" className="text-sm text-primary hover:underline block mt-4">
-            {lang === 'ar' ? 'العودة لتسجيل دخول العملاء' : 'Back to Client Login'}
+            {lang === 'ar' ? 'العودة لتسجيل دخول المستفيدين' : 'Back to Beneficiary Login'}
           </Link>
         </div>
       </div>
@@ -63,7 +63,7 @@ export function ClientForgotPassword() {
           </form>
           <div className="mt-6 text-center space-y-2">
             <Link to="/client/login" className="text-sm text-primary hover:underline block">
-              {lang === 'ar' ? 'العودة لتسجيل دخول العملاء' : 'Back to Client Login'}
+              {lang === 'ar' ? 'العودة لتسجيل دخول المستفيدين' : 'Back to Beneficiary Login'}
             </Link>
             <Link to="/" className="text-sm text-text-muted hover:text-text-main block">
               {lang === 'ar' ? 'العودة للرئيسية' : 'Back to main'}

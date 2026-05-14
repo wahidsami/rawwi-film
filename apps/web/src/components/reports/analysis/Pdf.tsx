@@ -109,7 +109,7 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
             <View style={s.coverMetaBlock}>
               <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير التحليل" : "Analysis Report"}</Text>
               <Text style={[s.coverText, rtl]}>{data.scriptTitle}</Text>
-              <Text style={[s.coverText, rtl]}>{isAr ? `العميل: ${data.clientName}` : `Client: ${data.clientName}`}</Text>
+              <Text style={[s.coverText, rtl]}>{isAr ? `المستفيد: ${data.clientName}` : `Beneficiary: ${data.clientName}`}</Text>
               <Text style={[s.coverText, rtl]}>
                 {dateFormat ? formatDate(new Date(data.createdAt), { lang: isAr ? "ar" : "en", format: dateFormat }) : formatDateLong(new Date(data.createdAt), { lang: isAr ? "ar" : "en" })}
               </Text>

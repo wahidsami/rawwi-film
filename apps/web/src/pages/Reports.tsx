@@ -133,7 +133,7 @@ function Reports() {
 
       await downloadAnalysisPdf({
         scriptTitle: fullReport.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
-        clientName: fullReport.clientName || (isAr ? 'عميل' : 'Client'),
+        clientName: fullReport.clientName || (isAr ? 'مستفيد' : 'Beneficiary'),
         createdAt: fullReport.createdAt,
         logoUrl: settings?.branding?.logoUrl,
         findings,
@@ -187,7 +187,7 @@ function Reports() {
       } catch { /* export can fall back to raw/summary */ }
       await downloadAnalysisWord({
         scriptTitle: fullReport.scriptTitle || (lang === 'ar' ? 'تحليل النص' : 'Script Analysis'),
-        clientName: fullReport.clientName || (lang === 'ar' ? 'عميل' : 'Client'),
+        clientName: fullReport.clientName || (lang === 'ar' ? 'مستفيد' : 'Beneficiary'),
         createdAt: fullReport.createdAt,
         logoUrl: '/fclogo.png',
         scriptType: scriptMeta?.type ?? null,

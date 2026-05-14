@@ -40,7 +40,7 @@ export const ClientsSectionPdf: React.FC<ClientsSectionPdfProps> = (props) => {
           ) : null}
           <View style={{ position: "absolute", left: 44, right: 44, bottom: 92 }}>
             <View style={s.coverMetaBlock}>
-              <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير محفظة العملاء" : "Clients Portfolio Report"}</Text>
+              <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير محفظة المستفيدين" : "Beneficiaries Portfolio Report"}</Text>
               <Text style={[s.coverText, rtl]}>{dateStr}</Text>
             </View>
           </View>
@@ -48,18 +48,18 @@ export const ClientsSectionPdf: React.FC<ClientsSectionPdfProps> = (props) => {
       </Page>
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
         {props.logoUrl ? <Image src={props.logoUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 10 }} /> : null}
-        <Text style={[s.title, rtl]}>{isAr ? "تقرير محفظة العملاء" : "Clients Portfolio Report"}</Text>
+        <Text style={[s.title, rtl]}>{isAr ? "تقرير محفظة المستفيدين" : "Beneficiaries Portfolio Report"}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? "الملخص التنفيذي" : "Executive Summary"}</Text>
         <View style={s.statRow}>
-          <View style={s.stat}><Text style={s.statValue}>{props.totalClients}</Text><Text style={s.statLabel}>{isAr ? "إجمالي العملاء" : "Total Clients"}</Text></View>
+          <View style={s.stat}><Text style={s.statValue}>{props.totalClients}</Text><Text style={s.statLabel}>{isAr ? "إجمالي المستفيدين" : "Total Beneficiaries"}</Text></View>
           <View style={s.stat}><Text style={s.statValue}>{props.totalScripts}</Text><Text style={s.statLabel}>{isAr ? "إجمالي النصوص" : "Total Scripts"}</Text></View>
           <View style={s.stat}><Text style={s.statValue}>{props.avgScripts}</Text><Text style={s.statLabel}>{isAr ? "متوسط النصوص" : "Avg Scripts"}</Text></View>
-          <View style={s.stat}><Text style={s.statValue}>{props.activeClients}</Text><Text style={s.statLabel}>{isAr ? "عملاء نشطون" : "Active Clients"}</Text></View>
+          <View style={s.stat}><Text style={s.statValue}>{props.activeClients}</Text><Text style={s.statLabel}>{isAr ? "عملاء نشطون" : "Active Beneficiaries"}</Text></View>
         </View>
 
         <View style={s.table}>
           <View style={s.tr}>
-            <Text style={[s.th, s.col1, rtl]}>{isAr ? "اسم العميل" : "Client Name"}</Text>
+            <Text style={[s.th, s.col1, rtl]}>{isAr ? "اسم المستفيد" : "Beneficiary Name"}</Text>
             <Text style={[s.th, s.col2, rtl]}>{isAr ? "المندوب" : "Representative"}</Text>
             <Text style={[s.th, s.col3, rtl]}>{isAr ? "الاتصال" : "Contact"}</Text>
             <Text style={[s.th, s.col4, rtl]}>{isAr ? "التسجيل" : "Registration"}</Text>

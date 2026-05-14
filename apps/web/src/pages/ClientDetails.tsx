@@ -604,7 +604,7 @@ export function ClientDetails() {
             </h3>
             <p className="text-text-muted max-w-sm mb-6">
               {isPortalClient
-                ? (lang === 'ar' ? 'سيتم عرض النصوص هنا بعد أن يرسلها العميل من بوابة العملاء.' : 'Scripts will appear here after the client submits them from the client portal.')
+                ? (lang === 'ar' ? 'سيتم عرض النصوص هنا بعد أن يرسلها المستفيد من بوابة المستفيدين.' : 'Scripts will appear here after the client submits them from the client portal.')
                 : (lang === 'ar' ? 'قم برفع أول نص للبدء في عملية التحليل.' : 'Upload the first script to start the analysis process.')}
             </p>
             {canAddScript && (
@@ -835,7 +835,7 @@ export function ClientDetails() {
                     ? (lang === 'ar' ? 'تحليل سريع' : 'Quick analysis')
                     : ownerCompany
                       ? (lang === 'ar' ? ownerCompany.nameAr : ownerCompany.nameEn)
-                      : (lang === 'ar' ? 'عميل غير معروف' : 'Unknown client');
+                      : (lang === 'ar' ? 'مستفيد غير معروف' : 'Unknown client');
                   return (
                     <div key={script.id} className="rounded-lg border border-border bg-background px-3 py-2 text-xs text-text-muted">
                       {[script.title, contextLabel, formatOptionalClientDate(script.createdAt, lang === 'ar' ? 'ar' : 'en', settings?.platform?.dateFormat)].filter(Boolean).join(' • ')}

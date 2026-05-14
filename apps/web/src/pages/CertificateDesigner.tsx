@@ -277,7 +277,7 @@ export function CertificateDesigner() {
     color: lang === 'ar' ? 'اللون' : 'Color',
     logoSource: lang === 'ar' ? 'مصدر الشعار' : 'Logo source',
     filmCommission: lang === 'ar' ? 'هيئة الأفلام' : 'Film Commission',
-    clientLogo: lang === 'ar' ? 'شعار العميل' : 'Client Logo',
+    clientLogo: lang === 'ar' ? 'شعار المستفيد' : 'Beneficiary Logo',
     uploadedLogo: lang === 'ar' ? 'شعار مرفوع' : 'Uploaded Logo',
     uploadLogo: lang === 'ar' ? 'رفع شعار' : 'Upload logo',
     uploadImage: lang === 'ar' ? 'رفع صورة' : 'Upload image',

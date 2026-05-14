@@ -242,7 +242,7 @@ function TemplateElementPdf({ element, item, lang, page, template, qrDataUrl, fo
     }
     return (
       <View style={[boxStyle, { borderWidth: 1, borderColor: '#d1d5db', alignItems: 'center', justifyContent: 'center' }]}>
-        <Text style={{ fontSize: 10, color: '#6b7280' }}>{lang === 'ar' ? 'شعار العميل' : 'Client Logo'}</Text>
+        <Text style={{ fontSize: 10, color: '#6b7280' }}>{lang === 'ar' ? 'شعار المستفيد' : 'Beneficiary Logo'}</Text>
       </View>
     );
   }

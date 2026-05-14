@@ -76,8 +76,8 @@ export function InternalClientEdit() {
     if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl);
   }, [logoPreviewUrl]);
 
-  if (!company) return <div className="p-8 text-center text-text-muted">{lang === 'ar' ? 'العميل غير موجود' : 'Client not found'}</div>;
-  if ((company.source ?? 'internal') !== 'internal') return <div className="p-8 text-center text-text-muted">{lang === 'ar' ? 'يمكن تعديل العملاء الداخليين فقط' : 'Only internal clients can be edited here'}</div>;
+  if (!company) return <div className="p-8 text-center text-text-muted">{lang === 'ar' ? 'المستفيد غير موجود' : 'Beneficiary not found'}</div>;
+  if ((company.source ?? 'internal') !== 'internal') return <div className="p-8 text-center text-text-muted">{lang === 'ar' ? 'يمكن تعديل المستفيدين الداخليين فقط' : 'Only internal clients can be edited here'}</div>;
 
   const setField = (key: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -151,7 +151,7 @@ export function InternalClientEdit() {
         await companiesApi.uploadCompanyLegalDocument(company.companyId, 'national_address', nationalAddressDocument);
       }
       await fetchInitialData();
-      toast.success(lang === 'ar' ? 'تم تحديث بيانات العميل' : 'Client updated');
+      toast.success(lang === 'ar' ? 'تم تحديث بيانات المستفيد' : 'Beneficiary updated');
       navigate(`/clients/${company.companyId}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل التحديث' : 'Update failed'));
@@ -166,7 +166,7 @@ export function InternalClientEdit() {
         <Button variant="ghost" className="px-2" onClick={() => navigate(`/clients/${company.companyId}`)} aria-label="Back">
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </Button>
-        <h1 className="text-2xl font-bold text-text-main">{lang === 'ar' ? 'تعديل بيانات العميل' : 'Edit Client Data'}</h1>
+        <h1 className="text-2xl font-bold text-text-main">{lang === 'ar' ? 'تعديل بيانات المستفيد' : 'Edit Beneficiary Data'}</h1>
       </div>
 
       <Card>

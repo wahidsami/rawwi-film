@@ -142,7 +142,7 @@ export function Clients() {
   const handleOpenEditPage = (event: React.MouseEvent, client: Company) => {
     event.stopPropagation();
     if ((client.source ?? 'internal') !== 'internal') {
-      toast.error(lang === 'ar' ? 'يمكن تعديل العملاء الداخليين فقط من هنا' : 'Only internal clients can be edited here');
+      toast.error(lang === 'ar' ? 'يمكن تعديل المستفيدين الداخليين فقط من هنا' : 'Only internal clients can be edited here');
       return;
     }
     navigate(`/clients/${client.companyId}/edit`);
@@ -169,7 +169,7 @@ export function Clients() {
     setActionId(client.companyId);
     try {
       await companiesApi.approveCompany(client.companyId);
-      toast.success(lang === 'ar' ? 'تم اعتماد العميل وإرسال بريد القبول' : 'Client approved and acceptance email sent');
+      toast.success(lang === 'ar' ? 'تم اعتماد المستفيد وإرسال بريد القبول' : 'Beneficiary approved and acceptance email sent');
       await fetchInitialData();
       setActiveTab('clients');
     } catch (err) {
@@ -188,7 +188,7 @@ export function Clients() {
     setActionId(rejectClient.companyId);
     try {
       await companiesApi.rejectCompany(rejectClient.companyId, rejectionReason.trim());
-      toast.success(lang === 'ar' ? 'تم رفض الطلب وإرسال السبب للعميل' : 'Request rejected and reason emailed to client');
+      toast.success(lang === 'ar' ? 'تم رفض الطلب وإرسال السبب للمستفيد' : 'Request rejected and reason emailed to client');
       setRejectClient(null);
       setRejectionReason('');
       await fetchInitialData();
@@ -201,8 +201,8 @@ export function Clients() {
 
   const tabs: Array<{ id: ClientTab; label: string; count: number }> = [
     { id: 'new', label: lang === 'ar' ? 'الجدد' : 'New', count: portalPendingOrRejected.length },
-    { id: 'clients', label: lang === 'ar' ? 'العملاء' : 'Clients', count: portalApproved.length },
-    { id: 'internal', label: lang === 'ar' ? 'عملاء داخليون' : 'Internal Clients', count: internalClients.length },
+    { id: 'clients', label: lang === 'ar' ? 'المستفيدين' : 'Beneficiaries', count: portalApproved.length },
+    { id: 'internal', label: lang === 'ar' ? 'عملاء داخليون' : 'Internal Beneficiaries', count: internalClients.length },
   ];
 
   const renderActions = (client: Company) => {
@@ -236,14 +236,14 @@ export function Clients() {
         <button
           onClick={(event) => handleOpenEditPage(event, client)}
           className="rounded-md p-1.5 text-text-muted transition-colors hover:bg-primary/10 hover:text-primary"
-          aria-label="Edit Client"
+          aria-label="Edit Beneficiary"
         >
           <Edit2 className="h-4 w-4" />
         </button>
         <button
           onClick={(event) => void handleDeleteClient(event, client)}
           className="rounded-md p-1.5 text-text-muted transition-colors hover:bg-error/10 hover:text-error"
-          aria-label="Delete Client"
+          aria-label="Delete Beneficiary"
         >
           <Trash2 className="h-4 w-4" />
         </button>
@@ -307,7 +307,7 @@ export function Clients() {
       <div className="dashboard-page-header flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-text-main">{t('clients')}</h1>
-          <p className="mt-1 text-text-muted">{lang === 'ar' ? 'إدارة طلبات التسجيل والعملاء والشركات الداخلية' : 'Manage registration requests, portal clients, and internal companies'}</p>
+          <p className="mt-1 text-text-muted">{lang === 'ar' ? 'إدارة طلبات التسجيل والمستفيدين والشركات الداخلية' : 'Manage registration requests, portal clients, and internal companies'}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -334,7 +334,7 @@ export function Clients() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{lang === 'ar' ? 'عملاء البوابة' : 'Portal Clients'}</CardTitle>
+            <CardTitle className="text-sm font-medium">{lang === 'ar' ? 'عملاء البوابة' : 'Portal Beneficiaries'}</CardTitle>
             <Building2 className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent><div className="text-2xl font-bold text-text-main">{portalApproved.length}</div></CardContent>

@@ -2232,7 +2232,7 @@ export function ScriptWorkspace() {
           shareReportIds: rejectDecisionShareReports ? rejectDecisionReportIds : [],
         },
       );
-      toast.success(lang === 'ar' ? 'تم رفض النص وإرسال الملاحظات للعميل' : 'Script rejected and client feedback saved');
+      toast.success(lang === 'ar' ? 'تم رفض النص وإرسال الملاحظات للمستفيد' : 'Script rejected and client feedback saved');
 
       if (selectedReportForHighlights?.id === rejectDecisionReportId) {
         setSelectedReportForHighlights((prev) =>
@@ -5234,7 +5234,7 @@ export function ScriptWorkspace() {
         {isClientCanceledScript && (
           <div className="absolute top-0 left-0 right-0 z-20 bg-error/15 border-b border-error/40 px-4 py-2 text-sm text-error">
             {lang === 'ar'
-              ? 'تم إلغاء هذا النص من قبل العميل. تم إيقاف إجراءات مساحة العمل.'
+              ? 'تم إلغاء هذا النص من قبل المستفيد. تم إيقاف إجراءات مساحة العمل.'
               : 'This script was canceled by the client. Workspace actions are disabled.'}
           </div>
         )}
@@ -5717,7 +5717,7 @@ export function ScriptWorkspace() {
                 </div>
                 <p className="text-[11px] text-text-muted leading-5">
                   {lang === 'ar'
-                    ? `آخر تقرير ${previousReviewInsight.latestDate ? `بتاريخ ${previousReviewInsight.latestDate}` : 'مسجل'} بواسطة ${previousReviewInsight.latestActor} للعميل ${previousReviewInsight.clientLabel}.`
+                    ? `آخر تقرير ${previousReviewInsight.latestDate ? `بتاريخ ${previousReviewInsight.latestDate}` : 'مسجل'} بواسطة ${previousReviewInsight.latestActor} للمستفيد ${previousReviewInsight.clientLabel}.`
                     : `Latest report ${previousReviewInsight.latestDate ? `on ${previousReviewInsight.latestDate}` : 'recorded'} by ${previousReviewInsight.latestActor} for client ${previousReviewInsight.clientLabel}.`}
                 </p>
                 {previousReviewInsight.hasExternalReview && (
@@ -6368,7 +6368,7 @@ export function ScriptWorkspace() {
         <div className="space-y-4">
           <p className="text-sm leading-7 text-text-muted">
             {lang === 'ar'
-              ? 'هذا الإجراء سيُنشئ شهادة الاعتماد تلقائياً، ثم تُحفظ حتى يدفع العميل رسوم الشهادة. هل تريد المتابعة؟'
+              ? 'هذا الإجراء سيُنشئ شهادة الاعتماد تلقائياً، ثم تُحفظ حتى يدفع المستفيد رسوم الشهادة. هل تريد المتابعة؟'
               : 'This action will generate the approval certificate automatically, then keep it stored until the client pays the certificate fee. Do you want to continue?'}
           </p>
           <div className="flex items-center gap-2">
@@ -6393,7 +6393,7 @@ export function ScriptWorkspace() {
       <Modal
         isOpen={rejectDecisionReportId != null}
         onClose={closeRejectDecisionModal}
-        title={lang === 'ar' ? 'رفض النص وإرسال الملاحظات للعميل' : 'Reject Script & Send Client Feedback'}
+        title={lang === 'ar' ? 'رفض النص وإرسال الملاحظات للمستفيد' : 'Reject Script & Send Beneficiary Feedback'}
       >
         <div className="space-y-4">
           <Textarea
@@ -6405,11 +6405,11 @@ export function ScriptWorkspace() {
           />
 
           <Textarea
-            label={lang === 'ar' ? 'ملاحظة للعميل (اختياري)' : 'Client comment (optional)'}
+            label={lang === 'ar' ? 'ملاحظة للمستفيد (اختياري)' : 'Beneficiary comment (optional)'}
             value={rejectDecisionClientComment}
             onChange={(e) => setRejectDecisionClientComment(e.target.value)}
             rows={3}
-            placeholder={lang === 'ar' ? 'سيظهر هذا النص للعميل في بوابة العميل.' : 'This message will be shown to the client in their portal.'}
+            placeholder={lang === 'ar' ? 'سيظهر هذا النص للمستفيد في بوابة المستفيد.' : 'This message will be shown to the client in their portal.'}
           />
 
           <div className="rounded-md border border-border bg-background p-3 space-y-3">
@@ -6648,7 +6648,7 @@ export function ScriptWorkspace() {
                 </p>
                 <p className="text-xs leading-6 text-text-muted">
                   {lang === 'ar'
-                    ? 'أزلنا العرض الحي للنص الحالي لتبسيط النافذة على فريق العميل. ستظهر هنا المؤشرات الأهم فقط: النمط، التقدم، المدة، والأجزاء المنجزة.'
+                    ? 'أزلنا العرض الحي للنص الحالي لتبسيط النافذة على فريق المستفيد. ستظهر هنا المؤشرات الأهم فقط: النمط، التقدم، المدة، والأجزاء المنجزة.'
                     : 'The live text preview was removed to keep this dialog simpler for client-facing teams. Only the most useful indicators stay visible here: mode, progress, timing, and completed chunks.'}
                 </p>
                 {(analysisJob?.manualReviewContextCount ?? 0) > 0 && (

@@ -519,7 +519,7 @@ export function Results() {
       setRejectDecisionShareReports(true);
       setRejectDecisionAvailableReports([]);
       setRejectDecisionSelectedReportIds([]);
-      toast.success(lang === 'ar' ? 'تم رفض النص وحفظ ملاحظات العميل' : 'Script rejected and client notes saved');
+      toast.success(lang === 'ar' ? 'تم رفض النص وحفظ ملاحظات المستفيد' : 'Script rejected and client notes saved');
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تنفيذ قرار الرفض' : 'Failed to reject script'));
     } finally {
@@ -1215,7 +1215,7 @@ export function Results() {
 
       // Metadata from summary (backend may attach client_name/script_title at top level or under metadata)
       const sum = summary as typeof summary & { client_name?: string; script_title?: string; scriptTitle?: string; metadata?: { client_name?: string } };
-      const clientNameRaw = report.clientName || sum.client_name || sum.metadata?.client_name || (isAr ? 'عميل' : 'Client');
+      const clientNameRaw = report.clientName || sum.client_name || sum.metadata?.client_name || (isAr ? 'مستفيد' : 'Beneficiary');
       const scriptTitleRaw = report.scriptTitle || sum.script_title || sum.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis');
       const clientName = escapeHtmlSafe(clientNameRaw);
       const scriptTitle = escapeHtmlSafe(scriptTitleRaw);
@@ -1318,7 +1318,7 @@ export function Results() {
 
         // Labels
         '{{labels.reportTitle}}': isAr ? 'تقرير التحليل' : 'Analysis Report',
-        '{{labels.client}}': isAr ? 'العميل' : 'Client',
+        '{{labels.client}}': isAr ? 'المستفيد' : 'Beneficiary',
         '{{labels.date}}': isAr ? 'التاريخ' : 'Date',
         '{{labels.executiveSummary}}': isAr ? 'ملخص التقرير' : 'Executive Summary',
         '{{labels.critical}}': isAr ? 'ملاحظات آلية' : 'AI findings',
@@ -1439,7 +1439,7 @@ export function Results() {
       }
       const basePayload = {
         scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
-        clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
+        clientName: report.clientName || (isAr ? 'مستفيد' : 'Beneficiary'),
         createdAt: report.createdAt,
         logoUrl: settings?.branding?.logoUrl,
         findings: (findings || []).filter((f): f is AnalysisFinding => Boolean(f)),
@@ -1599,7 +1599,7 @@ export function Results() {
       }
       const basePayload = {
         scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
-        clientName: report.clientName || (isAr ? 'عميل' : 'Client'),
+        clientName: report.clientName || (isAr ? 'مستفيد' : 'Beneficiary'),
         createdAt: report.createdAt,
         logoUrl: '/fclogo.png',
         scriptType: reportScriptMeta?.type ?? null,
@@ -2987,10 +2987,10 @@ export function Results() {
           />
 
           <Textarea
-            label={lang === 'ar' ? 'تعليق للعميل (اختياري)' : 'Client comment (optional)'}
+            label={lang === 'ar' ? 'تعليق للمستفيد (اختياري)' : 'Beneficiary comment (optional)'}
             value={rejectDecisionClientComment}
             onChange={(e) => setRejectDecisionClientComment(e.target.value)}
-            placeholder={lang === 'ar' ? 'اكتب ملاحظات واضحة تظهر للعميل في البوابة…' : 'Write clear notes that will be shown to the client…'}
+            placeholder={lang === 'ar' ? 'اكتب ملاحظات واضحة تظهر للمستفيد في البوابة…' : 'Write clear notes that will be shown to the client…'}
           />
 
           <div className="rounded-md border border-border bg-background p-3 space-y-3">
@@ -3000,7 +3000,7 @@ export function Results() {
                 checked={rejectDecisionShareReports}
                 onChange={(e) => setRejectDecisionShareReports(e.target.checked)}
               />
-              <span>{lang === 'ar' ? 'مشاركة تقرير/تقارير التحليل مع العميل' : 'Share analysis report(s) with client'}</span>
+              <span>{lang === 'ar' ? 'مشاركة تقرير/تقارير التحليل مع المستفيد' : 'Share analysis report(s) with client'}</span>
             </label>
 
             {rejectDecisionShareReports && (

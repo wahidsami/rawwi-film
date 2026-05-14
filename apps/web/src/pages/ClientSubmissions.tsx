@@ -57,7 +57,7 @@ export function ClientSubmissions() {
       const data = await clientPortalApi.getAdminSubmissions();
       setRows(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تحميل طلبات العملاء' : 'Failed to load client submissions'));
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تحميل طلبات المستفيدين' : 'Failed to load client submissions'));
     } finally {
       setIsLoading(false);
     }
@@ -166,11 +166,11 @@ export function ClientSubmissions() {
       <div className="dashboard-page-header flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between md:p-6">
         <div>
           <h1 className="text-2xl font-bold text-text-main">
-            {lang === 'ar' ? 'طلبات نصوص العملاء' : 'Client Script Submissions'}
+            {lang === 'ar' ? 'طلبات نصوص المستفيدين' : 'Beneficiary Script Submissions'}
           </h1>
           <p className="text-sm text-text-muted">
             {lang === 'ar'
-              ? 'قائمة طلبات شركات الإنتاج الواردة من بوابة العملاء للمراجعة والتحليل والاعتماد.'
+              ? 'قائمة طلبات شركات الإنتاج الواردة من بوابة المستفيدين للمراجعة والتحليل والاعتماد.'
               : 'Incoming submissions from production companies for review, analysis, and decision.'}
           </p>
         </div>
@@ -302,11 +302,11 @@ export function ClientSubmissions() {
           {decisionAction === 'reject' && (
             <>
               <Textarea
-                label={lang === 'ar' ? 'تعليق يظهر للعميل' : 'Client-facing comment'}
+                label={lang === 'ar' ? 'تعليق يظهر للمستفيد' : 'Beneficiary-facing comment'}
                 rows={3}
                 value={decisionClientComment}
                 onChange={(e) => setDecisionClientComment(e.target.value)}
-                placeholder={lang === 'ar' ? 'اكتب ملاحظات واضحة للعميل حول أسباب الرفض…' : 'Write clear feedback to client about the rejection…'}
+                placeholder={lang === 'ar' ? 'اكتب ملاحظات واضحة للمستفيد حول أسباب الرفض…' : 'Write clear feedback to client about the rejection…'}
               />
 
               <div className="dashboard-item-card space-y-3 p-3">
@@ -316,7 +316,7 @@ export function ClientSubmissions() {
                     checked={shareReportsToClient}
                     onChange={(e) => setShareReportsToClient(e.target.checked)}
                   />
-                  <span>{lang === 'ar' ? 'مشاركة تقرير/تقارير التحليل مع العميل' : 'Share analysis report(s) with client'}</span>
+                  <span>{lang === 'ar' ? 'مشاركة تقرير/تقارير التحليل مع المستفيد' : 'Share analysis report(s) with client'}</span>
                 </label>
 
                 {shareReportsToClient && (

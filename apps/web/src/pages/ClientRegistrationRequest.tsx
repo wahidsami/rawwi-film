@@ -90,7 +90,7 @@ export function ClientRegistrationRequest() {
     setActionId(company.companyId);
     try {
       await companiesApi.approveCompany(company.companyId);
-      toast.success(lang === 'ar' ? 'تم اعتماد العميل وإرسال بريد القبول' : 'Client approved and acceptance email sent');
+      toast.success(lang === 'ar' ? 'تم اعتماد المستفيد وإرسال بريد القبول' : 'Beneficiary approved and acceptance email sent');
       await fetchInitialData();
       navigate('/app/clients');
     } catch (err) {
@@ -108,7 +108,7 @@ export function ClientRegistrationRequest() {
     setActionId(company.companyId);
     try {
       await companiesApi.rejectCompany(company.companyId, rejectionReason.trim());
-      toast.success(lang === 'ar' ? 'تم رفض الطلب وإرسال السبب للعميل' : 'Request rejected and reason emailed to client');
+      toast.success(lang === 'ar' ? 'تم رفض الطلب وإرسال السبب للمستفيد' : 'Request rejected and reason emailed to client');
       await fetchInitialData();
       navigate('/app/clients');
     } catch (err) {

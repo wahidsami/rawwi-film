@@ -44,7 +44,7 @@ export function ClientModal({ isOpen, onClose, companyId }: ClientModalProps) {
   const { companies, addCompany, updateCompany } = useDataStore();
   const duplicateNameMessage =
     lang === 'ar'
-      ? 'يوجد عميل بهذا الاسم بالفعل'
+      ? 'يوجد مستفيد بهذا الاسم بالفعل'
       : 'There is already a client with this name';
 
   const existingCompany = companyId ? companies.find(c => c.companyId === companyId) : null;

@@ -30,7 +30,7 @@ export function ClientInfo() {
   const rows = [
     [isAr ? 'اسم الشركة بالعربية' : 'Company Arabic Name', company.nameAr],
     [isAr ? 'اسم الشركة بالإنجليزية' : 'Company English Name', company.nameEn],
-    [isAr ? 'مصدر العميل' : 'Client Source', company.source === 'portal' ? (isAr ? 'بوابة العملاء' : 'Client Portal') : (isAr ? 'إدخال داخلي' : 'Internal Entry')],
+    [isAr ? 'مصدر المستفيد' : 'Beneficiary Source', company.source === 'portal' ? (isAr ? 'بوابة المستفيدين' : 'Beneficiary Portal') : (isAr ? 'إدخال داخلي' : 'Internal Entry')],
     [isAr ? 'حالة الاعتماد' : 'Approval Status', company.approvalStatus ?? 'approved'],
     [isAr ? 'الموقع الإلكتروني' : 'Website', company.website],
     [isAr ? 'بريد الشركة' : 'Company Email', company.email],
@@ -60,7 +60,7 @@ export function ClientInfo() {
           />
           <div>
             <h1 className="text-2xl font-bold text-text-main">{isAr ? company.nameAr : company.nameEn}</h1>
-            <p className="mt-1 text-sm text-text-muted">{isAr ? 'معلومات العميل والبيانات القانونية' : 'Client information and legal profile'}</p>
+            <p className="mt-1 text-sm text-text-muted">{isAr ? 'معلومات المستفيد والبيانات القانونية' : 'Beneficiary information and legal profile'}</p>
           </div>
         </div>
         <Badge variant={company.approvalStatus === 'rejected' ? 'error' : company.approvalStatus === 'pending' ? 'warning' : 'success'}>
@@ -77,8 +77,8 @@ export function ClientInfo() {
           <CardContent className="flex items-center gap-3 p-5">
             <Building2 className="h-5 w-5 text-primary" />
             <div>
-              <p className="text-xs text-text-muted">{isAr ? 'نوع العميل' : 'Client Type'}</p>
-              <p className="font-semibold text-text-main">{company.source === 'portal' ? (isAr ? 'عميل بوابة' : 'Portal Client') : (isAr ? 'عميل داخلي' : 'Internal Client')}</p>
+              <p className="text-xs text-text-muted">{isAr ? 'نوع المستفيد' : 'Beneficiary Type'}</p>
+              <p className="font-semibold text-text-main">{company.source === 'portal' ? (isAr ? 'مستفيد بوابة' : 'Portal Beneficiary') : (isAr ? 'مستفيد داخلي' : 'Internal Beneficiary')}</p>
             </div>
           </CardContent>
         </Card>

@@ -54,7 +54,7 @@ export async function downloadClientDetailsPdf(params: {
 
   const blob = await pdf(doc).toBlob();
   const url = URL.createObjectURL(blob);
-  const safeTitle = (mapped.client.name || (params.lang === "ar" ? "عميل" : "client"))
+  const safeTitle = (mapped.client.name || (params.lang === "ar" ? "مستفيد" : "client"))
     .replace(/[\\/:*?"<>|]/g, " ")
     .replace(/\s+/g, "_")
     .slice(0, 80);

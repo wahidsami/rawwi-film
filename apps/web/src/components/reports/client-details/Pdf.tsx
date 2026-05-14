@@ -45,7 +45,7 @@ export const ClientDetailsSectionPdf: React.FC<ClientDetailsSectionPdfProps> = (
           ) : null}
           <View style={{ position: "absolute", left: 44, right: 44, bottom: 92 }}>
             <View style={s.coverMetaBlock}>
-              <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير العميل التفصيلي" : "Client Detailed Report"}</Text>
+              <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير المستفيد التفصيلي" : "Beneficiary Detailed Report"}</Text>
               <Text style={[s.coverText, rtl]}>{p.client.name}</Text>
               <Text style={[s.coverText, rtl]}>{formatDate(new Date(), { lang: p.lang, format: p.dateFormat })}</Text>
             </View>
@@ -54,10 +54,10 @@ export const ClientDetailsSectionPdf: React.FC<ClientDetailsSectionPdfProps> = (
       </Page>
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
         {p.dashboardLogoUrl ? <Image src={p.dashboardLogoUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 8 }} /> : null}
-        <Text style={[s.title, rtl]}>{isAr ? "تقرير العميل التفصيلي" : "Client Detailed Report"}</Text>
+        <Text style={[s.title, rtl]}>{isAr ? "تقرير المستفيد التفصيلي" : "Beneficiary Detailed Report"}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? `وقت الإنشاء: ${formatDateTime(new Date(p.generatedAt), { lang: p.lang })}` : `Generated: ${formatDateTime(new Date(p.generatedAt), { lang: p.lang })}`}</Text>
         <View style={s.profile}>
-          <Text style={[s.profileLine, rtl]}>{isAr ? `اسم العميل: ${p.client.name}` : `Client Name: ${p.client.name}`}</Text>
+          <Text style={[s.profileLine, rtl]}>{isAr ? `اسم المستفيد: ${p.client.name}` : `Beneficiary Name: ${p.client.name}`}</Text>
           <Text style={[s.profileLine, rtl]}>{isAr ? `المندوب: ${p.client.representative}` : `Representative: ${p.client.representative}`}</Text>
           <Text style={[s.profileLine, rtl]}>{isAr ? `البريد: ${p.client.email}` : `Email: ${p.client.email}`}</Text>
           <Text style={[s.profileLine, rtl]}>{isAr ? `الهاتف: ${p.client.phone}` : `Phone: ${p.client.phone}`}</Text>

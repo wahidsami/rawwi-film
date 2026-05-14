@@ -300,8 +300,8 @@ export function Landing() {
                 <Link
                   to="/client/login"
                   className="hidden text-sky-300 transition hover:text-sky-200 md:inline-flex"
-                  aria-label={isArabic ? 'تسجيل دخول العملاء' : 'Client login'}
-                  title={isArabic ? 'تسجيل دخول العملاء' : 'Client login'}
+                  aria-label={isArabic ? 'تسجيل دخول المستفيدين' : 'Beneficiary login'}
+                  title={isArabic ? 'تسجيل دخول المستفيدين' : 'Beneficiary login'}
                 >
                   <UserRound className="h-5 w-5" />
                 </Link>
@@ -707,7 +707,7 @@ export function Landing() {
             <div className="text-right">
               <h3 className="mb-2 text-xl text-white">{isArabic ? 'الوصول السريع' : 'Quick access'}</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><Link to="/client/login" className="transition hover:text-red-400">{isArabic ? 'دخول العملاء' : 'Client login'}</Link></li>
+                <li><Link to="/client/login" className="transition hover:text-red-400">{isArabic ? 'دخول المستفيدين' : 'Beneficiary login'}</Link></li>
                 <li><Link to="/portal/register" className="transition hover:text-red-400">{isArabic ? 'تسجيل شركة جديدة' : 'Register company'}</Link></li>
                 <li><Link to="/login" className="transition hover:text-red-400">{isArabic ? 'دخول هيئة الأفلام' : 'Film Commission login'}</Link></li>
                 <li><a href="#contact" className="transition hover:text-red-400">{isArabic ? 'ابدأ الآن' : 'Get started'}</a></li>

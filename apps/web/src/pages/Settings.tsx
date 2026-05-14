@@ -162,7 +162,7 @@ export default function Settings() {
     try {
       const response = await clientPortalApi.updateTerms(clientTerms);
       setClientTerms(response.terms);
-      toast.success(lang === 'ar' ? 'تم حفظ شروط تسجيل العملاء' : 'Client registration terms saved');
+      toast.success(lang === 'ar' ? 'تم حفظ شروط تسجيل المستفيدين' : 'Beneficiary registration terms saved');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر حفظ الشروط' : 'Failed to save terms'));
     } finally {
@@ -538,7 +538,7 @@ export default function Settings() {
 
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-text-main">
-                      {lang === 'ar' ? 'شروط تسجيل العملاء' : 'Client Registration Terms'}
+                      {lang === 'ar' ? 'شروط تسجيل المستفيدين' : 'Beneficiary Registration Terms'}
                     </h3>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <Textarea
@@ -600,7 +600,7 @@ export default function Settings() {
                         </h3>
                         <p className="text-sm text-text-muted">
                           {lang === 'ar'
-                            ? 'أي تصنيف تضيفه هنا سيظهر تلقائياً في قوائم إضافة النصوص للإدارة والعميل.'
+                            ? 'أي تصنيف تضيفه هنا سيظهر تلقائياً في قوائم إضافة النصوص للإدارة والمستفيد.'
                             : 'Any classification added here will automatically appear in script creation dropdowns for admins and clients.'}
                         </p>
                       </div>

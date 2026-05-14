@@ -48,9 +48,9 @@ export function ClientLogin() {
                 <img src="/fclogo.png" alt="FC" className="h-12 object-contain" />
               </div>
               <div className="space-y-1 text-center">
-                <h2 className="text-2xl font-bold tracking-tight">{lang === 'ar' ? 'دخول العميل' : 'Client Login'}</h2>
+                <h2 className="text-2xl font-bold tracking-tight">{lang === 'ar' ? 'دخول المستفيد' : 'Beneficiary Login'}</h2>
                 <p className="text-text-muted text-sm">
-                  {lang === 'ar' ? 'سجّل الدخول إلى بوابة العملاء' : 'Sign in to the client portal'}
+                  {lang === 'ar' ? 'سجّل الدخول إلى بوابة المستفيدين' : 'Sign in to the client portal'}
                 </p>
               </div>
 
@@ -81,7 +81,7 @@ export function ClientLogin() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-hover" />
             <div className="relative z-10 text-white text-center space-y-5">
               <img src="/loginlogo.png" alt="Raawi Film" className="h-24 mx-auto drop-shadow-xl" />
-              <h1 className="text-3xl font-bold tracking-tight">{lang === 'ar' ? 'بوابة العملاء' : 'Client Portal'}</h1>
+              <h1 className="text-3xl font-bold tracking-tight">{lang === 'ar' ? 'بوابة المستفيدين' : 'Beneficiary Portal'}</h1>
             </div>
           </div>
         </div>

@@ -144,14 +144,14 @@ export function Scripts() {
       <div className="dashboard-panel flex flex-col gap-4 rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-4 shadow-[0_16px_40px_rgba(31,23,36,0.04)] sm:flex-row">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={lang === 'ar' ? 'بحث عن نص أو عميل...' : 'Search scripts or clients...'} className="pl-10" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={lang === 'ar' ? 'بحث عن نص أو مستفيد...' : 'Search scripts or beneficiaries...'} className="pl-10" />
         </div>
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-text-muted" />
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="px-4 py-2 rounded-lg border border-border bg-surface/80 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20">
             <option value="date">{lang === 'ar' ? 'الأحدث' : 'Newest'}</option>
             <option value="title">{lang === 'ar' ? 'العنوان' : 'Title'}</option>
-            <option value="client">{lang === 'ar' ? 'العميل' : 'Client'}</option>
+            <option value="client">{lang === 'ar' ? 'المستفيد' : 'Beneficiary'}</option>
           </select>
         </div>
       </div>
@@ -209,7 +209,7 @@ export function Scripts() {
               <thead className="border-b border-border text-xs uppercase text-text-muted">
                 <tr>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'العنوان' : 'Title'}</th>
-                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'العميل' : 'Client'}</th>
+                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'المستفيد' : 'Beneficiary'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'الحالة' : 'Status'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'تاريخ الإنشاء' : 'Created'}</th>
                   <th className="px-6 py-4 font-medium text-end"></th>
