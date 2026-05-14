@@ -127,6 +127,45 @@ export interface ClientPortalRevisionCycleItem {
   updatedAt: string;
   snapshots: ClientPortalRevisionCycleSnapshot[];
   events: ClientPortalRevisionCycleEvent[];
+  sharedReports?: Array<{
+    id: string;
+    jobId: string;
+    reviewStatus: string;
+    reviewNotes?: string | null;
+    findingsCount: number;
+    severityCounts?: Record<string, number>;
+    createdAt: string;
+  }>;
+  sourceReport?: {
+    id: string;
+    jobId: string;
+    reviewStatus: string;
+    reviewNotes?: string | null;
+    findingsCount: number;
+    severityCounts?: Record<string, number>;
+    createdAt: string;
+  } | null;
+  reanalyzedReport?: {
+    id: string;
+    jobId: string;
+    reviewStatus: string;
+    reviewNotes?: string | null;
+    findingsCount: number;
+    severityCounts?: Record<string, number>;
+    createdAt: string;
+  } | null;
+  comparisonSummary?: {
+    baseline_findings?: number;
+    reanalyzed_findings?: number;
+    findings_delta?: number;
+    canonical?: {
+      baseline_count?: number;
+      reanalyzed_count?: number;
+      persisting_count?: number;
+      resolved_count?: number;
+      new_count?: number;
+    };
+  } | null;
 }
 
 export interface ClientPortalRevisionCyclesResponse {

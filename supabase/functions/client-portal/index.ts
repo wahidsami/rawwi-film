@@ -1020,13 +1020,13 @@ Deno.serve(async (req: Request) => {
 
     const { data: cycles, error: cyclesErr } = await supabase
       .from("script_revision_cycles")
-      .select("id, cycle_number, source_report_id, source_job_id, sent_by, sent_at, returned_at, status, admin_note, beneficiary_returned_version_id, created_at, updated_at")
+      .select("id, cycle_number, source_report_id, source_job_id, sent_by, sent_at, returned_at, status, admin_note, beneficiary_returned_version_id, reanalyzed_report_id, created_at, updated_at")
       .eq("script_id", scriptId)
       .order("cycle_number", { ascending: false });
     if (cyclesErr) return json({ error: cyclesErr.message }, 500);
 
     const cycleIds = (cycles ?? []).map((row: any) => row.id);
-    const [{ data: events }, { data: snapshots }, { data: profiles }] = await Promise.all([
+    const [{ data: events }, { data: snapshots }, { data: profiles }, { data: comparisons }] = await Promise.all([
       cycleIds.length > 0
         ? supabase
             .from("script_revision_cycle_events")
@@ -1046,6 +1046,13 @@ Deno.serve(async (req: Request) => {
           ? supabase.from("profiles").select("user_id, name").in("user_id", ids)
           : Promise.resolve({ data: [] as any[] });
       })(),
+      cycleIds.length > 0
+        ? supabase
+            .from("script_revision_cycle_comparisons")
+            .select("id, cycle_id, old_report_id, new_report_id, comparison_summary, created_at")
+            .in("cycle_id", cycleIds)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] }),
     ]);
 
     const eventsByCycle = new Map<string, any[]>();
@@ -1061,6 +1068,43 @@ Deno.serve(async (req: Request) => {
       snapshotsByCycle.set(row.cycle_id, bucket);
     }
     const profileNameById = new Map((profiles ?? []).map((row: any) => [row.user_id, row.name ?? null]));
+    const comparisonByCycle = new Map<string, any>();
+    for (const row of comparisons ?? []) {
+      if (!comparisonByCycle.has(row.cycle_id)) comparisonByCycle.set(row.cycle_id, row);
+    }
+
+    const sharedReportIdsByCycle = new Map<string, string[]>();
+    for (const [cycleId, cycleEvents] of eventsByCycle.entries()) {
+      const ids = new Set<string>();
+      for (const event of cycleEvents) {
+        const payload = (event?.payload ?? {}) as Record<string, unknown>;
+        const sharedIds = Array.isArray(payload.shared_report_ids)
+          ? payload.shared_report_ids.filter((id): id is string => typeof id === "string" && id.trim().length > 0)
+          : [];
+        for (const rid of sharedIds) ids.add(rid.trim());
+        if (typeof payload.source_report_id === "string" && payload.source_report_id.trim()) ids.add(payload.source_report_id.trim());
+      }
+      sharedReportIdsByCycle.set(cycleId, [...ids]);
+    }
+
+    const reportIds = new Set<string>();
+    for (const cycle of cycles ?? []) {
+      if (typeof cycle.source_report_id === "string" && cycle.source_report_id.trim()) reportIds.add(cycle.source_report_id.trim());
+      if (typeof cycle.reanalyzed_report_id === "string" && cycle.reanalyzed_report_id.trim()) reportIds.add(cycle.reanalyzed_report_id.trim());
+      for (const rid of sharedReportIdsByCycle.get(cycle.id) ?? []) reportIds.add(rid);
+    }
+    for (const comparison of comparisons ?? []) {
+      if (typeof comparison.old_report_id === "string" && comparison.old_report_id.trim()) reportIds.add(comparison.old_report_id.trim());
+      if (typeof comparison.new_report_id === "string" && comparison.new_report_id.trim()) reportIds.add(comparison.new_report_id.trim());
+    }
+
+    const { data: reportRows } = reportIds.size > 0
+      ? await supabase
+          .from("analysis_reports")
+          .select("id, job_id, review_status, review_notes, findings_count, severity_counts, created_at")
+          .in("id", [...reportIds])
+      : { data: [] as any[] };
+    const reportById = new Map((reportRows ?? []).map((row: any) => [row.id, row]));
 
     return json({
       script: {
@@ -1099,6 +1143,50 @@ Deno.serve(async (req: Request) => {
           payload: event.payload ?? {},
           createdAt: event.created_at,
         })),
+        sharedReports: (sharedReportIdsByCycle.get(cycle.id) ?? [])
+          .map((reportId) => {
+            const report = reportById.get(reportId);
+            if (!report) return null;
+            return {
+              id: report.id,
+              jobId: report.job_id,
+              reviewStatus: report.review_status ?? "under_review",
+              reviewNotes: report.review_notes ?? null,
+              findingsCount: Number(report.findings_count ?? 0) || 0,
+              severityCounts: report.severity_counts ?? {},
+              createdAt: report.created_at,
+            };
+          })
+          .filter(Boolean),
+        sourceReport: cycle.source_report_id && reportById.get(cycle.source_report_id)
+          ? (() => {
+              const report = reportById.get(cycle.source_report_id);
+              return {
+                id: report.id,
+                jobId: report.job_id,
+                reviewStatus: report.review_status ?? "under_review",
+                reviewNotes: report.review_notes ?? null,
+                findingsCount: Number(report.findings_count ?? 0) || 0,
+                severityCounts: report.severity_counts ?? {},
+                createdAt: report.created_at,
+              };
+            })()
+          : null,
+        reanalyzedReport: cycle.reanalyzed_report_id && reportById.get(cycle.reanalyzed_report_id)
+          ? (() => {
+              const report = reportById.get(cycle.reanalyzed_report_id);
+              return {
+                id: report.id,
+                jobId: report.job_id,
+                reviewStatus: report.review_status ?? "under_review",
+                reviewNotes: report.review_notes ?? null,
+                findingsCount: Number(report.findings_count ?? 0) || 0,
+                severityCounts: report.severity_counts ?? {},
+                createdAt: report.created_at,
+              };
+            })()
+          : null,
+        comparisonSummary: comparisonByCycle.get(cycle.id)?.comparison_summary ?? null,
       })),
     });
   }

@@ -2235,6 +2235,9 @@ export function ClientPortal() {
         </Card>
       );
     }
+    const activeRevisionCycle = submissionRevisionCycles.find((cycle) => cycle.status.toLowerCase() === 'sent') ?? null;
+    const hasRevisionCycles = submissionRevisionCycles.length > 0;
+    const isRevisionReadOnly = hasRevisionCycles && !activeRevisionCycle;
     return (
       <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
         <CardHeader>
@@ -2329,6 +2332,10 @@ export function ClientPortal() {
               <div className="space-y-2">
                 {submissionRevisionCycles.map((cycle) => {
                   const latestSnapshot = cycle.snapshots?.[0];
+                  const delta = typeof cycle.comparisonSummary?.findings_delta === 'number'
+                    ? cycle.comparisonSummary.findings_delta
+                    : null;
+                  const canonical = cycle.comparisonSummary?.canonical ?? null;
                   return (
                     <div key={cycle.id} className="rounded-md border border-border bg-surface p-3">
                       <div className="flex flex-wrap items-center gap-2">
@@ -2355,6 +2362,44 @@ export function ClientPortal() {
                           {latestSnapshot.findingsTotal}
                         </p>
                       ) : null}
+                      {canonical ? (
+                        <p className="mt-1 text-xs text-text-muted">
+                          {lang === 'ar' ? 'نتيجة المقارنة: ' : 'Comparison: '}
+                          <span className="text-success">
+                            {lang === 'ar' ? `معالجة ${canonical.resolved_count ?? 0}` : `resolved ${canonical.resolved_count ?? 0}`}
+                          </span>
+                          {' • '}
+                          <span className="text-warning">
+                            {lang === 'ar' ? `مستمرة ${canonical.persisting_count ?? 0}` : `persisting ${canonical.persisting_count ?? 0}`}
+                          </span>
+                          {' • '}
+                          <span className="text-error">
+                            {lang === 'ar' ? `جديدة ${canonical.new_count ?? 0}` : `new ${canonical.new_count ?? 0}`}
+                          </span>
+                          {delta != null ? (
+                            <>
+                              {' • '}
+                              <span className={delta <= 0 ? 'text-success' : 'text-warning'}>
+                                {lang === 'ar' ? `فرق الملاحظات ${delta > 0 ? '+' : ''}${delta}` : `findings delta ${delta > 0 ? '+' : ''}${delta}`}
+                              </span>
+                            </>
+                          ) : null}
+                        </p>
+                      ) : null}
+                      {cycle.sharedReports && cycle.sharedReports.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {cycle.sharedReports.map((report) => (
+                            <Button
+                              key={report.id}
+                              size="sm"
+                              variant="outline"
+                              onClick={() => navigate(`/report/${encodeURIComponent(report.jobId)}?by=job`)}
+                            >
+                              {lang === 'ar' ? `تقرير دورة ${cycle.cycleNumber}` : `Cycle ${cycle.cycleNumber} Report`}
+                            </Button>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   );
                 })}
@@ -2362,7 +2407,7 @@ export function ClientPortal() {
             )}
           </div>
 
-          {submissionRevisionCycles.find((cycle) => cycle.status.toLowerCase() === 'sent') ? (
+          {activeRevisionCycle ? (
             <div className="rounded-md border border-border bg-background p-3 space-y-3">
               <p className="text-sm font-semibold text-text-main">{lang === 'ar' ? 'إرسال نسخة معدلة' : 'Submit Revised Script'}</p>
               <p className="text-xs text-text-muted">
@@ -2393,13 +2438,21 @@ export function ClientPortal() {
                 </Button>
               </div>
             </div>
+          ) : hasRevisionCycles ? (
+            <div className="rounded-md border border-border bg-background p-3">
+              <p className="text-xs text-text-muted">
+                {lang === 'ar'
+                  ? 'هذا النص حالياً للعرض فقط. ستتفعّل إعادة الإرسال عند فتح دورة مراجعة جديدة من الإدارة.'
+                  : 'This script is currently read-only. Resubmission actions will re-enable when admin opens a new revision cycle.'}
+              </p>
+            </div>
           ) : null}
 
           <div className="flex items-center justify-end gap-2">
             <Button variant="outline" onClick={() => setActiveSection('scripts')}>
               {lang === 'ar' ? 'رجوع' : 'Back'}
             </Button>
-            <Button onClick={() => void startEditDraft(submissionDetailsItem)}>
+            <Button onClick={() => void startEditDraft(submissionDetailsItem)} disabled={isRevisionReadOnly}>
               {lang === 'ar' ? 'تعديل' : 'Edit'}
             </Button>
           </div>
