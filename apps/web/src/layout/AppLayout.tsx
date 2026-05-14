@@ -120,6 +120,7 @@ export function AppLayout() {
 
   const [notifUnreadCount, setNotifUnreadCount] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
+  const notifOpenRef = useRef(false);
   const [notifList, setNotifList] = useState<NotificationItem[]>([]);
   const notifRef = useRef<HTMLDivElement>(null);
   const [notifPanelStyle, setNotifPanelStyle] = useState<{ top: number; left: number; width: number } | null>(null);
@@ -140,13 +141,17 @@ export function AppLayout() {
   }, []);
 
   useEffect(() => {
+    notifOpenRef.current = notifOpen;
+  }, [notifOpen]);
+
+  useEffect(() => {
     if (!user?.id) return;
 
     const channel = supabase
       .channel(`notifications:${user.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
         notificationsApi.getUnreadCount().then(r => setNotifUnreadCount(r.unreadCount)).catch(() => {});
-        if (notifOpen) {
+        if (notifOpenRef.current) {
           notificationsApi.getList().then(r => {
             setNotifList(r.data);
             setNotifUnreadCount(r.unreadCount);
@@ -158,7 +163,7 @@ export function AppLayout() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, notifOpen]);
+  }, [user?.id]);
 
   const openNotifPanel = useCallback(() => {
     const nextOpen = !notifOpen;
