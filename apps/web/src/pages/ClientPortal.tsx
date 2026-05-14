@@ -1277,6 +1277,7 @@ export function ClientPortal() {
         ? (file ? await uploadSupportingDocument(file) : existingScriptFileUrl)
         : existingScriptFileUrl;
 
+      let targetScriptId: string;
       if (editingDraft) {
         await scriptsApi.updateScript(editingDraft.scriptId, {
           title: form.title.trim(),
@@ -1289,8 +1290,9 @@ export function ClientPortal() {
           fileUrl: scriptFileUrl ?? undefined,
           expectedRank: form.expectedRank,
           synopsis: form.synopsis.trim(),
-          status: 'in_review',
+          status: 'draft',
         } as Partial<Script>);
+        targetScriptId = editingDraft.scriptId;
       } else {
         const scriptPayload: Script = {
           id: '',
@@ -1305,11 +1307,16 @@ export function ClientPortal() {
           fileUrl: scriptFileUrl ?? undefined,
           expectedRank: form.expectedRank,
           synopsis: form.synopsis.trim(),
-          status: 'in_review',
+          status: 'draft',
           createdAt: new Date().toISOString(),
         };
-        await scriptsApi.addScript(scriptPayload);
+        const created = await scriptsApi.addScript(scriptPayload);
+        targetScriptId = created.id;
       }
+
+      // Submit always follows a successful save so workspace/docx loading remains consistent.
+      await scriptsApi.updateScript(targetScriptId, { status: 'in_review' } as Partial<Script>);
+
       setNotice(lang === 'ar' ? 'تم إرسال النص للإدارة بنجاح.' : 'Script submitted to admin successfully.');
       setEditingDraft(null);
       setExistingScriptSummaryPdfUrl(null);
