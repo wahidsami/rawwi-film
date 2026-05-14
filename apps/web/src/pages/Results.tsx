@@ -655,7 +655,11 @@ export function Results() {
     }
     setReviewing(true);
     try {
-      await reportsApi.review(report.id, status, reviewNotes, updateScriptStatus);
+      if (status === 'approved' && report.scriptId) {
+        const approvalReason = reviewNotes || report.reviewNotes || (lang === 'ar' ? 'تمت الموافقة عبر صفحة التقرير' : 'Approved via report page');
+        await scriptsApi.makeDecision(report.scriptId, 'approve', approvalReason, report.id, { issueCertificate: true });
+      }
+      await reportsApi.review(report.id, status, reviewNotes, false);
       setReport({
         ...report,
         reviewStatus: status,
@@ -663,17 +667,18 @@ export function Results() {
         reviewedAt: new Date().toISOString(),
         reviewedBy: user?.id ?? null,
       });
-      toast.success(
-        status === 'approved' ? (lang === 'ar' ? 'تم قبول التقرير' : 'Report approved') :
-          status === 'rejected' ? (lang === 'ar' ? 'تم رفض التقرير' : 'Report rejected') :
-            (lang === 'ar' ? 'تمت إعادة التقرير للمراجعة' : 'Report sent back for review')
-      );
+      if (status === 'approved' && report.scriptId) {
+        toast.success(lang === 'ar' ? 'تم قبول التقرير وإصدار الشهادة' : 'Report approved and certificate issued');
+      } else {
+        toast.success(
+          status === 'approved' ? (lang === 'ar' ? 'تم قبول التقرير' : 'Report approved') :
+            status === 'rejected' ? (lang === 'ar' ? 'تم رفض التقرير' : 'Report rejected') :
+              (lang === 'ar' ? 'تمت إعادة التقرير للمراجعة' : 'Report sent back for review')
+        );
+      }
       if (status === 'under_review') {
         setReportReviewModalOpen(false);
         setReportReviewReason('');
-      }
-      if (updateScriptStatus) {
-        toast.success(lang === 'ar' ? 'تم تحديث حالة النص' : 'Script status updated');
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed');
