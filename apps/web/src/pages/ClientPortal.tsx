@@ -549,6 +549,8 @@ export function ClientPortal() {
   const [notificationFilter, setNotificationFilter] = useState<NotificationFilter>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isSubmittingScript, setIsSubmittingScript] = useState(false);
+  const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [uploaderKey, setUploaderKey] = useState(1);
@@ -1119,6 +1121,109 @@ export function ClientPortal() {
     setActiveSection('new-script');
   };
 
+  const handleSubmitToAdmin = async () => {
+    setNotice('');
+    setError('');
+    if (!profile?.company?.companyId) {
+      setError(lang === 'ar' ? 'تعذّر تحديد حساب المستفيد الحالي' : 'Unable to resolve your beneficiary account');
+      return;
+    }
+    if (!form.title.trim()) {
+      setError(lang === 'ar' ? 'عنوان النص مطلوب' : 'Script title is required');
+      return;
+    }
+    if (!scriptSummaryPdfFile && !existingScriptSummaryPdfUrl) {
+      setError(lang === 'ar' ? 'يجب إرفاق ملف PDF لملخص النص' : 'Script summary PDF is required');
+      return;
+    }
+    if (scriptSummaryPdfFile && scriptSummaryPdfFile.type !== 'application/pdf') {
+      setError(lang === 'ar' ? 'ملف ملخص النص يجب أن يكون PDF' : 'Script summary file must be PDF');
+      return;
+    }
+    if (requiresStorySummary && !form.storySummary.trim()) {
+      setError(lang === 'ar' ? 'ملخص النص مطلوب لهذا التصنيف' : 'Story summary is required for this work classification');
+      return;
+    }
+    if (form.storySummary.split(/\r?\n/).length > 3) {
+      setError(lang === 'ar' ? 'ملخص النص يجب ألا يتجاوز 3 أسطر' : 'Story summary must be at most 3 lines');
+      return;
+    }
+    if (form.hasSecurityScenes === 'yes' && !securityContentFile && !existingSecurityContentAttachmentUrl) {
+      setError(lang === 'ar' ? 'يرجى إرفاق المحتوى الأمني' : 'Please attach security content');
+      return;
+    }
+    if (entryMode === 'upload' && !file && !existingScriptFileUrl) {
+      setError(lang === 'ar' ? 'يرجى إرفاق ملف النص بصيغة Word DOCX' : 'Please upload the script file as Word DOCX');
+      return;
+    }
+    if (entryMode === 'paste' && !manualText.trim()) {
+      setError(lang === 'ar' ? 'يرجى لصق النص قبل الإرسال' : 'Please paste the script before submitting');
+      return;
+    }
+
+    setIsSubmittingScript(true);
+    try {
+      const scriptSummaryPdfUrl = scriptSummaryPdfFile
+        ? await uploadSupportingDocument(scriptSummaryPdfFile)
+        : existingScriptSummaryPdfUrl;
+      const securityContentAttachmentUrl = form.hasSecurityScenes === 'yes'
+        ? (
+          securityContentFile
+            ? await uploadSupportingDocument(securityContentFile)
+            : existingSecurityContentAttachmentUrl
+        )
+        : null;
+      const scriptFileUrl = entryMode === 'upload'
+        ? (file ? await uploadSupportingDocument(file) : existingScriptFileUrl)
+        : existingScriptFileUrl;
+
+      if (editingDraft) {
+        await scriptsApi.updateScript(editingDraft.scriptId, {
+          title: form.title.trim(),
+          type: form.type,
+          workClassification: form.workClassification,
+          storySummary: form.storySummary.trim() || undefined,
+          scriptSummaryPdfUrl,
+          hasSecurityScenes: form.hasSecurityScenes === 'yes',
+          securityContentAttachmentUrl: securityContentAttachmentUrl ?? undefined,
+          fileUrl: scriptFileUrl ?? undefined,
+          expectedRank: form.expectedRank,
+          synopsis: form.synopsis.trim(),
+          status: 'in_review',
+        } as Partial<Script>);
+      } else {
+        const scriptPayload: Script = {
+          id: '',
+          companyId: profile.company.companyId,
+          title: form.title.trim(),
+          type: form.type,
+          workClassification: form.workClassification,
+          storySummary: form.storySummary.trim() || undefined,
+          scriptSummaryPdfUrl,
+          hasSecurityScenes: form.hasSecurityScenes === 'yes',
+          securityContentAttachmentUrl: securityContentAttachmentUrl ?? undefined,
+          fileUrl: scriptFileUrl ?? undefined,
+          expectedRank: form.expectedRank,
+          synopsis: form.synopsis.trim(),
+          status: 'in_review',
+          createdAt: new Date().toISOString(),
+        };
+        await scriptsApi.addScript(scriptPayload);
+      }
+      setNotice(lang === 'ar' ? 'تم إرسال النص للإدارة بنجاح.' : 'Script submitted to admin successfully.');
+      setEditingDraft(null);
+      setExistingScriptSummaryPdfUrl(null);
+      setExistingSecurityContentAttachmentUrl(null);
+      setExistingScriptFileUrl(null);
+      await loadProfileAndSubmissions();
+      setActiveSection('scripts');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل إرسال النص' : 'Failed to submit script'));
+    } finally {
+      setIsSubmittingScript(false);
+    }
+  };
+
   const openSubmissionDetails = async (item: ClientPortalSubmissionItem) => {
     setSubmissionDetailsLoading(true);
     setSubmissionRevisionCyclesLoading(true);
@@ -1589,10 +1694,29 @@ export function ClientPortal() {
             </div>
           )}
           <div className="md:col-span-2 flex flex-wrap items-center gap-3">
-            <Button type="button" variant="outline" isLoading={isSavingDraft} onClick={handleSaveDraft}>
+            <Button
+              type="button"
+              variant="outline"
+              isLoading={isSavingDraft}
+              disabled={isSubmittingScript}
+              onClick={handleSaveDraft}
+            >
               {lang === 'ar' ? 'حفظ كمسودة' : 'Save Draft'}
             </Button>
-            <Button type="button" variant="outline" onClick={loadProfileAndSubmissions} disabled={isLoading || isSavingDraft}>
+            <Button
+              type="button"
+              isLoading={isSubmittingScript}
+              disabled={isSavingDraft}
+              onClick={() => setSubmitConfirmOpen(true)}
+            >
+              {lang === 'ar' ? 'إرسال للإدارة' : 'Submit to Admin'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={loadProfileAndSubmissions}
+              disabled={isLoading || isSavingDraft || isSubmittingScript}
+            >
               {lang === 'ar' ? 'تحديث' : 'Refresh'}
             </Button>
           </div>
@@ -2653,6 +2777,38 @@ export function ClientPortal() {
             );
           })()
         )}
+      </Modal>
+      <Modal
+        isOpen={submitConfirmOpen}
+        onClose={() => setSubmitConfirmOpen(false)}
+        title={lang === 'ar' ? 'تأكيد الإرسال للإدارة' : 'Confirm Submit to Admin'}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-muted">
+            {lang === 'ar'
+              ? 'سيتم إرسال النص إلى الإدارة للمراجعة. هل تريد المتابعة؟'
+              : 'This will send the script to admin for review. Do you want to continue?'}
+          </p>
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setSubmitConfirmOpen(false)}
+              disabled={isSubmittingScript}
+            >
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              onClick={() => {
+                setSubmitConfirmOpen(false);
+                void handleSubmitToAdmin();
+              }}
+              isLoading={isSubmittingScript}
+              disabled={isSavingDraft}
+            >
+              {lang === 'ar' ? 'متابعة' : 'Continue'}
+            </Button>
+          </div>
+        </div>
       </Modal>
       <Modal
         isOpen={scriptToDelete != null}
