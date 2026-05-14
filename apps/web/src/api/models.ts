@@ -38,6 +38,7 @@ export interface User {
 
 export interface Company {
   companyId: string;
+  beneficiaryType?: 'company' | 'individual';
   nameAr: string;
   nameEn: string;
   representativeName: string;

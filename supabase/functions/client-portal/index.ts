@@ -9,6 +9,7 @@ const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 const LOGO_MIMES = new Set(["image/png", "image/jpeg"]);
 const DOC_MAX_BYTES = 10 * 1024 * 1024;
 const DOC_MIMES = new Set(["application/pdf", "image/png", "image/jpeg"]);
+const PDF_MIMES = new Set(["application/pdf"]);
 const RESEND_API = "https://api.resend.com/emails";
 const FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
 
@@ -244,6 +245,8 @@ Deno.serve(async (req: Request) => {
     let body: Record<string, unknown> = {};
     let companyLogoFile: File | null = null;
     const legalFiles: Array<{ key: string; type: string; file: File }> = [];
+    let individualCvFile: File | null = null;
+    let individualIdDocumentFile: File | null = null;
 
     if (contentType.includes("multipart/form-data")) {
       let formData: FormData;
@@ -274,6 +277,13 @@ Deno.serve(async (req: Request) => {
         yearsOfExperience: formData.get("yearsOfExperience"),
         acceptedTerms: formData.get("acceptedTerms"),
         acceptedRegulations: formData.get("acceptedRegulations"),
+        beneficiaryType: formData.get("beneficiaryType"),
+        individualFullName: formData.get("individualFullName"),
+        individualDateOfBirth: formData.get("individualDateOfBirth"),
+        individualNationality: formData.get("individualNationality"),
+        individualNationalIdOrIqama: formData.get("individualNationalIdOrIqama"),
+        individualCity: formData.get("individualCity"),
+        individualMobile: formData.get("individualMobile"),
       };
       const logoCandidate = formData.get("companyLogoFile") ?? formData.get("companyLogo") ?? formData.get("logo");
       if (logoCandidate instanceof File && logoCandidate.size > 0) {
@@ -290,6 +300,10 @@ Deno.serve(async (req: Request) => {
           legalFiles.push({ ...item, file: candidate });
         }
       }
+      const cvCandidate = formData.get("individualCvFile");
+      if (cvCandidate instanceof File && cvCandidate.size > 0) individualCvFile = cvCandidate;
+      const idCandidate = formData.get("individualIdDocumentFile");
+      if (idCandidate instanceof File && idCandidate.size > 0) individualIdDocumentFile = idCandidate;
     } else {
       try {
         body = await req.json();
@@ -319,22 +333,42 @@ Deno.serve(async (req: Request) => {
     const yearsOfExperience = Number.parseInt(field(body, "yearsOfExperience") ?? "0", 10);
     const acceptedTerms = body.acceptedTerms === true || body.acceptedTerms === "true";
     const acceptedRegulations = body.acceptedRegulations === true || body.acceptedRegulations === "true";
+    const beneficiaryType = (typeof body.beneficiaryType === "string" && body.beneficiaryType.trim().toLowerCase() === "individual")
+      ? "individual"
+      : "company";
+    const individualFullName = field(body, "individualFullName");
+    const individualDateOfBirth = field(body, "individualDateOfBirth");
+    const individualNationality = field(body, "individualNationality");
+    const individualNationalIdOrIqama = field(body, "individualNationalIdOrIqama");
+    const individualCity = field(body, "individualCity");
+    const individualMobile = normalizePhone(body.individualMobile);
+    const isSaudiIndividual = (individualNationality ?? "").toLowerCase() === "saudi arabia";
     const effectiveCompanyEmail = companyEmail || email;
 
     if (!email || !isValidEmail(email)) return json({ error: "Valid email is required" }, 400);
-    if (!effectiveCompanyEmail || !isValidEmail(effectiveCompanyEmail)) return json({ error: "Valid company email is required" }, 400);
+    if (beneficiaryType === "company" && (!effectiveCompanyEmail || !isValidEmail(effectiveCompanyEmail))) return json({ error: "Valid company email is required" }, 400);
     if (!password || password.length < 8) return json({ error: "Password must be at least 8 characters" }, 400);
     if (!name) return json({ error: "Name is required" }, 400);
     if (!companyNameAr || !companyNameEn) return json({ error: "companyNameAr and companyNameEn are required" }, 400);
-    if (!mobile) return json({ error: "Company phone/mobile is required" }, 400);
-    if (!city) return json({ error: "City is required" }, 400);
+    if (beneficiaryType === "company" && !mobile) return json({ error: "Company phone/mobile is required" }, 400);
+    if (beneficiaryType === "company" && !city) return json({ error: "City is required" }, 400);
     if (contactEmail && !isValidEmail(contactEmail)) return json({ error: "Valid contact email is required" }, 400);
     if (!acceptedTerms) return json({ error: "Terms must be accepted" }, 400);
     if (!acceptedRegulations) return json({ error: "Regulations must be accepted" }, 400);
-    const hasRequiredDocs = ["cr", "license", "national_address"].every((requiredType) =>
-      legalFiles.some((doc) => doc.type === requiredType)
-    );
-    if (!hasRequiredDocs) return json({ error: "CR, license, and national address documents are required" }, 400);
+    if (beneficiaryType === "company") {
+      const hasRequiredDocs = ["cr", "license", "national_address"].every((requiredType) =>
+        legalFiles.some((doc) => doc.type === requiredType)
+      );
+      if (!hasRequiredDocs) return json({ error: "CR, license, and national address documents are required" }, 400);
+    } else {
+      if (!individualFullName || !individualDateOfBirth || !individualNationality || !individualNationalIdOrIqama || !individualCity || !individualMobile) {
+        return json({ error: "Individual profile fields are required" }, 400);
+      }
+      if (isSaudiIndividual && !/^1\d{9}$/.test(individualNationalIdOrIqama)) return json({ error: "Saudi National ID must be 10 digits and start with 1" }, 400);
+      if (!isSaudiIndividual && !/^2\d{9}$/.test(individualNationalIdOrIqama)) return json({ error: "Iqama must be 10 digits and start with 2" }, 400);
+      if (!individualCvFile || !PDF_MIMES.has(individualCvFile.type)) return json({ error: "CV PDF is required" }, 400);
+      if (!individualIdDocumentFile || !DOC_MIMES.has(individualIdDocumentFile.type)) return json({ error: "National ID / Iqama document is required" }, 400);
+    }
     if (companyLogoFile) {
       if (!LOGO_MIMES.has(companyLogoFile.type)) {
         return json({ error: "Company logo must be PNG or JPG" }, 400);
@@ -407,20 +441,25 @@ Deno.serve(async (req: Request) => {
           name_en: companyNameEn,
           representative_name: representativeName,
           representative_title: representativeTitle,
-          mobile,
+          mobile: beneficiaryType === "individual" ? individualMobile : mobile,
           phone,
-          email: effectiveCompanyEmail,
+          email: beneficiaryType === "individual" ? email : effectiveCompanyEmail,
           website,
           address_line1: addressLine1,
           address_line2: addressLine2,
-          city,
+          city: beneficiaryType === "individual" ? individualCity : city,
           postal_code: postalCode,
           country: "Saudi Arabia",
-          contact_email: contactEmail ?? email,
-          contact_mobile: contactMobile,
+          contact_email: email,
+          contact_mobile: beneficiaryType === "individual" ? individualMobile : contactMobile,
           about,
           years_of_experience: Number.isFinite(yearsOfExperience) ? yearsOfExperience : null,
           source: "portal",
+          beneficiary_type: beneficiaryType,
+          individual_full_name: beneficiaryType === "individual" ? individualFullName : null,
+          individual_date_of_birth: beneficiaryType === "individual" ? individualDateOfBirth : null,
+          individual_nationality: beneficiaryType === "individual" ? individualNationality : null,
+          individual_national_id_or_iqama: beneficiaryType === "individual" ? individualNationalIdOrIqama : null,
           approval_status: "pending",
           terms_accepted_at: new Date().toISOString(),
           regulations_accepted_at: new Date().toISOString(),
@@ -458,6 +497,21 @@ Deno.serve(async (req: Request) => {
           .upload(objectName, doc.file, { contentType: doc.file.type, upsert: true });
         if (uploadErr) throw new Error(uploadErr.message || "Failed to upload legal document");
         legalDocuments.push({ type: doc.type, name: doc.file.name, path: `${LEGAL_DOC_BUCKET}/${objectName}`, size: doc.file.size, mimeType: doc.file.type });
+      }
+      if (beneficiaryType === "individual" && individualCvFile && individualIdDocumentFile) {
+        for (const doc of [
+          { type: "cv", file: individualCvFile },
+          { type: "national_id_or_iqama", file: individualIdDocumentFile },
+        ]) {
+          const rawExt = doc.file.name.split(".").pop()?.toLowerCase();
+          const ext = rawExt && /^[a-z0-9]+$/.test(rawExt) ? rawExt : (doc.file.type === "application/pdf" ? "pdf" : "bin");
+          const objectName = `${company.id}/${doc.type}-${crypto.randomUUID()}.${ext}`;
+          const { error: uploadErr } = await supabase.storage
+            .from(LEGAL_DOC_BUCKET)
+            .upload(objectName, doc.file, { contentType: doc.file.type, upsert: true });
+          if (uploadErr) throw new Error(uploadErr.message || "Failed to upload legal document");
+          legalDocuments.push({ type: doc.type, name: doc.file.name, path: `${LEGAL_DOC_BUCKET}/${objectName}`, size: doc.file.size, mimeType: doc.file.type });
+        }
       }
       const { error: docsErr } = await supabase
         .from("clients")
@@ -601,7 +655,7 @@ Deno.serve(async (req: Request) => {
       supabase.auth.admin.getUserById(userId),
       supabase
         .from("clients")
-        .select("id, name_ar, name_en, representative_name, representative_title, email, mobile, website, phone, city, country, contact_email, contact_mobile, about, years_of_experience, created_at")
+        .select("id, beneficiary_type, name_ar, name_en, representative_name, representative_title, email, mobile, website, phone, city, country, contact_email, contact_mobile, about, years_of_experience, individual_full_name, individual_date_of_birth, individual_nationality, individual_national_id_or_iqama, created_at")
         .eq("id", account.company_id)
         .maybeSingle(),
     ]);
@@ -622,6 +676,7 @@ Deno.serve(async (req: Request) => {
       company: company
         ? {
             companyId: (company as any).id,
+            beneficiaryType: (company as any).beneficiary_type ?? "company",
             nameAr: (company as any).name_ar,
             nameEn: (company as any).name_en,
             representativeName: (company as any).representative_name,
@@ -637,6 +692,14 @@ Deno.serve(async (req: Request) => {
             about: (company as any).about,
             yearsOfExperience: (company as any).years_of_experience,
             createdAt: (company as any).created_at,
+            individualProfile: {
+              fullName: (company as any).individual_full_name ?? null,
+              dateOfBirth: (company as any).individual_date_of_birth ?? null,
+              nationality: (company as any).individual_nationality ?? null,
+              nationalIdOrIqama: (company as any).individual_national_id_or_iqama ?? null,
+              city: (company as any).city ?? null,
+              mobile: (company as any).mobile ?? null,
+            },
           }
         : null,
     });
@@ -683,6 +746,10 @@ Deno.serve(async (req: Request) => {
       contact_mobile: text(body.contactMobile, 64),
       about: text(body.about, 4000),
       years_of_experience: normalizedYears,
+      individual_full_name: text((body.individualProfile as Record<string, unknown> | undefined)?.fullName, 200),
+      individual_date_of_birth: text((body.individualProfile as Record<string, unknown> | undefined)?.dateOfBirth, 64),
+      individual_nationality: text((body.individualProfile as Record<string, unknown> | undefined)?.nationality, 120),
+      individual_national_id_or_iqama: text((body.individualProfile as Record<string, unknown> | undefined)?.nationalIdOrIqama, 64),
     };
 
     const { error: updateErr } = await supabase
@@ -701,7 +768,7 @@ Deno.serve(async (req: Request) => {
       supabase.auth.admin.getUserById(userId),
       supabase
         .from("clients")
-        .select("id, name_ar, name_en, representative_name, representative_title, email, mobile, website, phone, city, country, contact_email, contact_mobile, about, years_of_experience, created_at")
+        .select("id, beneficiary_type, name_ar, name_en, representative_name, representative_title, email, mobile, website, phone, city, country, contact_email, contact_mobile, about, years_of_experience, individual_full_name, individual_date_of_birth, individual_nationality, individual_national_id_or_iqama, created_at")
         .eq("id", account.company_id)
         .maybeSingle(),
     ]);
@@ -724,6 +791,7 @@ Deno.serve(async (req: Request) => {
         company: company
           ? {
               companyId: (company as any).id,
+              beneficiaryType: (company as any).beneficiary_type ?? "company",
               nameAr: (company as any).name_ar,
               nameEn: (company as any).name_en,
               representativeName: (company as any).representative_name,
@@ -739,6 +807,14 @@ Deno.serve(async (req: Request) => {
               about: (company as any).about,
               yearsOfExperience: (company as any).years_of_experience,
               createdAt: (company as any).created_at,
+              individualProfile: {
+                fullName: (company as any).individual_full_name ?? null,
+                dateOfBirth: (company as any).individual_date_of_birth ?? null,
+                nationality: (company as any).individual_nationality ?? null,
+                nationalIdOrIqama: (company as any).individual_national_id_or_iqama ?? null,
+                city: (company as any).city ?? null,
+                mobile: (company as any).mobile ?? null,
+              },
             }
           : null,
       },

@@ -23,6 +23,7 @@ const FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
 
 type ClientRow = {
   id: string;
+  beneficiary_type?: "company" | "individual" | null;
   name_ar: string;
   name_en: string;
   representative_name: string | null;
@@ -55,6 +56,7 @@ type ClientRow = {
 
 type FrontendClient = {
   companyId: string;
+  beneficiaryType?: "company" | "individual";
   nameAr: string;
   nameEn: string;
   representativeName: string | null;
@@ -88,6 +90,7 @@ type FrontendClient = {
 function toFrontend(row: ClientRow, scriptsCount = 0): FrontendClient {
   return {
     companyId: row.id,
+    beneficiaryType: (row.beneficiary_type as "company" | "individual" | null) ?? "company",
     nameAr: row.name_ar,
     nameEn: row.name_en,
     representativeName: row.representative_name ?? null,
@@ -119,7 +122,7 @@ function toFrontend(row: ClientRow, scriptsCount = 0): FrontendClient {
   };
 }
 
-const CLIENT_SELECT = "id, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, created_by, logo_url, logo_updated_at, source, approval_status, website, phone, address_line1, address_line2, city, postal_code, country, contact_email, contact_mobile, about, years_of_experience, legal_documents, terms_accepted_at, approved_at, rejected_at, rejection_reason";
+const CLIENT_SELECT = "id, beneficiary_type, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, created_by, logo_url, logo_updated_at, source, approval_status, website, phone, address_line1, address_line2, city, postal_code, country, contact_email, contact_mobile, about, years_of_experience, legal_documents, terms_accepted_at, approved_at, rejected_at, rejection_reason";
 
 function getPathAfterCompanies(url: string): string {
   const pathname = new URL(url).pathname;

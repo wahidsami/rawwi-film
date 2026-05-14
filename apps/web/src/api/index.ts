@@ -31,6 +31,7 @@ export const settingsApi = {
 };
 
 export interface ClientPortalRegisterBody {
+  beneficiaryType?: 'company' | 'individual';
   name: string;
   email: string;
   companyEmail?: string;
@@ -59,6 +60,16 @@ export interface ClientPortalRegisterBody {
   };
   acceptedTerms: boolean;
   acceptedRegulations?: boolean;
+  individualProfile?: {
+    fullName: string;
+    dateOfBirth: string;
+    nationality: string;
+    nationalIdOrIqama: string;
+    city: string;
+    mobile: string;
+    cvFile?: File | null;
+    idDocumentFile?: File | null;
+  };
 }
 
 export interface ClientPortalSubmissionItem {
@@ -180,6 +191,7 @@ export interface ClientPortalMeResponse {
     price: number;
   };
   company: {
+    beneficiaryType?: 'company' | 'individual';
     companyId: string;
     nameAr: string;
     nameEn: string;
@@ -196,10 +208,19 @@ export interface ClientPortalMeResponse {
     about?: string | null;
     yearsOfExperience?: number | null;
     createdAt: string;
+    individualProfile?: {
+      fullName?: string | null;
+      dateOfBirth?: string | null;
+      nationality?: string | null;
+      nationalIdOrIqama?: string | null;
+      city?: string | null;
+      mobile?: string | null;
+    } | null;
   } | null;
 }
 
 export interface ClientPortalMeUpdateBody {
+  beneficiaryType?: 'company' | 'individual';
   userName?: string;
   companyNameAr?: string;
   companyNameEn?: string;
@@ -214,6 +235,14 @@ export interface ClientPortalMeUpdateBody {
   contactMobile?: string;
   about?: string;
   yearsOfExperience?: number | null;
+  individualProfile?: {
+    fullName?: string;
+    dateOfBirth?: string;
+    nationality?: string;
+    nationalIdOrIqama?: string;
+    city?: string;
+    mobile?: string;
+  };
 }
 
 export interface CertificateDemoCard {
@@ -396,6 +425,7 @@ export const clientPortalApi = {
     }
     const form = new FormData();
     form.append('name', payload.name);
+    form.append('beneficiaryType', payload.beneficiaryType ?? 'company');
     form.append('email', payload.email);
     if (payload.companyEmail) form.append('companyEmail', payload.companyEmail);
     form.append('password', payload.password);
@@ -421,6 +451,16 @@ export const clientPortalApi = {
     if (payload.legalDocuments?.license) form.append('licenseDocument', payload.legalDocuments.license);
     if (payload.legalDocuments?.nationalAddress) form.append('nationalAddressDocument', payload.legalDocuments.nationalAddress);
     if (payload.legalDocuments?.mediaContentProductionLicense) form.append('mediaContentProductionLicenseDocument', payload.legalDocuments.mediaContentProductionLicense);
+    if (payload.individualProfile) {
+      form.append('individualFullName', payload.individualProfile.fullName);
+      form.append('individualDateOfBirth', payload.individualProfile.dateOfBirth);
+      form.append('individualNationality', payload.individualProfile.nationality);
+      form.append('individualNationalIdOrIqama', payload.individualProfile.nationalIdOrIqama);
+      form.append('individualCity', payload.individualProfile.city);
+      form.append('individualMobile', payload.individualProfile.mobile);
+      if (payload.individualProfile.cvFile) form.append('individualCvFile', payload.individualProfile.cvFile);
+      if (payload.individualProfile.idDocumentFile) form.append('individualIdDocumentFile', payload.individualProfile.idDocumentFile);
+    }
 
     const anonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY as string | undefined;
     if (!anonKey) {

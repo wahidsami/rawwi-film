@@ -6,34 +6,28 @@ import { Textarea } from '@/components/ui/Textarea';
 import { clientPortalApi } from '@/api';
 import { useLangStore } from '@/store/langStore';
 
+type BeneficiaryType = 'company' | 'individual' | null;
+
 const SAUDI_MOBILE_REGEX = /^05\d{8}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NATIONAL_ID_REGEX = /^1\d{9}$/;
+const IQAMA_REGEX = /^2\d{9}$/;
 const LOGO_MIMES = new Set(['image/png', 'image/jpeg']);
 const DOC_MIMES = new Set(['application/pdf', 'image/png', 'image/jpeg']);
+const PDF_MIMES = new Set(['application/pdf']);
+const COUNTRIES = ['Saudi Arabia', 'United Arab Emirates', 'Kuwait', 'Bahrain', 'Qatar', 'Oman', 'Egypt', 'Jordan', 'Morocco', 'Tunisia', 'Algeria', 'Iraq', 'Syria', 'Lebanon', 'Yemen', 'Sudan', 'United States', 'United Kingdom', 'France', 'Germany', 'India', 'Pakistan', 'Turkey', 'Other'];
 
 export function ClientRegister() {
   const { lang } = useLangStore();
+  const isArabic = lang === 'ar';
+  const [beneficiaryType, setBeneficiaryType] = useState<BeneficiaryType>(null);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
-    companyNameAr: '',
-    companyNameEn: '',
-    website: '',
-    email: '',
-    phone: '',
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    postalCode: '',
-    contactName: '',
-    contactPosition: '',
-    contactEmail: '',
-    contactMobile: '',
-    password: '',
-    confirmPassword: '',
-    about: '',
-    yearsOfExperience: '',
-    acceptedTerms: false,
-    acceptedRegulations: false,
+    companyNameAr: '', companyNameEn: '', website: '', email: '', phone: '', city: '',
+    contactName: '', contactPosition: '', contactEmail: '', contactMobile: '',
+    password: '', confirmPassword: '', about: '', yearsOfExperience: '',
+    fullName: '', dateOfBirth: '', nationality: 'Saudi Arabia', nationalIdOrIqama: '', individualCity: '', individualMobile: '',
+    acceptedTerms: false, acceptedRegulations: false,
   });
   const [terms, setTerms] = useState<{ ar: string; en: string } | null>(null);
   const [regulations, setRegulations] = useState<{ ar: string; en: string } | null>(null);
@@ -46,6 +40,8 @@ export function ClientRegister() {
   const [licenseDocument, setLicenseDocument] = useState<File | null>(null);
   const [nationalAddressDocument, setNationalAddressDocument] = useState<File | null>(null);
   const [mediaContentLicenseDocument, setMediaContentLicenseDocument] = useState<File | null>(null);
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [idDocumentFile, setIdDocumentFile] = useState<File | null>(null);
 
   useEffect(() => {
     clientPortalApi.getTerms().then(setTerms).catch(() => setTerms(null));
@@ -53,126 +49,134 @@ export function ClientRegister() {
   }, []);
 
   useEffect(() => {
-    if (!companyLogoFile) {
-      setCompanyLogoPreview(null);
-      return;
-    }
+    if (!companyLogoFile) return setCompanyLogoPreview(null);
     const nextUrl = URL.createObjectURL(companyLogoFile);
     setCompanyLogoPreview(nextUrl);
     return () => URL.revokeObjectURL(nextUrl);
   }, [companyLogoFile]);
 
-  const setField = (key: keyof typeof form, value: string | boolean) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const stepTitle = useMemo(() => {
-    if (step === 1) return lang === 'ar' ? 'بيانات الشركة' : 'Company Information';
-    if (step === 2) return lang === 'ar' ? 'بيانات التواصل والحساب' : 'Contact and Account';
-    if (step === 3) return lang === 'ar' ? 'المستندات والشروط' : 'Documents and Terms';
-    return '';
-  }, [lang, step]);
-
-  const steps = useMemo(() => ([
-    { id: 1, labelAr: 'بيانات الشركة', labelEn: 'Company' },
-    { id: 2, labelAr: 'التواصل والحساب', labelEn: 'Contact' },
-    { id: 3, labelAr: 'المستندات والشروط', labelEn: 'Documents' },
-  ]), []);
-
-  const isStepComplete = (targetStep: number) => validateStep(targetStep) == null;
+  const setField = (key: keyof typeof form, value: string | boolean) => setForm((prev) => ({ ...prev, [key]: value }));
+  const isSaudiIndividual = form.nationality.trim().toLowerCase() === 'saudi arabia';
+  const individualIdLabel = isSaudiIndividual ? (isArabic ? 'رقم الهوية الوطنية *' : 'National ID No. *') : (isArabic ? 'رقم الإقامة *' : 'Iqama No. *');
 
   const validateStep = (targetStep: number): string | null => {
-    if (targetStep === 1) {
-      if (!form.companyNameAr.trim() || !form.companyNameEn.trim()) return lang === 'ar' ? 'يرجى إدخال اسم الشركة بالعربية والإنجليزية' : 'Please enter company name in Arabic and English';
-      if (!EMAIL_REGEX.test(form.email.trim())) return lang === 'ar' ? 'يرجى إدخال بريد شركة صحيح' : 'Please enter a valid company email';
-      if (!SAUDI_MOBILE_REGEX.test(form.phone.trim())) return lang === 'ar' ? 'رقم هاتف الشركة يجب أن يكون سعوديًا (05XXXXXXXX)' : 'Company phone must be Saudi format (05XXXXXXXX)';
-      if (!form.city.trim()) return lang === 'ar' ? 'يرجى إدخال المدينة' : 'Please enter city';
+    if (!beneficiaryType) return isArabic ? 'اختر نوع التسجيل أولاً' : 'Please select registration type first';
+    if (beneficiaryType === 'company') {
+      if (targetStep === 1) {
+        if (!form.companyNameAr.trim() || !form.companyNameEn.trim()) return isArabic ? 'يرجى إدخال اسم الشركة بالعربية والإنجليزية' : 'Please enter company name in Arabic and English';
+        if (!EMAIL_REGEX.test(form.email.trim())) return isArabic ? 'يرجى إدخال بريد شركة صحيح' : 'Please enter a valid company email';
+        if (!SAUDI_MOBILE_REGEX.test(form.phone.trim())) return isArabic ? 'رقم هاتف الشركة يجب أن يكون سعوديًا (05XXXXXXXX)' : 'Company phone must be Saudi format (05XXXXXXXX)';
+        if (!form.city.trim()) return isArabic ? 'يرجى إدخال المدينة' : 'Please enter city';
+      }
+      if (targetStep === 2) {
+        if (!form.contactName.trim() || !form.contactPosition.trim()) return isArabic ? 'يرجى إدخال اسم مسؤول التواصل والمنصب' : 'Please enter contact person name and position';
+        if (!EMAIL_REGEX.test(form.contactEmail.trim())) return isArabic ? 'يرجى إدخال بريد مسؤول التواصل بشكل صحيح' : 'Please enter a valid contact email';
+        if (!SAUDI_MOBILE_REGEX.test(form.contactMobile.trim())) return isArabic ? 'جوال مسؤول التواصل يجب أن يكون سعوديًا (05XXXXXXXX)' : 'Contact mobile must be Saudi format (05XXXXXXXX)';
+        if (form.password.length < 8) return isArabic ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters';
+        if (form.password !== form.confirmPassword) return isArabic ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match';
+      }
+      if (targetStep === 3) {
+        if (companyLogoFile && !LOGO_MIMES.has(companyLogoFile.type)) return isArabic ? 'شعار الشركة يجب أن يكون PNG أو JPEG' : 'Company logo must be PNG or JPEG';
+        if (!crDocument || !licenseDocument || !nationalAddressDocument) return isArabic ? 'يرجى رفع السجل التجاري والرخصة والعنوان الوطني' : 'Please upload CR, license, and national address documents';
+        if (!DOC_MIMES.has(crDocument.type) || !DOC_MIMES.has(licenseDocument.type) || !DOC_MIMES.has(nationalAddressDocument.type)) return isArabic ? 'المستندات يجب أن تكون PDF أو PNG أو JPEG' : 'Documents must be PDF, PNG, or JPEG';
+        if (!form.acceptedTerms) return isArabic ? 'يجب الموافقة على الشروط والأحكام' : 'You must agree to the terms and conditions';
+        if (!form.acceptedRegulations) return isArabic ? 'يجب الموافقة على الضوابط العامة للأعمال الدرامية والوثائقية' : 'You must agree to comply with the general regulations';
+      }
       return null;
+    }
+
+    if (targetStep === 1) {
+      if (!form.fullName.trim()) return isArabic ? 'الاسم مطلوب' : 'Name is required';
+      if (!form.dateOfBirth) return isArabic ? 'تاريخ الميلاد مطلوب' : 'Date of birth is required';
+      if (!form.nationality.trim()) return isArabic ? 'الجنسية مطلوبة' : 'Nationality is required';
+      if (!EMAIL_REGEX.test(form.contactEmail.trim())) return isArabic ? 'يرجى إدخال بريد صحيح' : 'Please enter a valid email';
+      if (!SAUDI_MOBILE_REGEX.test(form.individualMobile.trim())) return isArabic ? 'الجوال يجب أن يكون بصيغة سعودية (05XXXXXXXX)' : 'Mobile must be Saudi format (05XXXXXXXX)';
+      if (!form.individualCity.trim()) return isArabic ? 'المدينة مطلوبة' : 'City is required';
+      if (isSaudiIndividual && !NATIONAL_ID_REGEX.test(form.nationalIdOrIqama.trim())) return isArabic ? 'الهوية الوطنية يجب أن تكون 10 أرقام وتبدأ بـ 1' : 'National ID must be 10 digits and start with 1';
+      if (!isSaudiIndividual && !IQAMA_REGEX.test(form.nationalIdOrIqama.trim())) return isArabic ? 'الإقامة يجب أن تكون 10 أرقام وتبدأ بـ 2' : 'Iqama must be 10 digits and start with 2';
+      if (form.password.length < 8) return isArabic ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters';
+      if (form.password !== form.confirmPassword) return isArabic ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match';
     }
     if (targetStep === 2) {
-      if (!form.contactName.trim() || !form.contactPosition.trim()) return lang === 'ar' ? 'يرجى إدخال اسم مسؤول التواصل والمنصب' : 'Please enter contact person name and position';
-      if (!EMAIL_REGEX.test(form.contactEmail.trim())) return lang === 'ar' ? 'يرجى إدخال بريد مسؤول التواصل بشكل صحيح' : 'Please enter a valid contact email';
-      if (!SAUDI_MOBILE_REGEX.test(form.contactMobile.trim())) return lang === 'ar' ? 'جوال مسؤول التواصل يجب أن يكون سعوديًا (05XXXXXXXX)' : 'Contact mobile must be Saudi format (05XXXXXXXX)';
-      if (form.password.length < 8) return lang === 'ar' ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters';
-      if (form.password !== form.confirmPassword) return lang === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match';
-      return null;
-    }
-    if (targetStep === 3) {
-      if (companyLogoFile && !LOGO_MIMES.has(companyLogoFile.type)) return lang === 'ar' ? 'شعار الشركة يجب أن يكون PNG أو JPEG' : 'Company logo must be PNG or JPEG';
-      if (!crDocument || !licenseDocument || !nationalAddressDocument) return lang === 'ar' ? 'يرجى رفع السجل التجاري والرخصة والعنوان الوطني' : 'Please upload CR, license, and national address documents';
-      if (!DOC_MIMES.has(crDocument.type) || !DOC_MIMES.has(licenseDocument.type) || !DOC_MIMES.has(nationalAddressDocument.type)) {
-        return lang === 'ar' ? 'المستندات يجب أن تكون PDF أو PNG أو JPEG' : 'Documents must be PDF, PNG, or JPEG';
-      }
-      if (!form.acceptedTerms) return lang === 'ar' ? 'يجب الموافقة على الشروط والأحكام' : 'You must agree to the terms and conditions';
-      if (!form.acceptedRegulations) return lang === 'ar' ? 'يجب الموافقة على الضوابط العامة للأعمال الدرامية والوثائقية' : 'You must agree to comply with the general regulations for dramatic and documentary works';
-      return null;
+      if (!cvFile || !PDF_MIMES.has(cvFile.type)) return isArabic ? 'يرجى رفع السيرة الذاتية بصيغة PDF' : 'Please upload CV as PDF';
+      if (!idDocumentFile || !DOC_MIMES.has(idDocumentFile.type)) return isArabic ? 'يرجى رفع مستند الهوية/الإقامة' : 'Please upload ID/Iqama document';
+      if (!form.acceptedTerms) return isArabic ? 'يجب الموافقة على الشروط والأحكام' : 'You must agree to the terms and conditions';
+      if (!form.acceptedRegulations) return isArabic ? 'يجب الموافقة على الضوابط العامة للأعمال الدرامية والوثائقية' : 'You must agree to comply with the general regulations';
     }
     return null;
   };
 
+  const maxSteps = beneficiaryType === 'individual' ? 2 : 3;
   const nextStep = () => {
-    const stepError = validateStep(step);
-    if (stepError) {
-      setError(stepError);
-      return;
-    }
+    const e = validateStep(step);
+    if (e) return setError(e);
     setError('');
-    setStep((prev) => Math.min(3, prev + 1));
+    setStep((prev) => Math.min(maxSteps, prev + 1));
   };
-
-  const prevStep = () => {
-    setError('');
-    setStep((prev) => Math.max(1, prev - 1));
-  };
+  const prevStep = () => { setError(''); setStep((prev) => Math.max(1, prev - 1)); };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
     setSuccess('');
-
-    const finalError = validateStep(3);
-    if (finalError) {
-      setError(finalError);
-      return;
-    }
-
+    const e = validateStep(maxSteps);
+    if (e) return setError(e);
     setIsSaving(true);
     try {
-      await clientPortalApi.register({
-        name: form.contactName.trim(),
-        email: form.contactEmail.trim().toLowerCase(),
-        companyEmail: form.email.trim().toLowerCase(),
-        password: form.password,
-        companyNameAr: form.companyNameAr.trim(),
-        companyNameEn: form.companyNameEn.trim(),
-        website: form.website.trim() || undefined,
-        phone: form.phone.trim(),
-        addressLine1: form.addressLine1.trim(),
-        addressLine2: form.addressLine2.trim() || undefined,
-        city: form.city.trim(),
-        postalCode: form.postalCode.trim(),
-        representativeName: form.contactName.trim(),
-        representativeTitle: form.contactPosition.trim(),
-        mobile: form.phone.trim(),
-        contactEmail: form.contactEmail.trim().toLowerCase() || form.email.trim().toLowerCase(),
-        contactMobile: form.contactMobile.trim(),
-        about: form.about.trim() || undefined,
-        yearsOfExperience: form.yearsOfExperience ? Number.parseInt(form.yearsOfExperience, 10) : null,
-        companyLogoFile,
-        legalDocuments: {
-          cr: crDocument,
-          license: licenseDocument,
-          nationalAddress: nationalAddressDocument,
-          mediaContentProductionLicense: mediaContentLicenseDocument,
-        },
-        acceptedTerms: form.acceptedTerms,
-        acceptedRegulations: form.acceptedRegulations,
-      });
-      setSuccess(lang === 'ar'
-        ? 'تم إرسال طلب التسجيل بنجاح. ستصلك رسالة بريدية بعد مراجعة الطلب.'
-        : 'Registration request submitted successfully. You will receive an email after review.');
+      if (beneficiaryType === 'company') {
+        await clientPortalApi.register({
+          beneficiaryType: 'company',
+          name: form.contactName.trim(),
+          email: form.contactEmail.trim().toLowerCase(),
+          companyEmail: form.email.trim().toLowerCase(),
+          password: form.password,
+          companyNameAr: form.companyNameAr.trim(),
+          companyNameEn: form.companyNameEn.trim(),
+          website: form.website.trim() || undefined,
+          phone: form.phone.trim(),
+          city: form.city.trim(),
+          representativeName: form.contactName.trim(),
+          representativeTitle: form.contactPosition.trim(),
+          mobile: form.phone.trim(),
+          contactEmail: form.contactEmail.trim().toLowerCase(),
+          contactMobile: form.contactMobile.trim(),
+          about: form.about.trim() || undefined,
+          yearsOfExperience: form.yearsOfExperience ? Number.parseInt(form.yearsOfExperience, 10) : null,
+          companyLogoFile,
+          legalDocuments: { cr: crDocument, license: licenseDocument, nationalAddress: nationalAddressDocument, mediaContentProductionLicense: mediaContentLicenseDocument },
+          acceptedTerms: form.acceptedTerms,
+          acceptedRegulations: form.acceptedRegulations,
+        });
+      } else {
+        await clientPortalApi.register({
+          beneficiaryType: 'individual',
+          name: form.fullName.trim(),
+          email: form.contactEmail.trim().toLowerCase(),
+          password: form.password,
+          companyNameAr: form.fullName.trim(),
+          companyNameEn: form.fullName.trim(),
+          phone: form.individualMobile.trim(),
+          city: form.individualCity.trim(),
+          mobile: form.individualMobile.trim(),
+          contactEmail: form.contactEmail.trim().toLowerCase(),
+          contactMobile: form.individualMobile.trim(),
+          acceptedTerms: form.acceptedTerms,
+          acceptedRegulations: form.acceptedRegulations,
+          individualProfile: {
+            fullName: form.fullName.trim(),
+            dateOfBirth: form.dateOfBirth,
+            nationality: form.nationality,
+            nationalIdOrIqama: form.nationalIdOrIqama.trim(),
+            city: form.individualCity.trim(),
+            mobile: form.individualMobile.trim(),
+            cvFile,
+            idDocumentFile,
+          },
+        });
+      }
+      setSuccess(isArabic ? 'تم إرسال طلب التسجيل بنجاح. ستصلك رسالة بريدية بعد مراجعة الطلب.' : 'Registration request submitted successfully. You will receive an email after review.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل التسجيل' : 'Registration failed'));
+      setError(err instanceof Error ? err.message : (isArabic ? 'فشل التسجيل' : 'Registration failed'));
     } finally {
       setIsSaving(false);
     }
@@ -180,17 +184,19 @@ export function ClientRegister() {
 
   const fileInputClass = 'block w-full text-sm text-text-muted file:me-3 file:rounded-md file:border file:border-border file:bg-background file:px-3 file:py-2 file:text-text-main hover:file:bg-surface';
 
-  if (success) {
+  if (success) return <div className="flex min-h-screen items-center justify-center bg-background p-6 text-text-main"><div className="w-full max-w-xl rounded-2xl border border-border bg-surface p-8 text-center shadow-sm"><img src="/fclogo.png" alt="Film Commission" className="mx-auto mb-5 h-14 object-contain" /><h1 className="text-2xl font-bold">{isArabic ? 'تم استلام الطلب' : 'Request Received'}</h1><p className="mt-3 text-text-muted">{success}</p><div className="mt-6 flex justify-center gap-3"><Link to="/client/login"><Button variant="outline">{isArabic ? 'تسجيل الدخول' : 'Login'}</Button></Link><Link to="/"><Button>{isArabic ? 'العودة' : 'Back'}</Button></Link></div></div></div>;
+
+  if (!beneficiaryType) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-6 text-text-main">
-        <div className="w-full max-w-xl rounded-2xl border border-border bg-surface p-8 text-center shadow-sm">
-          <img src="/fclogo.png" alt="Film Commission" className="mx-auto mb-5 h-14 object-contain" />
-          <h1 className="text-2xl font-bold">{lang === 'ar' ? 'تم استلام الطلب' : 'Request Received'}</h1>
-          <p className="mt-3 text-text-muted">{success}</p>
-          <div className="mt-6 flex justify-center gap-3">
-            <Link to="/client/login"><Button variant="outline">{lang === 'ar' ? 'تسجيل الدخول' : 'Login'}</Button></Link>
-            <Link to="/"><Button>{lang === 'ar' ? 'العودة' : 'Back'}</Button></Link>
+      <div className="min-h-screen bg-background p-6 text-text-main">
+        <div className="mx-auto w-full max-w-4xl rounded-2xl border border-border bg-surface p-6 shadow-sm md:p-8">
+          <div className="mb-5 flex justify-center"><img src="/fclogo.png" alt="Film Commission" className="h-14 object-contain" /></div>
+          <h1 className="text-center text-2xl font-bold">{isArabic ? 'اختر نوع التسجيل' : 'Select Registration Type'}</h1>
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <button type="button" onClick={() => { setBeneficiaryType('company'); setStep(1); }} className="rounded-xl border border-border bg-background p-6 text-start hover:border-primary"><h2 className="text-lg font-semibold">{isArabic ? 'التسجيل كشركة' : 'Register as Company'}</h2></button>
+            <button type="button" onClick={() => { setBeneficiaryType('individual'); setStep(1); }} className="rounded-xl border border-border bg-background p-6 text-start hover:border-primary"><h2 className="text-lg font-semibold">{isArabic ? 'التسجيل كفرد' : 'Register as Individual'}</h2></button>
           </div>
+          <div className="mt-6 flex justify-center gap-3"><Link to="/client/login"><Button variant="outline">{isArabic ? 'تسجيل الدخول' : 'Login'}</Button></Link><Link to="/"><Button variant="outline">{isArabic ? 'العودة' : 'Back'}</Button></Link></div>
         </div>
       </div>
     );
@@ -199,134 +205,15 @@ export function ClientRegister() {
   return (
     <div className="min-h-screen bg-background p-6 text-text-main">
       <div className="mx-auto w-full max-w-5xl rounded-2xl border border-border bg-surface p-6 shadow-sm md:p-8">
-        <div className="mb-5 flex justify-center">
-          <img src="/fclogo.png" alt="Film Commission" className="h-14 object-contain" />
-        </div>
-        <div className="mb-6 space-y-2">
-          <h1 className="text-2xl font-bold">{lang === 'ar' ? 'طلب انضمام شركة إنتاج' : 'Production Company Join Request'}</h1>
-          <p className="text-sm text-text-muted">
-            {lang === 'ar'
-              ? 'سيتم تفعيل حسابك بعد مراجعة الطلب واعتماده من الإدارة.'
-              : 'Your account will be activated after the admin team reviews and approves your request.'}
-          </p>
-          <p className="text-sm font-medium text-text-main">{`${lang === 'ar' ? 'الخطوة' : 'Step'} ${step}/3: ${stepTitle}`}</p>
-          <div className="mt-4 flex items-center gap-2">
-            {steps.map((item) => {
-              const isActive = step === item.id;
-              const done = isStepComplete(item.id);
-              return (
-                <div key={item.id} className="flex items-center gap-2">
-                  <div
-                    className={[
-                      'flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold transition-colors',
-                      done ? 'border-success bg-success text-white' : isActive ? 'border-primary bg-primary text-white' : 'border-border bg-background text-text-muted',
-                    ].join(' ')}
-                  >
-                    {done ? '✓' : item.id}
-                  </div>
-                  <span className={['text-xs', isActive ? 'text-text-main' : 'text-text-muted'].join(' ')}>
-                    {lang === 'ar' ? item.labelAr : item.labelEn}
-                  </span>
-                  {item.id < steps.length && <div className="mx-1 h-px w-6 bg-border" />}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
+        <div className="mb-5 flex justify-center"><img src="/fclogo.png" alt="Film Commission" className="h-14 object-contain" /></div>
+        <div className="mb-6 space-y-2"><h1 className="text-2xl font-bold">{beneficiaryType === 'company' ? (isArabic ? 'طلب انضمام شركة إنتاج' : 'Production Company Join Request') : (isArabic ? 'طلب انضمام فرد' : 'Individual Join Request')}</h1><p className="text-sm font-medium text-text-main">{`${isArabic ? 'الخطوة' : 'Step'} ${step}/${maxSteps}`}</p></div>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {step === 1 && (
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Input label={lang === 'ar' ? 'اسم الشركة بالعربية *' : 'Company Name Arabic *'} value={form.companyNameAr} onChange={(e) => setField('companyNameAr', e.target.value)} required />
-              <Input label={lang === 'ar' ? 'اسم الشركة بالإنجليزية *' : 'Company Name English *'} value={form.companyNameEn} onChange={(e) => setField('companyNameEn', e.target.value)} required dir="ltr" />
-              <Input label={lang === 'ar' ? 'الموقع الإلكتروني' : 'Company Website'} value={form.website} onChange={(e) => setField('website', e.target.value)} dir="ltr" />
-              <Input label={lang === 'ar' ? 'بريد الشركة *' : 'Company Email *'} type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required dir="ltr" />
-              <Input label={lang === 'ar' ? 'رقم هاتف الشركة السعودي *' : 'Saudi Company Phone *'} value={form.phone} onChange={(e) => setField('phone', e.target.value)} required placeholder="05XXXXXXXX" dir="ltr" />
-              <Input label={lang === 'ar' ? 'المدينة *' : 'City *'} value={form.city} onChange={(e) => setField('city', e.target.value)} required />
-            </section>
-          )}
-
-          {step === 2 && (
-            <>
-              <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Input label={lang === 'ar' ? 'اسم مسؤول التواصل *' : 'Contact Person Name *'} value={form.contactName} onChange={(e) => setField('contactName', e.target.value)} required />
-                <Input label={lang === 'ar' ? 'المنصب *' : 'Position *'} value={form.contactPosition} onChange={(e) => setField('contactPosition', e.target.value)} required />
-                <Input label={lang === 'ar' ? 'بريد مسؤول التواصل *' : 'Contact Email *'} type="email" value={form.contactEmail} onChange={(e) => setField('contactEmail', e.target.value)} required dir="ltr" />
-                <Input label={lang === 'ar' ? 'جوال مسؤول التواصل *' : 'Contact Mobile *'} value={form.contactMobile} onChange={(e) => setField('contactMobile', e.target.value)} required placeholder="05XXXXXXXX" dir="ltr" />
-              </section>
-
-              <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Input label={lang === 'ar' ? 'كلمة المرور *' : 'Password *'} type="password" value={form.password} onChange={(e) => setField('password', e.target.value)} required minLength={8} dir="ltr" />
-                <Input label={lang === 'ar' ? 'تأكيد كلمة المرور *' : 'Confirm Password *'} type="password" value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required minLength={8} dir="ltr" />
-              </section>
-
-              <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <Input label={lang === 'ar' ? 'سنوات الخبرة' : 'Years of Experience'} type="number" min={0} value={form.yearsOfExperience} onChange={(e) => setField('yearsOfExperience', e.target.value)} />
-                <div className="md:col-span-2">
-                  <Textarea label={lang === 'ar' ? 'نبذة عن الشركة' : 'About the Company'} value={form.about} onChange={(e) => setField('about', e.target.value)} rows={4} />
-                </div>
-              </section>
-            </>
-          )}
-
-          {step === 3 && (
-            <>
-              <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'شعار الشركة (PNG/JPEG)' : 'Company Logo (PNG/JPEG)'}</label>
-                  <input type="file" accept="image/png,image/jpeg" onChange={(e) => setCompanyLogoFile(e.target.files?.[0] ?? null)} className={fileInputClass} />
-                  {companyLogoPreview && <img src={companyLogoPreview} alt="" className="h-16 w-16 rounded-md border border-border bg-background object-cover" />}
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'السجل التجاري * (PDF/JPEG/PNG)' : 'CR Document * (PDF/JPEG/PNG)'}</label>
-                  <input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setCrDocument(e.target.files?.[0] ?? null)} className={fileInputClass} required />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'الرخصة * (PDF/JPEG/PNG)' : 'License Document * (PDF/JPEG/PNG)'}</label>
-                  <input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setLicenseDocument(e.target.files?.[0] ?? null)} className={fileInputClass} required />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'مستند العنوان الوطني * (PDF/JPEG/PNG)' : 'National Address Document * (PDF/JPEG/PNG)'}</label>
-                  <input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setNationalAddressDocument(e.target.files?.[0] ?? null)} className={fileInputClass} required />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'رخصة إنتاج المحتوى الإعلامي المرئي والمسموع (اختياري) (PDF/JPEG/PNG)' : 'Audio-Visual Media Content Production License (Optional) (PDF/JPEG/PNG)'}</label>
-                  <input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setMediaContentLicenseDocument(e.target.files?.[0] ?? null)} className={fileInputClass} />
-                </div>
-              </section>
-
-              <section className="rounded-xl border border-border bg-background/60 p-4">
-                <p className="text-sm font-semibold text-text-main">{lang === 'ar' ? 'الشروط والأحكام' : 'Terms and Conditions'}</p>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-text-muted">{lang === 'ar' ? terms?.ar : terms?.en}</p>
-                <label className="mt-4 flex items-start gap-2 text-sm text-text-main">
-                  <input type="checkbox" checked={form.acceptedTerms} onChange={(e) => setField('acceptedTerms', e.target.checked)} required />
-                  <span>{lang === 'ar' ? 'أفهم وأوافق على الالتزام بالشروط والأحكام' : 'I understand and agree to comply with the terms and conditions'}</span>
-                </label>
-              </section>
-
-              <section className="rounded-xl border border-border bg-background/60 p-4">
-                <p className="text-sm font-semibold text-text-main">{lang === 'ar' ? 'الضوابط العامة للأعمال الدرامية والوثائقية' : 'General Regulations for Dramatic and Documentary Works'}</p>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-text-muted">{lang === 'ar' ? regulations?.ar : regulations?.en}</p>
-                <label className="mt-4 flex items-start gap-2 text-sm text-text-main">
-                  <input type="checkbox" checked={form.acceptedRegulations} onChange={(e) => setField('acceptedRegulations', e.target.checked)} required />
-                  <span>{lang === 'ar' ? 'أفهم وسألتزم بالضوابط العامة للأعمال الدرامية والوثائقية' : 'I understand and will comply with the general regulations for dramatic and documentary works'}</span>
-                </label>
-              </section>
-            </>
-          )}
-
+          {beneficiaryType === 'company' && step === 1 && <section className="grid grid-cols-1 gap-4 md:grid-cols-2"><Input label={isArabic ? 'اسم الشركة بالعربية *' : 'Company Name Arabic *'} value={form.companyNameAr} onChange={(e) => setField('companyNameAr', e.target.value)} required /><Input label={isArabic ? 'اسم الشركة بالإنجليزية *' : 'Company Name English *'} value={form.companyNameEn} onChange={(e) => setField('companyNameEn', e.target.value)} required dir="ltr" /><Input label={isArabic ? 'الموقع الإلكتروني' : 'Company Website'} value={form.website} onChange={(e) => setField('website', e.target.value)} dir="ltr" /><Input label={isArabic ? 'بريد الشركة *' : 'Company Email *'} type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required dir="ltr" /><Input label={isArabic ? 'رقم هاتف الشركة السعودي *' : 'Saudi Company Phone *'} value={form.phone} onChange={(e) => setField('phone', e.target.value)} required placeholder="05XXXXXXXX" dir="ltr" /><Input label={isArabic ? 'المدينة *' : 'City *'} value={form.city} onChange={(e) => setField('city', e.target.value)} required /></section>}
+          {beneficiaryType === 'company' && step === 2 && <><section className="grid grid-cols-1 gap-4 md:grid-cols-2"><Input label={isArabic ? 'اسم مسؤول التواصل *' : 'Contact Person Name *'} value={form.contactName} onChange={(e) => setField('contactName', e.target.value)} required /><Input label={isArabic ? 'المنصب *' : 'Position *'} value={form.contactPosition} onChange={(e) => setField('contactPosition', e.target.value)} required /><Input label={isArabic ? 'بريد مسؤول التواصل *' : 'Contact Email *'} type="email" value={form.contactEmail} onChange={(e) => setField('contactEmail', e.target.value)} required dir="ltr" /><Input label={isArabic ? 'جوال مسؤول التواصل *' : 'Contact Mobile *'} value={form.contactMobile} onChange={(e) => setField('contactMobile', e.target.value)} required placeholder="05XXXXXXXX" dir="ltr" /></section><section className="grid grid-cols-1 gap-4 md:grid-cols-2"><Input label={isArabic ? 'كلمة المرور *' : 'Password *'} type="password" value={form.password} onChange={(e) => setField('password', e.target.value)} required minLength={8} dir="ltr" /><Input label={isArabic ? 'تأكيد كلمة المرور *' : 'Confirm Password *'} type="password" value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required minLength={8} dir="ltr" /></section><section className="grid grid-cols-1 gap-4 md:grid-cols-3"><Input label={isArabic ? 'سنوات الخبرة' : 'Years of Experience'} type="number" min={0} value={form.yearsOfExperience} onChange={(e) => setField('yearsOfExperience', e.target.value)} /><div className="md:col-span-2"><Textarea label={isArabic ? 'نبذة عن الشركة' : 'About the Company'} value={form.about} onChange={(e) => setField('about', e.target.value)} rows={4} /></div></section></>}
+          {beneficiaryType === 'individual' && step === 1 && <section className="grid grid-cols-1 gap-4 md:grid-cols-2"><Input label={isArabic ? 'الاسم الكامل *' : 'Full Name *'} value={form.fullName} onChange={(e) => setField('fullName', e.target.value)} required /><Input label={isArabic ? 'تاريخ الميلاد *' : 'Date of Birth *'} type="date" value={form.dateOfBirth} onChange={(e) => setField('dateOfBirth', e.target.value)} required /><label className="text-sm font-medium text-text-main">{isArabic ? 'الجنسية *' : 'Nationality *'}<select className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2" value={form.nationality} onChange={(e) => setField('nationality', e.target.value)}>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></label><Input label={individualIdLabel} value={form.nationalIdOrIqama} onChange={(e) => setField('nationalIdOrIqama', e.target.value)} required dir="ltr" maxLength={10} /><Input label={isArabic ? 'البريد الإلكتروني *' : 'Email *'} type="email" value={form.contactEmail} onChange={(e) => setField('contactEmail', e.target.value)} required dir="ltr" /><Input label={isArabic ? 'الجوال *' : 'Mobile *'} value={form.individualMobile} onChange={(e) => setField('individualMobile', e.target.value)} required placeholder="05XXXXXXXX" dir="ltr" /><Input label={isArabic ? 'المدينة *' : 'City *'} value={form.individualCity} onChange={(e) => setField('individualCity', e.target.value)} required /><Input label={isArabic ? 'كلمة المرور *' : 'Password *'} type="password" value={form.password} onChange={(e) => setField('password', e.target.value)} required minLength={8} dir="ltr" /><Input label={isArabic ? 'تأكيد كلمة المرور *' : 'Confirm Password *'} type="password" value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required minLength={8} dir="ltr" /></section>}
+          {((beneficiaryType === 'company' && step === 3) || (beneficiaryType === 'individual' && step === 2)) && <><section className="grid grid-cols-1 gap-4 md:grid-cols-2">{beneficiaryType === 'company' ? <><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'شعار الشركة (PNG/JPEG)' : 'Company Logo (PNG/JPEG)'}</label><input type="file" accept="image/png,image/jpeg" onChange={(e) => setCompanyLogoFile(e.target.files?.[0] ?? null)} className={fileInputClass} />{companyLogoPreview && <img src={companyLogoPreview} alt="" className="h-16 w-16 rounded-md border border-border bg-background object-cover" />}</div><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'السجل التجاري * (PDF/JPEG/PNG)' : 'CR Document * (PDF/JPEG/PNG)'}</label><input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setCrDocument(e.target.files?.[0] ?? null)} className={fileInputClass} /></div><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'الرخصة * (PDF/JPEG/PNG)' : 'License Document * (PDF/JPEG/PNG)'}</label><input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setLicenseDocument(e.target.files?.[0] ?? null)} className={fileInputClass} /></div><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'مستند العنوان الوطني * (PDF/JPEG/PNG)' : 'National Address Document * (PDF/JPEG/PNG)'}</label><input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setNationalAddressDocument(e.target.files?.[0] ?? null)} className={fileInputClass} /></div><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'رخصة إنتاج المحتوى الإعلامي المرئي والمسموع (اختياري)' : 'Audio-Visual Media Content Production License (Optional)'}</label><input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setMediaContentLicenseDocument(e.target.files?.[0] ?? null)} className={fileInputClass} /></div></> : <><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'السيرة الذاتية (PDF) *' : 'CV (PDF) *'}</label><input type="file" accept="application/pdf" onChange={(e) => setCvFile(e.target.files?.[0] ?? null)} className={fileInputClass} /></div><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'مستند الهوية/الإقامة *' : 'National ID / Iqama *'}</label><input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setIdDocumentFile(e.target.files?.[0] ?? null)} className={fileInputClass} /></div></>}</section><section className="rounded-xl border border-border bg-background/60 p-4"><p className="text-sm font-semibold text-text-main">{isArabic ? 'الشروط والأحكام' : 'Terms and Conditions'}</p><p className="mt-2 whitespace-pre-wrap text-sm text-text-muted">{isArabic ? terms?.ar : terms?.en}</p><label className="mt-4 flex items-start gap-2 text-sm text-text-main"><input type="checkbox" checked={form.acceptedTerms} onChange={(e) => setField('acceptedTerms', e.target.checked)} /><span>{isArabic ? 'أفهم وأوافق على الالتزام بالشروط والأحكام' : 'I understand and agree to comply with the terms and conditions'}</span></label></section><section className="rounded-xl border border-border bg-background/60 p-4"><p className="text-sm font-semibold text-text-main">{isArabic ? 'الضوابط العامة للأعمال الدرامية والوثائقية' : 'General Regulations for Dramatic and Documentary Works'}</p><p className="mt-2 whitespace-pre-wrap text-sm text-text-muted">{isArabic ? regulations?.ar : regulations?.en}</p><label className="mt-4 flex items-start gap-2 text-sm text-text-main"><input type="checkbox" checked={form.acceptedRegulations} onChange={(e) => setField('acceptedRegulations', e.target.checked)} /><span>{isArabic ? 'أفهم وسألتزم بالضوابط العامة للأعمال الدرامية والوثائقية' : 'I understand and will comply with the general regulations for dramatic and documentary works'}</span></label></section></>}
           {error && <div className="rounded-md border border-error/20 bg-error/10 p-3 text-sm text-error">{error}</div>}
-
-          <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
-            {step > 1 && <Button type="button" variant="outline" onClick={prevStep}>{lang === 'ar' ? 'السابق' : 'Previous'}</Button>}
-            {step < 3 ? (
-              <Button type="button" onClick={nextStep}>{lang === 'ar' ? 'التالي' : 'Next'}</Button>
-            ) : (
-              <Button type="submit" isLoading={isSaving}>{lang === 'ar' ? 'إرسال طلب الانضمام' : 'Submit Join Request'}</Button>
-            )}
-            <Link to="/client/login"><Button type="button" variant="outline">{lang === 'ar' ? 'لديك حساب؟ تسجيل الدخول' : 'Already have an account? Login'}</Button></Link>
-            <Link to="/" className="text-sm text-text-muted hover:text-text-main">{lang === 'ar' ? 'العودة للصفحة الرئيسية' : 'Back to landing'}</Link>
-          </div>
+          <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4"><Button type="button" variant="outline" onClick={() => { setBeneficiaryType(null); setStep(1); }}>{isArabic ? 'تغيير النوع' : 'Change Type'}</Button>{step > 1 && <Button type="button" variant="outline" onClick={prevStep}>{isArabic ? 'السابق' : 'Previous'}</Button>}{step < maxSteps ? <Button type="button" onClick={nextStep}>{isArabic ? 'التالي' : 'Next'}</Button> : <Button type="submit" isLoading={isSaving}>{isArabic ? 'إرسال طلب الانضمام' : 'Submit Join Request'}</Button>}<Link to="/client/login"><Button type="button" variant="outline">{isArabic ? 'لديك حساب؟ تسجيل الدخول' : 'Already have an account? Login'}</Button></Link></div>
         </form>
       </div>
     </div>
