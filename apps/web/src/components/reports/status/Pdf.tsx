@@ -59,6 +59,12 @@ export const StatusSectionPdf: React.FC<StatusSectionPdfProps> = ({
           <View style={s.statCard}><Text style={s.statValue}>{data.reportsThisMonth}</Text><Text style={s.statLabel}>{isAr ? "تقارير الشهر" : "This Month"}</Text></View>
           <View style={s.statCard}><Text style={s.statValue}>{data.totalFindings}</Text><Text style={s.statLabel}>{isAr ? "إجمالي الملاحظات" : "Total Findings"}</Text></View>
         </View>
+        <View style={s.statRow}>
+          <View style={s.statCard}><Text style={s.statValue}>{data.totalBeneficiaries}</Text><Text style={s.statLabel}>{isAr ? "إجمالي المستفيدين" : "Total Beneficiaries"}</Text></View>
+          <View style={s.statCard}><Text style={s.statValue}>{data.beneficiariesThisMonth}</Text><Text style={s.statLabel}>{isAr ? "انضموا هذا الشهر" : "Joined This Month"}</Text></View>
+          <View style={s.statCard}><Text style={s.statValue}>{data.totalCompanies}</Text><Text style={s.statLabel}>{isAr ? "شركات" : "Companies"}</Text></View>
+          <View style={s.statCard}><Text style={s.statValue}>{data.totalIndividuals}</Text><Text style={s.statLabel}>{isAr ? "أفراد" : "Individuals"}</Text></View>
+        </View>
 
         <Text style={[s.sectionTitle, rtl]}>{isAr ? "توزيع حالات النصوص" : "Script Status"}</Text>
         <View style={s.table}>
@@ -92,17 +98,31 @@ export const StatusSectionPdf: React.FC<StatusSectionPdfProps> = ({
           </View>
         </View>
 
-        <Text style={[s.sectionTitle, rtl]}>{isAr ? "الأنشطة الأخيرة" : "Recent Activity"}</Text>
-        {data.activities.length === 0 ? (
-          <Text style={rtl}>{isAr ? "لا أنشطة حديثة." : "No recent activity."}</Text>
-        ) : (
-          data.activities.map((a, idx) => (
-            <View key={`activity-${idx}`} style={s.activityItem}>
-              <Text style={[s.activityTitle, rtl]}>{a.action}</Text>
-              <Text style={[s.activityMeta, rtl]}>{a.actor} - {a.time}</Text>
+        <Text style={[s.sectionTitle, rtl]}>{isAr ? "قائمة النصوص وحالتها" : "Scripts Status List"}</Text>
+        <View style={s.table}>
+          <View style={s.tr}>
+            <Text style={[s.th, rtl]}>{isAr ? "النص" : "Script"}</Text>
+            <Text style={[s.th, rtl]}>{isAr ? "المستفيد" : "Beneficiary"}</Text>
+            <Text style={[s.th, rtl]}>{isAr ? "تاريخ الاستلام" : "Received"}</Text>
+            <Text style={[s.th, rtl]}>{isAr ? "الحالة" : "Status"}</Text>
+            <Text style={[s.th, rtl, { borderRightWidth: 0 }]}>{isAr ? "تاريخ الموافقة/الرفض" : "Approved/Rejected Date"}</Text>
+          </View>
+          {data.scriptRows.length === 0 ? (
+            <View style={s.tr}>
+              <Text style={[s.td, rtl, { borderRightWidth: 0, flex: 5 }]}>{isAr ? "لا توجد نصوص" : "No scripts"}</Text>
             </View>
-          ))
-        )}
+          ) : (
+            data.scriptRows.map((row, idx) => (
+              <View key={`script-row-${idx}`} style={s.tr}>
+                <Text style={[s.td, rtl]}>{row.scriptTitle}</Text>
+                <Text style={[s.td, rtl]}>{row.beneficiaryName}</Text>
+                <Text style={[s.td, rtl]}>{row.receivedAt}</Text>
+                <Text style={[s.td, rtl]}>{row.status}</Text>
+                <Text style={[s.td, rtl, { borderRightWidth: 0 }]}>{row.approvedOrRejectedAt}</Text>
+              </View>
+            ))
+          )}
+        </View>
       </Page>
     </Document>
   );

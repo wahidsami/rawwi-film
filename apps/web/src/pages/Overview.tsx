@@ -13,11 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   FileText,
   BarChart2,
-  Plus,
-  UploadCloud,
-  PlayCircle,
   FileBarChart,
-  BookOpen,
   ArrowLeft,
   ArrowRight,
   Clock,
@@ -32,8 +28,8 @@ import { downloadStatusPdf } from '@/components/reports/status/download';
 
 export function Overview() {
   const { t, lang } = useLangStore();
-  const { user, hasPermission, hasSection } = useAuthStore();
-  const { fetchInitialData } = useDataStore();
+  const { user, hasSection } = useAuthStore();
+  const { fetchInitialData, scripts, companies } = useDataStore();
   const { settings } = useSettingsStore();
   const navigate = useNavigate();
 
@@ -72,6 +68,8 @@ export function Overview() {
       await downloadStatusPdf({
         stats,
         activities,
+        scripts,
+        companies,
         lang: lang === 'ar' ? 'ar' : 'en',
         dateFormat: settings?.platform?.dateFormat,
       });
@@ -84,9 +82,31 @@ export function Overview() {
     }
   };
 
-  const canManage = user?.role === 'Super Admin' || user?.role === 'Admin' || user?.role === 'Regulator';
-  const canViewAudit = hasSection('audit');
   const isRegulator = user?.role === 'Regulator';
+  const now = new Date();
+  const beneficiariesJoinedThisMonth = companies.filter((company) => {
+    const dt = company.createdAt ? new Date(company.createdAt) : null;
+    return dt && !Number.isNaN(dt.getTime()) && dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear();
+  }).length;
+  const totalBeneficiaries = companies.length;
+  const companyCount = companies.filter((company) => (company.beneficiaryType ?? 'company') === 'company').length;
+  const individualCount = companies.filter((company) => (company.beneficiaryType ?? 'company') === 'individual').length;
+  const companyNameById = new Map<string, string>(
+    companies.map((company) => [
+      company.companyId,
+      (company.beneficiaryType ?? 'company') === 'individual'
+        ? (company.individualProfile?.fullName || company.representativeName || company.nameAr || company.nameEn || '—')
+        : (company.nameAr || company.nameEn || '—'),
+    ]),
+  );
+  const scriptsOverviewRows = scripts
+    .slice()
+    .sort((a, b) => {
+      const da = new Date(a.receivedAt || a.createdAt || 0).getTime();
+      const db = new Date(b.receivedAt || b.createdAt || 0).getTime();
+      return db - da;
+    })
+    .slice(0, 25);
 
   if (loading) {
     return (
@@ -279,6 +299,27 @@ export function Overview() {
             </p>
           </CardContent>
         </Card>
+        {!isRegulator && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-text-muted">{lang === 'ar' ? 'إجمالي المستفيدين' : 'Total Beneficiaries'}</CardTitle>
+              <FileText className="h-4 w-4 text-info" />
+            </CardHeader>
+            <CardContent><div className="text-3xl font-bold text-text-main">{totalBeneficiaries}</div></CardContent>
+          </Card>
+        )}
+        {!isRegulator && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-text-muted">{lang === 'ar' ? 'انضموا هذا الشهر' : 'Joined This Month'}</CardTitle>
+              <TrendingUp className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent><div className="text-3xl font-bold text-text-main">{beneficiariesJoinedThisMonth}</div></CardContent>
+            <p className="px-6 pb-4 text-xs text-text-muted">
+              {lang === 'ar' ? `شركات: ${companyCount} • أفراد: ${individualCount}` : `Companies: ${companyCount} • Individuals: ${individualCount}`}
+            </p>
+          </Card>
+        )}
       </div>
 
       {/* Main Content Grid */}
@@ -347,49 +388,58 @@ export function Overview() {
 
         {/* Right Column (Actions & Activity) */}
         <div className="space-y-8">
-          {/* Quick Actions */}
-          <Card className="border-primary/20 bg-primary/5">
-            <CardHeader>
-              <CardTitle className="text-primary-dark">{t('quickActions')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {!isRegulator && hasSection('clients') && (
-                <>
-                  <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/clients')}>
-                    <Plus className="h-4 w-4" /> {t('addClientAction')}
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/clients')}>
-                    <UploadCloud className="h-4 w-4" /> {t('uploadScriptAction')}
-                  </Button>
-                </>
-              )}
-              {hasSection('clients') && (
-                <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/scripts')}>
-                  <FileText className="h-4 w-4" /> {lang === 'ar' ? 'فتح النصوص' : 'Open Scripts'}
-                </Button>
-              )}
-              {!isRegulator && hasSection('tasks') && (
-                <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/tasks')}>
-                  <PlayCircle className="h-4 w-4" /> {t('startAnalysisAction')}
-                </Button>
-              )}
-              {!isRegulator && hasSection('reports') && (
-                <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/reports')}>
-                  <FileBarChart className="h-4 w-4" /> {t('generateReportAction')}
-                </Button>
-              )}
-              {hasSection('glossary') && (
-                <Button variant="outline" className="w-full justify-start gap-3 bg-surface-main" onClick={() => navigate('/glossary')}>
-                  <BookOpen className="h-4 w-4" /> {t('addTermAction')}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Recent Decisions */}
           <RecentDecisionsWidget />
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{lang === 'ar' ? 'النصوص وحالتها' : 'Scripts and Status'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-surface-hover">
+                <tr>
+                  <th className="px-4 py-2 text-start">{lang === 'ar' ? 'اسم النص' : 'Script Name'}</th>
+                  <th className="px-4 py-2 text-start">{lang === 'ar' ? 'المستفيد' : 'Beneficiary'}</th>
+                  <th className="px-4 py-2 text-start">{lang === 'ar' ? 'تاريخ الاستلام' : 'Date Received'}</th>
+                  <th className="px-4 py-2 text-start">{lang === 'ar' ? 'الحالة' : 'Status'}</th>
+                  <th className="px-4 py-2 text-start">{lang === 'ar' ? 'تاريخ الرفض/الموافقة' : 'Rejected/Approved Date'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scriptsOverviewRows.map((script) => {
+                  const status = String(script.status ?? '—');
+                  const statusKey = status.toLowerCase();
+                  const decisionDate = statusKey === 'approved'
+                    ? (script as any).approvedAt ?? '—'
+                    : statusKey === 'rejected'
+                      ? (script as any).rejectedAt ?? '—'
+                      : '—';
+                  return (
+                    <tr key={script.id} className="border-b border-border/60">
+                      <td className="px-4 py-2">{script.title}</td>
+                      <td className="px-4 py-2">{companyNameById.get(script.companyId) ?? '—'}</td>
+                      <td className="px-4 py-2">{script.receivedAt || script.createdAt || '—'}</td>
+                      <td className="px-4 py-2">{status}</td>
+                      <td className="px-4 py-2">{decisionDate}</td>
+                    </tr>
+                  );
+                })}
+                {scriptsOverviewRows.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-4 text-center text-text-muted">
+                      {lang === 'ar' ? 'لا توجد نصوص حالياً' : 'No scripts yet'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

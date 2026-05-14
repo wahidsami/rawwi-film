@@ -14,6 +14,9 @@ function safeText(v: unknown, max = 34): string {
 export interface ClientsSectionPdfProps {
   rows: ClientPdfRow[];
   totalClients: number;
+  totalCompanies: number;
+  totalIndividuals: number;
+  joinedThisMonth: number;
   totalScripts: number;
   avgScripts: number;
   activeClients: number;
@@ -52,6 +55,11 @@ export const ClientsSectionPdf: React.FC<ClientsSectionPdfProps> = (props) => {
         <Text style={[s.subtitle, rtl]}>{isAr ? "الملخص التنفيذي" : "Executive Summary"}</Text>
         <View style={s.statRow}>
           <View style={s.stat}><Text style={s.statValue}>{props.totalClients}</Text><Text style={s.statLabel}>{isAr ? "إجمالي المستفيدين" : "Total Beneficiaries"}</Text></View>
+          <View style={s.stat}><Text style={s.statValue}>{props.joinedThisMonth}</Text><Text style={s.statLabel}>{isAr ? "انضموا هذا الشهر" : "Joined This Month"}</Text></View>
+          <View style={s.stat}><Text style={s.statValue}>{props.totalCompanies}</Text><Text style={s.statLabel}>{isAr ? "شركات" : "Companies"}</Text></View>
+          <View style={s.stat}><Text style={s.statValue}>{props.totalIndividuals}</Text><Text style={s.statLabel}>{isAr ? "أفراد" : "Individuals"}</Text></View>
+        </View>
+        <View style={s.statRow}>
           <View style={s.stat}><Text style={s.statValue}>{props.totalScripts}</Text><Text style={s.statLabel}>{isAr ? "إجمالي النصوص" : "Total Scripts"}</Text></View>
           <View style={s.stat}><Text style={s.statValue}>{props.avgScripts}</Text><Text style={s.statLabel}>{isAr ? "متوسط النصوص" : "Avg Scripts"}</Text></View>
           <View style={s.stat}><Text style={s.statValue}>{props.activeClients}</Text><Text style={s.statLabel}>{isAr ? "مستفيدون نشطون" : "Active Beneficiaries"}</Text></View>
@@ -60,17 +68,17 @@ export const ClientsSectionPdf: React.FC<ClientsSectionPdfProps> = (props) => {
         <View style={s.table}>
           <View style={s.tr}>
             <Text style={[s.th, s.col1, rtl]}>{isAr ? "اسم المستفيد" : "Beneficiary Name"}</Text>
-            <Text style={[s.th, s.col2, rtl]}>{isAr ? "المندوب" : "Representative"}</Text>
-            <Text style={[s.th, s.col3, rtl]}>{isAr ? "الاتصال" : "Contact"}</Text>
+            <Text style={[s.th, s.col2, rtl]}>{isAr ? "النوع" : "Type"}</Text>
+            <Text style={[s.th, s.col3, rtl]}>{isAr ? "المندوب" : "Representative"}</Text>
             <Text style={[s.th, s.col4, rtl]}>{isAr ? "التسجيل" : "Registration"}</Text>
             <Text style={[s.th, s.col5, rtl]}>{isAr ? "النصوص" : "Scripts"}</Text>
             <Text style={[s.th, s.col6, rtl]}>{isAr ? "الحالة" : "Status"}</Text>
           </View>
           {props.rows.map((row, idx) => (
             <View key={`client-row-${idx}`} style={[s.tr, idx % 2 ? s.rowEven : {}]}>
-              <Text style={[s.td, s.col1, rtl]}>{safeText(row.name, 26)}{row.nameSecondary ? `\n${safeText(row.nameSecondary, 26)}` : ""}</Text>
-              <Text style={[s.td, s.col2, rtl]}>{safeText(row.representative, 20)}</Text>
-              <Text style={[s.td, s.col3, rtl]}>{safeText(row.email, 24)}{"\n"}{safeText(row.phone, 18)}</Text>
+              <Text style={[s.td, s.col1, rtl]}>{safeText(row.name, 30)}</Text>
+              <Text style={[s.td, s.col2, rtl]}>{safeText(row.beneficiaryType, 14)}</Text>
+              <Text style={[s.td, s.col3, rtl]}>{safeText(row.representative, 20)}</Text>
               <Text style={[s.td, s.col4, rtl]}>{safeText(row.registrationDate, 14)}</Text>
               <Text style={[s.td, s.col5, rtl]}>{String(row.scriptsCount || 0)}</Text>
               <Text style={[s.td, s.col6, rtl]}>{safeText(row.status, 14)}</Text>

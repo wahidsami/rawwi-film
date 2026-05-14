@@ -45,6 +45,19 @@ function clientDisplayName(client: Company, lang: 'ar' | 'en') {
   return lang === 'ar' ? client.nameAr : client.nameEn;
 }
 
+function beneficiaryTypeLabel(client: Company, lang: 'ar' | 'en') {
+  const type = client.beneficiaryType ?? 'company';
+  if (type === 'individual') return lang === 'ar' ? 'فرد' : 'Individual';
+  return lang === 'ar' ? 'شركة' : 'Company';
+}
+
+function clientResponsibleName(client: Company) {
+  if ((client.beneficiaryType ?? 'company') === 'individual') {
+    return client.individualProfile?.fullName || client.representativeName || client.nameAr || client.nameEn || '—';
+  }
+  return client.representativeName || '—';
+}
+
 function statusBadge(client: Company, lang: 'ar' | 'en') {
   const status = client.approvalStatus ?? 'approved';
   if (status === 'pending') return <Badge variant="warning">{lang === 'ar' ? 'قيد المراجعة' : 'Pending'}</Badge>;
@@ -123,12 +136,14 @@ export function Clients() {
   const companyIds = new Set(filteredClients.map((client) => client.companyId));
   const pendingScriptsCount = scripts.filter((script) => companyIds.has(script.companyId) && ['pending', 'in_review', 'In Review'].includes(script.status as string)).length;
   const approvedScriptsCount = scripts.filter((script) => companyIds.has(script.companyId) && script.status === 'approved').length;
+  const totalCompaniesCount = tabClients.filter((client) => (client.beneficiaryType ?? 'company') === 'company').length;
+  const totalIndividualsCount = tabClients.filter((client) => (client.beneficiaryType ?? 'company') === 'individual').length;
 
   const handleExportPdf = async () => {
     setExportingPdf(true);
     try {
       await downloadClientsPdf({
-        companies: filteredClients,
+        companies: tabClients,
         lang: lang === 'ar' ? 'ar' : 'en',
         dateFormat: settings?.platform?.dateFormat,
       });
@@ -277,11 +292,7 @@ export function Clients() {
                   {clientDisplayName(client, lang === 'ar' ? 'ar' : 'en')}
                 </h3>
                 <p className="truncate text-sm text-text-muted">{lang === 'ar' ? client.nameEn : client.nameAr}</p>
-                <p className="mt-1 text-xs text-text-muted">
-                  {lang === 'ar'
-                    ? (client.beneficiaryType === 'individual' ? 'فرد' : 'شركة')
-                    : (client.beneficiaryType === 'individual' ? 'Individual' : 'Company')}
-                </p>
+                <p className="mt-1 text-xs text-text-muted">{beneficiaryTypeLabel(client, lang === 'ar' ? 'ar' : 'en')}</p>
               </div>
               {statusBadge(client, lang === 'ar' ? 'ar' : 'en')}
             </div>
@@ -292,7 +303,7 @@ export function Clients() {
           <div className="flex items-center gap-3 text-sm">
             <User className="h-4 w-4 flex-shrink-0 text-text-muted" />
             <span className="w-28 flex-shrink-0 text-text-muted">{t('representative')}:</span>
-            <span className="truncate font-medium text-text-main">{client.representativeName || '—'}</span>
+            <span className="truncate font-medium text-text-main">{clientResponsibleName(client)}</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <FolderGit2 className="h-4 w-4 flex-shrink-0 text-text-muted" />
@@ -344,24 +355,24 @@ export function Clients() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{lang === 'ar' ? 'مستفيدو البوابة' : 'Portal Beneficiaries'}</CardTitle>
+            <CardTitle className="text-sm font-medium">{lang === 'ar' ? 'شركات' : 'Companies'}</CardTitle>
             <Building2 className="h-4 w-4 text-text-muted" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold text-text-main">{portalApproved.length}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-text-main">{totalCompaniesCount}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('pendingScripts')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{lang === 'ar' ? 'أفراد' : 'Individuals'}</CardTitle>
             <FileText className="h-4 w-4 text-text-muted" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold text-text-main">{pendingScriptsCount}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-text-main">{totalIndividualsCount}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('approvedScripts')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{lang === 'ar' ? 'النصوص (قيد/مفسوح)' : 'Scripts (Pending/Approved)'}</CardTitle>
             <CheckCircle className="h-4 w-4 text-text-muted" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold text-text-main">{approvedScriptsCount}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-text-main">{pendingScriptsCount} / {approvedScriptsCount}</div></CardContent>
         </Card>
       </div>
 
@@ -429,6 +440,7 @@ export function Clients() {
               <thead className="border-b border-border text-xs uppercase text-text-muted">
                 <tr>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'الشركة' : 'Company'}</th>
+                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'النوع' : 'Type'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'المسؤول' : 'Contact'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'الحالة' : 'Status'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'النصوص' : 'Scripts'}</th>
@@ -451,7 +463,8 @@ export function Clients() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-text-muted">{client.representativeName || '—'}</td>
+                    <td className="px-6 py-4 text-text-muted">{beneficiaryTypeLabel(client, lang === 'ar' ? 'ar' : 'en')}</td>
+                    <td className="px-6 py-4 text-text-muted">{clientResponsibleName(client)}</td>
                     <td className="px-6 py-4">{statusBadge(client, lang === 'ar' ? 'ar' : 'en')}</td>
                     <td className="px-6 py-4">{client.scriptsCount ?? 0}</td>
                     <td className="px-6 py-4 text-end">{renderActions(client)}</td>

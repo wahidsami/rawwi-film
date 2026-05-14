@@ -34,6 +34,9 @@ export async function downloadClientsPdf(params: {
   const doc = React.createElement(ClientsSectionPdf, {
     rows: mapped.rows,
     totalClients: mapped.totalClients,
+    totalCompanies: mapped.totalCompanies,
+    totalIndividuals: mapped.totalIndividuals,
+    joinedThisMonth: mapped.joinedThisMonth,
     totalScripts: mapped.totalScripts,
     avgScripts: mapped.avgScripts,
     activeClients: mapped.activeClients,

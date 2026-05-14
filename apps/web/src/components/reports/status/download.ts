@@ -2,6 +2,7 @@ import React from "react";
 import { pdf } from "@react-pdf/renderer";
 import type { DashboardStats } from "@/services/dashboardService";
 import type { Activity } from "@/services/activityService";
+import type { Script, Company } from "@/api/models";
 import { mapStatusDataForPdf } from "./mapper";
 import { StatusSectionPdf } from "./Pdf";
 
@@ -24,6 +25,8 @@ async function toDataUrl(url: string): Promise<string | null> {
 export async function downloadStatusPdf(params: {
   stats: DashboardStats;
   activities: Activity[];
+  scripts: Script[];
+  companies: Company[];
   lang: "ar" | "en";
   dateFormat?: string;
 }): Promise<void> {
@@ -33,7 +36,7 @@ export async function downloadStatusPdf(params: {
     toDataUrl(`${origin}/dashboardlogo.png`),
   ]);
   const doc = React.createElement(StatusSectionPdf, {
-    data: mapStatusDataForPdf(params.stats, params.activities),
+    data: mapStatusDataForPdf(params.stats, params.activities, params.scripts, params.companies),
     lang: params.lang,
     dateFormat: params.dateFormat,
     generatedAt: new Date().toISOString(),
