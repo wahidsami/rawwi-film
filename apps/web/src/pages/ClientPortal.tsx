@@ -558,15 +558,21 @@ export function ClientPortal() {
     workClassification: string;
     expectedRank: 'low' | 'medium' | 'high';
     synopsis: string;
+    storySummary: string;
+    hasSecurityScenes: 'yes' | 'no';
   }>({
     title: '',
     type: 'Film' as 'Film' | 'Series',
     workClassification: LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
     expectedRank: 'medium',
     synopsis: '',
+    storySummary: '',
+    hasSecurityScenes: 'no',
   });
   const [file, setFile] = useState<File | null>(null);
   const [manualText, setManualText] = useState('');
+  const [scriptSummaryPdfFile, setScriptSummaryPdfFile] = useState<File | null>(null);
+  const [securityContentFile, setSecurityContentFile] = useState<File | null>(null);
 
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -904,6 +910,20 @@ export function ClientPortal() {
     return response.json();
   };
 
+  const uploadSupportingDocument = async (uploadFile: File): Promise<string> => {
+    const upload = await scriptsApi.getUploadUrl(uploadFile.name);
+    await scriptsApi.uploadToSignedUrl(uploadFile, upload.url);
+    if (upload.path) return upload.path;
+    return upload.url;
+  };
+
+  const requiresStorySummary = useMemo(() => {
+    const normalized = (form.workClassification || '').trim().toLowerCase();
+    return ['سياسي', 'وثائقي', 'امني', 'أمني', 'تاريخي', 'political', 'documentary', 'security', 'historical'].some((token) =>
+      normalized.includes(token.toLowerCase()),
+    );
+  }, [form.workClassification]);
+
   const handleSubmitScript = async (e: React.FormEvent) => {
     e.preventDefault();
     setNotice('');
@@ -925,16 +945,45 @@ export function ClientPortal() {
       setError(lang === 'ar' ? 'يجب إدخال نص في المحرر' : 'Please enter script text in the editor');
       return;
     }
+    if (!scriptSummaryPdfFile) {
+      setError(lang === 'ar' ? 'يجب إرفاق ملف PDF لملخص النص' : 'Script summary PDF is required');
+      return;
+    }
+    if (scriptSummaryPdfFile.type !== 'application/pdf') {
+      setError(lang === 'ar' ? 'ملف ملخص النص يجب أن يكون PDF' : 'Script summary file must be PDF');
+      return;
+    }
+    if (requiresStorySummary && !form.storySummary.trim()) {
+      setError(lang === 'ar' ? 'ملخص النص مطلوب لهذا التصنيف' : 'Story summary is required for this work classification');
+      return;
+    }
+    if (form.storySummary.split(/\r?\n/).length > 3) {
+      setError(lang === 'ar' ? 'ملخص النص يجب ألا يتجاوز 3 أسطر' : 'Story summary must be at most 3 lines');
+      return;
+    }
+    if (form.hasSecurityScenes === 'yes' && !securityContentFile) {
+      setError(lang === 'ar' ? 'يرجى إرفاق المحتوى الأمني' : 'Please attach security content');
+      return;
+    }
 
     setIsSubmitting(true);
     let createdScriptId: string | null = null;
     try {
+      const scriptSummaryPdfUrl = await uploadSupportingDocument(scriptSummaryPdfFile);
+      const securityContentAttachmentUrl = form.hasSecurityScenes === 'yes' && securityContentFile
+        ? await uploadSupportingDocument(securityContentFile)
+        : null;
+
       const scriptPayload: Script = {
         id: '',
         companyId: profile.company.companyId,
         title: form.title.trim(),
         type: form.type,
         workClassification: form.workClassification,
+        storySummary: form.storySummary.trim() || undefined,
+        scriptSummaryPdfUrl,
+        hasSecurityScenes: form.hasSecurityScenes === 'yes',
+        securityContentAttachmentUrl: securityContentAttachmentUrl ?? undefined,
         expectedRank: form.expectedRank,
         synopsis: form.synopsis.trim(),
         status: 'in_review',
@@ -989,9 +1038,13 @@ export function ClientPortal() {
         workClassification: workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
         expectedRank: 'medium',
         synopsis: '',
+        storySummary: '',
+        hasSecurityScenes: 'no',
       });
       setFile(null);
       setManualText('');
+      setScriptSummaryPdfFile(null);
+      setSecurityContentFile(null);
       setEntryMode('upload');
       setUploaderKey((v) => v + 1);
       setNotice(duplicateTitleWarning
@@ -1022,14 +1075,42 @@ export function ClientPortal() {
       setError(lang === 'ar' ? 'عنوان النص مطلوب' : 'Script title is required');
       return;
     }
+    if (!scriptSummaryPdfFile) {
+      setError(lang === 'ar' ? 'يجب إرفاق ملف PDF لملخص النص' : 'Script summary PDF is required');
+      return;
+    }
+    if (scriptSummaryPdfFile.type !== 'application/pdf') {
+      setError(lang === 'ar' ? 'ملف ملخص النص يجب أن يكون PDF' : 'Script summary file must be PDF');
+      return;
+    }
+    if (requiresStorySummary && !form.storySummary.trim()) {
+      setError(lang === 'ar' ? 'ملخص النص مطلوب لهذا التصنيف' : 'Story summary is required for this work classification');
+      return;
+    }
+    if (form.storySummary.split(/\r?\n/).length > 3) {
+      setError(lang === 'ar' ? 'ملخص النص يجب ألا يتجاوز 3 أسطر' : 'Story summary must be at most 3 lines');
+      return;
+    }
+    if (form.hasSecurityScenes === 'yes' && !securityContentFile) {
+      setError(lang === 'ar' ? 'يرجى إرفاق المحتوى الأمني' : 'Please attach security content');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
+      const scriptSummaryPdfUrl = await uploadSupportingDocument(scriptSummaryPdfFile);
+      const securityContentAttachmentUrl = form.hasSecurityScenes === 'yes' && securityContentFile
+        ? await uploadSupportingDocument(securityContentFile)
+        : null;
       if (editingDraft) {
         await scriptsApi.updateScript(editingDraft.scriptId, {
           title: form.title.trim(),
           type: form.type,
           workClassification: form.workClassification,
+          storySummary: form.storySummary.trim() || undefined,
+          scriptSummaryPdfUrl,
+          hasSecurityScenes: form.hasSecurityScenes === 'yes',
+          securityContentAttachmentUrl: securityContentAttachmentUrl ?? undefined,
           expectedRank: form.expectedRank,
           synopsis: form.synopsis.trim(),
           status: 'draft',
@@ -1041,6 +1122,10 @@ export function ClientPortal() {
           title: form.title.trim(),
           type: form.type,
           workClassification: form.workClassification,
+          storySummary: form.storySummary.trim() || undefined,
+          scriptSummaryPdfUrl,
+          hasSecurityScenes: form.hasSecurityScenes === 'yes',
+          securityContentAttachmentUrl: securityContentAttachmentUrl ?? undefined,
           expectedRank: form.expectedRank,
           synopsis: form.synopsis.trim(),
           status: 'draft',
@@ -1411,12 +1496,49 @@ export function ClientPortal() {
           </div>
           <div className="md:col-span-2">
             <Textarea
-              label={lang === 'ar' ? 'ملخص النص' : 'Synopsis'}
+              label={lang === 'ar' ? 'ملخص القصة' : 'Story Summary'}
               rows={4}
               value={form.synopsis}
               onChange={(e) => setForm((prev) => ({ ...prev, synopsis: e.target.value }))}
             />
           </div>
+          <div className="md:col-span-2">
+            <FileUpload
+              label={lang === 'ar' ? 'رفع ملف ملخص النص (PDF) *' : 'Upload Script Summary (PDF) *'}
+              accept=".pdf,application/pdf"
+              helperText={lang === 'ar' ? 'ملف إلزامي بصيغة PDF' : 'Mandatory PDF file'}
+              onChange={setScriptSummaryPdfFile}
+            />
+          </div>
+          {requiresStorySummary ? (
+            <div className="md:col-span-2">
+              <Textarea
+                label={lang === 'ar' ? 'ملخص النص * (حد أقصى 3 أسطر)' : 'Script Summary * (max 3 lines)'}
+                rows={3}
+                value={form.storySummary}
+                onChange={(e) => setForm((prev) => ({ ...prev, storySummary: e.target.value }))}
+              />
+            </div>
+          ) : null}
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'هل يحتوي العمل على مشاهد أمنة؟' : 'Does the work contain security scenes?'}</label>
+            <select
+              value={form.hasSecurityScenes}
+              onChange={(e) => setForm((prev) => ({ ...prev, hasSecurityScenes: e.target.value as 'yes' | 'no' }))}
+              className="h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 text-sm"
+            >
+              <option value="no">{lang === 'ar' ? 'لا' : 'No'}</option>
+              <option value="yes">{lang === 'ar' ? 'نعم' : 'Yes'}</option>
+            </select>
+          </div>
+          {form.hasSecurityScenes === 'yes' ? (
+            <div className="space-y-1.5">
+              <FileUpload
+                label={lang === 'ar' ? 'إرفاق المحتوى الأمني *' : 'Attach Security Content *'}
+                onChange={setSecurityContentFile}
+              />
+            </div>
+          ) : null}
           {entryMode === 'upload' ? (
             <div className="md:col-span-2">
               <div key={uploaderKey}>

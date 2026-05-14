@@ -70,6 +70,10 @@ type ScriptRow = {
   received_at: string | null;
   status: string;
   synopsis: string | null;
+  story_summary: string | null;
+  script_summary_pdf_url: string | null;
+  has_security_scenes: boolean | null;
+  security_content_attachment_url: string | null;
   file_url: string | null;
   created_by: string | null;
   created_at: string;
@@ -90,6 +94,10 @@ function toScriptFrontend(row: ScriptRow) {
     expectedRank: row.expected_rank ?? null,
     receivedAt: row.received_at ?? null,
     synopsis: row.synopsis ?? undefined,
+    storySummary: row.story_summary ?? undefined,
+    scriptSummaryPdfUrl: row.script_summary_pdf_url ?? undefined,
+    hasSecurityScenes: row.has_security_scenes ?? undefined,
+    securityContentAttachmentUrl: row.security_content_attachment_url ?? undefined,
     fileUrl: row.file_url ?? undefined,
     status: row.status,
     createdAt: row.created_at,
@@ -682,6 +690,24 @@ async function ensureCertificateGeneratedOnApproval(
   }
 }
 
+function normalizeOptionalText(value: unknown, maxLength: number): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().normalize("NFC");
+  if (!trimmed) return null;
+  return trimmed.slice(0, maxLength);
+}
+
+function normalizeOptionalPath(value: unknown, maxLength: number): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, maxLength);
+}
+
+function lineCount(value: string): number {
+  return value.split(/\r?\n/).length;
+}
+
 /** Shared predicate for script decision: used by GET .../decision/can and POST .../decision. */
 async function computeScriptDecisionCan(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -769,7 +795,7 @@ Deno.serve(async (req: Request) => {
   if (method === "GET" && rest === "") {
     let query = supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("is_quick_analysis", false)
       .order("created_at", { ascending: false });
     const seeAll = await isSuperAdminOrAdmin(supabase, uid);
@@ -833,7 +859,7 @@ Deno.serve(async (req: Request) => {
     const { data: row, error } = await supabase
       .from("scripts")
       .insert(insert)
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .single();
     if (error || !row) {
       console.error(`[scripts] correlationId=${correlationId} quick insert error=`, error?.message);
@@ -857,7 +883,7 @@ Deno.serve(async (req: Request) => {
   if (method === "GET" && rest === "quick") {
     const { data: rows, error } = await supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("is_quick_analysis", true)
       .eq("created_by", uid)
       .order("created_at", { ascending: false });
@@ -1379,7 +1405,7 @@ Deno.serve(async (req: Request) => {
     const scriptId = rest.trim();
     const { data: row, error } = await supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("id", scriptId)
       .maybeSingle();
     if (error) return json({ error: error.message }, 500);
@@ -1430,6 +1456,22 @@ Deno.serve(async (req: Request) => {
     }
     if (status == null || typeof status !== "string" || !String(status).trim()) {
       return json({ error: "status is required" }, 400);
+    }
+    const storySummary = normalizeOptionalText(body.storySummary ?? body.story_summary, 3000);
+    const scriptSummaryPdfUrl = normalizeOptionalPath(body.scriptSummaryPdfUrl ?? body.script_summary_pdf_url, 1024);
+    const hasSecurityScenes = body.hasSecurityScenes === true || body.has_security_scenes === true;
+    const securityContentAttachmentUrl = normalizeOptionalPath(body.securityContentAttachmentUrl ?? body.security_content_attachment_url, 1024);
+    if (!scriptSummaryPdfUrl) {
+      return json({ error: "scriptSummaryPdfUrl is required" }, 400);
+    }
+    if (["سياسي", "وثائقي", "امني", "أمني", "تاريخي", "political", "documentary", "security", "historical"].some((token) =>
+      workClassification.toLowerCase().includes(token.toLowerCase())
+    )) {
+      if (!storySummary) return json({ error: "storySummary is required for this work classification" }, 400);
+      if (lineCount(storySummary) > 3) return json({ error: "storySummary must be at most 3 lines" }, 400);
+    }
+    if (hasSecurityScenes && !securityContentAttachmentUrl) {
+      return json({ error: "securityContentAttachmentUrl is required when hasSecurityScenes is true" }, 400);
     }
     const clientId = companyId.trim();
     const normalizedTitle = String(title).trim().normalize("NFC");
@@ -1527,6 +1569,10 @@ Deno.serve(async (req: Request) => {
       received_at: normalizeReceivedAt(body.receivedAt ?? body.received_at ?? new Date().toISOString()),
       status: normalizeStatus(status),
       synopsis: typeof body.synopsis === "string" ? body.synopsis.trim() || null : null,
+      story_summary: storySummary,
+      script_summary_pdf_url: scriptSummaryPdfUrl,
+      has_security_scenes: hasSecurityScenes,
+      security_content_attachment_url: securityContentAttachmentUrl,
       file_url: typeof body.fileUrl === "string" ? body.fileUrl.trim() || null : null,
       created_by: uid,
       assignee_id: typeof body.assigneeId === "string" && body.assigneeId.trim() ? body.assigneeId.trim() : (typeof body.assignee_id === "string" && body.assignee_id.trim() ? body.assignee_id.trim() : null),
@@ -1535,7 +1581,7 @@ Deno.serve(async (req: Request) => {
     const { data: row, error } = await supabase
       .from("scripts")
       .insert(insert)
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .single();
     if (error) {
       console.error(`[scripts] correlationId=${correlationId} insert error=`, error.message);
@@ -1896,7 +1942,7 @@ Deno.serve(async (req: Request) => {
     // Fetch updated script
     const { data: updated } = await supabase
       .from("scripts")
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id")
       .eq("id", scriptId)
       .single();
 
@@ -1937,6 +1983,21 @@ Deno.serve(async (req: Request) => {
     const updates: any = {};
     if (body.title && typeof body.title === 'string' && body.title.trim()) updates.title = body.title.trim();
     if (body.synopsis !== undefined) updates.synopsis = typeof body.synopsis === 'string' ? body.synopsis.trim() || null : null;
+    if (body.storySummary !== undefined || body.story_summary !== undefined) {
+      updates.story_summary = normalizeOptionalText(body.storySummary ?? body.story_summary, 3000);
+      if (typeof updates.story_summary === "string" && lineCount(updates.story_summary) > 3) {
+        return json({ error: "storySummary must be at most 3 lines" }, 400);
+      }
+    }
+    if (body.scriptSummaryPdfUrl !== undefined || body.script_summary_pdf_url !== undefined) {
+      updates.script_summary_pdf_url = normalizeOptionalPath(body.scriptSummaryPdfUrl ?? body.script_summary_pdf_url, 1024);
+    }
+    if (body.hasSecurityScenes !== undefined || body.has_security_scenes !== undefined) {
+      updates.has_security_scenes = body.hasSecurityScenes === true || body.has_security_scenes === true;
+    }
+    if (body.securityContentAttachmentUrl !== undefined || body.security_content_attachment_url !== undefined) {
+      updates.security_content_attachment_url = normalizeOptionalPath(body.securityContentAttachmentUrl ?? body.security_content_attachment_url, 1024);
+    }
     if (body.workClassification !== undefined || body.work_classification !== undefined) {
       updates.work_classification = normalizeWorkClassification(body.workClassification ?? body.work_classification);
       if (updates.work_classification) {
@@ -1993,7 +2054,7 @@ Deno.serve(async (req: Request) => {
       .from("scripts")
       .update(updates)
       .eq("id", scriptId)
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id")
       .single();
 
     if (updateErr) {
@@ -2030,7 +2091,7 @@ Deno.serve(async (req: Request) => {
       .from("scripts")
       .update({ status: "canceled" })
       .eq("id", scriptId)
-      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
+      .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .single();
     if (updateErr || !updated) {
       console.error(`[scripts] correlationId=${correlationId} soft-cancel error=`, updateErr?.message);

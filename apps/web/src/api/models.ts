@@ -94,6 +94,10 @@ export interface Script {
   title: string;
   type: 'Film' | 'Series';
   workClassification?: string;
+  storySummary?: string;
+  scriptSummaryPdfUrl?: string;
+  hasSecurityScenes?: boolean;
+  securityContentAttachmentUrl?: string;
   episodeCount?: number | null;
   expectedRank?: 'low' | 'medium' | 'high' | string | null;
   receivedAt?: string | null;
