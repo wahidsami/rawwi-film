@@ -21,6 +21,7 @@ export type ClientPortalSection =
   | 'overview'
   | 'scripts'
   | 'new-script'
+  | 'script-view'
   | 'payment'
   | 'certificates'
   | 'notifications'

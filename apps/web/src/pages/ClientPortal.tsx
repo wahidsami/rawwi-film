@@ -38,26 +38,13 @@ import { useAuthStore } from '@/store/authStore';
 import { useLangStore } from '@/store/langStore';
 import type { Script } from '@/api/models';
 import { supabase } from '@/lib/supabaseClient';
-import { API_BASE_URL } from '@/lib/env';
 import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
-import { extractDocxWithPages } from '@/utils/documentExtract';
-import { PDF_EXTRACTION_INTERVAL_MS, PDF_EXTRACTION_TIMEOUT_MS, waitForVersionExtraction } from '@/utils/waitForVersionExtraction';
 import {
   buildScriptClassificationSelectOptions,
   LEGACY_SCRIPT_CLASSIFICATION_OPTIONS,
   useScriptClassificationOptions,
 } from '@/lib/scriptClassificationOptions';
 import { cn } from '@/utils/cn';
-
-type UploadResult = {
-  success: boolean;
-  fileUrl: string;
-  path: string;
-  fileName: string;
-  fileSize: number;
-  versionId: string | null;
-  versionNumber: number | null;
-};
 
 type ComplianceTabKey = 'guidelines' | 'age';
 type ExpectedRank = 'G' | 'PG' | 'PG12' | 'PG15' | 'R15' | 'R18';
@@ -548,7 +535,7 @@ export function ClientPortal() {
   const [notificationsError, setNotificationsError] = useState('');
   const [notificationFilter, setNotificationFilter] = useState<NotificationFilter>('all');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [uploaderKey, setUploaderKey] = useState(1);
@@ -576,6 +563,9 @@ export function ClientPortal() {
   const [manualText, setManualText] = useState('');
   const [scriptSummaryPdfFile, setScriptSummaryPdfFile] = useState<File | null>(null);
   const [securityContentFile, setSecurityContentFile] = useState<File | null>(null);
+  const [existingScriptSummaryPdfUrl, setExistingScriptSummaryPdfUrl] = useState<string | null>(null);
+  const [existingSecurityContentAttachmentUrl, setExistingSecurityContentAttachmentUrl] = useState<string | null>(null);
+  const [existingScriptFileUrl, setExistingScriptFileUrl] = useState<string | null>(null);
 
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -586,6 +576,8 @@ export function ClientPortal() {
   const [scriptsStatusFilter, setScriptsStatusFilter] = useState<'all' | 'draft' | 'submitted' | 'approved' | 'rejected'>('all');
   const [scriptsPage, setScriptsPage] = useState(1);
   const [scriptToDelete, setScriptToDelete] = useState<ClientPortalSubmissionItem | null>(null);
+  const [submissionDetailsItem, setSubmissionDetailsItem] = useState<ClientPortalSubmissionItem | null>(null);
+  const [submissionDetailsLoading, setSubmissionDetailsLoading] = useState(false);
   const [editingDraft, setEditingDraft] = useState<ClientPortalSubmissionItem | null>(null);
   const [paymentScriptId, setPaymentScriptId] = useState<string | null>(null);
   const [paymentData, setPaymentData] = useState<ClientCertificatesResponse | null>(null);
@@ -926,45 +918,24 @@ export function ClientPortal() {
     }
   }, [activeSection, loadNotifications]);
 
-  const uploadScriptDocument = async (scriptId: string, companyId: string, uploadFile: File): Promise<UploadResult> => {
-    let { data: { session } } = await supabase.auth.getSession();
-    let token = session?.access_token ?? null;
-    if (!token) {
-      await supabase.auth.refreshSession();
-      ({ data: { session } } = await supabase.auth.getSession());
-      token = session?.access_token ?? null;
-    }
-    if (!token) throw new Error('No auth token available');
-
-    const formData = new FormData();
-    formData.append('file', uploadFile);
-    formData.append('scriptId', scriptId);
-    formData.append('companyId', companyId);
-    formData.append('createVersion', 'true');
-
-    const response = await fetch(`${API_BASE_URL}/raawi-script-upload`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        apikey: (import.meta as any).env.VITE_SUPABASE_ANON_KEY,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({} as Record<string, unknown>));
-      const message = typeof body.error === 'string' ? body.error : `${response.status} ${response.statusText}`;
-      throw new Error(message);
-    }
-
-    return response.json();
-  };
-
   const uploadSupportingDocument = async (uploadFile: File): Promise<string> => {
     const upload = await scriptsApi.getUploadUrl(uploadFile.name);
     await scriptsApi.uploadToSignedUrl(uploadFile, upload.url);
     if (upload.path) return upload.path;
     return upload.url;
+  };
+
+  const openStoredDocument = async (pathOrUrl: string | null | undefined) => {
+    if (!pathOrUrl) return;
+    const value = pathOrUrl.trim();
+    if (!value) return;
+    if (/^https?:\/\//i.test(value)) {
+      window.open(value, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    const { data, error } = await supabase.storage.from('scripts').createSignedUrl(value, 60 * 10);
+    if (error || !data?.signedUrl) throw new Error(error?.message || 'Unable to open document');
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
   };
 
   const requiresStorySummary = useMemo(() => {
@@ -973,146 +944,6 @@ export function ClientPortal() {
       normalized.includes(token.toLowerCase()),
     );
   }, [form.workClassification]);
-
-  const handleSubmitScript = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setNotice('');
-    setError('');
-
-    if (!profile?.company?.companyId) {
-      setError(lang === 'ar' ? 'تعذّر تحديد حساب المستفيد الحالي' : 'Unable to resolve your beneficiary account');
-      return;
-    }
-    if (!form.title.trim()) {
-      setError(lang === 'ar' ? 'عنوان النص مطلوب' : 'Script title is required');
-      return;
-    }
-    if (entryMode === 'upload' && !file) {
-      setError(lang === 'ar' ? 'يجب إرفاق ملف النص' : 'Please attach a script file');
-      return;
-    }
-    if (entryMode === 'paste' && !/\S/.test(manualText)) {
-      setError(lang === 'ar' ? 'يجب إدخال نص في المحرر' : 'Please enter script text in the editor');
-      return;
-    }
-    if (!scriptSummaryPdfFile) {
-      setError(lang === 'ar' ? 'يجب إرفاق ملف PDF لملخص النص' : 'Script summary PDF is required');
-      return;
-    }
-    if (scriptSummaryPdfFile.type !== 'application/pdf') {
-      setError(lang === 'ar' ? 'ملف ملخص النص يجب أن يكون PDF' : 'Script summary file must be PDF');
-      return;
-    }
-    if (requiresStorySummary && !form.storySummary.trim()) {
-      setError(lang === 'ar' ? 'ملخص النص مطلوب لهذا التصنيف' : 'Story summary is required for this work classification');
-      return;
-    }
-    if (form.storySummary.split(/\r?\n/).length > 3) {
-      setError(lang === 'ar' ? 'ملخص النص يجب ألا يتجاوز 3 أسطر' : 'Story summary must be at most 3 lines');
-      return;
-    }
-    if (form.hasSecurityScenes === 'yes' && !securityContentFile) {
-      setError(lang === 'ar' ? 'يرجى إرفاق المحتوى الأمني' : 'Please attach security content');
-      return;
-    }
-
-    setIsSubmitting(true);
-    let createdScriptId: string | null = null;
-    try {
-      const scriptSummaryPdfUrl = await uploadSupportingDocument(scriptSummaryPdfFile);
-      const securityContentAttachmentUrl = form.hasSecurityScenes === 'yes' && securityContentFile
-        ? await uploadSupportingDocument(securityContentFile)
-        : null;
-
-      const scriptPayload: Script = {
-        id: '',
-        companyId: profile.company.companyId,
-        title: form.title.trim(),
-        type: form.type,
-        workClassification: form.workClassification,
-        storySummary: form.storySummary.trim() || undefined,
-        scriptSummaryPdfUrl,
-        hasSecurityScenes: form.hasSecurityScenes === 'yes',
-        securityContentAttachmentUrl: securityContentAttachmentUrl ?? undefined,
-        expectedRank: form.expectedRank,
-        synopsis: form.synopsis.trim(),
-        status: 'in_review',
-        createdAt: new Date().toISOString(),
-      };
-      const created = await scriptsApi.addScript(scriptPayload);
-
-      createdScriptId = created.id;
-      const duplicateTitleWarning = created.warnings?.find((warning) => warning.code === 'duplicate_title_same_client');
-      if (entryMode === 'upload') {
-        const upload = await uploadScriptDocument(created.id, profile.company.companyId, file!);
-        if (!upload.versionId) {
-          throw new Error(lang === 'ar' ? 'تعذّر إنشاء نسخة النص' : 'Failed to create script version');
-        }
-
-        const ext = file!.name.toLowerCase().split('.').pop() || '';
-        if (ext === 'pdf') {
-          await scriptsApi.extractText(upload.versionId, undefined, { enqueueAnalysis: false });
-          const extractedVersion = await waitForVersionExtraction(created.id, upload.versionId, {
-            timeoutMs: PDF_EXTRACTION_TIMEOUT_MS,
-            intervalMs: PDF_EXTRACTION_INTERVAL_MS,
-          });
-          if (!extractedVersion.extracted_text?.trim()) {
-            throw new Error(lang === 'ar' ? 'لم يتم استخراج نص من الملف' : 'No text extracted from file');
-          }
-        } else if (ext === 'docx') {
-          const { pages } = await extractDocxWithPages(file!);
-          const res = await scriptsApi.extractText(upload.versionId, undefined, { pages, enqueueAnalysis: false });
-          if (!(res as { extracted_text?: string }).extracted_text?.trim()) {
-            throw new Error(lang === 'ar' ? 'لم يتم استخراج نص من الملف' : 'No text extracted from file');
-          }
-        } else if (ext === 'txt') {
-          const text = await file!.text();
-          if (!text.trim()) throw new Error(lang === 'ar' ? 'الملف النصي فارغ' : 'Text file is empty');
-          await scriptsApi.extractText(upload.versionId, text, { enqueueAnalysis: false });
-        } else {
-          throw new Error(lang === 'ar' ? 'صيغة الملف غير مدعومة' : 'Unsupported file format');
-        }
-      } else {
-        const version = await scriptsApi.createVersion(created.id, {
-          source_file_name: 'client-editor-entry.txt',
-          source_file_type: 'application/x-raawi-editor',
-          source_file_size: manualText.length,
-          extraction_status: 'pending',
-        });
-        await scriptsApi.extractText(version.id, manualText, { enqueueAnalysis: false });
-      }
-
-      setForm({
-        title: '',
-        type: 'Film',
-        workClassification: workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '',
-        expectedRank: 'PG',
-        synopsis: '',
-        storySummary: '',
-        hasSecurityScenes: 'no',
-      });
-      setFile(null);
-      setManualText('');
-      setScriptSummaryPdfFile(null);
-      setSecurityContentFile(null);
-      setEntryMode('upload');
-      setUploaderKey((v) => v + 1);
-      setNotice(duplicateTitleWarning
-        ? (lang === 'ar' ? duplicateTitleWarning.message : (duplicateTitleWarning.messageEn ?? duplicateTitleWarning.message))
-        : (lang === 'ar'
-          ? 'تم إرسال النص بنجاح، وسيتم مراجعته من فريق الإدارة.'
-          : 'Script submitted successfully and sent to admin review.'));
-      setActiveSection('scripts');
-      await loadProfileAndSubmissions();
-    } catch (err) {
-      if (createdScriptId) {
-        await scriptsApi.deleteScript(createdScriptId).catch(() => {});
-      }
-      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل إرسال النص' : 'Failed to submit script'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleSaveDraft = async () => {
     setNotice('');
@@ -1125,11 +956,11 @@ export function ClientPortal() {
       setError(lang === 'ar' ? 'عنوان النص مطلوب' : 'Script title is required');
       return;
     }
-    if (!scriptSummaryPdfFile) {
+    if (!scriptSummaryPdfFile && !existingScriptSummaryPdfUrl) {
       setError(lang === 'ar' ? 'يجب إرفاق ملف PDF لملخص النص' : 'Script summary PDF is required');
       return;
     }
-    if (scriptSummaryPdfFile.type !== 'application/pdf') {
+    if (scriptSummaryPdfFile && scriptSummaryPdfFile.type !== 'application/pdf') {
       setError(lang === 'ar' ? 'ملف ملخص النص يجب أن يكون PDF' : 'Script summary file must be PDF');
       return;
     }
@@ -1141,17 +972,26 @@ export function ClientPortal() {
       setError(lang === 'ar' ? 'ملخص النص يجب ألا يتجاوز 3 أسطر' : 'Story summary must be at most 3 lines');
       return;
     }
-    if (form.hasSecurityScenes === 'yes' && !securityContentFile) {
+    if (form.hasSecurityScenes === 'yes' && !securityContentFile && !existingSecurityContentAttachmentUrl) {
       setError(lang === 'ar' ? 'يرجى إرفاق المحتوى الأمني' : 'Please attach security content');
       return;
     }
 
-    setIsSubmitting(true);
+    setIsSavingDraft(true);
     try {
-      const scriptSummaryPdfUrl = await uploadSupportingDocument(scriptSummaryPdfFile);
-      const securityContentAttachmentUrl = form.hasSecurityScenes === 'yes' && securityContentFile
-        ? await uploadSupportingDocument(securityContentFile)
+      const scriptSummaryPdfUrl = scriptSummaryPdfFile
+        ? await uploadSupportingDocument(scriptSummaryPdfFile)
+        : existingScriptSummaryPdfUrl;
+      const securityContentAttachmentUrl = form.hasSecurityScenes === 'yes'
+        ? (
+          securityContentFile
+            ? await uploadSupportingDocument(securityContentFile)
+            : existingSecurityContentAttachmentUrl
+        )
         : null;
+      const scriptFileUrl = entryMode === 'upload'
+        ? (file ? await uploadSupportingDocument(file) : existingScriptFileUrl)
+        : existingScriptFileUrl;
       if (editingDraft) {
         await scriptsApi.updateScript(editingDraft.scriptId, {
           title: form.title.trim(),
@@ -1161,6 +1001,7 @@ export function ClientPortal() {
           scriptSummaryPdfUrl,
           hasSecurityScenes: form.hasSecurityScenes === 'yes',
           securityContentAttachmentUrl: securityContentAttachmentUrl ?? undefined,
+          fileUrl: scriptFileUrl ?? undefined,
           expectedRank: form.expectedRank,
           synopsis: form.synopsis.trim(),
           status: 'draft',
@@ -1176,6 +1017,7 @@ export function ClientPortal() {
           scriptSummaryPdfUrl,
           hasSecurityScenes: form.hasSecurityScenes === 'yes',
           securityContentAttachmentUrl: securityContentAttachmentUrl ?? undefined,
+          fileUrl: scriptFileUrl ?? undefined,
           expectedRank: form.expectedRank,
           synopsis: form.synopsis.trim(),
           status: 'draft',
@@ -1189,12 +1031,15 @@ export function ClientPortal() {
       }
       setNotice((current) => current || (lang === 'ar' ? 'تم حفظ النص كمسودة.' : 'Script saved as draft.'));
       setEditingDraft(null);
+      setExistingScriptSummaryPdfUrl(null);
+      setExistingSecurityContentAttachmentUrl(null);
+      setExistingScriptFileUrl(null);
       await loadProfileAndSubmissions();
       setActiveSection('scripts');
     } catch (err) {
       setError(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل حفظ المسودة' : 'Failed to save draft'));
     } finally {
-      setIsSubmitting(false);
+      setIsSavingDraft(false);
     }
   };
 
@@ -1212,20 +1057,75 @@ export function ClientPortal() {
     }
   };
 
-  const startEditDraft = (item: ClientPortalSubmissionItem) => {
-    const incomingExpectedRank = (item as ClientPortalSubmissionItem & { expectedRank?: string | null }).expectedRank;
+  const startEditDraft = async (item: ClientPortalSubmissionItem) => {
+    let source = item;
+    try {
+      const full = await scriptsApi.getScript(item.scriptId);
+      source = {
+        ...item,
+        title: full.title ?? item.title,
+        type: full.type ?? item.type,
+        status: full.status ?? item.status,
+        synopsis: full.synopsis ?? item.synopsis ?? null,
+        expectedRank: full.expectedRank ?? item.expectedRank ?? null,
+        workClassification: full.workClassification ?? item.workClassification ?? null,
+        storySummary: full.storySummary ?? item.storySummary ?? null,
+        scriptSummaryPdfUrl: full.scriptSummaryPdfUrl ?? item.scriptSummaryPdfUrl ?? null,
+        hasSecurityScenes: full.hasSecurityScenes ?? item.hasSecurityScenes ?? false,
+        securityContentAttachmentUrl: full.securityContentAttachmentUrl ?? item.securityContentAttachmentUrl ?? null,
+        fileUrl: full.fileUrl ?? item.fileUrl ?? null,
+      };
+    } catch {
+      // Keep existing row snapshot as fallback if full fetch is unavailable.
+    }
+    const incomingExpectedRank = (source as ClientPortalSubmissionItem & { expectedRank?: string | null }).expectedRank;
     const normalizedExpectedRank: ExpectedRank = EXPECTED_RANK_VALUES.includes(incomingExpectedRank as ExpectedRank)
       ? (incomingExpectedRank as ExpectedRank)
       : 'PG';
     setEditingDraft(item);
     setForm((prev) => ({
       ...prev,
-      title: item.title ?? '',
-      type: item.type === 'Series' ? 'Series' : 'Film',
+      title: source.title ?? '',
+      type: source.type === 'Series' ? 'Series' : 'Film',
+      workClassification: source.workClassification || prev.workClassification,
       expectedRank: normalizedExpectedRank,
-      synopsis: prev.synopsis ?? '',
+      synopsis: source.synopsis ?? '',
+      storySummary: source.storySummary ?? '',
+      hasSecurityScenes: source.hasSecurityScenes ? 'yes' : 'no',
     }));
+    setScriptSummaryPdfFile(null);
+    setSecurityContentFile(null);
+    setExistingScriptSummaryPdfUrl(source.scriptSummaryPdfUrl ?? null);
+    setExistingSecurityContentAttachmentUrl(source.securityContentAttachmentUrl ?? null);
+    setExistingScriptFileUrl(source.fileUrl ?? null);
     setActiveSection('new-script');
+  };
+
+  const openSubmissionDetails = async (item: ClientPortalSubmissionItem) => {
+    setSubmissionDetailsLoading(true);
+    setSubmissionDetailsItem(item);
+    setActiveSection('script-view');
+    try {
+      const full = await scriptsApi.getScript(item.scriptId);
+      setSubmissionDetailsItem({
+        ...item,
+        title: full.title ?? item.title,
+        type: full.type ?? item.type,
+        status: full.status ?? item.status,
+        synopsis: full.synopsis ?? item.synopsis ?? null,
+        expectedRank: full.expectedRank ?? item.expectedRank ?? null,
+        workClassification: full.workClassification ?? item.workClassification ?? null,
+        storySummary: full.storySummary ?? item.storySummary ?? null,
+        scriptSummaryPdfUrl: full.scriptSummaryPdfUrl ?? item.scriptSummaryPdfUrl ?? null,
+        hasSecurityScenes: full.hasSecurityScenes ?? item.hasSecurityScenes ?? false,
+        securityContentAttachmentUrl: full.securityContentAttachmentUrl ?? item.securityContentAttachmentUrl ?? null,
+        fileUrl: full.fileUrl ?? item.fileUrl ?? null,
+      });
+    } catch {
+      // Keep initial snapshot shown in modal.
+    } finally {
+      setSubmissionDetailsLoading(false);
+    }
   };
 
   const openPaymentPage = async (scriptId: string) => {
@@ -1413,7 +1313,7 @@ export function ClientPortal() {
                                 return;
                               }
                               if (isDraft) {
-                                startEditDraft(item);
+                                void openSubmissionDetails(item);
                                 return;
                               }
                               if (status === 'approved') {
@@ -1428,7 +1328,7 @@ export function ClientPortal() {
                             <Eye className="h-4 w-4" />
                           </Button>
                           {isDraft ? (
-                            <Button size="sm" variant="ghost" onClick={() => startEditDraft(item)} aria-label="edit"><Pencil className="h-4 w-4" /></Button>
+                            <Button size="sm" variant="ghost" onClick={() => void startEditDraft(item)} aria-label="edit"><Pencil className="h-4 w-4" /></Button>
                           ) : null}
                           <Button size="sm" variant="ghost" onClick={() => setScriptToDelete(item)} aria-label="delete"><Trash2 className="h-4 w-4 text-error" /></Button>
                           {!isDraft && !isSubmitted && status === 'approved' ? (
@@ -1476,7 +1376,7 @@ export function ClientPortal() {
         <CardTitle>{lang === 'ar' ? 'إضافة نص جديد' : 'Add New Script'}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmitScript} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="md:col-span-2 space-y-2">
             <label className="block text-sm font-medium text-text-main">
               {lang === 'ar' ? 'طريقة إدخال النص' : 'Script Entry Method'}
@@ -1563,6 +1463,20 @@ export function ClientPortal() {
                 helperText={lang === 'ar' ? 'إلزامي' : 'Mandatory'}
                 onChange={setScriptSummaryPdfFile}
               />
+              {editingDraft && existingScriptSummaryPdfUrl ? (
+                <div className="mt-1 space-y-1 text-xs text-text-muted">
+                  <p>
+                    {lang === 'ar' ? 'ملف الملخص الحالي محفوظ. ارفع ملفًا جديدًا فقط إذا رغبت بالاستبدال.' : 'Current summary file is preserved. Upload a new file only if you want to replace it.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void openStoredDocument(existingScriptSummaryPdfUrl)}
+                    className="inline-flex text-primary underline"
+                  >
+                    {lang === 'ar' ? 'عرض الملف الحالي' : 'View current file'}
+                  </button>
+                </div>
+              ) : null}
           </div>
           {requiresStorySummary ? (
             <div className="md:col-span-2">
@@ -1591,6 +1505,20 @@ export function ClientPortal() {
                 label={lang === 'ar' ? 'إرفاق المحتوى الأمني *' : 'Attach Security Content *'}
                 onChange={setSecurityContentFile}
               />
+              {editingDraft && existingSecurityContentAttachmentUrl ? (
+                <div className="mt-1 space-y-1 text-xs text-text-muted">
+                  <p>
+                    {lang === 'ar' ? 'مرفق المحتوى الأمني الحالي محفوظ. ارفع ملفًا جديدًا فقط إذا رغبت بالاستبدال.' : 'Current security attachment is preserved. Upload a new file only if you want to replace it.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void openStoredDocument(existingSecurityContentAttachmentUrl)}
+                    className="inline-flex text-primary underline"
+                  >
+                    {lang === 'ar' ? 'عرض الملف الحالي' : 'View current file'}
+                  </button>
+                </div>
+              ) : null}
             </div>
           ) : null}
           {entryMode === 'upload' ? (
@@ -1602,6 +1530,20 @@ export function ClientPortal() {
                   helperText={lang === 'ar' ? 'الملف المدعوم الوحيد: Word DOCX' : 'Only supported file: Word DOCX'}
                   onChange={setFile}
                 />
+                {editingDraft && existingScriptFileUrl ? (
+                  <div className="mt-1 space-y-1 text-xs text-text-muted">
+                    <p>
+                      {lang === 'ar' ? 'ملف النص الحالي محفوظ. ارفع ملفًا جديدًا فقط إذا رغبت بالاستبدال.' : 'Current script file is preserved. Upload a new file only if you want to replace it.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void openStoredDocument(existingScriptFileUrl)}
+                      className="inline-flex text-primary underline"
+                    >
+                      {lang === 'ar' ? 'عرض الملف الحالي' : 'View current file'}
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
           ) : (
@@ -1622,17 +1564,14 @@ export function ClientPortal() {
             </div>
           )}
           <div className="md:col-span-2 flex flex-wrap items-center gap-3">
-            <Button type="submit" isLoading={isSubmitting}>
-              {lang === 'ar' ? 'إرسال للنظام' : 'Submit to Dashboard'}
-            </Button>
-            <Button type="button" variant="outline" isLoading={isSubmitting} onClick={handleSaveDraft}>
+            <Button type="button" variant="outline" isLoading={isSavingDraft} onClick={handleSaveDraft}>
               {lang === 'ar' ? 'حفظ كمسودة' : 'Save Draft'}
             </Button>
-            <Button type="button" variant="outline" onClick={loadProfileAndSubmissions} disabled={isLoading || isSubmitting}>
+            <Button type="button" variant="outline" onClick={loadProfileAndSubmissions} disabled={isLoading || isSavingDraft}>
               {lang === 'ar' ? 'تحديث' : 'Refresh'}
             </Button>
           </div>
-        </form>
+        </div>
       </CardContent>
     </Card>
   );
@@ -2203,10 +2142,134 @@ export function ClientPortal() {
     );
   };
 
+  const renderScriptViewPage = () => {
+    if (submissionDetailsLoading) {
+      return (
+        <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+          <CardHeader>
+            <CardTitle>{lang === 'ar' ? 'عرض النص' : 'Script View'}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-text-muted">{lang === 'ar' ? 'جاري تحميل التفاصيل...' : 'Loading details...'}</p>
+          </CardContent>
+        </Card>
+      );
+    }
+    if (!submissionDetailsItem) {
+      return (
+        <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+          <CardHeader>
+            <CardTitle>{lang === 'ar' ? 'عرض النص' : 'Script View'}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-text-muted">{lang === 'ar' ? 'لم يتم تحديد نص للعرض.' : 'No script selected for viewing.'}</p>
+            <div className="mt-4">
+              <Button variant="outline" onClick={() => setActiveSection('scripts')}>
+                {lang === 'ar' ? 'العودة إلى نصوصي' : 'Back to My Scripts'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    return (
+      <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
+        <CardHeader>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>{lang === 'ar' ? 'عرض النص' : 'Script View'}</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setActiveSection('scripts')}>
+              {lang === 'ar' ? 'العودة إلى نصوصي' : 'Back to My Scripts'}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="rounded-md border border-border bg-surface p-3">
+              <p className="text-xs text-text-muted">{lang === 'ar' ? 'عنوان النص' : 'Title'}</p>
+              <p className="mt-1 text-sm font-medium text-text-main">{submissionDetailsItem.title || '-'}</p>
+            </div>
+            <div className="rounded-md border border-border bg-surface p-3">
+              <p className="text-xs text-text-muted">{lang === 'ar' ? 'الحالة' : 'Status'}</p>
+              <p className="mt-1 text-sm font-medium text-text-main">{statusLabel(submissionDetailsItem.status, lang)}</p>
+            </div>
+            <div className="rounded-md border border-border bg-surface p-3">
+              <p className="text-xs text-text-muted">{lang === 'ar' ? 'نوع الإنتاج' : 'Type'}</p>
+              <p className="mt-1 text-sm font-medium text-text-main">{submissionDetailsItem.type || '-'}</p>
+            </div>
+            <div className="rounded-md border border-border bg-surface p-3">
+              <p className="text-xs text-text-muted">{lang === 'ar' ? 'تصنيف العمل' : 'Work Classification'}</p>
+              <p className="mt-1 text-sm font-medium text-text-main">{submissionDetailsItem.workClassification || '-'}</p>
+            </div>
+            <div className="rounded-md border border-border bg-surface p-3 md:col-span-2">
+              <p className="text-xs text-text-muted">{lang === 'ar' ? 'ملخص القصة' : 'Story Summary'}</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm font-medium text-text-main">{submissionDetailsItem.synopsis || '-'}</p>
+            </div>
+            <div className="rounded-md border border-border bg-surface p-3 md:col-span-2">
+              <p className="text-xs text-text-muted">{lang === 'ar' ? 'الملخص الإضافي للنص' : 'Additional Script Summary'}</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm font-medium text-text-main">{submissionDetailsItem.storySummary || '-'}</p>
+            </div>
+          </div>
+
+          <div className="rounded-md border border-border bg-background p-3 space-y-3">
+            <p className="text-sm font-semibold text-text-main">{lang === 'ar' ? 'المرفقات' : 'Attachments'}</p>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="text-text-muted">{lang === 'ar' ? 'ملخص النص PDF: ' : 'Script Summary PDF: '}</span>
+                {submissionDetailsItem.scriptSummaryPdfUrl ? (
+                  <button
+                    type="button"
+                    className="text-primary underline"
+                    onClick={() => void openStoredDocument(submissionDetailsItem.scriptSummaryPdfUrl)}
+                  >
+                    {lang === 'ar' ? 'عرض الملف' : 'View file'}
+                  </button>
+                ) : <span>{lang === 'ar' ? 'غير مرفق' : 'Not attached'}</span>}
+              </div>
+              <div>
+                <span className="text-text-muted">{lang === 'ar' ? 'مرفق المحتوى الأمني: ' : 'Security Content Attachment: '}</span>
+                {submissionDetailsItem.securityContentAttachmentUrl ? (
+                  <button
+                    type="button"
+                    className="text-primary underline"
+                    onClick={() => void openStoredDocument(submissionDetailsItem.securityContentAttachmentUrl)}
+                  >
+                    {lang === 'ar' ? 'عرض الملف' : 'View file'}
+                  </button>
+                ) : <span>{lang === 'ar' ? 'غير مرفق' : 'Not attached'}</span>}
+              </div>
+              <div>
+                <span className="text-text-muted">{lang === 'ar' ? 'ملف النص الأصلي: ' : 'Original Script File: '}</span>
+                {submissionDetailsItem.fileUrl ? (
+                  <button
+                    type="button"
+                    className="text-primary underline"
+                    onClick={() => void openStoredDocument(submissionDetailsItem.fileUrl)}
+                  >
+                    {lang === 'ar' ? 'عرض الملف' : 'View file'}
+                  </button>
+                ) : <span>{lang === 'ar' ? 'غير مرفق' : 'Not attached'}</span>}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="outline" onClick={() => setActiveSection('scripts')}>
+              {lang === 'ar' ? 'رجوع' : 'Back'}
+            </Button>
+            <Button onClick={() => void startEditDraft(submissionDetailsItem)}>
+              {lang === 'ar' ? 'تعديل' : 'Edit'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   const renderActiveSection = () => {
     if (activeSection === 'overview') return renderOverview();
     if (activeSection === 'scripts') return renderSubmissionList();
     if (activeSection === 'new-script') return renderNewScriptForm();
+    if (activeSection === 'script-view') return renderScriptViewPage();
     if (activeSection === 'payment') return renderPaymentPage();
     if (activeSection === 'certificates') {
       return <ClientCertificatesSection lang={lang} />;
