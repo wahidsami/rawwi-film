@@ -52,6 +52,10 @@ type ClientRow = {
   approved_at?: string | null;
   rejected_at?: string | null;
   rejection_reason?: string | null;
+  individual_full_name?: string | null;
+  individual_date_of_birth?: string | null;
+  individual_nationality?: string | null;
+  individual_national_id_or_iqama?: string | null;
 };
 
 type FrontendClient = {
@@ -85,6 +89,12 @@ type FrontendClient = {
   approvedAt?: string | null;
   rejectedAt?: string | null;
   rejectionReason?: string | null;
+  individualProfile?: {
+    fullName?: string | null;
+    dateOfBirth?: string | null;
+    nationality?: string | null;
+    nationalIdOrIqama?: string | null;
+  } | null;
 };
 
 function toFrontend(row: ClientRow, scriptsCount = 0): FrontendClient {
@@ -119,10 +129,16 @@ function toFrontend(row: ClientRow, scriptsCount = 0): FrontendClient {
     approvedAt: row.approved_at ?? null,
     rejectedAt: row.rejected_at ?? null,
     rejectionReason: row.rejection_reason ?? null,
+    individualProfile: {
+      fullName: row.individual_full_name ?? null,
+      dateOfBirth: row.individual_date_of_birth ?? null,
+      nationality: row.individual_nationality ?? null,
+      nationalIdOrIqama: row.individual_national_id_or_iqama ?? null,
+    },
   };
 }
 
-const CLIENT_SELECT = "id, beneficiary_type, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, created_by, logo_url, logo_updated_at, source, approval_status, website, phone, address_line1, address_line2, city, postal_code, country, contact_email, contact_mobile, about, years_of_experience, legal_documents, terms_accepted_at, approved_at, rejected_at, rejection_reason";
+const CLIENT_SELECT = "id, beneficiary_type, name_ar, name_en, representative_name, representative_title, mobile, email, created_at, created_by, logo_url, logo_updated_at, source, approval_status, website, phone, address_line1, address_line2, city, postal_code, country, contact_email, contact_mobile, about, years_of_experience, legal_documents, terms_accepted_at, approved_at, rejected_at, rejection_reason, individual_full_name, individual_date_of_birth, individual_nationality, individual_national_id_or_iqama";
 
 function getPathAfterCompanies(url: string): string {
   const pathname = new URL(url).pathname;

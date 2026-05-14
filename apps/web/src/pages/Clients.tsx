@@ -61,6 +61,7 @@ export function Clients() {
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin' || hasSection('access_control');
 
   const [search, setSearch] = useState('');
+  const [beneficiaryTypeFilter, setBeneficiaryTypeFilter] = useState<'all' | 'company' | 'individual'>('all');
   const [activeTab, setActiveTab] = useState<ClientTab>('new');
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = window.localStorage.getItem(VIEW_STORAGE_KEY);
@@ -101,14 +102,18 @@ export function Clients() {
 
   const filteredClients = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return tabClients;
-    return tabClients.filter((client) =>
+    return tabClients.filter((client) => {
+      const matchText = !q || (
       (client.nameAr ?? '').toLowerCase().includes(q) ||
       (client.nameEn ?? '').toLowerCase().includes(q) ||
       (client.email ?? '').toLowerCase().includes(q) ||
       (client.representativeName ?? '').toLowerCase().includes(q)
-    );
-  }, [tabClients, search]);
+      );
+      const type = client.beneficiaryType ?? 'company';
+      const matchType = beneficiaryTypeFilter === 'all' || type === beneficiaryTypeFilter;
+      return matchText && matchType;
+    });
+  }, [tabClients, search, beneficiaryTypeFilter]);
 
   const pageCount = Math.max(1, Math.ceil(filteredClients.length / PAGE_SIZE));
   const pagedClients = viewMode === 'table'
@@ -272,6 +277,11 @@ export function Clients() {
                   {clientDisplayName(client, lang === 'ar' ? 'ar' : 'en')}
                 </h3>
                 <p className="truncate text-sm text-text-muted">{lang === 'ar' ? client.nameEn : client.nameAr}</p>
+                <p className="mt-1 text-xs text-text-muted">
+                  {lang === 'ar'
+                    ? (client.beneficiaryType === 'individual' ? 'فرد' : 'شركة')
+                    : (client.beneficiaryType === 'individual' ? 'Individual' : 'Company')}
+                </p>
               </div>
               {statusBadge(client, lang === 'ar' ? 'ar' : 'en')}
             </div>
@@ -392,6 +402,17 @@ export function Clients() {
             onChange={(event) => setSearch(event.target.value)}
             className={cn('h-10', lang === 'ar' ? 'pr-9' : 'pl-9')}
           />
+        </div>
+        <div className="w-full sm:w-56">
+          <select
+            value={beneficiaryTypeFilter}
+            onChange={(event) => setBeneficiaryTypeFilter(event.target.value as 'all' | 'company' | 'individual')}
+            className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-text-main"
+          >
+            <option value="all">{lang === 'ar' ? 'كل الأنواع' : 'All Types'}</option>
+            <option value="company">{lang === 'ar' ? 'شركة' : 'Company'}</option>
+            <option value="individual">{lang === 'ar' ? 'فرد' : 'Individual'}</option>
+          </select>
         </div>
       </div>
 

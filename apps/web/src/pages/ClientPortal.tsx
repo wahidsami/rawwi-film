@@ -616,6 +616,10 @@ export function ClientPortal() {
     contactMobile: '',
     yearsOfExperience: '',
     about: '',
+    individualFullName: '',
+    individualDateOfBirth: '',
+    individualNationality: '',
+    individualNationalIdOrIqama: '',
   });
 
   const subscriptionLabel = useMemo(
@@ -672,6 +676,10 @@ export function ClientPortal() {
       contactMobile: profile.company?.contactMobile ?? '',
       yearsOfExperience: profile.company?.yearsOfExperience != null ? String(profile.company.yearsOfExperience) : '',
       about: profile.company?.about ?? '',
+      individualFullName: profile.company?.individualProfile?.fullName ?? '',
+      individualDateOfBirth: profile.company?.individualProfile?.dateOfBirth ?? '',
+      individualNationality: profile.company?.individualProfile?.nationality ?? '',
+      individualNationalIdOrIqama: profile.company?.individualProfile?.nationalIdOrIqama ?? '',
     });
   }, [profile]);
 
@@ -2022,6 +2030,7 @@ export function ClientPortal() {
 
   const renderSettingsSection = () => {
     const isArabic = lang === 'ar';
+    const isIndividual = (profile?.company?.beneficiaryType ?? 'company') === 'individual';
     const saveSettings = async (e: React.FormEvent) => {
       e.preventDefault();
       setError('');
@@ -2029,6 +2038,7 @@ export function ClientPortal() {
       setIsSavingSettings(true);
       try {
         const response = await clientPortalApi.updateMe({
+          beneficiaryType: isIndividual ? 'individual' : 'company',
           userName: settingsForm.userName,
           companyNameAr: settingsForm.companyNameAr,
           companyNameEn: settingsForm.companyNameEn,
@@ -2043,6 +2053,16 @@ export function ClientPortal() {
           contactMobile: settingsForm.contactMobile,
           about: settingsForm.about,
           yearsOfExperience: settingsForm.yearsOfExperience.trim() ? Number(settingsForm.yearsOfExperience) : null,
+          individualProfile: isIndividual
+            ? {
+                fullName: settingsForm.individualFullName,
+                dateOfBirth: settingsForm.individualDateOfBirth,
+                nationality: settingsForm.individualNationality,
+                nationalIdOrIqama: settingsForm.individualNationalIdOrIqama,
+                city: settingsForm.city,
+                mobile: settingsForm.companyMobile || settingsForm.contactMobile,
+              }
+            : undefined,
         });
         setProfile(response.profile);
         setNotice(isArabic ? 'تم حفظ بيانات الإعدادات بنجاح.' : 'Settings saved successfully.');
@@ -2062,18 +2082,30 @@ export function ClientPortal() {
           <form onSubmit={saveSettings} className="grid gap-4 md:grid-cols-2">
             <Input label={isArabic ? 'اسم المستخدم' : 'User Name'} value={settingsForm.userName} onChange={(e) => setSettingsForm((p) => ({ ...p, userName: e.target.value }))} />
             <Input label={isArabic ? 'بريد جهة الاتصال (تسجيل الدخول)' : 'Contact Email (Login)'} value={settingsForm.contactEmail} disabled />
-            <Input label={isArabic ? 'اسم الشركة بالعربية' : 'Company Name (Arabic)'} value={settingsForm.companyNameAr} onChange={(e) => setSettingsForm((p) => ({ ...p, companyNameAr: e.target.value }))} />
-            <Input label={isArabic ? 'اسم الشركة بالإنجليزية' : 'Company Name (English)'} value={settingsForm.companyNameEn} onChange={(e) => setSettingsForm((p) => ({ ...p, companyNameEn: e.target.value }))} />
-            <Input label={isArabic ? 'اسم ممثل الجهة' : 'Representative Name'} value={settingsForm.representativeName} onChange={(e) => setSettingsForm((p) => ({ ...p, representativeName: e.target.value }))} />
-            <Input label={isArabic ? 'الصفة الوظيفية' : 'Representative Title'} value={settingsForm.representativeTitle} onChange={(e) => setSettingsForm((p) => ({ ...p, representativeTitle: e.target.value }))} />
-            <Input label={isArabic ? 'بريد الشركة' : 'Company Email'} value={settingsForm.companyEmail} onChange={(e) => setSettingsForm((p) => ({ ...p, companyEmail: e.target.value }))} />
-            <Input label={isArabic ? 'جوال الشركة' : 'Company Mobile'} value={settingsForm.companyMobile} onChange={(e) => setSettingsForm((p) => ({ ...p, companyMobile: e.target.value }))} />
-            <Input label={isArabic ? 'موقع إلكتروني' : 'Website'} value={settingsForm.website} onChange={(e) => setSettingsForm((p) => ({ ...p, website: e.target.value }))} />
-            <Input label={isArabic ? 'هاتف' : 'Phone'} value={settingsForm.phone} onChange={(e) => setSettingsForm((p) => ({ ...p, phone: e.target.value }))} />
+            {isIndividual ? (
+              <>
+                <Input label={isArabic ? 'الاسم الكامل' : 'Full Name'} value={settingsForm.individualFullName} onChange={(e) => setSettingsForm((p) => ({ ...p, individualFullName: e.target.value }))} />
+                <Input label={isArabic ? 'تاريخ الميلاد' : 'Date of Birth'} type="date" value={settingsForm.individualDateOfBirth} onChange={(e) => setSettingsForm((p) => ({ ...p, individualDateOfBirth: e.target.value }))} />
+                <Input label={isArabic ? 'الجنسية' : 'Nationality'} value={settingsForm.individualNationality} onChange={(e) => setSettingsForm((p) => ({ ...p, individualNationality: e.target.value }))} />
+                <Input label={isArabic ? 'رقم الهوية/الإقامة' : 'National ID / Iqama'} value={settingsForm.individualNationalIdOrIqama} onChange={(e) => setSettingsForm((p) => ({ ...p, individualNationalIdOrIqama: e.target.value }))} dir="ltr" />
+                <Input label={isArabic ? 'الجوال' : 'Mobile'} value={settingsForm.companyMobile} onChange={(e) => setSettingsForm((p) => ({ ...p, companyMobile: e.target.value }))} />
+              </>
+            ) : (
+              <>
+                <Input label={isArabic ? 'اسم الشركة بالعربية' : 'Company Name (Arabic)'} value={settingsForm.companyNameAr} onChange={(e) => setSettingsForm((p) => ({ ...p, companyNameAr: e.target.value }))} />
+                <Input label={isArabic ? 'اسم الشركة بالإنجليزية' : 'Company Name (English)'} value={settingsForm.companyNameEn} onChange={(e) => setSettingsForm((p) => ({ ...p, companyNameEn: e.target.value }))} />
+                <Input label={isArabic ? 'اسم ممثل الجهة' : 'Representative Name'} value={settingsForm.representativeName} onChange={(e) => setSettingsForm((p) => ({ ...p, representativeName: e.target.value }))} />
+                <Input label={isArabic ? 'الصفة الوظيفية' : 'Representative Title'} value={settingsForm.representativeTitle} onChange={(e) => setSettingsForm((p) => ({ ...p, representativeTitle: e.target.value }))} />
+                <Input label={isArabic ? 'بريد الشركة' : 'Company Email'} value={settingsForm.companyEmail} onChange={(e) => setSettingsForm((p) => ({ ...p, companyEmail: e.target.value }))} />
+                <Input label={isArabic ? 'جوال الشركة' : 'Company Mobile'} value={settingsForm.companyMobile} onChange={(e) => setSettingsForm((p) => ({ ...p, companyMobile: e.target.value }))} />
+                <Input label={isArabic ? 'موقع إلكتروني' : 'Website'} value={settingsForm.website} onChange={(e) => setSettingsForm((p) => ({ ...p, website: e.target.value }))} />
+                <Input label={isArabic ? 'هاتف' : 'Phone'} value={settingsForm.phone} onChange={(e) => setSettingsForm((p) => ({ ...p, phone: e.target.value }))} />
+              </>
+            )}
             <Input label={isArabic ? 'المدينة' : 'City'} value={settingsForm.city} onChange={(e) => setSettingsForm((p) => ({ ...p, city: e.target.value }))} />
             <Input label={isArabic ? 'الدولة' : 'Country'} value={settingsForm.country} onChange={(e) => setSettingsForm((p) => ({ ...p, country: e.target.value }))} />
             <Input label={isArabic ? 'جوال جهة الاتصال' : 'Contact Mobile'} value={settingsForm.contactMobile} onChange={(e) => setSettingsForm((p) => ({ ...p, contactMobile: e.target.value }))} />
-            <Input label={isArabic ? 'سنوات الخبرة' : 'Years of Experience'} type="number" min={0} value={settingsForm.yearsOfExperience} onChange={(e) => setSettingsForm((p) => ({ ...p, yearsOfExperience: e.target.value }))} />
+            {!isIndividual && <Input label={isArabic ? 'سنوات الخبرة' : 'Years of Experience'} type="number" min={0} value={settingsForm.yearsOfExperience} onChange={(e) => setSettingsForm((p) => ({ ...p, yearsOfExperience: e.target.value }))} />}
             <div className="md:col-span-2">
               <Textarea label={isArabic ? 'نبذة' : 'About'} rows={4} value={settingsForm.about} onChange={(e) => setSettingsForm((p) => ({ ...p, about: e.target.value }))} />
             </div>

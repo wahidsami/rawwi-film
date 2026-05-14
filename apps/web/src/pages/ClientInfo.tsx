@@ -28,6 +28,7 @@ export function ClientInfo() {
 
   const isAr = lang === 'ar';
   const rows = [
+    [isAr ? 'نوع المستفيد' : 'Beneficiary Type', company.beneficiaryType === 'individual' ? (isAr ? 'فرد' : 'Individual') : (isAr ? 'شركة' : 'Company')],
     [isAr ? 'اسم الشركة بالعربية' : 'Company Arabic Name', company.nameAr],
     [isAr ? 'اسم الشركة بالإنجليزية' : 'Company English Name', company.nameEn],
     [isAr ? 'مصدر المستفيد' : 'Beneficiary Source', company.source === 'portal' ? (isAr ? 'بوابة المستفيدين' : 'Beneficiary Portal') : (isAr ? 'إدخال داخلي' : 'Internal Entry')],
@@ -43,6 +44,9 @@ export function ClientInfo() {
     [isAr ? 'تاريخ الانضمام' : 'Joining Date', company.approvedAt ?? company.createdAt],
     [isAr ? 'سنوات الخبرة' : 'Years of Experience', company.yearsOfExperience],
     [isAr ? 'عن الشركة' : 'About Company', company.about],
+    [isAr ? 'الاسم الكامل (فرد)' : 'Full Name (Individual)', company.beneficiaryType === 'individual' ? company.individualProfile?.fullName : null],
+    [isAr ? 'تاريخ الميلاد (فرد)' : 'Date of Birth (Individual)', company.beneficiaryType === 'individual' ? company.individualProfile?.dateOfBirth : null],
+    [isAr ? 'الجنسية (فرد)' : 'Nationality (Individual)', company.beneficiaryType === 'individual' ? company.individualProfile?.nationality : null],
   ];
 
   return (

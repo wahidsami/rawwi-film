@@ -72,6 +72,12 @@ export interface Company {
   approvedAt?: string | null;
   rejectedAt?: string | null;
   rejectionReason?: string | null;
+  individualProfile?: {
+    fullName?: string | null;
+    dateOfBirth?: string | null;
+    nationality?: string | null;
+    nationalIdOrIqama?: string | null;
+  } | null;
 }
 
 export interface ScriptVersion {
