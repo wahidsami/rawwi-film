@@ -202,7 +202,7 @@ export function Clients() {
   const tabs: Array<{ id: ClientTab; label: string; count: number }> = [
     { id: 'new', label: lang === 'ar' ? 'الجدد' : 'New', count: portalPendingOrRejected.length },
     { id: 'clients', label: lang === 'ar' ? 'المستفيدين' : 'Beneficiaries', count: portalApproved.length },
-    { id: 'internal', label: lang === 'ar' ? 'عملاء داخليون' : 'Internal Beneficiaries', count: internalClients.length },
+    { id: 'internal', label: lang === 'ar' ? 'مستفيدون داخليون' : 'Internal Beneficiaries', count: internalClients.length },
   ];
 
   const renderActions = (client: Company) => {
@@ -334,7 +334,7 @@ export function Clients() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{lang === 'ar' ? 'عملاء البوابة' : 'Portal Beneficiaries'}</CardTitle>
+            <CardTitle className="text-sm font-medium">{lang === 'ar' ? 'مستفيدو البوابة' : 'Portal Beneficiaries'}</CardTitle>
             <Building2 className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent><div className="text-2xl font-bold text-text-main">{portalApproved.length}</div></CardContent>

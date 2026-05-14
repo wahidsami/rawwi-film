@@ -88,7 +88,7 @@ export function AppLayout() {
     { to: '/app/clients', icon: Users, label: t('clients'), section: 'clients', permission: 'view_clients' },
     { to: '/app/scripts', icon: FileText, label: lang === 'ar' ? 'النصوص' : 'Scripts', section: 'clients', permission: 'view_scripts' },
     // Intentionally hidden for now (kept route/page in codebase).
-    // { to: '/app/client-submissions', icon: FileText, label: lang === 'ar' ? 'طلبات العملاء' : 'Client Submissions', section: 'clients', permission: 'view_scripts' },
+    // { to: '/app/client-submissions', icon: FileText, label: lang === 'ar' ? 'طلبات المستفيدين' : 'Beneficiary Submissions', section: 'clients', permission: 'view_scripts' },
     ...(ENABLE_QUICK_ANALYSIS
       ? [{ to: '/app/quick-analysis', icon: Wand2, label: lang === 'ar' ? 'تحليل سريع' : 'Quick Analysis', section: null as string | null, permission: null as string | null }]
       : []),
@@ -223,8 +223,8 @@ export function AppLayout() {
   }, []);
 
   const getNotifTypeLabel = useCallback((type: string) => {
-    if (type === 'client_registration_arrived') return lang === 'ar' ? 'تسجيل عميل جديد' : 'New Client Registration';
-    if (type === 'client_submission') return lang === 'ar' ? 'تسليم من العميل' : 'Client Submission';
+    if (type === 'client_registration_arrived') return lang === 'ar' ? 'تسجيل مستفيد جديد' : 'New Beneficiary Registration';
+    if (type === 'client_submission') return lang === 'ar' ? 'تسليم من المستفيد' : 'Beneficiary Submission';
     if (type === 'script_assigned') return lang === 'ar' ? 'إسناد نص' : 'Script Assigned';
     if (type === 'certificate_payment_completed') return lang === 'ar' ? 'سداد رسوم الشهادة' : 'Certificate Payment';
     if (type === 'certificate_issued') return lang === 'ar' ? 'إصدار شهادة' : 'Certificate Issued';

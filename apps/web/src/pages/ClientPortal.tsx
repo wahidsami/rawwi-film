@@ -1442,7 +1442,7 @@ export function ClientPortal() {
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80 md:text-base">
               {lang === 'ar'
                 ? 'أصبحت بوابة المستفيد جاهزة لاستقبال أعمالك ومتابعة حالتها خطوة بخطوة، من رفع النص وحتى التقرير والشهادات، بتجربة واضحة ومرتبطة مباشرة بفريق المراجعة.'
-                : 'Your client portal is ready for new work, with clear tracking from script upload through review reports and certificates, all connected directly to the review team.'}
+                : 'Your beneficiary portal is ready for new work, with clear tracking from script upload through review reports and certificates, all connected directly to the review team.'}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 md:min-w-[300px]">

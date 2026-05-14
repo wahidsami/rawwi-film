@@ -671,7 +671,7 @@ export function Landing() {
               </div>
 
               <div className="rounded-[32px] border border-white/10 bg-black/35 p-6 shadow-[0_30px_100px_rgba(0,0,0,0.35)] backdrop-blur">
-                <h3 className="mb-4 text-2xl text-white">{isArabic ? 'مزايا راوي للعملاء' : 'Raawi features for clients'}</h3>
+                <h3 className="mb-4 text-2xl text-white">{isArabic ? 'مزايا راوي للمستفيدين' : 'Raawi features for beneficiaries'}</h3>
                 <ul className="space-y-3 text-white/80">
                   <li>{isArabic ? 'تسجيل مجاني وسريع للشركات.' : 'Fast and free company registration.'}</li>
                   <li>{isArabic ? 'رفع النصوص ومتابعة حالتها خطوة بخطوة.' : 'Submit scripts and track status step by step.'}</li>

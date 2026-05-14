@@ -819,7 +819,7 @@ Deno.serve(async (req: Request) => {
           html: buildBilingualClientEmail({
             titleEn: "Registration Approved",
             titleAr: "تمت الموافقة على التسجيل",
-            bodyEn: `Congratulations.\nYour registration for ${htmlEscape(after.name_en || after.name_ar)} has been approved.\nYou can now sign in and start using the client portal.`,
+            bodyEn: `Congratulations.\nYour registration for ${htmlEscape(after.name_en || after.name_ar)} has been approved.\nYou can now sign in and start using the beneficiary portal.`,
             bodyAr: `تهانينا.\nتمت الموافقة على تسجيل شركة ${htmlEscape(after.name_ar || after.name_en)}.\nيمكنكم الآن تسجيل الدخول والبدء في استخدام بوابة المستفيد.`,
             ctaUrl: `${appPublicUrl}/client/login`,
             ctaLabelEn: "Login",

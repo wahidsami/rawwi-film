@@ -548,7 +548,7 @@ Deno.serve(async (req: Request) => {
   // GET /client-portal/me
   if (method === "GET" && rest === "me") {
     if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
-    if (account.subscription_status !== "active") return json({ error: "Client portal account is not active" }, 403);
+    if (account.subscription_status !== "active") return json({ error: "Beneficiary portal account is not active" }, 403);
     const [{ data: userResult }, { data: company }] = await Promise.all([
       supabase.auth.admin.getUserById(userId),
       supabase

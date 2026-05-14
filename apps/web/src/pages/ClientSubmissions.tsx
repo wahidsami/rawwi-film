@@ -316,7 +316,7 @@ export function ClientSubmissions() {
                     checked={shareReportsToClient}
                     onChange={(e) => setShareReportsToClient(e.target.checked)}
                   />
-                  <span>{lang === 'ar' ? 'مشاركة تقرير/تقارير التحليل مع المستفيد' : 'Share analysis report(s) with client'}</span>
+                  <span>{lang === 'ar' ? 'مشاركة تقرير/تقارير التحليل مع المستفيد' : 'Share analysis report(s) with beneficiary'}</span>
                 </label>
 
                 {shareReportsToClient && (

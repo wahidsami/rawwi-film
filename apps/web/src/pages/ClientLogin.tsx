@@ -50,7 +50,7 @@ export function ClientLogin() {
               <div className="space-y-1 text-center">
                 <h2 className="text-2xl font-bold tracking-tight">{lang === 'ar' ? 'دخول المستفيد' : 'Beneficiary Login'}</h2>
                 <p className="text-text-muted text-sm">
-                  {lang === 'ar' ? 'سجّل الدخول إلى بوابة المستفيدين' : 'Sign in to the client portal'}
+                  {lang === 'ar' ? 'سجّل الدخول إلى بوابة المستفيد' : 'Sign in to the beneficiary portal'}
                 </p>
               </div>
 

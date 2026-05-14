@@ -5718,7 +5718,7 @@ export function ScriptWorkspace() {
                 <p className="text-[11px] text-text-muted leading-5">
                   {lang === 'ar'
                     ? `آخر تقرير ${previousReviewInsight.latestDate ? `بتاريخ ${previousReviewInsight.latestDate}` : 'مسجل'} بواسطة ${previousReviewInsight.latestActor} للمستفيد ${previousReviewInsight.clientLabel}.`
-                    : `Latest report ${previousReviewInsight.latestDate ? `on ${previousReviewInsight.latestDate}` : 'recorded'} by ${previousReviewInsight.latestActor} for client ${previousReviewInsight.clientLabel}.`}
+                    : `Latest report ${previousReviewInsight.latestDate ? `on ${previousReviewInsight.latestDate}` : 'recorded'} by ${previousReviewInsight.latestActor} for beneficiary ${previousReviewInsight.clientLabel}.`}
                 </p>
                 {previousReviewInsight.hasExternalReview && (
                   <p className="text-[11px] text-warning">
@@ -6409,7 +6409,7 @@ export function ScriptWorkspace() {
             value={rejectDecisionClientComment}
             onChange={(e) => setRejectDecisionClientComment(e.target.value)}
             rows={3}
-            placeholder={lang === 'ar' ? 'سيظهر هذا النص للمستفيد في بوابة المستفيد.' : 'This message will be shown to the client in their portal.'}
+            placeholder={lang === 'ar' ? 'سيظهر هذا النص للمستفيد في بوابة المستفيد.' : 'This message will be shown to the beneficiary in their portal.'}
           />
 
           <div className="rounded-md border border-border bg-background p-3 space-y-3">
@@ -6649,7 +6649,7 @@ export function ScriptWorkspace() {
                 <p className="text-xs leading-6 text-text-muted">
                   {lang === 'ar'
                     ? 'أزلنا العرض الحي للنص الحالي لتبسيط النافذة على فريق المستفيد. ستظهر هنا المؤشرات الأهم فقط: النمط، التقدم، المدة، والأجزاء المنجزة.'
-                    : 'The live text preview was removed to keep this dialog simpler for client-facing teams. Only the most useful indicators stay visible here: mode, progress, timing, and completed chunks.'}
+                    : 'The live text preview was removed to keep this dialog simpler for beneficiary-facing teams. Only the most useful indicators stay visible here: mode, progress, timing, and completed chunks.'}
                 </p>
                 {(analysisJob?.manualReviewContextCount ?? 0) > 0 && (
                   <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-[11px] text-primary">

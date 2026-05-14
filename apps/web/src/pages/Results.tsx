@@ -2990,7 +2990,7 @@ export function Results() {
             label={lang === 'ar' ? 'تعليق للمستفيد (اختياري)' : 'Beneficiary comment (optional)'}
             value={rejectDecisionClientComment}
             onChange={(e) => setRejectDecisionClientComment(e.target.value)}
-            placeholder={lang === 'ar' ? 'اكتب ملاحظات واضحة تظهر للمستفيد في البوابة…' : 'Write clear notes that will be shown to the client…'}
+            placeholder={lang === 'ar' ? 'اكتب ملاحظات واضحة تظهر للمستفيد في البوابة…' : 'Write clear notes that will be shown to the beneficiary…'}
           />
 
           <div className="rounded-md border border-border bg-background p-3 space-y-3">
@@ -3000,7 +3000,7 @@ export function Results() {
                 checked={rejectDecisionShareReports}
                 onChange={(e) => setRejectDecisionShareReports(e.target.checked)}
               />
-              <span>{lang === 'ar' ? 'مشاركة تقرير/تقارير التحليل مع المستفيد' : 'Share analysis report(s) with client'}</span>
+              <span>{lang === 'ar' ? 'مشاركة تقرير/تقارير التحليل مع المستفيد' : 'Share analysis report(s) with beneficiary'}</span>
             </label>
 
             {rejectDecisionShareReports && (
