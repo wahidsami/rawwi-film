@@ -946,7 +946,7 @@ export function ClientPortal() {
       setError(lang === 'ar' ? 'يجب إرفاق ملف النص' : 'Please attach a script file');
       return;
     }
-    if (entryMode === 'paste' && !manualText.trim()) {
+    if (entryMode === 'paste' && !/\S/.test(manualText)) {
       setError(lang === 'ar' ? 'يجب إدخال نص في المحرر' : 'Please enter script text in the editor');
       return;
     }
@@ -1031,10 +1031,10 @@ export function ClientPortal() {
         const version = await scriptsApi.createVersion(created.id, {
           source_file_name: 'client-editor-entry.txt',
           source_file_type: 'application/x-raawi-editor',
-          source_file_size: manualText.trim().length,
+          source_file_size: manualText.length,
           extraction_status: 'pending',
         });
-        await scriptsApi.extractText(version.id, manualText.trim(), { enqueueAnalysis: false });
+        await scriptsApi.extractText(version.id, manualText, { enqueueAnalysis: false });
       }
 
       setForm({
@@ -1566,6 +1566,8 @@ export function ClientPortal() {
                 rows={14}
                 value={manualText}
                 onChange={(e) => setManualText(e.target.value)}
+                className="font-mono whitespace-pre"
+                spellCheck={false}
                 placeholder={
                   lang === 'ar'
                     ? 'الصق النص هنا. سننشئ له نسخة نظامية ونمرره لنفس مسار المعالجة المستخدم في النظام الحالي.'
