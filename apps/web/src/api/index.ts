@@ -693,6 +693,26 @@ export const companiesApi = {
 };
 
 export type UploadUrlResponse = { url: string; path?: string };
+export interface ScriptRevisionCycleSummaryItem {
+  id: string;
+  cycleNumber: number;
+  status: string;
+  sentAt: string;
+  returnedAt?: string | null;
+  reanalyzedAt?: string | null;
+  sourceReportId?: string | null;
+  reanalyzedReportId?: string | null;
+  baselineFindings: number;
+  reanalyzedFindings?: number | null;
+  findingsDelta?: number | null;
+  baselineSeverityCounts?: Record<string, number>;
+  reanalyzedSeverityCounts?: Record<string, number>;
+}
+
+export interface ScriptRevisionCycleSummaryResponse {
+  scriptId: string;
+  cycles: ScriptRevisionCycleSummaryItem[];
+}
 
 export const scriptsApi = {
   getScripts: (): Promise<Script[]> => httpClient.get('/scripts'),
@@ -729,6 +749,8 @@ export const scriptsApi = {
     }),
   getScriptVersions: (scriptId: string, options?: { signal?: AbortSignal }): Promise<ScriptVersion[]> =>
     httpClient.get(`/scripts/${encodeURIComponent(scriptId)}/versions`, { signal: options?.signal }),
+  getRevisionCycleSummary: (scriptId: string): Promise<ScriptRevisionCycleSummaryResponse> =>
+    httpClient.get(`/scripts/${encodeURIComponent(scriptId)}/revision-cycles/summary`),
   createVersion: (scriptId: string, versionData: any, options?: { signal?: AbortSignal }): Promise<any> =>
     httpClient.post('/scripts/versions', { ...versionData, scriptId }, { signal: options?.signal }),
   /** Get signed upload URL; returns { url, path? }. */

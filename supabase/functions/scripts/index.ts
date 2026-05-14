@@ -1860,6 +1860,92 @@ Deno.serve(async (req: Request) => {
     const list = (versions ?? []).map((v) => toVersionFrontend(v as ScriptVersionRow));
     return json(list);
   }
+
+  // GET /scripts/:id/revision-cycles/summary
+  const revisionCyclesSummaryMatch = rest.match(/^([^/]+)\/revision-cycles\/summary$/);
+  if (method === "GET" && revisionCyclesSummaryMatch) {
+    const scriptId = revisionCyclesSummaryMatch[1].trim();
+    const { data: scriptRow, error: scriptErr } = await supabase
+      .from("scripts")
+      .select("id, created_by, assignee_id")
+      .eq("id", scriptId)
+      .maybeSingle();
+    if (scriptErr || !scriptRow) return json({ error: "Script not found" }, 404);
+
+    const scriptAccess = scriptRow as { created_by: string | null; assignee_id: string | null };
+    const isAdminForCycles = await isUserAdmin(supabase, uid);
+    if (!isAdminForCycles && scriptAccess.created_by !== uid && scriptAccess.assignee_id !== uid) {
+      return json({ error: "Forbidden" }, 403);
+    }
+
+    const { data: cycles, error: cyclesErr } = await supabase
+      .from("script_revision_cycles")
+      .select("id, cycle_number, status, sent_at, returned_at, reanalyzed_at, source_report_id, reanalyzed_report_id")
+      .eq("script_id", scriptId)
+      .order("cycle_number", { ascending: false })
+      .limit(20);
+    if (cyclesErr) return json({ error: cyclesErr.message }, 500);
+
+    const cycleIds = (cycles ?? []).map((row: any) => row.id);
+    const reportIds = [...new Set(
+      (cycles ?? [])
+        .flatMap((row: any) => [row.source_report_id, row.reanalyzed_report_id])
+        .filter((v: unknown): v is string => typeof v === "string" && v.trim().length > 0),
+    )];
+
+    const [{ data: snapshots, error: snapshotsErr }, { data: reports, error: reportsErr }] = await Promise.all([
+      cycleIds.length > 0
+        ? supabase
+            .from("script_revision_cycle_snapshots")
+            .select("id, cycle_id, findings_total, findings_violation, severity_counts, created_at")
+            .in("cycle_id", cycleIds)
+        : Promise.resolve({ data: [] as any[], error: null }),
+      reportIds.length > 0
+        ? supabase
+            .from("analysis_reports")
+            .select("id, findings_count, severity_counts, created_at")
+            .in("id", reportIds)
+        : Promise.resolve({ data: [] as any[], error: null }),
+    ]);
+    if (snapshotsErr) return json({ error: snapshotsErr.message }, 500);
+    if (reportsErr) return json({ error: reportsErr.message }, 500);
+
+    const snapshotByCycle = new Map<string, any>();
+    for (const row of snapshots ?? []) {
+      if (!snapshotByCycle.has((row as any).cycle_id)) snapshotByCycle.set((row as any).cycle_id, row);
+    }
+    const reportById = new Map<string, any>((reports ?? []).map((row: any) => [row.id, row]));
+
+    return json({
+      scriptId,
+      cycles: (cycles ?? []).map((cycle: any) => {
+        const baselineSnapshot = snapshotByCycle.get(cycle.id) ?? null;
+        const sourceReport = cycle.source_report_id ? reportById.get(cycle.source_report_id) ?? null : null;
+        const reanalyzedReport = cycle.reanalyzed_report_id ? reportById.get(cycle.reanalyzed_report_id) ?? null : null;
+        const baselineFindings = Number(
+          baselineSnapshot?.findings_violation ?? baselineSnapshot?.findings_total ?? sourceReport?.findings_count ?? 0,
+        ) || 0;
+        const reanalyzedFindings = Number(reanalyzedReport?.findings_count ?? 0) || 0;
+        const findingsDelta = reanalyzedReport ? reanalyzedFindings - baselineFindings : null;
+
+        return {
+          id: cycle.id,
+          cycleNumber: cycle.cycle_number,
+          status: cycle.status,
+          sentAt: cycle.sent_at,
+          returnedAt: cycle.returned_at ?? null,
+          reanalyzedAt: cycle.reanalyzed_at ?? null,
+          sourceReportId: cycle.source_report_id ?? null,
+          reanalyzedReportId: cycle.reanalyzed_report_id ?? null,
+          baselineFindings,
+          reanalyzedFindings: reanalyzedReport ? reanalyzedFindings : null,
+          findingsDelta,
+          baselineSeverityCounts: baselineSnapshot?.severity_counts ?? sourceReport?.severity_counts ?? {},
+          reanalyzedSeverityCounts: reanalyzedReport?.severity_counts ?? {},
+        };
+      }),
+    });
+  }
   // ──────────────── GET /scripts/:id/decision/can (policy predicate for UI) ────────────────
   const decisionCanMatch = rest.match(/^([^/]+)\/decision\/can$/);
   if (method === "GET" && decisionCanMatch) {

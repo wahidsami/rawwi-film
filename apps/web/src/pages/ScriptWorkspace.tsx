@@ -394,7 +394,7 @@ const SEVERITY_ORDER: Record<string, number> = {
 };
 
 import { scriptsApi, tasksApi, reportsApi, findingsApi } from '@/api';
-import type { AnalysisFinding, AnalysisReviewFinding, DuplicateScriptCheckResponse, Report as AnalysisReport } from '@/api';
+import type { AnalysisFinding, AnalysisReviewFinding, DuplicateScriptCheckResponse, Report as AnalysisReport, ScriptRevisionCycleSummaryItem } from '@/api';
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
@@ -1866,6 +1866,8 @@ export function ScriptWorkspace() {
   // ── Report history ──
   const [sidebarTab, setSidebarTab] = useState<'findings' | 'reports'>('findings');
   const [reportHistory, setReportHistory] = useState<ReportListItem[]>([]);
+  const [revisionCycleSummary, setRevisionCycleSummary] = useState<ScriptRevisionCycleSummaryItem[]>([]);
+  const [revisionCycleSummaryLoading, setRevisionCycleSummaryLoading] = useState(false);
   const [approveDecisionReportId, setApproveDecisionReportId] = useState<string | null>(null);
   const [approveDecisionSubmitting, setApproveDecisionSubmitting] = useState(false);
   const [rejectDecisionReportId, setRejectDecisionReportId] = useState<string | null>(null);
@@ -2148,6 +2150,19 @@ export function ScriptWorkspace() {
     // setReportHistoryLoading(false);
   }, [id]);
 
+  const loadRevisionCycleSummary = useCallback(async () => {
+    if (!id) return;
+    setRevisionCycleSummaryLoading(true);
+    try {
+      const payload = await scriptsApi.getRevisionCycleSummary(id);
+      setRevisionCycleSummary(payload.cycles ?? []);
+    } catch {
+      setRevisionCycleSummary([]);
+    } finally {
+      setRevisionCycleSummaryLoading(false);
+    }
+  }, [id]);
+
   const reloadSelectedReportReviewLayer = useCallback(async () => {
     if (!selectedReportSummary?.id && !selectedReportForHighlights?.jobId) return;
     try {
@@ -2165,8 +2180,14 @@ export function ScriptWorkspace() {
     if (id) loadReportHistory();
   }, [id, loadReportHistory]);
   useEffect(() => {
+    if (id) loadRevisionCycleSummary();
+  }, [id, loadRevisionCycleSummary]);
+  useEffect(() => {
     if (sidebarTab === 'reports' || isViolationModalOpen) loadReportHistory();
   }, [sidebarTab, isViolationModalOpen, loadReportHistory]);
+  useEffect(() => {
+    if (sidebarTab === 'reports') loadRevisionCycleSummary();
+  }, [sidebarTab, loadRevisionCycleSummary]);
 
   // Reset restore flag when switching to another script
   useEffect(() => {
@@ -2184,6 +2205,9 @@ export function ScriptWorkspace() {
   useEffect(() => {
     if (isSuccessfulJobStatus(analysisJob?.status)) loadReportHistory();
   }, [analysisJob?.status, loadReportHistory]);
+  useEffect(() => {
+    if (isSuccessfulJobStatus(analysisJob?.status)) loadRevisionCycleSummary();
+  }, [analysisJob?.status, loadRevisionCycleSummary]);
 
   const openRejectDecisionModal = useCallback((reportId: string) => {
     const hasReport = reportHistory.some((report) => report.id === reportId);
@@ -6417,6 +6441,61 @@ export function ScriptWorkspace() {
           {/* ── Reports tab ── */}
           {sidebarTab === 'reports' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background/30">
+              {revisionCycleSummaryLoading ? (
+                <div className="rounded-xl border border-border bg-surface p-3 text-xs text-text-muted">
+                  {lang === 'ar' ? 'جاري تحميل ملخص دورات المراجعة...' : 'Loading revision cycle summary...'}
+                </div>
+              ) : null}
+              {revisionCycleSummary.length > 0 ? (
+                <div className="rounded-xl border border-border bg-surface p-3 space-y-2">
+                  <p className="text-xs font-semibold text-text-main">
+                    {lang === 'ar' ? 'ملخص مقارنة دورات المراجعة' : 'Revision Cycle Comparison Summary'}
+                  </p>
+                  <div className="space-y-2">
+                    {revisionCycleSummary.slice(0, 3).map((cycle) => {
+                      const statusKey = String(cycle.status ?? '').toLowerCase();
+                      const statusLabel =
+                        statusKey === 'sent'
+                          ? (lang === 'ar' ? 'مرسلة للمستفيد' : 'Sent to Beneficiary')
+                          : statusKey === 'returned'
+                            ? (lang === 'ar' ? 'عاد من المستفيد' : 'Returned by Beneficiary')
+                            : statusKey === 'reanalyzed'
+                              ? (lang === 'ar' ? 'أعيد تحليله' : 'Reanalyzed')
+                              : statusKey === 'closed'
+                                ? (lang === 'ar' ? 'مغلقة' : 'Closed')
+                                : cycle.status;
+                      const delta = cycle.findingsDelta;
+                      const deltaPrefix = typeof delta === 'number' && delta > 0 ? '+' : '';
+                      return (
+                        <div key={cycle.id} className="rounded-lg border border-border/60 bg-background/40 p-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-text-main">
+                              {lang === 'ar' ? `الدورة ${cycle.cycleNumber}` : `Cycle ${cycle.cycleNumber}`}
+                            </span>
+                            <Badge variant={statusKey === 'reanalyzed' ? 'success' : 'outline'} className="text-[10px]">
+                              {statusLabel}
+                            </Badge>
+                          </div>
+                          <div className="mt-1 text-text-muted">
+                            {lang === 'ar' ? 'المرجعي: ' : 'Baseline: '}
+                            <span className="text-text-main">{cycle.baselineFindings}</span>
+                            {lang === 'ar' ? ' • بعد الإعادة: ' : ' • Reanalysis: '}
+                            <span className="text-text-main">{cycle.reanalyzedFindings ?? '—'}</span>
+                            {typeof delta === 'number' ? (
+                              <>
+                                {lang === 'ar' ? ' • الفرق: ' : ' • Delta: '}
+                                <span className={cn(delta <= 0 ? 'text-success' : 'text-warning')}>
+                                  {`${deltaPrefix}${delta}`}
+                                </span>
+                              </>
+                            ) : null}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
               {/* reports tab */}
               {reportHistory.length === 0 ? (
                 <div className="text-center p-8 text-text-muted text-sm border-2 border-dashed border-border rounded-xl">
