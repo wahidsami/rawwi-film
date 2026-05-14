@@ -143,7 +143,7 @@ export function Clients() {
     setExportingPdf(true);
     try {
       await downloadClientsPdf({
-        companies: tabClients,
+        companies,
         lang: lang === 'ar' ? 'ar' : 'en',
         dateFormat: settings?.platform?.dateFormat,
       });

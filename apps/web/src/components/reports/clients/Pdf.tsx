@@ -31,6 +31,15 @@ export const ClientsSectionPdf: React.FC<ClientsSectionPdfProps> = (props) => {
   const isAr = props.lang === "ar";
   const rtl = isAr ? s.rtl : {};
   const dateStr = formatDate(new Date(props.generatedAt), { lang: props.lang, format: props.dateFormat });
+  const headers = [
+    { key: "name", ar: "اسم المستفيد", en: "Beneficiary Name", style: s.col1 },
+    { key: "beneficiaryType", ar: "النوع", en: "Type", style: s.col2 },
+    { key: "representative", ar: "المندوب", en: "Representative", style: s.col3 },
+    { key: "registrationDate", ar: "التسجيل", en: "Registration", style: s.col4 },
+    { key: "scriptsCount", ar: "النصوص", en: "Scripts", style: s.col5 },
+    { key: "status", ar: "الحالة", en: "Status", style: s.col6 },
+  ] as const;
+  const orderedHeaders = isAr ? [...headers].reverse() : headers;
   return (
     <Document>
       <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
@@ -67,21 +76,31 @@ export const ClientsSectionPdf: React.FC<ClientsSectionPdfProps> = (props) => {
 
         <View style={s.table}>
           <View style={s.tr}>
-            <Text style={[s.th, s.col1, rtl]}>{isAr ? "اسم المستفيد" : "Beneficiary Name"}</Text>
-            <Text style={[s.th, s.col2, rtl]}>{isAr ? "النوع" : "Type"}</Text>
-            <Text style={[s.th, s.col3, rtl]}>{isAr ? "المندوب" : "Representative"}</Text>
-            <Text style={[s.th, s.col4, rtl]}>{isAr ? "التسجيل" : "Registration"}</Text>
-            <Text style={[s.th, s.col5, rtl]}>{isAr ? "النصوص" : "Scripts"}</Text>
-            <Text style={[s.th, s.col6, rtl]}>{isAr ? "الحالة" : "Status"}</Text>
+            {orderedHeaders.map((h, idx) => (
+              <Text key={`h-${h.key}`} style={[s.th, h.style, rtl, idx === orderedHeaders.length - 1 ? { borderRightWidth: 0 } : {}]}>
+                {isAr ? h.ar : h.en}
+              </Text>
+            ))}
           </View>
           {props.rows.map((row, idx) => (
             <View key={`client-row-${idx}`} style={[s.tr, idx % 2 ? s.rowEven : {}]}>
-              <Text style={[s.td, s.col1, rtl]}>{safeText(row.name, 30)}</Text>
-              <Text style={[s.td, s.col2, rtl]}>{safeText(row.beneficiaryType, 14)}</Text>
-              <Text style={[s.td, s.col3, rtl]}>{safeText(row.representative, 20)}</Text>
-              <Text style={[s.td, s.col4, rtl]}>{safeText(row.registrationDate, 14)}</Text>
-              <Text style={[s.td, s.col5, rtl]}>{String(row.scriptsCount || 0)}</Text>
-              <Text style={[s.td, s.col6, rtl]}>{safeText(row.status, 14)}</Text>
+              {(isAr
+                ? [
+                    <Text key="status" style={[s.td, s.col6, rtl]}>{safeText(row.status, 14)}</Text>,
+                    <Text key="scriptsCount" style={[s.td, s.col5, rtl]}>{String(row.scriptsCount || 0)}</Text>,
+                    <Text key="registrationDate" style={[s.td, s.col4, rtl]}>{safeText(row.registrationDate, 14)}</Text>,
+                    <Text key="representative" style={[s.td, s.col3, rtl]}>{safeText(row.representative, 20)}</Text>,
+                    <Text key="beneficiaryType" style={[s.td, s.col2, rtl]}>{safeText(row.beneficiaryType, 14)}</Text>,
+                    <Text key="name" style={[s.td, s.col1, rtl, { borderRightWidth: 0 }]}>{safeText(row.name, 30)}</Text>,
+                  ]
+                : [
+                    <Text key="name" style={[s.td, s.col1, rtl]}>{safeText(row.name, 30)}</Text>,
+                    <Text key="beneficiaryType" style={[s.td, s.col2, rtl]}>{safeText(row.beneficiaryType, 14)}</Text>,
+                    <Text key="representative" style={[s.td, s.col3, rtl]}>{safeText(row.representative, 20)}</Text>,
+                    <Text key="registrationDate" style={[s.td, s.col4, rtl]}>{safeText(row.registrationDate, 14)}</Text>,
+                    <Text key="scriptsCount" style={[s.td, s.col5, rtl]}>{String(row.scriptsCount || 0)}</Text>,
+                    <Text key="status" style={[s.td, s.col6, rtl, { borderRightWidth: 0 }]}>{safeText(row.status, 14)}</Text>,
+                  ])}
             </View>
           ))}
         </View>

@@ -28,6 +28,21 @@ export const StatusSectionPdf: React.FC<StatusSectionPdfProps> = ({
   const totalScripts = Object.values(data.scriptsByStatus).reduce((a, b) => a + b, 0) || 1;
   const totalFindings = Object.values(data.findingsByType).reduce((a, b) => a + b, 0) || 1;
   const pct = (v: number, t: number) => `${Math.round((v / t) * 100)}%`;
+  const scriptStatusHeaders = [
+    { ar: "النص", en: "Script" },
+    { ar: "المستفيد", en: "Beneficiary" },
+    { ar: "تاريخ الاستلام", en: "Received" },
+    { ar: "الحالة", en: "Status" },
+    { ar: "تاريخ الموافقة/الرفض", en: "Approved/Rejected Date" },
+  ];
+  const scriptStatusCells = (row: StatusPdfData["scriptRows"][number]) => [
+    row.scriptTitle,
+    row.beneficiaryName,
+    row.receivedAt,
+    row.status,
+    row.approvedOrRejectedAt,
+  ];
+  const orderedScriptHeaders = isAr ? [...scriptStatusHeaders].reverse() : scriptStatusHeaders;
 
   return (
     <Document>
@@ -101,26 +116,30 @@ export const StatusSectionPdf: React.FC<StatusSectionPdfProps> = ({
         <Text style={[s.sectionTitle, rtl]}>{isAr ? "قائمة النصوص وحالتها" : "Scripts Status List"}</Text>
         <View style={s.table}>
           <View style={s.tr}>
-            <Text style={[s.th, rtl]}>{isAr ? "النص" : "Script"}</Text>
-            <Text style={[s.th, rtl]}>{isAr ? "المستفيد" : "Beneficiary"}</Text>
-            <Text style={[s.th, rtl]}>{isAr ? "تاريخ الاستلام" : "Received"}</Text>
-            <Text style={[s.th, rtl]}>{isAr ? "الحالة" : "Status"}</Text>
-            <Text style={[s.th, rtl, { borderRightWidth: 0 }]}>{isAr ? "تاريخ الموافقة/الرفض" : "Approved/Rejected Date"}</Text>
+            {orderedScriptHeaders.map((h, idx) => (
+              <Text key={`script-h-${idx}`} style={[s.th, rtl, idx === orderedScriptHeaders.length - 1 ? { borderRightWidth: 0 } : {}]}>
+                {isAr ? h.ar : h.en}
+              </Text>
+            ))}
           </View>
           {data.scriptRows.length === 0 ? (
             <View style={s.tr}>
               <Text style={[s.td, rtl, { borderRightWidth: 0, flex: 5 }]}>{isAr ? "لا توجد نصوص" : "No scripts"}</Text>
             </View>
           ) : (
-            data.scriptRows.map((row, idx) => (
-              <View key={`script-row-${idx}`} style={s.tr}>
-                <Text style={[s.td, rtl]}>{row.scriptTitle}</Text>
-                <Text style={[s.td, rtl]}>{row.beneficiaryName}</Text>
-                <Text style={[s.td, rtl]}>{row.receivedAt}</Text>
-                <Text style={[s.td, rtl]}>{row.status}</Text>
-                <Text style={[s.td, rtl, { borderRightWidth: 0 }]}>{row.approvedOrRejectedAt}</Text>
-              </View>
-            ))
+            data.scriptRows.map((row, idx) => {
+              const cells = scriptStatusCells(row);
+              const ordered = isAr ? [...cells].reverse() : cells;
+              return (
+                <View key={`script-row-${idx}`} style={s.tr}>
+                  {ordered.map((cell, cellIdx) => (
+                    <Text key={`script-c-${idx}-${cellIdx}`} style={[s.td, rtl, cellIdx === ordered.length - 1 ? { borderRightWidth: 0 } : {}]}>
+                      {cell}
+                    </Text>
+                  ))}
+                </View>
+              );
+            })
           )}
         </View>
       </Page>
