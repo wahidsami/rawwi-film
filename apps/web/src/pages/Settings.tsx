@@ -54,6 +54,8 @@ export default function Settings() {
   const [creatingClassification, setCreatingClassification] = useState(false);
   const [clientTerms, setClientTerms] = useState({ ar: '', en: '' });
   const [savingClientTerms, setSavingClientTerms] = useState(false);
+  const [clientRegulations, setClientRegulations] = useState({ ar: '', en: '' });
+  const [savingClientRegulations, setSavingClientRegulations] = useState(false);
   const [certificateFee, setCertificateFee] = useState({
     baseAmount: '3500',
     taxRatePercent: '15',
@@ -104,6 +106,17 @@ export default function Settings() {
         setClientTerms({
           ar: 'أقر بأن جميع البيانات والمستندات المقدمة صحيحة، وأوافق على شروط استخدام منصة راوي فيلم وسياسة معالجة الطلبات.',
           en: 'I confirm that all submitted information and documents are accurate, and I agree to the Raawi Film platform terms and request review policy.',
+        });
+      });
+  }, []);
+
+  useEffect(() => {
+    clientPortalApi.getRegulations()
+      .then(setClientRegulations)
+      .catch(() => {
+        setClientRegulations({
+          ar: 'الضوابط العامة للأعمال الدرامية والوثائقية',
+          en: 'General Regulations for Dramatic and Documentary Works',
         });
       });
   }, []);
@@ -167,6 +180,23 @@ export default function Settings() {
       toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر حفظ الشروط' : 'Failed to save terms'));
     } finally {
       setSavingClientTerms(false);
+    }
+  };
+
+  const handleSaveClientRegulations = async () => {
+    if (!clientRegulations.ar.trim() || !clientRegulations.en.trim()) {
+      toast.error(lang === 'ar' ? 'يرجى إدخال الضوابط بالعربية والإنجليزية' : 'Please enter Arabic and English regulations');
+      return;
+    }
+    setSavingClientRegulations(true);
+    try {
+      const response = await clientPortalApi.updateRegulations(clientRegulations);
+      setClientRegulations(response.regulations);
+      toast.success(lang === 'ar' ? 'تم حفظ ضوابط تسجيل المستفيدين' : 'Beneficiary registration regulations saved');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر حفظ الضوابط' : 'Failed to save regulations'));
+    } finally {
+      setSavingClientRegulations(false);
     }
   };
 
@@ -561,6 +591,36 @@ export default function Settings() {
                       className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
                     >
                       {savingClientTerms ? (lang === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (lang === 'ar' ? 'حفظ الشروط' : 'Save Terms')}
+                    </button>
+                  </div>
+
+                  <hr className="border-border" />
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-text-main">
+                      {lang === 'ar' ? 'ضوابط تسجيل المستفيدين' : 'Beneficiary Registration Regulations'}
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <Textarea
+                        label={lang === 'ar' ? 'الضوابط بالعربية' : 'Arabic Regulations'}
+                        rows={6}
+                        value={clientRegulations.ar}
+                        onChange={(e) => setClientRegulations((state) => ({ ...state, ar: e.target.value }))}
+                      />
+                      <Textarea
+                        label={lang === 'ar' ? 'الضوابط بالإنجليزية' : 'English Regulations'}
+                        rows={6}
+                        value={clientRegulations.en}
+                        onChange={(e) => setClientRegulations((state) => ({ ...state, en: e.target.value }))}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleSaveClientRegulations()}
+                      disabled={savingClientRegulations}
+                      className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {savingClientRegulations ? (lang === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (lang === 'ar' ? 'حفظ الضوابط' : 'Save Regulations')}
                     </button>
                   </div>
 

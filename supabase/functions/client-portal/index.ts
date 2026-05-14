@@ -156,6 +156,19 @@ async function loadClientTerms(supabase: ReturnType<typeof createSupabaseAdmin>)
   };
 }
 
+async function loadClientRegulations(supabase: ReturnType<typeof createSupabaseAdmin>): Promise<{ ar: string; en: string }> {
+  const fallback = {
+    ar: "الضوابط العامة للأعمال الدرامية والوثائقية",
+    en: "General Regulations for Dramatic and Documentary Works",
+  };
+  const { data } = await supabase.from("app_settings").select("value").eq("key", "client_regulations").maybeSingle();
+  const value = ((data as any)?.value ?? {}) as Record<string, unknown>;
+  return {
+    ar: typeof value.ar === "string" && value.ar.trim() ? value.ar : fallback.ar,
+    en: typeof value.en === "string" && value.en.trim() ? value.en : fallback.en,
+  };
+}
+
 function resolveClientSubmissionStatus(
   scriptStatus: unknown,
   latestReportReviewStatus: unknown,
@@ -219,6 +232,9 @@ Deno.serve(async (req: Request) => {
   if (method === "GET" && rest === "terms") {
     return json(await loadClientTerms(supabase));
   }
+  if (method === "GET" && rest === "regulations") {
+    return json(await loadClientRegulations(supabase));
+  }
 
   // POST /client-portal/register (public, free registration)
   if (method === "POST" && rest === "register") {
@@ -237,6 +253,7 @@ Deno.serve(async (req: Request) => {
       body = {
         name: formData.get("name"),
         email: formData.get("email"),
+        companyEmail: formData.get("companyEmail"),
         password: formData.get("password"),
         companyNameAr: formData.get("companyNameAr"),
         companyNameEn: formData.get("companyNameEn"),
@@ -254,6 +271,7 @@ Deno.serve(async (req: Request) => {
         about: formData.get("about"),
         yearsOfExperience: formData.get("yearsOfExperience"),
         acceptedTerms: formData.get("acceptedTerms"),
+        acceptedRegulations: formData.get("acceptedRegulations"),
       };
       const logoCandidate = formData.get("companyLogoFile") ?? formData.get("companyLogo") ?? formData.get("logo");
       if (logoCandidate instanceof File && logoCandidate.size > 0) {
@@ -263,6 +281,7 @@ Deno.serve(async (req: Request) => {
         { key: "crDocument", type: "cr" },
         { key: "licenseDocument", type: "license" },
         { key: "nationalAddressDocument", type: "national_address" },
+        { key: "mediaContentProductionLicenseDocument", type: "media_content_production_license" },
       ]) {
         const candidate = formData.get(item.key);
         if (candidate instanceof File && candidate.size > 0) {
@@ -278,6 +297,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const companyEmail = typeof body.companyEmail === "string" ? body.companyEmail.trim().toLowerCase() : "";
     const password = typeof body.password === "string" ? body.password : "";
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const companyNameAr = typeof body.companyNameAr === "string" ? body.companyNameAr.trim() : "";
@@ -296,16 +316,23 @@ Deno.serve(async (req: Request) => {
     const about = field(body, "about");
     const yearsOfExperience = Number.parseInt(field(body, "yearsOfExperience") ?? "0", 10);
     const acceptedTerms = body.acceptedTerms === true || body.acceptedTerms === "true";
+    const acceptedRegulations = body.acceptedRegulations === true || body.acceptedRegulations === "true";
+    const effectiveCompanyEmail = companyEmail || email;
 
     if (!email || !isValidEmail(email)) return json({ error: "Valid email is required" }, 400);
+    if (!effectiveCompanyEmail || !isValidEmail(effectiveCompanyEmail)) return json({ error: "Valid company email is required" }, 400);
     if (!password || password.length < 8) return json({ error: "Password must be at least 8 characters" }, 400);
     if (!name) return json({ error: "Name is required" }, 400);
     if (!companyNameAr || !companyNameEn) return json({ error: "companyNameAr and companyNameEn are required" }, 400);
     if (!mobile) return json({ error: "Company phone/mobile is required" }, 400);
-    if (!addressLine1 || !city || !postalCode) return json({ error: "Saudi address fields are required" }, 400);
+    if (!city) return json({ error: "City is required" }, 400);
     if (contactEmail && !isValidEmail(contactEmail)) return json({ error: "Valid contact email is required" }, 400);
     if (!acceptedTerms) return json({ error: "Terms must be accepted" }, 400);
-    if (legalFiles.length < 3) return json({ error: "CR, license, and national address documents are required" }, 400);
+    if (!acceptedRegulations) return json({ error: "Regulations must be accepted" }, 400);
+    const hasRequiredDocs = ["cr", "license", "national_address"].every((requiredType) =>
+      legalFiles.some((doc) => doc.type === requiredType)
+    );
+    if (!hasRequiredDocs) return json({ error: "CR, license, and national address documents are required" }, 400);
     if (companyLogoFile) {
       if (!LOGO_MIMES.has(companyLogoFile.type)) {
         return json({ error: "Company logo must be PNG or JPG" }, 400);
@@ -380,7 +407,7 @@ Deno.serve(async (req: Request) => {
           representative_title: representativeTitle,
           mobile,
           phone,
-          email,
+          email: effectiveCompanyEmail,
           website,
           address_line1: addressLine1,
           address_line2: addressLine2,
@@ -394,6 +421,7 @@ Deno.serve(async (req: Request) => {
           source: "portal",
           approval_status: "pending",
           terms_accepted_at: new Date().toISOString(),
+          regulations_accepted_at: new Date().toISOString(),
           created_by: createdUserId,
         })
         .select("id, created_at")
@@ -543,6 +571,24 @@ Deno.serve(async (req: Request) => {
       .upsert({ key: "client_terms", value, updated_at: new Date().toISOString(), updated_by: userId }, { onConflict: "key" });
     if (error) return json({ error: error.message }, 500);
     return json({ ok: true, terms: value });
+  }
+  if (method === "PUT" && rest === "admin/regulations") {
+    if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    let body: { ar?: string; en?: string };
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+    const ar = (body.ar ?? "").trim();
+    const en = (body.en ?? "").trim();
+    if (!ar || !en) return json({ error: "Arabic and English regulations are required" }, 400);
+    const value = { ar, en };
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert({ key: "client_regulations", value, updated_at: new Date().toISOString(), updated_by: userId }, { onConflict: "key" });
+    if (error) return json({ error: error.message }, 500);
+    return json({ ok: true, regulations: value });
   }
 
   // GET /client-portal/me

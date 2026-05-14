@@ -812,9 +812,10 @@ Deno.serve(async (req: Request) => {
       const after = afterRow as ClientRow;
 
       const appPublicUrl = (Deno.env.get("APP_PUBLIC_URL") ?? "http://localhost:5173").replace(/\/$/, "");
-      if (after.email) {
+      const beneficiaryEmail = after.contact_email || after.email;
+      if (beneficiaryEmail) {
         await sendClientEmail({
-          to: after.email,
+          to: beneficiaryEmail,
           subject: "Registration approved | تمت الموافقة على التسجيل",
           html: buildBilingualClientEmail({
             titleEn: "Registration Approved",
@@ -900,9 +901,10 @@ Deno.serve(async (req: Request) => {
       if (updateErr || !afterRow) return jsonResponse({ error: updateErr?.message ?? "Rejection failed" }, 500);
       const after = afterRow as ClientRow;
 
-      if (after.email) {
+      const beneficiaryEmail = after.contact_email || after.email;
+      if (beneficiaryEmail) {
         await sendClientEmail({
-          to: after.email,
+          to: beneficiaryEmail,
           subject: "Registration request update | تحديث طلب التسجيل",
           html: buildBilingualClientEmail({
             titleEn: "Registration Request Update",

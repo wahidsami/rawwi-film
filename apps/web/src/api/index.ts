@@ -33,6 +33,7 @@ export const settingsApi = {
 export interface ClientPortalRegisterBody {
   name: string;
   email: string;
+  companyEmail?: string;
   password: string;
   companyNameAr: string;
   companyNameEn: string;
@@ -54,8 +55,10 @@ export interface ClientPortalRegisterBody {
     cr?: File | null;
     license?: File | null;
     nationalAddress?: File | null;
+    mediaContentProductionLicense?: File | null;
   };
   acceptedTerms: boolean;
+  acceptedRegulations?: boolean;
 }
 
 export interface ClientPortalSubmissionItem {
@@ -369,6 +372,7 @@ export const clientPortalApi = {
     const form = new FormData();
     form.append('name', payload.name);
     form.append('email', payload.email);
+    if (payload.companyEmail) form.append('companyEmail', payload.companyEmail);
     form.append('password', payload.password);
     form.append('companyNameAr', payload.companyNameAr);
     form.append('companyNameEn', payload.companyNameEn);
@@ -386,10 +390,12 @@ export const clientPortalApi = {
     if (payload.about) form.append('about', payload.about);
     if (payload.yearsOfExperience != null) form.append('yearsOfExperience', String(payload.yearsOfExperience));
     form.append('acceptedTerms', payload.acceptedTerms ? 'true' : 'false');
+    form.append('acceptedRegulations', payload.acceptedRegulations ? 'true' : 'false');
     if (payload.companyLogoFile) form.append('companyLogoFile', payload.companyLogoFile);
     if (payload.legalDocuments?.cr) form.append('crDocument', payload.legalDocuments.cr);
     if (payload.legalDocuments?.license) form.append('licenseDocument', payload.legalDocuments.license);
     if (payload.legalDocuments?.nationalAddress) form.append('nationalAddressDocument', payload.legalDocuments.nationalAddress);
+    if (payload.legalDocuments?.mediaContentProductionLicense) form.append('mediaContentProductionLicenseDocument', payload.legalDocuments.mediaContentProductionLicense);
 
     const anonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY as string | undefined;
     if (!anonKey) {
@@ -414,6 +420,10 @@ export const clientPortalApi = {
     httpClient.get('/client-portal/terms'),
   updateTerms: (terms: { ar: string; en: string }): Promise<{ ok: boolean; terms: { ar: string; en: string } }> =>
     httpClient.put('/client-portal/admin/terms', terms),
+  getRegulations: (): Promise<{ ar: string; en: string }> =>
+    httpClient.get('/client-portal/regulations'),
+  updateRegulations: (regulations: { ar: string; en: string }): Promise<{ ok: boolean; regulations: { ar: string; en: string } }> =>
+    httpClient.put('/client-portal/admin/regulations', regulations),
   getMe: (): Promise<ClientPortalMeResponse> =>
     httpClient.get('/client-portal/me'),
   getSubmissions: (): Promise<ClientPortalSubmissionItem[]> =>

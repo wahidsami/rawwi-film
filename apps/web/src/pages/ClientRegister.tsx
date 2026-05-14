@@ -33,8 +33,10 @@ export function ClientRegister() {
     about: '',
     yearsOfExperience: '',
     acceptedTerms: false,
+    acceptedRegulations: false,
   });
   const [terms, setTerms] = useState<{ ar: string; en: string } | null>(null);
+  const [regulations, setRegulations] = useState<{ ar: string; en: string } | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -43,9 +45,11 @@ export function ClientRegister() {
   const [crDocument, setCrDocument] = useState<File | null>(null);
   const [licenseDocument, setLicenseDocument] = useState<File | null>(null);
   const [nationalAddressDocument, setNationalAddressDocument] = useState<File | null>(null);
+  const [mediaContentLicenseDocument, setMediaContentLicenseDocument] = useState<File | null>(null);
 
   useEffect(() => {
     clientPortalApi.getTerms().then(setTerms).catch(() => setTerms(null));
+    clientPortalApi.getRegulations().then(setRegulations).catch(() => setRegulations(null));
   }, []);
 
   useEffect(() => {
@@ -82,7 +86,7 @@ export function ClientRegister() {
       if (!form.companyNameAr.trim() || !form.companyNameEn.trim()) return lang === 'ar' ? 'يرجى إدخال اسم الشركة بالعربية والإنجليزية' : 'Please enter company name in Arabic and English';
       if (!EMAIL_REGEX.test(form.email.trim())) return lang === 'ar' ? 'يرجى إدخال بريد شركة صحيح' : 'Please enter a valid company email';
       if (!SAUDI_MOBILE_REGEX.test(form.phone.trim())) return lang === 'ar' ? 'رقم هاتف الشركة يجب أن يكون سعوديًا (05XXXXXXXX)' : 'Company phone must be Saudi format (05XXXXXXXX)';
-      if (!form.city.trim() || !form.addressLine1.trim() || !form.postalCode.trim()) return lang === 'ar' ? 'يرجى إكمال العنوان الوطني (المدينة، السطر الأول، الرمز البريدي)' : 'Please complete Saudi address fields (city, line 1, postal code)';
+      if (!form.city.trim()) return lang === 'ar' ? 'يرجى إدخال المدينة' : 'Please enter city';
       return null;
     }
     if (targetStep === 2) {
@@ -100,6 +104,7 @@ export function ClientRegister() {
         return lang === 'ar' ? 'المستندات يجب أن تكون PDF أو PNG أو JPEG' : 'Documents must be PDF, PNG, or JPEG';
       }
       if (!form.acceptedTerms) return lang === 'ar' ? 'يجب الموافقة على الشروط والأحكام' : 'You must agree to the terms and conditions';
+      if (!form.acceptedRegulations) return lang === 'ar' ? 'يجب الموافقة على الضوابط العامة للأعمال الدرامية والوثائقية' : 'You must agree to comply with the general regulations for dramatic and documentary works';
       return null;
     }
     return null;
@@ -135,7 +140,8 @@ export function ClientRegister() {
     try {
       await clientPortalApi.register({
         name: form.contactName.trim(),
-        email: form.email.trim().toLowerCase(),
+        email: form.contactEmail.trim().toLowerCase(),
+        companyEmail: form.email.trim().toLowerCase(),
         password: form.password,
         companyNameAr: form.companyNameAr.trim(),
         companyNameEn: form.companyNameEn.trim(),
@@ -157,8 +163,10 @@ export function ClientRegister() {
           cr: crDocument,
           license: licenseDocument,
           nationalAddress: nationalAddressDocument,
+          mediaContentProductionLicense: mediaContentLicenseDocument,
         },
         acceptedTerms: form.acceptedTerms,
+        acceptedRegulations: form.acceptedRegulations,
       });
       setSuccess(lang === 'ar'
         ? 'تم إرسال طلب التسجيل بنجاح. ستصلك رسالة بريدية بعد مراجعة الطلب.'
@@ -235,9 +243,6 @@ export function ClientRegister() {
               <Input label={lang === 'ar' ? 'بريد الشركة *' : 'Company Email *'} type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required dir="ltr" />
               <Input label={lang === 'ar' ? 'رقم هاتف الشركة السعودي *' : 'Saudi Company Phone *'} value={form.phone} onChange={(e) => setField('phone', e.target.value)} required placeholder="05XXXXXXXX" dir="ltr" />
               <Input label={lang === 'ar' ? 'المدينة *' : 'City *'} value={form.city} onChange={(e) => setField('city', e.target.value)} required />
-              <Input label={lang === 'ar' ? 'العنوان الوطني - السطر الأول *' : 'Saudi Address Line 1 *'} value={form.addressLine1} onChange={(e) => setField('addressLine1', e.target.value)} required />
-              <Input label={lang === 'ar' ? 'العنوان الوطني - السطر الثاني' : 'Saudi Address Line 2'} value={form.addressLine2} onChange={(e) => setField('addressLine2', e.target.value)} />
-              <Input label={lang === 'ar' ? 'الرمز البريدي *' : 'Postal Code *'} value={form.postalCode} onChange={(e) => setField('postalCode', e.target.value)} required dir="ltr" />
             </section>
           )}
 
@@ -284,6 +289,10 @@ export function ClientRegister() {
                   <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'مستند العنوان الوطني * (PDF/JPEG/PNG)' : 'National Address Document * (PDF/JPEG/PNG)'}</label>
                   <input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setNationalAddressDocument(e.target.files?.[0] ?? null)} className={fileInputClass} required />
                 </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'رخصة إنتاج المحتوى الإعلامي المرئي والمسموع (اختياري) (PDF/JPEG/PNG)' : 'Audio-Visual Media Content Production License (Optional) (PDF/JPEG/PNG)'}</label>
+                  <input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setMediaContentLicenseDocument(e.target.files?.[0] ?? null)} className={fileInputClass} />
+                </div>
               </section>
 
               <section className="rounded-xl border border-border bg-background/60 p-4">
@@ -291,7 +300,16 @@ export function ClientRegister() {
                 <p className="mt-2 whitespace-pre-wrap text-sm text-text-muted">{lang === 'ar' ? terms?.ar : terms?.en}</p>
                 <label className="mt-4 flex items-start gap-2 text-sm text-text-main">
                   <input type="checkbox" checked={form.acceptedTerms} onChange={(e) => setField('acceptedTerms', e.target.checked)} required />
-                  <span>{lang === 'ar' ? 'أوافق على الشروط والأحكام' : 'I agree to the terms and conditions'}</span>
+                  <span>{lang === 'ar' ? 'أفهم وأوافق على الالتزام بالشروط والأحكام' : 'I understand and agree to comply with the terms and conditions'}</span>
+                </label>
+              </section>
+
+              <section className="rounded-xl border border-border bg-background/60 p-4">
+                <p className="text-sm font-semibold text-text-main">{lang === 'ar' ? 'الضوابط العامة للأعمال الدرامية والوثائقية' : 'General Regulations for Dramatic and Documentary Works'}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-text-muted">{lang === 'ar' ? regulations?.ar : regulations?.en}</p>
+                <label className="mt-4 flex items-start gap-2 text-sm text-text-main">
+                  <input type="checkbox" checked={form.acceptedRegulations} onChange={(e) => setField('acceptedRegulations', e.target.checked)} required />
+                  <span>{lang === 'ar' ? 'أفهم وسألتزم بالضوابط العامة للأعمال الدرامية والوثائقية' : 'I understand and will comply with the general regulations for dramatic and documentary works'}</span>
                 </label>
               </section>
             </>
