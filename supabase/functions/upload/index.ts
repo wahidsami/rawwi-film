@@ -8,11 +8,40 @@
 import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
-import { sanitizeUnicodeUploadFileName, getCorrelationId } from "../_shared/utils.ts";
+import { getCorrelationId } from "../_shared/utils.ts";
 
 /** Must match extract + raawi-script-upload: script files live in `scripts`, not `uploads`. */
 const BUCKET = "scripts";
 const SIGNED_URL_EXPIRY_SEC = 60 * 5; // 5 minutes
+
+function buildSafeStorageFileName(originalName: string, fallbackExt: string): string {
+  const normalized = (originalName || "").normalize("NFC").trim();
+  const lastDot = normalized.lastIndexOf(".");
+  const rawBase = lastDot > 0 ? normalized.slice(0, lastDot) : normalized;
+  const rawExt = lastDot > 0 ? normalized.slice(lastDot + 1) : fallbackExt;
+
+  const safeBase = rawBase
+    .replace(/\s+/g, "_")
+    .replace(/[^A-Za-z0-9_-]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const safeExt = (rawExt || fallbackExt || "bin")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+
+  const base = safeBase || "file";
+  const ext = safeExt || "bin";
+  return `${base}.${ext}`;
+}
+
+function extractExtFromName(fileName: string): string {
+  const normalized = (fileName || "").normalize("NFC").trim();
+  const idx = normalized.lastIndexOf(".");
+  if (idx <= 0 || idx >= normalized.length - 1) return "bin";
+  const ext = normalized.slice(idx + 1).toLowerCase();
+  const safeExt = ext.replace(/[^a-z0-9]/g, "");
+  return safeExt || "bin";
+}
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? undefined;
@@ -39,18 +68,17 @@ Deno.serve(async (req: Request) => {
   if (rawName == null || typeof rawName !== "string") {
     return json({ error: "fileName is required" }, 400);
   }
-
-  let safeName: string;
-  try {
-    safeName = sanitizeUnicodeUploadFileName(rawName);
-  } catch (e) {
-    return json({ error: e instanceof Error ? e.message : "Invalid fileName" }, 400);
-  }
+  const normalizedName = rawName.normalize("NFC").trim();
+  if (!normalizedName) return json({ error: "fileName is required" }, 400);
 
   const userId = auth.userId;
   const scriptId = "unscoped";
   const timestamp = Date.now();
-  const objectPath = `${userId}/${scriptId}/${timestamp}_${safeName}`;
+  const ext = extractExtFromName(normalizedName);
+  // Accept any user-visible file name (any language/special chars) while
+  // storing with a robust ASCII-only object key to avoid storage path failures.
+  const safeStorageName = buildSafeStorageFileName(`file_${crypto.randomUUID()}.${ext}`, ext);
+  const objectPath = `${userId}/${scriptId}/${timestamp}_${safeStorageName}`;
 
   const supabase = createSupabaseAdmin();
   const { data: signed, error } = await supabase.storage
