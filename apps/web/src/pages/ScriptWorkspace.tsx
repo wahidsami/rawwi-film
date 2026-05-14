@@ -2126,6 +2126,23 @@ export function ScriptWorkspace() {
     if (resolved.length > 0) return resolved;
     return firstSubmittedVersion ? [firstSubmittedVersion] : [];
   }, [firstSubmittedVersion, revisionHistorySnapshot, revisionHistoryVersionById]);
+  const getRawCycleByNumber = useCallback((cycleNumber: number) => {
+    return (revisionHistorySnapshot?.cycles ?? []).find((entry) => {
+      const rawCycleNumber = Number(
+        (entry.cycleNumber ?? entry.cycle_number ?? entry.number ?? entry.index ?? 0) as number,
+      );
+      return rawCycleNumber === cycleNumber;
+    }) ?? null;
+  }, [revisionHistorySnapshot]);
+  const getCycleTextField = useCallback((cycleNumber: number, keys: string[]) => {
+    const raw = getRawCycleByNumber(cycleNumber);
+    if (!raw) return '';
+    for (const key of keys) {
+      const value = raw[key];
+      if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return '';
+  }, [getRawCycleByNumber]);
 
   const missingReportReason = lang === 'ar'
     ? 'لا يمكن تنفيذ هذا الإجراء قبل تشغيل التحليل وإنشاء أول تقرير.'
@@ -6758,6 +6775,14 @@ export function ScriptWorkspace() {
                 const delta = cycle.findingsDelta;
                 const deltaPrefix = typeof delta === 'number' && delta > 0 ? '+' : '';
                 const cycleVersions = getCycleVersionCandidates(cycle);
+                const adminCommentPreview = getCycleTextField(cycle.cycleNumber, [
+                  'adminComment',
+                  'admin_comment',
+                  'reason',
+                  'reviewReason',
+                  'review_reason',
+                  'message',
+                ]);
                 return (
                   <button
                     type="button"
@@ -6821,6 +6846,12 @@ export function ScriptWorkspace() {
                         </a>
                       )}
                     </div>
+                    {adminCommentPreview ? (
+                      <div className="text-[11px] text-text-muted border-t border-border/60 pt-2">
+                        <span className="font-semibold text-text-main">{lang === 'ar' ? 'تعليق الإدارة: ' : 'Admin comment: '}</span>
+                        {adminCommentPreview}
+                      </div>
+                    ) : null}
                   </button>
                 );
               })}
@@ -7724,6 +7755,24 @@ export function ScriptWorkspace() {
         className="max-w-2xl"
       >
         {selectedCycleDetails && (
+          (() => {
+            const adminComment = getCycleTextField(selectedCycleDetails.cycleNumber, [
+              'adminComment',
+              'admin_comment',
+              'reason',
+              'reviewReason',
+              'review_reason',
+              'message',
+            ]);
+            const beneficiaryMessage = getCycleTextField(selectedCycleDetails.cycleNumber, [
+              'clientComment',
+              'client_comment',
+              'beneficiaryComment',
+              'beneficiary_comment',
+              'messageToClient',
+              'message_to_client',
+            ]);
+            return (
           <div className="space-y-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
               <div className="rounded-lg border border-border bg-background/40 p-3">
@@ -7799,7 +7848,21 @@ export function ScriptWorkspace() {
                 </div>
               </div>
             ) : null}
+            {adminComment ? (
+              <div className="rounded-lg border border-border bg-background/40 p-3">
+                <p className="text-xs text-text-muted mb-2">{lang === 'ar' ? 'تعليق الإدارة' : 'Admin comment'}</p>
+                <p className="text-sm text-text-main whitespace-pre-wrap">{adminComment}</p>
+              </div>
+            ) : null}
+            {beneficiaryMessage ? (
+              <div className="rounded-lg border border-border bg-background/40 p-3">
+                <p className="text-xs text-text-muted mb-2">{lang === 'ar' ? 'رسالة للمستفيد' : 'Message to beneficiary'}</p>
+                <p className="text-sm text-text-main whitespace-pre-wrap">{beneficiaryMessage}</p>
+              </div>
+            ) : null}
           </div>
+            );
+          })()
         )}
       </Modal>
 
