@@ -244,8 +244,8 @@ export function AppLayout() {
         <div className={cn("flex items-center border-b border-border/60", isSidebarCollapsed ? "h-20 justify-center px-3" : "px-5 py-5")}>
           <div className={cn("flex min-w-0 items-center", isSidebarCollapsed ? "justify-center" : "w-full gap-3")}>
             <img
-              src="/dashboardlogo.png"
-              alt="Raawi Film"
+              src="/raawi-dashboard-new.png"
+              alt="Raawi"
               className={cn("object-contain transition-all duration-300", isSidebarCollapsed ? "h-9" : "h-11")}
             />
             {!isSidebarCollapsed && (
@@ -263,7 +263,7 @@ export function AppLayout() {
               {lang === 'ar' ? 'مساحة الإدارة' : 'Admin Space'}
             </p>
             <p className="mt-2 text-sm font-semibold">
-              {lang === 'ar' ? 'لوحة راوي فيلم' : 'Raawi Film Console'}
+              {lang === 'ar' ? 'لوحة راوي' : 'Raawi Console'}
             </p>
           </div>
         )}

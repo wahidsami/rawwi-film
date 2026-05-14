@@ -80,14 +80,14 @@ export function ClientLogin() {
           <div className="hidden md:flex w-[45%] bg-primary items-center justify-center p-8 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-hover" />
             <div className="relative z-10 text-white text-center space-y-5">
-              <img src="/loginlogo.png" alt="Raawi Film" className="h-24 mx-auto drop-shadow-xl" />
+              <img src="/raawilogonew.png" alt="Raawi" className="h-24 mx-auto drop-shadow-xl" />
               <h1 className="text-3xl font-bold tracking-tight">{lang === 'ar' ? 'بوابة المستفيدين' : 'Beneficiary Portal'}</h1>
             </div>
           </div>
         </div>
       </div>
       <footer className="py-5 flex justify-center">
-        <img src="/footer.png" alt="Powered by" className="h-32 object-contain opacity-80" />
+        <img src="/raawilogonew.png" alt="Raawi" className="h-16 object-contain opacity-90" />
       </footer>
     </div>
   );

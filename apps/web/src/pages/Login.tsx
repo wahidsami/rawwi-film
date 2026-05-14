@@ -118,8 +118,8 @@ export function Login() {
             <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-white/8 blur-2xl" />
             <div className="absolute -left-10 -bottom-10 w-48 h-48 rounded-full bg-white/5 blur-2xl" />
             <div className="relative z-10 text-white text-center space-y-5">
-              <img src="/loginlogo.png" alt="Raawi Film" className="h-24 mx-auto drop-shadow-xl" />
-              <h1 className="text-3xl font-bold tracking-tight">{lang === 'ar' ? 'راوي فيلم' : 'Raawi Film'}</h1>
+              <img src="/raawilogonew.png" alt="Raawi" className="h-24 mx-auto drop-shadow-xl" />
+              <h1 className="text-3xl font-bold tracking-tight">{lang === 'ar' ? 'راوي' : 'Raawi'}</h1>
               <p className="text-white/70 text-sm leading-relaxed max-w-xs mx-auto">
                 {lang === 'ar'
                   ? 'منصة التحليل الرقمي للنصوص السنمائية'
@@ -133,7 +133,7 @@ export function Login() {
 
       {/* Footer */}
       <footer className="py-5 flex justify-center">
-        <img src="/footer.png" alt="Powered by" className="h-32 object-contain opacity-80" />
+        <img src="/raawilogonew.png" alt="Raawi" className="h-16 object-contain opacity-90" />
       </footer>
     </div>
   );
