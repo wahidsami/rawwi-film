@@ -926,7 +926,7 @@ Deno.serve(async (req: Request) => {
           .eq("script_id", scriptId);
       }
 
-      await supabase
+      const { error: cycleEventInsertErr } = await supabase
         .from("script_revision_cycle_events")
         .insert({
           cycle_id: cycleId,
@@ -937,15 +937,25 @@ Deno.serve(async (req: Request) => {
             job_id: job.id,
             version_id: versionId.trim(),
           },
-        })
-        .catch((err) => console.warn("[tasks] failed to write admin_reanalysis_started event:", err?.message ?? err));
+        });
+      if (cycleEventInsertErr) {
+        console.warn(
+          "[tasks] failed to write admin_reanalysis_started event:",
+          cycleEventInsertErr.message,
+        );
+      }
     }
 
-    await supabase
+    const { error: scriptStatusUpdateErr } = await supabase
       .from("scripts")
       .update({ status: "analysis_running" })
-      .eq("id", scriptId)
-      .catch((err) => console.warn("[tasks] failed to update script status to analysis_running:", err?.message ?? err));
+      .eq("id", scriptId);
+    if (scriptStatusUpdateErr) {
+      console.warn(
+        "[tasks] failed to update script status to analysis_running:",
+        scriptStatusUpdateErr.message,
+      );
+    }
   }
 
   return json({
