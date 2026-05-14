@@ -1526,7 +1526,7 @@ export function ClientPortal() {
               ))}
             </select>
           </div>
-          <div className="space-y-1.5">
+          <div className="hidden space-y-1.5" aria-hidden>
             <label className="block text-sm font-medium text-text-main">{lang === 'ar' ? 'الرتبة المتوقعة' : 'Expected Rank'}</label>
             <select
               value={form.expectedRank}
