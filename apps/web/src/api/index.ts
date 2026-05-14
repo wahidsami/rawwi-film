@@ -707,6 +707,24 @@ export interface ScriptRevisionCycleSummaryItem {
   findingsDelta?: number | null;
   baselineSeverityCounts?: Record<string, number>;
   reanalyzedSeverityCounts?: Record<string, number>;
+  comparisonSummary?: {
+    baseline_findings?: number;
+    reanalyzed_findings?: number;
+    findings_delta?: number;
+    canonical?: {
+      baseline_count?: number;
+      reanalyzed_count?: number;
+      persisting_count?: number;
+      resolved_count?: number;
+      new_count?: number;
+    };
+    severity_delta?: {
+      low?: number;
+      medium?: number;
+      high?: number;
+      critical?: number;
+    };
+  } | null;
 }
 
 export interface ScriptRevisionCycleSummaryResponse {

@@ -1732,7 +1732,7 @@ export async function runAggregation(jobId: string): Promise<void> {
     const scriptId = (job as { script_id: string }).script_id;
     const { data: linkedCycle } = await supabase
       .from("script_revision_cycles")
-      .select("id, status")
+      .select("id, status, source_report_id")
       .eq("script_id", scriptId)
       .eq("reanalyzed_job_id", jobId)
       .order("cycle_number", { ascending: false })
@@ -1781,6 +1781,109 @@ export async function runAggregation(jobId: string): Promise<void> {
         reportId,
         error: cycleEventErr.message,
       });
+    }
+
+    const sourceReportId = (linkedCycle as { source_report_id?: string | null }).source_report_id ?? null;
+    if (sourceReportId) {
+      const { data: snapshotRow } = await supabase
+        .from("script_revision_cycle_snapshots")
+        .select("snapshot_payload, findings_total, severity_counts")
+        .eq("cycle_id", (linkedCycle as { id: string }).id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const { data: newReportRow } = await supabase
+        .from("analysis_reports")
+        .select("summary_json, findings_count, severity_counts")
+        .eq("id", reportId)
+        .maybeSingle();
+
+      const oldSummary = ((snapshotRow as { snapshot_payload?: Record<string, unknown> | null } | null)?.snapshot_payload ?? {}) as Record<string, unknown>;
+      const newSummary = ((newReportRow as { summary_json?: Record<string, unknown> | null } | null)?.summary_json ?? {}) as Record<string, unknown>;
+      const oldCanonical = Array.isArray((oldSummary as any).canonical_findings) ? ((oldSummary as any).canonical_findings as any[]) : [];
+      const newCanonical = Array.isArray((newSummary as any).canonical_findings) ? ((newSummary as any).canonical_findings as any[]) : [];
+      const canonicalKey = (row: any): string => {
+        const primary = Number(row?.primary_article_id ?? row?.article_id ?? 0) || 0;
+        const atom = typeof row?.canonical_atom === "string" && row.canonical_atom.trim()
+          ? row.canonical_atom.trim()
+          : (typeof row?.atom_id === "string" ? row.atom_id.trim() : "");
+        const title = typeof row?.title_ar === "string" ? row.title_ar.trim() : "";
+        return `${primary}|${atom}|${title}`;
+      };
+      const oldKeys = new Set(oldCanonical.map(canonicalKey).filter(Boolean));
+      const newKeys = new Set(newCanonical.map(canonicalKey).filter(Boolean));
+      let persisting = 0;
+      for (const key of oldKeys) if (newKeys.has(key)) persisting++;
+      let resolved = 0;
+      for (const key of oldKeys) if (!newKeys.has(key)) resolved++;
+      let newlyIntroduced = 0;
+      for (const key of newKeys) if (!oldKeys.has(key)) newlyIntroduced++;
+
+      const baselineFindings = Number(
+        (snapshotRow as { findings_total?: number } | null)?.findings_total
+          ?? (oldSummary as any)?.totals?.findings_count
+          ?? 0
+      ) || 0;
+      const reanalyzedFindings = Number((newReportRow as { findings_count?: number } | null)?.findings_count ?? 0) || 0;
+      const oldSeverity = ((snapshotRow as { severity_counts?: Record<string, number> } | null)?.severity_counts ?? {}) as Record<string, number>;
+      const newSeverity = ((newReportRow as { severity_counts?: Record<string, number> } | null)?.severity_counts ?? {}) as Record<string, number>;
+
+      const comparisonSummary = {
+        baseline_findings: baselineFindings,
+        reanalyzed_findings: reanalyzedFindings,
+        findings_delta: reanalyzedFindings - baselineFindings,
+        canonical: {
+          baseline_count: oldKeys.size,
+          reanalyzed_count: newKeys.size,
+          persisting_count: persisting,
+          resolved_count: resolved,
+          new_count: newlyIntroduced,
+        },
+        severity_delta: {
+          low: Number(newSeverity.low ?? 0) - Number(oldSeverity.low ?? 0),
+          medium: Number(newSeverity.medium ?? 0) - Number(oldSeverity.medium ?? 0),
+          high: Number(newSeverity.high ?? 0) - Number(oldSeverity.high ?? 0),
+          critical: Number(newSeverity.critical ?? 0) - Number(oldSeverity.critical ?? 0),
+        },
+      };
+
+      const { error: deleteComparisonErr } = await supabase
+        .from("script_revision_cycle_comparisons")
+        .delete()
+        .eq("cycle_id", (linkedCycle as { id: string }).id)
+        .eq("new_report_id", reportId);
+      if (deleteComparisonErr) {
+        logger.warn("Failed to clear previous script revision comparison row", {
+          jobId,
+          reportId,
+          cycleId: (linkedCycle as { id: string }).id,
+          error: deleteComparisonErr.message,
+        });
+      }
+
+      const { error: comparisonErr } = await supabase
+        .from("script_revision_cycle_comparisons")
+        .insert({
+          cycle_id: (linkedCycle as { id: string }).id,
+          script_id: scriptId,
+          old_report_id: sourceReportId,
+          new_report_id: reportId,
+          comparison_summary: comparisonSummary,
+          comparison_payload: {
+            baseline_severity_counts: oldSeverity,
+            reanalyzed_severity_counts: newSeverity,
+            generated_at: reanalyzedAt,
+          },
+        });
+      if (comparisonErr) {
+        logger.warn("Failed to persist script revision comparison", {
+          jobId,
+          reportId,
+          cycleId: (linkedCycle as { id: string }).id,
+          error: comparisonErr.message,
+        });
+      }
     }
   };
 

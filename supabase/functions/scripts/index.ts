@@ -1893,7 +1893,7 @@ Deno.serve(async (req: Request) => {
         .filter((v: unknown): v is string => typeof v === "string" && v.trim().length > 0),
     )];
 
-    const [{ data: snapshots, error: snapshotsErr }, { data: reports, error: reportsErr }] = await Promise.all([
+    const [{ data: snapshots, error: snapshotsErr }, { data: reports, error: reportsErr }, { data: comparisons, error: comparisonsErr }] = await Promise.all([
       cycleIds.length > 0
         ? supabase
             .from("script_revision_cycle_snapshots")
@@ -1906,15 +1906,27 @@ Deno.serve(async (req: Request) => {
             .select("id, findings_count, severity_counts, created_at")
             .in("id", reportIds)
         : Promise.resolve({ data: [] as any[], error: null }),
+      cycleIds.length > 0
+        ? supabase
+            .from("script_revision_cycle_comparisons")
+            .select("id, cycle_id, comparison_summary, created_at")
+            .in("cycle_id", cycleIds)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[], error: null }),
     ]);
     if (snapshotsErr) return json({ error: snapshotsErr.message }, 500);
     if (reportsErr) return json({ error: reportsErr.message }, 500);
+    if (comparisonsErr) return json({ error: comparisonsErr.message }, 500);
 
     const snapshotByCycle = new Map<string, any>();
     for (const row of snapshots ?? []) {
       if (!snapshotByCycle.has((row as any).cycle_id)) snapshotByCycle.set((row as any).cycle_id, row);
     }
     const reportById = new Map<string, any>((reports ?? []).map((row: any) => [row.id, row]));
+    const comparisonByCycle = new Map<string, any>();
+    for (const row of comparisons ?? []) {
+      if (!comparisonByCycle.has((row as any).cycle_id)) comparisonByCycle.set((row as any).cycle_id, row);
+    }
 
     return json({
       scriptId,
@@ -1927,6 +1939,7 @@ Deno.serve(async (req: Request) => {
         ) || 0;
         const reanalyzedFindings = Number(reanalyzedReport?.findings_count ?? 0) || 0;
         const findingsDelta = reanalyzedReport ? reanalyzedFindings - baselineFindings : null;
+        const comparison = comparisonByCycle.get(cycle.id) ?? null;
 
         return {
           id: cycle.id,
@@ -1942,6 +1955,7 @@ Deno.serve(async (req: Request) => {
           findingsDelta,
           baselineSeverityCounts: baselineSnapshot?.severity_counts ?? sourceReport?.severity_counts ?? {},
           reanalyzedSeverityCounts: reanalyzedReport?.severity_counts ?? {},
+          comparisonSummary: comparison?.comparison_summary ?? null,
         };
       }),
     });

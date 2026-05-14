@@ -6490,6 +6490,28 @@ export function ScriptWorkspace() {
                               </>
                             ) : null}
                           </div>
+                          {cycle.comparisonSummary?.canonical ? (
+                            <div className="mt-1 text-text-muted">
+                              {lang === 'ar' ? 'المقارنة النوعية: ' : 'Canonical diff: '}
+                              <span className="text-success">
+                                {lang === 'ar'
+                                  ? `معالجة ${cycle.comparisonSummary.canonical.resolved_count ?? 0}`
+                                  : `resolved ${cycle.comparisonSummary.canonical.resolved_count ?? 0}`}
+                              </span>
+                              {' • '}
+                              <span className="text-warning">
+                                {lang === 'ar'
+                                  ? `مستمرة ${cycle.comparisonSummary.canonical.persisting_count ?? 0}`
+                                  : `persisting ${cycle.comparisonSummary.canonical.persisting_count ?? 0}`}
+                              </span>
+                              {' • '}
+                              <span className="text-error">
+                                {lang === 'ar'
+                                  ? `جديدة ${cycle.comparisonSummary.canonical.new_count ?? 0}`
+                                  : `new ${cycle.comparisonSummary.canonical.new_count ?? 0}`}
+                              </span>
+                            </div>
+                          ) : null}
                         </div>
                       );
                     })}
