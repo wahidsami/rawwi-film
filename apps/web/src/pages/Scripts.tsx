@@ -84,14 +84,14 @@ export function Scripts() {
 
   const tabs: Array<{ key: StatusFilter; label: string; icon: any }> = [
     { key: 'all', label: lang === 'ar' ? 'الكل' : 'All', icon: FileText },
-    { key: 'approved', label: lang === 'ar' ? 'مقبول' : 'Approved', icon: CheckCircle },
+    { key: 'approved', label: lang === 'ar' ? 'مفسوح' : 'Approved', icon: CheckCircle },
     { key: 'rejected', label: lang === 'ar' ? 'مرفوض' : 'Rejected', icon: XCircle },
     { key: 'pending', label: lang === 'ar' ? 'قيد المراجعة' : 'Pending', icon: Clock },
   ];
 
   const getStatusBadge = (status: string) => {
     const n = normalizeScriptStatusForFilter(status);
-    if (n === 'approved') return <Badge variant="outline" className="bg-success/10 text-success border-success/30">{lang === 'ar' ? 'مقبول' : 'Approved'}</Badge>;
+    if (n === 'approved') return <Badge variant="outline" className="bg-success/10 text-success border-success/30">{lang === 'ar' ? 'مفسوح' : 'Approved'}</Badge>;
     if (n === 'rejected') return <Badge variant="outline" className="bg-error/10 text-error border-error/30">{lang === 'ar' ? 'مرفوض' : 'Rejected'}</Badge>;
     if (n === 'review_required' || n === 'in_review') return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">{lang === 'ar' ? 'قيد المراجعة' : 'Pending'}</Badge>;
     if (n === 'draft') return <Badge variant="outline">{lang === 'ar' ? 'مسودة' : 'Draft'}</Badge>;

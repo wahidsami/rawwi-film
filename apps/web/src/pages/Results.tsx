@@ -1034,7 +1034,7 @@ export function Results() {
     (useReviewFindingsUi ? reviewViolations.length : displayViolationsCount) > 0 ? 'REVIEW_REQUIRED' : 'PASS';
 
   const decisionConfig = {
-    PASS: { label: lang === 'ar' ? 'مقبول' : 'PASS', bg: 'bg-success/5', text: 'text-success', border: 'border-success/30', icon: CheckCircle },
+    PASS: { label: lang === 'ar' ? 'مفسوح' : 'PASS', bg: 'bg-success/5', text: 'text-success', border: 'border-success/30', icon: CheckCircle },
     REJECT: { label: lang === 'ar' ? 'مرفوض' : 'REJECT', bg: 'bg-error/5', text: 'text-error', border: 'border-error/30', icon: XCircle },
     REVIEW_REQUIRED: { label: lang === 'ar' ? 'يتطلب مراجعة' : 'REVIEW REQUIRED', bg: 'bg-warning/5', text: 'text-warning', border: 'border-warning/30', icon: AlertTriangle },
   };

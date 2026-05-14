@@ -6187,7 +6187,7 @@ export function ScriptWorkspace() {
                   const total = r.findingsCount ?? 0;
                   const approved = (r as any).approvedCount ?? 0;
                   const reviewColor = r.reviewStatus === 'approved' ? 'success' : r.reviewStatus === 'rejected' ? 'error' : 'warning';
-                  const reviewLabel = r.reviewStatus === 'approved' ? (lang === 'ar' ? 'مقبول' : 'Approved')
+                  const reviewLabel = r.reviewStatus === 'approved' ? (lang === 'ar' ? 'مفسوح' : 'Approved')
                     : r.reviewStatus === 'rejected' ? (lang === 'ar' ? 'مرفوض' : 'Rejected')
                       : (lang === 'ar' ? 'قيد المراجعة' : 'Under Review');
 

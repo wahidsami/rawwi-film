@@ -22,7 +22,7 @@ function statusVariant(status: string): 'default' | 'success' | 'warning' | 'err
 
 function statusLabel(status: string, lang: 'ar' | 'en'): string {
   const key = status.toLowerCase();
-  if (key === 'approved') return lang === 'ar' ? 'مقبول' : 'Approved';
+  if (key === 'approved') return lang === 'ar' ? 'مفسوح' : 'Approved';
   if (key === 'rejected') return lang === 'ar' ? 'مرفوض' : 'Rejected';
   if (key === 'in_review') return lang === 'ar' ? 'قيد المراجعة' : 'In Review';
   if (key === 'review_required') return lang === 'ar' ? 'بحاجة مراجعة' : 'Needs Review';
@@ -207,7 +207,7 @@ export function ClientSubmissions() {
                 className="w-full h-10 rounded-[var(--radius)] border border-border bg-surface px-3 text-sm"
               >
                 <option value="pending">{lang === 'ar' ? 'قيد المعالجة' : 'Pending'}</option>
-                <option value="approved">{lang === 'ar' ? 'مقبول' : 'Approved'}</option>
+                <option value="approved">{lang === 'ar' ? 'مفسوح' : 'Approved'}</option>
                 <option value="rejected">{lang === 'ar' ? 'مرفوض' : 'Rejected'}</option>
                 <option value="all">{lang === 'ar' ? 'الكل' : 'All'}</option>
               </select>

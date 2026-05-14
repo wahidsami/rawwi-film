@@ -195,7 +195,7 @@ export function Overview() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-text-muted">
-              {lang === 'ar' ? 'نصوص مقبولة' : 'Approved Scripts'}
+              {lang === 'ar' ? 'نصوص مفسوحة' : 'Approved Scripts'}
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-success" />
           </CardHeader>
@@ -208,7 +208,7 @@ export function Overview() {
                 onClick={() => navigate('/scripts?status=approved')}
                 className="mt-4 text-xs text-success hover:underline flex items-center gap-1"
               >
-                {lang === 'ar' ? 'عرض النصوص المقبولة' : 'View Approved'} <ArrowIcon className="h-3 w-3" />
+                {lang === 'ar' ? 'عرض النصوص المفسوحة' : 'View Approved'} <ArrowIcon className="h-3 w-3" />
               </button>
             )}
           </CardContent>

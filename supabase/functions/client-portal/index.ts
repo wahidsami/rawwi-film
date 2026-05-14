@@ -180,8 +180,10 @@ function resolveClientSubmissionStatus(
   // even if scripts.status was not synced by the caller.
   if (review === "approved") return "approved";
   if (review === "rejected") return "rejected";
-
-  return script || "draft";
+  if (script === "draft") return "draft";
+  if (script === "approved") return "approved";
+  if (script === "rejected") return "rejected";
+  return "in_review";
 }
 
 type ClientAccountRow = {

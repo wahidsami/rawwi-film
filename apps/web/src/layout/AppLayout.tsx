@@ -90,7 +90,7 @@ export function AppLayout() {
     // Intentionally hidden for now (kept route/page in codebase).
     // { to: '/app/client-submissions', icon: FileText, label: lang === 'ar' ? 'طلبات المستفيدين' : 'Beneficiary Submissions', section: 'clients', permission: 'view_scripts' },
     ...(ENABLE_QUICK_ANALYSIS
-      ? [{ to: '/app/quick-analysis', icon: Wand2, label: lang === 'ar' ? 'تحليل سريع' : 'Quick Analysis', section: null as string | null, permission: null as string | null }]
+      ? [{ to: '/app/quick-analysis', icon: Wand2, label: lang === 'ar' ? 'تحليل الأعمال' : 'Works Analysis', section: null as string | null, permission: null as string | null }]
       : []),
     { to: '/app/glossary', icon: BookOpen, label: t('glossary'), section: 'glossary', permission: 'manage_glossary' },
     { to: '/app/tasks', icon: FileText, label: lang === 'ar' ? 'المهام' : 'Tasks', section: 'tasks', permission: 'view_tasks' },

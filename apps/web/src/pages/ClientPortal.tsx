@@ -65,7 +65,7 @@ const EXPECTED_RANK_VALUES: ReadonlyArray<ExpectedRank> = ['G', 'PG', 'PG12', 'P
 
 function statusLabel(status: string, lang: 'ar' | 'en'): string {
   const key = status.toLowerCase();
-  if (key === 'approved') return lang === 'ar' ? 'مقبول' : 'Approved';
+  if (key === 'approved') return lang === 'ar' ? 'مفسوح' : 'Approved';
   if (key === 'rejected') return lang === 'ar' ? 'مرفوض' : 'Rejected';
   if (key === 'analysis_running') return lang === 'ar' ? 'التحليل جارٍ' : 'Analysis Running';
   if (key === 'review_required') return lang === 'ar' ? 'بحاجة لمراجعة' : 'Needs Review';
@@ -1361,7 +1361,7 @@ export function ClientPortal() {
             <option value="all">{lang === 'ar' ? 'الكل' : 'All'}</option>
             <option value="draft">{lang === 'ar' ? 'مسودة' : 'Draft'}</option>
             <option value="submitted">{lang === 'ar' ? 'مُرسل' : 'Submitted'}</option>
-            <option value="approved">{lang === 'ar' ? 'مقبول' : 'Approved'}</option>
+            <option value="approved">{lang === 'ar' ? 'مفسوح' : 'Approved'}</option>
             <option value="rejected">{lang === 'ar' ? 'مرفوض' : 'Rejected'}</option>
           </select>
         </div>
