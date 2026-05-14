@@ -1261,7 +1261,7 @@ function isHttp404(error: unknown): boolean {
 }
 
 function createReportsUnavailableError(): Error & { status?: number } {
-  const error = new Error('Reports service is unavailable in this environment.') as Error & { status?: number };
+  const error = new Error('Reports service is unavailable in this environment. Deploy edge functions: reports and scripts, then retry.') as Error & { status?: number };
   error.status = 404;
   return error;
 }

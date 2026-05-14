@@ -384,6 +384,13 @@ export function Results() {
   const [rejectDecisionAvailableReports, setRejectDecisionAvailableReports] = useState<ReportListItem[]>([]);
   const [rejectDecisionSelectedReportIds, setRejectDecisionSelectedReportIds] = useState<string[]>([]);
   const [rejectDecisionLoadingReports, setRejectDecisionLoadingReports] = useState(false);
+  const [sendReviewDecisionModalOpen, setSendReviewDecisionModalOpen] = useState(false);
+  const [sendReviewDecisionReason, setSendReviewDecisionReason] = useState('');
+  const [sendReviewDecisionClientComment, setSendReviewDecisionClientComment] = useState('');
+  const [sendReviewDecisionShareReports, setSendReviewDecisionShareReports] = useState(true);
+  const [sendReviewDecisionAvailableReports, setSendReviewDecisionAvailableReports] = useState<ReportListItem[]>([]);
+  const [sendReviewDecisionSelectedReportIds, setSendReviewDecisionSelectedReportIds] = useState<string[]>([]);
+  const [sendReviewDecisionLoadingReports, setSendReviewDecisionLoadingReports] = useState(false);
   const [selectedFindingIds, setSelectedFindingIds] = useState<string[]>([]);
   const [editFindingModal, setEditFindingModal] = useState<AnalysisFinding | null>(null);
   const [editFindingSaving, setEditFindingSaving] = useState(false);
@@ -453,6 +460,14 @@ export function Results() {
     );
   }, []);
 
+  const toggleSendReviewDecisionReport = useCallback((reportId: string) => {
+    setSendReviewDecisionSelectedReportIds((prev) =>
+      prev.includes(reportId)
+        ? prev.filter((id) => id !== reportId)
+        : [...prev, reportId]
+    );
+  }, []);
+
   const openRejectDecisionModal = useCallback(async () => {
     if (!report?.scriptId) {
       toast.error(lang === 'ar' ? 'تعذر تحديد النص المرتبط بهذا التقرير' : 'Unable to resolve script for this report');
@@ -481,6 +496,37 @@ export function Results() {
       setRejectDecisionSelectedReportIds(report.id ? [report.id] : []);
     } finally {
       setRejectDecisionLoadingReports(false);
+    }
+  }, [lang, report?.id, report?.scriptId]);
+
+  const openSendReviewDecisionModal = useCallback(async () => {
+    if (!report?.scriptId) {
+      toast.error(lang === 'ar' ? 'تعذر تحديد النص المرتبط بهذا التقرير' : 'Unable to resolve script for this report');
+      return;
+    }
+
+    setSendReviewDecisionReason('');
+    setSendReviewDecisionClientComment('');
+    setSendReviewDecisionShareReports(true);
+    setSendReviewDecisionAvailableReports([]);
+    setSendReviewDecisionSelectedReportIds(report.id ? [report.id] : []);
+    setSendReviewDecisionModalOpen(true);
+    setSendReviewDecisionLoadingReports(true);
+
+    try {
+      const reports = await reportsApi.listByScript(report.scriptId);
+      setSendReviewDecisionAvailableReports(reports);
+      const defaultReportId =
+        (report.id && reports.some((item) => item.id === report.id))
+          ? report.id
+          : (reports[0]?.id ?? null);
+      setSendReviewDecisionSelectedReportIds(defaultReportId ? [defaultReportId] : []);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تحميل التقارير المتاحة' : 'Failed to load available reports'));
+      setSendReviewDecisionAvailableReports([]);
+      setSendReviewDecisionSelectedReportIds(report.id ? [report.id] : []);
+    } finally {
+      setSendReviewDecisionLoadingReports(false);
     }
   }, [lang, report?.id, report?.scriptId]);
 
@@ -533,6 +579,58 @@ export function Results() {
     rejectDecisionSelectedReportIds,
     rejectDecisionShareReports,
     report,
+    user?.id,
+  ]);
+
+  const submitSendReviewDecision = useCallback(async () => {
+    if (!report?.scriptId || !report?.id) return;
+    const reason = sendReviewDecisionReason.trim();
+    if (!reason) {
+      toast.error(lang === 'ar' ? 'يرجى إدخال سبب الإعادة للمراجعة' : 'Please enter a review-return reason');
+      return;
+    }
+
+    setReviewing(true);
+    try {
+      await scriptsApi.makeDecision(
+        report.scriptId,
+        'send_for_review',
+        reason,
+        report.id,
+        {
+          clientComment: sendReviewDecisionClientComment.trim(),
+          shareReportsToClient: sendReviewDecisionShareReports,
+          shareReportIds: sendReviewDecisionShareReports ? sendReviewDecisionSelectedReportIds : [],
+        },
+      );
+
+      setReport({
+        ...report,
+        reviewStatus: 'under_review',
+        reviewNotes: reason,
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: user?.id ?? null,
+      });
+      setUpdateScriptStatus(true);
+      setSendReviewDecisionModalOpen(false);
+      setSendReviewDecisionReason('');
+      setSendReviewDecisionClientComment('');
+      setSendReviewDecisionShareReports(true);
+      setSendReviewDecisionAvailableReports([]);
+      setSendReviewDecisionSelectedReportIds([]);
+      toast.success(lang === 'ar' ? 'تمت إعادة النص للمستفيد للمراجعة' : 'Script sent back to beneficiary for review');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل إعادة النص للمراجعة' : 'Failed to send script back for review'));
+    } finally {
+      setReviewing(false);
+    }
+  }, [
+    lang,
+    report,
+    sendReviewDecisionClientComment,
+    sendReviewDecisionReason,
+    sendReviewDecisionSelectedReportIds,
+    sendReviewDecisionShareReports,
     user?.id,
   ]);
 
@@ -2682,6 +2780,15 @@ export function Results() {
               <XCircle className="w-3.5 h-3.5" />
               {lang === 'ar' ? 'رفض' : 'Reject'}
             </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-10 text-xs text-warning"
+              onClick={() => void openSendReviewDecisionModal()}
+              disabled={reviewing || report.reviewStatus === 'approved' || report.reviewStatus === 'rejected'}
+            >
+              {lang === 'ar' ? 'إرسال للمراجعة' : 'Send for Review'}
+            </Button>
             {report.reviewStatus !== 'under_review' && (
               <Button size="sm" variant="ghost" className="h-10 text-xs" onClick={openReportReReviewModal} disabled={reviewing}>
                 {lang === 'ar' ? 'إعادة للمراجعة' : 'Re-review'}
@@ -3148,6 +3255,98 @@ export function Results() {
               disabled={reviewing || !rejectDecisionReason.trim()}
             >
               {reviewing ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : (lang === 'ar' ? 'تأكيد الرفض' : 'Confirm Rejection')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={sendReviewDecisionModalOpen}
+        onClose={() => {
+          if (reviewing) return;
+          setSendReviewDecisionModalOpen(false);
+          setSendReviewDecisionReason('');
+          setSendReviewDecisionClientComment('');
+          setSendReviewDecisionShareReports(true);
+          setSendReviewDecisionAvailableReports([]);
+          setSendReviewDecisionSelectedReportIds([]);
+        }}
+        title={lang === 'ar' ? 'إرسال النص للمراجعة' : 'Send Script for Review'}
+      >
+        <div className="space-y-4">
+          <Textarea
+            label={lang === 'ar' ? 'سبب الإعادة للمراجعة (داخلي)' : 'Review-return reason (internal)'}
+            value={sendReviewDecisionReason}
+            onChange={(e) => setSendReviewDecisionReason(e.target.value)}
+            placeholder={lang === 'ar' ? 'اكتب سبب الإعادة للمراجعة…' : 'Write the reason for sending back to review…'}
+          />
+
+          <Textarea
+            label={lang === 'ar' ? 'تعليق للمستفيد (اختياري)' : 'Beneficiary comment (optional)'}
+            value={sendReviewDecisionClientComment}
+            onChange={(e) => setSendReviewDecisionClientComment(e.target.value)}
+            placeholder={lang === 'ar' ? 'اكتب ملاحظات واضحة تظهر للمستفيد في البوابة…' : 'Write clear notes that will be shown to the beneficiary…'}
+          />
+
+          <div className="rounded-md border border-border bg-background p-3 space-y-3">
+            <label className="inline-flex items-center gap-2 text-sm font-medium text-text-main">
+              <input
+                type="checkbox"
+                checked={sendReviewDecisionShareReports}
+                onChange={(e) => setSendReviewDecisionShareReports(e.target.checked)}
+              />
+              <span>{lang === 'ar' ? 'مشاركة تقرير/تقارير التحليل مع المستفيد' : 'Share analysis report(s) with beneficiary'}</span>
+            </label>
+
+            {sendReviewDecisionShareReports && (
+              <div className="space-y-2 max-h-48 overflow-y-auto pe-1">
+                {sendReviewDecisionLoadingReports ? (
+                  <p className="text-xs text-text-muted">{lang === 'ar' ? 'جاري تحميل التقارير…' : 'Loading reports…'}</p>
+                ) : sendReviewDecisionAvailableReports.length === 0 ? (
+                  <p className="text-xs text-text-muted">{lang === 'ar' ? 'لا توجد تقارير متاحة لهذا النص حالياً.' : 'No reports available for this script yet.'}</p>
+                ) : (
+                  sendReviewDecisionAvailableReports.map((item) => (
+                    <label key={item.id} className="flex items-start gap-2 text-sm text-text-main rounded border border-border bg-surface p-2">
+                      <input
+                        type="checkbox"
+                        checked={sendReviewDecisionSelectedReportIds.includes(item.id)}
+                        onChange={() => toggleSendReviewDecisionReport(item.id)}
+                      />
+                      <span>
+                        {(lang === 'ar' ? 'تقرير' : 'Report')} #{item.id.slice(0, 8)} {' • '}
+                        {new Date(item.createdAt).toLocaleString()} {' • '}
+                        {(lang === 'ar' ? 'الحالة' : 'Status')}: {item.reviewStatus} {' • '}
+                        {(lang === 'ar' ? 'المخالفات' : 'Findings')}: {item.findingsCount}
+                      </span>
+                    </label>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (reviewing) return;
+                setSendReviewDecisionModalOpen(false);
+                setSendReviewDecisionReason('');
+                setSendReviewDecisionClientComment('');
+                setSendReviewDecisionShareReports(true);
+                setSendReviewDecisionAvailableReports([]);
+                setSendReviewDecisionSelectedReportIds([]);
+              }}
+              disabled={reviewing}
+            >
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={submitSendReviewDecision}
+              disabled={reviewing || !sendReviewDecisionReason.trim()}
+            >
+              {reviewing ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : (lang === 'ar' ? 'إرسال للمراجعة' : 'Send for Review')}
             </Button>
           </div>
         </div>
