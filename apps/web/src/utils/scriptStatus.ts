@@ -11,6 +11,8 @@ export function normalizeScriptStatusForDisplay(status: string | undefined): str
     draft: 'Draft',
     pending: 'Pending',
     in_review: 'In Review',
+    revision_requested: 'In Review',
+    resubmitted: 'In Review',
     review_required: 'In Review',
     analysis_running: 'In Review',
     assigned: 'Assigned',

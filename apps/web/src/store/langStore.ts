@@ -159,6 +159,8 @@ const translations = {
     draft: 'مسودة',
     assigned: 'تم الإسناد',
     analysis_running: 'قيد المراجعة',
+    revision_requested: 'قيد المراجعة',
+    resubmitted: 'قيد المراجعة',
     review_required: 'قيد المراجعة',
     completed: 'مكتمل',
     // Glossary
@@ -402,6 +404,8 @@ const translations = {
     draft: 'Draft',
     assigned: 'Assigned',
     analysis_running: 'In Review',
+    revision_requested: 'In Review',
+    resubmitted: 'In Review',
     review_required: 'In Review',
     completed: 'Completed',
     // Glossary

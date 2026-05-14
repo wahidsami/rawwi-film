@@ -683,7 +683,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: script, error: scriptErr } = await supabase
     .from("scripts")
-    .select("id, created_by, assignee_id")
+    .select("id, created_by, assignee_id, status")
     .eq("id", (version as { script_id: string }).script_id)
     .single();
 
@@ -691,7 +691,7 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Script not found" }, 404);
   }
 
-  const s = script as { created_by: string | null; assignee_id: string | null };
+  const s = script as { created_by: string | null; assignee_id: string | null; status: string | null };
   const hasAccess =
     isAdmin || s.created_by === uid || (s.assignee_id != null && s.assignee_id === uid);
   if (!hasAccess) {
@@ -898,8 +898,57 @@ Deno.serve(async (req: Request) => {
     manualReviewSnapshot.items
   );
 
+  let linkedRevisionCycleNumber: number | null = null;
+  const scriptStatusNormalized = String(s.status ?? "").trim().toLowerCase();
+  if (scriptStatusNormalized === "resubmitted") {
+    const { data: cycleRow } = await supabase
+      .from("script_revision_cycles")
+      .select("id, cycle_number, status, reanalyzed_job_id")
+      .eq("script_id", scriptId)
+      .order("cycle_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (cycleRow && String((cycleRow as { status?: string | null }).status ?? "").toLowerCase() === "returned") {
+      linkedRevisionCycleNumber = Number((cycleRow as { cycle_number?: number }).cycle_number ?? 0) || null;
+      const cycleId = (cycleRow as { id: string }).id;
+
+      if (!(cycleRow as { reanalyzed_job_id?: string | null }).reanalyzed_job_id) {
+        await supabase
+          .from("script_revision_cycles")
+          .update({
+            reanalyzed_job_id: job.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", cycleId)
+          .eq("script_id", scriptId);
+      }
+
+      await supabase
+        .from("script_revision_cycle_events")
+        .insert({
+          cycle_id: cycleId,
+          script_id: scriptId,
+          event_type: "admin_reanalysis_started",
+          actor_user_id: uid,
+          payload: {
+            job_id: job.id,
+            version_id: versionId.trim(),
+          },
+        })
+        .catch((err) => console.warn("[tasks] failed to write admin_reanalysis_started event:", err?.message ?? err));
+    }
+
+    await supabase
+      .from("scripts")
+      .update({ status: "analysis_running" })
+      .eq("id", scriptId)
+      .catch((err) => console.warn("[tasks] failed to update script status to analysis_running:", err?.message ?? err));
+  }
+
   return json({
     jobId: job.id,
     manualReviewContextCount: clonedManualFindings,
+    linkedRevisionCycleNumber,
   });
 });

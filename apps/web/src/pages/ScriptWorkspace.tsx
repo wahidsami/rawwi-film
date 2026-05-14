@@ -3034,7 +3034,7 @@ export function ScriptWorkspace() {
     }
     setIsAnalyzing(true);
     try {
-      const { jobId, manualReviewContextCount } = await scriptsApi.createTask(script.currentVersionId, {
+      const { jobId, manualReviewContextCount, linkedRevisionCycleNumber } = await scriptsApi.createTask(script.currentVersionId, {
         forceFresh: true,
         analysisProfile: analysisModeProfile,
         pipelineVersion: 'v2',
@@ -3054,6 +3054,13 @@ export function ScriptWorkspace() {
           { duration: 5000 }
         );
       }
+      if (linkedRevisionCycleNumber && linkedRevisionCycleNumber > 0) {
+        toast.success(
+          lang === 'ar'
+            ? `تم بدء إعادة التحليل وربطه بدورة المراجعة رقم ${linkedRevisionCycleNumber}.`
+            : `Reanalysis started and linked to revision cycle #${linkedRevisionCycleNumber}.`
+        );
+      }
     } catch (err: any) {
       console.error('[ScriptWorkspace] Analysis trigger failed:', err);
       toast.error(err?.message ?? (lang === 'ar' ? 'فشل تفعيل التحليل' : 'Failed to start analysis'));
@@ -3065,6 +3072,7 @@ export function ScriptWorkspace() {
 
 
   const isAnalysisRunning = analysisJob != null && !isTerminalJobStatus(analysisJob.status);
+  const isResubmittedScript = String(script?.status ?? '').trim().toLowerCase() === 'resubmitted';
   const chunkCountFromJob = Math.max(0, (analysisJob?.progressTotal ?? 0) - 1);
   const hasTrackedChunks = chunkStatuses.length > 0;
   const totalChunksTracked = hasTrackedChunks ? chunkStatuses.length : chunkCountFromJob;
@@ -5354,10 +5362,10 @@ export function ScriptWorkspace() {
               className="flex gap-2"
               onClick={isAnalysisRunning ? () => setAnalysisModalOpen(true) : handleStartAnalysis}
               disabled={!hasVersionForAnalysis || isAnalyzing || isClientCanceledScript}
-              title={!hasVersionForAnalysis ? (lang === 'ar' ? 'ارفع ملف نص أولاً' : 'Upload a script file first') : isAnalysisRunning ? (lang === 'ar' ? 'عرض التقدم' : 'View progress') : (lang === 'ar' ? 'تشغيل التحليل الذكي' : 'Queue analysis')}
+              title={!hasVersionForAnalysis ? (lang === 'ar' ? 'ارفع ملف نص أولاً' : 'Upload a script file first') : isAnalysisRunning ? (lang === 'ar' ? 'عرض التقدم' : 'View progress') : isResubmittedScript ? (lang === 'ar' ? 'بدء إعادة التحليل للنص المُعاد من المستفيد' : 'Start reanalysis for beneficiary resubmission') : (lang === 'ar' ? 'تشغيل التحليل الذكي' : 'Queue analysis')}
             >
               {isAnalysisRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
-              {isAnalyzing ? (lang === 'ar' ? 'في انتظار الدور…' : 'Queuing…') : isAnalysisRunning ? `${analysisJob?.progressPercent ?? 0}%` : (lang === 'ar' ? 'تحليل ذكي' : 'Start Smart Analysis')}
+              {isAnalyzing ? (lang === 'ar' ? 'في انتظار الدور…' : 'Queuing…') : isAnalysisRunning ? `${analysisJob?.progressPercent ?? 0}%` : isResubmittedScript ? (lang === 'ar' ? 'بدء إعادة التحليل' : 'Start Reanalysis') : (lang === 'ar' ? 'تحليل ذكي' : 'Start Smart Analysis')}
           </Button>
             {isAnalysisRunning && (
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-warning rounded-full animate-pulse border-2 border-surface" />

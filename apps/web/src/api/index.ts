@@ -791,7 +791,7 @@ export const scriptsApi = {
       pipelineVersion?: 'v1' | 'v2';
       analysisOptions?: { mergeStrategy?: 'same_location_only' | 'every_occurrence' };
     }
-  ): Promise<{ jobId: string; manualReviewContextCount?: number }> =>
+  ): Promise<{ jobId: string; manualReviewContextCount?: number; linkedRevisionCycleNumber?: number | null }> =>
     httpClient.post('/tasks', {
       versionId,
       ...(options?.forceFresh ? { forceFresh: true } : {}),
