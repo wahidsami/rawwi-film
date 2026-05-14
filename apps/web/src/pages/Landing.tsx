@@ -25,7 +25,7 @@ import { useAuthStore } from '@/store/authStore';
 const heroSlides = [
   {
     id: 1,
-    titleAr: 'انضم إلى منصة راوي فيلم الآن',
+    titleAr: 'انضم إلى منصة راوي الآن',
     titleEn: 'Join Raawi film platform now',
     subtitleAr: 'راوي يساعدك في إيصال نصوصك السينمائية بسرعة أكبر إلى هيئة الأفلام.',
     subtitleEn: 'Raawi helps you to get your film scripts faster to the film commission',
@@ -237,7 +237,7 @@ export function Landing() {
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#141414]/95 backdrop-blur-sm">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 lg:px-10">
           <div className="flex items-center gap-3">
-            <img src="/loginlogo.png" alt="Raawi Film" className="h-14 w-auto object-contain" />
+            <img src="/loginlogo.png" alt="Raawi" className="h-14 w-auto object-contain" />
           </div>
 
           <nav className="hidden items-center gap-10 xl:flex">
@@ -722,7 +722,7 @@ export function Landing() {
 
           <div className="border-t border-red-900/20 py-8">
             <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-              <p className="text-center text-sm text-gray-500">{isArabic ? '© 2026 راوي فيلم — جميع الحقوق محفوظة' : '© 2026 Raawi Film — All rights reserved'}</p>
+              <p className="text-center text-sm text-gray-500">{isArabic ? '© 2026 راوي — جميع الحقوق محفوظة' : '© 2026 Raawi — All rights reserved'}</p>
               <a href="#hero" className="inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white">
                 <span>{isArabic ? 'العودة للأعلى' : 'Back to top'}</span>
                 <ArrowLeft className={`h-4 w-4 ${isArabic ? 'rotate-90' : '-rotate-90'}`} />
