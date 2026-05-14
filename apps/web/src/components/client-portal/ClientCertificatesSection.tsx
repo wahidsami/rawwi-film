@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Document, Font, Image, Page, Text, View, pdf } from '@react-pdf/renderer';
 import QRCode from 'qrcode';
-import { AlertTriangle, Award, BadgeCheck, CreditCard, Download, Eye, Loader2, ShieldCheck } from 'lucide-react';
+import { Award, BadgeCheck, CreditCard, Download, Eye, Loader2, ShieldCheck } from 'lucide-react';
 import {
   certificatesApi,
   type CertificateDashboardItem,
@@ -573,13 +573,7 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
           <CardTitle>{lang === 'ar' ? 'دورة الشهادة والرسوم' : 'Certificate and Fee Flow'}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-[calc(var(--radius)+0.35rem)] border border-warning/20 bg-warning/10 p-4 text-sm leading-7 text-warning">
-            {lang === 'ar'
-              ? 'هذه شاشة دفع تجريبية فقط. بمجرد اعتماد النص من الإدارة، يظهر هنا للدفع ثم تُصدر الشهادة تلقائياً بعد نجاح العملية.'
-              : 'This is a demo payment screen. Once a script is approved by admin, it appears here for payment and the certificate is issued automatically after a successful transaction.'}
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2">
             <Card className="border-border/70 bg-background/70">
               <CardContent className="flex items-center justify-between p-5">
                 <div>
@@ -587,24 +581,6 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
                   <p className="mt-2 text-3xl font-bold">{summary.approved}</p>
                 </div>
                 <Award className="h-8 w-8 text-primary" />
-              </CardContent>
-            </Card>
-            <Card className="border-border/70 bg-background/70">
-              <CardContent className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-sm text-text-muted">{lang === 'ar' ? 'بانتظار الدفع' : 'Awaiting Payment'}</p>
-                  <p className="mt-2 text-3xl font-bold text-warning">{summary.pending}</p>
-                </div>
-                <CreditCard className="h-8 w-8 text-warning" />
-              </CardContent>
-            </Card>
-            <Card className="border-border/70 bg-background/70">
-              <CardContent className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-sm text-text-muted">{lang === 'ar' ? 'دفعات فاشلة' : 'Failed Payments'}</p>
-                  <p className="mt-2 text-3xl font-bold text-error">{summary.failed}</p>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-error" />
               </CardContent>
             </Card>
             <Card className="border-border/70 bg-background/70">

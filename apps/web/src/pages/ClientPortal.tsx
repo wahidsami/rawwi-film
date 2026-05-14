@@ -1264,7 +1264,30 @@ export function ClientPortal() {
                       <td className="px-4 py-3"><Badge variant={statusVariant(item.status)}>{statusLabel(item.status, lang)}</Badge></td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <Button size="sm" variant="ghost" onClick={() => navigate(`/workspace/${item.scriptId}`)} aria-label="view"><Eye className="h-4 w-4" /></Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            aria-label="view"
+                            onClick={() => {
+                              if (status === 'rejected') {
+                                void openRejectionDetails(item.scriptId);
+                                return;
+                              }
+                              if (isDraft) {
+                                startEditDraft(item);
+                                return;
+                              }
+                              if (status === 'approved') {
+                                setActiveSection('certificates');
+                                return;
+                              }
+                              setNotice(lang === 'ar'
+                                ? 'عرض التفاصيل الكاملة لهذا النص داخل بوابة المستفيد سيكون متاحاً قريباً. يمكنك حالياً متابعة الحالة من قائمة نصوصي.'
+                                : 'Full in-portal script details will be available soon. For now, you can track status from My Scripts.');
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           {isDraft ? (
                             <Button size="sm" variant="ghost" onClick={() => startEditDraft(item)} aria-label="edit"><Pencil className="h-4 w-4" /></Button>
                           ) : null}
