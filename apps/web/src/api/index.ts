@@ -135,6 +135,7 @@ export interface ClientPortalRevisionCycleItem {
     findingsCount: number;
     severityCounts?: Record<string, number>;
     createdAt: string;
+    sharedFormats?: Array<'pdf' | 'docx'>;
   }>;
   sourceReport?: {
     id: string;
@@ -176,6 +177,41 @@ export interface ClientPortalRevisionCyclesResponse {
     fileUrl?: string | null;
   };
   cycles: ClientPortalRevisionCycleItem[];
+}
+
+export interface ClientPortalSharedCycleReportPayloadResponse {
+  script: {
+    id: string;
+    title: string;
+    status: string;
+  };
+  cycle: {
+    id: string;
+    cycleNumber: number;
+  };
+  report: {
+    id: string;
+    jobId: string;
+    reviewStatus: string;
+    reviewNotes?: string | null;
+    findingsCount: number;
+    severityCounts?: Record<string, number> | null;
+    summaryJson?: Record<string, unknown> | null;
+    createdAt: string;
+  };
+  findings: Array<{
+    id: string;
+    source: string;
+    articleId: number;
+    atomId?: string | null;
+    severity: string;
+    titleAr: string;
+    descriptionAr?: string | null;
+    rationaleAr?: string | null;
+    evidenceSnippet: string;
+    pageNumber?: number | null;
+    createdAt: string;
+  }>;
 }
 
 export interface AdminClientSubmissionItem {
@@ -593,6 +629,14 @@ export const clientPortalApi = {
     httpClient.get(`/client-portal/rejections/${encodeURIComponent(scriptId)}`),
   getRevisionCycles: (scriptId: string): Promise<ClientPortalRevisionCyclesResponse> =>
     httpClient.get(`/client-portal/scripts/${encodeURIComponent(scriptId)}/revision-cycles`),
+  getRevisionCycleSharedReportPayload: (
+    scriptId: string,
+    cycleId: string,
+    reportId: string,
+  ): Promise<ClientPortalSharedCycleReportPayloadResponse> =>
+    httpClient.get(
+      `/client-portal/scripts/${encodeURIComponent(scriptId)}/revision-cycles/${encodeURIComponent(cycleId)}/reports/${encodeURIComponent(reportId)}`,
+    ),
   resubmitRevisionCycle: (
     scriptId: string,
     cycleId: string,
@@ -824,6 +868,7 @@ export const scriptsApi = {
       clientComment?: string;
       shareReportsToClient?: boolean;
       shareReportIds?: string[];
+      shareReportFormats?: Array<'pdf' | 'docx'>;
     },
   ): Promise<{ success: boolean; script: Script; message: string }> =>
     httpClient.post(`/scripts/${encodeURIComponent(id)}/decision`, {
@@ -834,6 +879,7 @@ export const scriptsApi = {
       ...(options?.clientComment != null ? { clientComment: options.clientComment } : {}),
       ...(options?.shareReportsToClient != null ? { shareReportsToClient: options.shareReportsToClient } : {}),
       ...(options?.shareReportIds != null ? { shareReportIds: options.shareReportIds } : {}),
+      ...(options?.shareReportFormats != null ? { shareReportFormats: options.shareReportFormats } : {}),
     }),
   getScriptVersions: (scriptId: string, options?: { signal?: AbortSignal }): Promise<ScriptVersion[]> =>
     httpClient.get(`/scripts/${encodeURIComponent(scriptId)}/versions`, { signal: options?.signal }),

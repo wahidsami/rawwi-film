@@ -41,6 +41,7 @@ import { useLangStore } from '@/store/langStore';
 import type { Script } from '@/api/models';
 import { supabase } from '@/lib/supabaseClient';
 import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
+import { downloadAnalysisWord } from '@/components/reports/analysis/downloadWord';
 import {
   buildScriptClassificationSelectOptions,
   LEGACY_SCRIPT_CLASSIFICATION_OPTIONS,
@@ -943,6 +944,68 @@ export function ClientPortal() {
     await scriptsApi.uploadToSignedUrl(uploadFile, upload.url);
     if (upload.path) return upload.path;
     return upload.url;
+  };
+
+  const downloadCycleSharedReport = async (
+    scriptId: string,
+    cycle: ClientPortalRevisionCycleItem,
+    report: NonNullable<ClientPortalRevisionCycleItem['sharedReports']>[number],
+    format: 'pdf' | 'docx',
+  ) => {
+    setError('');
+    try {
+      const payload = await clientPortalApi.getRevisionCycleSharedReportPayload(scriptId, cycle.id, report.id);
+      const summary = asReportSummary(payload.report.summaryJson);
+      const canonicalFindings =
+        summary?.canonical_findings && summary.canonical_findings.length > 0
+          ? summary.canonical_findings
+          : payload.findings.map((finding, index) => ({
+              canonical_finding_id: finding.id || `${payload.report.id}-${index}`,
+              title_ar: finding.titleAr || (lang === 'ar' ? 'مخالفة' : 'Finding'),
+              evidence_snippet: finding.evidenceSnippet || '',
+              severity: finding.severity || 'info',
+              confidence: 1,
+              rationale: finding.rationaleAr || finding.descriptionAr || null,
+              primary_article_id: Number.isFinite(finding.articleId) ? finding.articleId : null,
+              related_article_ids: [],
+              page_number: finding.pageNumber ?? null,
+              source: finding.source || 'ai',
+            }));
+
+      const scriptTitle = payload.script.title || (lang === 'ar' ? 'تقرير النص' : 'Script Report');
+      const clientName = profile?.company
+        ? (lang === 'ar' ? profile.company.nameAr : profile.company.nameEn)
+        : (lang === 'ar' ? 'المستفيد' : 'Beneficiary');
+      const cycleLabel = `Cycle-${cycle.cycleNumber}`;
+      const dateLabel = new Date(payload.report.createdAt).toISOString().slice(0, 10);
+      const fileStem = `${cycleLabel}_${scriptTitle}_${dateLabel}`.replace(/[\\/:*?"<>|]+/g, '_').trim();
+
+      if (format === 'pdf') {
+        await downloadAnalysisPdf({
+          scriptTitle,
+          clientName,
+          createdAt: payload.report.createdAt,
+          findingsByArticle: summary?.findings_by_article ?? null,
+          canonicalFindings,
+          reportHints: summary?.report_hints ?? null,
+          scriptSummary: summary?.script_summary ?? null,
+          lang,
+        });
+      } else {
+        await downloadAnalysisWord({
+          scriptTitle,
+          clientName,
+          createdAt: payload.report.createdAt,
+          findingsByArticle: summary?.findings_by_article ?? null,
+          canonicalFindings,
+          reportHints: summary?.report_hints ?? null,
+          scriptSummary: summary?.script_summary ?? null,
+          lang,
+        });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تنزيل تقرير الدورة' : 'Unable to download cycle report'));
+    }
   };
 
   const openStoredDocument = async (pathOrUrl: string | null | undefined) => {
@@ -2599,14 +2662,20 @@ export function ClientPortal() {
                       {cycle.sharedReports && cycle.sharedReports.length > 0 ? (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {cycle.sharedReports.map((report) => (
-                            <Button
-                              key={report.id}
-                              size="sm"
-                              variant="outline"
-                              onClick={() => navigate(`/report/${encodeURIComponent(report.jobId)}?by=job`)}
-                            >
-                              {lang === 'ar' ? `تقرير دورة ${cycle.cycleNumber}` : `Cycle ${cycle.cycleNumber} Report`}
-                            </Button>
+                            <div key={report.id} className="flex flex-wrap gap-2">
+                              {(report.sharedFormats && report.sharedFormats.length > 0 ? report.sharedFormats : ['pdf', 'docx']).map((format) => (
+                                <Button
+                                  key={`${report.id}-${format}`}
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => void downloadCycleSharedReport(submissionDetailsItem.scriptId, cycle, report, format)}
+                                >
+                                  {lang === 'ar'
+                                    ? `تقرير الدورة ${cycle.cycleNumber} (${format.toUpperCase()})`
+                                    : `Cycle ${cycle.cycleNumber} Report (${format.toUpperCase()})`}
+                                </Button>
+                              ))}
+                            </div>
                           ))}
                         </div>
                       ) : null}

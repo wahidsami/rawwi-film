@@ -752,6 +752,17 @@ async function ensureCertificateGeneratedOnApproval(
   }
 }
 
+function normalizeShareReportFormats(value: unknown): Array<"pdf" | "docx"> {
+  if (!Array.isArray(value)) return [];
+  const out = new Set<"pdf" | "docx">();
+  for (const item of value) {
+    if (typeof item !== "string") continue;
+    const v = item.trim().toLowerCase();
+    if (v === "pdf" || v === "docx") out.add(v);
+  }
+  return [...out];
+}
+
 async function notifyBeneficiaryRevisionRequested(
   supabase: ReturnType<typeof createSupabaseAdmin>,
   params: {
@@ -2210,6 +2221,8 @@ Deno.serve(async (req: Request) => {
     const clientComment = typeof body.clientComment === 'string' ? body.clientComment.trim().slice(0, 5000) : '';
     const shareReportsToClient = body.shareReportsToClient === true;
     const requestedShareReportIds = normalizeUuidList(body.shareReportIds);
+    const requestedShareReportFormats = normalizeShareReportFormats(body.shareReportFormats);
+    const shareReportFormats = requestedShareReportFormats.length > 0 ? requestedShareReportFormats : ["pdf", "docx"];
 
     // Fetch script
     const { data: script, error: findErr } = await supabase
@@ -2307,6 +2320,7 @@ Deno.serve(async (req: Request) => {
         client_comment: clientComment || null,
         share_reports_to_client: (decision === 'reject' || decision === 'send_for_review') ? shareReportsToClient : false,
         shared_report_ids: (decision === 'reject' || decision === 'send_for_review') ? sharedReportIds : [],
+        shared_report_formats: (decision === 'reject' || decision === 'send_for_review') ? shareReportFormats : [],
       }
     });
 
@@ -2398,6 +2412,7 @@ Deno.serve(async (req: Request) => {
                 admin_note: clientComment || null,
                 source_report_id: sourceReportId,
                 shared_report_ids: sharedReportIds,
+                shared_report_formats: shareReportFormats,
               },
             });
 

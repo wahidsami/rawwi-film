@@ -388,6 +388,7 @@ export function Results() {
   const [sendReviewDecisionReason, setSendReviewDecisionReason] = useState('');
   const [sendReviewDecisionClientComment, setSendReviewDecisionClientComment] = useState('');
   const [sendReviewDecisionShareReports, setSendReviewDecisionShareReports] = useState(true);
+  const [sendReviewDecisionShareFormats, setSendReviewDecisionShareFormats] = useState<Array<'pdf' | 'docx'>>(['pdf', 'docx']);
   const [sendReviewDecisionAvailableReports, setSendReviewDecisionAvailableReports] = useState<ReportListItem[]>([]);
   const [sendReviewDecisionSelectedReportIds, setSendReviewDecisionSelectedReportIds] = useState<string[]>([]);
   const [sendReviewDecisionLoadingReports, setSendReviewDecisionLoadingReports] = useState(false);
@@ -508,6 +509,7 @@ export function Results() {
     setSendReviewDecisionReason('');
     setSendReviewDecisionClientComment('');
     setSendReviewDecisionShareReports(true);
+    setSendReviewDecisionShareFormats(['pdf', 'docx']);
     setSendReviewDecisionAvailableReports([]);
     setSendReviewDecisionSelectedReportIds(report.id ? [report.id] : []);
     setSendReviewDecisionModalOpen(true);
@@ -601,6 +603,7 @@ export function Results() {
           clientComment: sendReviewDecisionClientComment.trim(),
           shareReportsToClient: sendReviewDecisionShareReports,
           shareReportIds: sendReviewDecisionShareReports ? sendReviewDecisionSelectedReportIds : [],
+          shareReportFormats: sendReviewDecisionShareReports ? sendReviewDecisionShareFormats : [],
         },
       );
 
@@ -630,6 +633,7 @@ export function Results() {
     sendReviewDecisionClientComment,
     sendReviewDecisionReason,
     sendReviewDecisionSelectedReportIds,
+    sendReviewDecisionShareFormats,
     sendReviewDecisionShareReports,
     user?.id,
   ]);
@@ -3268,6 +3272,7 @@ export function Results() {
           setSendReviewDecisionReason('');
           setSendReviewDecisionClientComment('');
           setSendReviewDecisionShareReports(true);
+          setSendReviewDecisionShareFormats(['pdf', 'docx']);
           setSendReviewDecisionAvailableReports([]);
           setSendReviewDecisionSelectedReportIds([]);
         }}
@@ -3299,7 +3304,29 @@ export function Results() {
             </label>
 
             {sendReviewDecisionShareReports && (
-              <div className="space-y-2 max-h-48 overflow-y-auto pe-1">
+              <div className="space-y-3">
+                <div className="rounded border border-border bg-surface p-2">
+                  <p className="text-xs font-medium text-text-main">{lang === 'ar' ? 'تنسيقات الملفات المرسلة' : 'Shared file formats'}</p>
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    <label className="inline-flex items-center gap-2 text-xs text-text-muted">
+                      <input
+                        type="checkbox"
+                        checked={sendReviewDecisionShareFormats.includes('pdf')}
+                        onChange={(e) => setSendReviewDecisionShareFormats((prev) => e.target.checked ? Array.from(new Set([...prev, 'pdf'])) : prev.filter((f) => f !== 'pdf'))}
+                      />
+                      PDF
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-xs text-text-muted">
+                      <input
+                        type="checkbox"
+                        checked={sendReviewDecisionShareFormats.includes('docx')}
+                        onChange={(e) => setSendReviewDecisionShareFormats((prev) => e.target.checked ? Array.from(new Set([...prev, 'docx'])) : prev.filter((f) => f !== 'docx'))}
+                      />
+                      DOCX
+                    </label>
+                  </div>
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto pe-1">
                 {sendReviewDecisionLoadingReports ? (
                   <p className="text-xs text-text-muted">{lang === 'ar' ? 'جاري تحميل التقارير…' : 'Loading reports…'}</p>
                 ) : sendReviewDecisionAvailableReports.length === 0 ? (
@@ -3321,6 +3348,7 @@ export function Results() {
                     </label>
                   ))
                 )}
+                </div>
               </div>
             )}
           </div>
@@ -3334,6 +3362,7 @@ export function Results() {
                 setSendReviewDecisionReason('');
                 setSendReviewDecisionClientComment('');
                 setSendReviewDecisionShareReports(true);
+                setSendReviewDecisionShareFormats(['pdf', 'docx']);
                 setSendReviewDecisionAvailableReports([]);
                 setSendReviewDecisionSelectedReportIds([]);
               }}
@@ -3344,7 +3373,7 @@ export function Results() {
             <Button
               variant="primary"
               onClick={submitSendReviewDecision}
-              disabled={reviewing || !sendReviewDecisionReason.trim()}
+              disabled={reviewing || !sendReviewDecisionReason.trim() || (sendReviewDecisionShareReports && sendReviewDecisionShareFormats.length === 0)}
             >
               {reviewing ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : (lang === 'ar' ? 'إرسال للمراجعة' : 'Send for Review')}
             </Button>

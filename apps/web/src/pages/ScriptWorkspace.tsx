@@ -1936,6 +1936,7 @@ export function ScriptWorkspace() {
   const [sendReviewDecisionReason, setSendReviewDecisionReason] = useState('');
   const [sendReviewDecisionClientComment, setSendReviewDecisionClientComment] = useState('');
   const [sendReviewDecisionShareReports, setSendReviewDecisionShareReports] = useState(true);
+  const [sendReviewDecisionShareFormats, setSendReviewDecisionShareFormats] = useState<Array<'pdf' | 'docx'>>(['pdf', 'docx']);
   const [sendReviewDecisionReportIds, setSendReviewDecisionReportIds] = useState<string[]>([]);
   const [sendReviewDecisionSubmitting, setSendReviewDecisionSubmitting] = useState(false);
 
@@ -2320,6 +2321,7 @@ export function ScriptWorkspace() {
     setSendReviewDecisionReason('');
     setSendReviewDecisionClientComment('');
     setSendReviewDecisionShareReports(true);
+    setSendReviewDecisionShareFormats(['pdf', 'docx']);
     setSendReviewDecisionReportIds(defaultReportId ? [defaultReportId] : []);
   }, [reportHistory]);
 
@@ -2329,6 +2331,7 @@ export function ScriptWorkspace() {
     setSendReviewDecisionReason('');
     setSendReviewDecisionClientComment('');
     setSendReviewDecisionShareReports(true);
+    setSendReviewDecisionShareFormats(['pdf', 'docx']);
     setSendReviewDecisionReportIds([]);
   }, [sendReviewDecisionSubmitting]);
 
@@ -2456,6 +2459,7 @@ export function ScriptWorkspace() {
           clientComment: sendReviewDecisionClientComment.trim(),
           shareReportsToClient: sendReviewDecisionShareReports,
           shareReportIds: sendReviewDecisionShareReports ? sendReviewDecisionReportIds : [],
+          shareReportFormats: sendReviewDecisionShareReports ? sendReviewDecisionShareFormats : [],
         },
       );
       toast.success(lang === 'ar' ? 'تم إرسال النص للمستفيد للمراجعة' : 'Script sent to beneficiary for review');
@@ -2493,6 +2497,7 @@ export function ScriptWorkspace() {
     sendReviewDecisionReason,
     sendReviewDecisionReportId,
     sendReviewDecisionReportIds,
+    sendReviewDecisionShareFormats,
     sendReviewDecisionShareReports,
   ]);
 
@@ -6856,31 +6861,54 @@ export function ScriptWorkspace() {
             </label>
 
             {sendReviewDecisionShareReports && (
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {reportHistory.length === 0 ? (
-                  <p className="text-xs text-text-muted">
-                    {lang === 'ar' ? 'لا توجد تقارير متاحة لهذا النص حالياً.' : 'No reports available for this script yet.'}
-                  </p>
-                ) : (
-                  reportHistory.map((report) => (
-                    <label key={report.id} className="flex items-start gap-2 text-sm text-text-main rounded border border-border bg-surface p-2">
+              <div className="space-y-3">
+                <div className="rounded border border-border bg-surface p-2">
+                  <p className="text-xs font-medium text-text-main">{lang === 'ar' ? 'تنسيقات الملفات المرسلة' : 'Shared file formats'}</p>
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    <label className="inline-flex items-center gap-2 text-xs text-text-muted">
                       <input
                         type="checkbox"
-                        checked={sendReviewDecisionReportIds.includes(report.id)}
-                        onChange={() => toggleSendReviewDecisionReportId(report.id)}
+                        checked={sendReviewDecisionShareFormats.includes('pdf')}
+                        onChange={(e) => setSendReviewDecisionShareFormats((prev) => e.target.checked ? Array.from(new Set([...prev, 'pdf'])) : prev.filter((f) => f !== 'pdf'))}
                       />
-                      <span>
-                        {(lang === 'ar' ? 'تقرير' : 'Report')} #{report.id.slice(0, 8)}
-                        {' • '}
-                        {new Date(report.createdAt).toLocaleString()}
-                        {' • '}
-                        {(lang === 'ar' ? 'الحالة' : 'Status')}: {report.reviewStatus}
-                        {' • '}
-                        {(lang === 'ar' ? 'المخالفات' : 'Findings')}: {report.findingsCount}
-                      </span>
+                      PDF
                     </label>
-                  ))
-                )}
+                    <label className="inline-flex items-center gap-2 text-xs text-text-muted">
+                      <input
+                        type="checkbox"
+                        checked={sendReviewDecisionShareFormats.includes('docx')}
+                        onChange={(e) => setSendReviewDecisionShareFormats((prev) => e.target.checked ? Array.from(new Set([...prev, 'docx'])) : prev.filter((f) => f !== 'docx'))}
+                      />
+                      DOCX
+                    </label>
+                  </div>
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {reportHistory.length === 0 ? (
+                    <p className="text-xs text-text-muted">
+                      {lang === 'ar' ? 'لا توجد تقارير متاحة لهذا النص حالياً.' : 'No reports available for this script yet.'}
+                    </p>
+                  ) : (
+                    reportHistory.map((report) => (
+                      <label key={report.id} className="flex items-start gap-2 text-sm text-text-main rounded border border-border bg-surface p-2">
+                        <input
+                          type="checkbox"
+                          checked={sendReviewDecisionReportIds.includes(report.id)}
+                          onChange={() => toggleSendReviewDecisionReportId(report.id)}
+                        />
+                        <span>
+                          {(lang === 'ar' ? 'تقرير' : 'Report')} #{report.id.slice(0, 8)}
+                          {' • '}
+                          {new Date(report.createdAt).toLocaleString()}
+                          {' • '}
+                          {(lang === 'ar' ? 'الحالة' : 'Status')}: {report.reviewStatus}
+                          {' • '}
+                          {(lang === 'ar' ? 'المخالفات' : 'Findings')}: {report.findingsCount}
+                        </span>
+                      </label>
+                    ))
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -6890,6 +6918,7 @@ export function ScriptWorkspace() {
               variant="primary"
               isLoading={sendReviewDecisionSubmitting}
               onClick={submitSendReviewDecision}
+              disabled={sendReviewDecisionShareReports && sendReviewDecisionShareFormats.length === 0}
             >
               {lang === 'ar' ? 'تأكيد الإرسال للمراجعة' : 'Confirm Send for Review'}
             </Button>

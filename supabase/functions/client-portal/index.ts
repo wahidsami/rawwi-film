@@ -157,6 +157,83 @@ async function loadClientTerms(supabase: ReturnType<typeof createSupabaseAdmin>)
   };
 }
 
+function normalizeShareReportFormats(value: unknown): Array<"pdf" | "docx"> {
+  if (!Array.isArray(value)) return [];
+  const result = new Set<"pdf" | "docx">();
+  for (const item of value) {
+    if (typeof item !== "string") continue;
+    const v = item.trim().toLowerCase();
+    if (v === "pdf" || v === "docx") result.add(v);
+  }
+  return [...result];
+}
+
+async function loadReportPayload(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  reportRow: any,
+) {
+  const { data: reviewFindings } = await supabase
+    .from("analysis_review_findings")
+    .select("id, source_kind, primary_article_id, primary_atom_id, severity, title_ar, description_ar, rationale_ar, evidence_snippet, review_status, include_in_report, page_number, created_at")
+    .eq("report_id", reportRow.id)
+    .eq("is_hidden", false)
+    .eq("include_in_report", true)
+    .eq("review_status", "violation")
+    .order("created_at", { ascending: true });
+
+  const fallbackFindings =
+    (reviewFindings ?? []).length > 0
+      ? []
+      : (await supabase
+          .from("analysis_findings")
+          .select("id, source, article_id, atom_id, severity, title_ar, description_ar, rationale_ar, evidence_snippet, review_status, page_number, created_at")
+          .eq("job_id", reportRow.job_id)
+          .neq("review_status", "approved")
+          .order("created_at", { ascending: true })).data ?? [];
+
+  const findings = (reviewFindings ?? []).length > 0
+    ? (reviewFindings ?? []).map((f: any) => ({
+        id: f.id,
+        source: f.source_kind,
+        articleId: f.primary_article_id,
+        atomId: f.primary_atom_id,
+        severity: f.severity,
+        titleAr: f.title_ar,
+        descriptionAr: f.description_ar,
+        rationaleAr: f.rationale_ar,
+        evidenceSnippet: f.evidence_snippet,
+        pageNumber: f.page_number,
+        createdAt: f.created_at,
+      }))
+    : (fallbackFindings as any[]).map((f: any) => ({
+        id: f.id,
+        source: f.source,
+        articleId: f.article_id,
+        atomId: f.atom_id,
+        severity: f.severity,
+        titleAr: f.title_ar,
+        descriptionAr: f.description_ar,
+        rationaleAr: f.rationale_ar,
+        evidenceSnippet: f.evidence_snippet,
+        pageNumber: f.page_number,
+        createdAt: f.created_at,
+      }));
+
+  return {
+    report: {
+      id: reportRow.id,
+      jobId: reportRow.job_id,
+      reviewStatus: reportRow.review_status,
+      reviewNotes: reportRow.review_notes,
+      findingsCount: reportRow.findings_count,
+      severityCounts: reportRow.severity_counts,
+      summaryJson: reportRow.summary_json,
+      createdAt: reportRow.created_at,
+    },
+    findings,
+  };
+}
+
 async function loadClientRegulations(supabase: ReturnType<typeof createSupabaseAdmin>): Promise<{ ar: string; en: string }> {
   const fallback = {
     ar: "الضوابط العامة للأعمال الدرامية والوثائقية",
@@ -1074,8 +1151,10 @@ Deno.serve(async (req: Request) => {
     }
 
     const sharedReportIdsByCycle = new Map<string, string[]>();
+    const sharedReportFormatsByCycle = new Map<string, Array<"pdf" | "docx">>();
     for (const [cycleId, cycleEvents] of eventsByCycle.entries()) {
       const ids = new Set<string>();
+      let formats: Array<"pdf" | "docx"> = ["pdf", "docx"];
       for (const event of cycleEvents) {
         const payload = (event?.payload ?? {}) as Record<string, unknown>;
         const sharedIds = Array.isArray(payload.shared_report_ids)
@@ -1083,8 +1162,11 @@ Deno.serve(async (req: Request) => {
           : [];
         for (const rid of sharedIds) ids.add(rid.trim());
         if (typeof payload.source_report_id === "string" && payload.source_report_id.trim()) ids.add(payload.source_report_id.trim());
+        const normalizedFormats = normalizeShareReportFormats(payload.shared_report_formats);
+        if (normalizedFormats.length > 0) formats = normalizedFormats;
       }
       sharedReportIdsByCycle.set(cycleId, [...ids]);
+      sharedReportFormatsByCycle.set(cycleId, formats);
     }
 
     const reportIds = new Set<string>();
@@ -1155,6 +1237,7 @@ Deno.serve(async (req: Request) => {
               findingsCount: Number(report.findings_count ?? 0) || 0,
               severityCounts: report.severity_counts ?? {},
               createdAt: report.created_at,
+              sharedFormats: sharedReportFormatsByCycle.get(cycle.id) ?? ["pdf", "docx"],
             };
           })
           .filter(Boolean),
@@ -1188,6 +1271,74 @@ Deno.serve(async (req: Request) => {
           : null,
         comparisonSummary: comparisonByCycle.get(cycle.id)?.comparison_summary ?? null,
       })),
+    });
+  }
+
+  // GET /client-portal/scripts/:scriptId/revision-cycles/:cycleId/reports/:reportId
+  const cycleReportMatch = rest.match(/^scripts\/([^/]+)\/revision-cycles\/([^/]+)\/reports\/([^/]+)$/);
+  if (method === "GET" && cycleReportMatch) {
+    if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
+    const scriptId = cycleReportMatch[1].trim();
+    const cycleId = cycleReportMatch[2].trim();
+    const reportId = cycleReportMatch[3].trim();
+    if (!scriptId || !cycleId || !reportId) return json({ error: "scriptId, cycleId and reportId are required" }, 400);
+
+    const { data: scriptRow } = await supabase
+      .from("scripts")
+      .select("id, company_id, client_id, title, status")
+      .eq("id", scriptId)
+      .maybeSingle();
+    if (!scriptRow) return json({ error: "Script not found" }, 404);
+    const scriptCompanyId = ((scriptRow as any).company_id ?? (scriptRow as any).client_id ?? "").toString();
+    if (scriptCompanyId !== account.company_id) return json({ error: "Forbidden" }, 403);
+
+    const { data: cycleRow } = await supabase
+      .from("script_revision_cycles")
+      .select("id, script_id, cycle_number")
+      .eq("id", cycleId)
+      .eq("script_id", scriptId)
+      .maybeSingle();
+    if (!cycleRow) return json({ error: "Revision cycle not found" }, 404);
+
+    const { data: cycleEvents } = await supabase
+      .from("script_revision_cycle_events")
+      .select("payload")
+      .eq("cycle_id", cycleId)
+      .order("created_at", { ascending: true });
+    const allowedReportIds = new Set<string>();
+    for (const row of cycleEvents ?? []) {
+      const payload = ((row as any)?.payload ?? {}) as Record<string, unknown>;
+      const sharedIds = Array.isArray(payload.shared_report_ids)
+        ? payload.shared_report_ids.filter((id): id is string => typeof id === "string" && id.trim().length > 0)
+        : [];
+      for (const rid of sharedIds) allowedReportIds.add(rid.trim());
+      if (typeof payload.source_report_id === "string" && payload.source_report_id.trim()) {
+        allowedReportIds.add(payload.source_report_id.trim());
+      }
+    }
+    if (!allowedReportIds.has(reportId)) return json({ error: "Report is not shared in this revision cycle" }, 403);
+
+    const { data: reportRow } = await supabase
+      .from("analysis_reports")
+      .select("id, job_id, review_status, review_notes, findings_count, severity_counts, summary_json, created_at")
+      .eq("id", reportId)
+      .eq("script_id", scriptId)
+      .maybeSingle();
+    if (!reportRow) return json({ error: "Report not found" }, 404);
+
+    const payload = await loadReportPayload(supabase, reportRow);
+    return json({
+      script: {
+        id: (scriptRow as any).id,
+        title: (scriptRow as any).title,
+        status: (scriptRow as any).status,
+      },
+      cycle: {
+        id: (cycleRow as any).id,
+        cycleNumber: (cycleRow as any).cycle_number,
+      },
+      report: payload.report,
+      findings: payload.findings,
     });
   }
 
