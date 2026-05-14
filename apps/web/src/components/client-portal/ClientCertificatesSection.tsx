@@ -73,7 +73,7 @@ function statusBadgeVariant(status: CertificateStatus): 'success' | 'warning' | 
 function statusLabel(status: CertificateStatus, lang: 'ar' | 'en') {
   if (status === 'issued') return lang === 'ar' ? 'صادرة' : 'Issued';
   if (status === 'payment_failed') return lang === 'ar' ? 'الدفع فشل' : 'Payment failed';
-  return lang === 'ar' ? 'جاري تجهيز الشهادة' : 'Preparing certificate';
+  return lang === 'ar' ? 'قيد الإصدار' : 'Issuing';
 }
 
 const PDF_PAGE_SIZE: Record<string, { width: number; height: number }> = {
@@ -570,7 +570,7 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
 
       <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
         <CardHeader>
-          <CardTitle>{lang === 'ar' ? 'دورة الشهادة والرسوم' : 'Certificate and Fee Flow'}</CardTitle>
+          <CardTitle>{lang === 'ar' ? 'الشهادات' : 'Certificates'}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2">
@@ -598,7 +598,7 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
 
       <Card className="client-portal-panel overflow-hidden border-border/80 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
         <CardHeader>
-          <CardTitle>{lang === 'ar' ? 'النصوص المؤهلة للشهادة' : 'Certificate-Eligible Scripts'}</CardTitle>
+          <CardTitle>{lang === 'ar' ? 'الشهادات الصادرة' : 'Issued Certificates'}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -609,8 +609,8 @@ export function ClientCertificatesSection({ lang }: ClientCertificatesSectionPro
           ) : !data || data.items.length === 0 ? (
             <p className="text-sm text-text-muted">
               {lang === 'ar'
-                ? 'لا توجد نصوص معتمدة مؤهلة للدفع حالياً. بمجرد اعتماد نص من الإدارة سيظهر هنا.'
-                : 'There are no approved scripts ready for payment yet. Once admin approves a script, it will appear here.'}
+                ? 'لا توجد شهادات متاحة حالياً. بمجرد اعتماد النص من الإدارة ستظهر الشهادة هنا.'
+                : 'There are no certificates available yet. Once admin approves a script, the certificate will appear here.'}
             </p>
           ) : (
             <div className="space-y-3">

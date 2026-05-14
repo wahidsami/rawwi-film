@@ -98,9 +98,17 @@ type FrontendClient = {
 };
 
 function toFrontend(row: ClientRow, scriptsCount = 0): FrontendClient {
+  const inferredBeneficiaryType: "company" | "individual" =
+    row.beneficiary_type === "individual" ||
+      (!row.beneficiary_type && (
+        (row.individual_full_name && row.individual_full_name.trim().length > 0) ||
+        (row.individual_national_id_or_iqama && row.individual_national_id_or_iqama.trim().length > 0)
+      ))
+      ? "individual"
+      : "company";
   return {
     companyId: row.id,
-    beneficiaryType: (row.beneficiary_type as "company" | "individual" | null) ?? "company",
+    beneficiaryType: inferredBeneficiaryType,
     nameAr: row.name_ar,
     nameEn: row.name_en,
     representativeName: row.representative_name ?? null,

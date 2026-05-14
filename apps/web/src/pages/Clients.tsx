@@ -46,13 +46,18 @@ function clientDisplayName(client: Company, lang: 'ar' | 'en') {
 }
 
 function beneficiaryTypeLabel(client: Company, lang: 'ar' | 'en') {
-  const type = client.beneficiaryType ?? 'company';
+  const type = beneficiaryTypeValue(client);
   if (type === 'individual') return lang === 'ar' ? 'فرد' : 'Individual';
   return lang === 'ar' ? 'شركة' : 'Company';
 }
 
+function beneficiaryTypeValue(client: Company): 'company' | 'individual' {
+  const rawType = (client.beneficiaryType ?? (client as unknown as { beneficiary_type?: string }).beneficiary_type ?? 'company').toString().toLowerCase();
+  return rawType === 'individual' ? 'individual' : 'company';
+}
+
 function clientResponsibleName(client: Company) {
-  if ((client.beneficiaryType ?? 'company') === 'individual') {
+  if (beneficiaryTypeValue(client) === 'individual') {
     return client.individualProfile?.fullName || client.representativeName || client.nameAr || client.nameEn || '—';
   }
   return client.representativeName || '—';
@@ -122,7 +127,7 @@ export function Clients() {
       (client.email ?? '').toLowerCase().includes(q) ||
       (client.representativeName ?? '').toLowerCase().includes(q)
       );
-      const type = client.beneficiaryType ?? 'company';
+      const type = beneficiaryTypeValue(client);
       const matchType = beneficiaryTypeFilter === 'all' || type === beneficiaryTypeFilter;
       return matchText && matchType;
     });
@@ -136,8 +141,8 @@ export function Clients() {
   const companyIds = new Set(filteredClients.map((client) => client.companyId));
   const pendingScriptsCount = scripts.filter((script) => companyIds.has(script.companyId) && ['pending', 'in_review', 'In Review'].includes(script.status as string)).length;
   const approvedScriptsCount = scripts.filter((script) => companyIds.has(script.companyId) && script.status === 'approved').length;
-  const totalCompaniesCount = tabClients.filter((client) => (client.beneficiaryType ?? 'company') === 'company').length;
-  const totalIndividualsCount = tabClients.filter((client) => (client.beneficiaryType ?? 'company') === 'individual').length;
+  const totalCompaniesCount = tabClients.filter((client) => beneficiaryTypeValue(client) === 'company').length;
+  const totalIndividualsCount = tabClients.filter((client) => beneficiaryTypeValue(client) === 'individual').length;
 
   const handleExportPdf = async () => {
     setExportingPdf(true);

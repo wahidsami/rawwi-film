@@ -2345,6 +2345,17 @@ Deno.serve(async (req: Request) => {
             `[scripts] correlationId=${correlationId} approval-time certificate generation error=`,
             certificateError instanceof Error ? certificateError.message : certificateError,
           );
+          // Keep approval + certificate issuance atomic from business perspective.
+          // If certificate generation fails, rollback script status to previous state.
+          await supabase
+            .from("scripts")
+            .update({ status: currentStatus })
+            .eq("id", scriptId);
+          return json({
+            error: certificateError instanceof Error
+              ? `Approval cancelled: ${certificateError.message}`
+              : "Approval cancelled: certificate generation failed",
+          }, 500);
         }
       }
     }

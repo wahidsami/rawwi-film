@@ -377,6 +377,9 @@ export function Results() {
   const [bulkReviewSaving, setBulkReviewSaving] = useState(false);
   const [reportReviewModalOpen, setReportReviewModalOpen] = useState(false);
   const [reportReviewReason, setReportReviewReason] = useState('');
+  const [approveDecisionModalOpen, setApproveDecisionModalOpen] = useState(false);
+  const [approveDecisionSubmitting, setApproveDecisionSubmitting] = useState(false);
+  const [approveSuccessModalOpen, setApproveSuccessModalOpen] = useState(false);
   const [rejectDecisionModalOpen, setRejectDecisionModalOpen] = useState(false);
   const [rejectDecisionReason, setRejectDecisionReason] = useState('');
   const [rejectDecisionClientComment, setRejectDecisionClientComment] = useState('');
@@ -637,6 +640,33 @@ export function Results() {
     sendReviewDecisionShareReports,
     user?.id,
   ]);
+
+  const submitApproveDecision = useCallback(async () => {
+    if (!report?.scriptId || !report?.id) return;
+    setApproveDecisionSubmitting(true);
+    try {
+      await scriptsApi.makeDecision(
+        report.scriptId,
+        'approve',
+        lang === 'ar'
+          ? 'تم اعتماد النص من صفحة التقرير'
+          : 'Script approved from report page',
+        report.id,
+        { issueCertificate: true },
+      );
+
+      const refreshedReport = await reportsApi.getById(report.id);
+      setReport(refreshedReport);
+      setUpdateScriptStatus(true);
+      setApproveDecisionModalOpen(false);
+      setApproveSuccessModalOpen(true);
+      toast.success(lang === 'ar' ? 'تم اعتماد النص وتوليد الشهادة' : 'Script approved and certificate generated');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تنفيذ قرار القبول' : 'Failed to approve script'));
+    } finally {
+      setApproveDecisionSubmitting(false);
+    }
+  }, [lang, report?.id, report?.scriptId]);
 
   // Report-level review
   const handleReportReview = async (status: ReviewStatus, explicitReviewNotes?: string) => {
@@ -2773,7 +2803,7 @@ export function Results() {
               size="sm"
               variant="outline"
               className="h-10 text-xs gap-1 text-success border-success/30 hover:bg-success/10"
-              onClick={() => handleReportReview('approved')}
+              onClick={() => setApproveDecisionModalOpen(true)}
               disabled={reviewing || report.reviewStatus === 'approved'}
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
@@ -3172,6 +3202,57 @@ export function Results() {
               disabled={reviewing || !reportReviewReason.trim()}
             >
               {reviewing ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : (lang === 'ar' ? 'إعادة للمراجعة' : 'Send to review')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={approveDecisionModalOpen}
+        onClose={() => {
+          if (!approveDecisionSubmitting) setApproveDecisionModalOpen(false);
+        }}
+        title={lang === 'ar' ? 'تأكيد اعتماد النص' : 'Confirm Script Approval'}
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-7 text-text-muted">
+            {lang === 'ar'
+              ? 'هل تريد اعتماد النص وإصدار الشهادة؟'
+              : 'Do you want to approve the script and issue the certificate?'}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="primary"
+              isLoading={approveDecisionSubmitting}
+              onClick={() => void submitApproveDecision()}
+            >
+              {lang === 'ar' ? 'متابعة' : 'Continue'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setApproveDecisionModalOpen(false)}
+              disabled={approveDecisionSubmitting}
+            >
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={approveSuccessModalOpen}
+        onClose={() => setApproveSuccessModalOpen(false)}
+        title={lang === 'ar' ? 'تم إرسال الشهادة' : 'Certificate Sent'}
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-7 text-text-muted">
+            {lang === 'ar'
+              ? 'تم إرسال شهادة فسح النص إلى المستفيد.'
+              : 'The script approval certificate was sent to the beneficiary.'}
+          </p>
+          <div className="flex justify-end">
+            <Button onClick={() => setApproveSuccessModalOpen(false)}>
+              {lang === 'ar' ? 'حسنًا' : 'Close'}
             </Button>
           </div>
         </div>
