@@ -547,7 +547,7 @@ Deno.serve(async (req: Request) => {
 
   // GET /client-portal/me
   if (method === "GET" && rest === "me") {
-    if (!account) return json({ error: "Client portal account not found" }, 403);
+    if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
     if (account.subscription_status !== "active") return json({ error: "Client portal account is not active" }, 403);
     const [{ data: userResult }, { data: company }] = await Promise.all([
       supabase.auth.admin.getUserById(userId),
@@ -588,7 +588,7 @@ Deno.serve(async (req: Request) => {
 
   // GET /client-portal/submissions
   if (method === "GET" && rest === "submissions") {
-    if (!account) return json({ error: "Client portal account not found" }, 403);
+    if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
     const { data: scripts, error: scriptsErr } = await supabase
       .from("scripts")
       .select("id, title, type, status, created_at, expected_rank, received_at, current_version_id, company_id, client_id")
@@ -751,7 +751,7 @@ Deno.serve(async (req: Request) => {
   // GET /client-portal/rejections/:scriptId
   const rejectionMatch = rest.match(/^rejections\/([^/]+)$/);
   if (method === "GET" && rejectionMatch) {
-    if (!account) return json({ error: "Client portal account not found" }, 403);
+    if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
     const scriptId = rejectionMatch[1].trim();
     if (!scriptId) return json({ error: "scriptId is required" }, 400);
 

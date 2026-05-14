@@ -547,7 +547,7 @@ async function drawTemplateElement(
       });
       return;
     }
-    drawPlaceholderBox(page, box, fonts.cairoRegular, "Client Logo");
+    drawPlaceholderBox(page, box, fonts.cairoRegular, "Beneficiary Logo");
     return;
   }
 

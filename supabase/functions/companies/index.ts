@@ -464,7 +464,7 @@ Deno.serve(async (req: Request) => {
     // POST /companies/:id/logo → upload logo (multipart)
     if (method === "POST" && companyId && subPath === "logo") {
       const { data: clientRow, error: fetchErr } = await supabase.from("clients").select("id, logo_url").eq("id", companyId).single();
-      if (fetchErr || !clientRow) return jsonResponse({ error: "Client not found" }, 404);
+      if (fetchErr || !clientRow) return jsonResponse({ error: "Beneficiary not found" }, 404);
 
       let formData: FormData;
       try {
@@ -515,7 +515,7 @@ Deno.serve(async (req: Request) => {
     // DELETE /companies/:id/logo → remove logo
     if (method === "DELETE" && companyId && subPath === "logo") {
       const { data: clientRow, error: fetchErr } = await supabase.from("clients").select("id, logo_url").eq("id", companyId).single();
-      if (fetchErr || !clientRow) return jsonResponse({ error: "Client not found" }, 404);
+      if (fetchErr || !clientRow) return jsonResponse({ error: "Beneficiary not found" }, 404);
       const logoUrl = (clientRow as { logo_url?: string | null }).logo_url;
       if (logoUrl && logoUrl.includes(LOGO_BUCKET)) {
         try {
@@ -540,7 +540,7 @@ Deno.serve(async (req: Request) => {
         .select("id, source, legal_documents")
         .eq("id", companyId)
         .single();
-      if (fetchErr || !clientRow) return jsonResponse({ error: "Client not found" }, 404);
+      if (fetchErr || !clientRow) return jsonResponse({ error: "Beneficiary not found" }, 404);
       if ((((clientRow as any).source ?? "internal") as string) !== "internal") {
         return jsonResponse({ error: "Only internal clients can upload legal documents here" }, 403);
       }
@@ -617,7 +617,7 @@ Deno.serve(async (req: Request) => {
         .single();
 
       if (fetchErr || !beforeRow) {
-        return jsonResponse({ error: "Client not found" }, 404);
+        return jsonResponse({ error: "Beneficiary not found" }, 404);
       }
       const before = beforeRow as ClientRow;
       if ((before.source ?? "internal") !== "internal") {
@@ -765,7 +765,7 @@ Deno.serve(async (req: Request) => {
         .select(CLIENT_SELECT)
         .eq("id", companyId)
         .single();
-      if (fetchErr || !beforeRow) return jsonResponse({ error: "Client not found" }, 404);
+      if (fetchErr || !beforeRow) return jsonResponse({ error: "Beneficiary not found" }, 404);
       const before = beforeRow as ClientRow;
       if ((before.source ?? "internal") !== "portal") return jsonResponse({ error: "Only portal clients can be approved" }, 400);
 
@@ -820,7 +820,7 @@ Deno.serve(async (req: Request) => {
             titleEn: "Registration Approved",
             titleAr: "تمت الموافقة على التسجيل",
             bodyEn: `Congratulations.\nYour registration for ${htmlEscape(after.name_en || after.name_ar)} has been approved.\nYou can now sign in and start using the client portal.`,
-            bodyAr: `تهانينا.\nتمت الموافقة على تسجيل شركة ${htmlEscape(after.name_ar || after.name_en)}.\nيمكنكم الآن تسجيل الدخول والبدء في استخدام بوابة العميل.`,
+            bodyAr: `تهانينا.\nتمت الموافقة على تسجيل شركة ${htmlEscape(after.name_ar || after.name_en)}.\nيمكنكم الآن تسجيل الدخول والبدء في استخدام بوابة المستفيد.`,
             ctaUrl: `${appPublicUrl}/client/login`,
             ctaLabelEn: "Login",
             ctaLabelAr: "تسجيل الدخول",
@@ -856,7 +856,7 @@ Deno.serve(async (req: Request) => {
         .select(CLIENT_SELECT)
         .eq("id", companyId)
         .single();
-      if (fetchErr || !beforeRow) return jsonResponse({ error: "Client not found" }, 404);
+      if (fetchErr || !beforeRow) return jsonResponse({ error: "Beneficiary not found" }, 404);
       const before = beforeRow as ClientRow;
       if ((before.source ?? "internal") !== "portal") return jsonResponse({ error: "Only portal clients can be rejected" }, 400);
 
@@ -934,7 +934,7 @@ Deno.serve(async (req: Request) => {
         .eq("id", companyId)
         .single();
       if (fetchErr || !clientRow) {
-        return jsonResponse({ error: "Client not found" }, 404);
+        return jsonResponse({ error: "Beneficiary not found" }, 404);
       }
       const label = (clientRow as ClientRow).name_ar || (clientRow as ClientRow).name_en;
       const { error: deleteErr } = await supabase.from("clients").delete().eq("id", companyId);

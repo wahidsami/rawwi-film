@@ -519,7 +519,7 @@ Deno.serve(async (req: Request) => {
     const assignedTasks = (scriptRows ?? []).map((s: any) => ({
       id: s.id, // Use script ID as task ID
       scriptId: s.id,
-      companyName: "Client", // simplified, or fetch company name if needed
+      companyName: "Beneficiary", // simplified, or fetch company name if needed
       scriptTitle: s.title,
       status: s.status, // e.g. "Draft", "Ready"
       assignedBy: "System", // we don't have this easily without join

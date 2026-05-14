@@ -372,11 +372,11 @@ async function notifyAdminsOnClientSubmission(
   const companyName =
     ((company as { name_ar?: string | null; name_en?: string | null } | null)?.name_ar ??
       (company as { name_ar?: string | null; name_en?: string | null } | null)?.name_en ??
-      "Client").trim() || "Client";
+      "Beneficiary").trim() || "Beneficiary";
   const submitterName =
-    ((profile as { name?: string | null } | null)?.name ?? "Client").trim() || "Client";
+    ((profile as { name?: string | null } | null)?.name ?? "Beneficiary").trim() || "Beneficiary";
 
-  const title = `Client submission: ${payload.scriptTitle}`;
+  const title = `Beneficiary submission: ${payload.scriptTitle}`;
   const body = `A new script was submitted by ${companyName} (${submitterName}).`;
   const metadata = {
     script_id: payload.scriptId,
@@ -436,9 +436,9 @@ async function notifyAdminsOnDuplicateClientScriptTitle(
   const companyName =
     ((company as { name_ar?: string | null; name_en?: string | null } | null)?.name_ar ??
       (company as { name_ar?: string | null; name_en?: string | null } | null)?.name_en ??
-      "Client").trim() || "Client";
+      "Beneficiary").trim() || "Beneficiary";
   const submitterName =
-    ((profile as { name?: string | null } | null)?.name ?? "Client").trim() || "Client";
+    ((profile as { name?: string | null } | null)?.name ?? "Beneficiary").trim() || "Beneficiary";
 
   const title = `Duplicate script title: ${payload.scriptTitle}`;
   const body = `${companyName} (${submitterName}) submitted a script title that already exists under another client.`;
@@ -482,8 +482,8 @@ async function notifyAdminsOnClientScriptCanceled(
   const notifications = adminUserIds.map((adminUserId) => ({
     user_id: adminUserId,
     type: "client_script_deleted",
-    title: "Client canceled a script",
-    message: `Client canceled script "${scriptTitle}".`,
+    title: "Beneficiary canceled a script",
+    message: `Beneficiary canceled script "${scriptTitle}".`,
     link: `/workspace/${scriptId}`,
     data: {
       scriptId,

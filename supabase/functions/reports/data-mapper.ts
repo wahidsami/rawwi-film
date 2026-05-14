@@ -133,7 +133,7 @@ export async function prepareReportData(
   // Prepare labels
   const labels = {
     reportTitle: isAr ? 'تقرير التحليل' : 'Analysis Report',
-    client: isAr ? 'العميل' : 'Client',
+    client: isAr ? 'المستفيد' : 'Beneficiary',
     date: isAr ? 'التاريخ' : 'Date',
     executiveSummary: isAr ? 'ملخص التقرير' : 'Executive Summary',
     critical: isAr ? 'ملاحظات آلية' : 'AI findings',
@@ -157,7 +157,7 @@ export async function prepareReportData(
 
   return {
     scriptTitle,
-    clientName: 'Client Name', // TODO: Fetch from scripts table or clients table
+    clientName: 'Beneficiary Name', // TODO: Fetch from scripts table or clients table
     formattedDate,
     stats: {
       critical: typeCounts.ai ?? 0,

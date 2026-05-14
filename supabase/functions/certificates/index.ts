@@ -691,7 +691,7 @@ async function createCertificateFileSignedUrl(
 
   if (!params.isAdmin) {
     const account = await getClientAccountForUser(supabase, params.userId);
-    if (!account) throw new Error("Client portal account not found");
+    if (!account) throw new Error("Beneficiary portal account not found");
     const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
     if (ownerCompanyId !== account.company_id) throw new Error("Forbidden");
   }
@@ -753,7 +753,7 @@ Deno.serve(async (req: Request) => {
   const account = await getClientAccountForUser(supabase, userId);
 
   if (method === "GET" && rest === "client") {
-    if (!account) return json({ error: "Client portal account not found" }, 403);
+    if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
     const { data: scriptsData, error: scriptsError } = await supabase
       .from("scripts")
       .select("id, title, type, status, company_id, client_id, created_at")
@@ -804,7 +804,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (method === "POST" && rest === "pay") {
-    if (!account) return json({ error: "Client portal account not found" }, 403);
+    if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
     let body: Record<string, unknown>;
     try {
       body = await req.json();
@@ -916,7 +916,7 @@ Deno.serve(async (req: Request) => {
       await notifyAdmins(supabase, {
         type: "certificate_payment_completed",
         title: `Certificate payment completed: ${(script as any).title}`,
-        body: `Client payment was completed for script "${(script as any).title}".`,
+        body: `Beneficiary payment was completed for script "${(script as any).title}".`,
         metadata: {
           script_id: scriptId,
           script_title: (script as any).title,
@@ -1239,7 +1239,7 @@ Deno.serve(async (req: Request) => {
 
   const clientFileMatch = rest.match(/^client\/file\/([0-9a-f-]{36})$/i);
   if (method === "GET" && clientFileMatch) {
-    if (!account) return json({ error: "Client portal account not found" }, 403);
+    if (!account) return json({ error: "Beneficiary portal account not found" }, 403);
     const scriptId = clientFileMatch[1];
     try {
       const payload = await createCertificateFileSignedUrl(supabase, {
