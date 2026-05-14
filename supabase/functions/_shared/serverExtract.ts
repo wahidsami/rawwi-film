@@ -27,13 +27,15 @@ export function sanitizePageText(raw: string): string {
 function walkDocxBodyForPageBreaks(body: Element): string[] | null {
   const pageTexts: string[] = [];
   let current: string[] = [];
+  const TEXT_NODE = 3;
+  const ELEMENT_NODE = 1;
 
   function walk(node: Node): void {
-    if (node.nodeType === Node.TEXT_NODE) {
+    if (node.nodeType === TEXT_NODE) {
       current.push(node.textContent ?? "");
       return;
     }
-    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    if (node.nodeType !== ELEMENT_NODE) return;
     const el = node as Element;
     const local = el.localName;
     const ns = el.namespaceURI;
@@ -73,12 +75,14 @@ function walkDocxBodyForPageBreaks(body: Element): string[] | null {
 
 function extractDocxFullPlain(body: Element): string {
   const parts: string[] = [];
+  const TEXT_NODE = 3;
+  const ELEMENT_NODE = 1;
   function walk(node: Node): void {
-    if (node.nodeType === Node.TEXT_NODE) {
+    if (node.nodeType === TEXT_NODE) {
       parts.push(node.textContent ?? "");
       return;
     }
-    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    if (node.nodeType !== ELEMENT_NODE) return;
     const el = node as Element;
     if (el.namespaceURI === W_NS) {
       if (el.localName === "t") {
@@ -167,6 +171,7 @@ function virtualPages(plain: string): string[] {
  */
 export async function extractDocxPageTexts(arrayBuffer: ArrayBuffer): Promise<string[]> {
   const JSZip = (await import("https://esm.sh/jszip@3.10.1")).default;
+  const { DOMParser } = await import("https://esm.sh/@xmldom/xmldom@0.8.10");
   const zip = await JSZip.loadAsync(arrayBuffer);
   const docXml = await zip.file("word/document.xml")?.async("string");
   if (!docXml) throw new Error("Invalid DOCX: missing word/document.xml");
