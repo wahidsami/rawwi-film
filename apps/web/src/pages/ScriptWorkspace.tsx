@@ -2615,6 +2615,18 @@ export function ScriptWorkspace() {
     loadReportHistory,
     script?.id,
   ]);
+
+  const submitSendReviewDecision = useCallback(async () => {
+    if (!script?.id || !sendReviewDecisionReportId) return;
+    const reason = sendReviewDecisionReason.trim();
+    if (!reason) {
+      toast.error(lang === 'ar' ? 'يرجى إدخال سبب الإعادة للمراجعة' : 'Please enter a review-return reason');
+      return;
+    }
+
+    setSendReviewDecisionSubmitting(true);
+    try {
+      await scriptsApi.makeDecision(
         script.id,
         'send_for_review',
         reason,
