@@ -1512,12 +1512,12 @@ export function ClientPortal() {
             />
           </div>
           <div className="md:col-span-2">
-            <FileUpload
-              label={lang === 'ar' ? 'رفع ملف ملخص النص (PDF) *' : 'Upload Script Summary (PDF) *'}
-              accept=".pdf,application/pdf"
-              helperText={lang === 'ar' ? 'ملف إلزامي بصيغة PDF' : 'Mandatory PDF file'}
-              onChange={setScriptSummaryPdfFile}
-            />
+              <FileUpload
+                label={lang === 'ar' ? 'رفع ملف ملخص النص (PDF) *' : 'Upload Script Summary (PDF) *'}
+                accept=".pdf,application/pdf"
+                helperText={lang === 'ar' ? 'إلزامي' : 'Mandatory'}
+                onChange={setScriptSummaryPdfFile}
+              />
           </div>
           {requiresStorySummary ? (
             <div className="md:col-span-2">
@@ -1553,8 +1553,8 @@ export function ClientPortal() {
               <div key={uploaderKey}>
                 <FileUpload
                   label={lang === 'ar' ? 'ملف النص' : 'Script File'}
-                  accept=".pdf,.docx,.txt"
-                  helperText={lang === 'ar' ? 'يدعم PDF وDOCX وTXT حتى 50MB. هذا هو المسار الحالي المرتبط بمساحة عمل الإدارة.' : 'Supports PDF, DOCX, and TXT up to 50MB. This is the current flow already wired to the admin workspace.'}
+                  accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  helperText={lang === 'ar' ? 'الملف المدعوم الوحيد: Word DOCX' : 'Only supported file: Word DOCX'}
                   onChange={setFile}
                 />
               </div>

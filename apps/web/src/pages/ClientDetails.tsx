@@ -631,6 +631,7 @@ export function ClientDetails() {
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'النوع' : 'Type'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'التاريخ' : 'Date'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'الحالة' : 'Status'}</th>
+                  <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'مرفقات النموذج' : 'Form Attachments'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'التقارير' : 'Reports'}</th>
                   <th className="px-6 py-4 font-medium">{lang === 'ar' ? 'المعين' : 'Assignee'}</th>
                   {isAdmin && (
@@ -667,6 +668,41 @@ export function ClientDetails() {
                       <Badge variant={badgeVariant}>
                         {normalizeScriptStatusForDisplay(effectiveStatus)}
                       </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-1 text-xs">
+                        {script.scriptSummaryPdfUrl ? (
+                          script.scriptSummaryPdfUrl.startsWith('http')
+                            ? (
+                              <a
+                                href={script.scriptSummaryPdfUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary underline underline-offset-2"
+                              >
+                                {lang === 'ar' ? 'ملف ملخص النص' : 'Script Summary File'}
+                              </a>
+                            )
+                            : <span className="text-text-muted">{lang === 'ar' ? 'ملف ملخص النص مرفوع' : 'Script summary file uploaded'}</span>
+                        ) : null}
+                        {script.securityContentAttachmentUrl ? (
+                          script.securityContentAttachmentUrl.startsWith('http')
+                            ? (
+                              <a
+                                href={script.securityContentAttachmentUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary underline underline-offset-2"
+                              >
+                                {lang === 'ar' ? 'مرفق المحتوى الأمني' : 'Security Content Attachment'}
+                              </a>
+                            )
+                            : <span className="text-text-muted">{lang === 'ar' ? 'مرفق المحتوى الأمني مرفوع' : 'Security attachment uploaded'}</span>
+                        ) : null}
+                        {!script.scriptSummaryPdfUrl && !script.securityContentAttachmentUrl ? (
+                          <span className="text-text-muted">—</span>
+                        ) : null}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
