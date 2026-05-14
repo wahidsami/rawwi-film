@@ -58,6 +58,57 @@ function pathAfter(base: string, url: string): string {
   return (match?.[1] ?? "").replace(/^\/+/, "").trim();
 }
 
+function normalizeStorageObjectPath(raw: string): string {
+  const value = raw.trim();
+  if (!value) return value;
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const pathname = new URL(value).pathname;
+      const match =
+        pathname.match(/\/storage\/v1\/object\/(?:public|sign)\/scripts\/(.+)$/i) ??
+        pathname.match(/\/storage\/v1\/object\/upload\/sign\/scripts\/(.+)$/i) ??
+        pathname.match(/\/scripts\/(.+)$/i);
+      if (match?.[1]) return decodeURIComponent(match[1]).replace(/^\/+/, "");
+    } catch {
+      return value;
+    }
+  }
+  return value.replace(/^scripts\//i, "").replace(/^\/+/, "");
+}
+
+async function triggerExtractForVersion(
+  req: Request,
+  versionId: string,
+): Promise<void> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  if (!supabaseUrl) return;
+  const authHeader = req.headers.get("authorization") ?? req.headers.get("Authorization");
+  const apikey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/extract`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(authHeader ? { Authorization: authHeader } : {}),
+        ...(apikey ? { apikey } : {}),
+      },
+      body: JSON.stringify({
+        versionId,
+        enqueueAnalysis: false,
+      }),
+    });
+    if (!response.ok) {
+      const message = await response.text().catch(() => "");
+      console.warn(`[scripts] trigger extract failed version=${versionId} status=${response.status} body=${message.slice(0, 300)}`);
+    }
+  } catch (error) {
+    console.warn(
+      `[scripts] trigger extract error version=${versionId}:`,
+      error instanceof Error ? error.message : String(error),
+    );
+  }
+}
+
 type ScriptRow = {
   id: string;
   client_id: string;
@@ -2425,7 +2476,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: script, error: findErr } = await supabase
       .from("scripts")
-      .select("id, created_by, client_id, company_id")
+      .select("id, created_by, client_id, company_id, status, title, file_url, current_version_id")
       .eq("id", scriptId)
       .maybeSingle();
 
@@ -2517,6 +2568,76 @@ Deno.serve(async (req: Request) => {
     }
 
     const updatedRow = updated as ScriptRow;
+
+    // Client draft -> in_review should behave like a new beneficiary submission:
+    // 1) notify admins
+    // 2) bootstrap a script version from file_url so workspace doesn't open empty
+    const oldStatus = String((script as any).status ?? "").trim().toLowerCase();
+    const newStatus = String(updatedRow.status ?? "").trim().toLowerCase();
+    const transitionedToSubmitted = oldStatus === "draft" && newStatus === "in_review";
+    const updatedByClient = await isClientUser(supabase, uid);
+    if (transitionedToSubmitted && updatedByClient) {
+      await notifyAdminsOnClientSubmission(supabase, {
+        scriptId: updatedRow.id,
+        scriptTitle: updatedRow.title,
+        companyId: updatedRow.company_id ?? updatedRow.client_id,
+        submittedByUserId: uid,
+      });
+
+      if (!updatedRow.current_version_id && updatedRow.file_url) {
+        const { data: maxVersionRow } = await supabase
+          .from("script_versions")
+          .select("version_number")
+          .eq("script_id", updatedRow.id)
+          .order("version_number", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const nextVersion = maxVersionRow ? Number((maxVersionRow as { version_number: number }).version_number ?? 0) + 1 : 1;
+
+        const fileUrlValue = String(updatedRow.file_url);
+        const normalizedSourcePath = normalizeStorageObjectPath(fileUrlValue);
+        const guessedFileName = decodeURIComponent(fileUrlValue.split("/").pop() || "submitted-script.docx");
+        const lowerName = guessedFileName.toLowerCase();
+        const guessedMime =
+          lowerName.endsWith(".docx")
+            ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            : lowerName.endsWith(".pdf")
+              ? "application/pdf"
+              : lowerName.endsWith(".txt")
+                ? "text/plain"
+                : "application/octet-stream";
+
+        const { data: createdVersion, error: versionErr } = await supabase
+          .from("script_versions")
+          .insert({
+            script_id: updatedRow.id,
+            version_number: nextVersion,
+            source_file_name: guessedFileName,
+            source_file_type: guessedMime,
+            source_file_path: normalizedSourcePath,
+            source_file_url: fileUrlValue,
+            extraction_status: "pending",
+          })
+          .select("id")
+          .single();
+
+        if (versionErr) {
+          console.error(`[scripts] correlationId=${correlationId} version bootstrap error=`, versionErr.message);
+        } else if (createdVersion?.id) {
+          const { error: currentVersionErr } = await supabase
+            .from("scripts")
+            .update({ current_version_id: createdVersion.id })
+            .eq("id", updatedRow.id);
+          if (currentVersionErr) {
+            console.error(`[scripts] correlationId=${correlationId} set current_version_id error=`, currentVersionErr.message);
+          } else {
+            updatedRow.current_version_id = createdVersion.id;
+            await triggerExtractForVersion(req, createdVersion.id);
+          }
+        }
+      }
+    }
+
     if (updates.assignee_id && updatedRow.assignee_id) {
       const { data: assignerProfile } = await supabase.from("profiles").select("name").eq("user_id", uid).maybeSingle();
       const assignerName = (assignerProfile as { name?: string } | null)?.name ?? undefined;

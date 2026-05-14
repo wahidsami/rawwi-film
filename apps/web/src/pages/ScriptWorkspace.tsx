@@ -1818,7 +1818,7 @@ export function ScriptWorkspace() {
         // Use scriptsApi directly as it's not exposed in dataStore
         const versions = await scriptsApi.getScriptVersions(script.id);
         if (versions.length > 0) {
-          const latest = versions[0];
+          const latest = versions.find((v) => v.id === script.currentVersionId) ?? versions[0];
 
           // If we have text and editor is empty, auto-load it silently.
           // This should never re-open the import modal on refresh/navigation.
@@ -1831,6 +1831,61 @@ export function ScriptWorkspace() {
               toast(lang === 'ar' ? 'المستند كبير. انقر لاستيراده.' : 'Large document found. Click to import.', {
                 icon: '📁',
               });
+            }
+            return;
+          }
+
+          // Auto-start extraction for beneficiary-submitted versions that reached admin workspace
+          // with pending/failed extraction state.
+          if (
+            (latest.extraction_status === 'pending' || latest.extraction_status === 'failed') &&
+            (latest.source_file_url || latest.source_file_name)
+          ) {
+            setUploadStatus('extracting');
+            setUploadStatusMessage(
+              lang === 'ar'
+                ? 'جاري تجهيز محتوى النص تلقائياً...'
+                : 'Preparing script content automatically...'
+            );
+            try {
+              const started = await scriptsApi.extractText(latest.id, undefined, { enqueueAnalysis: false });
+              if (started?.extraction_status === 'done' && started?.extracted_text) {
+                setExtractedText(started.extracted_text);
+                setUploadStatus('done');
+                setUploadStatusMessage(lang === 'ar' ? 'تم تحميل النص تلقائياً.' : 'Script loaded automatically.');
+                return;
+              }
+
+              const extractedVersion = await waitForVersionExtraction(script.id, latest.id, {
+                timeoutMs: PDF_EXTRACTION_TIMEOUT_MS,
+                intervalMs: PDF_EXTRACTION_INTERVAL_MS,
+                onProgress: (currentVersion) => {
+                  const progressMessage = formatExtractionProgressMessage(currentVersion.extraction_progress, lang);
+                  if (progressMessage) setUploadStatusMessage(progressMessage);
+                  if (currentVersion.extraction_status === 'failed' && currentVersion.extraction_error) {
+                    setUploadError(currentVersion.extraction_error);
+                  }
+                },
+              });
+
+              if (extractedVersion?.extraction_status === 'done' && extractedVersion?.extracted_text) {
+                setExtractedText(extractedVersion.extracted_text);
+                setUploadStatus('done');
+                setUploadStatusMessage(lang === 'ar' ? 'تم تحميل النص تلقائياً.' : 'Script loaded automatically.');
+                return;
+              }
+              if (extractedVersion?.extraction_status === 'failed') {
+                setUploadStatus('failed');
+              } else {
+                setUploadStatus('idle');
+              }
+            } catch (autoExtractErr) {
+              setUploadStatus('failed');
+              setUploadError(
+                autoExtractErr instanceof Error
+                  ? autoExtractErr.message
+                  : (lang === 'ar' ? 'تعذر تجهيز النص تلقائياً.' : 'Could not prepare script content automatically.')
+              );
             }
           }
         }
