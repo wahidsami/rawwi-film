@@ -711,7 +711,7 @@ export function Landing() {
             <div className="text-right">
               <h3 className="mb-2 text-xl text-white">{isArabic ? 'معلومات عامة' : 'General info'}</h3>
               <p className="text-gray-400">{isArabic ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia'}</p>
-              <p className="mt-2 text-gray-400">info@raawi.film</p>
+              <p className="mt-2 text-gray-400">cinamaa@moc.gov.sa</p>
               <p className="mt-2">
                 <Link to="/contact-us" className="text-gray-300 transition hover:text-red-400">
                   {isArabic ? 'تواصل معنا' : 'Contact Us'}
