@@ -13,7 +13,6 @@ import {
   LogIn,
   MapPin,
   Menu,
-  ShieldCheck,
   Shield,
   UserRound,
   UserPlus,
@@ -305,14 +304,6 @@ export function Landing() {
                 >
                   <UserRound className="h-5 w-5" />
                 </Link>
-                <Link
-                  to="/login"
-                  className="text-amber-400 transition hover:text-amber-300"
-                  aria-label={isArabic ? 'تسجيل دخول الإدارة' : 'Admin login'}
-                  title={isArabic ? 'تسجيل دخول الإدارة' : 'Admin login'}
-                >
-                  <ShieldCheck className="h-5 w-5" />
-                </Link>
               </>
             )}
             <div className="h-6 w-px bg-white/20" />
@@ -578,6 +569,11 @@ export function Landing() {
                           </div>
                           <h3 className="mb-6 text-5xl text-white">{isArabic ? location.nameAr : location.nameEn}</h3>
                           <p className="mb-8 text-lg leading-relaxed text-gray-300">{isArabic ? location.featureAr : location.featureEn}</p>
+                          <p className="mb-5 text-sm font-medium text-amber-200">
+                            {isArabic
+                              ? 'لابد من الحصول على تصاريح للتصوير في هذة المواقع من الجهات المعنية'
+                              : 'Filming permits from the relevant authorities are required for these locations.'}
+                          </p>
                           <button className="inline-flex items-center gap-3 rounded-lg bg-[#76B6B7] px-8 py-4 text-lg text-black shadow-2xl transition hover:scale-105 hover:bg-[#5a9fa0]">
                             <span>{isArabic ? 'استكشف' : 'Explore'}</span>
                             <ArrowLeft className="h-5 w-5" />
@@ -709,7 +705,6 @@ export function Landing() {
               <ul className="space-y-2 text-gray-400">
                 <li><Link to="/client/login" className="transition hover:text-red-400">{isArabic ? 'دخول المستفيدين' : 'Beneficiary login'}</Link></li>
                 <li><Link to="/portal/register" className="transition hover:text-red-400">{isArabic ? 'تسجيل شركة جديدة' : 'Register company'}</Link></li>
-                <li><Link to="/login" className="transition hover:text-red-400">{isArabic ? 'دخول هيئة الأفلام' : 'Film Commission login'}</Link></li>
                 <li><a href="#contact" className="transition hover:text-red-400">{isArabic ? 'ابدأ الآن' : 'Get started'}</a></li>
               </ul>
             </div>
@@ -717,6 +712,11 @@ export function Landing() {
               <h3 className="mb-2 text-xl text-white">{isArabic ? 'معلومات عامة' : 'General info'}</h3>
               <p className="text-gray-400">{isArabic ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia'}</p>
               <p className="mt-2 text-gray-400">info@raawi.film</p>
+              <p className="mt-2">
+                <Link to="/contact-us" className="text-gray-300 transition hover:text-red-400">
+                  {isArabic ? 'تواصل معنا' : 'Contact Us'}
+                </Link>
+              </p>
             </div>
           </div>
 

@@ -34,6 +34,7 @@ import { ClientForgotPassword } from '@/pages/ClientForgotPassword';
 import { ClientPortal } from '@/pages/ClientPortal';
 import { ClientSubmissions } from '@/pages/ClientSubmissions';
 import { CertificateVerify } from '@/pages/CertificateVerify';
+import { ContactUs } from '@/pages/ContactUs';
 import { ENABLE_QUICK_ANALYSIS } from '@/lib/env';
 import { Landing } from '@/pages/Landing';
 
@@ -60,6 +61,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />

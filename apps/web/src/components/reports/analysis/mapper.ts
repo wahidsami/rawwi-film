@@ -172,7 +172,7 @@ export function mapAnalysisFindingsForPdf(
       primaryArticleId: Number(v3.primary_article_id),
       relatedArticleIds: (v3.related_article_ids as number[] | undefined) ?? [],
       rationale: (v3.rationale_ar as string | undefined) ?? null,
-      actionText: (v3.action_text as string | undefined) ?? null,
+      actionText: ((f as unknown as { actionText?: string | null }).actionText ?? (v3.action_text as string | undefined)) ?? null,
       pillarId: (v3.pillar_id as string | undefined) ?? null,
       startLineChunk: f.startLineChunk ?? undefined,
       endLineChunk: f.endLineChunk ?? undefined,
