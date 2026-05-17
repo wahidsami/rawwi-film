@@ -12,7 +12,7 @@ const translations = {
     rememberMe: 'تذكرني',
     overview: 'نظرة عامة',
     glossary: 'المصطلحات',
-    clients: 'المستفيدين (الشركات)',
+    clients: 'المستفيدون',
     accessControl: 'إدارة الصلاحيات',
     certificates: 'الشهادات',
     reports: 'التقارير',
