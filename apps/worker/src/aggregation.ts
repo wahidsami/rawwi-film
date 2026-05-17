@@ -191,6 +191,36 @@ type ScriptPageMetaRow = {
   meta?: Record<string, unknown> | null;
 };
 
+type JobConfigMeta = {
+  analysis_engine?: string;
+  pipeline_version?: string;
+  violation_system_version?: string;
+  auditor_layer_version?: string;
+  deep_auditor_enabled?: boolean;
+};
+
+function pickAnalysisEngine(value: unknown): "v2" | "hybrid" | "policy_v1" {
+  if (value === "hybrid") return "hybrid";
+  if (value === "policy_v1") return "policy_v1";
+  return "v2";
+}
+
+function pickPipelineVersion(value: unknown): "v1" | "v2" {
+  return value === "v2" ? "v2" : "v1";
+}
+
+function pickViolationSystemVersion(value: unknown): "v2" | "v3" | "v4" {
+  if (value === "v2") return "v2";
+  if (value === "v4") return "v4";
+  return "v3";
+}
+
+function pickAuditorLayerVersion(value: unknown): "v2" | "v3" | "v4" {
+  if (value === "v2") return "v2";
+  if (value === "v3") return "v3";
+  return "v4";
+}
+
 type DocumentReviewHint = NonNullable<SummaryJson["report_hints"]>[number];
 type ReviewFindingInsertRow = {
   job_id: string;
@@ -1294,7 +1324,8 @@ export function buildSummaryJson(
   findings: DbFinding[],
   clientName?: string,
   scriptTitle?: string,
-  analysisOptions?: AnalysisSummaryOptions | null
+  analysisOptions?: AnalysisSummaryOptions | null,
+  jobConfigMeta?: JobConfigMeta | null,
 ): SummaryJson {
   const generated_at = new Date().toISOString();
   const filtered = findings.filter((f) => f.article_id !== OUT_OF_SCOPE_ARTICLE_ID);
@@ -1531,11 +1562,14 @@ export function buildSummaryJson(
     script_id: scriptId,
     generated_at,
     analysis_meta: {
-      auditor_layer_version: config.AUDITOR_LAYER_VERSION,
-      violation_system_version: config.VIOLATION_SYSTEM_VERSION,
-      analysis_engine: config.ANALYSIS_ENGINE,
-      analysis_pipeline_version: config.ANALYSIS_PIPELINE_VERSION,
-      deep_auditor_enabled: config.ANALYSIS_DEEP_AUDITOR,
+      auditor_layer_version: pickAuditorLayerVersion(jobConfigMeta?.auditor_layer_version ?? config.AUDITOR_LAYER_VERSION),
+      violation_system_version: pickViolationSystemVersion(jobConfigMeta?.violation_system_version ?? config.VIOLATION_SYSTEM_VERSION),
+      analysis_engine: pickAnalysisEngine(jobConfigMeta?.analysis_engine ?? config.ANALYSIS_ENGINE),
+      analysis_pipeline_version: pickPipelineVersion(jobConfigMeta?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION),
+      deep_auditor_enabled:
+        typeof jobConfigMeta?.deep_auditor_enabled === "boolean"
+          ? jobConfigMeta.deep_auditor_enabled
+          : config.ANALYSIS_DEEP_AUDITOR,
       generated_by: "worker",
     },
     client_name: clientName,
@@ -1954,7 +1988,21 @@ export async function runAggregation(jobId: string): Promise<void> {
   } else if (rawAnalysisOptions?.mergeStrategy === "every_occurrence") {
     analysisOptions = { mergeStrategy: "every_occurrence" };
   }
-  const summary = buildSummaryJson(jobId, job.script_id, list, clientName, scriptTitle, analysisOptions);
+  const summary = buildSummaryJson(
+    jobId,
+    job.script_id,
+    list,
+    clientName,
+    scriptTitle,
+    analysisOptions,
+    {
+      analysis_engine: (job.config_snapshot as { analysis_engine?: string } | null)?.analysis_engine,
+      pipeline_version: (job.config_snapshot as { pipeline_version?: string } | null)?.pipeline_version,
+      violation_system_version: (job.config_snapshot as { violation_system_version?: string } | null)?.violation_system_version,
+      auditor_layer_version: (job.config_snapshot as { auditor_layer_version?: string } | null)?.auditor_layer_version,
+      deep_auditor_enabled: (job.config_snapshot as { deep_auditor_enabled?: boolean } | null)?.deep_auditor_enabled,
+    },
+  );
   const totalChunks = Math.max(0, (((job as { progress_total?: number | null }).progress_total ?? 1) - 1));
   if ((job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested) {
     const [doneChunks, pendingChunks, failedChunks] = await Promise.all([
