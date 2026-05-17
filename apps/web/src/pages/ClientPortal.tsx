@@ -117,6 +117,7 @@ function formatNotificationDate(value: string, lang: 'ar' | 'en'): string {
 function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
   const isArabic = lang === 'ar';
   const [activeTab, setActiveTab] = useState<ComplianceTabKey>('guidelines');
+  const [regulations, setRegulations] = useState<{ ar: string; en: string } | null>(null);
 
   const ageRatings = useMemo(() => [
     {
@@ -175,139 +176,40 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
     },
   ], [isArabic]);
 
-  const violations = useMemo(() => [
-    {
-      number: 1,
-      titleAr: 'المساس بالثوابت الدينية',
-      titleEn: 'Religious fundamentals',
-      bodyAr: 'يشمل هذا النوع من المخالفات أي محتوى يتضمن إساءة أو تشويه أو سخرية أو تشكيك في أصول الشريعة الإسلامية، بما في ذلك القرآن الكريم والأحاديث النبوية المتواترة والشعائر الأساسية. ويمكن أن يظهر ذلك في الحوارات أو المشاهد أو حتى من خلال السخرية أو التلميح أو الرمزية. ومن أبرز مؤشرات هذا النوع من الانتهاك استخدام عبارات استهزاء بالدين، أو ربطه بسلوكيات سلبية بشكل تهكمي، أو تصوير شخصيات دينية بصورة مهينة، أو إعادة تفسير النصوص الدينية بطريقة ساخرة أو محرفة.',
-      examplesAr: 'ومن الأمثلة على ذلك مشاهد تسخر من الصلاة أو الأذان، أو تصوير شخصية دينية كمخادعة أو جاهلة، أو حوارات تشكك في النصوص الدينية بأسلوب استهزائي، أو استخدام آيات وأحاديث في سياق كوميدي غير لائق.',
-    },
-    {
-      number: 2,
-      titleAr: 'المساس بالقيادة السياسية',
-      titleEn: 'Political leadership',
-      bodyAr: 'يتعلق هذا البند بأي محتوى يتضمن إساءة مباشرة أو غير مباشرة لرموز الدولة، مثل الملوك أو ولاة العهد أو القيادات العليا. وقد يظهر ذلك من خلال ذكر هذه الشخصيات أو الإشارة إليها بسياق سلبي، أو عبر تلميحات سياسية ساخرة، أو إسقاطات درامية واضحة تستهدف القيادة.',
-      examplesAr: 'تشمل الأمثلة الحوارات التي تسخر من القيادة، أو تقديم شخصيات تمثلها بصورة فاسدة أو ضعيفة، أو مشاهد تدعو إلى التمرد عليها.',
-    },
-    {
-      number: 3,
-      titleAr: 'الإضرار بالأمن الوطني',
-      titleEn: 'National security',
-      bodyAr: 'يشمل هذا النوع من المحتوى كل ما يمكن أن يهدد استقرار الدولة أو يشجع على سلوكيات تمس الأمن العام. ويظهر ذلك عادة من خلال استخدام كلمات أو دعوات صريحة مثل التمرد أو العصيان أو إسقاط النظام، أو تقديم تعليمات عملية يمكن تنفيذها، أو تمجيد الفوضى والجرائم.',
-      examplesAr: 'ومن أبرز الأمثلة شرح كيفية تصنيع المتفجرات، أو الدعوة للإضرابات والعصيان المدني، أو تصوير رجال الأمن كأعداء للمجتمع، أو التقليل من خطورة الإرهاب والعنف.',
-    },
-    {
-      number: 4,
-      titleAr: 'المحتوى التاريخي غير الموثوق',
-      titleEn: 'Unreliable historical content',
-      bodyAr: 'يتعلق هذا البند بالمحتوى الذي يعرض معلومات تاريخية عن المملكة أو الشخصيات الإسلامية دون الاعتماد على مصادر موثوقة ومعتمدة. ويظهر ذلك من خلال تقديم روايات تختلف بشكل واضح عن الحقائق المعروفة، أو عرض معلومات دون سند، أو تحريف الأحداث التاريخية.',
-      examplesAr: 'ومن الأمثلة تغيير أحداث تاريخية معروفة، أو اختلاق مواقف لشخصيات تاريخية، أو تقديم روايات بديلة دون توضيح أنها خيالية.',
-    },
-    {
-      number: 5,
-      titleAr: 'الإساءة للمجتمع أو الهوية الوطنية',
-      titleEn: 'Community or national identity',
-      bodyAr: 'يشمل هذا النوع من المخالفات أي محتوى يتضمن تعميمات سلبية أو تشويهًا لصورة المجتمع السعودي أو مكوناته. وغالبًا ما يظهر ذلك من خلال استخدام ألفاظ تعميمية مثل "دائمًا" أو "كل"، أو ربط المجتمع بصفات سلبية جماعية، أو الإساءة لقبائل أو عوائل.',
-      examplesAr: 'ومن الأمثلة على ذلك وصف السعوديين بصفات سلبية عامة، أو تصوير قبيلة كاملة بصورة إجرامية، أو نسب ثقافات غير سعودية إلى المجتمع، أو الترويج لقطع صلة الرحم.',
-    },
-    {
-      number: 6,
-      titleAr: 'محتوى الجرائم الموجه للأطفال',
-      titleEn: 'Crime content for children',
-      bodyAr: 'يتعلق هذا البند بالمحتوى الموجه للأطفال الذي يعرض الجرائم أو السلوكيات الخطرة بطريقة إيجابية أو محفزة. ويظهر ذلك عندما يتم تقديم شخصية محبوبة ترتكب جرائم دون عواقب، أو استخدام عناصر إخراجية تجعل الجريمة تبدو ممتعة، أو غياب أي نتائج سلبية للسلوك.',
-      examplesAr: 'ومن الأمثلة طفل يتابع شخصية تسرق وتنجح، أو تقديم العصابات كأبطال، أو تصوير تعاطي المخدرات بشكل ممتع.',
-    },
-    {
-      number: 7,
-      titleAr: 'الترويج للمخدرات والمسكرات',
-      titleEn: 'Drugs and alcohol promotion',
-      bodyAr: 'يشمل هذا النوع من المحتوى أي عرض يقوم بتعليم أو تشجيع استخدام أو تصنيع المخدرات أو الكحول. ويظهر ذلك من خلال شرح خطوات التصنيع، أو ربط هذه المواد بالمتعة أو النجاح أو حل المشكلات.',
-      examplesAr: 'ومن الأمثلة تقديم طريقة تصنيع مخدر، أو تصوير المخدرات كوسيلة للتخلص من المشاكل، أو إظهار شخصية ناجحة بسبب تعاطيها.',
-    },
-    {
-      number: 8,
-      titleAr: 'إيذاء الطفل وذوي الإعاقة',
-      titleEn: 'Harm to children and persons with disabilities',
-      bodyAr: 'يتضمن هذا البند أي محتوى يحتوي على إيذاء أو استغلال أو سخرية من الأطفال أو ذوي الإعاقة. وقد يظهر ذلك من خلال مشاهد عنف غير مبرر، أو استخدام ألفاظ مهينة، أو تقديم هذه الفئات كوسيلة للضحك.',
-      examplesAr: 'ومن الأمثلة التنمر على طفل أو شخص من ذوي الإعاقة، أو مشاهد تعذيب، أو السخرية من الإعاقة بشكل مباشر أو ضمني.',
-    },
-    {
-      number: 9,
-      titleAr: 'المحتوى الجنسي غير المناسب',
-      titleEn: 'Inappropriate sexual content',
-      bodyAr: 'يشمل هذا البند أي محتوى يروج أو يلمّح لسلوكيات جنسية غير مناسبة للجمهور العام، خاصة إذا تم تقديمها بشكل إيجابي. ويظهر ذلك من خلال التلميحات الجنسية أو الحوارات الإيحائية أو تطبيع هذه السلوكيات.',
-      examplesAr: 'ومن الأمثلة الحوارات ذات الطابع الجنسي الصريح أو غير المباشر، أو الترويج لعلاقات غير مناسبة للقاصرين.',
-    },
-    {
-      number: 10,
-      titleAr: 'المشاهد الجنسية الصريحة',
-      titleEn: 'Explicit sexual scenes',
-      bodyAr: 'يتعلق هذا البند بعرض مباشر للممارسات الجنسية، سواء من خلال مشاهد جسدية واضحة أو تصوير تفصيلي للعلاقات. ويُعد هذا النوع من المحتوى من أكثر أنواع المخالفات وضوحًا نظرًا لطبيعته المباشرة.',
-      examplesAr: 'ويشمل ذلك اللقطات أو المشاهد التي تعرض العلاقة الحميمة بصورة واضحة أو مفصلة.',
-    },
-    {
-      number: 11,
-      titleAr: 'الألفاظ النابية',
-      titleEn: 'Profanity',
-      bodyAr: 'يشمل هذا البند استخدام الكلمات المسيئة أو الخادشة، سواء كانت مباشرة أو ضمنية. وتظهر المخالفة من خلال استخدام الشتائم أو الألفاظ ذات الطابع الجنسي أو المهين، خاصة إذا تكرر استخدامها أو كان لها تأثير سلبي واضح على سياق العمل.',
-      examplesAr: 'ومن الأمثلة الشتائم المباشرة أو الإيحاءات اللفظية المهينة أو الألفاظ الجنسية الفجة.',
-    },
-    {
-      number: 12,
-      titleAr: 'الإساءة إلى المرأة أو تعنيفها',
-      titleEn: 'Abuse or violence against women',
-      bodyAr: 'يتضمن هذا النوع من المحتوى أي إساءة للمرأة أو تقليل من شأنها أو تبرير أو تجميل العنف ضدها، سواء كان ذلك جسديًا أو نفسيًا أو اجتماعيًا. وقد يظهر في الحوارات أو السلوكيات داخل المشاهد أو الرسائل الضمنية أو حتى في الكوميديا.',
-      examplesAr: 'ومن المؤشرات تبرير إيذاء المرأة، أو تصويرها كأقل قيمة بشكل متكرر، أو استخدام ألفاظ مهينة، أو عرض العنف ضدها دون إدانة.',
-    },
-    {
-      number: 13,
-      titleAr: 'تقويض قيم الأسرة',
-      titleEn: 'Undermining family values',
-      bodyAr: 'يشمل هذا البند أي محتوى يروج لتفكك الأسرة أو يضعف الروابط الأسرية دون طرح متوازن أو نقدي. ويظهر ذلك من خلال تشجيع القطيعة بين أفراد الأسرة، أو تصوير الأسرة ككيان سلبي بالكامل، أو الترويج لسلوكيات تهدم العلاقات.',
-      examplesAr: 'ومن الأمثلة الدعوة لقطع العلاقة مع الوالدين دون مبرر، أو تقديم الخيانة الزوجية بشكل طبيعي، أو التقليل من أهمية الأسرة بشكل متكرر.',
-    },
-    {
-      number: 14,
-      titleAr: 'الإساءة إلى الوالدين',
-      titleEn: 'Disrespect to parents',
-      bodyAr: 'يتعلق هذا البند بأي محتوى يتضمن إهانة أو تحقير أو إساءة مباشرة أو غير مباشرة للأب أو الأم. ويظهر ذلك من خلال استخدام ألفاظ مهينة، أو تقديم سلوكيات عقوق بشكل طبيعي، أو التقليل من مكانة الوالدين.',
-      examplesAr: 'ومن الأمثلة حوارات تتضمن سب الوالدين، أو مشاهد اعتداء عليهم، أو تقديمهم كشخصيات مثيرة للسخرية بشكل متكرر.',
-    },
-    {
-      number: 15,
-      titleAr: 'الإساءة إلى كبار السن',
-      titleEn: 'Disrespect to the elderly',
-      bodyAr: 'يشمل هذا النوع من المحتوى أي إساءة أو تهميش أو سخرية من كبار السن، سواء من خلال تصويرهم كعبء أو بلا قيمة، أو السخرية من حالتهم الصحية أو أعمارهم، أو تجاهل حقوقهم.',
-      examplesAr: 'ومن الأمثلة مشاهد تسخر من شخص مسن، أو تقديم كبار السن كشخصيات غير مهمة، أو استغلالهم أو إهمالهم دون إدانة.',
-    },
-    {
-      number: 16,
-      titleAr: 'التنمر الجارح والسخرية',
-      titleEn: 'Bullying and mockery',
-      bodyAr: 'يشمل هذا البند أي محتوى يتضمن إساءة متكررة أو مقصودة لشخص أو فئة من خلال السخرية أو الإهانة أو التقليل من القيمة، سواء بشكل مباشر أو غير مباشر. ويظهر ذلك في الحوارات أو الكوميديا أو التفاعل بين الشخصيات أو السرد.',
-      examplesAr: 'ومن أبرز المؤشرات استخدام ألفاظ مهينة بشكل متكرر، أو استهداف صفات شخصية مثل الشكل أو العمر أو الإعاقة، أو وجود ردود فعل إيجابية على الإساءة، أو غياب أي إدانة لها.',
-    },
-  ], [isArabic]);
+  useEffect(() => {
+    let mounted = true;
+    clientPortalApi.getRegulations()
+      .then((res) => {
+        if (!mounted) return;
+        setRegulations(res);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setRegulations(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-  const violationEnglishCopy = useMemo<Record<number, { body: string; examples: string }>>(() => ({
-    1: { body: 'Any content that mocks, distorts, or disrespects core Islamic principles and rituals.', examples: 'Mocking prayer, ridicule of religious symbols, or sarcastic misuse of verses/hadith.' },
-    2: { body: 'Any direct or indirect insult toward political leadership or state symbols.', examples: 'Satirical attacks on leadership or scenes encouraging rebellion against state authority.' },
-    3: { body: 'Content that may harm national security or public stability.', examples: 'Incitement to unrest, glorification of violence, or practical harmful instructions.' },
-    4: { body: 'Historical content that is inaccurate or presented without trusted references.', examples: 'Distorting known national/Islamic events or presenting fabricated facts as true history.' },
-    5: { body: 'Generalized or derogatory portrayal of Saudi society or national identity.', examples: 'Negative stereotyping of communities, tribes, or families as a whole.' },
-    6: { body: 'Children-focused content that normalizes crime or dangerous behavior.', examples: 'Criminal characters shown as role models without consequences.' },
-    7: { body: 'Content promoting drugs, intoxicants, or their production/use.', examples: 'Step-by-step drug references or portraying substance use as a solution to problems.' },
-    8: { body: 'Abuse, exploitation, or mockery targeting children or persons with disabilities.', examples: 'Bullying, humiliating language, or violent exploitation of vulnerable groups.' },
-    9: { body: 'Inappropriate sexual references or normalization of unsuitable sexual behavior.', examples: 'Suggestive sexual dialogue or themes not suitable for general audiences.' },
-    10: { body: 'Explicit sexual scenes or direct visual/verbal sexual depiction.', examples: 'Detailed portrayals of intimate acts or explicit sexual context.' },
-    11: { body: 'Profanity or offensive language with harmful social impact.', examples: 'Repeated insults, explicit profanity, or degrading verbal abuse.' },
-    12: { body: 'Degrading portrayal of women or normalization of violence against women.', examples: 'Justifying abuse, repeated humiliation, or violence without clear condemnation.' },
-    13: { body: 'Narratives that undermine family cohesion and social values.', examples: 'Promoting family estrangement or framing family bonds as inherently harmful.' },
-    14: { body: 'Content that legitimizes criminal conduct or moral corruption.', examples: 'Glorifying crime and presenting offenders as admirable without accountability.' },
-    15: { body: 'Content that promotes extremism, hatred, or sectarian conflict.', examples: 'Calls for violence, exclusion, or hostility against groups or identities.' },
-    16: { body: 'Any additional harmful content violating public media regulations.', examples: 'Material that conflicts with approved regulatory and ethical standards.' },
-  }), []);
+  const regulationItems = useMemo(() => {
+    const source = (isArabic ? regulations?.ar : regulations?.en) ?? '';
+    const text = source.replace(/\r\n/g, '\n').trim();
+    if (!text) return [] as Array<{ number: number; title: string; body: string }>;
+
+    const sections = text.split(/\n{2,}/).map((s) => s.trim()).filter(Boolean);
+    return sections.map((section, index) => {
+      const lines = section.split('\n').map((line) => line.trim()).filter(Boolean);
+      const first = lines[0] ?? '';
+      const title = first.replace(/^\d+([.]\d+)?\s+/, '').trim();
+      const body = lines.slice(1).join('\n').trim();
+      return {
+        number: index + 1,
+        title: title || (isArabic ? `بند ${index + 1}` : `Clause ${index + 1}`),
+        body: body || title,
+      };
+    });
+  }, [isArabic, regulations]);
 
   const renderCardText = (ar: string, en: string) => (isArabic ? ar : en);
 
@@ -348,7 +250,7 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-text-main">{renderCardText('الضوابط العامة للأعمال الدرامية والوثائقية', 'General Regulations')}</p>
-                  <p className="text-xs text-text-muted">{renderCardText('16 بندًا مرجعيًا', '16 reference items')}</p>
+                  <p className="text-xs text-text-muted">{renderCardText(`${regulationItems.length} بندًا مرجعيًا`, `${regulationItems.length} reference clauses`)}</p>
                 </div>
               </CardContent>
             </Card>
@@ -399,7 +301,7 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
       {activeTab === 'guidelines' ? (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="grid gap-4 md:grid-cols-2">
-            {violations.map((item) => (
+            {regulationItems.map((item) => (
               <Card key={item.number} className="group overflow-hidden border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(31,23,36,0.10)]">
                 <CardContent className="space-y-4 p-5">
                   <div className="flex items-start gap-3">
@@ -411,21 +313,21 @@ function ComplianceGuidelinesSection({ lang }: { lang: 'ar' | 'en' }) {
                         <Badge variant="outline" className="px-2 py-0 text-[10px]">
                           {item.number}
                         </Badge>
-                        <h3 className="text-base font-bold leading-6 text-text-main">{renderCardText(item.titleAr, item.titleEn)}</h3>
+                        <h3 className="text-base font-bold leading-6 text-text-main">{item.title}</h3>
                       </div>
-                      <p className="mt-2 text-sm leading-7 text-text-muted">
-                        {isArabic ? item.bodyAr : (violationEnglishCopy[item.number]?.body ?? item.titleEn)}
-                      </p>
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-text-muted">{item.body}</p>
                     </div>
-                  </div>
-                  <div className="rounded-[calc(var(--radius)+0.2rem)] border border-border/70 bg-surface/80 p-4">
-                    <p className="text-sm leading-7 text-text-main">
-                      {isArabic ? item.examplesAr : (violationEnglishCopy[item.number]?.examples ?? item.titleEn)}
-                    </p>
                   </div>
                 </CardContent>
               </Card>
             ))}
+            {regulationItems.length === 0 && (
+              <Card className="md:col-span-2 border-border/80 bg-background/90">
+                <CardContent className="p-5 text-sm text-text-muted">
+                  {renderCardText('تعذّر تحميل الضوابط حاليًا. يرجى المحاولة لاحقًا.', 'Unable to load regulations at the moment. Please try again later.')}
+                </CardContent>
+              </Card>
+            )}
           </div>
           <div className="space-y-4">
             <Card className="border-border/80 bg-background/90 shadow-[0_18px_50px_rgba(31,23,36,0.06)]">
