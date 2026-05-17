@@ -1,5 +1,5 @@
 import React from "react";
-import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 import type { ScriptJourneyPayload } from "@/api";
 
 const s: Record<string, any> = {
@@ -41,7 +41,15 @@ function ordered<T>(arr: T[], isAr: boolean): T[] {
   return isAr ? [...arr].reverse() : arr;
 }
 
-export function ScriptJourneyPdf({ data, lang }: { data: ScriptJourneyPayload; lang: "ar" | "en" }) {
+export function ScriptJourneyPdf({
+  data,
+  lang,
+  logoUrl,
+}: {
+  data: ScriptJourneyPayload;
+  lang: "ar" | "en";
+  logoUrl?: string;
+}) {
   const isAr = lang === "ar";
   const dir = isAr ? "rtl" : "ltr";
   const beneficiaryName = isAr
@@ -56,6 +64,12 @@ export function ScriptJourneyPdf({ data, lang }: { data: ScriptJourneyPayload; l
     <Document>
       <Page size="A4" style={s.page}>
         <View style={[s.cover, { direction: dir }]}> 
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              style={{ width: 110, height: 34, objectFit: "contain", marginBottom: 12, alignSelf: isAr ? "flex-end" : "flex-start" }}
+            />
+          ) : null}
           <Text style={s.coverTitle}>{isAr ? "تقرير رحلة النص" : "Script Journey Report"}</Text>
           <Text style={s.coverSub}>{isAr ? "من الاستلام حتى القرار النهائي" : "From submission to final decision"}</Text>
           <Text style={[s.title, { marginTop: 10 }]}>{safe(data.script.title)}</Text>
@@ -68,6 +82,12 @@ export function ScriptJourneyPdf({ data, lang }: { data: ScriptJourneyPayload; l
 
       <Page size="A4" style={s.page}>
         <View style={{ direction: dir }}>
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 10, alignSelf: isAr ? "flex-end" : "flex-start" }}
+            />
+          ) : null}
           <Text style={s.title}>{isAr ? "الملخص التنفيذي" : "Executive Summary"}</Text>
           <Text style={s.subtitle}>{safe(data.script.title)}</Text>
 
@@ -113,6 +133,12 @@ export function ScriptJourneyPdf({ data, lang }: { data: ScriptJourneyPayload; l
 
       <Page size="A4" style={s.page}>
         <View style={{ direction: dir }}>
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 10, alignSelf: isAr ? "flex-end" : "flex-start" }}
+            />
+          ) : null}
           <Text style={s.title}>{isAr ? "الأنشطة الإدارية" : "Admin Activity"}</Text>
           <Text style={s.subtitle}>{isAr ? "من قام بماذا ومتى" : "Who did what and when"}</Text>
 
