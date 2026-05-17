@@ -31,8 +31,14 @@ Return JSON only in this shape:
 
 Rules:
 - Extract facts/events only. Do NOT output legal categories or violations.
+- Do NOT infer incidents that are not explicitly supported by the provided text.
+- Do NOT import context from outside this chunk.
+- If the same incident repeats, return separate events only when evidence snippets are materially different.
 - If no event is found return {"events":[]}.
-- Keep evidence_snippet short and literal from input text.`;
+- Keep evidence_snippet short and literal from input text.
+- event_id must be stable in format: "evt-<index>".
+- start_offset/end_offset should be local to this chunk when possible, otherwise null.
+- promoted/glorified must be true only with clear positive framing signals.`;
 
 export async function runSceneAnalyzer(args: {
   chunkText: string;
