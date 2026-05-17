@@ -409,7 +409,8 @@ const SEVERITY_ORDER: Record<string, number> = {
 };
 
 import { scriptsApi, tasksApi, reportsApi, findingsApi } from '@/api';
-import type { AnalysisFinding, AnalysisReviewFinding, DuplicateScriptCheckResponse, Report as AnalysisReport, ScriptRevisionCycleSummaryItem } from '@/api';
+import type { AnalysisFinding, AnalysisReviewFinding, DuplicateScriptCheckResponse, Report as AnalysisReport, ScriptJourneyPayload, ScriptRevisionCycleSummaryItem } from '@/api';
+import { downloadScriptJourneyPdf } from '@/components/reports/script-journey/download';
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
 import type { EditorContentResponse, EditorSectionResponse } from '@/api';
@@ -1942,6 +1943,7 @@ export function ScriptWorkspace() {
   const [revisionHistorySnapshotLoading, setRevisionHistorySnapshotLoading] = useState(false);
   const [selectedCycleDetails, setSelectedCycleDetails] = useState<ScriptRevisionCycleSummaryItem | null>(null);
   const [revisionHistoryExporting, setRevisionHistoryExporting] = useState(false);
+  const [journeyReportExporting, setJourneyReportExporting] = useState(false);
   const [approveDecisionReportId, setApproveDecisionReportId] = useState<string | null>(null);
   const [approveDecisionSubmitting, setApproveDecisionSubmitting] = useState(false);
   const [approveSuccessModalOpen, setApproveSuccessModalOpen] = useState(false);
@@ -2401,6 +2403,20 @@ export function ScriptWorkspace() {
       toast.error(err?.message ?? (lang === 'ar' ? 'تعذر تنزيل تقرير تاريخ دورات المراجعة.' : 'Unable to download revision history report.'));
     } finally {
       setRevisionHistoryExporting(false);
+    }
+  }, [id, lang]);
+
+  const handleExportScriptJourneyReport = useCallback(async () => {
+    if (!id) return;
+    setJourneyReportExporting(true);
+    try {
+      const payload = await reportsApi.getScriptJourney(id) as ScriptJourneyPayload;
+      await downloadScriptJourneyPdf({ data: payload, lang });
+      toast.success(lang === 'ar' ? 'تم تنزيل تقرير رحلة النص.' : 'Script journey report downloaded.');
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذر تنزيل تقرير رحلة النص.' : 'Unable to download script journey report.'));
+    } finally {
+      setJourneyReportExporting(false);
     }
   }, [id, lang]);
 
@@ -6717,7 +6733,13 @@ export function ScriptWorkspace() {
           {/* ── Reports tab ── */}
           {sidebarTab === 'reports' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background/30">
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2 flex-wrap">
+                <Button size="sm" variant="outline" onClick={handleExportScriptJourneyReport} disabled={journeyReportExporting || !id}>
+                  <Download className="w-3 h-3 mr-1" />
+                  {journeyReportExporting
+                    ? (lang === 'ar' ? 'جاري التحضير...' : 'Preparing...')
+                    : (lang === 'ar' ? 'تقرير رحلة النص (PDF)' : 'Script Journey Report (PDF)')}
+                </Button>
                 <Button size="sm" variant="outline" onClick={handleExportRevisionHistory} disabled={revisionHistoryExporting || !id}>
                   <Download className="w-3 h-3 mr-1" />
                   {revisionHistoryExporting

@@ -1407,7 +1407,106 @@ export const reportsApi = {
   /** Delete a report by id. */
   deleteReport: (id: string): Promise<{ ok: boolean }> =>
     requestReports(() => httpClient.delete(`/reports?id=${encodeURIComponent(id)}`)),
+  /** Get lifecycle payload for Script Journey report. */
+  getScriptJourney: (scriptId: string): Promise<ScriptJourneyPayload> =>
+    requestReports(() => httpClient.get(`/reports/script-journey?scriptId=${encodeURIComponent(scriptId)}`)),
 };
+
+export interface ScriptJourneyPayload {
+  script: {
+    id: string;
+    title: string;
+    status: string | null;
+    createdAt: string | null;
+    receivedAt: string | null;
+    type: string | null;
+    workClassification: string | null;
+    episodeCount: number | null;
+    expectedRank: string | null;
+    synopsis: string | null;
+    storySummary: string | null;
+    attachments?: {
+      scriptFileUrl?: string | null;
+      scriptSummaryPdfUrl?: string | null;
+      hasSecurityScenes?: boolean | null;
+      securityContentAttachmentUrl?: string | null;
+    };
+  };
+  beneficiary: {
+    id: string | null;
+    nameAr: string | null;
+    nameEn: string | null;
+    type: string | null;
+    contactPerson: string | null;
+    contactPersonEmail: string | null;
+    email: string | null;
+  };
+  decision: {
+    status: string | null;
+    decidedAt: string | null;
+    decidedBy: string | null;
+    decidedByName: string | null;
+    reason: string | null;
+    relatedReportId: string | null;
+  };
+  summary: {
+    totalCycles: number;
+    totalProcessDays: number | null;
+    firstFindingsCount: number;
+    finalFindingsCount: number;
+    reportsCount: number;
+    jobsCount: number;
+  };
+  timeline: Array<{
+    type: string;
+    at: string;
+    actorId?: string | null;
+    actorName?: string | null;
+    note?: string | null;
+    toStatus?: string | null;
+    reason?: string | null;
+  }>;
+  cycles: Array<{
+    cycleId: string;
+    cycleNumber: number;
+    status: string | null;
+    sentAt: string | null;
+    returnedAt: string | null;
+    reanalyzedAt: string | null;
+    adminNote: string | null;
+    sentBy: string | null;
+    sentByName: string | null;
+    sourceJobId: string | null;
+    reanalyzedJobId: string | null;
+    sourceReportId: string | null;
+    reanalyzedReportId: string | null;
+    sourceFindingsTotal: number;
+    reanalyzedFindingsTotal: number;
+    sourceFindingsBySeverity: Record<string, number>;
+    reanalyzedFindingsBySeverity: Record<string, number>;
+    sourceFindingsBySource: Record<string, number>;
+    reanalyzedFindingsBySource: Record<string, number>;
+    comparison?: {
+      canonical?: {
+        resolved_count?: number;
+        persisting_count?: number;
+        new_count?: number;
+      };
+    } | null;
+  }>;
+  findingsEvolution: Array<{
+    cycleNumber: number;
+    sourceFindingsTotal: number;
+    reanalyzedFindingsTotal: number;
+    comparisonSummary?: {
+      canonical?: {
+        resolved_count?: number;
+        persisting_count?: number;
+        new_count?: number;
+      };
+    } | null;
+  }>;
+}
 
 export interface UserListItem {
   id: string;
