@@ -384,6 +384,7 @@ export function Results() {
   const [rejectDecisionReason, setRejectDecisionReason] = useState('');
   const [rejectDecisionClientComment, setRejectDecisionClientComment] = useState('');
   const [rejectDecisionShareReports, setRejectDecisionShareReports] = useState(true);
+  const [rejectDecisionShareFormats, setRejectDecisionShareFormats] = useState<Array<'pdf' | 'docx'>>(['pdf', 'docx']);
   const [rejectDecisionAvailableReports, setRejectDecisionAvailableReports] = useState<ReportListItem[]>([]);
   const [rejectDecisionSelectedReportIds, setRejectDecisionSelectedReportIds] = useState<string[]>([]);
   const [rejectDecisionLoadingReports, setRejectDecisionLoadingReports] = useState(false);
@@ -481,6 +482,7 @@ export function Results() {
     setRejectDecisionReason('');
     setRejectDecisionClientComment('');
     setRejectDecisionShareReports(true);
+    setRejectDecisionShareFormats(['pdf', 'docx']);
     setRejectDecisionAvailableReports([]);
     setRejectDecisionSelectedReportIds(report.id ? [report.id] : []);
     setRejectDecisionModalOpen(true);
@@ -554,6 +556,7 @@ export function Results() {
           clientComment: rejectDecisionClientComment.trim(),
           shareReportsToClient: rejectDecisionShareReports,
           shareReportIds: rejectDecisionShareReports ? rejectDecisionSelectedReportIds : [],
+          shareReportFormats: rejectDecisionShareReports ? rejectDecisionShareFormats : [],
         },
       );
 
@@ -569,6 +572,7 @@ export function Results() {
       setRejectDecisionReason('');
       setRejectDecisionClientComment('');
       setRejectDecisionShareReports(true);
+      setRejectDecisionShareFormats(['pdf', 'docx']);
       setRejectDecisionAvailableReports([]);
       setRejectDecisionSelectedReportIds([]);
       toast.success(lang === 'ar' ? 'تم رفض النص وحفظ ملاحظات المستفيد' : 'Script rejected and client notes saved');
@@ -582,6 +586,7 @@ export function Results() {
     rejectDecisionClientComment,
     rejectDecisionReason,
     rejectDecisionSelectedReportIds,
+    rejectDecisionShareFormats,
     rejectDecisionShareReports,
     report,
     user?.id,
@@ -1049,24 +1054,15 @@ export function Results() {
   const approvedFindingsDeduped = hasRealFindings ? dedupeRealFindings(approvedFindings) : [];
 
   const semanticCategoriesOrdered = violationTypesForChecklist();
-  const regulationChecklistRows = (summary.checklist_articles ?? [])
-    .filter((row) => Number.isFinite(Number(row.article_id)) && Number(row.article_id) > 0)
-    .map((row) => {
-      const counts = row.counts ?? {};
-      const total =
-        Number(counts.critical ?? 0) +
-        Number(counts.high ?? 0) +
-        Number(counts.medium ?? 0) +
-        Number(counts.low ?? 0);
-      return {
-        articleId: Number(row.article_id),
-        titleAr: row.title_ar,
-        status: row.status,
-        total,
-      };
-    })
-    .filter((row) => row.total > 0)
-    .sort((a, b) => a.articleId - b.articleId);
+  const checklistSubjectRows = semanticCategoriesOrdered
+    .map((cat) => ({
+      id: cat.id,
+      titleAr: cat.titleAr,
+      titleEn: cat.titleEn,
+      order: cat.order,
+      total: categoryViolationCounts.get(cat.id) ?? 0,
+    }))
+    .filter((row) => row.id !== 'other' || row.total > 0);
   const categoryViolationCounts = (() => {
     const m = new Map<ViolationTypeId, number>();
     const add = (id: ViolationTypeId) => {
@@ -3108,56 +3104,32 @@ export function Results() {
       <Modal
         isOpen={checklistModalOpen}
         onClose={() => setChecklistModalOpen(false)}
-        title={lang === 'ar' ? 'قائمة التحقق (أنواع المخالفات)' : 'Compliance checklist (violation types)'}
+        title={lang === 'ar' ? 'قائمة التحقق (موضوعات المخالفات)' : 'Compliance checklist (violation subjects)'}
         className="max-w-4xl"
       >
         <div className="space-y-4">
           <p className="text-sm text-text-muted">
             {lang === 'ar'
-              ? 'تُعرض هنا قائمة التحقق حسب مواد الضوابط الحالية مع العدّ الفعلي لكل مادة.'
-              : 'This shows the current regulation checklist (by policy article) with actual counts.'}
+              ? 'تُعرض هنا قائمة موضوعات المخالفات المعتمدة حالياً، مع العدّ الفعلي لكل موضوع.'
+              : 'This shows the currently active violation subjects with actual counts.'}
           </p>
-          {regulationChecklistRows.length > 0 ? (
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {regulationChecklistRows.map((row) => (
-                <div key={`check-${row.articleId}`} className="rounded-xl border border-border bg-background/70 p-3 flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                      {lang === 'ar' ? row.titleAr : `Article ${row.articleId}`}
-                    </div>
-                    <div className="text-[11px] text-text-muted mt-1">
-                      {lang === 'ar' ? `مادة ${row.articleId}` : `Article ${row.articleId}`}
-                    </div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {checklistSubjectRows.map((row) => (
+              <div key={row.id} className="rounded-xl border border-border bg-background/70 p-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                    {lang === 'ar' ? row.titleAr : row.titleEn}
                   </div>
-                  <Badge variant={row.total > 0 ? 'error' : 'outline'} className="shrink-0">
-                    {row.total}
-                  </Badge>
+                  <div className="text-[11px] text-text-muted mt-1">
+                    {lang === 'ar' ? 'موضوع' : 'Subject'} #{row.order}
+                  </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {semanticCategoriesOrdered.map((cat) => {
-                const n = categoryViolationCounts.get(cat.id) ?? 0;
-                if (cat.id === 'other' && n === 0) return null;
-                return (
-                  <div key={cat.id} className="rounded-xl border border-border bg-background/70 p-3 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                        {lang === 'ar' ? cat.titleAr : cat.titleEn}
-                      </div>
-                      <div className="text-[11px] text-text-muted mt-1">
-                        {lang === 'ar' ? 'ترتيب' : 'Order'} {cat.order}
-                      </div>
-                    </div>
-                    <Badge variant={n > 0 ? 'error' : 'outline'} className="shrink-0">
-                      {n}
-                    </Badge>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                <Badge variant={row.total > 0 ? 'error' : 'outline'} className="shrink-0">
+                  {row.total}
+                </Badge>
+              </div>
+            ))}
+          </div>
         </div>
       </Modal>
 
@@ -3304,6 +3276,7 @@ export function Results() {
           setRejectDecisionReason('');
           setRejectDecisionClientComment('');
           setRejectDecisionShareReports(true);
+          setRejectDecisionShareFormats(['pdf', 'docx']);
           setRejectDecisionAvailableReports([]);
           setRejectDecisionSelectedReportIds([]);
         }}
@@ -3335,6 +3308,28 @@ export function Results() {
             </label>
 
             {rejectDecisionShareReports && (
+              <div className="space-y-3">
+                <div className="rounded border border-border bg-surface p-2">
+                  <p className="text-xs font-medium text-text-main">{lang === 'ar' ? 'تنسيقات الملفات المرسلة' : 'Shared file formats'}</p>
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    <label className="inline-flex items-center gap-2 text-xs text-text-muted">
+                      <input
+                        type="checkbox"
+                        checked={rejectDecisionShareFormats.includes('pdf')}
+                        onChange={(e) => setRejectDecisionShareFormats((prev) => e.target.checked ? Array.from(new Set([...prev, 'pdf'])) : prev.filter((f) => f !== 'pdf'))}
+                      />
+                      PDF
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-xs text-text-muted">
+                      <input
+                        type="checkbox"
+                        checked={rejectDecisionShareFormats.includes('docx')}
+                        onChange={(e) => setRejectDecisionShareFormats((prev) => e.target.checked ? Array.from(new Set([...prev, 'docx'])) : prev.filter((f) => f !== 'docx'))}
+                      />
+                      DOCX
+                    </label>
+                  </div>
+                </div>
               <div className="space-y-2 max-h-48 overflow-y-auto pe-1">
                 {rejectDecisionLoadingReports ? (
                   <p className="text-xs text-text-muted">{lang === 'ar' ? 'جاري تحميل التقارير…' : 'Loading reports…'}</p>
@@ -3358,6 +3353,7 @@ export function Results() {
                   ))
                 )}
               </div>
+              </div>
             )}
           </div>
 
@@ -3370,6 +3366,7 @@ export function Results() {
                 setRejectDecisionReason('');
                 setRejectDecisionClientComment('');
                 setRejectDecisionShareReports(true);
+                setRejectDecisionShareFormats(['pdf', 'docx']);
                 setRejectDecisionAvailableReports([]);
                 setRejectDecisionSelectedReportIds([]);
               }}
@@ -3380,7 +3377,7 @@ export function Results() {
             <Button
               variant="danger"
               onClick={submitRejectDecision}
-              disabled={reviewing || !rejectDecisionReason.trim()}
+              disabled={reviewing || !rejectDecisionReason.trim() || (rejectDecisionShareReports && rejectDecisionShareFormats.length === 0)}
             >
               {reviewing ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…') : (lang === 'ar' ? 'تأكيد الرفض' : 'Confirm Rejection')}
             </Button>
