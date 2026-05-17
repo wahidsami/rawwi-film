@@ -232,6 +232,17 @@ async function sendClientEmail(params: { to: string; subject: string; html: stri
   }
 }
 
+function uniqueEmails(values: Array<string | null | undefined>): string[] {
+  const set = new Set<string>();
+  for (const value of values) {
+    if (!value || typeof value !== "string") continue;
+    const email = value.trim().toLowerCase();
+    if (!email) continue;
+    set.add(email);
+  }
+  return [...set];
+}
+
 function buildBilingualClientEmail(params: {
   titleEn: string;
   titleAr: string;
@@ -780,22 +791,25 @@ Deno.serve(async (req: Request) => {
       const after = afterRow as ClientRow;
 
       const appPublicUrl = (Deno.env.get("APP_PUBLIC_URL") ?? "http://localhost:5173").replace(/\/$/, "");
-      const beneficiaryEmail = after.contact_email || after.email;
-      if (beneficiaryEmail) {
-        await sendClientEmail({
-          to: beneficiaryEmail,
-          subject: "Registration approved | تمت الموافقة على التسجيل",
-          html: buildBilingualClientEmail({
-            titleEn: "Registration Approved",
-            titleAr: "تمت الموافقة على التسجيل",
-            bodyEn: `Congratulations.\nYour registration for ${htmlEscape(after.name_en || after.name_ar)} has been approved.\nYou can now sign in and start using the beneficiary portal.`,
-            bodyAr: `تهانينا.\nتمت الموافقة على تسجيل شركة ${htmlEscape(after.name_ar || after.name_en)}.\nيمكنكم الآن تسجيل الدخول والبدء في استخدام بوابة المستفيد.`,
-            ctaUrl: `${appPublicUrl}/client/login`,
-            ctaLabelEn: "Login",
-            ctaLabelAr: "تسجيل الدخول",
-            logoUrl: `${appPublicUrl}/fclogo.png`,
-          }),
+      const beneficiaryEmails = uniqueEmails([after.email, after.contact_email]);
+      if (beneficiaryEmails.length > 0) {
+        const html = buildBilingualClientEmail({
+          titleEn: "Registration Approved",
+          titleAr: "تمت الموافقة على التسجيل",
+          bodyEn: `Congratulations.\nYour registration for ${htmlEscape(after.name_en || after.name_ar)} has been approved.\nYou can now sign in and start using the beneficiary portal.`,
+          bodyAr: `تهانينا.\nتمت الموافقة على تسجيل شركة ${htmlEscape(after.name_ar || after.name_en)}.\nيمكنكم الآن تسجيل الدخول والبدء في استخدام بوابة المستفيد.`,
+          ctaUrl: `${appPublicUrl}/client/login`,
+          ctaLabelEn: "Login",
+          ctaLabelAr: "تسجيل الدخول",
+          logoUrl: `${appPublicUrl}/fclogo.png`,
         });
+        for (const to of beneficiaryEmails) {
+          await sendClientEmail({
+            to,
+            subject: "Registration approved | تمت الموافقة على التسجيل",
+            html,
+          });
+        }
       }
 
       await logAuditCanonical(supabase, {
@@ -869,19 +883,22 @@ Deno.serve(async (req: Request) => {
       if (updateErr || !afterRow) return jsonResponse({ error: updateErr?.message ?? "Rejection failed" }, 500);
       const after = afterRow as ClientRow;
 
-      const beneficiaryEmail = after.contact_email || after.email;
-      if (beneficiaryEmail) {
-        await sendClientEmail({
-          to: beneficiaryEmail,
-          subject: "Registration request update | تحديث طلب التسجيل",
-          html: buildBilingualClientEmail({
-            titleEn: "Registration Request Update",
-            titleAr: "تحديث طلب التسجيل",
-            bodyEn: `Dear ${htmlEscape(after.representative_name || after.name_en || after.name_ar)},\nWe are sorry, but your registration request for ${htmlEscape(after.name_en || after.name_ar)} was not approved at this time.\nReason:\n${htmlEscape(reason)}`,
-            bodyAr: `عزيزي/عزيزتي ${htmlEscape(after.representative_name || after.name_ar || after.name_en)}،\nنعتذر، لم تتم الموافقة على طلب تسجيل شركة ${htmlEscape(after.name_ar || after.name_en)} في الوقت الحالي.\nسبب الرفض:\n${htmlEscape(reason)}`,
-            logoUrl: `${(Deno.env.get("APP_PUBLIC_URL") ?? "https://raawifilm.com").replace(/\/$/, "")}/fclogo.png`,
-          }),
+      const beneficiaryEmails = uniqueEmails([after.email, after.contact_email]);
+      if (beneficiaryEmails.length > 0) {
+        const html = buildBilingualClientEmail({
+          titleEn: "Registration Request Update",
+          titleAr: "تحديث طلب التسجيل",
+          bodyEn: `Dear ${htmlEscape(after.representative_name || after.name_en || after.name_ar)},\nWe are sorry, but your registration request for ${htmlEscape(after.name_en || after.name_ar)} was not approved at this time.\nReason:\n${htmlEscape(reason)}`,
+          bodyAr: `عزيزي/عزيزتي ${htmlEscape(after.representative_name || after.name_ar || after.name_en)}،\nنعتذر، لم تتم الموافقة على طلب تسجيل شركة ${htmlEscape(after.name_ar || after.name_en)} في الوقت الحالي.\nسبب الرفض:\n${htmlEscape(reason)}`,
+          logoUrl: `${(Deno.env.get("APP_PUBLIC_URL") ?? "https://raawifilm.com").replace(/\/$/, "")}/fclogo.png`,
         });
+        for (const to of beneficiaryEmails) {
+          await sendClientEmail({
+            to,
+            subject: "Registration request update | تحديث طلب التسجيل",
+            html,
+          });
+        }
       }
 
       await logAuditCanonical(supabase, {

@@ -377,6 +377,35 @@ async function clearScriptAnalysisArtifacts(
 const RESEND_API = "https://api.resend.com/emails";
 const NOTIFY_FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
 
+function uniqueEmails(values: Array<string | null | undefined>): string[] {
+  const set = new Set<string>();
+  for (const value of values) {
+    if (!value || typeof value !== "string") continue;
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) continue;
+    set.add(normalized);
+  }
+  return [...set];
+}
+
+async function getBeneficiaryEmailRecipients(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  companyId: string,
+): Promise<string[]> {
+  const { data: beneficiaryClient } = await supabase
+    .from("clients")
+    .select("beneficiary_type, contact_email, email")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  const client = (beneficiaryClient as { beneficiary_type?: string | null; contact_email?: string | null; email?: string | null } | null);
+  const beneficiaryType = (client?.beneficiary_type ?? "company").toLowerCase();
+  if (beneficiaryType === "company") {
+    return uniqueEmails([client?.email ?? null, client?.contact_email ?? null]);
+  }
+  return uniqueEmails([client?.email ?? null]);
+}
+
 /** Notify assignee when a script is assigned (in-app + optional email). */
 async function notifyScriptAssigned(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -680,17 +709,13 @@ async function ensureCertificateGeneratedOnApproval(
     if (error) throw new Error(error.message);
   }
 
-  const [{ data: account }, { data: beneficiaryClient }] = await Promise.all([
+  const [{ data: account }, recipients] = await Promise.all([
     supabase
       .from("client_portal_accounts")
       .select("user_id")
       .eq("company_id", params.companyId)
       .maybeSingle(),
-    supabase
-      .from("clients")
-      .select("name_ar, name_en, contact_email, email")
-      .eq("id", params.companyId)
-      .maybeSingle(),
+    getBeneficiaryEmailRecipients(supabase, params.companyId),
   ]);
 
   const beneficiaryUserId = ((account as { user_id?: string | null } | null)?.user_id ?? null);
@@ -710,12 +735,8 @@ async function ensureCertificateGeneratedOnApproval(
     if (notifyError) console.error("[scripts] certificate issued notification:", notifyError.message);
   }
 
-  const beneficiaryEmail =
-    ((beneficiaryClient as { contact_email?: string | null; email?: string | null } | null)?.contact_email ??
-      (beneficiaryClient as { contact_email?: string | null; email?: string | null } | null)?.email ??
-      "").trim();
   const resendKey = Deno.env.get("RESEND_API_KEY");
-  if (resendKey && beneficiaryEmail) {
+  if (resendKey && recipients.length > 0) {
     const appUrl = (Deno.env.get("APP_PUBLIC_URL") ?? "https://raawifilm.com").replace(/\/+$/, "");
     const html = `
       <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#111827;">
@@ -741,7 +762,7 @@ async function ensureCertificateGeneratedOnApproval(
       },
       body: JSON.stringify({
         from: NOTIFY_FROM_EMAIL,
-        to: [beneficiaryEmail],
+        to: recipients,
         subject: "Certificate issued | تم إصدار الشهادة",
         html,
       }),
@@ -773,17 +794,13 @@ async function notifyBeneficiaryRevisionRequested(
     note: string;
   },
 ) {
-  const [{ data: account }, { data: beneficiaryClient }] = await Promise.all([
+  const [{ data: account }, recipients] = await Promise.all([
     supabase
       .from("client_portal_accounts")
       .select("user_id")
       .eq("company_id", params.companyId)
       .maybeSingle(),
-    supabase
-      .from("clients")
-      .select("contact_email, email")
-      .eq("id", params.companyId)
-      .maybeSingle(),
+    getBeneficiaryEmailRecipients(supabase, params.companyId),
   ]);
 
   const beneficiaryUserId = ((account as { user_id?: string | null } | null)?.user_id ?? null);
@@ -803,12 +820,8 @@ async function notifyBeneficiaryRevisionRequested(
     });
   }
 
-  const beneficiaryEmail =
-    ((beneficiaryClient as { contact_email?: string | null; email?: string | null } | null)?.contact_email ??
-      (beneficiaryClient as { contact_email?: string | null; email?: string | null } | null)?.email ??
-      "").trim();
   const resendKey = Deno.env.get("RESEND_API_KEY");
-  if (resendKey && beneficiaryEmail) {
+  if (resendKey && recipients.length > 0) {
     const appUrl = (Deno.env.get("APP_PUBLIC_URL") ?? "https://raawifilm.com").replace(/\/+$/, "");
     const html = `
       <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#111827;">
@@ -838,7 +851,7 @@ async function notifyBeneficiaryRevisionRequested(
       },
       body: JSON.stringify({
         from: NOTIFY_FROM_EMAIL,
-        to: [beneficiaryEmail],
+        to: recipients,
         subject: "Script returned for revision | تمت إعادة النص للمراجعة",
         html,
       }),
