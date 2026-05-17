@@ -609,10 +609,40 @@ export const clientPortalApi = {
     }
     return data as { ok: true; registration: 'pending_review'; userId: string; companyId: string };
   },
-  sendRegistrationOtp: (payload: { email: string; beneficiaryType?: 'company' | 'individual' }): Promise<{ ok: true; expiresInSeconds: number; resendAfterSeconds: number }> =>
-    httpClient.post('/client-portal/register/send-otp', payload),
-  verifyRegistrationOtp: (payload: { email: string; otp: string }): Promise<{ ok: true; verificationToken: string; verificationTokenExpiresAt: string }> =>
-    httpClient.post('/client-portal/register/verify-otp', payload),
+  sendRegistrationOtp: async (payload: { email: string; beneficiaryType?: 'company' | 'individual' }): Promise<{ ok: true; expiresInSeconds: number; resendAfterSeconds: number }> => {
+    if (USE_MOCK_API) return httpClient.post('/client-portal/register/send-otp', payload);
+    const anonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY as string | undefined;
+    if (!anonKey) throw new Error('VITE_SUPABASE_ANON_KEY is required for public OTP flow');
+    const res = await fetch(`${API_BASE_URL}/client-portal/register/send-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error((data as { error?: string }).error || res.statusText || 'Failed to send OTP');
+    return data as { ok: true; expiresInSeconds: number; resendAfterSeconds: number };
+  },
+  verifyRegistrationOtp: async (payload: { email: string; otp: string }): Promise<{ ok: true; verificationToken: string; verificationTokenExpiresAt: string }> => {
+    if (USE_MOCK_API) return httpClient.post('/client-portal/register/verify-otp', payload);
+    const anonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY as string | undefined;
+    if (!anonKey) throw new Error('VITE_SUPABASE_ANON_KEY is required for public OTP flow');
+    const res = await fetch(`${API_BASE_URL}/client-portal/register/verify-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error((data as { error?: string }).error || res.statusText || 'Failed to verify OTP');
+    return data as { ok: true; verificationToken: string; verificationTokenExpiresAt: string };
+  },
   getTerms: (): Promise<{ ar: string; en: string }> =>
     httpClient.get('/client-portal/terms'),
   updateTerms: (terms: { ar: string; en: string }): Promise<{ ok: boolean; terms: { ar: string; en: string } }> =>
