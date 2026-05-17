@@ -55,8 +55,9 @@ type JobRow = {
   config_snapshot?: {
     pipeline_version?: "v1" | "v2";
     analysis_profile?: "quality" | "balanced" | "turbo";
-    analysis_engine?: "v2" | "hybrid";
+    analysis_engine?: "v2" | "hybrid" | "policy_v1";
     hybrid_mode?: "off" | "shadow" | "enforce";
+    policy_v1_mode?: "shadow" | "enforce";
     manual_review_context?: {
       carried_forward_count?: number;
       source_job_ids?: string[];
@@ -85,24 +86,18 @@ const ANALYSIS_PROFILE_PRESETS = {
     mergeStrategy: "every_occurrence" as const,
     maxRouterCandidates: 10,
     deepAuditorEnabled: true,
-    analysisEngine: "hybrid" as const,
-    hybridMode: "enforce" as const,
   },
   balanced: {
     analysisProfile: "balanced" as const,
     mergeStrategy: "same_location_only" as const,
     maxRouterCandidates: 8,
     deepAuditorEnabled: true,
-    analysisEngine: "hybrid" as const,
-    hybridMode: "shadow" as const,
   },
   turbo: {
     analysisProfile: "turbo" as const,
     mergeStrategy: "same_location_only" as const,
     maxRouterCandidates: 6,
     deepAuditorEnabled: false,
-    analysisEngine: "v2" as const,
-    hybridMode: "off" as const,
   },
 };
 
@@ -296,6 +291,7 @@ function toCamel(job: JobRow) {
     pipelineVersion: job.config_snapshot?.pipeline_version ?? "v1",
     analysisEngine: job.config_snapshot?.analysis_engine ?? null,
     hybridMode: job.config_snapshot?.hybrid_mode ?? null,
+    policyV1Mode: job.config_snapshot?.policy_v1_mode ?? null,
     progressTotal: job.progress_total,
     progressDone: job.progress_done,
     progressPercent: job.progress_percent,
@@ -654,8 +650,33 @@ Deno.serve(async (req: Request) => {
   const versionId = body?.versionId;
   const forceFresh = body?.forceFresh === true;
   const analysisMemoryMode = await loadAnalysisMemoryMode(supabase);
+  const envDefaultEngine = (() => {
+    const raw = String(Deno.env.get("ANALYSIS_ENGINE") ?? "v2").toLowerCase();
+    if (raw === "policy_v1") return "policy_v1" as const;
+    if (raw === "hybrid") return "hybrid" as const;
+    return "v2" as const;
+  })();
+  const requestedAnalysisEngine = (() => {
+    const raw = String(body?.analysisEngine ?? envDefaultEngine).toLowerCase();
+    if (raw === "policy_v1") return "policy_v1" as const;
+    if (raw === "hybrid") return "hybrid" as const;
+    return "v2" as const;
+  })();
+  const requestedPolicyV1Mode = (() => {
+    const envMode = String(Deno.env.get("ANALYSIS_POLICY_V1_MODE") ?? "shadow").toLowerCase();
+    const raw = String(body?.policyV1Mode ?? envMode).toLowerCase();
+    return raw === "enforce" ? "enforce" as const : "shadow" as const;
+  })();
+  const requestedHybridMode = (() => {
+    const envMode = String(Deno.env.get("ANALYSIS_HYBRID_MODE") ?? "shadow").toLowerCase();
+    const raw = String(body?.hybridMode ?? envMode).toLowerCase();
+    if (raw === "enforce") return "enforce" as const;
+    if (raw === "off") return "off" as const;
+    return "shadow" as const;
+  })();
   const envDefaultPipelineVersion = (Deno.env.get("ANALYSIS_PIPELINE_VERSION") ?? "v2").toLowerCase() === "v1" ? "v1" : "v2";
-  const defaultPipelineVersion = analysisMemoryMode === "memory2" ? "v2" : envDefaultPipelineVersion;
+  const engineDefaultPipelineVersion = requestedAnalysisEngine === "policy_v1" ? "v1" : envDefaultPipelineVersion;
+  const defaultPipelineVersion = analysisMemoryMode === "memory2" ? "v2" : engineDefaultPipelineVersion;
   const requestedPipelineVersion = body?.pipelineVersion === "v2" || body?.pipelineVersion === "v1"
     ? body.pipelineVersion
     : defaultPipelineVersion;
@@ -805,12 +826,9 @@ Deno.serve(async (req: Request) => {
         pipeline_version: requestedPipelineVersion,
         force_fresh: forceFresh,
         analysis_profile: analysisProfilePreset.analysisProfile,
-        ...(requestedPipelineVersion === "v2"
-          ? {
-              analysis_engine: analysisProfilePreset.analysisEngine,
-              hybrid_mode: analysisProfilePreset.hybridMode,
-            }
-          : {}),
+        analysis_engine: requestedAnalysisEngine,
+        ...(requestedAnalysisEngine === "hybrid" ? { hybrid_mode: requestedHybridMode } : {}),
+        ...(requestedAnalysisEngine === "policy_v1" ? { policy_v1_mode: requestedPolicyV1Mode } : {}),
         max_router_candidates: analysisProfilePreset.maxRouterCandidates,
         deep_auditor_enabled: analysisProfilePreset.deepAuditorEnabled,
         router_prompt_version: PROMPT_VERSIONS.router,
