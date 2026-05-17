@@ -180,6 +180,310 @@ async function checkOwnership(
   return !!job && (job as any).created_by === uid;
 }
 
+async function checkScriptAccess(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  scriptId: string,
+  uid: string,
+  isAdmin: boolean,
+): Promise<{ allowed: boolean; script?: Record<string, unknown> | null; error?: string }> {
+  const { data: script, error } = await supabase
+    .from("scripts")
+    .select("id, title, status, created_at, received_at, created_by, assignee_id, client_id, company_id, type, work_classification, episode_count, expected_rank, synopsis, story_summary, file_url, script_summary_pdf_url, has_security_scenes, security_content_attachment_url")
+    .eq("id", scriptId)
+    .maybeSingle();
+  if (error) return { allowed: false, error: error.message };
+  if (!script) return { allowed: false, error: "Script not found" };
+  const s = script as { created_by?: string | null; assignee_id?: string | null };
+  const allowed = isAdmin || s.created_by === uid || s.assignee_id === uid;
+  return { allowed, script };
+}
+
+async function buildScriptJourneyPayload(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  script: Record<string, unknown>,
+) {
+  const scriptId = String(script.id);
+  const companyId = String((script.company_id ?? script.client_id ?? "") || "");
+
+  const [
+    clientRes,
+    cyclesRes,
+    cycleEventsRes,
+    cycleSnapshotsRes,
+    cycleComparisonsRes,
+    reportsRes,
+    jobsRes,
+    findingsRes,
+    statusHistoryRes,
+  ] = await Promise.all([
+    companyId
+      ? supabase.from("clients").select("id, name_ar, name_en, beneficiary_type, contact_person, contact_person_email, email").eq("id", companyId).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    supabase
+      .from("script_revision_cycles")
+      .select("id, cycle_number, status, sent_by, sent_at, returned_at, reanalyzed_at, source_job_id, source_report_id, reanalyzed_job_id, reanalyzed_report_id, beneficiary_returned_version_id, admin_note, created_at, updated_at")
+      .eq("script_id", scriptId)
+      .order("cycle_number", { ascending: true }),
+    supabase
+      .from("script_revision_cycle_events")
+      .select("id, cycle_id, event_type, actor_user_id, payload, created_at")
+      .eq("script_id", scriptId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("script_revision_cycle_snapshots")
+      .select("id, cycle_id, findings_total, findings_by_severity, findings_by_source, checklist_summary, created_at")
+      .eq("script_id", scriptId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("script_revision_cycle_comparisons")
+      .select("id, cycle_id, comparison_summary, created_at")
+      .eq("script_id", scriptId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("analysis_reports")
+      .select("id, job_id, script_id, findings_count, severity_counts, summary_json, review_status, reviewed_by, reviewed_at, created_at")
+      .eq("script_id", scriptId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("analysis_jobs")
+      .select("id, script_id, status, created_by, created_at, started_at, completed_at, config_snapshot")
+      .eq("script_id", scriptId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("analysis_findings")
+      .select("id, job_id, source, severity, created_at")
+      .eq("script_id", scriptId),
+    supabase
+      .from("script_status_history")
+      .select("id, to_status, changed_at, changed_by, reason, related_report_id, metadata")
+      .eq("script_id", scriptId)
+      .order("changed_at", { ascending: true }),
+  ]);
+
+  const cycles = (cyclesRes.data ?? []) as Array<Record<string, unknown>>;
+  const cycleEvents = (cycleEventsRes.data ?? []) as Array<Record<string, unknown>>;
+  const cycleSnapshots = (cycleSnapshotsRes.data ?? []) as Array<Record<string, unknown>>;
+  const cycleComparisons = (cycleComparisonsRes.data ?? []) as Array<Record<string, unknown>>;
+  const reports = (reportsRes.data ?? []) as Array<Record<string, unknown>>;
+  const jobs = (jobsRes.data ?? []) as Array<Record<string, unknown>>;
+  const findings = (findingsRes.data ?? []) as Array<Record<string, unknown>>;
+  const history = (statusHistoryRes.data ?? []) as Array<Record<string, unknown>>;
+
+  const actorIds = new Set<string>();
+  for (const row of cycleEvents) {
+    const actor = row.actor_user_id;
+    if (typeof actor === "string" && actor) actorIds.add(actor);
+  }
+  for (const row of cycles) {
+    const actor = row.sent_by;
+    if (typeof actor === "string" && actor) actorIds.add(actor);
+  }
+  for (const row of jobs) {
+    const actor = row.created_by;
+    if (typeof actor === "string" && actor) actorIds.add(actor);
+  }
+  for (const row of history) {
+    const actor = row.changed_by;
+    if (typeof actor === "string" && actor) actorIds.add(actor);
+  }
+
+  const { data: profileRows } = actorIds.size > 0
+    ? await supabase.from("profiles").select("user_id, name").in("user_id", [...actorIds])
+    : { data: [] as Array<{ user_id: string; name?: string | null }> };
+  const profileById = new Map<string, string>();
+  for (const row of profileRows ?? []) {
+    profileById.set(row.user_id, row.name ?? row.user_id);
+  }
+
+  const findingsByJob = new Map<string, Array<Record<string, unknown>>>();
+  for (const f of findings) {
+    const jobId = String(f.job_id ?? "");
+    if (!jobId) continue;
+    if (!findingsByJob.has(jobId)) findingsByJob.set(jobId, []);
+    findingsByJob.get(jobId)!.push(f);
+  }
+
+  const reportById = new Map<string, Record<string, unknown>>();
+  for (const r of reports) reportById.set(String(r.id), r);
+
+  const snapshotByCycle = new Map<string, Record<string, unknown>>();
+  for (const snap of cycleSnapshots) {
+    const cycleId = String(snap.cycle_id ?? "");
+    if (!cycleId) continue;
+    snapshotByCycle.set(cycleId, snap);
+  }
+  const comparisonByCycle = new Map<string, Record<string, unknown>>();
+  for (const cmp of cycleComparisons) {
+    const cycleId = String(cmp.cycle_id ?? "");
+    if (!cycleId) continue;
+    comparisonByCycle.set(cycleId, cmp);
+  }
+
+  const scriptCreatedAt = String(script.created_at ?? "");
+  const scriptReceivedAt = String(script.received_at ?? scriptCreatedAt);
+  const finalDecision = [...history].reverse().find((row) => {
+    const status = String(row.to_status ?? "").toLowerCase();
+    return status === "approved" || status === "rejected";
+  }) ?? null;
+  const finalDecisionAt = String(finalDecision?.changed_at ?? "");
+  const processDays = scriptReceivedAt && finalDecisionAt
+    ? Math.max(0, Math.ceil((new Date(finalDecisionAt).getTime() - new Date(scriptReceivedAt).getTime()) / 86_400_000))
+    : null;
+
+  const cycleCards = cycles.map((cycle) => {
+    const cycleId = String(cycle.id ?? "");
+    const cycleNumber = Number(cycle.cycle_number ?? 0);
+    const sourceJobId = String(cycle.source_job_id ?? "");
+    const reJobId = String(cycle.reanalyzed_job_id ?? "");
+    const sourceFindings = sourceJobId ? (findingsByJob.get(sourceJobId) ?? []) : [];
+    const reFindings = reJobId ? (findingsByJob.get(reJobId) ?? []) : [];
+    const bySeverity = (list: Array<Record<string, unknown>>) => {
+      const out = { low: 0, medium: 0, high: 0, critical: 0 };
+      for (const row of list) {
+        const s = String(row.severity ?? "").toLowerCase();
+        if (s in out) (out as Record<string, number>)[s] += 1;
+      }
+      return out;
+    };
+    const bySource = (list: Array<Record<string, unknown>>) => {
+      const out: Record<string, number> = {};
+      for (const row of list) {
+        const s = String(row.source ?? "unknown");
+        out[s] = (out[s] ?? 0) + 1;
+      }
+      return out;
+    };
+    return {
+      cycleId,
+      cycleNumber,
+      status: cycle.status ?? null,
+      sentAt: cycle.sent_at ?? null,
+      returnedAt: cycle.returned_at ?? null,
+      reanalyzedAt: cycle.reanalyzed_at ?? null,
+      adminNote: cycle.admin_note ?? null,
+      sentBy: cycle.sent_by ?? null,
+      sentByName: typeof cycle.sent_by === "string" ? (profileById.get(cycle.sent_by) ?? cycle.sent_by) : null,
+      sourceJobId: sourceJobId || null,
+      reanalyzedJobId: reJobId || null,
+      sourceReportId: cycle.source_report_id ?? null,
+      reanalyzedReportId: cycle.reanalyzed_report_id ?? null,
+      sourceFindingsTotal: sourceFindings.length,
+      reanalyzedFindingsTotal: reFindings.length,
+      sourceFindingsBySeverity: bySeverity(sourceFindings),
+      reanalyzedFindingsBySeverity: bySeverity(reFindings),
+      sourceFindingsBySource: bySource(sourceFindings),
+      reanalyzedFindingsBySource: bySource(reFindings),
+      snapshot: snapshotByCycle.get(cycleId)?.checklist_summary ?? null,
+      comparison: comparisonByCycle.get(cycleId)?.comparison_summary ?? null,
+    };
+  });
+
+  const timeline: Array<Record<string, unknown>> = [
+    {
+      type: "script_received",
+      at: scriptReceivedAt,
+      actorId: script.created_by ?? null,
+      actorName: typeof script.created_by === "string" ? (profileById.get(script.created_by) ?? script.created_by) : null,
+      note: "Script received in admin system",
+    },
+    ...jobs.map((job) => ({
+      type: "analysis_job_created",
+      at: job.created_at ?? null,
+      actorId: job.created_by ?? null,
+      actorName: typeof job.created_by === "string" ? (profileById.get(job.created_by) ?? job.created_by) : null,
+      note: `Analysis job created (${String(job.status ?? "unknown")})`,
+      jobId: job.id ?? null,
+    })),
+    ...cycleEvents.map((ev) => ({
+      type: ev.event_type ?? "cycle_event",
+      at: ev.created_at ?? null,
+      actorId: ev.actor_user_id ?? null,
+      actorName: typeof ev.actor_user_id === "string" ? (profileById.get(ev.actor_user_id) ?? ev.actor_user_id) : null,
+      cycleId: ev.cycle_id ?? null,
+      payload: ev.payload ?? null,
+      note: String(ev.event_type ?? "cycle_event"),
+    })),
+    ...history.map((h) => ({
+      type: "script_status_changed",
+      at: h.changed_at ?? null,
+      actorId: h.changed_by ?? null,
+      actorName: typeof h.changed_by === "string" ? (profileById.get(h.changed_by) ?? h.changed_by) : null,
+      toStatus: h.to_status ?? null,
+      reason: h.reason ?? null,
+      relatedReportId: h.related_report_id ?? null,
+      note: `Status changed to ${String(h.to_status ?? "")}`,
+    })),
+  ].filter((row) => row.at != null).sort((a, b) => String(a.at).localeCompare(String(b.at)));
+
+  const firstCycleSourceCount = cycleCards[0]?.sourceFindingsTotal ?? 0;
+  const finalCycleReCount = cycleCards.length > 0
+    ? (cycleCards[cycleCards.length - 1]?.reanalyzedFindingsTotal ?? cycleCards[cycleCards.length - 1]?.sourceFindingsTotal ?? 0)
+    : 0;
+
+  return {
+    script: {
+      id: script.id,
+      title: script.title,
+      status: script.status,
+      createdAt: script.created_at,
+      receivedAt: script.received_at ?? script.created_at,
+      type: script.type ?? null,
+      workClassification: script.work_classification ?? null,
+      episodeCount: script.episode_count ?? null,
+      expectedRank: script.expected_rank ?? null,
+      synopsis: script.synopsis ?? null,
+      storySummary: script.story_summary ?? null,
+      attachments: {
+        scriptFileUrl: script.file_url ?? null,
+        scriptSummaryPdfUrl: script.script_summary_pdf_url ?? null,
+        hasSecurityScenes: script.has_security_scenes ?? null,
+        securityContentAttachmentUrl: script.security_content_attachment_url ?? null,
+      },
+    },
+    beneficiary: {
+      id: clientRes.data?.id ?? null,
+      nameAr: clientRes.data?.name_ar ?? null,
+      nameEn: clientRes.data?.name_en ?? null,
+      type: (clientRes.data as Record<string, unknown> | null)?.beneficiary_type ?? null,
+      contactPerson: (clientRes.data as Record<string, unknown> | null)?.contact_person ?? null,
+      contactPersonEmail: (clientRes.data as Record<string, unknown> | null)?.contact_person_email ?? null,
+      email: (clientRes.data as Record<string, unknown> | null)?.email ?? null,
+    },
+    decision: {
+      status: finalDecision?.to_status ?? null,
+      decidedAt: finalDecision?.changed_at ?? null,
+      decidedBy: finalDecision?.changed_by ?? null,
+      decidedByName: typeof finalDecision?.changed_by === "string" ? (profileById.get(finalDecision.changed_by) ?? finalDecision.changed_by) : null,
+      reason: finalDecision?.reason ?? null,
+      relatedReportId: finalDecision?.related_report_id ?? null,
+    },
+    summary: {
+      totalCycles: cycleCards.length,
+      totalProcessDays: processDays,
+      firstFindingsCount: firstCycleSourceCount,
+      finalFindingsCount: finalCycleReCount,
+      reportsCount: reports.length,
+      jobsCount: jobs.length,
+    },
+    timeline,
+    cycles: cycleCards,
+    findingsEvolution: cycleCards.map((cycle) => ({
+      cycleNumber: cycle.cycleNumber,
+      sourceFindingsTotal: cycle.sourceFindingsTotal,
+      reanalyzedFindingsTotal: cycle.reanalyzedFindingsTotal,
+      comparisonSummary: cycle.comparison ?? null,
+    })),
+    adminActivity: timeline.filter((row) => {
+      const actorId = row.actorId;
+      return typeof actorId === "string" && actorId.length > 0;
+    }),
+    complianceSnapshot: {
+      latestReportId: reports.length > 0 ? reports[reports.length - 1].id : null,
+      latestChecklist: reports.length > 0 ? ((reports[reports.length - 1].summary_json as Record<string, unknown> | null)?.checklist_articles ?? null) : null,
+    },
+  };
+}
+
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
   const match = pathname.match(new RegExp(`/${base}/?(.*)$`));
@@ -218,6 +522,16 @@ Deno.serve(async (req: Request) => {
       const reportId = url.searchParams.get("id")?.trim() || undefined;
       const langParam = (url.searchParams.get("lang")?.trim() || "en").toLowerCase();
       const pdfLang = langParam === "ar" ? "ar" : "en";
+
+      if (pathRest === "script-journey") {
+        const scriptId = url.searchParams.get("scriptId")?.trim();
+        if (!scriptId) return json({ error: "scriptId query param required" }, 400);
+        const access = await checkScriptAccess(supabase, scriptId, uid, isAdmin);
+        if (access.error) return json({ error: access.error }, access.error === "Script not found" ? 404 : 500);
+        if (!access.allowed) return json({ error: "Forbidden" }, 403);
+        const payload = await buildScriptJourneyPayload(supabase, access.script as Record<string, unknown>);
+        return json(payload);
+      }
 
       // ── Legacy PDF routes (removed; return 410 so frontend can show clear message — BUG-06) ──
       if (pathRest === "audit.pdf" || pathRest === "glossary.pdf" || pathRest === "clients.pdf") {
