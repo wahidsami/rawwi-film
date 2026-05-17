@@ -641,30 +641,37 @@ export function Landing() {
         </section>
 
         <section id="abdea" className="relative overflow-hidden py-24">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('/abde.png')" }}
-          />
-          <div className="absolute inset-0 bg-black/65" />
-          <div className="relative mx-auto max-w-6xl px-4 lg:px-8">
-            <div className="rounded-3xl border border-white/15 bg-black/35 p-8 text-center shadow-2xl backdrop-blur-sm md:p-12">
-              <h2 className="mb-4 text-4xl font-bold text-white md:text-5xl">
-                {isArabic ? 'منصة ابدع لإصدار التراخيص' : 'Ebdaa Platform for Licensing'}
-              </h2>
-              <p className="mx-auto mb-8 max-w-3xl text-lg leading-8 text-gray-200">
-                {isArabic
-                  ? 'للحصول على التراخيص اللازمة للإنتاج السينمائي والإعلامي، تفضّل بزيارة منصة ابدع التابعة لوزارة الثقافة.'
-                  : 'For production licensing needs, visit the Ministry of Culture Ebdaa platform and complete your required permits.'}
-              </p>
-              <a
-                href="https://abdea.moc.gov.sa/licenses"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#76B6B7] px-8 py-4 text-base font-semibold text-black transition hover:bg-[#5a9fa0]"
-              >
-                {isArabic ? 'زيارة منصة ابدع' : 'Visit Ebdaa Platform'}
-                <ArrowLeft className="h-5 w-5" />
-              </a>
+          <div className="mx-auto max-w-7xl px-4 lg:px-8">
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black">
+              <img
+                src="/abde.png"
+                alt={isArabic ? 'منصة ابدع لإصدار التراخيص' : 'Ebdaa Platform for Licensing'}
+                className="h-auto max-h-[760px] w-full object-contain"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/20" />
+
+              <div className="absolute inset-y-0 start-0 flex w-full items-center p-4 md:w-[52%] md:p-8">
+                <div className="pointer-events-auto rounded-2xl border border-white/15 bg-black/50 p-6 text-start shadow-2xl backdrop-blur-sm md:p-8">
+                  <h2 className="mb-3 text-3xl font-bold text-white md:text-4xl">
+                    {isArabic ? 'منصة ابدع لإصدار التراخيص' : 'Ebdaa Platform for Licensing'}
+                  </h2>
+                  <p className="mb-6 text-base leading-8 text-gray-200 md:text-lg">
+                    {isArabic
+                      ? 'للحصول على التراخيص اللازمة للإنتاج السينمائي والإعلامي، تفضّل بزيارة منصة ابدع التابعة لوزارة الثقافة.'
+                      : 'For production licensing needs, visit the Ministry of Culture Ebdaa platform and complete your required permits.'}
+                  </p>
+                  <a
+                    href="https://abdea.moc.gov.sa/licenses"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-3 rounded-xl bg-[#76B6B7] px-6 py-3 text-base font-semibold text-black transition hover:bg-[#5a9fa0]"
+                  >
+                    <img src="/95214.png" alt="Ebdaa" className="h-6 w-6 rounded-sm object-contain" />
+                    {isArabic ? 'زيارة منصة ابدع' : 'Visit Ebdaa Platform'}
+                    <ArrowLeft className="h-5 w-5" />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </section>
