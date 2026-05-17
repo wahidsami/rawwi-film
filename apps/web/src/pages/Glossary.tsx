@@ -4,12 +4,6 @@ import { useLangStore } from '@/store/langStore';
 import { useDataStore, LexiconTerm } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
 import { getPolicyArticles } from '@/data/policyMap';
-import {
-  getLegacyPolicyArticleIdForViolationTypeId,
-  violationTypesForChecklist,
-  violationTypeLabel,
-  type ViolationTypeId,
-} from '@/data/violationTypes';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -54,35 +48,6 @@ function serializeGeneratedVariantsInput(values: string[] | null | undefined): s
   return (values ?? []).join('\n');
 }
 
-function inferViolationTypeIdFromLegacyGcam(articleId: number | null | undefined, atomId?: string | null): ViolationTypeId {
-  const normalizedArticleId = Number(articleId);
-  const normalizedAtomId = (atomId ?? '').trim();
-  if (normalizedArticleId === 4) return 'religious_fundamentals';
-  if (normalizedArticleId === 5) return 'profanity';
-  if (normalizedArticleId === 6) {
-    if (normalizedAtomId.includes('4')) return 'bullying';
-    if (normalizedAtomId.includes('3')) return 'child_disability_harm';
-    return 'children_crime';
-  }
-  if (normalizedArticleId === 7) return 'women_abuse';
-  if (normalizedArticleId === 8) return 'society_identity';
-  if (normalizedArticleId === 9) {
-    if (normalizedAtomId.includes('4')) return 'inappropriate_sexual_content';
-    return 'explicit_sexual_scenes';
-  }
-  if (normalizedArticleId === 10) return 'drugs_alcohol';
-  if (normalizedArticleId === 12) return 'national_security';
-  if (normalizedArticleId === 13) return 'political_leadership';
-  if (normalizedArticleId === 16) return 'historical_unreliable';
-  if (normalizedArticleId === 17) {
-    if (normalizedAtomId.includes('14')) return 'parents_abuse';
-    if (normalizedAtomId.includes('15')) return 'elderly_abuse';
-    if (normalizedAtomId.includes('16')) return 'bullying';
-    return 'family_values';
-  }
-  return 'other';
-}
-
 export function Glossary() {
   const { t, lang } = useLangStore();
   const { settings } = useSettingsStore();
@@ -94,7 +59,6 @@ export function Glossary() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterSeverity, setFilterSeverity] = useState('all');
-  const [filterMode, setFilterMode] = useState('all');
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
 
@@ -103,7 +67,7 @@ export function Glossary() {
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, filterCategory, filterSeverity, filterMode]);
+  }, [searchTerm, filterCategory, filterSeverity]);
 
   const isAdminOrRegulator = user?.role === 'Super Admin' || user?.role === 'Admin' || user?.role === 'Regulator';
 
@@ -122,8 +86,7 @@ export function Glossary() {
     const matchesSearch = term.term.includes(searchTerm) || term.description?.includes(searchTerm) || term.gcam_article_title_ar?.includes(searchTerm);
     const matchesCategory = filterCategory === 'all' || term.category === filterCategory;
     const matchesSeverity = filterSeverity === 'all' || term.severity_floor === filterSeverity;
-    const matchesMode = filterMode === 'all' || term.enforcement_mode === filterMode;
-    return matchesSearch && matchesCategory && matchesSeverity && matchesMode;
+    return matchesSearch && matchesCategory && matchesSeverity;
   });
 
   const totalFiltered = filteredTerms.length;
@@ -132,8 +95,14 @@ export function Glossary() {
   const start = (currentPage - 1) * pageSize;
   const paginatedTerms = filteredTerms.slice(start, start + pageSize);
 
-  const softSignalsCount = activeTerms.filter(t => t.enforcement_mode === 'soft_signal').length;
-  const mandatoryCount = activeTerms.filter(t => t.enforcement_mode === 'mandatory_finding').length;
+  const policyArticles = getPolicyArticles();
+  const policyArticleLabel = (articleId: number | null | undefined) => {
+    const id = Number(articleId);
+    if (!Number.isFinite(id) || id <= 0) return lang === 'ar' ? 'غير محدد' : 'Unspecified';
+    const article = policyArticles.find((a) => a.articleId === id);
+    if (!article) return lang === 'ar' ? `مادة ${id}` : `Article ${id}`;
+    return lang === 'ar' ? article.title_ar : `Article ${id}`;
+  };
 
   const handleDeactivate = (id: string) => {
     if (confirm(lang === 'ar' ? 'هل أنت متأكد من حذف هذا المصطلح؟' : 'Are you sure you want to delete this term?')) {
@@ -309,7 +278,7 @@ export function Glossary() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardContent className="p-6 flex flex-col justify-center">
             <p className="text-sm text-text-muted">{t('totalTerms')}</p>
@@ -318,14 +287,10 @@ export function Glossary() {
         </Card>
         <Card>
           <CardContent className="p-6 flex flex-col justify-center">
-            <p className="text-sm text-text-muted">{t('softSignals')} <span className="text-[10px] bg-background px-1 py-0.5 rounded">{t('softSignalsSub')}</span></p>
-            <p className="text-3xl font-bold text-warning-700 mt-1">{softSignalsCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 flex flex-col justify-center">
-            <p className="text-sm text-text-muted">{t('mandatoryViolations')} <span className="text-[10px] bg-background px-1 py-0.5 rounded">{t('mandatoryViolationsSub')}</span></p>
-            <p className="text-3xl font-bold text-error mt-1">{mandatoryCount}</p>
+            <p className="text-sm text-text-muted">{lang === 'ar' ? 'مرتبطة بموضوع مخالفة' : 'Mapped to violation subject'}</p>
+            <p className="text-3xl font-bold text-primary mt-1">
+              {activeTerms.filter((term) => Number.isFinite(Number(term.gcam_article_id)) && Number(term.gcam_article_id) > 0).length}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -364,15 +329,6 @@ export function Glossary() {
               { label: t('critical'), value: 'Critical' },
             ]}
           />
-          <Select
-            value={filterMode}
-            onChange={(e) => setFilterMode(e.target.value)}
-            options={[
-              { label: t('allModes'), value: 'all' },
-              { label: t('softSignals'), value: 'soft_signal' },
-              { label: t('mandatoryViolations'), value: 'mandatory_finding' },
-            ]}
-          />
         </div>
       </div>
 
@@ -407,9 +363,7 @@ export function Glossary() {
                   <td className="px-6 py-4">
                     <div className="text-xs">
                       <p className="font-semibold">
-                        {lang === 'ar'
-                          ? violationTypeLabel(inferViolationTypeIdFromLegacyGcam(term.gcam_article_id, term.gcam_atom_id ?? null), 'ar')
-                          : violationTypeLabel(inferViolationTypeIdFromLegacyGcam(term.gcam_article_id, term.gcam_atom_id ?? null), 'en')}
+                        {policyArticleLabel(term.gcam_article_id)}
                       </p>
                     </div>
                   </td>
@@ -573,21 +527,21 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
   const { lexiconTerms, addLexiconTerm, updateLexiconTerm } = useDataStore();
   const { user } = useAuthStore();
 
-  const violationTypes = violationTypesForChecklist();
-  type FormState = Partial<LexiconTerm> & { violationTypeId?: ViolationTypeId };
+  const actionablePolicyArticles = getPolicyArticles().filter((article) => (article.atoms?.length ?? 0) > 0);
+  type FormState = Partial<LexiconTerm> & { selectedArticleId?: string };
   const defaultForm: FormState = {
     term: '',
     term_type: 'word',
     category: 'profanity',
     severity_floor: 'Medium',
     enforcement_mode: 'soft_signal',
-    gcam_article_id: 1,
+    gcam_article_id: actionablePolicyArticles[0]?.articleId ?? 4,
     gcam_atom_id: '',
     gcam_article_title_ar: '',
     description: '',
     example_usage: '',
     term_variants: [],
-    violationTypeId: 'other',
+    selectedArticleId: String(actionablePolicyArticles[0]?.articleId ?? 4),
   };
 
   const [formData, setFormData] = useState<FormState>(defaultForm);
@@ -598,17 +552,18 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
   const [generatingFromPrompt, setGeneratingFromPrompt] = useState(false);
   const [error, setError] = useState('');
   const applyPromptModeDefaults = (input: FormState): FormState => {
-    const currentType = input.violationTypeId ?? 'other';
+    const selectedArticleId = input.selectedArticleId ?? String(actionablePolicyArticles[0]?.articleId ?? 4);
+    const selectedArticleNumber = Number.parseInt(selectedArticleId, 10);
     return {
       ...input,
       term_type: 'phrase',
       category: 'other',
       severity_floor: 'Medium',
       enforcement_mode: 'mandatory_finding',
-      violationTypeId: currentType,
-      gcam_article_id: getLegacyPolicyArticleIdForViolationTypeId(currentType),
+      selectedArticleId,
+      gcam_article_id: Number.isFinite(selectedArticleNumber) ? selectedArticleNumber : (actionablePolicyArticles[0]?.articleId ?? 4),
       gcam_atom_id: '',
-      gcam_article_title_ar: getPolicyArticles().find((a) => a.articleId === getLegacyPolicyArticleIdForViolationTypeId(currentType))?.title_ar ?? '',
+      gcam_article_title_ar: getPolicyArticles().find((a) => a.articleId === selectedArticleNumber)?.title_ar ?? '',
     };
   };
 
@@ -617,15 +572,17 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
     if (isOpen) {
       const existingTerm = termId ? lexiconTerms.find(t => t.id === termId) : null;
       if (existingTerm) {
-        const inferred = inferViolationTypeIdFromLegacyGcam(existingTerm.gcam_article_id, existingTerm.gcam_atom_id ?? null);
+        const existingArticleId = Number.isFinite(Number(existingTerm.gcam_article_id))
+          ? Number(existingTerm.gcam_article_id)
+          : (actionablePolicyArticles[0]?.articleId ?? 4);
         setFormData({
           ...existingTerm,
           term_variants: existingTerm.term_variants ?? [],
-          violationTypeId: inferred,
-          gcam_article_id: getLegacyPolicyArticleIdForViolationTypeId(inferred),
+          selectedArticleId: String(existingArticleId),
+          gcam_article_id: existingArticleId,
           gcam_atom_id: '',
           gcam_article_title_ar:
-            getPolicyArticles().find((a) => a.articleId === getLegacyPolicyArticleIdForViolationTypeId(inferred))?.title_ar ?? existingTerm.gcam_article_title_ar,
+            getPolicyArticles().find((a) => a.articleId === existingArticleId)?.title_ar ?? existingTerm.gcam_article_title_ar,
         });
         setGeneratedVariantsText(serializeGeneratedVariantsInput(existingTerm.term_variants ?? []));
         setPromptMode(false);
@@ -703,8 +660,8 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
       setError(lang === 'ar' ? 'المصطلح مطلوب' : 'Term is required');
       return;
     }
-    if (!formData.violationTypeId) {
-      setError(lang === 'ar' ? 'اختر نوع المخالفة' : 'Select a violation type');
+    if (!formData.selectedArticleId) {
+      setError(lang === 'ar' ? 'اختر موضوع المخالفة' : 'Select violation subject');
       return;
     }
     if (promptMode && (formData.term_variants ?? []).length === 0) {
@@ -723,7 +680,7 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
       return;
     }
 
-    const { violationTypeId: _, ...rest } = formData;
+    const { selectedArticleId: _, ...rest } = formData;
     const payload = { ...rest };
     if (Array.isArray(payload.term_variants) && payload.term_variants.length === 0) {
       delete (payload as Partial<LexiconTerm>).term_variants;
@@ -800,29 +757,29 @@ function TermModal({ isOpen, onClose, termId }: { isOpen: boolean; onClose: () =
             {lang === 'ar' ? 'نوع المخالفة *' : 'Violation type *'}
           </label>
           <Select
-            value={formData.violationTypeId ?? 'other'}
+            value={formData.selectedArticleId ?? ''}
             onChange={(e) => {
-              const violationTypeId = e.target.value as ViolationTypeId;
-              const legacyArticleId = getLegacyPolicyArticleIdForViolationTypeId(violationTypeId);
+              const selectedArticleId = e.target.value;
+              const selectedArticleNumber = Number.parseInt(selectedArticleId, 10);
               setFormData({
                 ...formData,
-                violationTypeId,
-                gcam_article_id: legacyArticleId,
+                selectedArticleId,
+                gcam_article_id: selectedArticleNumber,
                 gcam_atom_id: '',
-                gcam_article_title_ar: getPolicyArticles().find((a) => a.articleId === legacyArticleId)?.title_ar ?? '',
+                gcam_article_title_ar: getPolicyArticles().find((a) => a.articleId === selectedArticleNumber)?.title_ar ?? '',
               });
             }}
             options={[
-              { label: lang === 'ar' ? '— اختر نوع المخالفة —' : '— Select violation type —', value: '' },
-              ...violationTypes.map((o) => ({
-                label: lang === 'ar' ? o.titleAr : o.titleEn,
-                value: o.id,
+              { label: lang === 'ar' ? '— اختر موضوع المخالفة —' : '— Select violation subject —', value: '' },
+              ...actionablePolicyArticles.map((article) => ({
+                label: lang === 'ar' ? article.title_ar : `Article ${article.articleId}`,
+                value: String(article.articleId),
               })),
             ]}
             className="w-full"
           />
           <p className="text-xs text-text-muted mt-0.5">
-            {lang === 'ar' ? 'يُستخدم هذا الاختيار داخلياً لربط المصطلح بالمخالفات الحالية.' : 'This selection is used internally to map the term to the current violation system.'}
+            {lang === 'ar' ? 'يُستخدم هذا الاختيار لربط المصطلح مباشرة بموضوع المخالفة المعتمد في النظام.' : 'This maps the term directly to the active violation subject used by the system.'}
           </p>
         </div>
 
