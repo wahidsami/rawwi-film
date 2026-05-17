@@ -60,12 +60,12 @@ export interface ClientPortalRegisterBody {
   };
   acceptedTerms: boolean;
   acceptedRegulations?: boolean;
+  otpVerificationToken?: string;
   individualProfile?: {
     fullName: string;
     dateOfBirth: string;
     nationality: string;
     nationalIdOrIqama: string;
-    city: string;
     mobile: string;
     cvFile?: File | null;
     idDocumentFile?: File | null;
@@ -574,6 +574,7 @@ export const clientPortalApi = {
     if (payload.yearsOfExperience != null) form.append('yearsOfExperience', String(payload.yearsOfExperience));
     form.append('acceptedTerms', payload.acceptedTerms ? 'true' : 'false');
     form.append('acceptedRegulations', payload.acceptedRegulations ? 'true' : 'false');
+    if (payload.otpVerificationToken) form.append('otpVerificationToken', payload.otpVerificationToken);
     if (payload.companyLogoFile) form.append('companyLogoFile', payload.companyLogoFile);
     if (payload.legalDocuments?.cr) form.append('crDocument', payload.legalDocuments.cr);
     if (payload.legalDocuments?.license) form.append('licenseDocument', payload.legalDocuments.license);
@@ -584,7 +585,6 @@ export const clientPortalApi = {
       form.append('individualDateOfBirth', payload.individualProfile.dateOfBirth);
       form.append('individualNationality', payload.individualProfile.nationality);
       form.append('individualNationalIdOrIqama', payload.individualProfile.nationalIdOrIqama);
-      form.append('individualCity', payload.individualProfile.city);
       form.append('individualMobile', payload.individualProfile.mobile);
       if (payload.individualProfile.cvFile) form.append('individualCvFile', payload.individualProfile.cvFile);
       if (payload.individualProfile.idDocumentFile) form.append('individualIdDocumentFile', payload.individualProfile.idDocumentFile);
@@ -609,6 +609,10 @@ export const clientPortalApi = {
     }
     return data as { ok: true; registration: 'pending_review'; userId: string; companyId: string };
   },
+  sendRegistrationOtp: (payload: { email: string; beneficiaryType?: 'company' | 'individual' }): Promise<{ ok: true; expiresInSeconds: number; resendAfterSeconds: number }> =>
+    httpClient.post('/client-portal/register/send-otp', payload),
+  verifyRegistrationOtp: (payload: { email: string; otp: string }): Promise<{ ok: true; verificationToken: string; verificationTokenExpiresAt: string }> =>
+    httpClient.post('/client-portal/register/verify-otp', payload),
   getTerms: (): Promise<{ ar: string; en: string }> =>
     httpClient.get('/client-portal/terms'),
   updateTerms: (terms: { ar: string; en: string }): Promise<{ ok: boolean; terms: { ar: string; en: string } }> =>

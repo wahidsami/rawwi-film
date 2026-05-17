@@ -12,6 +12,32 @@ const DOC_MIMES = new Set(["application/pdf", "image/png", "image/jpeg"]);
 const PDF_MIMES = new Set(["application/pdf"]);
 const RESEND_API = "https://api.resend.com/emails";
 const FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
+const OTP_TTL_MINUTES = 10;
+const OTP_VERIFICATION_TOKEN_TTL_MINUTES = 30;
+const OTP_RESEND_COOLDOWN_SECONDS = 60;
+
+function toHex(buffer: ArrayBuffer): string {
+  return [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const bytes = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return toHex(digest);
+}
+
+function generateOtpCode(): string {
+  const bytes = new Uint32Array(1);
+  crypto.getRandomValues(bytes);
+  const n = Number(bytes[0] % 1_000_000);
+  return n.toString().padStart(6, "0");
+}
+
+function generateVerificationToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
 
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
@@ -316,6 +342,121 @@ Deno.serve(async (req: Request) => {
     return json(await loadClientRegulations(supabase));
   }
 
+  // POST /client-portal/register/send-otp
+  if (method === "POST" && rest === "register/send-otp") {
+    let body: Record<string, unknown> = {};
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const rawType = typeof body.beneficiaryType === "string" ? body.beneficiaryType.trim().toLowerCase() : "company";
+    const beneficiaryType = rawType === "individual" ? "individual" : "company";
+    if (!email || !isValidEmail(email)) return json({ error: "Valid email is required" }, 400);
+
+    const { data: recentOtp } = await supabase
+      .from("registration_email_otps")
+      .select("id, created_at")
+      .eq("email", email)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (recentOtp?.created_at) {
+      const createdAt = Date.parse(recentOtp.created_at);
+      if (Number.isFinite(createdAt)) {
+        const diffSeconds = Math.floor((Date.now() - createdAt) / 1000);
+        if (diffSeconds < OTP_RESEND_COOLDOWN_SECONDS) {
+          return json({
+            error: "Please wait before requesting a new code",
+            retryAfterSeconds: OTP_RESEND_COOLDOWN_SECONDS - diffSeconds,
+          }, 429);
+        }
+      }
+    }
+
+    const { data: usersList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+    const emailTaken = (usersList?.users ?? []).some((u) => (u.email ?? "").toLowerCase() === email);
+    if (emailTaken) return json({ error: "Email already registered" }, 409);
+
+    const otpCode = generateOtpCode();
+    const otpHash = await sha256Hex(`${email}:${otpCode}`);
+    const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60_000).toISOString();
+
+    const { error: insertErr } = await supabase.from("registration_email_otps").insert({
+      email,
+      beneficiary_type: beneficiaryType,
+      otp_hash: otpHash,
+      expires_at: expiresAt,
+    });
+    if (insertErr) return json({ error: insertErr.message }, 500);
+
+    const subject = "Raawi Registration OTP";
+    const html = buildBilingualClientEmail({
+      titleEn: "Verify your email",
+      titleAr: "تأكيد البريد الإلكتروني",
+      bodyEn: `Your verification code is: ${otpCode}\nThis code expires in ${OTP_TTL_MINUTES} minutes.`,
+      bodyAr: `رمز التحقق الخاص بك هو: ${otpCode}\nتنتهي صلاحية الرمز خلال ${OTP_TTL_MINUTES} دقائق.`,
+    });
+    await sendClientEmail({ to: email, subject, html });
+
+    return json({ ok: true, expiresInSeconds: OTP_TTL_MINUTES * 60, resendAfterSeconds: OTP_RESEND_COOLDOWN_SECONDS });
+  }
+
+  // POST /client-portal/register/verify-otp
+  if (method === "POST" && rest === "register/verify-otp") {
+    let body: Record<string, unknown> = {};
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const otp = typeof body.otp === "string" ? body.otp.trim() : "";
+    if (!email || !isValidEmail(email)) return json({ error: "Valid email is required" }, 400);
+    if (!/^\d{6}$/.test(otp)) return json({ error: "OTP must be 6 digits" }, 400);
+
+    const { data: otpRow } = await supabase
+      .from("registration_email_otps")
+      .select("id, otp_hash, attempts, max_attempts, expires_at, consumed_at")
+      .eq("email", email)
+      .is("verified_at", null)
+      .is("consumed_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!otpRow?.id) return json({ error: "No OTP request found for this email" }, 404);
+    if (otpRow.consumed_at) return json({ error: "OTP already used" }, 409);
+    if (new Date(otpRow.expires_at).getTime() < Date.now()) return json({ error: "OTP expired" }, 410);
+    if ((otpRow.attempts ?? 0) >= (otpRow.max_attempts ?? 5)) return json({ error: "Too many attempts" }, 429);
+
+    const otpHash = await sha256Hex(`${email}:${otp}`);
+    if (otpHash !== otpRow.otp_hash) {
+      await supabase
+        .from("registration_email_otps")
+        .update({ attempts: (otpRow.attempts ?? 0) + 1, updated_at: new Date().toISOString() })
+        .eq("id", otpRow.id);
+      return json({ error: "Invalid OTP" }, 400);
+    }
+
+    const verificationToken = generateVerificationToken();
+    const verificationTokenHash = await sha256Hex(verificationToken);
+    const tokenExpiresAt = new Date(Date.now() + OTP_VERIFICATION_TOKEN_TTL_MINUTES * 60_000).toISOString();
+    const nowIso = new Date().toISOString();
+    const { error: verifyErr } = await supabase
+      .from("registration_email_otps")
+      .update({
+        verified_at: nowIso,
+        verification_token_hash: verificationTokenHash,
+        verification_token_expires_at: tokenExpiresAt,
+        updated_at: nowIso,
+      })
+      .eq("id", otpRow.id);
+    if (verifyErr) return json({ error: verifyErr.message }, 500);
+
+    return json({ ok: true, verificationToken, verificationTokenExpiresAt: tokenExpiresAt });
+  }
+
   // POST /client-portal/register (public, free registration)
   if (method === "POST" && rest === "register") {
     const contentType = req.headers.get("content-type") ?? "";
@@ -359,7 +500,6 @@ Deno.serve(async (req: Request) => {
         individualDateOfBirth: formData.get("individualDateOfBirth"),
         individualNationality: formData.get("individualNationality"),
         individualNationalIdOrIqama: formData.get("individualNationalIdOrIqama"),
-        individualCity: formData.get("individualCity"),
         individualMobile: formData.get("individualMobile"),
       };
       const logoCandidate = formData.get("companyLogoFile") ?? formData.get("companyLogo") ?? formData.get("logo");
@@ -410,13 +550,13 @@ Deno.serve(async (req: Request) => {
     const yearsOfExperience = Number.parseInt(field(body, "yearsOfExperience") ?? "0", 10);
     const acceptedTerms = body.acceptedTerms === true || body.acceptedTerms === "true";
     const acceptedRegulations = body.acceptedRegulations === true || body.acceptedRegulations === "true";
+    const otpVerificationToken = typeof body.otpVerificationToken === "string" ? body.otpVerificationToken.trim() : "";
     const beneficiaryTypeRaw = typeof body.beneficiaryType === "string" ? body.beneficiaryType.trim().toLowerCase() : "";
     const individualSignals =
       Boolean(field(body, "individualFullName")) ||
       Boolean(field(body, "individualDateOfBirth")) ||
       Boolean(field(body, "individualNationality")) ||
       Boolean(field(body, "individualNationalIdOrIqama")) ||
-      Boolean(field(body, "individualCity")) ||
       Boolean(field(body, "individualMobile")) ||
       Boolean(individualCvFile) ||
       Boolean(individualIdDocumentFile);
@@ -427,28 +567,44 @@ Deno.serve(async (req: Request) => {
     const individualDateOfBirth = field(body, "individualDateOfBirth");
     const individualNationality = field(body, "individualNationality");
     const individualNationalIdOrIqama = field(body, "individualNationalIdOrIqama");
-    const individualCity = field(body, "individualCity");
     const individualMobile = normalizePhone(body.individualMobile);
     const isSaudiIndividual = (individualNationality ?? "").toLowerCase() === "saudi arabia";
     const effectiveCompanyEmail = companyEmail || email;
 
     if (!email || !isValidEmail(email)) return json({ error: "Valid email is required" }, 400);
+    if (!otpVerificationToken) return json({ error: "Email verification is required before registration" }, 400);
     if (beneficiaryType === "company" && (!effectiveCompanyEmail || !isValidEmail(effectiveCompanyEmail))) return json({ error: "Valid company email is required" }, 400);
     if (!password || password.length < 8) return json({ error: "Password must be at least 8 characters" }, 400);
     if (!name) return json({ error: "Name is required" }, 400);
     if (!companyNameAr || !companyNameEn) return json({ error: "companyNameAr and companyNameEn are required" }, 400);
     if (beneficiaryType === "company" && !mobile) return json({ error: "Company phone/mobile is required" }, 400);
-    if (beneficiaryType === "company" && !city) return json({ error: "City is required" }, 400);
     if (contactEmail && !isValidEmail(contactEmail)) return json({ error: "Valid contact email is required" }, 400);
     if (!acceptedTerms) return json({ error: "Terms must be accepted" }, 400);
     if (!acceptedRegulations) return json({ error: "Regulations must be accepted" }, 400);
+
+    const tokenHash = await sha256Hex(otpVerificationToken);
+    const { data: verifiedOtp } = await supabase
+      .from("registration_email_otps")
+      .select("id, email, verification_token_expires_at, consumed_at")
+      .eq("email", email)
+      .eq("verification_token_hash", tokenHash)
+      .not("verified_at", "is", null)
+      .is("consumed_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!verifiedOtp?.id) return json({ error: "Invalid or missing email verification token" }, 401);
+    if (verifiedOtp.consumed_at) return json({ error: "Verification token already used" }, 409);
+    if (!verifiedOtp.verification_token_expires_at || new Date(verifiedOtp.verification_token_expires_at).getTime() < Date.now()) {
+      return json({ error: "Email verification token expired" }, 410);
+    }
     if (beneficiaryType === "company") {
       const hasRequiredDocs = ["cr", "license", "national_address"].every((requiredType) =>
         legalFiles.some((doc) => doc.type === requiredType)
       );
       if (!hasRequiredDocs) return json({ error: "CR, license, and national address documents are required" }, 400);
     } else {
-      if (!individualFullName || !individualDateOfBirth || !individualNationality || !individualNationalIdOrIqama || !individualCity || !individualMobile) {
+      if (!individualFullName || !individualDateOfBirth || !individualNationality || !individualNationalIdOrIqama || !individualMobile) {
         return json({ error: "Individual profile fields are required" }, 400);
       }
       if (isSaudiIndividual && !/^1\d{9}$/.test(individualNationalIdOrIqama)) return json({ error: "Saudi National ID must be 10 digits and start with 1" }, 400);
@@ -534,7 +690,7 @@ Deno.serve(async (req: Request) => {
           website,
           address_line1: addressLine1,
           address_line2: addressLine2,
-          city: beneficiaryType === "individual" ? individualCity : city,
+          city: beneficiaryType === "individual" ? null : city,
           postal_code: postalCode,
           country: "Saudi Arabia",
           contact_email: email,
@@ -665,6 +821,11 @@ Deno.serve(async (req: Request) => {
           requester_name: name,
         },
       });
+
+      await supabase
+        .from("registration_email_otps")
+        .update({ consumed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq("id", verifiedOtp.id);
 
       return json({
         ok: true,
@@ -1448,6 +1609,7 @@ Deno.serve(async (req: Request) => {
           previous_file_url: (scriptRow as any).file_url ?? null,
         },
       });
+
     if (eventErr) return json({ error: eventErr.message }, 500);
 
     await notifyAdmins(supabase, {

@@ -114,12 +114,12 @@ export function ClientRegister() {
   const [beneficiaryType, setBeneficiaryType] = useState<BeneficiaryType>(null);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
-    companyNameAr: '', companyNameEn: '', website: '', email: '', phone: '', city: '',
+    companyNameAr: '', companyNameEn: '', website: '', email: '', phone: '',
     phoneCountryCode: '+966',
     contactName: '', contactPosition: '', contactEmail: '', contactMobile: '',
     contactMobileCountryCode: '+966',
     password: '', confirmPassword: '', about: '', yearsOfExperience: '',
-    fullName: '', dateOfBirth: '', nationality: 'Saudi Arabia', nationalIdOrIqama: '', individualCity: '', individualMobile: '',
+    fullName: '', dateOfBirth: '', nationality: 'Saudi Arabia', nationalIdOrIqama: '', individualMobile: '',
     individualMobileCountryCode: '+966',
     acceptedTerms: false, acceptedRegulations: false,
   });
@@ -136,6 +136,14 @@ export function ClientRegister() {
   const [mediaContentLicenseDocument, setMediaContentLicenseDocument] = useState<File | null>(null);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [idDocumentFile, setIdDocumentFile] = useState<File | null>(null);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpPanelOpen, setOtpPanelOpen] = useState(false);
+  const [otpVerificationToken, setOtpVerificationToken] = useState<string | null>(null);
+  const [otpVerifiedEmail, setOtpVerifiedEmail] = useState<string | null>(null);
+  const [otpMessage, setOtpMessage] = useState('');
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
   useEffect(() => {
     clientPortalApi.getTerms().then(setTerms).catch(() => setTerms(null));
@@ -149,9 +157,27 @@ export function ClientRegister() {
     return () => URL.revokeObjectURL(nextUrl);
   }, [companyLogoFile]);
 
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const timer = window.setInterval(() => setOtpCooldown((prev) => Math.max(0, prev - 1)), 1000);
+    return () => window.clearInterval(timer);
+  }, [otpCooldown]);
+
   const setField = (key: keyof typeof form, value: string | boolean) => setForm((prev) => ({ ...prev, [key]: value }));
   const isSaudiIndividual = form.nationality.trim().toLowerCase() === 'saudi arabia';
   const individualIdLabel = isSaudiIndividual ? (isArabic ? 'رقم الهوية الوطنية *' : 'National ID No. *') : (isArabic ? 'رقم الإقامة *' : 'Iqama No. *');
+  const registrationEmail = (beneficiaryType === 'company' ? form.email : form.contactEmail).trim().toLowerCase();
+
+  useEffect(() => {
+    if (!registrationEmail) return;
+    if (otpVerifiedEmail && otpVerifiedEmail !== registrationEmail) {
+      setOtpVerificationToken(null);
+      setOtpVerifiedEmail(null);
+      setOtpCode('');
+      setOtpPanelOpen(false);
+      setOtpMessage('');
+    }
+  }, [otpVerifiedEmail, registrationEmail]);
 
   const validateStep = (targetStep: number): string | null => {
     if (!beneficiaryType) return isArabic ? 'اختر نوع التسجيل أولاً' : 'Please select registration type first';
@@ -160,7 +186,6 @@ export function ClientRegister() {
         if (!form.companyNameAr.trim() || !form.companyNameEn.trim()) return isArabic ? 'يرجى إدخال اسم الشركة بالعربية والإنجليزية' : 'Please enter company name in Arabic and English';
         if (!EMAIL_REGEX.test(form.email.trim())) return isArabic ? 'يرجى إدخال بريد شركة صحيح' : 'Please enter a valid company email';
         if (!form.phoneCountryCode.trim() || !form.phone.trim()) return isArabic ? 'يرجى إدخال رقم هاتف الشركة مع مفتاح الدولة' : 'Please enter company phone with country code';
-        if (!form.city.trim()) return isArabic ? 'يرجى إدخال المدينة' : 'Please enter city';
       }
       if (targetStep === 2) {
         if (!form.contactName.trim() || !form.contactPosition.trim()) return isArabic ? 'يرجى إدخال اسم مسؤول التواصل والمنصب' : 'Please enter contact person name and position';
@@ -185,7 +210,6 @@ export function ClientRegister() {
       if (!form.nationality.trim()) return isArabic ? 'الجنسية مطلوبة' : 'Nationality is required';
       if (!EMAIL_REGEX.test(form.contactEmail.trim())) return isArabic ? 'يرجى إدخال بريد صحيح' : 'Please enter a valid email';
       if (!form.individualMobileCountryCode.trim() || !form.individualMobile.trim()) return isArabic ? 'يرجى إدخال الجوال مع مفتاح الدولة' : 'Please enter mobile with country code';
-      if (!form.individualCity.trim()) return isArabic ? 'المدينة مطلوبة' : 'City is required';
       if (isSaudiIndividual && !NATIONAL_ID_REGEX.test(form.nationalIdOrIqama.trim())) return isArabic ? 'الهوية الوطنية يجب أن تكون 10 أرقام وتبدأ بـ 1' : 'National ID must be 10 digits and start with 1';
       if (!isSaudiIndividual && !IQAMA_REGEX.test(form.nationalIdOrIqama.trim())) return isArabic ? 'الإقامة يجب أن تكون 10 أرقام وتبدأ بـ 2' : 'Iqama must be 10 digits and start with 2';
       if (form.password.length < 8) return isArabic ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters';
@@ -203,10 +227,68 @@ export function ClientRegister() {
   const maxSteps = beneficiaryType === 'individual' ? 2 : 3;
   const isFinalStep = step === maxSteps;
   const isSubmitEnabled = isFinalStep && form.acceptedTerms && form.acceptedRegulations;
-  const nextStep = () => {
+  const sendOtp = async () => {
+    if (!registrationEmail || !EMAIL_REGEX.test(registrationEmail)) {
+      setError(isArabic ? 'يرجى إدخال بريد إلكتروني صحيح أولاً' : 'Please enter a valid email first');
+      return;
+    }
+    setIsSendingOtp(true);
+    setOtpMessage('');
+    try {
+      const response = await clientPortalApi.sendRegistrationOtp({
+        email: registrationEmail,
+        beneficiaryType: beneficiaryType ?? 'company',
+      });
+      setOtpCooldown(response.resendAfterSeconds ?? 60);
+      setOtpPanelOpen(true);
+      setOtpMessage(isArabic ? 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' : 'Verification code sent to your email');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (isArabic ? 'فشل إرسال رمز التحقق' : 'Failed to send verification code'));
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!/^\d{6}$/.test(otpCode.trim())) {
+      setError(isArabic ? 'رمز التحقق يجب أن يكون 6 أرقام' : 'OTP must be 6 digits');
+      return;
+    }
+    if (!registrationEmail) {
+      setError(isArabic ? 'البريد الإلكتروني غير متوفر' : 'Email is missing');
+      return;
+    }
+    setIsVerifyingOtp(true);
+    setError('');
+    try {
+      const response = await clientPortalApi.verifyRegistrationOtp({
+        email: registrationEmail,
+        otp: otpCode.trim(),
+      });
+      setOtpVerificationToken(response.verificationToken);
+      setOtpVerifiedEmail(registrationEmail);
+      setOtpPanelOpen(false);
+      setOtpMessage(isArabic ? 'تم تأكيد البريد الإلكتروني بنجاح' : 'Email verified successfully');
+      setStep((prev) => Math.min(maxSteps, prev + 1));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (isArabic ? 'فشل التحقق من الرمز' : 'Failed to verify OTP'));
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const nextStep = async () => {
     const e = validateStep(step);
     if (e) return setError(e);
     setError('');
+    if (step === 1) {
+      if (otpVerificationToken && otpVerifiedEmail === registrationEmail) {
+        setStep((prev) => Math.min(maxSteps, prev + 1));
+        return;
+      }
+      await sendOtp();
+      return;
+    }
     setStep((prev) => Math.min(maxSteps, prev + 1));
   };
   const prevStep = () => { setError(''); setStep((prev) => Math.max(1, prev - 1)); };
@@ -225,14 +307,13 @@ export function ClientRegister() {
         await clientPortalApi.register({
           beneficiaryType: 'company',
           name: form.contactName.trim(),
-          email: form.contactEmail.trim().toLowerCase(),
+          email: form.email.trim().toLowerCase(),
           companyEmail: form.email.trim().toLowerCase(),
           password: form.password,
           companyNameAr: form.companyNameAr.trim(),
           companyNameEn: form.companyNameEn.trim(),
           website: form.website.trim() || undefined,
           phone: companyPhone,
-          city: form.city.trim(),
           representativeName: form.contactName.trim(),
           representativeTitle: form.contactPosition.trim(),
           mobile: companyPhone,
@@ -244,6 +325,7 @@ export function ClientRegister() {
           legalDocuments: { cr: crDocument, license: licenseDocument, nationalAddress: nationalAddressDocument, mediaContentProductionLicense: mediaContentLicenseDocument },
           acceptedTerms: form.acceptedTerms,
           acceptedRegulations: form.acceptedRegulations,
+          otpVerificationToken: otpVerificationToken ?? undefined,
         });
       } else {
         const individualMobile = composeInternationalPhone(form.individualMobileCountryCode, form.individualMobile);
@@ -255,18 +337,17 @@ export function ClientRegister() {
           companyNameAr: form.fullName.trim(),
           companyNameEn: form.fullName.trim(),
           phone: individualMobile,
-          city: form.individualCity.trim(),
           mobile: individualMobile,
           contactEmail: form.contactEmail.trim().toLowerCase(),
           contactMobile: individualMobile,
           acceptedTerms: form.acceptedTerms,
           acceptedRegulations: form.acceptedRegulations,
+          otpVerificationToken: otpVerificationToken ?? undefined,
           individualProfile: {
             fullName: form.fullName.trim(),
             dateOfBirth: form.dateOfBirth,
             nationality: form.nationality,
             nationalIdOrIqama: form.nationalIdOrIqama.trim(),
-            city: form.individualCity.trim(),
             mobile: individualMobile,
             cvFile,
             idDocumentFile,
@@ -307,12 +388,38 @@ export function ClientRegister() {
         <div className="mb-5 flex justify-center"><img src="/fclogo.png" alt="Film Commission" className="h-14 object-contain" /></div>
         <div className="mb-6 space-y-2"><h1 className="text-2xl font-bold">{beneficiaryType === 'company' ? (isArabic ? 'تسجيل مستفيد' : 'Beneficiary Registration') : (isArabic ? 'طلب انضمام فرد' : 'Individual Join Request')}</h1><p className="text-sm font-medium text-text-main">{`${isArabic ? 'الخطوة' : 'Step'} ${step}/${maxSteps}`}</p></div>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {beneficiaryType === 'company' && step === 1 && <section className="grid grid-cols-1 gap-4 md:grid-cols-2"><Input label={isArabic ? 'اسم الشركة بالعربية *' : 'Company Name Arabic *'} value={form.companyNameAr} onChange={(e) => setField('companyNameAr', e.target.value)} required /><Input label={isArabic ? 'اسم الشركة بالإنجليزية *' : 'Company Name English *'} value={form.companyNameEn} onChange={(e) => setField('companyNameEn', e.target.value)} required dir="ltr" /><Input label={isArabic ? 'الموقع الإلكتروني' : 'Company Website'} value={form.website} onChange={(e) => setField('website', e.target.value)} dir="ltr" /><Input label={isArabic ? 'البريد الإلكتروني *' : 'Email *'} type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required dir="ltr" /><div className="md:col-span-2"><PhoneInputWithCountryCode label={isArabic ? 'رقم هاتف الشركة *' : 'Company Phone *'} codeLabel={isArabic ? 'مفتاح الدولة' : 'Country code'} numberLabel={isArabic ? 'رقم الهاتف' : 'Phone number'} countryCode={form.phoneCountryCode} onCountryCodeChange={(value) => setField('phoneCountryCode', value)} number={form.phone} onNumberChange={(value) => setField('phone', value)} required isArabic={isArabic} /></div><Input label={isArabic ? 'المدينة *' : 'City *'} value={form.city} onChange={(e) => setField('city', e.target.value)} required /></section>}
+          {beneficiaryType === 'company' && step === 1 && <section className="grid grid-cols-1 gap-4 md:grid-cols-2"><Input label={isArabic ? 'اسم الشركة بالعربية *' : 'Company Name Arabic *'} value={form.companyNameAr} onChange={(e) => setField('companyNameAr', e.target.value)} required /><Input label={isArabic ? 'اسم الشركة بالإنجليزية *' : 'Company Name English *'} value={form.companyNameEn} onChange={(e) => setField('companyNameEn', e.target.value)} required dir="ltr" /><Input label={isArabic ? 'الموقع الإلكتروني' : 'Company Website'} value={form.website} onChange={(e) => setField('website', e.target.value)} dir="ltr" /><Input label={isArabic ? 'البريد الإلكتروني *' : 'Email *'} type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required dir="ltr" /><div className="md:col-span-2"><PhoneInputWithCountryCode label={isArabic ? 'رقم هاتف الشركة *' : 'Company Phone *'} codeLabel={isArabic ? 'مفتاح الدولة' : 'Country code'} numberLabel={isArabic ? 'رقم الهاتف' : 'Phone number'} countryCode={form.phoneCountryCode} onCountryCodeChange={(value) => setField('phoneCountryCode', value)} number={form.phone} onNumberChange={(value) => setField('phone', value)} required isArabic={isArabic} /></div></section>}
           {beneficiaryType === 'company' && step === 2 && <><section className="grid grid-cols-1 gap-4 md:grid-cols-2"><Input label={isArabic ? 'اسم مسؤول التواصل *' : 'Contact Person Name *'} value={form.contactName} onChange={(e) => setField('contactName', e.target.value)} required /><Input label={isArabic ? 'المنصب *' : 'Position *'} value={form.contactPosition} onChange={(e) => setField('contactPosition', e.target.value)} required /><Input label={isArabic ? 'البريد الإلكتروني *' : 'Email *'} type="email" value={form.contactEmail} onChange={(e) => setField('contactEmail', e.target.value)} required dir="ltr" /><div className="md:col-span-2"><PhoneInputWithCountryCode label={isArabic ? 'جوال مسؤول التواصل *' : 'Contact Mobile *'} codeLabel={isArabic ? 'مفتاح الدولة' : 'Country code'} numberLabel={isArabic ? 'رقم الجوال' : 'Mobile number'} countryCode={form.contactMobileCountryCode} onCountryCodeChange={(value) => setField('contactMobileCountryCode', value)} number={form.contactMobile} onNumberChange={(value) => setField('contactMobile', value)} required isArabic={isArabic} /></div></section><section className="grid grid-cols-1 gap-4 md:grid-cols-2"><Input label={isArabic ? 'كلمة المرور *' : 'Password *'} type="password" value={form.password} onChange={(e) => setField('password', e.target.value)} required minLength={8} dir="ltr" /><Input label={isArabic ? 'تأكيد كلمة المرور *' : 'Confirm Password *'} type="password" value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required minLength={8} dir="ltr" /></section><section className="grid grid-cols-1 gap-4 md:grid-cols-3"><Input label={isArabic ? 'سنوات الخبرة' : 'Years of Experience'} type="number" min={0} value={form.yearsOfExperience} onChange={(e) => setField('yearsOfExperience', e.target.value)} /><div className="md:col-span-2"><Textarea label={isArabic ? 'نبذة عن الشركة' : 'About the Company'} value={form.about} onChange={(e) => setField('about', e.target.value)} rows={4} /></div></section></>}
-          {beneficiaryType === 'individual' && step === 1 && <section className="grid grid-cols-1 gap-4 md:grid-cols-2"><Input label={isArabic ? 'الاسم الكامل *' : 'Full Name *'} value={form.fullName} onChange={(e) => setField('fullName', e.target.value)} required /><Input label={isArabic ? 'تاريخ الميلاد *' : 'Date of Birth *'} type="date" value={form.dateOfBirth} onChange={(e) => setField('dateOfBirth', e.target.value)} required /><label className="text-sm font-medium text-text-main">{isArabic ? 'الجنسية *' : 'Nationality *'}<select className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2" value={form.nationality} onChange={(e) => setField('nationality', e.target.value)}>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></label><Input label={individualIdLabel} value={form.nationalIdOrIqama} onChange={(e) => setField('nationalIdOrIqama', e.target.value)} required dir="ltr" maxLength={10} /><Input label={isArabic ? 'البريد الإلكتروني *' : 'Email *'} type="email" value={form.contactEmail} onChange={(e) => setField('contactEmail', e.target.value)} required dir="ltr" /><div className="md:col-span-2"><PhoneInputWithCountryCode label={isArabic ? 'الجوال *' : 'Mobile *'} codeLabel={isArabic ? 'مفتاح الدولة' : 'Country code'} numberLabel={isArabic ? 'رقم الجوال' : 'Mobile number'} countryCode={form.individualMobileCountryCode} onCountryCodeChange={(value) => setField('individualMobileCountryCode', value)} number={form.individualMobile} onNumberChange={(value) => setField('individualMobile', value)} required isArabic={isArabic} /></div><Input label={isArabic ? 'المدينة *' : 'City *'} value={form.individualCity} onChange={(e) => setField('individualCity', e.target.value)} required /><Input label={isArabic ? 'كلمة المرور *' : 'Password *'} type="password" value={form.password} onChange={(e) => setField('password', e.target.value)} required minLength={8} dir="ltr" /><Input label={isArabic ? 'تأكيد كلمة المرور *' : 'Confirm Password *'} type="password" value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required minLength={8} dir="ltr" /></section>}
+          {beneficiaryType === 'individual' && step === 1 && <section className="grid grid-cols-1 gap-4 md:grid-cols-2"><Input label={isArabic ? 'الاسم الكامل *' : 'Full Name *'} value={form.fullName} onChange={(e) => setField('fullName', e.target.value)} required /><Input label={isArabic ? 'تاريخ الميلاد *' : 'Date of Birth *'} type="date" value={form.dateOfBirth} onChange={(e) => setField('dateOfBirth', e.target.value)} required /><label className="text-sm font-medium text-text-main">{isArabic ? 'الجنسية *' : 'Nationality *'}<select className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2" value={form.nationality} onChange={(e) => setField('nationality', e.target.value)}>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></label><Input label={individualIdLabel} value={form.nationalIdOrIqama} onChange={(e) => setField('nationalIdOrIqama', e.target.value)} required dir="ltr" maxLength={10} /><Input label={isArabic ? 'البريد الإلكتروني *' : 'Email *'} type="email" value={form.contactEmail} onChange={(e) => setField('contactEmail', e.target.value)} required dir="ltr" /><div className="md:col-span-2"><PhoneInputWithCountryCode label={isArabic ? 'الجوال *' : 'Mobile *'} codeLabel={isArabic ? 'مفتاح الدولة' : 'Country code'} numberLabel={isArabic ? 'رقم الجوال' : 'Mobile number'} countryCode={form.individualMobileCountryCode} onCountryCodeChange={(value) => setField('individualMobileCountryCode', value)} number={form.individualMobile} onNumberChange={(value) => setField('individualMobile', value)} required isArabic={isArabic} /></div><Input label={isArabic ? 'كلمة المرور *' : 'Password *'} type="password" value={form.password} onChange={(e) => setField('password', e.target.value)} required minLength={8} dir="ltr" /><Input label={isArabic ? 'تأكيد كلمة المرور *' : 'Confirm Password *'} type="password" value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required minLength={8} dir="ltr" /></section>}
           {((beneficiaryType === 'company' && step === 3) || (beneficiaryType === 'individual' && step === 2)) && <><section className="grid grid-cols-1 gap-4 md:grid-cols-2">{beneficiaryType === 'company' ? <><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'شعار الشركة (PNG/JPEG)' : 'Company Logo (PNG/JPEG)'}</label><input type="file" accept="image/png,image/jpeg" onChange={(e) => setCompanyLogoFile(e.target.files?.[0] ?? null)} className={fileInputClass} />{companyLogoPreview && <img src={companyLogoPreview} alt="" className="h-16 w-16 rounded-md border border-border bg-background object-cover" />}</div><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'السجل التجاري * (PDF/JPEG/PNG)' : 'CR Document * (PDF/JPEG/PNG)'}</label><input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setCrDocument(e.target.files?.[0] ?? null)} className={fileInputClass} /></div><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'الرخصة * (PDF/JPEG/PNG)' : 'License Document * (PDF/JPEG/PNG)'}</label><input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setLicenseDocument(e.target.files?.[0] ?? null)} className={fileInputClass} /></div><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'مستند العنوان الوطني * (PDF/JPEG/PNG)' : 'National Address Document * (PDF/JPEG/PNG)'}</label><input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setNationalAddressDocument(e.target.files?.[0] ?? null)} className={fileInputClass} /></div><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'رخصة إنتاج المحتوى الإعلامي المرئي والمسموع (اختياري)' : 'Audio-Visual Media Content Production License (Optional)'}</label><input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setMediaContentLicenseDocument(e.target.files?.[0] ?? null)} className={fileInputClass} /></div></> : <><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'السيرة الذاتية (PDF) *' : 'CV (PDF) *'}</label><input type="file" accept="application/pdf" onChange={(e) => setCvFile(e.target.files?.[0] ?? null)} className={fileInputClass} /></div><div className="space-y-2"><label className="block text-sm font-medium text-text-main">{isArabic ? 'مستند الهوية/الإقامة *' : 'National ID / Iqama *'}</label><input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setIdDocumentFile(e.target.files?.[0] ?? null)} className={fileInputClass} /></div></>}</section><section className="rounded-xl border border-border bg-background/60 p-4"><p className="text-sm font-semibold text-text-main">{isArabic ? 'الشروط والأحكام' : 'Terms and Conditions'}</p><p className="mt-2 whitespace-pre-wrap text-sm text-text-muted">{isArabic ? terms?.ar : terms?.en}</p><label className="mt-4 flex items-start gap-2 text-sm text-text-main"><input type="checkbox" checked={form.acceptedTerms} onChange={(e) => setField('acceptedTerms', e.target.checked)} /><span>{isArabic ? 'أفهم وأوافق على الالتزام بالشروط والأحكام' : 'I understand and agree to comply with the terms and conditions'}</span></label></section><section className="rounded-xl border border-border bg-background/60 p-4"><p className="text-sm font-semibold text-text-main">{isArabic ? 'الضوابط العامة للأعمال الدرامية والوثائقية' : 'General Regulations for Dramatic and Documentary Works'}</p><p className="mt-2 whitespace-pre-wrap text-sm text-text-muted">{isArabic ? regulations?.ar : regulations?.en}</p><label className="mt-4 flex items-start gap-2 text-sm text-text-main"><input type="checkbox" checked={form.acceptedRegulations} onChange={(e) => setField('acceptedRegulations', e.target.checked)} /><span>{isArabic ? 'أفهم وسألتزم بالضوابط العامة للأعمال الدرامية والوثائقية' : 'I understand and will comply with the general regulations for dramatic and documentary works'}</span></label></section></>}
+          {step === 1 && otpPanelOpen && (
+            <section className="rounded-xl border border-border bg-background/60 p-4">
+              <p className="text-sm font-semibold text-text-main">{isArabic ? 'تأكيد البريد الإلكتروني (OTP)' : 'Email Verification (OTP)'}</p>
+              <p className="mt-1 text-xs text-text-muted">{isArabic ? 'أدخل الرمز المكون من 6 أرقام المرسل إلى بريدك' : 'Enter the 6-digit code sent to your email'}</p>
+              <div className="mt-3 flex flex-wrap items-end gap-2">
+                <div className="min-w-[220px] flex-1">
+                  <Input
+                    label={isArabic ? 'رمز التحقق' : 'Verification Code'}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    dir="ltr"
+                    maxLength={6}
+                  />
+                </div>
+                <Button type="button" onClick={verifyOtp} isLoading={isVerifyingOtp}>
+                  {isArabic ? 'تأكيد الرمز' : 'Verify Code'}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => void sendOtp()} disabled={isSendingOtp || otpCooldown > 0}>
+                  {otpCooldown > 0
+                    ? (isArabic ? `إعادة الإرسال خلال ${otpCooldown}s` : `Resend in ${otpCooldown}s`)
+                    : (isArabic ? 'إعادة إرسال الرمز' : 'Resend Code')}
+                </Button>
+              </div>
+            </section>
+          )}
+          {!!otpMessage && <div className="rounded-md border border-success/20 bg-success/10 p-3 text-sm text-success">{otpMessage}</div>}
           {error && <div className="rounded-md border border-error/20 bg-error/10 p-3 text-sm text-error">{error}</div>}
-          <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4"><Button type="button" variant="outline" onClick={() => { setBeneficiaryType(null); setStep(1); }}>{isArabic ? 'تغيير النوع' : 'Change Type'}</Button>{step > 1 && <Button type="button" variant="outline" onClick={prevStep}>{isArabic ? 'السابق' : 'Previous'}</Button>}{step < maxSteps ? <Button type="button" onClick={nextStep}>{isArabic ? 'التالي' : 'Next'}</Button> : <Button type="submit" isLoading={isSaving} disabled={!isSubmitEnabled}>{isArabic ? 'إرسال طلب الانضمام' : 'Submit Join Request'}</Button>}<Link to="/client/login"><Button type="button" variant="outline">{isArabic ? 'لديك حساب؟ تسجيل الدخول' : 'Already have an account? Login'}</Button></Link></div>
+          <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4"><Button type="button" variant="outline" onClick={() => { setBeneficiaryType(null); setStep(1); }}>{isArabic ? 'تغيير النوع' : 'Change Type'}</Button>{step > 1 && <Button type="button" variant="outline" onClick={prevStep}>{isArabic ? 'السابق' : 'Previous'}</Button>}{step < maxSteps ? <Button type="button" onClick={() => { void nextStep(); }} isLoading={isSendingOtp}>{isArabic ? 'التالي' : 'Next'}</Button> : <Button type="submit" isLoading={isSaving} disabled={!isSubmitEnabled}>{isArabic ? 'إرسال طلب الانضمام' : 'Submit Join Request'}</Button>}<Link to="/client/login"><Button type="button" variant="outline">{isArabic ? 'لديك حساب؟ تسجيل الدخول' : 'Already have an account? Login'}</Button></Link></div>
         </form>
       </div>
     </div>
