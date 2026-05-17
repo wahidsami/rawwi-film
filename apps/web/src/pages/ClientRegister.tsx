@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -144,6 +144,8 @@ export function ClientRegister() {
   const [otpCooldown, setOtpCooldown] = useState(0);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpLocked, setOtpLocked] = useState(false);
+  const otpInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
     clientPortalApi.getTerms().then(setTerms).catch(() => setTerms(null));
@@ -176,6 +178,7 @@ export function ClientRegister() {
       setOtpCode('');
       setOtpPanelOpen(false);
       setOtpMessage('');
+      setOtpLocked(false);
     }
   }, [otpVerifiedEmail, registrationEmail]);
 
@@ -234,6 +237,7 @@ export function ClientRegister() {
     }
     setIsSendingOtp(true);
     setOtpMessage('');
+    setOtpLocked(false);
     try {
       const response = await clientPortalApi.sendRegistrationOtp({
         email: registrationEmail,
@@ -241,7 +245,9 @@ export function ClientRegister() {
       });
       setOtpCooldown(response.resendAfterSeconds ?? 60);
       setOtpPanelOpen(true);
+      setOtpCode('');
       setOtpMessage(isArabic ? 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' : 'Verification code sent to your email');
+      setTimeout(() => otpInputRefs.current[0]?.focus(), 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : (isArabic ? 'فشل إرسال رمز التحقق' : 'Failed to send verification code'));
     } finally {
@@ -271,10 +277,34 @@ export function ClientRegister() {
       setOtpMessage(isArabic ? 'تم تأكيد البريد الإلكتروني بنجاح' : 'Email verified successfully');
       setStep((prev) => Math.min(maxSteps, prev + 1));
     } catch (err) {
-      setError(err instanceof Error ? err.message : (isArabic ? 'فشل التحقق من الرمز' : 'Failed to verify OTP'));
+      const message = err instanceof Error ? err.message : (isArabic ? 'فشل التحقق من الرمز' : 'Failed to verify OTP');
+      setError(message);
+      if (/too many attempts/i.test(message)) {
+        setOtpLocked(true);
+      }
     } finally {
       setIsVerifyingOtp(false);
     }
+  };
+
+  const setOtpDigit = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, '').slice(-1);
+    const current = otpCode.padEnd(6, ' ').split('');
+    current[index] = digit || ' ';
+    const nextCode = current.join('').replace(/\s/g, '');
+    setOtpCode(nextCode);
+    if (digit && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasted) return;
+    event.preventDefault();
+    setOtpCode(pasted);
+    const focusIndex = Math.min(5, pasted.length);
+    otpInputRefs.current[focusIndex]?.focus();
   };
 
   const nextStep = async () => {
@@ -396,17 +426,34 @@ export function ClientRegister() {
             <section className="rounded-xl border border-border bg-background/60 p-4">
               <p className="text-sm font-semibold text-text-main">{isArabic ? 'تأكيد البريد الإلكتروني (OTP)' : 'Email Verification (OTP)'}</p>
               <p className="mt-1 text-xs text-text-muted">{isArabic ? 'أدخل الرمز المكون من 6 أرقام المرسل إلى بريدك' : 'Enter the 6-digit code sent to your email'}</p>
-              <div className="mt-3 flex flex-wrap items-end gap-2">
-                <div className="min-w-[220px] flex-1">
-                  <Input
-                    label={isArabic ? 'رمز التحقق' : 'Verification Code'}
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    dir="ltr"
-                    maxLength={6}
-                  />
+              <div className="mt-3 space-y-3">
+                <div className="flex flex-wrap gap-2" dir="ltr">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => { otpInputRefs.current[index] = el; }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={otpCode[index] ?? ''}
+                      onChange={(e) => setOtpDigit(index, e.target.value)}
+                      onPaste={handleOtpPaste}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace' && !(otpCode[index] ?? '') && index > 0) {
+                          otpInputRefs.current[index - 1]?.focus();
+                        }
+                      }}
+                      className="h-11 w-11 rounded-md border border-border bg-background text-center text-base font-semibold text-text-main focus:border-primary focus:outline-none"
+                    />
+                  ))}
                 </div>
-                <Button type="button" onClick={verifyOtp} isLoading={isVerifyingOtp}>
+                {otpLocked && (
+                  <p className="text-xs text-error">
+                    {isArabic ? 'تم إيقاف المحاولات مؤقتاً. يرجى طلب رمز جديد.' : 'Attempts are temporarily locked. Please request a new code.'}
+                  </p>
+                )}
+                <div className="flex flex-wrap items-end gap-2">
+                <Button type="button" onClick={verifyOtp} isLoading={isVerifyingOtp} disabled={otpLocked}>
                   {isArabic ? 'تأكيد الرمز' : 'Verify Code'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => void sendOtp()} disabled={isSendingOtp || otpCooldown > 0}>
@@ -414,6 +461,7 @@ export function ClientRegister() {
                     ? (isArabic ? `إعادة الإرسال خلال ${otpCooldown}s` : `Resend in ${otpCooldown}s`)
                     : (isArabic ? 'إعادة إرسال الرمز' : 'Resend Code')}
                 </Button>
+                </div>
               </div>
             </section>
           )}
