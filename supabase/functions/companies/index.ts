@@ -419,73 +419,14 @@ Deno.serve(async (req: Request) => {
 
     // POST /companies → create client
     if (method === "POST" && !pathAfter) {
-      let body: Record<string, unknown>;
-      try {
-        body = await req.json();
-      } catch {
-        return jsonResponse({ error: "Invalid JSON body" }, 400);
-      }
-      const nameAr = typeof body.nameAr === "string" ? body.nameAr.trim() : "";
-      const nameEn = typeof body.nameEn === "string" ? body.nameEn.trim() : "";
-      if (!nameAr || !nameEn) {
-        return jsonResponse({ error: "nameAr and nameEn are required" }, 400);
-      }
-      const nameArErr = validateSafeClientText("nameAr", nameAr);
-      if (nameArErr) return jsonResponse({ error: nameArErr }, 400);
-      if (containsEnglishLetters(nameAr)) return jsonResponse({ error: "nameAr must use Arabic letters" }, 400);
-      const nameEnErr = validateSafeClientText("nameEn", nameEn);
-      if (nameEnErr) return jsonResponse({ error: nameEnErr }, 400);
-      if (containsArabicLetters(nameEn)) return jsonResponse({ error: "nameEn must use English letters" }, 400);
-      const repName = typeof body.representativeName === "string" ? body.representativeName.trim() : "";
-      if (repName) {
-        const repErr = validateSafeClientText("representativeName", repName);
-        if (repErr) return jsonResponse({ error: repErr }, 400);
-      }
-      const repTitle = typeof body.representativeTitle === "string" ? body.representativeTitle.trim() : "";
-      if (repTitle) {
-        const repTitleErr = validateSafeClientText("representativeTitle", repTitle);
-        if (repTitleErr) return jsonResponse({ error: repTitleErr }, 400);
-      }
-      const mobile = normalizeMobile(typeof body.mobile === "string" ? body.mobile : null);
-      const mobileErr = validateMobile(mobile);
-      if (mobileErr) return jsonResponse({ error: mobileErr }, 400);
-      const email = normalizeEmail(typeof body.email === "string" ? body.email : null);
-      const emailErr = validateEmail(email);
-      if (emailErr) return jsonResponse({ error: emailErr }, 400);
-      const duplicateErr = await ensureUniqueClientNames(supabase, nameAr, nameEn);
-      if (duplicateErr) return jsonResponse({ error: duplicateErr }, 409);
-
-      const insert: Record<string, unknown> = {
-        name_ar: nameAr,
-        name_en: nameEn,
-        representative_name: typeof body.representativeName === "string" ? body.representativeName.trim() || null : null,
-        representative_title: typeof body.representativeTitle === "string" ? body.representativeTitle.trim() || null : null,
-        mobile,
-        email,
-        source: "internal",
-        approval_status: "approved",
-        approved_at: new Date().toISOString(),
-      };
-
-      if (body.logoUrl !== undefined) (insert as Record<string, unknown>).logo_url = typeof body.logoUrl === "string" ? body.logoUrl.trim() || null : null;
-      if (insert.logo_url) (insert as Record<string, unknown>).logo_updated_at = new Date().toISOString();
-
-      const { data: row, error } = await supabase.from("clients").insert(insert).select(CLIENT_SELECT).single();
-
-      if (error) {
-        return jsonResponse({ error: error.message }, 500);
-      }
-      const after = row as ClientRow;
-      await logAuditCanonical(supabase, {
-        event_type: "CLIENT_CREATED",
-        actor_user_id: actorUserId,
-        target_type: "client",
-        target_id: after.id,
-        target_label: after.name_ar || after.name_en,
-        result_status: "success",
-        metadata: { after: toFrontend(after) },
-      }).catch((e) => console.warn("[companies] audit:", e));
-      return jsonResponse(toFrontend(after));
+      return jsonResponse(
+        {
+          error:
+            "Creating beneficiaries from admin dashboard is disabled. Beneficiaries must register via the beneficiary portal.",
+          code: "ADMIN_BENEFICIARY_CREATE_DISABLED",
+        },
+        403,
+      );
     }
 
     // POST /companies/:id/logo → upload logo (multipart)

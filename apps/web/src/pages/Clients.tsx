@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { CompanyAvatar } from '@/components/ui/CompanyAvatar';
-import { ClientModal } from '@/components/ClientModal';
 import {
   Building2,
   CheckCircle,
@@ -21,7 +20,6 @@ import {
   Grid2X2,
   List,
   Loader2,
-  Plus,
   Search,
   Trash2,
   User,
@@ -86,7 +84,6 @@ export function Clients() {
     return saved === 'table' ? 'table' : 'cards';
   });
   const [page, setPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [creators, setCreators] = useState<Record<string, string>>({});
   const [rejectClient, setRejectClient] = useState<Company | null>(null);
@@ -158,10 +155,6 @@ export function Clients() {
     } finally {
       setExportingPdf(false);
     }
-  };
-
-  const handleOpenAddModal = () => {
-    setIsModalOpen(true);
   };
 
   const handleOpenEditPage = (event: React.MouseEvent, client: Company) => {
@@ -341,12 +334,6 @@ export function Clients() {
             {exportingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             {exportingPdf ? (lang === 'ar' ? 'جاري تجهيز PDF...' : 'Preparing PDF...') : t('exportPdf')}
           </Button>
-          {isAdmin && (
-            <Button className="flex items-center gap-2" onClick={handleOpenAddModal}>
-              <Plus className="h-4 w-4" />
-              {t('addNewClient')}
-            </Button>
-          )}
         </div>
       </div>
 
@@ -517,8 +504,6 @@ export function Clients() {
           </div>
         </div>
       </Modal>
-
-      <ClientModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} companyId={null} />
     </div>
   );
 }
