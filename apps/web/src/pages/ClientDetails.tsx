@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
+import { AdminTableFilters } from '@/components/ui/AdminTableFilters';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { CompanyAvatar } from '@/components/ui/CompanyAvatar';
@@ -684,7 +685,15 @@ export function ClientDetails() {
         )}
       </div>
       {visibleCompanyScripts.length > 0 && (
-        <div className="grid gap-3 md:grid-cols-4">
+        <AdminTableFilters
+          onReset={() => {
+            setScriptsSearch('');
+            setScriptsStatusFilter('all');
+            setScriptsTypeFilter('all');
+          }}
+          resetLabel={lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
+        >
+        <div className="grid gap-3 md:grid-cols-3">
           <Input
             value={scriptsSearch}
             onChange={(e) => setScriptsSearch(e.target.value)}
@@ -706,17 +715,8 @@ export function ClientDetails() {
               ...scriptTypeOptions.map((type) => ({ value: type, label: type })),
             ]}
           />
-          <Button
-            variant="outline"
-            onClick={() => {
-              setScriptsSearch('');
-              setScriptsStatusFilter('all');
-              setScriptsTypeFilter('all');
-            }}
-          >
-            {lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
-          </Button>
         </div>
+        </AdminTableFilters>
       )}
 
       {visibleCompanyScripts.length === 0 ? (
@@ -900,7 +900,15 @@ export function ClientDetails() {
       {isPortalClient && activeTab === 'certificates' && (
         <Card>
           <CardContent className="p-6">
-            <div className="mb-4 grid gap-3 md:grid-cols-3">
+            <AdminTableFilters
+              className="mb-4"
+              onReset={() => {
+                setCertificatesSearch('');
+                setCertificatePaymentFilter('all');
+              }}
+              resetLabel={lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
+            >
+            <div className="grid gap-3 md:grid-cols-2">
               <Input
                 value={certificatesSearch}
                 onChange={(e) => setCertificatesSearch(e.target.value)}
@@ -914,16 +922,8 @@ export function ClientDetails() {
                   ...certificatePaymentOptions.map((status) => ({ value: status, label: status })),
                 ]}
               />
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setCertificatesSearch('');
-                  setCertificatePaymentFilter('all');
-                }}
-              >
-                {lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
-              </Button>
             </div>
+            </AdminTableFilters>
             {certificatesLoading ? (
               <p className="text-sm text-text-muted">{lang === 'ar' ? 'جاري تحميل الشهادات...' : 'Loading certificates...'}</p>
             ) : filteredCompanyCertificates.length === 0 ? (

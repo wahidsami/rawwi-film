@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
+import { AdminTableFilters } from '../components/ui/AdminTableFilters';
 import { RecentDecisionsWidget } from '../components/RecentDecisionsWidget';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -451,7 +452,16 @@ export function Overview() {
           <CardTitle>{lang === 'ar' ? 'النصوص وحالتها' : 'Scripts and Status'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 grid gap-3 md:grid-cols-3">
+          <AdminTableFilters
+            className="mb-4"
+            onReset={() => {
+              setScriptsSearch('');
+              setScriptsStatusFilter('all');
+              setScriptsBeneficiaryFilter('all');
+            }}
+            resetLabel={lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
+          >
+          <div className="grid gap-3 md:grid-cols-3">
             <Input
               value={scriptsSearch}
               onChange={(e) => setScriptsSearch(e.target.value)}
@@ -474,19 +484,7 @@ export function Overview() {
               ]}
             />
           </div>
-          <div className="mb-4">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setScriptsSearch('');
-                setScriptsStatusFilter('all');
-                setScriptsBeneficiaryFilter('all');
-              }}
-            >
-              {lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
-            </Button>
-          </div>
+          </AdminTableFilters>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-surface-hover">

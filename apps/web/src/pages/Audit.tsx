@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
+import { AdminTableFilters } from '@/components/ui/AdminTableFilters';
 import { Download, FileText, ChevronDown, ChevronRight, Filter, Search } from 'lucide-react';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDateTime } from '@/utils/dateFormat';
@@ -181,28 +182,26 @@ export function Audit() {
               <FileText className="h-4 w-4 me-2" />
               {t('exportPdf')}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setFilters({
-                  pageSize: PAGE_SIZE,
-                  dateFrom: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19),
-                  dateTo: '',
-                  userId: '',
-                  eventType: '',
-                  targetType: '',
-                  resultStatus: '',
-                  q: '',
-                });
-                setPage(1);
-              }}
-            >
-              {lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
-            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <AdminTableFilters
+            className="shadow-none border-0 p-0"
+            onReset={() => {
+              setFilters({
+                pageSize: PAGE_SIZE,
+                dateFrom: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19),
+                dateTo: '',
+                userId: '',
+                eventType: '',
+                targetType: '',
+                resultStatus: '',
+                q: '',
+              });
+              setPage(1);
+            }}
+            resetLabel={lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
+          >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
             <Input
               label={t('filterByDate') + ' (from)'}
@@ -279,6 +278,7 @@ export function Audit() {
               />
             </div>
           </div>
+          </AdminTableFilters>
         </CardContent>
       </Card>
 

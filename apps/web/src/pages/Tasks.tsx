@@ -7,6 +7,7 @@ import { useDataStore } from '@/store/dataStore';
 import { usersApi, type UserListItem } from '@/api';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { AdminTableFilters } from '@/components/ui/AdminTableFilters';
 import { ArrowRight, FileText, Calendar, CheckCircle2, Search } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -96,7 +97,14 @@ export function Tasks() {
         </p>
       </div>
 
-      <div className="dashboard-panel rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-4 shadow-[0_16px_40px_rgba(31,23,36,0.04)] space-y-3">
+      <AdminTableFilters
+        onReset={() => {
+          setSearch('');
+          setStatusFilter('all');
+          setPerformerFilter('all');
+        }}
+        resetLabel={lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
+      >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
           <Input
@@ -124,20 +132,7 @@ export function Tasks() {
             ]}
           />
         </div>
-        <div>
-          <button
-            type="button"
-            className="rounded-lg border border-border px-3 py-1.5 text-sm text-text-main hover:bg-surface-hover"
-            onClick={() => {
-              setSearch('');
-              setStatusFilter('all');
-              setPerformerFilter('all');
-            }}
-          >
-            {lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
-          </button>
-        </div>
-      </div>
+      </AdminTableFilters>
 
       {filteredTasks.length === 0 ? (
         <Card className="dashboard-table-card border-dashed">

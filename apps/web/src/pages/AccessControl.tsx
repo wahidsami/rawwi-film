@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { AdminTableFilters } from '@/components/ui/AdminTableFilters';
 import { Search, Plus, UserCog, Shield, Eye, Pencil, UserX, UserCheck, Trash2 } from 'lucide-react';
 import { usersApi, invitesApi } from '@/api';
 import type { UserListItem } from '@/api';
@@ -216,6 +217,17 @@ export function AccessControl() {
             <UserCog className="w-5 h-5 text-primary" />
             {t('users')}
           </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 border-b border-border">
+          <AdminTableFilters
+            className="shadow-none border-0 p-0"
+            onReset={() => {
+              setSearch('');
+              setRoleFilter('all');
+              setStatusFilter('all');
+            }}
+            resetLabel={lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
+          >
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
@@ -245,19 +257,9 @@ export function AccessControl() {
               <option value="active">{lang === 'ar' ? 'نشط' : 'Active'}</option>
               <option value="disabled">{lang === 'ar' ? 'معطل' : 'Disabled'}</option>
             </select>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setSearch('');
-                setRoleFilter('all');
-                setStatusFilter('all');
-              }}
-            >
-              {lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
-            </Button>
           </div>
-        </CardHeader>
+          </AdminTableFilters>
+        </CardContent>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             {usersLoading ? (

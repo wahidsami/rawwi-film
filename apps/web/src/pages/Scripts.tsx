@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
+import { AdminTableFilters } from '@/components/ui/AdminTableFilters';
 import { CheckCircle, Clock, FileText, Filter, Grid2X2, List, Search, XCircle } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { normalizeScriptStatusForDisplay, normalizeScriptStatusForFilter } from '@/utils/scriptStatus';
@@ -143,7 +144,17 @@ export function Scripts() {
         })}
       </div>
 
-      <div className="dashboard-panel flex flex-col gap-4 rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-4 shadow-[0_16px_40px_rgba(31,23,36,0.04)] sm:flex-row">
+      <AdminTableFilters
+        className="sm:space-y-0"
+        onReset={() => {
+          setSearch('');
+          setStatusFilter('all');
+          setTypeFilter('all');
+          setSortBy('date');
+        }}
+        resetLabel={lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
+      >
+      <div className="flex flex-col gap-4 sm:flex-row">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={lang === 'ar' ? 'بحث عن نص أو مستفيد...' : 'Search scripts or beneficiaries...'} className="pl-10" />
@@ -160,20 +171,9 @@ export function Scripts() {
             <option value="title">{lang === 'ar' ? 'العنوان' : 'Title'}</option>
             <option value="client">{lang === 'ar' ? 'المستفيد' : 'Beneficiary'}</option>
           </select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setSearch('');
-              setStatusFilter('all');
-              setTypeFilter('all');
-              setSortBy('date');
-            }}
-          >
-            {lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
-          </Button>
         </div>
       </div>
+      </AdminTableFilters>
 
       <div className="text-sm text-text-muted">
         {lang === 'ar' ? `عرض ${filteredScripts.length} من ${counts[statusFilter]} نص` : `Showing ${filteredScripts.length} of ${counts[statusFilter]} scripts`}
