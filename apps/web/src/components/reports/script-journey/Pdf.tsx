@@ -53,12 +53,56 @@ function ordered<T>(arr: T[], isAr: boolean): T[] {
   return isAr ? [...arr].reverse() : arr;
 }
 
+function beneficiaryTypeLabel(type: unknown, lang: "ar" | "en"): string {
+  const t = String(type ?? "").trim().toLowerCase();
+  if (!t) return "-";
+  if (t === "company") return lang === "ar" ? "شركة" : "Company";
+  if (t === "individual") return lang === "ar" ? "فرد" : "Individual";
+  return String(type);
+}
+
+function beneficiaryNameLabel(data: ScriptJourneyPayload, lang: "ar" | "en"): string {
+  const name = lang === "ar"
+    ? (data.beneficiary.nameAr || data.beneficiary.nameEn)
+    : (data.beneficiary.nameEn || data.beneficiary.nameAr);
+  return (
+    name ||
+    data.beneficiary.contactPerson ||
+    data.beneficiary.email ||
+    data.beneficiary.contactPersonEmail ||
+    "-"
+  );
+}
+
+function actionLabel(actionType: unknown, lang: "ar" | "en"): string {
+  const t = String(actionType ?? "").trim();
+  if (!t) return "-";
+  const mapAr: Record<string, string> = {
+    script_received: "استلام النص",
+    analysis_job_created: "بدء/إنشاء مهمة تحليل",
+    script_status_changed: "تغيير حالة النص",
+    review_sent: "إرسال للمراجعة",
+    beneficiary_returned: "إرجاع النسخة المعدلة من المستفيد",
+    reanalysis_completed: "اكتمال إعادة التحليل",
+    final_decision: "إصدار القرار النهائي",
+  };
+  const mapEn: Record<string, string> = {
+    script_received: "Script received",
+    analysis_job_created: "Analysis job created",
+    script_status_changed: "Script status changed",
+    review_sent: "Sent for review",
+    beneficiary_returned: "Beneficiary resubmitted",
+    reanalysis_completed: "Reanalysis completed",
+    final_decision: "Final decision issued",
+  };
+  if (lang === "ar") return mapAr[t] ?? t.replaceAll("_", " ");
+  return mapEn[t] ?? t.replaceAll("_", " ");
+}
+
 export function ScriptJourneyPdf({ data, lang, logoUrl }: { data: ScriptJourneyPayload; lang: "ar" | "en"; logoUrl?: string }) {
   const isAr = lang === "ar";
   const rtl = isAr ? s.rtl : {};
-  const beneficiaryName = isAr
-    ? (data.beneficiary.nameAr || data.beneficiary.nameEn || "-")
-    : (data.beneficiary.nameEn || data.beneficiary.nameAr || "-");
+  const beneficiaryName = beneficiaryNameLabel(data, lang);
 
   const cycleRows = data.findingsEvolution || [];
   const timelineRows = (data.timeline || []).slice(0, 40);
@@ -96,7 +140,7 @@ export function ScriptJourneyPdf({ data, lang, logoUrl }: { data: ScriptJourneyP
         <View style={s.section}>
           <Text style={[s.sectionTitle, rtl]}>{isAr ? "بيانات الإرسال" : "Submission Snapshot"}</Text>
           <View style={s.row}><Text style={[s.key, rtl]}>{isAr ? "المستفيد" : "Beneficiary"}</Text><Text style={[s.value, rtl]}>{beneficiaryName}</Text></View>
-          <View style={s.row}><Text style={[s.key, rtl]}>{isAr ? "نوع المستفيد" : "Beneficiary Type"}</Text><Text style={[s.value, rtl]}>{safe(data.beneficiary.type)}</Text></View>
+          <View style={s.row}><Text style={[s.key, rtl]}>{isAr ? "نوع المستفيد" : "Beneficiary Type"}</Text><Text style={[s.value, rtl]}>{beneficiaryTypeLabel(data.beneficiary.type, lang)}</Text></View>
           <View style={s.row}><Text style={[s.key, rtl]}>{isAr ? "تاريخ الاستلام" : "Received At"}</Text><Text style={[s.value, rtl]}>{fmt(data.script.receivedAt)}</Text></View>
           <View style={s.row}><Text style={[s.key, rtl]}>{isAr ? "نوع الإنتاج" : "Production Type"}</Text><Text style={[s.value, rtl]}>{safe(data.script.type)}</Text></View>
           <View style={s.row}><Text style={[s.key, rtl]}>{isAr ? "تصنيف العمل" : "Work Classification"}</Text><Text style={[s.value, rtl]}>{safe(data.script.workClassification)}</Text></View>
@@ -141,7 +185,7 @@ export function ScriptJourneyPdf({ data, lang, logoUrl }: { data: ScriptJourneyP
           {adminRows.map((e, idx) => {
             const cells = [
               <Text key="ad1" style={[s.td, rtl]}>{fmt(e.at)}</Text>,
-              <Text key="ad2" style={[s.td, rtl]}>{safe(e.type)}</Text>,
+              <Text key="ad2" style={[s.td, rtl]}>{actionLabel(e.type, lang)}</Text>,
               <Text key="ad3" style={[s.td, rtl, { borderRightWidth: 0 }]}>{safe(e.actorName)}</Text>,
             ];
             return <View key={`ad-${idx}`} style={s.tr}>{ordered(cells, isAr)}</View>;
@@ -152,7 +196,7 @@ export function ScriptJourneyPdf({ data, lang, logoUrl }: { data: ScriptJourneyP
         <View style={s.section}>
           {timelineRows.map((e, idx) => (
             <View key={`tl-${idx}`} style={{ marginBottom: 5, borderBottomWidth: 1, borderBottomColor: "#f3f4f6", paddingBottom: 4 }}>
-              <Text style={rtl}>{fmt(e.at)} | {safe(e.type)} | {safe(e.actorName)}</Text>
+              <Text style={rtl}>{fmt(e.at)} | {actionLabel(e.type, lang)} | {safe(e.actorName)}</Text>
               {e.note ? <Text style={[s.small, rtl]}>{safe(e.note)}</Text> : null}
             </View>
           ))}
