@@ -5,7 +5,7 @@ import { useLangStore } from '@/store/langStore';
 import { useDataStore, Finding, type Script } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate, formatTime } from '@/utils/dateFormat';
+import { formatDate, formatTime, formatDateTimeValue } from '@/utils/dateFormat';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
@@ -7188,7 +7188,7 @@ export function ScriptWorkspace() {
                         <span>
                           {(lang === 'ar' ? 'تقرير' : 'Report')} #{report.id.slice(0, 8)}
                           {' • '}
-                          {new Date(report.createdAt).toLocaleString()}
+                          {formatDateTimeValue(report.createdAt, { lang })}
                           {' • '}
                           {(lang === 'ar' ? 'الحالة' : 'Status')}: {report.reviewStatus}
                           {' • '}
@@ -7271,7 +7271,7 @@ export function ScriptWorkspace() {
                       <span>
                         {(lang === 'ar' ? 'تقرير' : 'Report')} #{report.id.slice(0, 8)}
                         {' • '}
-                        {new Date(report.createdAt).toLocaleString()}
+                        {formatDateTimeValue(report.createdAt, { lang })}
                         {' • '}
                         {(lang === 'ar' ? 'الحالة' : 'Status')}: {report.reviewStatus}
                         {' • '}

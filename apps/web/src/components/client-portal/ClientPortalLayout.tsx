@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/utils/cn';
+import { formatDateTimeValue } from '@/utils/dateFormat';
 
 export type ClientPortalSection =
   | 'overview'
@@ -224,7 +225,7 @@ export function ClientPortalLayout({
                                 }}
                               >
                                 <p className="font-semibold text-text-main">{item.title}</p>
-                                <p className="mt-1 text-text-muted">{new Date(item.createdAt).toLocaleString()}</p>
+                                <p className="mt-1 text-text-muted">{formatDateTimeValue(item.createdAt, { lang })}</p>
                               </button>
                             );
                           })

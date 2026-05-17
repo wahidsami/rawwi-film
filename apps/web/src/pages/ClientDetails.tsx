@@ -20,7 +20,7 @@ import { ArrowLeft, Trash2, FileText, Edit, Upload, User } from 'lucide-react';
 
 import { usersApi } from '@/api';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate } from '@/utils/dateFormat';
+import { formatDate, formatDateTimeValue } from '@/utils/dateFormat';
 import { normalizeScriptStatusForDisplay } from '@/utils/scriptStatus';
 import { downloadClientDetailsPdf } from '@/components/reports/client-details/download';
 import { extractDocxWithPages } from '@/utils/documentExtract';
@@ -121,6 +121,16 @@ export function ClientDetails() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin';
   const isPortalClient = (company?.source ?? 'internal') === 'portal';
+  const isIndividualBeneficiary = (company?.beneficiaryType ?? 'company') === 'individual';
+  const responsibleName = isIndividualBeneficiary
+    ? (company?.individualProfile?.fullName || company?.representativeName || company?.nameAr || company?.nameEn || '—')
+    : (company?.representativeName || '—');
+  const primaryEmail = isIndividualBeneficiary
+    ? (company?.contactEmail || company?.email || '—')
+    : (company?.email || '—');
+  const primaryPhone = isIndividualBeneficiary
+    ? (company?.contactMobile || company?.mobile || '—')
+    : (company?.phone ?? company?.mobile ?? '—');
   const visibleCompanyScripts = useMemo(
     () => companyScripts.filter((script) => {
       if (!isPortalClient) return true;
@@ -554,14 +564,16 @@ export function ClientDetails() {
             />
             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
-                <p className="text-xs text-text-muted uppercase mb-1">{t('representative')}</p>
-                <p className="font-medium text-text-main">{company.representativeName}</p>
-                <p className="text-sm text-text-muted">{company.email}</p>
-                <p className="text-sm text-text-muted" dir="ltr">{company.phone ?? company.mobile ?? '—'}</p>
+                <p className="text-xs text-text-muted uppercase mb-1">{isIndividualBeneficiary ? (lang === 'ar' ? 'الاسم' : 'Name') : t('representative')}</p>
+                <p className="font-medium text-text-main">{responsibleName}</p>
+                <p className="text-sm text-text-muted">{primaryEmail}</p>
+                <p className="text-sm text-text-muted" dir="ltr">{primaryPhone}</p>
               </div>
               <div>
                 <p className="text-xs text-text-muted uppercase mb-1">{t('registrationDate')}</p>
-                <p className="font-medium text-text-main">{company.createdAt}</p>
+                <p className="font-medium text-text-main">
+                  {formatDateTimeValue(company.createdAt, { lang: lang === 'ar' ? 'ar' : 'en', format: settings?.platform?.dateFormat })}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-text-muted uppercase mb-1">{t('scriptsCount')}</p>
@@ -663,7 +675,9 @@ export function ClientDetails() {
                       {script.title}
                     </td>
                     <td className="px-6 py-4">{script.type}</td>
-                    <td className="px-6 py-4 text-text-muted">{script.createdAt}</td>
+                    <td className="px-6 py-4 text-text-muted">
+                      {formatDateTimeValue(script.createdAt, { lang: lang === 'ar' ? 'ar' : 'en', format: settings?.platform?.dateFormat })}
+                    </td>
                     <td className="px-6 py-4">
                       <Badge variant={badgeVariant}>
                         {normalizeScriptStatusForDisplay(effectiveStatus)}

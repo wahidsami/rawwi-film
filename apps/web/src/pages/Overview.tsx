@@ -5,7 +5,7 @@ import { activityService, Activity } from '../services/activityService';
 import { useAuthStore } from '../store/authStore';
 import { useDataStore } from '../store/dataStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate } from '@/utils/dateFormat';
+import { formatDate, formatDateTimeValue } from '@/utils/dateFormat';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { RecentDecisionsWidget } from '../components/RecentDecisionsWidget';
@@ -445,9 +445,13 @@ export function Overview() {
                     <tr key={script.id} className="border-b border-border/60">
                       <td className="px-4 py-2">{script.title}</td>
                       <td className="px-4 py-2">{companyNameById.get(script.companyId) ?? '—'}</td>
-                      <td className="px-4 py-2">{script.receivedAt || script.createdAt || '—'}</td>
+                      <td className="px-4 py-2">
+                        {formatDateTimeValue(script.receivedAt || script.createdAt, { lang, format: settings?.platform?.dateFormat })}
+                      </td>
                       <td className="px-4 py-2">{status}</td>
-                      <td className="px-4 py-2">{decisionDate}</td>
+                      <td className="px-4 py-2">
+                        {formatDateTimeValue(decisionDate, { lang, format: settings?.platform?.dateFormat })}
+                      </td>
                     </tr>
                   );
                 })}

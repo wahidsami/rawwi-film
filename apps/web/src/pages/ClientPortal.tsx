@@ -48,6 +48,7 @@ import {
   useScriptClassificationOptions,
 } from '@/lib/scriptClassificationOptions';
 import { cn } from '@/utils/cn';
+import { formatDateTimeValue } from '@/utils/dateFormat';
 
 type ComplianceTabKey = 'guidelines' | 'age';
 type ExpectedRank = 'G' | 'PG' | 'PG12' | 'PG15' | 'R15' | 'R18';
@@ -1457,7 +1458,7 @@ export function ClientPortal() {
                     <tr key={item.scriptId} className="border-b border-border/70 last:border-b-0">
                       <td className="px-4 py-3 text-text-muted">{(scriptsPage - 1) * scriptsPageSize + index + 1}</td>
                       <td className="px-4 py-3 font-medium text-text-main">{item.title}</td>
-                      <td className="px-4 py-3 text-text-muted">{new Date(item.createdAt).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-text-muted">{formatDateTimeValue(item.createdAt, { lang })}</td>
                       <td className="px-4 py-3"><Badge variant={statusVariant(item.status)}>{statusLabel(item.status, lang)}</Badge></td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
@@ -2529,7 +2530,7 @@ export function ClientPortal() {
                       </div>
                       <p className="mt-1 text-xs text-text-muted">
                         {lang === 'ar' ? 'تاريخ الإرسال: ' : 'Sent at: '}
-                        {new Date(cycle.sentAt).toLocaleString()}
+                        {formatDateTimeValue(cycle.sentAt, { lang })}
                       </p>
                       {cycle.adminNote ? (
                         <p className="mt-1 whitespace-pre-wrap text-xs text-text-main">
@@ -2740,7 +2741,7 @@ export function ClientPortal() {
                   <p className="font-semibold">{details.script.title}</p>
                   {details.decision?.decidedAt && (
                     <p className="text-sm text-text-muted">
-                      {lang === 'ar' ? 'تاريخ قرار الرفض:' : 'Rejection decision date:'} {new Date(details.decision.decidedAt).toLocaleString()}
+                      {lang === 'ar' ? 'تاريخ قرار الرفض:' : 'Rejection decision date:'} {formatDateTimeValue(details.decision.decidedAt, { lang })}
                     </p>
                   )}
                   {details.decision?.adminComment && (
@@ -2770,7 +2771,7 @@ export function ClientPortal() {
                             {lang === 'ar' ? 'التقرير' : 'Report'} #{block.report.id.slice(0, 8)}
                           </p>
                           <p className="text-xs text-text-muted">
-                            {lang === 'ar' ? 'تاريخ التقرير:' : 'Report date:'} {new Date(block.report.createdAt).toLocaleString()}
+                            {lang === 'ar' ? 'تاريخ التقرير:' : 'Report date:'} {formatDateTimeValue(block.report.createdAt, { lang })}
                           </p>
                           {block.report.reviewNotes && (
                             <p className="text-xs text-text-muted">

@@ -11,6 +11,7 @@ import { clientPortalApi, reportsApi, scriptsApi, type AdminClientSubmissionItem
 import type { ReportListItem } from '@/api/models';
 import { useLangStore } from '@/store/langStore';
 import { useDataStore } from '@/store/dataStore';
+import { formatDateTimeValue } from '@/utils/dateFormat';
 
 function statusVariant(status: string): 'default' | 'success' | 'warning' | 'error' | 'outline' {
   const key = status.toLowerCase();
@@ -248,7 +249,7 @@ export function ClientSubmissions() {
                         <p className="text-xs text-text-muted">
                           {lang === 'ar' ? 'مرسل بواسطة:' : 'Submitted by:'} {row.submittedByName || row.submittedByEmail || '—'}
                           {' • '}
-                          {new Date(row.submittedAt).toLocaleString()}
+                          {formatDateTimeValue(row.submittedAt, { lang })}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -345,7 +346,7 @@ export function ClientSubmissions() {
                             onChange={() => toggleSharedReport(report.id)}
                           />
                           <span>
-                            {lang === 'ar' ? 'تقرير' : 'Report'} #{report.id.slice(0, 8)} • {new Date(report.createdAt).toLocaleString()}
+                            {lang === 'ar' ? 'تقرير' : 'Report'} #{report.id.slice(0, 8)} • {formatDateTimeValue(report.createdAt, { lang })}
                             {' • '}
                             {lang === 'ar' ? 'الحالة:' : 'Status:'} {report.reviewStatus}
                             {' • '}

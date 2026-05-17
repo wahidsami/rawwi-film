@@ -4,7 +4,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { formatDate, formatDateLong, formatDateTime } from '@/utils/dateFormat';
+import { formatDate, formatDateLong, formatDateTime, formatDateTimeValue } from '@/utils/dateFormat';
 import { type AnalysisReport } from '@/services/reportService';
 import { reportsApi, findingsApi, scriptsApi, type AnalysisFinding, type AnalysisReviewFinding } from '@/api';
 import type { ReportListItem, ReviewStatus, Script } from '@/api/models';
@@ -3350,7 +3350,7 @@ export function Results() {
                       />
                       <span>
                         {(lang === 'ar' ? 'تقرير' : 'Report')} #{item.id.slice(0, 8)} {' • '}
-                        {new Date(item.createdAt).toLocaleString()} {' • '}
+                        {formatDateTimeValue(item.createdAt, { lang })} {' • '}
                         {(lang === 'ar' ? 'الحالة' : 'Status')}: {item.reviewStatus} {' • '}
                         {(lang === 'ar' ? 'المخالفات' : 'Findings')}: {item.findingsCount}
                       </span>
@@ -3465,7 +3465,7 @@ export function Results() {
                       />
                       <span>
                         {(lang === 'ar' ? 'تقرير' : 'Report')} #{item.id.slice(0, 8)} {' • '}
-                        {new Date(item.createdAt).toLocaleString()} {' • '}
+                        {formatDateTimeValue(item.createdAt, { lang })} {' • '}
                         {(lang === 'ar' ? 'الحالة' : 'Status')}: {item.reviewStatus} {' • '}
                         {(lang === 'ar' ? 'المخالفات' : 'Findings')}: {item.findingsCount}
                       </span>

@@ -100,3 +100,15 @@ export function formatTime(
     timeStyle: 'medium',
   }).format(date);
 }
+
+export function formatDateTimeValue(
+  value: string | number | Date | null | undefined,
+  options?: { lang?: 'ar' | 'en'; format?: string }
+): string {
+  if (value === null || value === undefined || value === '') return '—';
+  const date = value instanceof Date ? value : new Date(value);
+  if (!isValidDate(date)) return '—';
+  const datePart = formatDate(date, { lang: options?.lang, format: options?.format });
+  const timePart = formatTime(date, { lang: options?.lang });
+  return `${datePart} ${timePart}`;
+}
