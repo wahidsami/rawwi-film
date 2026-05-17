@@ -23,6 +23,8 @@ import { runMultiPassDetection, DETECTION_PASSES, planDetectionPassExecution, ty
 import { PASS_GATING_VERSION } from "./passGating.js";
 import { normalizeFindingTitleAgainstRationale, normalizeMisusedGlossaryPassTitle } from "./findingTitleNormalize.js";
 import { runHybridContextPipeline } from "./methodology-v3/index.js";
+import { runSceneAnalyzer } from "./policyV1/sceneAnalyzer.js";
+import { runPolicyEngine } from "./policyV1/policyEngine.js";
 import { upsertFindingPolicyLinks } from "./policyLinks.js";
 import { calculateSeverity } from "./severityRulebook.js";
 import { getPrimaryGcamForCanonicalAtom, getPrimaryCanonicalAtomForGcam } from "./canonicalAtomMapping.js";
@@ -49,7 +51,7 @@ export type FindingWithGlobal = JudgeFinding & {
   secondary_pillar_ids?: string[];
 };
 
-type AnalysisEngineMode = "v2" | "hybrid";
+type AnalysisEngineMode = "v2" | "hybrid" | "policy_v1";
 type HybridRunMode = "off" | "shadow" | "enforce";
 
 const MAX_EVIDENCE_SPAN = 280;
@@ -470,6 +472,7 @@ function resolveAnalysisEngineForJob(
   if (pipelineVersion === "v2") {
     const requested = jobConfig.analysis_engine;
     if (requested === "hybrid") return "hybrid";
+    if (requested === "policy_v1") return "policy_v1";
     if (requested === "v2") return "v2";
   }
   return config.ANALYSIS_ENGINE;
@@ -2073,6 +2076,7 @@ export async function processChunkJudge(
   const baselineMetrics = computeContradictionMetrics(baselineFindings);
   let persistedFindings: FindingWithGlobal[] = baselineFindings;
   let hybridMetrics: Record<string, unknown> | null = null;
+  let policyV1Metrics: Record<string, unknown> | null = null;
   const partialFinalizeRequested = await isPartialFinalizeRequested(jobId);
   const truthValidationEnabled = config.AUDITOR_LAYER_VERSION === "v4";
   const shouldRunValidatedTruthPipeline = truthValidationEnabled || (analysisEngine === "hybrid" && hybridMode !== "off");
@@ -2084,6 +2088,78 @@ export async function processChunkJudge(
       baselineFindings: baselineFindings.length,
     });
     hybridMetrics = { skipped_reason: "partial_finalize_requested" };
+  } else if (analysisEngine === "policy_v1") {
+    await setChunkPhase(chunk.id, "policy_v1");
+    const policyStartedAt = Date.now();
+    try {
+      const sceneResult = await runSceneAnalyzer({
+        chunkText,
+        chunkStart,
+        chunkEnd,
+        signal,
+      });
+      throwIfAborted(signal);
+      const policyDecisions = runPolicyEngine(sceneResult);
+      const violationDecisions = policyDecisions.filter((d) => d.status === "violation");
+      const reviewDecisions = policyDecisions.filter((d) => d.status === "needs_review");
+      const rejectedDecisions = policyDecisions.filter((d) => d.status === "rejected");
+      policyV1Metrics = {
+        engine: "policy_v1",
+        scene_events: sceneResult.events.length,
+        decisions_total: policyDecisions.length,
+        violations: violationDecisions.length,
+        needs_review: reviewDecisions.length,
+        rejected: rejectedDecisions.length,
+        duration_ms: Date.now() - policyStartedAt,
+      };
+      logger.info("Policy-v1 scene triage completed (shadow)", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        ...policyV1Metrics,
+      });
+      try {
+        await withOperationTimeout(
+          "Persist policy_v1 analysis_chunk_run meta",
+          NON_CRITICAL_DB_TIMEOUT_MS,
+          supabase.from("analysis_chunk_runs").update({
+            truth_layer_meta: {
+              architecture: "policy_v1_shadow",
+              advisory_count: baselineFindings.length,
+              persisted_source: "baseline_shadow",
+              policy_v1: policyV1Metrics,
+            },
+          }).eq("run_key", runKey)
+        );
+      } catch (error) {
+        logger.warn("Failed to persist policy_v1 shadow metadata", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          error: error instanceof Error ? error.message : String(error),
+          timeoutMs: NON_CRITICAL_DB_TIMEOUT_MS,
+        });
+      }
+    } catch (error) {
+      if (
+        (error instanceof Error && (error.name === "AbortError" || error.name === "ChunkTimeoutError")) ||
+        signal?.aborted
+      ) {
+        throwIfAborted(signal);
+        throw error;
+      }
+      policyV1Metrics = {
+        engine: "policy_v1",
+        skipped_reason: "policy_pipeline_failed",
+        error: error instanceof Error ? error.message : String(error),
+      };
+      logger.warn("Policy-v1 scene triage failed; baseline findings remain persisted", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   } else if (shouldRunValidatedTruthPipeline) {
     await setChunkPhase(chunk.id, "hybrid");
     const hybridStartedAt = Date.now();
@@ -2233,6 +2309,7 @@ export async function processChunkJudge(
     runKey,
     baselineMetrics,
     hybridMetrics,
+    policyV1Metrics,
     persistedCount: persistedFindings.length,
     engine: analysisEngine,
     hybridMode,

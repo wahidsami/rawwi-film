@@ -64,8 +64,14 @@ export const config = {
    * Analysis engine:
    * - v2: existing detector-only behavior
    * - hybrid: detector + context arbiter + policy reasoner
+   * - policy_v1: scene-event extraction + deterministic legal policy mapping
    */
-  ANALYSIS_ENGINE: ((process.env.ANALYSIS_ENGINE ?? "v2").toLowerCase() === "hybrid" ? "hybrid" : "v2") as "v2" | "hybrid",
+  ANALYSIS_ENGINE: ((): "v2" | "hybrid" | "policy_v1" => {
+    const value = (process.env.ANALYSIS_ENGINE ?? "v2").toLowerCase();
+    if (value === "hybrid") return "hybrid";
+    if (value === "policy_v1") return "policy_v1";
+    return "v2";
+  })(),
   /**
    * Violation prompt pack:
    * - v2: current live prompts
