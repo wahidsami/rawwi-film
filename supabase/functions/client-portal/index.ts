@@ -763,7 +763,7 @@ Deno.serve(async (req: Request) => {
           city: beneficiaryType === "individual" ? null : city,
           postal_code: postalCode,
           country: "Saudi Arabia",
-          contact_email: email,
+          contact_email: contactEmail ?? email,
           contact_mobile: beneficiaryType === "individual" ? individualMobile : contactMobile,
           about,
           years_of_experience: Number.isFinite(yearsOfExperience) ? yearsOfExperience : null,
