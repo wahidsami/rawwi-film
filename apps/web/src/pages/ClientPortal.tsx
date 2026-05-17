@@ -2280,6 +2280,9 @@ export function ClientPortal() {
         </CardHeader>
         <CardContent>
           <form onSubmit={saveSettings} className="grid gap-4 md:grid-cols-2">
+            <div className="md:col-span-2 flex justify-end">
+              <Button type="submit" isLoading={isSavingSettings}>{isArabic ? 'حفظ التعديلات' : 'Save Changes'}</Button>
+            </div>
             <Input label={isArabic ? 'اسم المستخدم' : 'User Name'} value={settingsForm.userName} onChange={(e) => setSettingsForm((p) => ({ ...p, userName: e.target.value }))} />
             <Input label={isArabic ? 'البريد الإلكتروني (تسجيل الدخول)' : 'Email (Login)'} value={settingsForm.contactEmail} disabled />
             {isIndividual ? (
@@ -2288,7 +2291,7 @@ export function ClientPortal() {
                 <Input label={isArabic ? 'تاريخ الميلاد' : 'Date of Birth'} type="date" value={settingsForm.individualDateOfBirth} onChange={(e) => setSettingsForm((p) => ({ ...p, individualDateOfBirth: e.target.value }))} />
                 <Input label={isArabic ? 'الجنسية' : 'Nationality'} value={settingsForm.individualNationality} onChange={(e) => setSettingsForm((p) => ({ ...p, individualNationality: e.target.value }))} />
                 <Input label={isArabic ? 'رقم الهوية/الإقامة' : 'National ID / Iqama'} value={settingsForm.individualNationalIdOrIqama} onChange={(e) => setSettingsForm((p) => ({ ...p, individualNationalIdOrIqama: e.target.value }))} dir="ltr" />
-                <Input label={isArabic ? 'الجوال' : 'Mobile'} value={settingsForm.companyMobile} onChange={(e) => setSettingsForm((p) => ({ ...p, companyMobile: e.target.value }))} />
+                <Input label={isArabic ? 'الجوال' : 'Mobile'} value={settingsForm.companyMobile} disabled />
               </>
             ) : (
               <>
@@ -2297,20 +2300,17 @@ export function ClientPortal() {
                 <Input label={isArabic ? 'اسم ممثل الجهة' : 'Representative Name'} value={settingsForm.representativeName} onChange={(e) => setSettingsForm((p) => ({ ...p, representativeName: e.target.value }))} />
                 <Input label={isArabic ? 'الصفة الوظيفية' : 'Representative Title'} value={settingsForm.representativeTitle} onChange={(e) => setSettingsForm((p) => ({ ...p, representativeTitle: e.target.value }))} />
                 <Input label={isArabic ? 'البريد الإلكتروني' : 'Email'} value={settingsForm.companyEmail} onChange={(e) => setSettingsForm((p) => ({ ...p, companyEmail: e.target.value }))} />
-                <Input label={isArabic ? 'جوال الشركة' : 'Company Mobile'} value={settingsForm.companyMobile} onChange={(e) => setSettingsForm((p) => ({ ...p, companyMobile: e.target.value }))} />
+                <Input label={isArabic ? 'جوال الشركة' : 'Company Mobile'} value={settingsForm.companyMobile} disabled />
                 <Input label={isArabic ? 'موقع إلكتروني' : 'Website'} value={settingsForm.website} onChange={(e) => setSettingsForm((p) => ({ ...p, website: e.target.value }))} />
                 <Input label={isArabic ? 'هاتف' : 'Phone'} value={settingsForm.phone} onChange={(e) => setSettingsForm((p) => ({ ...p, phone: e.target.value }))} />
               </>
             )}
             <Input label={isArabic ? 'المدينة' : 'City'} value={settingsForm.city} onChange={(e) => setSettingsForm((p) => ({ ...p, city: e.target.value }))} />
             <Input label={isArabic ? 'الدولة' : 'Country'} value={settingsForm.country} onChange={(e) => setSettingsForm((p) => ({ ...p, country: e.target.value }))} />
-            <Input label={isArabic ? 'جوال جهة الاتصال' : 'Contact Mobile'} value={settingsForm.contactMobile} onChange={(e) => setSettingsForm((p) => ({ ...p, contactMobile: e.target.value }))} />
+            <Input label={isArabic ? 'جوال جهة الاتصال' : 'Contact Mobile'} value={settingsForm.contactMobile} disabled />
             {!isIndividual && <Input label={isArabic ? 'سنوات الخبرة' : 'Years of Experience'} type="number" min={0} value={settingsForm.yearsOfExperience} onChange={(e) => setSettingsForm((p) => ({ ...p, yearsOfExperience: e.target.value }))} />}
             <div className="md:col-span-2">
               <Textarea label={isArabic ? 'نبذة' : 'About'} rows={4} value={settingsForm.about} onChange={(e) => setSettingsForm((p) => ({ ...p, about: e.target.value }))} />
-            </div>
-            <div className="md:col-span-2 flex justify-end">
-              <Button type="submit" isLoading={isSavingSettings}>{isArabic ? 'حفظ التعديلات' : 'Save Changes'}</Button>
             </div>
           </form>
         </CardContent>
