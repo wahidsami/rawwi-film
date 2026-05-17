@@ -2281,7 +2281,7 @@ export function ClientPortal() {
         <CardContent>
           <form onSubmit={saveSettings} className="grid gap-4 md:grid-cols-2">
             <Input label={isArabic ? 'اسم المستخدم' : 'User Name'} value={settingsForm.userName} onChange={(e) => setSettingsForm((p) => ({ ...p, userName: e.target.value }))} />
-            <Input label={isArabic ? 'بريد جهة الاتصال (تسجيل الدخول)' : 'Contact Email (Login)'} value={settingsForm.contactEmail} disabled />
+            <Input label={isArabic ? 'البريد الإلكتروني (تسجيل الدخول)' : 'Email (Login)'} value={settingsForm.contactEmail} disabled />
             {isIndividual ? (
               <>
                 <Input label={isArabic ? 'الاسم الكامل' : 'Full Name'} value={settingsForm.individualFullName} onChange={(e) => setSettingsForm((p) => ({ ...p, individualFullName: e.target.value }))} />
@@ -2296,7 +2296,7 @@ export function ClientPortal() {
                 <Input label={isArabic ? 'اسم الشركة بالإنجليزية' : 'Company Name (English)'} value={settingsForm.companyNameEn} onChange={(e) => setSettingsForm((p) => ({ ...p, companyNameEn: e.target.value }))} />
                 <Input label={isArabic ? 'اسم ممثل الجهة' : 'Representative Name'} value={settingsForm.representativeName} onChange={(e) => setSettingsForm((p) => ({ ...p, representativeName: e.target.value }))} />
                 <Input label={isArabic ? 'الصفة الوظيفية' : 'Representative Title'} value={settingsForm.representativeTitle} onChange={(e) => setSettingsForm((p) => ({ ...p, representativeTitle: e.target.value }))} />
-                <Input label={isArabic ? 'بريد الشركة' : 'Company Email'} value={settingsForm.companyEmail} onChange={(e) => setSettingsForm((p) => ({ ...p, companyEmail: e.target.value }))} />
+                <Input label={isArabic ? 'البريد الإلكتروني' : 'Email'} value={settingsForm.companyEmail} onChange={(e) => setSettingsForm((p) => ({ ...p, companyEmail: e.target.value }))} />
                 <Input label={isArabic ? 'جوال الشركة' : 'Company Mobile'} value={settingsForm.companyMobile} onChange={(e) => setSettingsForm((p) => ({ ...p, companyMobile: e.target.value }))} />
                 <Input label={isArabic ? 'موقع إلكتروني' : 'Website'} value={settingsForm.website} onChange={(e) => setSettingsForm((p) => ({ ...p, website: e.target.value }))} />
                 <Input label={isArabic ? 'هاتف' : 'Phone'} value={settingsForm.phone} onChange={(e) => setSettingsForm((p) => ({ ...p, phone: e.target.value }))} />

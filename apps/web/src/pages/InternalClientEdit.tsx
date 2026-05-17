@@ -185,7 +185,7 @@ export function InternalClientEdit() {
             <Input label={lang === 'ar' ? 'اسم الشركة بالعربية *' : 'Company Name Arabic *'} value={form.companyNameAr} onChange={(e) => setField('companyNameAr', e.target.value)} error={errors.companyNameAr} />
             <Input label={lang === 'ar' ? 'اسم الشركة بالإنجليزية *' : 'Company Name English *'} value={form.companyNameEn} onChange={(e) => setField('companyNameEn', e.target.value)} error={errors.companyNameEn} dir="ltr" />
             <Input label={lang === 'ar' ? 'الموقع الإلكتروني' : 'Company Website'} value={form.website} onChange={(e) => setField('website', e.target.value)} dir="ltr" />
-            <Input label={lang === 'ar' ? 'بريد الشركة *' : 'Company Email *'} value={form.email} onChange={(e) => setField('email', e.target.value)} error={errors.email} dir="ltr" />
+            <Input label={lang === 'ar' ? 'البريد الإلكتروني *' : 'Email *'} value={form.email} onChange={(e) => setField('email', e.target.value)} error={errors.email} dir="ltr" />
             <Input label={lang === 'ar' ? 'رقم هاتف الشركة السعودي *' : 'Saudi Company Phone *'} value={form.phone} onChange={(e) => setField('phone', e.target.value)} error={errors.phone} dir="ltr" />
             <Input label={lang === 'ar' ? 'المدينة' : 'City'} value={form.city} onChange={(e) => setField('city', e.target.value)} />
             <Input label={lang === 'ar' ? 'العنوان الوطني - السطر الأول' : 'Saudi Address Line 1'} value={form.addressLine1} onChange={(e) => setField('addressLine1', e.target.value)} />

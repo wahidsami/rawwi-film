@@ -27,27 +27,39 @@ export function ClientInfo() {
   }
 
   const isAr = lang === 'ar';
-  const rows = [
-    [isAr ? 'نوع المستفيد' : 'Beneficiary Type', company.beneficiaryType === 'individual' ? (isAr ? 'فرد' : 'Individual') : (isAr ? 'شركة' : 'Company')],
-    [isAr ? 'اسم الشركة بالعربية' : 'Company Arabic Name', company.nameAr],
-    [isAr ? 'اسم الشركة بالإنجليزية' : 'Company English Name', company.nameEn],
-    [isAr ? 'مصدر المستفيد' : 'Beneficiary Source', company.source === 'portal' ? (isAr ? 'بوابة المستفيدين' : 'Beneficiary Portal') : (isAr ? 'إدخال داخلي' : 'Internal Entry')],
-    [isAr ? 'حالة الاعتماد' : 'Approval Status', company.approvalStatus ?? 'approved'],
-    [isAr ? 'الموقع الإلكتروني' : 'Website', company.website],
-    [isAr ? 'بريد الشركة' : 'Company Email', company.email],
-    [isAr ? 'هاتف الشركة' : 'Company Phone', company.phone ?? company.mobile],
-    [isAr ? 'العنوان الوطني' : 'Saudi Address', [company.addressLine1, company.addressLine2, company.city, company.postalCode, company.country].filter(Boolean).join(', ')],
-    [isAr ? 'اسم مسؤول التواصل' : 'Contact Person', company.representativeName],
-    [isAr ? 'المنصب' : 'Position', company.representativeTitle],
-    [isAr ? 'بريد مسؤول التواصل' : 'Contact Email', company.contactEmail],
-    [isAr ? 'جوال مسؤول التواصل' : 'Contact Mobile', company.contactMobile],
-    [isAr ? 'تاريخ الانضمام' : 'Joining Date', company.approvedAt ?? company.createdAt],
-    [isAr ? 'سنوات الخبرة' : 'Years of Experience', company.yearsOfExperience],
-    [isAr ? 'عن الشركة' : 'About Company', company.about],
-    [isAr ? 'الاسم الكامل (فرد)' : 'Full Name (Individual)', company.beneficiaryType === 'individual' ? company.individualProfile?.fullName : null],
-    [isAr ? 'تاريخ الميلاد (فرد)' : 'Date of Birth (Individual)', company.beneficiaryType === 'individual' ? company.individualProfile?.dateOfBirth : null],
-    [isAr ? 'الجنسية (فرد)' : 'Nationality (Individual)', company.beneficiaryType === 'individual' ? company.individualProfile?.nationality : null],
-  ];
+  const isIndividual = (company.beneficiaryType ?? 'company') === 'individual';
+  const rows = isIndividual
+    ? [
+        [isAr ? 'نوع المستفيد' : 'Beneficiary Type', isAr ? 'فرد' : 'Individual'],
+        [isAr ? 'الاسم الكامل' : 'Full Name', company.individualProfile?.fullName ?? company.nameAr ?? company.nameEn],
+        [isAr ? 'تاريخ الميلاد' : 'Date of Birth', company.individualProfile?.dateOfBirth],
+        [isAr ? 'الجنسية' : 'Nationality', company.individualProfile?.nationality],
+        [isAr ? 'رقم الهوية/الإقامة' : 'National ID / Iqama', company.individualProfile?.nationalIdOrIqama],
+        [isAr ? 'البريد الإلكتروني' : 'Email', company.contactEmail ?? company.email],
+        [isAr ? 'الجوال' : 'Mobile', company.contactMobile ?? company.mobile],
+        [isAr ? 'المدينة' : 'City', company.city],
+        [isAr ? 'مصدر المستفيد' : 'Beneficiary Source', company.source === 'portal' ? (isAr ? 'بوابة المستفيدين' : 'Beneficiary Portal') : (isAr ? 'إدخال داخلي' : 'Internal Entry')],
+        [isAr ? 'حالة الاعتماد' : 'Approval Status', company.approvalStatus ?? 'approved'],
+        [isAr ? 'تاريخ الانضمام' : 'Joining Date', company.approvedAt ?? company.createdAt],
+      ]
+    : [
+        [isAr ? 'نوع المستفيد' : 'Beneficiary Type', isAr ? 'شركة' : 'Company'],
+        [isAr ? 'اسم الشركة بالعربية' : 'Company Arabic Name', company.nameAr],
+        [isAr ? 'اسم الشركة بالإنجليزية' : 'Company English Name', company.nameEn],
+        [isAr ? 'مصدر المستفيد' : 'Beneficiary Source', company.source === 'portal' ? (isAr ? 'بوابة المستفيدين' : 'Beneficiary Portal') : (isAr ? 'إدخال داخلي' : 'Internal Entry')],
+        [isAr ? 'حالة الاعتماد' : 'Approval Status', company.approvalStatus ?? 'approved'],
+        [isAr ? 'الموقع الإلكتروني' : 'Website', company.website],
+        [isAr ? 'البريد الإلكتروني' : 'Email', company.email],
+        [isAr ? 'هاتف الشركة' : 'Company Phone', company.phone ?? company.mobile],
+        [isAr ? 'العنوان الوطني' : 'Saudi Address', [company.addressLine1, company.addressLine2, company.city, company.postalCode, company.country].filter(Boolean).join(', ')],
+        [isAr ? 'اسم مسؤول التواصل' : 'Contact Person', company.representativeName],
+        [isAr ? 'المنصب' : 'Position', company.representativeTitle],
+        [isAr ? 'بريد مسؤول التواصل' : 'Contact Email', company.contactEmail],
+        [isAr ? 'جوال مسؤول التواصل' : 'Contact Mobile', company.contactMobile],
+        [isAr ? 'تاريخ الانضمام' : 'Joining Date', company.approvedAt ?? company.createdAt],
+        [isAr ? 'سنوات الخبرة' : 'Years of Experience', company.yearsOfExperience],
+        [isAr ? 'عن الشركة' : 'About Company', company.about],
+      ];
 
   return (
     <div className="space-y-6">
