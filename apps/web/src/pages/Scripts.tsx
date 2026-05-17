@@ -26,6 +26,7 @@ export function Scripts() {
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get('status') as StatusFilter) || 'all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'Film' | 'Series'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'client'>('date');
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = window.localStorage.getItem(VIEW_STORAGE_KEY);
@@ -39,7 +40,7 @@ export function Scripts() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, sortBy, viewMode]);
+  }, [search, statusFilter, typeFilter, sortBy, viewMode]);
 
   useEffect(() => {
     if (statusFilter !== 'all') setSearchParams({ status: statusFilter });
@@ -53,6 +54,7 @@ export function Scripts() {
     if (statusFilter === 'approved') filtered = filtered.filter((s) => norm(s.status) === 'approved');
     else if (statusFilter === 'rejected') filtered = filtered.filter((s) => norm(s.status) === 'rejected');
     else if (statusFilter === 'pending') filtered = filtered.filter((s) => ['draft', 'pending', 'review_required', 'in_review'].includes(norm(s.status)));
+    if (typeFilter !== 'all') filtered = filtered.filter((s) => String(s.type ?? '') === typeFilter);
 
     if (search.trim()) {
       const q = search.trim().toLowerCase();
@@ -70,7 +72,7 @@ export function Scripts() {
       const clientB = companies.find((c) => c.companyId === b.companyId)?.nameEn || '';
       return clientA.localeCompare(clientB);
     });
-  }, [companies, scripts, search, sortBy, statusFilter]);
+  }, [companies, scripts, search, sortBy, statusFilter, typeFilter]);
 
   const pageCount = Math.max(1, Math.ceil(filteredScripts.length / PAGE_SIZE));
   const pagedScripts = filteredScripts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -148,6 +150,11 @@ export function Scripts() {
         </div>
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-text-muted" />
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as any)} className="px-4 py-2 rounded-lg border border-border bg-surface/80 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20">
+            <option value="all">{lang === 'ar' ? 'كل الأنواع' : 'All types'}</option>
+            <option value="Film">{lang === 'ar' ? 'فيلم' : 'Film'}</option>
+            <option value="Series">{lang === 'ar' ? 'مسلسل' : 'Series'}</option>
+          </select>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="px-4 py-2 rounded-lg border border-border bg-surface/80 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20">
             <option value="date">{lang === 'ar' ? 'الأحدث' : 'Newest'}</option>
             <option value="title">{lang === 'ar' ? 'العنوان' : 'Title'}</option>

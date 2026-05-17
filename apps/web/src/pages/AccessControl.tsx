@@ -9,6 +9,7 @@ import { Search, Plus, UserCog, Shield, Eye, Pencil, UserX, UserCheck, Trash2 } 
 import { usersApi, invitesApi } from '@/api';
 import type { UserListItem } from '@/api';
 import toast from 'react-hot-toast';
+const PAGE_SIZE = 10;
 
 const ROLE_OPTIONS = [
   { value: 'admin', labelKey: 'admin' as const },
@@ -38,6 +39,9 @@ function getDefaultSectionsForRoleKey(roleKey: string): string[] {
 export function AccessControl() {
   const { t, lang } = useLangStore();
   const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -85,11 +89,20 @@ export function AccessControl() {
     loadUsers();
   }, [loadUsers]);
 
-  const filteredUsers = users.filter(
-    (u) =>
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    setPage(1);
+  }, [search, roleFilter, statusFilter]);
+
+  const filteredUsers = users.filter((u) => {
+    const q = search.trim().toLowerCase();
+    const matchesSearch = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    const matchesRole = roleFilter === 'all' || (u.roleKey ?? '') === roleFilter;
+    const matchesStatus = statusFilter === 'all' || (u.status ?? '') === statusFilter;
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+  const pageCount = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedUsers = filteredUsers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const handleSubmit = async () => {
     const name = form.name.trim();
@@ -203,14 +216,35 @@ export function AccessControl() {
             <UserCog className="w-5 h-5 text-primary" />
             {t('users')}
           </CardTitle>
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <Input
-              placeholder={t('search')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9"
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+              <Input
+                placeholder={t('search')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="h-9 rounded-md border border-border bg-background px-3 text-sm text-text-main"
+            >
+              <option value="all">{lang === 'ar' ? 'كل الأدوار' : 'All roles'}</option>
+              {ROLE_OPTIONS.map((role) => (
+                <option key={role.value} value={role.value}>{role.value}</option>
+              ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-9 rounded-md border border-border bg-background px-3 text-sm text-text-main"
+            >
+              <option value="all">{lang === 'ar' ? 'كل الحالات' : 'All statuses'}</option>
+              <option value="active">{lang === 'ar' ? 'نشط' : 'Active'}</option>
+              <option value="disabled">{lang === 'ar' ? 'معطل' : 'Disabled'}</option>
+            </select>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -228,7 +262,7 @@ export function AccessControl() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user) => (
+                  {pagedUsers.map((user) => (
                     <tr
                       key={user.id}
                       className="bg-surface border-b border-border hover:bg-background/50 transition-colors"
@@ -315,6 +349,20 @@ export function AccessControl() {
               </table>
             )}
           </div>
+          {filteredUsers.length > PAGE_SIZE && (
+            <div className="flex items-center justify-between border-t border-border px-6 py-4 text-sm">
+              <span className="text-text-muted">{filteredUsers.length} {lang === 'ar' ? 'نتيجة' : 'results'}</span>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" disabled={currentPage <= 1} onClick={() => setPage((v) => Math.max(1, v - 1))}>
+                  {lang === 'ar' ? 'السابق' : 'Previous'}
+                </Button>
+                <span className="text-text-muted">{currentPage} / {pageCount}</span>
+                <Button size="sm" variant="outline" disabled={currentPage >= pageCount} onClick={() => setPage((v) => Math.min(pageCount, v + 1))}>
+                  {lang === 'ar' ? 'التالي' : 'Next'}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

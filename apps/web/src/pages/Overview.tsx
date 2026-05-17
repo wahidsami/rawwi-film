@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLangStore } from '../store/langStore';
 import { dashboardService, DashboardStats } from '../services/dashboardService';
 import { activityService, Activity } from '../services/activityService';
@@ -8,6 +8,8 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate, formatDateTimeValue } from '@/utils/dateFormat';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Select } from '../components/ui/Select';
 import { RecentDecisionsWidget } from '../components/RecentDecisionsWidget';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -40,6 +42,9 @@ export function Overview() {
   const [exportingReport, setExportingReport] = useState(false);
   const [decisionDatesByScript, setDecisionDatesByScript] = useState<Record<string, string>>({});
   const [scriptsPage, setScriptsPage] = useState(1);
+  const [scriptsSearch, setScriptsSearch] = useState('');
+  const [scriptsStatusFilter, setScriptsStatusFilter] = useState('all');
+  const [scriptsBeneficiaryFilter, setScriptsBeneficiaryFilter] = useState('all');
   const scriptsPageSize = 10;
 
   useEffect(() => {
@@ -120,16 +125,41 @@ export function Overview() {
       const db = new Date(b.receivedAt || b.createdAt || 0).getTime();
       return db - da;
     });
-  const scriptsPageCount = Math.max(1, Math.ceil(scriptsOverviewRows.length / scriptsPageSize));
+  const scriptsStatusOptions = useMemo(
+    () =>
+      Array.from(new Set(scriptsOverviewRows.map((script) => String(script.status ?? '').trim()).filter(Boolean))).sort(),
+    [scriptsOverviewRows],
+  );
+  const scriptsBeneficiaryOptions = useMemo(() => {
+    const options = new Map<string, string>();
+    for (const script of scriptsOverviewRows) {
+      const name = companyNameById.get(script.companyId) ?? '—';
+      options.set(script.companyId, name);
+    }
+    return Array.from(options.entries()).map(([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [scriptsOverviewRows, companyNameById]);
+  const filteredScriptsRows = useMemo(() => {
+    const q = scriptsSearch.trim().toLowerCase();
+    return scriptsOverviewRows.filter((script) => {
+      const matchesSearch = !q || [script.title, script.id, companyNameById.get(script.companyId) ?? '', script.status ?? '']
+        .join(' ')
+        .toLowerCase()
+        .includes(q);
+      const matchesStatus = scriptsStatusFilter === 'all' || String(script.status ?? '') === scriptsStatusFilter;
+      const matchesBeneficiary = scriptsBeneficiaryFilter === 'all' || script.companyId === scriptsBeneficiaryFilter;
+      return matchesSearch && matchesStatus && matchesBeneficiary;
+    });
+  }, [scriptsOverviewRows, scriptsSearch, scriptsStatusFilter, scriptsBeneficiaryFilter, companyNameById]);
+  const scriptsPageCount = Math.max(1, Math.ceil(filteredScriptsRows.length / scriptsPageSize));
   const currentScriptsPage = Math.min(scriptsPage, scriptsPageCount);
-  const paginatedScriptsRows = scriptsOverviewRows.slice(
+  const paginatedScriptsRows = filteredScriptsRows.slice(
     (currentScriptsPage - 1) * scriptsPageSize,
     currentScriptsPage * scriptsPageSize,
   );
 
   useEffect(() => {
     setScriptsPage(1);
-  }, [scriptsOverviewRows.length]);
+  }, [scriptsOverviewRows.length, scriptsSearch, scriptsStatusFilter, scriptsBeneficiaryFilter]);
 
   if (loading) {
     return (
@@ -421,6 +451,29 @@ export function Overview() {
           <CardTitle>{lang === 'ar' ? 'النصوص وحالتها' : 'Scripts and Status'}</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 grid gap-3 md:grid-cols-3">
+            <Input
+              value={scriptsSearch}
+              onChange={(e) => setScriptsSearch(e.target.value)}
+              placeholder={lang === 'ar' ? 'ابحث باسم النص/المستفيد/الحالة...' : 'Search by script/beneficiary/status...'}
+            />
+            <Select
+              value={scriptsStatusFilter}
+              onChange={(e) => setScriptsStatusFilter(e.target.value)}
+              options={[
+                { value: 'all', label: lang === 'ar' ? 'كل الحالات' : 'All statuses' },
+                ...scriptsStatusOptions.map((status) => ({ value: status, label: status })),
+              ]}
+            />
+            <Select
+              value={scriptsBeneficiaryFilter}
+              onChange={(e) => setScriptsBeneficiaryFilter(e.target.value)}
+              options={[
+                { value: 'all', label: lang === 'ar' ? 'كل المستفيدين' : 'All beneficiaries' },
+                ...scriptsBeneficiaryOptions,
+              ]}
+            />
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-surface-hover">
@@ -465,7 +518,7 @@ export function Overview() {
               </tbody>
             </table>
           </div>
-          {scriptsOverviewRows.length > scriptsPageSize && (
+          {filteredScriptsRows.length > scriptsPageSize && (
             <div className="mt-4 flex items-center justify-between text-xs text-text-muted">
               <span>
                 {lang === 'ar'

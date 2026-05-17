@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { Download, FileText, ChevronDown, ChevronRight, Filter } from 'lucide-react';
+import { Download, FileText, ChevronDown, ChevronRight, Filter, Search } from 'lucide-react';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDateTime } from '@/utils/dateFormat';
 import { downloadAuditPdf } from '@/components/reports/audit/download';
@@ -44,6 +44,7 @@ export function Audit() {
     eventType: '',
     targetType: '',
     resultStatus: '',
+    q: '',
   });
 
   const load = useCallback(async () => {
@@ -99,6 +100,7 @@ export function Audit() {
         eventType: filters.eventType || undefined,
         targetType: filters.targetType || undefined,
         resultStatus: filters.resultStatus || undefined,
+        q: filters.q || undefined,
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -241,12 +243,21 @@ export function Audit() {
               <select
                 className="flex h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-sm text-text-main"
                 value={filters.resultStatus ?? ''}
-                onChange={(e) => setFilters((f) => ({ ...f, resultStatus: e.target.value || '' }))}
+              onChange={(e) => setFilters((f) => ({ ...f, resultStatus: e.target.value || '' }))}
               >
                 <option value="">—</option>
                 <option value="success">success</option>
                 <option value="failure">failure</option>
               </select>
+            </div>
+            <div>
+              <Input
+                label={lang === 'ar' ? 'بحث عام' : 'Global Search'}
+                value={filters.q ?? ''}
+                onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
+                placeholder={lang === 'ar' ? 'ابحث بالإجراء/المستخدم/الهدف/الوصف...' : 'Search action/user/target/details...'}
+                icon={<Search className="h-4 w-4" />}
+              />
             </div>
           </div>
         </CardContent>

@@ -156,7 +156,16 @@ export function ClientDetails() {
   const [companyCertificates, setCompanyCertificates] = useState<CertificateDashboardItem[]>([]);
   const [certificatesLoading, setCertificatesLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'scripts' | 'certificates'>('scripts');
+  const [scriptsSearch, setScriptsSearch] = useState('');
+  const [scriptsStatusFilter, setScriptsStatusFilter] = useState('all');
+  const [scriptsTypeFilter, setScriptsTypeFilter] = useState('all');
+  const [scriptsPage, setScriptsPage] = useState(1);
+  const [certificatesSearch, setCertificatesSearch] = useState('');
+  const [certificatePaymentFilter, setCertificatePaymentFilter] = useState('all');
+  const [certificatesPage, setCertificatesPage] = useState(1);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const scriptsPageSize = 10;
+  const certificatesPageSize = 10;
 
   const { fetchInitialData } = useDataStore();
 
@@ -230,6 +239,14 @@ export function ClientDetails() {
   }, [company, isPortalClient]);
 
   useEffect(() => {
+    setScriptsPage(1);
+  }, [scriptsSearch, scriptsStatusFilter, scriptsTypeFilter, activeTab]);
+
+  useEffect(() => {
+    setCertificatesPage(1);
+  }, [certificatesSearch, certificatePaymentFilter, activeTab]);
+
+  useEffect(() => {
     const defaultClassification = workClassificationOptions[0]?.value ?? LEGACY_SCRIPT_CLASSIFICATION_OPTIONS[0]?.label_ar ?? '';
     setFormData((prev) => {
       if (prev.workClassification && workClassificationOptions.some((option) => option.value === prev.workClassification)) {
@@ -253,6 +270,61 @@ export function ClientDetails() {
     setNewScriptErrors({});
     setIsUploadOpen(true);
   };
+
+  const scriptStatusOptions = useMemo(
+    () =>
+      Array.from(new Set(visibleCompanyScripts.map((script) => String(effectiveStatusByScriptId[script.id] ?? script.status ?? '').trim()).filter(Boolean))).sort(),
+    [visibleCompanyScripts, effectiveStatusByScriptId],
+  );
+  const scriptTypeOptions = useMemo(
+    () => Array.from(new Set(visibleCompanyScripts.map((script) => String(script.type ?? '').trim()).filter(Boolean))).sort(),
+    [visibleCompanyScripts],
+  );
+  const filteredVisibleCompanyScripts = useMemo(() => {
+    const q = scriptsSearch.trim().toLowerCase();
+    return visibleCompanyScripts.filter((script) => {
+      const effectiveStatus = String(effectiveStatusByScriptId[script.id] ?? script.status ?? '');
+      const matchesSearch =
+        !q ||
+        [script.title, script.type, effectiveStatus, availableUsers.find((u) => u.id === script.assigneeId)?.name ?? '']
+          .join(' ')
+          .toLowerCase()
+          .includes(q);
+      const matchesStatus = scriptsStatusFilter === 'all' || effectiveStatus === scriptsStatusFilter;
+      const matchesType = scriptsTypeFilter === 'all' || String(script.type ?? '') === scriptsTypeFilter;
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [visibleCompanyScripts, scriptsSearch, scriptsStatusFilter, scriptsTypeFilter, effectiveStatusByScriptId, availableUsers]);
+  const filteredScriptsPageCount = Math.max(1, Math.ceil(filteredVisibleCompanyScripts.length / scriptsPageSize));
+  const currentScriptsPage = Math.min(scriptsPage, filteredScriptsPageCount);
+  const paginatedVisibleCompanyScripts = filteredVisibleCompanyScripts.slice(
+    (currentScriptsPage - 1) * scriptsPageSize,
+    currentScriptsPage * scriptsPageSize,
+  );
+  const certificatePaymentOptions = useMemo(
+    () => Array.from(new Set(companyCertificates.map((item) => String(item.latestPayment?.paymentStatus ?? 'completed').trim()).filter(Boolean))).sort(),
+    [companyCertificates],
+  );
+  const filteredCompanyCertificates = useMemo(() => {
+    const q = certificatesSearch.trim().toLowerCase();
+    return companyCertificates.filter((item) => {
+      const paymentStatus = String(item.latestPayment?.paymentStatus ?? 'completed');
+      const matchesSearch =
+        !q ||
+        [item.scriptTitle, item.certificate?.certificateNumber ?? '', paymentStatus]
+          .join(' ')
+          .toLowerCase()
+          .includes(q);
+      const matchesPayment = certificatePaymentFilter === 'all' || paymentStatus === certificatePaymentFilter;
+      return matchesSearch && matchesPayment;
+    });
+  }, [companyCertificates, certificatesSearch, certificatePaymentFilter]);
+  const filteredCertificatesPageCount = Math.max(1, Math.ceil(filteredCompanyCertificates.length / certificatesPageSize));
+  const currentCertificatesPage = Math.min(certificatesPage, filteredCertificatesPageCount);
+  const paginatedCompanyCertificates = filteredCompanyCertificates.slice(
+    (currentCertificatesPage - 1) * certificatesPageSize,
+    currentCertificatesPage * certificatesPageSize,
+  );
 
   const handleDeleteScript = async (scriptId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -611,6 +683,31 @@ export function ClientDetails() {
           </Button>
         )}
       </div>
+      {visibleCompanyScripts.length > 0 && (
+        <div className="grid gap-3 md:grid-cols-3">
+          <Input
+            value={scriptsSearch}
+            onChange={(e) => setScriptsSearch(e.target.value)}
+            placeholder={lang === 'ar' ? 'ابحث بعنوان النص/النوع/الحالة...' : 'Search by script/type/status...'}
+          />
+          <Select
+            value={scriptsStatusFilter}
+            onChange={(e) => setScriptsStatusFilter(e.target.value)}
+            options={[
+              { value: 'all', label: lang === 'ar' ? 'كل الحالات' : 'All statuses' },
+              ...scriptStatusOptions.map((status) => ({ value: status, label: status })),
+            ]}
+          />
+          <Select
+            value={scriptsTypeFilter}
+            onChange={(e) => setScriptsTypeFilter(e.target.value)}
+            options={[
+              { value: 'all', label: lang === 'ar' ? 'كل الأنواع' : 'All types' },
+              ...scriptTypeOptions.map((type) => ({ value: type, label: type })),
+            ]}
+          />
+        </div>
+      )}
 
       {visibleCompanyScripts.length === 0 ? (
         <Card className="border-dashed border-2 bg-background/50">
@@ -653,7 +750,7 @@ export function ClientDetails() {
                 </tr>
               </thead>
               <tbody>
-                {visibleCompanyScripts.map((script) => (
+                {paginatedVisibleCompanyScripts.map((script) => (
                   (() => {
                     const effectiveStatus = effectiveStatusByScriptId[script.id] ?? script.status;
                     const normalized = String(effectiveStatus).toLowerCase();
@@ -771,6 +868,20 @@ export function ClientDetails() {
               </tbody>
             </table>
           </div>
+          {filteredVisibleCompanyScripts.length > scriptsPageSize && (
+            <div className="flex items-center justify-between border-t border-border px-6 py-4 text-sm">
+              <span className="text-text-muted">{filteredVisibleCompanyScripts.length} {lang === 'ar' ? 'نتيجة' : 'results'}</span>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" disabled={currentScriptsPage <= 1} onClick={() => setScriptsPage((v) => Math.max(1, v - 1))}>
+                  {lang === 'ar' ? 'السابق' : 'Previous'}
+                </Button>
+                <span className="text-text-muted">{currentScriptsPage} / {filteredScriptsPageCount}</span>
+                <Button size="sm" variant="outline" disabled={currentScriptsPage >= filteredScriptsPageCount} onClick={() => setScriptsPage((v) => Math.min(filteredScriptsPageCount, v + 1))}>
+                  {lang === 'ar' ? 'التالي' : 'Next'}
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
       )}
       </>
@@ -779,9 +890,24 @@ export function ClientDetails() {
       {isPortalClient && activeTab === 'certificates' && (
         <Card>
           <CardContent className="p-6">
+            <div className="mb-4 grid gap-3 md:grid-cols-2">
+              <Input
+                value={certificatesSearch}
+                onChange={(e) => setCertificatesSearch(e.target.value)}
+                placeholder={lang === 'ar' ? 'ابحث بعنوان النص أو رقم الشهادة...' : 'Search by script or certificate no...'}
+              />
+              <Select
+                value={certificatePaymentFilter}
+                onChange={(e) => setCertificatePaymentFilter(e.target.value)}
+                options={[
+                  { value: 'all', label: lang === 'ar' ? 'كل حالات الدفع' : 'All payment statuses' },
+                  ...certificatePaymentOptions.map((status) => ({ value: status, label: status })),
+                ]}
+              />
+            </div>
             {certificatesLoading ? (
               <p className="text-sm text-text-muted">{lang === 'ar' ? 'جاري تحميل الشهادات...' : 'Loading certificates...'}</p>
-            ) : companyCertificates.length === 0 ? (
+            ) : filteredCompanyCertificates.length === 0 ? (
               <p className="text-sm text-text-muted">{lang === 'ar' ? 'لا توجد شهادات صادرة بعد.' : 'No issued certificates yet.'}</p>
             ) : (
               <div className="overflow-x-auto">
@@ -795,7 +921,7 @@ export function ClientDetails() {
                     </tr>
                   </thead>
                   <tbody>
-                    {companyCertificates.map((item) => (
+                    {paginatedCompanyCertificates.map((item) => (
                       <tr key={item.scriptId} className="border-b border-border">
                         <td className="px-4 py-3 text-text-main">{item.scriptTitle}</td>
                         <td className="px-4 py-3 text-text-main">{item.certificate?.certificateNumber ?? '—'}</td>
@@ -805,6 +931,20 @@ export function ClientDetails() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+            {filteredCompanyCertificates.length > certificatesPageSize && (
+              <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-sm">
+                <span className="text-text-muted">{filteredCompanyCertificates.length} {lang === 'ar' ? 'نتيجة' : 'results'}</span>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" disabled={currentCertificatesPage <= 1} onClick={() => setCertificatesPage((v) => Math.max(1, v - 1))}>
+                    {lang === 'ar' ? 'السابق' : 'Previous'}
+                  </Button>
+                  <span className="text-text-muted">{currentCertificatesPage} / {filteredCertificatesPageCount}</span>
+                  <Button size="sm" variant="outline" disabled={currentCertificatesPage >= filteredCertificatesPageCount} onClick={() => setCertificatesPage((v) => Math.min(filteredCertificatesPageCount, v + 1))}>
+                    {lang === 'ar' ? 'التالي' : 'Next'}
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

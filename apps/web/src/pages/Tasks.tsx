@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ArrowRight, FileText, Calendar, CheckCircle2, Search } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import type { AnalysisJob, Task } from '@/api/models';
 
 const PAGE_SIZE = 10;
@@ -19,6 +20,8 @@ export function Tasks() {
   const navigate = useNavigate();
   const { tasks, scripts } = useDataStore();
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [performerFilter, setPerformerFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [users, setUsers] = useState<UserListItem[]>([]);
 
@@ -28,7 +31,7 @@ export function Tasks() {
 
   useEffect(() => {
     setPage(1);
-  }, [search]);
+  }, [search, statusFilter, performerFilter]);
 
   /** Resolve script display name: assignment Task has scriptTitle; AnalysisJob has only scriptId — resolve from scripts list when possible. */
   const getScriptDisplayName = (task: AnalysisJob | Task): string => {
@@ -52,17 +55,32 @@ export function Tasks() {
     return directId;
   };
 
+  const statusOptions = useMemo(
+    () => Array.from(new Set(tasks.map((task) => String(task.status ?? '').trim()).filter(Boolean))).sort(),
+    [tasks],
+  );
+  const performerOptions = useMemo(() => {
+    const options = new Set<string>();
+    for (const task of tasks) {
+      const performer = getPerformer(task);
+      if (performer && performer !== '—') options.add(performer);
+    }
+    return Array.from(options).sort();
+  }, [tasks, users, scripts]);
+
   const filteredTasks = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return tasks;
-
     return tasks.filter((task) => {
       const scriptName = getScriptDisplayName(task).toLowerCase();
       const status = (task.status || '').toLowerCase();
-      const performer = getPerformer(task).toLowerCase();
-      return scriptName.includes(q) || status.includes(q) || performer.includes(q);
+      const performerLabel = getPerformer(task);
+      const performer = performerLabel.toLowerCase();
+      const matchesSearch = !q || scriptName.includes(q) || status.includes(q) || performer.includes(q);
+      const matchesStatus = statusFilter === 'all' || String(task.status ?? '') === statusFilter;
+      const matchesPerformer = performerFilter === 'all' || performerLabel === performerFilter;
+      return matchesSearch && matchesStatus && matchesPerformer;
     });
-  }, [tasks, search, users, scripts]);
+  }, [tasks, search, users, scripts, statusFilter, performerFilter]);
 
   const pageCount = Math.max(1, Math.ceil(filteredTasks.length / PAGE_SIZE));
   const pagedTasks = filteredTasks.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -78,7 +96,7 @@ export function Tasks() {
         </p>
       </div>
 
-      <div className="dashboard-panel rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-4 shadow-[0_16px_40px_rgba(31,23,36,0.04)]">
+      <div className="dashboard-panel rounded-[calc(var(--radius)+0.55rem)] border border-border/70 p-4 shadow-[0_16px_40px_rgba(31,23,36,0.04)] space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
           <Input
@@ -86,6 +104,24 @@ export function Tasks() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder={lang === 'ar' ? 'ابحث بالنص أو الحالة أو المستخدم...' : 'Search by script, status, or user...'}
             className="pl-10"
+          />
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            options={[
+              { value: 'all', label: lang === 'ar' ? 'كل الحالات' : 'All statuses' },
+              ...statusOptions.map((status) => ({ value: status, label: status })),
+            ]}
+          />
+          <Select
+            value={performerFilter}
+            onChange={(e) => setPerformerFilter(e.target.value)}
+            options={[
+              { value: 'all', label: lang === 'ar' ? 'كل المنفذين' : 'All performers' },
+              ...performerOptions.map((performer) => ({ value: performer, label: performer })),
+            ]}
           />
         </div>
       </div>
