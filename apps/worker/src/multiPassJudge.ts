@@ -1599,6 +1599,36 @@ function hasGovernanceAnchor(text: string): boolean {
   );
 }
 
+function hasV4TopicAnchor(passName: string, text: string): boolean {
+  const normalized = text.normalize("NFC");
+  const byPass: Record<string, RegExp> = {
+    v4_01_religious_fundamentals: /(الشريعة|القرآن|حديث|أحاديث|الدين|الإسلام|الصلاة|الأذان|المقدسات|ثوابت\s+دينية)/u,
+    v4_02_state_leadership: /(الدولة\s+السعودية|الملك|ولي\s+العهد|القيادة|الحكومة|النظام\s+السياسي)/u,
+    v4_03_national_security: /(الأمن\s+الوطني|العصيان|الاضطرابات|تمرد|تفجير|متفجرات|أسلحة|إرهاب|رجال\s+الأمن|سيدات\s+الأمن)/u,
+    v4_04_historical_documentary_reliability: /(وثائقي|تاريخ|تاريخي|مصدر|مراجع|موثوق|رواية\s+تاريخية|توثيق)/u,
+    v4_05_society_identity_generalization: /(السعودي|السعوديين|المجتمع|قبيلة|قبائل|عائلة|عوائل|كلهم|جميعهم|صلة\s+الرحم|التفكك\s+الأسري)/u,
+    v4_06_children_crime_security: /(طفل|أطفال|قاصر|مدرسة|خطف|سطو|قتل|عصابة|انضم|تمجيد\s+الجريمة)/u,
+    v4_07_drugs_alcohol_manufacture: /(مخدر|مخدرات|كحول|خمر|مسكرات|تصنيع|تحضير|تركيبة|طريقة\s+صنع)/u,
+    v4_08_child_disability_harm: /(طفل|أطفال|ذوي\s+الإعاقة|إعاقة|معاق|تنمر|إيذاء|إهمال|تحرش)/u,
+    v4_09_lgbtq_positive_advocacy: /(مثلية|الشذوذ|شاذ|جنس\s+مماثل|والدين\s+من\s+نفس\s+الجنس)/u,
+    v4_10_explicit_sexual_scenes: /(مشهد\s+جنسي|ممارسة\s+جنسية|جماع|علاقة\s+حميمية|عري|إيحاء\s+جنسي\s+صريح)/u,
+    v4_11_profanity: /(شتيمة|سب|نابية|لعن|قذف|يا\s+\S+|كذاب|نصاب|حرامي|وسخ)/u,
+  };
+  const re = byPass[passName];
+  if (!re) return true;
+  return re.test(normalized);
+}
+
+function isLikelyNoisyGlossaryEvidence(text: string): boolean {
+  const value = text.trim().toLowerCase();
+  const obviousNoise = new Set([
+    "مساعدة",
+    "تشتكي",
+    "تشتكي لأحد",
+  ]);
+  return obviousNoise.has(value);
+}
+
 function normalizeEvidenceForPassDedupe(value: string | null | undefined): string {
   return (value ?? "")
     .normalize("NFC")
@@ -1647,6 +1677,19 @@ function applyEarlyPassFilters(passName: string, findings: JudgeFinding[]): { fi
         dropped++;
         continue;
       }
+    }
+
+    if (passName.startsWith("v4_")) {
+      const local = `${finding.evidence_snippet ?? ""}\n${finding.title_ar ?? ""}\n${finding.rationale_ar ?? ""}`;
+      if (!hasV4TopicAnchor(passName, local)) {
+        dropped++;
+        continue;
+      }
+    }
+
+    if (passName === "glossary" && isLikelyNoisyGlossaryEvidence(finding.evidence_snippet ?? "")) {
+      dropped++;
+      continue;
     }
 
     const key = `${finding.article_id}|${normalizeEvidenceForPassDedupe(finding.evidence_snippet)}`;
