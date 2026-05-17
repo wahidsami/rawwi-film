@@ -245,6 +245,17 @@ export function AccessControl() {
               <option value="active">{lang === 'ar' ? 'نشط' : 'Active'}</option>
               <option value="disabled">{lang === 'ar' ? 'معطل' : 'Disabled'}</option>
             </select>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setSearch('');
+                setRoleFilter('all');
+                setStatusFilter('all');
+              }}
+            >
+              {lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="p-0">

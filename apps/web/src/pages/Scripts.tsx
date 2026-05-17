@@ -160,6 +160,18 @@ export function Scripts() {
             <option value="title">{lang === 'ar' ? 'العنوان' : 'Title'}</option>
             <option value="client">{lang === 'ar' ? 'المستفيد' : 'Beneficiary'}</option>
           </select>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSearch('');
+              setStatusFilter('all');
+              setTypeFilter('all');
+              setSortBy('date');
+            }}
+          >
+            {lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
+          </Button>
         </div>
       </div>
 

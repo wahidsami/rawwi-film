@@ -181,6 +181,25 @@ export function Audit() {
               <FileText className="h-4 w-4 me-2" />
               {t('exportPdf')}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setFilters({
+                  pageSize: PAGE_SIZE,
+                  dateFrom: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19),
+                  dateTo: '',
+                  userId: '',
+                  eventType: '',
+                  targetType: '',
+                  resultStatus: '',
+                  q: '',
+                });
+                setPage(1);
+              }}
+            >
+              {lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

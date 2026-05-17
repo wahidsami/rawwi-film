@@ -474,6 +474,19 @@ export function Overview() {
               ]}
             />
           </div>
+          <div className="mb-4">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setScriptsSearch('');
+                setScriptsStatusFilter('all');
+                setScriptsBeneficiaryFilter('all');
+              }}
+            >
+              {lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
+            </Button>
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-surface-hover">

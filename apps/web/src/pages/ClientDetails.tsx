@@ -684,7 +684,7 @@ export function ClientDetails() {
         )}
       </div>
       {visibleCompanyScripts.length > 0 && (
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-4">
           <Input
             value={scriptsSearch}
             onChange={(e) => setScriptsSearch(e.target.value)}
@@ -706,6 +706,16 @@ export function ClientDetails() {
               ...scriptTypeOptions.map((type) => ({ value: type, label: type })),
             ]}
           />
+          <Button
+            variant="outline"
+            onClick={() => {
+              setScriptsSearch('');
+              setScriptsStatusFilter('all');
+              setScriptsTypeFilter('all');
+            }}
+          >
+            {lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
+          </Button>
         </div>
       )}
 
@@ -890,7 +900,7 @@ export function ClientDetails() {
       {isPortalClient && activeTab === 'certificates' && (
         <Card>
           <CardContent className="p-6">
-            <div className="mb-4 grid gap-3 md:grid-cols-2">
+            <div className="mb-4 grid gap-3 md:grid-cols-3">
               <Input
                 value={certificatesSearch}
                 onChange={(e) => setCertificatesSearch(e.target.value)}
@@ -904,6 +914,15 @@ export function ClientDetails() {
                   ...certificatePaymentOptions.map((status) => ({ value: status, label: status })),
                 ]}
               />
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCertificatesSearch('');
+                  setCertificatePaymentFilter('all');
+                }}
+              >
+                {lang === 'ar' ? 'إعادة ضبط' : 'Reset'}
+              </Button>
             </div>
             {certificatesLoading ? (
               <p className="text-sm text-text-muted">{lang === 'ar' ? 'جاري تحميل الشهادات...' : 'Loading certificates...'}</p>

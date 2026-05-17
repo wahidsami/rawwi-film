@@ -124,6 +124,19 @@ export function Tasks() {
             ]}
           />
         </div>
+        <div>
+          <button
+            type="button"
+            className="rounded-lg border border-border px-3 py-1.5 text-sm text-text-main hover:bg-surface-hover"
+            onClick={() => {
+              setSearch('');
+              setStatusFilter('all');
+              setPerformerFilter('all');
+            }}
+          >
+            {lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
+          </button>
+        </div>
       </div>
 
       {filteredTasks.length === 0 ? (
