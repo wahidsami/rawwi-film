@@ -66,7 +66,103 @@ export const CLAUSE_RULES: ClauseRule[] = [
     reasonAr: (_event, status) =>
       status === "needs_review"
         ? "ادعاء تاريخي في سياق وثائقي يحتاج تحققًا من المصادر الموثقة والمعتمدة."
-        : "الادعاء لا يحقق شرط السياق الوثائقي/الفactualي اللازم لتطبيق هذا البند.",
+        : "الادعاء لا يحقق شرط السياق الوثائقي/الوقائعي اللازم لتطبيق هذا البند.",
+  },
+  {
+    clause: "1.3",
+    evaluate: (event) => {
+      if (event.event_type !== "national_security_reference") return null;
+      const directIncitement =
+        event.intent_signal === "advocacy" || event.promoted || event.glorified;
+      if (directIncitement) return "violation";
+      if (event.intent_signal === "factual_claim") return "needs_review";
+      return "rejected";
+    },
+    reasonCode: (_event, status) =>
+      status === "violation"
+        ? "national_security_advocacy_or_glorification"
+        : status === "needs_review"
+          ? "national_security_claim_requires_context_review"
+          : "no_incitement_or_promotion_signal",
+    reasonAr: (_event, status) =>
+      status === "violation"
+        ? "المشهد يتضمن تحريضًا/ترويجًا يمس الأمن الوطني بصورة مباشرة أو ضمنية."
+        : status === "needs_review"
+          ? "الإشارة تمس الأمن الوطني لكنها تتطلب مراجعة سياقية قبل اعتماد المخالفة."
+          : "لا يظهر في الحدث تحريض أو ترويج كافٍ لتطبيق هذا البند.",
+  },
+  {
+    clause: "1.6",
+    evaluate: (event) => {
+      if (event.event_type !== "national_security_reference") return null;
+      if (event.target_class !== "child") return null;
+      if (event.promoted || event.glorified || event.intent_signal === "advocacy") return "violation";
+      return "rejected";
+    },
+    reasonCode: (_event, status) =>
+      status === "violation"
+        ? "child_oriented_security_crime_glamorization"
+        : "child_context_without_positive_framing",
+    reasonAr: (_event, status) =>
+      status === "violation"
+        ? "المشهد يقدّم محتوى أمني/جرمي موجّهًا للأطفال بإطار إيجابي أو تجميلي."
+        : "الحدث لا يحقق شرط الترويج/التجميل الإيجابي المطلوب لتطبيق هذا البند.",
+  },
+  {
+    clause: "2.1",
+    evaluate: (event) => {
+      if (event.event_type !== "drug_or_alcohol") return null;
+      if (event.intent_signal === "instruction") return "violation";
+      if (event.promoted || event.glorified) return "needs_review";
+      return "rejected";
+    },
+    reasonCode: (_event, status) =>
+      status === "violation"
+        ? "drug_or_alcohol_instructional_content"
+        : status === "needs_review"
+          ? "drug_or_alcohol_positive_framing_requires_review"
+          : "no_instructional_signal",
+    reasonAr: (_event, status) =>
+      status === "violation"
+        ? "الحدث يتضمن محتوى تعليميًا مباشرًا أو ضمنيًا حول صناعة المخدرات/المسكرات."
+        : status === "needs_review"
+          ? "الحدث يتضمن إيحاءً إيجابيًا متعلقًا بالمخدرات/المسكرات ويستلزم مراجعة."
+          : "لا يظهر في الحدث عنصر تعليمي كافٍ لتطبيق هذا البند.",
+  },
+  {
+    clause: "2.4",
+    evaluate: (event) => {
+      if (event.event_type !== "sexual_content") return null;
+      const explicitSignal =
+        event.action_mode === "action" || event.action_mode === "visual";
+      if (explicitSignal && (event.promoted || event.glorified || event.framing !== "unclear")) {
+        return "violation";
+      }
+      return "needs_review";
+    },
+    reasonCode: (_event, status) =>
+      status === "violation" ? "explicit_sexual_practice_signal" : "sexual_content_requires_explicitness_review",
+    reasonAr: (_event, status) =>
+      status === "violation"
+        ? "المشهد يتضمن إظهارًا صريحًا لممارسة جنسية وفق مؤشرات الفعل/العرض المباشر."
+        : "المحتوى الجنسي مرصود لكنه يحتاج تحققًا إضافيًا من مستوى الصراحة قبل اعتماده.",
+  },
+  {
+    clause: "2.5",
+    evaluate: (event) => {
+      if (event.event_type !== "verbal_abuse") return null;
+      const bullyingOrTargeted =
+        event.target_class === "child" ||
+        event.target_class === "person_with_disability";
+      if (bullyingOrTargeted) return "rejected";
+      return "violation";
+    },
+    reasonCode: (_event, status) =>
+      status === "violation" ? "profanity_or_insult_expression" : "redirect_to_more_specific_harm_clause",
+    reasonAr: (_event, status) =>
+      status === "violation"
+        ? "الحدث يتضمن ألفاظًا نابية/مهينة تدخل ضمن نطاق الألفاظ غير اللائقة."
+        : "تم رفض الإسناد لهذا البند لأن الحدث أقرب لبند ضرر نوعي أكثر تحديدًا.",
   },
 ];
 
@@ -87,4 +183,3 @@ export function evaluateClauseRules(event: SceneEvent): PolicyDecision[] {
   }
   return out;
 }
-
