@@ -25,6 +25,7 @@ import { normalizeFindingTitleAgainstRationale, normalizeMisusedGlossaryPassTitl
 import { runHybridContextPipeline } from "./methodology-v3/index.js";
 import { runSceneAnalyzer } from "./policyV1/sceneAnalyzer.js";
 import { runPolicyEngine } from "./policyV1/policyEngine.js";
+import { adaptPolicyDecisionsToFindings } from "./policyV1/policyDecisionAdapter.js";
 import { upsertFindingPolicyLinks } from "./policyLinks.js";
 import { calculateSeverity } from "./severityRulebook.js";
 import { getPrimaryGcamForCanonicalAtom, getPrimaryCanonicalAtomForGcam } from "./canonicalAtomMapping.js";
@@ -2100,6 +2101,11 @@ export async function processChunkJudge(
       });
       throwIfAborted(signal);
       const policyDecisions = runPolicyEngine(sceneResult);
+      const policyFindings = sortFindingsStable(adaptPolicyDecisionsToFindings({
+        decisions: policyDecisions,
+        chunkStart,
+        chunkEnd,
+      }));
       const violationDecisions = policyDecisions.filter((d) => d.status === "violation");
       const reviewDecisions = policyDecisions.filter((d) => d.status === "needs_review");
       const rejectedDecisions = policyDecisions.filter((d) => d.status === "rejected");
@@ -2110,6 +2116,7 @@ export async function processChunkJudge(
         violations: violationDecisions.length,
         needs_review: reviewDecisions.length,
         rejected: rejectedDecisions.length,
+        adapted_findings_total: policyFindings.length,
         duration_ms: Date.now() - policyStartedAt,
       };
       logger.info("Policy-v1 scene triage completed (shadow)", {
@@ -2128,6 +2135,7 @@ export async function processChunkJudge(
               advisory_count: baselineFindings.length,
               persisted_source: "baseline_shadow",
               policy_v1: policyV1Metrics,
+              policy_v1_findings_preview: policyFindings.slice(0, 15),
             },
           }).eq("run_key", runKey)
         );
