@@ -1471,12 +1471,8 @@ export function ClientPortal() {
                                 void openRejectionDetails(item.scriptId);
                                 return;
                               }
-                              if (isDraft || isSubmitted) {
+                              if (isDraft || isSubmitted || status === 'approved') {
                                 void openSubmissionDetails(item);
-                                return;
-                              }
-                              if (status === 'approved') {
-                                setActiveSection('certificates');
                                 return;
                               }
                               void openSubmissionDetails(item);
