@@ -25,6 +25,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import toast from 'react-hot-toast';
 import { downloadStatusPdf } from '@/components/reports/status/download';
+import { httpClient } from '@/api/httpClient';
 
 export function Overview() {
   const { t, lang } = useLangStore();
@@ -37,6 +38,9 @@ export function Overview() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [exportingReport, setExportingReport] = useState(false);
+  const [decisionDatesByScript, setDecisionDatesByScript] = useState<Record<string, string>>({});
+  const [scriptsPage, setScriptsPage] = useState(1);
+  const scriptsPageSize = 10;
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -49,6 +53,16 @@ export function Overview() {
         ]);
         setStats(statsData);
         setActivities(actData);
+        try {
+          const decisionRows = await httpClient.get('/dashboard/decision-dates') as Array<{ scriptId: string; status: string; changedAt: string }>;
+          const map: Record<string, string> = {};
+          for (const row of decisionRows ?? []) {
+            if (row?.scriptId && row?.changedAt) map[row.scriptId] = row.changedAt;
+          }
+          setDecisionDatesByScript(map);
+        } catch {
+          setDecisionDatesByScript({});
+        }
       } catch (error) {
         console.error('Failed to load dashboard:', error);
       } finally {
@@ -105,8 +119,17 @@ export function Overview() {
       const da = new Date(a.receivedAt || a.createdAt || 0).getTime();
       const db = new Date(b.receivedAt || b.createdAt || 0).getTime();
       return db - da;
-    })
-    .slice(0, 25);
+    });
+  const scriptsPageCount = Math.max(1, Math.ceil(scriptsOverviewRows.length / scriptsPageSize));
+  const currentScriptsPage = Math.min(scriptsPage, scriptsPageCount);
+  const paginatedScriptsRows = scriptsOverviewRows.slice(
+    (currentScriptsPage - 1) * scriptsPageSize,
+    currentScriptsPage * scriptsPageSize,
+  );
+
+  useEffect(() => {
+    setScriptsPage(1);
+  }, [scriptsOverviewRows.length]);
 
   if (loading) {
     return (
@@ -410,13 +433,13 @@ export function Overview() {
                 </tr>
               </thead>
               <tbody>
-                {scriptsOverviewRows.map((script) => {
+                {paginatedScriptsRows.map((script) => {
                   const status = String(script.status ?? '—');
                   const statusKey = status.toLowerCase();
                   const decisionDate = statusKey === 'approved'
-                    ? (script as any).approvedAt ?? '—'
+                    ? ((script as any).approvedAt ?? decisionDatesByScript[script.id] ?? '—')
                     : statusKey === 'rejected'
-                      ? (script as any).rejectedAt ?? '—'
+                      ? ((script as any).rejectedAt ?? decisionDatesByScript[script.id] ?? '—')
                       : '—';
                   return (
                     <tr key={script.id} className="border-b border-border/60">
@@ -428,7 +451,7 @@ export function Overview() {
                     </tr>
                   );
                 })}
-                {scriptsOverviewRows.length === 0 && (
+                {paginatedScriptsRows.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-4 py-4 text-center text-text-muted">
                       {lang === 'ar' ? 'لا توجد نصوص حالياً' : 'No scripts yet'}
@@ -438,6 +461,33 @@ export function Overview() {
               </tbody>
             </table>
           </div>
+          {scriptsOverviewRows.length > scriptsPageSize && (
+            <div className="mt-4 flex items-center justify-between text-xs text-text-muted">
+              <span>
+                {lang === 'ar'
+                  ? `صفحة ${currentScriptsPage} من ${scriptsPageCount}`
+                  : `Page ${currentScriptsPage} of ${scriptsPageCount}`}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentScriptsPage <= 1}
+                  onClick={() => setScriptsPage((prev) => Math.max(1, prev - 1))}
+                >
+                  {lang === 'ar' ? 'السابق' : 'Previous'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentScriptsPage >= scriptsPageCount}
+                  onClick={() => setScriptsPage((prev) => Math.min(scriptsPageCount, prev + 1))}
+                >
+                  {lang === 'ar' ? 'التالي' : 'Next'}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

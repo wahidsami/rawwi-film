@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
     const uid = auth.userId;
 
     const rest = pathAfter("dashboard", req.url);
-    if (req.method !== "GET" || (rest !== "" && rest !== "stats" && rest !== "recent-decisions")) {
+    if (req.method !== "GET" || (rest !== "" && rest !== "stats" && rest !== "recent-decisions" && rest !== "decision-dates")) {
       return json({ error: "Not Found" }, 404);
     }
 
@@ -81,6 +81,48 @@ Deno.serve(async (req: Request) => {
       }));
 
       return json(formatted);
+    }
+
+    // Handle /dashboard/decision-dates endpoint
+    if (rest === "decision-dates") {
+      const { data: rows, error } = await supabase
+        .from("script_status_history")
+        .select(`
+          script_id,
+          to_status,
+          changed_at,
+          scripts!inner(assignee_id)
+        `)
+        .in("to_status", ["approved", "rejected"])
+        .order("changed_at", { ascending: false })
+        .limit(seeAll ? 2000 : 3000);
+
+      if (error) {
+        console.error("[dashboard] decision-dates error:", error);
+        return json({ error: error.message }, 500);
+      }
+
+      let list = (rows ?? []) as any[];
+      if (!seeAll) {
+        list = list.filter((r) => r?.scripts?.assignee_id === uid);
+      }
+
+      const latestByScript = new Map<string, { status: string; changedAt: string }>();
+      for (const row of list) {
+        const scriptId = String(row.script_id ?? "");
+        if (!scriptId || latestByScript.has(scriptId)) continue;
+        latestByScript.set(scriptId, {
+          status: String(row.to_status ?? ""),
+          changedAt: String(row.changed_at ?? ""),
+        });
+      }
+
+      const result = [...latestByScript.entries()].map(([scriptId, value]) => ({
+        scriptId,
+        status: value.status,
+        changedAt: value.changedAt,
+      }));
+      return json(result);
     }
 
     // Continue with /dashboard/stats endpoint
