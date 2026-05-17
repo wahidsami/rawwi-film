@@ -1049,6 +1049,24 @@ export function Results() {
   const approvedFindingsDeduped = hasRealFindings ? dedupeRealFindings(approvedFindings) : [];
 
   const semanticCategoriesOrdered = violationTypesForChecklist();
+  const regulationChecklistRows = (summary.checklist_articles ?? [])
+    .filter((row) => Number.isFinite(Number(row.article_id)) && Number(row.article_id) > 0)
+    .map((row) => {
+      const counts = row.counts ?? {};
+      const total =
+        Number(counts.critical ?? 0) +
+        Number(counts.high ?? 0) +
+        Number(counts.medium ?? 0) +
+        Number(counts.low ?? 0);
+      return {
+        articleId: Number(row.article_id),
+        titleAr: row.title_ar,
+        status: row.status,
+        total,
+      };
+    })
+    .filter((row) => row.total > 0)
+    .sort((a, b) => a.articleId - b.articleId);
   const categoryViolationCounts = (() => {
     const m = new Map<ViolationTypeId, number>();
     const add = (id: ViolationTypeId) => {
@@ -3096,30 +3114,50 @@ export function Results() {
         <div className="space-y-4">
           <p className="text-sm text-text-muted">
             {lang === 'ar'
-              ? 'تُعرض هنا نفس أنواع المخالفات المستخدمة في البطاقات، مع العدّ الحالي لكل نوع.'
-              : 'This shows the same violation types used by the cards, with the current count for each type.'}
+              ? 'تُعرض هنا قائمة التحقق حسب مواد الضوابط الحالية مع العدّ الفعلي لكل مادة.'
+              : 'This shows the current regulation checklist (by policy article) with actual counts.'}
           </p>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {semanticCategoriesOrdered.map((cat) => {
-              const n = categoryViolationCounts.get(cat.id) ?? 0;
-              if (cat.id === 'other' && n === 0) return null;
-              return (
-                <div key={cat.id} className="rounded-xl border border-border bg-background/70 p-3 flex items-start justify-between gap-3">
+          {regulationChecklistRows.length > 0 ? (
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {regulationChecklistRows.map((row) => (
+                <div key={`check-${row.articleId}`} className="rounded-xl border border-border bg-background/70 p-3 flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                      {lang === 'ar' ? cat.titleAr : cat.titleEn}
+                      {lang === 'ar' ? row.titleAr : `Article ${row.articleId}`}
                     </div>
                     <div className="text-[11px] text-text-muted mt-1">
-                      {lang === 'ar' ? 'ترتيب' : 'Order'} {cat.order}
+                      {lang === 'ar' ? `مادة ${row.articleId}` : `Article ${row.articleId}`}
                     </div>
                   </div>
-                  <Badge variant={n > 0 ? 'error' : 'outline'} className="shrink-0">
-                    {n}
+                  <Badge variant={row.total > 0 ? 'error' : 'outline'} className="shrink-0">
+                    {row.total}
                   </Badge>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {semanticCategoriesOrdered.map((cat) => {
+                const n = categoryViolationCounts.get(cat.id) ?? 0;
+                if (cat.id === 'other' && n === 0) return null;
+                return (
+                  <div key={cat.id} className="rounded-xl border border-border bg-background/70 p-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-text-main" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                        {lang === 'ar' ? cat.titleAr : cat.titleEn}
+                      </div>
+                      <div className="text-[11px] text-text-muted mt-1">
+                        {lang === 'ar' ? 'ترتيب' : 'Order'} {cat.order}
+                      </div>
+                    </div>
+                    <Badge variant={n > 0 ? 'error' : 'outline'} className="shrink-0">
+                      {n}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </Modal>
 
