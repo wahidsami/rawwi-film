@@ -2122,6 +2122,7 @@ export async function processChunkJudge(
         decisions: policyDecisions,
         chunkStart,
         chunkEnd,
+        chunkText,
       }));
       const persistPolicyFindings = policyV1Mode === "enforce";
       if (persistPolicyFindings) {

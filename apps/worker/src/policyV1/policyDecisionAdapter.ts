@@ -27,9 +27,25 @@ export function adaptPolicyDecisionsToFindings(args: {
   decisions: PolicyDecision[];
   chunkStart: number;
   chunkEnd: number;
+  chunkText: string;
 }): FindingWithGlobal[] {
   const out: FindingWithGlobal[] = [];
-  const { decisions, chunkStart, chunkEnd } = args;
+  const { decisions, chunkStart, chunkEnd, chunkText } = args;
+
+  const locateInChunk = (snippet: string): { start: number; end: number } | null => {
+    if (!snippet) return null;
+    const direct = chunkText.indexOf(snippet);
+    if (direct >= 0) return { start: direct, end: direct + snippet.length };
+
+    const compact = (value: string) => value.replace(/\s+/g, " ").trim();
+    const compactChunk = compact(chunkText);
+    const compactSnippet = compact(snippet);
+    if (!compactSnippet) return null;
+    const compactIdx = compactChunk.indexOf(compactSnippet);
+    if (compactIdx < 0) return null;
+    // We cannot map compacted index back exactly; return null to keep conservative behavior.
+    return null;
+  };
   for (const row of decisions) {
     if (row.status === "rejected") continue;
     const meta = CLAUSE_META[row.regulation_clause] ?? {
@@ -39,8 +55,10 @@ export function adaptPolicyDecisionsToFindings(args: {
     };
     const snippet = String(row.evidence_snippet ?? "").trim();
     if (!snippet) continue;
-    const localStart = 0;
-    const localEnd = Math.min(Math.max(snippet.length, 1), Math.max(chunkEnd - chunkStart, 1));
+    const located = locateInChunk(snippet);
+    const localStart = located?.start ?? 0;
+    // If not located exactly, force non-sane span (end == start) to avoid false canonical mismatch drops.
+    const localEnd = located?.end ?? localStart;
     const globalStart = clampGlobalOffset(chunkStart + localStart, chunkStart);
     const globalEnd = clampGlobalOffset(chunkStart + localEnd, Math.min(chunkStart + localEnd, chunkEnd));
     out.push({
