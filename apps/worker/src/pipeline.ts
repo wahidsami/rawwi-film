@@ -54,6 +54,7 @@ export type FindingWithGlobal = JudgeFinding & {
 
 type AnalysisEngineMode = "v2" | "hybrid" | "policy_v1";
 type HybridRunMode = "off" | "shadow" | "enforce";
+type PolicyV1RunMode = "shadow" | "enforce";
 
 const MAX_EVIDENCE_SPAN = 280;
 const PIPELINE_LOGIC_VERSION = "v2.10";
@@ -492,6 +493,21 @@ function resolveHybridModeForJob(
     }
   }
   return config.ANALYSIS_HYBRID_MODE;
+}
+
+function resolvePolicyV1ModeForJob(
+  jobConfig: Record<string, unknown>,
+  pipelineVersion: "v1" | "v2",
+  analysisEngine: AnalysisEngineMode,
+): PolicyV1RunMode {
+  if (analysisEngine !== "policy_v1") return "shadow";
+  if (pipelineVersion === "v2") {
+    const requested = jobConfig.policy_v1_mode;
+    if (requested === "enforce" || requested === "shadow") {
+      return requested;
+    }
+  }
+  return config.ANALYSIS_POLICY_V1_MODE;
 }
 
 function compareFindingPreference(a: FindingWithGlobal, b: FindingWithGlobal): number {
@@ -1352,6 +1368,7 @@ export async function processChunkJudge(
   const pipelineVersion = jobConfig.pipeline_version === "v2" ? "v2" : "v1";
   const analysisEngine = resolveAnalysisEngineForJob(jobConfig, pipelineVersion);
   const hybridMode = resolveHybridModeForJob(jobConfig, pipelineVersion, analysisEngine);
+  const policyV1Mode = resolvePolicyV1ModeForJob(jobConfig, pipelineVersion, analysisEngine);
   const chunkText = chunk.text;
   const chunkStart = chunk.start_offset;
   const chunkEnd = chunk.end_offset;
@@ -2106,17 +2123,25 @@ export async function processChunkJudge(
         chunkStart,
         chunkEnd,
       }));
+      const persistPolicyFindings = policyV1Mode === "enforce";
+      if (persistPolicyFindings) {
+        persistedFindings = policyFindings;
+      } else {
+        persistedFindings = baselineFindings;
+      }
       const violationDecisions = policyDecisions.filter((d) => d.status === "violation");
       const reviewDecisions = policyDecisions.filter((d) => d.status === "needs_review");
       const rejectedDecisions = policyDecisions.filter((d) => d.status === "rejected");
       policyV1Metrics = {
         engine: "policy_v1",
+        mode: policyV1Mode,
         scene_events: sceneResult.events.length,
         decisions_total: policyDecisions.length,
         violations: violationDecisions.length,
         needs_review: reviewDecisions.length,
         rejected: rejectedDecisions.length,
         adapted_findings_total: policyFindings.length,
+        persisted_findings_total: persistedFindings.length,
         duration_ms: Date.now() - policyStartedAt,
       };
       logger.info("Policy-v1 scene triage completed (shadow)", {
@@ -2131,9 +2156,9 @@ export async function processChunkJudge(
           NON_CRITICAL_DB_TIMEOUT_MS,
           supabase.from("analysis_chunk_runs").update({
             truth_layer_meta: {
-              architecture: "policy_v1_shadow",
+              architecture: "policy_v1_legal_triage",
               advisory_count: baselineFindings.length,
-              persisted_source: "baseline_shadow",
+              persisted_source: persistPolicyFindings ? "policy_v1_enforced" : "baseline_shadow",
               policy_v1: policyV1Metrics,
               policy_v1_findings_preview: policyFindings.slice(0, 15),
             },

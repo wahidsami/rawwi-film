@@ -97,6 +97,12 @@ export const config = {
    */
   ANALYSIS_HYBRID_MODE: ((process.env.ANALYSIS_HYBRID_MODE ?? "shadow").toLowerCase() === "enforce" ? "enforce" : "shadow") as "shadow" | "enforce",
   /**
+   * Policy-v1 run mode:
+   * - shadow: evaluate policy_v1 and keep baseline persisted findings
+   * - enforce: persist policy_v1 adapted findings as final findings
+   */
+  ANALYSIS_POLICY_V1_MODE: ((process.env.ANALYSIS_POLICY_V1_MODE ?? "shadow").toLowerCase() === "enforce" ? "enforce" : "shadow") as "shadow" | "enforce",
+  /**
    * Persist evaluation comparison rows for hybrid rollout KPIs.
    */
   ANALYSIS_EVAL_LOG: (process.env.ANALYSIS_EVAL_LOG ?? "true").toLowerCase() !== "false",
