@@ -70,8 +70,14 @@ export const config = {
    * Violation prompt pack:
    * - v2: current live prompts
    * - v3: new policy-driven prompt overlay built from the updated violation handbook
+   * - v4: film-commission regulation pack (new regulation.md)
    */
-  VIOLATION_SYSTEM_VERSION: ((process.env.VIOLATION_SYSTEM_VERSION ?? "v3").toLowerCase() === "v2" ? "v2" : "v3") as "v2" | "v3",
+  VIOLATION_SYSTEM_VERSION: ((): "v2" | "v3" | "v4" => {
+    const value = (process.env.VIOLATION_SYSTEM_VERSION ?? "v3").toLowerCase();
+    if (value === "v2") return "v2";
+    if (value === "v4") return "v4";
+    return "v3";
+  })(),
   /**
    * Pipeline version:
    * - v1: current production-safe pipeline

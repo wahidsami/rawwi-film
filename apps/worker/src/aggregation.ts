@@ -25,7 +25,7 @@ export type SummaryJson = {
   generated_at: string;
   analysis_meta?: {
     auditor_layer_version: "v2" | "v3" | "v4";
-    violation_system_version: "v2" | "v3";
+    violation_system_version: "v2" | "v3" | "v4";
     analysis_engine: "v2" | "hybrid";
     analysis_pipeline_version: "v1" | "v2";
     deep_auditor_enabled: boolean;
