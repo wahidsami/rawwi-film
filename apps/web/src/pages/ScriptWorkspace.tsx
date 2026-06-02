@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
 import { ScriptRecommendationBar } from '@/components/ScriptRecommendationBar';
 import { DocumentImportModal } from '@/components/import/DocumentImportModal';
-import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square, Search, MoreVertical, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square, Search, MoreVertical, RotateCcw, Users } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getActionablePolicyArticles } from '@/data/policyMap';
 import {
@@ -409,8 +409,8 @@ const SEVERITY_ORDER: Record<string, number> = {
   low: 1,
 };
 
-import { scriptsApi, tasksApi, reportsApi, findingsApi } from '@/api';
-import type { AnalysisFinding, AnalysisReviewFinding, DuplicateScriptCheckResponse, Report as AnalysisReport, ScriptJourneyPayload, ScriptRevisionCycleSummaryItem } from '@/api';
+import { scriptsApi, tasksApi, reportsApi, findingsApi, usersApi } from '@/api';
+import type { AnalysisFinding, AnalysisReviewFinding, DuplicateScriptCheckResponse, Report as AnalysisReport, ScriptJourneyPayload, ScriptRevisionCycleSummaryItem, UserListItem } from '@/api';
 import { downloadScriptJourneyPdf } from '@/components/reports/script-journey/download';
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
 import { normalizeText as canonicalNormalize } from '@/utils/canonicalText';
@@ -1547,7 +1547,7 @@ export function ScriptWorkspace() {
   const { lang, t } = useLangStore();
   const { settings } = useSettingsStore();
   const { scripts, findings, updateFindingStatus, updateScript, fetchInitialData, isLoading, error: dataError } = useDataStore();
-  const { user, hasPermission } = useAuthStore();
+  const { user, hasPermission, isAdmin } = useAuthStore();
   const dateFormat = settings?.platform?.dateFormat;
 
   const scriptFromList = scripts.find(s => s.id === id);
@@ -1971,6 +1971,11 @@ export function ScriptWorkspace() {
     createdAt?: string;
   }>>([]);
   const [scriptDetailsLoading, setScriptDetailsLoading] = useState(false);
+  const [assignScriptModalOpen, setAssignScriptModalOpen] = useState(false);
+  const [assignCandidates, setAssignCandidates] = useState<UserListItem[]>([]);
+  const [assignCandidatesLoading, setAssignCandidatesLoading] = useState(false);
+  const [assignSaving, setAssignSaving] = useState(false);
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState('');
 
   // ── Report findings (for editor highlights) ──
   const [selectedReportForHighlights, setSelectedReportForHighlights] = useState<ReportListItem | null>(null);
@@ -2238,6 +2243,79 @@ export function ScriptWorkspace() {
       setScriptDetailsLoading(false);
     }
   }, [script?.id]);
+
+  const canAssignScript = isAdmin();
+
+  const openAssignScriptModal = useCallback(async () => {
+    if (!script?.id || !canAssignScript) return;
+    setAssignScriptModalOpen(true);
+    setAssignCandidatesLoading(true);
+    setSelectedAssigneeId(script.assigneeId ?? '');
+    try {
+      const users = await usersApi.getUsers();
+      const filtered = users
+        .filter((entry) => {
+          const roleKey = String(entry.roleKey ?? '').toLowerCase();
+          return (
+            entry.status === 'active' &&
+            (roleKey === 'admin' || roleKey === 'super_admin' || roleKey === 'regulator')
+          );
+        })
+        .sort((a, b) => {
+          const roleRank = (roleKey: string | null | undefined) => {
+            const normalized = String(roleKey ?? '').toLowerCase();
+            if (normalized === 'super_admin') return 0;
+            if (normalized === 'admin') return 1;
+            if (normalized === 'regulator') return 2;
+            return 3;
+          };
+          const byRole = roleRank(a.roleKey) - roleRank(b.roleKey);
+          if (byRole !== 0) return byRole;
+          return a.name.localeCompare(b.name, 'en', { sensitivity: 'base' });
+        });
+
+      const currentAssigneeId = script.assigneeId ?? '';
+      if (currentAssigneeId) {
+        const currentAssignee = users.find((entry) => entry.id === currentAssigneeId);
+        if (currentAssignee && !filtered.some((entry) => entry.id === currentAssignee.id)) {
+          filtered.unshift(currentAssignee);
+        }
+      }
+
+      setAssignCandidates(filtered);
+    } catch {
+      setAssignCandidates([]);
+      toast.error(lang === 'ar' ? 'تعذر تحميل قائمة المستخدمين القابلين للإسناد' : 'Unable to load assignable users');
+    } finally {
+      setAssignCandidatesLoading(false);
+    }
+  }, [canAssignScript, lang, script?.assigneeId, script?.id]);
+
+  const closeAssignScriptModal = useCallback(() => {
+    setAssignScriptModalOpen(false);
+    setAssignCandidates([]);
+    setAssignCandidatesLoading(false);
+    setAssignSaving(false);
+    setSelectedAssigneeId('');
+  }, []);
+
+  const handleSaveScriptAssignment = useCallback(async () => {
+    if (!script?.id || !canAssignScript) return;
+    setAssignSaving(true);
+    try {
+      const updatedScript = await scriptsApi.updateScript(script.id, {
+        assigneeId: selectedAssigneeId.trim() ? selectedAssigneeId.trim() : null,
+      });
+      setScriptFetched((prev) => (prev?.id === updatedScript.id ? { ...prev, ...updatedScript } : prev));
+      await fetchInitialData();
+      toast.success(lang === 'ar' ? 'تم حفظ الإسناد بنجاح' : 'Script assignment saved successfully');
+      closeAssignScriptModal();
+    } catch (error: any) {
+      toast.error(error?.message ?? (lang === 'ar' ? 'تعذر حفظ الإسناد' : 'Unable to save assignment'));
+    } finally {
+      setAssignSaving(false);
+    }
+  }, [canAssignScript, closeAssignScriptModal, fetchInitialData, lang, script?.id, selectedAssigneeId]);
   const selectedWorkspaceReportReviewStatus =
     selectedReportSummary?.reviewStatus ?? selectedReportForHighlights?.reviewStatus ?? null;
   const workspaceDecisionStatus = selectedWorkspaceReportReviewStatus ?? script?.status ?? 'draft';
@@ -5650,6 +5728,18 @@ export function ScriptWorkspace() {
             recommendedAt={(script as any).recommendedAt ?? null}
             recommendationReportId={(script as any).recommendationReportId ?? null}
           />
+          {canAssignScript && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void openAssignScriptModal()}
+              disabled={isClientCanceledScript}
+              className="hidden sm:flex gap-2"
+            >
+              <Users className="w-4 h-4" />
+              {lang === 'ar' ? 'إسناد' : 'Assign'}
+            </Button>
+          )}
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -8029,6 +8119,66 @@ export function ScriptWorkspace() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={assignScriptModalOpen}
+        onClose={closeAssignScriptModal}
+        title={lang === 'ar' ? 'إسناد النص' : 'Assign script'}
+        className="max-w-lg"
+      >
+        <div className="space-y-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <div className="rounded-lg border border-border bg-background/40 p-3 space-y-1">
+            <p className="text-xs text-text-muted">{lang === 'ar' ? 'النص الحالي' : 'Current script'}</p>
+            <p className="text-sm font-semibold text-text-main break-words">{script.title || '—'}</p>
+            <p className="text-xs text-text-muted">
+              {script.assigneeName
+                ? (lang === 'ar'
+                  ? `مُسند حالياً إلى: ${script.assigneeName}`
+                  : `Currently assigned to: ${script.assigneeName}`)
+                : (lang === 'ar' ? 'غير مُسند حالياً' : 'Currently unassigned')}
+            </p>
+          </div>
+
+          <Select
+            label={lang === 'ar' ? 'اختر المستخدم المراد الإسناد إليه' : 'Choose assignee'}
+            value={selectedAssigneeId}
+            onChange={(e) => setSelectedAssigneeId(e.target.value)}
+            options={[
+              { label: lang === 'ar' ? 'بدون إسناد' : 'Unassigned', value: '' },
+              ...assignCandidates.map((item) => ({
+                value: item.id,
+                label: `${item.name} · ${item.email}${item.roleKey ? ` · ${item.roleKey}` : ''}`,
+              })),
+            ]}
+            disabled={assignCandidatesLoading || assignSaving}
+          />
+
+          {assignCandidatesLoading && (
+            <div className="text-sm text-text-muted flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {lang === 'ar' ? 'جارٍ تحميل قائمة المستخدمين…' : 'Loading assignable users…'}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={closeAssignScriptModal}
+              disabled={assignSaving}
+            >
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              onClick={() => void handleSaveScriptAssignment()}
+              disabled={assignSaving || assignCandidatesLoading}
+            >
+              {assignSaving
+                ? (lang === 'ar' ? 'جاري الحفظ…' : 'Saving…')
+                : (lang === 'ar' ? 'حفظ الإسناد' : 'Save assignment')}
+            </Button>
           </div>
         </div>
       </Modal>
