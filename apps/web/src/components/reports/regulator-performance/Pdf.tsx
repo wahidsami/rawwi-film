@@ -91,8 +91,8 @@ export function RegulatorPerformancePdf({
           <View style={{ width: "100%", alignItems: "center", textAlign: "center" }}>
             {logoUrl ? <Image src={logoUrl} style={{ width: 150, height: 48, objectFit: "contain", marginBottom: 18 }} /> : null}
             <View style={[s.coverMetaBlock, { width: "100%", alignItems: "center" }]}>
-              <Text style={[s.coverTitle, rtl, { textAlign: "center" }]}>{isAr ? "تقرير أداء المراجع / الفريق" : "Regulator / Team Member Performance Report"}</Text>
-              <Text style={[s.coverSub, rtl, { textAlign: "center" }]}>{isAr ? "ملخص تشغيلي لقرارات المراجعة والتوصية وإرجاع النصوص" : "Operational summary of review, recommendation, and send-back behavior"}</Text>
+              <Text style={[s.coverTitle, rtl, { textAlign: "center" }]}>{isAr ? "تقرير النشاط المسجل للمراجع / الفريق" : "Recorded Activity Report for Regulator / Team Member"}</Text>
+              <Text style={[s.coverSub, rtl, { textAlign: "center" }]}>{isAr ? "ملخص تشغيلي مبني فقط على الأحداث المسجلة في النظام خلال الفترة المحددة" : "Operational summary based only on recorded system events within the selected period"}</Text>
               <Text style={[s.coverSub, rtl, { textAlign: "center" }]}>{isAr ? `اسم المستخدم: ${safe(data.regulator.name)}` : `User: ${safe(data.regulator.name)}`}</Text>
               <Text style={[s.coverSub, rtl, { textAlign: "center" }]}>{isAr ? `البريد: ${safe(data.regulator.email)}` : `Email: ${safe(data.regulator.email)}`}</Text>
               <Text style={[s.coverSub, rtl, { textAlign: "center" }]}>
@@ -108,21 +108,21 @@ export function RegulatorPerformancePdf({
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
         <Text style={[s.title, rtl]}>{isAr ? "الملخص التنفيذي" : "Executive Summary"}</Text>
         <Text style={[s.subtitle, rtl]}>
-          {isAr ? `هذا التقرير يوضح أداء ${safe(data.regulator.name)} خلال الفترة المحددة.` : `This report summarizes the performance of ${safe(data.regulator.name)} during the selected period.`}
+          {isAr ? `هذا التقرير يوضح النشاط المسجل لـ ${safe(data.regulator.name)} خلال الفترة المحددة.` : `This report summarizes the recorded activity of ${safe(data.regulator.name)} during the selected period.`}
         </Text>
 
         <View style={s.statRow}>
           <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.totalAssignedScripts}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "النصوص المسندة" : "Assigned scripts"}</Text></View>
-          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.totalRecommendations}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "إجمالي التوصيات" : "Total recommendations"}</Text></View>
-          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.totalSendBacks}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "إرجاعات للمستفيد" : "Send-backs"}</Text></View>
-          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.totalCyclesHandled}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "الدورات المعالجة" : "Cycles handled"}</Text></View>
+          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.totalRecommendations}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "التوصيات المسجلة" : "Recorded recommendations"}</Text></View>
+          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.totalSendBacks}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "الإرجاعات المسجلة" : "Recorded send-backs"}</Text></View>
+          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.totalCyclesHandled}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "الدورات المسجلة" : "Recorded cycles"}</Text></View>
         </View>
 
         <View style={s.statRow}>
-          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.totalApprovalRecommendations}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "توصيات بالموافقة" : "Approval recommendations"}</Text></View>
-          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.totalRejectionRecommendations}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "توصيات بالرفض" : "Rejection recommendations"}</Text></View>
-          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{pct(recommendedAgree)}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "التوافق مع القرار النهائي" : "Recommendation agreement"}</Text></View>
-          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.averageFirstActionMinutes == null ? "-" : Math.round(data.summary.averageFirstActionMinutes)}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "متوسط أول إجراء بالدقائق" : "Avg. first action (min)"}</Text></View>
+          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.totalApprovalRecommendations}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "توصيات الموافقة المسجلة" : "Recorded approval recommendations"}</Text></View>
+          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.totalRejectionRecommendations}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "توصيات الرفض المسجلة" : "Recorded rejection recommendations"}</Text></View>
+          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{pct(recommendedAgree)}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "توافق مع القرار النهائي" : "Agreement with final decision"}</Text></View>
+          <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.averageFirstActionMinutes == null ? "-" : Math.round(data.summary.averageFirstActionMinutes)}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "أول إجراء مسجل بالدقائق" : "First recorded action (min)"}</Text></View>
         </View>
       </Page>
 
@@ -262,6 +262,11 @@ export function RegulatorPerformancePdf({
               <Text key={`note-${idx}`} style={[s.note, rtl]}>• {note}</Text>
             ))
           )}
+          <Text style={[s.note, rtl, { marginTop: 8 }]}>
+            {isAr
+              ? "القيم الظاهرة هنا مبنية على الأحداث المسجلة فقط. الصفر يعني عدم وجود حدث مسجل لهذا المؤشر، والشرطة — تعني أن المؤشر غير متاح أو لم يُسجل بعد."
+              : "The values shown here are based only on recorded events. Zero means no event was recorded for that metric, and the dash — means the metric is unavailable or not yet tracked."}
+          </Text>
         </View>
       </Page>
 

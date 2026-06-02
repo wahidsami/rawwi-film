@@ -702,7 +702,7 @@ export function Performance() {
                       <div className="space-y-3">
                         <div>
                           <p className="text-xs font-medium uppercase tracking-[0.24em] text-text-muted">
-                            {lang === 'ar' ? 'ملف الأداء التنفيذي' : 'Executive performance file'}
+                            {lang === 'ar' ? 'ملف النشاط المسجل' : 'Recorded activity file'}
                           </p>
                           <h2 className="mt-2 text-3xl font-bold text-text-main">{currentDetail.regulator.name}</h2>
                           <p className="mt-1 text-sm text-text-muted" dir="ltr">
@@ -711,10 +711,10 @@ export function Performance() {
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="default" className="whitespace-nowrap">
-                            {lang === 'ar' ? 'تقرير أداء فردي' : 'Individual performance report'}
+                            {lang === 'ar' ? 'تقرير نشاط فردي' : 'Individual activity report'}
                           </Badge>
                           <Badge variant="outline" className="whitespace-nowrap">
-                            {lang === 'ar' ? 'الفترة الحالية' : 'Current range'}
+                            {lang === 'ar' ? 'الفترة المحددة' : 'Selected range'}
                           </Badge>
                           <Badge variant="outline" className="whitespace-nowrap">
                             {lang === 'ar' ? `تفاعل مع ${currentDetail.summary.totalAssignedScripts} نص` : `Handled ${currentDetail.summary.totalAssignedScripts} scripts`}
@@ -756,19 +756,19 @@ export function Performance() {
               <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
                 <Card>
                   <CardContent className="p-6">
-                    <h2 className="text-lg font-semibold text-text-main">{lang === 'ar' ? 'مؤشرات الأداء' : 'Performance indicators'}</h2>
+                    <h2 className="text-lg font-semibold text-text-main">{lang === 'ar' ? 'مؤشرات النشاط المسجل' : 'Recorded activity indicators'}</h2>
                     <p className="mt-1 text-sm text-text-muted">
                       {lang === 'ar'
-                        ? 'هذه المؤشرات تلخص سرعة العضو، كثافة تفاعله، وتوزيع قراراته على مدار الفترة المحددة.'
-                        : 'These indicators summarize speed, activity density, and decision distribution across the selected period.'}
+                        ? 'هذه المؤشرات مبنية فقط على الأحداث المسجلة في النظام خلال الفترة المحددة. الرمز — يعني أنه لا توجد قيمة مسجلة لهذا المؤشر.'
+                        : 'These indicators are based only on recorded system events within the selected period. A dash (—) means no value was recorded for that metric.'}
                     </p>
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                        <p className="text-xs text-text-muted">{lang === 'ar' ? 'أول إجراء بالدقائق' : 'First action (min)'}</p>
+                        <p className="text-xs text-text-muted">{lang === 'ar' ? 'أول إجراء مسجل بالدقائق' : 'First recorded action (min)'}</p>
                         <p className="mt-2 text-2xl font-bold text-text-main">{currentDetail.summary.averageFirstActionMinutes == null ? '—' : Math.round(currentDetail.summary.averageFirstActionMinutes)}</p>
                       </div>
                       <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                        <p className="text-xs text-text-muted">{lang === 'ar' ? 'متوسط أيام الإنجاز' : 'Avg turnaround days'}</p>
+                        <p className="text-xs text-text-muted">{lang === 'ar' ? 'متوسط أيام الإنجاز المسجلة' : 'Recorded turnaround days avg.'}</p>
                         <p className="mt-2 text-2xl font-bold text-text-main">{currentDetail.summary.averageTurnaroundDays == null ? '—' : currentDetail.summary.averageTurnaroundDays.toFixed(1)}</p>
                       </div>
                     </div>
@@ -776,29 +776,29 @@ export function Performance() {
                       <SimpleBars
                         lang={lang === 'ar' ? 'ar' : 'en'}
                         items={[
-                          { label: lang === 'ar' ? 'توصيات' : 'Recommendations', value: currentDetail.summary.totalRecommendations, color: '#6d2f5f' },
-                          { label: lang === 'ar' ? 'موافقات' : 'Approvals', value: currentDetail.summary.totalApprovalRecommendations, color: '#0f9d58' },
-                          { label: lang === 'ar' ? 'رفض' : 'Rejections', value: currentDetail.summary.totalRejectionRecommendations, color: '#c53b3b' },
-                          { label: lang === 'ar' ? 'إرجاعات' : 'Send-backs', value: currentDetail.summary.totalSendBacks, color: '#d97706' },
-                          { label: lang === 'ar' ? 'دورات' : 'Cycles', value: currentDetail.summary.totalCyclesHandled, color: '#2563eb' },
+                          { label: lang === 'ar' ? 'توصيات مسجلة' : 'Recorded recommendations', value: currentDetail.summary.totalRecommendations, color: '#6d2f5f' },
+                          { label: lang === 'ar' ? 'موافقات مسجلة' : 'Recorded approvals', value: currentDetail.summary.totalApprovalRecommendations, color: '#0f9d58' },
+                          { label: lang === 'ar' ? 'رفض مسجل' : 'Recorded rejections', value: currentDetail.summary.totalRejectionRecommendations, color: '#c53b3b' },
+                          { label: lang === 'ar' ? 'إرجاعات مسجلة' : 'Recorded send-backs', value: currentDetail.summary.totalSendBacks, color: '#d97706' },
+                          { label: lang === 'ar' ? 'دورات مسجلة' : 'Recorded cycles', value: currentDetail.summary.totalCyclesHandled, color: '#2563eb' },
                         ]}
                       />
                     </div>
                     <div className="mt-6 grid gap-3 sm:grid-cols-3">
                       <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                        <p className="text-xs text-text-muted">{lang === 'ar' ? 'مؤشر التوصية' : 'Recommendation signal'}</p>
+                        <p className="text-xs text-text-muted">{lang === 'ar' ? 'مؤشر التوصيات المسجلة' : 'Recorded recommendation signal'}</p>
                         <p className="mt-2 text-xl font-bold text-text-main">{pct(currentDetail.summary.totalRecommendations ? currentDetail.summary.totalApprovalRecommendations / Math.max(1, currentDetail.summary.totalRecommendations) : null)}</p>
-                        <p className="mt-1 text-xs text-text-muted">{lang === 'ar' ? 'نسبة التوصيات الإيجابية' : 'Positive recommendation share'}</p>
+                        <p className="mt-1 text-xs text-text-muted">{lang === 'ar' ? 'نسبة التوصيات الإيجابية المسجلة' : 'Positive recorded recommendation share'}</p>
                       </div>
                       <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                        <p className="text-xs text-text-muted">{lang === 'ar' ? 'إيقاع العمل' : 'Work rhythm'}</p>
+                        <p className="text-xs text-text-muted">{lang === 'ar' ? 'إيقاع العمل المسجل' : 'Recorded work rhythm'}</p>
                         <p className="mt-2 text-xl font-bold text-text-main">{currentDetail.summary.averageTurnaroundDays == null ? '—' : `${currentDetail.summary.averageTurnaroundDays.toFixed(1)}d`}</p>
-                        <p className="mt-1 text-xs text-text-muted">{lang === 'ar' ? 'متوسط زمن الدورة' : 'Average cycle turnaround'}</p>
+                        <p className="mt-1 text-xs text-text-muted">{lang === 'ar' ? 'متوسط زمن الدورة المسجلة' : 'Average recorded cycle turnaround'}</p>
                       </div>
                       <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                        <p className="text-xs text-text-muted">{lang === 'ar' ? 'قوة الحضور' : 'Workload depth'}</p>
+                        <p className="text-xs text-text-muted">{lang === 'ar' ? 'عمق الحمل المسجل' : 'Recorded workload depth'}</p>
                         <p className="mt-2 text-xl font-bold text-text-main">{currentDetail.summary.totalCyclesHandled}</p>
-                        <p className="mt-1 text-xs text-text-muted">{lang === 'ar' ? 'إجمالي الدورات المعالجة' : 'Total handled cycles'}</p>
+                        <p className="mt-1 text-xs text-text-muted">{lang === 'ar' ? 'إجمالي الدورات المسجلة' : 'Total recorded cycles'}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -812,6 +812,11 @@ export function Performance() {
                       <div><p className="text-text-muted">{lang === 'ar' ? 'البريد' : 'Email'}</p><p className="font-medium text-text-main" dir="ltr">{safe(currentDetail.regulator.email)}</p></div>
                       <div><p className="text-text-muted">{lang === 'ar' ? 'الدور' : 'Role'}</p><p className="font-medium text-text-main">{safe(currentDetail.regulator.roleKey)}</p></div>
                       <div><p className="text-text-muted">{lang === 'ar' ? 'الفترة' : 'Period'}</p><p className="font-medium text-text-main">{formatDateTimeValue(from || null, { lang: lang === 'ar' ? 'ar' : 'en', format: settings?.platform?.dateFormat })} - {formatDateTimeValue(to || null, { lang: lang === 'ar' ? 'ar' : 'en', format: settings?.platform?.dateFormat })}</p></div>
+                    </div>
+                    <div className="mt-5 rounded-2xl border border-dashed border-border bg-background/60 p-4 text-sm text-text-muted">
+                      {lang === 'ar'
+                        ? 'هذه الأرقام تمثل ما تم تسجيله فعليًا في النظام خلال الفترة المحددة فقط. إذا كان العضو مسؤولًا إداريًا أو لم يسجل توصيات/إرجاعات، فستظهر القيم صفر أو — حسب توفر الحدث.'
+                        : 'These numbers represent only what was actually recorded in the system during the selected period. If the member handled administration only or did not record recommendations/send-backs, values will appear as zero or — depending on whether the metric exists.'}
                     </div>
                   </CardContent>
                 </Card>
