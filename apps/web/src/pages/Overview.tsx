@@ -17,6 +17,7 @@ import {
   FileText,
   BarChart2,
   FileBarChart,
+  BarChart3,
   ArrowLeft,
   ArrowRight,
   Clock,
@@ -383,6 +384,26 @@ export function Overview() {
             <p className="px-6 pb-4 text-xs text-text-muted">
               {lang === 'ar' ? `شركات: ${companyCount} • أفراد: ${individualCount}` : `Companies: ${companyCount} • Individuals: ${individualCount}`}
             </p>
+          </Card>
+        )}
+
+        {!isRegulator && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-text-muted">{lang === 'ar' ? 'الأداء' : 'Performance'}</CardTitle>
+              <BarChart3 className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-text-main">
+                {lang === 'ar' ? 'مؤشرات' : 'Analytics'}
+              </div>
+              <button
+                onClick={() => navigate('/performance')}
+                className="mt-4 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                {lang === 'ar' ? 'فتح الأداء' : 'Open Performance'} <ArrowIcon className="h-3 w-3" />
+              </button>
+            </CardContent>
           </Card>
         )}
       </div>
