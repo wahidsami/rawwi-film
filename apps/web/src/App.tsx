@@ -21,6 +21,7 @@ import { Results } from '@/pages/Results';
 import { Glossary } from '@/pages/Glossary';
 import Reports from '@/pages/Reports';
 import { Performance } from '@/pages/Performance';
+import { ReportBuilder } from '@/pages/ReportBuilder';
 import Settings from '@/pages/Settings';
 import { Audit } from '@/pages/Audit';
 import { Scripts } from '@/pages/Scripts';
@@ -180,6 +181,11 @@ function App() {
               <Reports />
             </ProtectedRoute>
           } />
+          <Route path="report-builder" element={
+            <ProtectedRoute requiredPermission="manage_users">
+              <ReportBuilder />
+            </ProtectedRoute>
+          } />
           <Route path="performance" element={
             <ProtectedRoute requiredPermission="manage_users">
               <Performance />
@@ -217,6 +223,7 @@ function App() {
         <Route path="/workspace/:id" element={<LegacyAdminRedirect />} />
         <Route path="/report/:id" element={<LegacyAdminRedirect />} />
         <Route path="/reports" element={<LegacyAdminRedirect />} />
+        <Route path="/report-builder" element={<LegacyAdminRedirect />} />
         <Route path="/performance" element={<LegacyAdminRedirect />} />
         <Route path="/performance/:userId" element={<LegacyAdminRedirect />} />
         <Route path="/audit" element={<LegacyAdminRedirect />} />

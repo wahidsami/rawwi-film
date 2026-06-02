@@ -21,7 +21,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Inbox,
-  BarChart3
+  BarChart3,
+  Table2
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { formatDateTime } from '@/utils/dateFormat';
@@ -110,6 +111,7 @@ export function AppLayout() {
     { to: '/app/glossary', icon: BookOpen, label: t('glossary'), section: 'glossary', permission: 'manage_glossary', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
     { to: '/app/tasks', icon: FileText, label: lang === 'ar' ? 'المهام' : 'Tasks', section: 'tasks', permission: 'view_tasks', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
     { to: '/app/reports', icon: FileText, label: t('reports'), section: 'reports', permission: 'view_reports', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
+    { to: '/app/report-builder', icon: Table2, label: lang === 'ar' ? 'منشئ التقارير' : 'Report Builder', section: null as string | null, permission: 'manage_users', roles: ['Super Admin', 'Admin'] as Array<'Super Admin' | 'Admin'> },
     { to: '/app/performance', icon: BarChart3, label: lang === 'ar' ? 'الأداء' : 'Performance', section: null as string | null, permission: 'manage_users', roles: ['Super Admin', 'Admin'] as Array<'Super Admin' | 'Admin'> },
     ...(settings?.features?.enableCertificates ? [{ to: '/app/certificates', icon: Award, label: t('certificates'), section: null as string | null, permission: null as string | null, roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null }] : []),
     { to: '/app/access-control', icon: ShieldCheck, label: t('accessControl'), section: 'access_control', permission: 'manage_users', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
