@@ -4,12 +4,15 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
+  Bookmark,
   Download,
   FileDown,
   Loader2,
   RefreshCw,
   Search,
+  Save,
   SlidersHorizontal,
+  Trash2,
   Table2,
 } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -23,9 +26,11 @@ import { Badge } from '@/components/ui/Badge';
 import { useAuthStore } from '@/store/authStore';
 import { useDataStore } from '@/store/dataStore';
 import { useLangStore } from '@/store/langStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { formatDateTimeValue, APP_TIME_ZONE } from '@/utils/dateFormat';
 import { reportsApi, scriptsApi, usersApi, type ReportListItem, type Script, type UserListItem } from '@/api';
 import { downloadCsvFile, downloadXlsxFile } from '@/utils/spreadsheetExport';
+import { downloadReportBuilderPdf } from '@/components/reports/report-builder/download';
 import { cn } from '@/utils/cn';
 
 type BuilderSource = 'scripts' | 'reports' | 'users';
@@ -113,6 +118,45 @@ const SOURCE_DEFAULT_COLUMNS: Record<BuilderSource, string[]> = {
   reports: ['scriptTitle', 'company', 'status', 'findingsCount', 'createdAt'],
   users: ['name', 'email', 'role', 'status', 'permissionsCount'],
 };
+
+type ReportBuilderTemplate = {
+  id: string;
+  name: string;
+  source: BuilderSource;
+  search: string;
+  statusFilter: string;
+  roleFilter: string;
+  from: string;
+  to: string;
+  pageSize: number;
+  selectedColumns: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+const REPORT_BUILDER_TEMPLATE_KEY = 'raawi-report-builder-templates-v1';
+
+function loadTemplatesFromStorage(): ReportBuilderTemplate[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(REPORT_BUILDER_TEMPLATE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as ReportBuilderTemplate[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item) => typeof item?.id === 'string' && typeof item?.name === 'string');
+  } catch {
+    return [];
+  }
+}
+
+function persistTemplatesToStorage(templates: ReportBuilderTemplate[]): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(REPORT_BUILDER_TEMPLATE_KEY, JSON.stringify(templates));
+}
+
+function createTemplateId(name: string): string {
+  return `${Date.now()}-${name.toLowerCase().replace(/\s+/g, '-').slice(0, 24)}`;
+}
 
 function formatCount(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '0';
@@ -324,6 +368,7 @@ export function ReportBuilder() {
   const navigate = useNavigate();
   const { user, hasPermission } = useAuthStore();
   const { fetchInitialData, companies } = useDataStore();
+  const { settings } = useSettingsStore();
 
   const [source, setSource] = useState<BuilderSource>('scripts');
   const [loading, setLoading] = useState(false);
@@ -339,6 +384,10 @@ export function ReportBuilder() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [downloading, setDownloading] = useState<'csv' | 'xlsx' | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [templates, setTemplates] = useState<ReportBuilderTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
   const canAccessBuilder = user?.role === 'Admin' || user?.role === 'Super Admin' || hasPermission('manage_users');
   const sourceOption = SOURCE_OPTIONS.find((opt) => opt.value === source) ?? SOURCE_OPTIONS[0];
@@ -356,20 +405,24 @@ export function ReportBuilder() {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  const loadSource = useCallback(async () => {
+  useEffect(() => {
+    setTemplates(loadTemplatesFromStorage());
+  }, []);
+
+  const loadSourceData = useCallback(async (nextSource: BuilderSource) => {
     if (!canAccessBuilder) return;
     setLoading(true);
     setError(null);
     setLoadingMessage(lang === 'ar' ? 'جاري تحميل بيانات المصدر...' : 'Loading source data...');
     try {
       const [scriptRows, reportRows, userRows] = await Promise.all([
-        source === 'scripts' ? scriptsApi.getScripts() : Promise.resolve<Script[]>([]),
-        source === 'reports' ? reportsApi.listAll() : Promise.resolve<ReportListItem[]>([]),
-        source === 'users' ? usersApi.getUsers() : Promise.resolve<UserListItem[]>([]),
+        nextSource === 'scripts' ? scriptsApi.getScripts() : Promise.resolve<Script[]>([]),
+        nextSource === 'reports' ? reportsApi.listAll() : Promise.resolve<ReportListItem[]>([]),
+        nextSource === 'users' ? usersApi.getUsers() : Promise.resolve<UserListItem[]>([]),
       ]);
 
       const nextRows = createBuilderRows(
-        source,
+        nextSource,
         {
           scripts: scriptRows,
           reports: reportRows,
@@ -380,12 +433,6 @@ export function ReportBuilder() {
       );
 
       setRows(nextRows);
-      setSelectedColumns(SOURCE_DEFAULT_COLUMNS[source]);
-      setSearch('');
-      setStatusFilter('all');
-      setRoleFilter('all');
-      setFrom('');
-      setTo('');
       setPage(1);
     } catch (err: any) {
       setError(err?.message ?? (lang === 'ar' ? 'تعذر تحميل البيانات' : 'Failed to load data'));
@@ -394,11 +441,41 @@ export function ReportBuilder() {
       setLoading(false);
       setLoadingMessage('');
     }
-  }, [canAccessBuilder, companies, lang, source]);
+  }, [canAccessBuilder, companies, lang]);
 
   useEffect(() => {
-    void loadSource();
-  }, [loadSource]);
+    void loadSourceData(source);
+    // Only run initial fetch on mount; source changes use the handler below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const applyTemplate = useCallback(async (template: ReportBuilderTemplate) => {
+    setSelectedTemplateId(template.id);
+    setSource(template.source);
+    setSelectedColumns(template.selectedColumns.length > 0 ? template.selectedColumns : SOURCE_DEFAULT_COLUMNS[template.source]);
+    setSearch(template.search);
+    setStatusFilter(template.statusFilter);
+    setRoleFilter(template.roleFilter);
+    setFrom(template.from);
+    setTo(template.to);
+    setPageSize(template.pageSize || 10);
+    setPage(1);
+    await loadSourceData(template.source);
+  }, [loadSourceData]);
+
+  const handleSourceChange = useCallback(async (nextSource: BuilderSource) => {
+    setSelectedTemplateId('');
+    setSource(nextSource);
+    setSelectedColumns(SOURCE_DEFAULT_COLUMNS[nextSource]);
+    setSearch('');
+    setStatusFilter('all');
+    setRoleFilter('all');
+    setFrom('');
+    setTo('');
+    setPageSize(10);
+    setPage(1);
+    await loadSourceData(nextSource);
+  }, [loadSourceData]);
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -514,6 +591,88 @@ export function ReportBuilder() {
     }
   };
 
+  const handleExportPdf = async () => {
+    if (downloadingPdf) return;
+    setDownloadingPdf(true);
+    try {
+      const pdfRows = filteredRows.slice(0, 30).map((row) => ({
+        values: selectedColumnsMeta.map((col) => String(row.values[col.key] ?? '—')),
+      }));
+      await downloadReportBuilderPdf({
+        lang,
+        dateFormat: settings?.platform?.dateFormat,
+        data: {
+          sourceLabel: sourceOption.labelEn,
+          generatedAt: new Date().toISOString(),
+          totalRows: rows.length,
+          filteredRows: filteredRows.length,
+          selectedColumns: selectedColumnsMeta.length,
+          summaryCards: summaryCards.map((card) => ({
+            label: card.label,
+            value: card.value,
+            hint: card.hint,
+          })),
+          filters: [
+            { label: lang === 'ar' ? 'مصدر البيانات' : 'Data source', value: sourceOption.labelEn },
+            { label: lang === 'ar' ? 'بحث' : 'Search', value: search || '—' },
+            { label: lang === 'ar' ? 'الحالة' : 'Status', value: statusFilter },
+            { label: lang === 'ar' ? 'الدور' : 'Role', value: source === 'users' ? roleFilter : '—' },
+            { label: lang === 'ar' ? 'من تاريخ' : 'From date', value: from || '—' },
+            { label: lang === 'ar' ? 'إلى تاريخ' : 'To date', value: to || '—' },
+          ],
+          columns: selectedColumnsMeta.map((col) => ({ label: lang === 'ar' ? col.labelAr : col.labelEn })),
+          rows: pdfRows,
+        },
+      });
+      toast.success(lang === 'ar' ? 'تم تنزيل PDF' : 'PDF downloaded');
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذر تنزيل PDF' : 'Failed to download PDF'));
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
+  const handleSaveTemplate = () => {
+    const name = templateName.trim();
+    if (!name) {
+      toast.error(lang === 'ar' ? 'اكتب اسمًا للقالب أولًا' : 'Enter a template name first');
+      return;
+    }
+    const now = new Date().toISOString();
+    const nextTemplate: ReportBuilderTemplate = {
+      id: selectedTemplateId || createTemplateId(name),
+      name,
+      source,
+      search,
+      statusFilter,
+      roleFilter,
+      from,
+      to,
+      pageSize,
+      selectedColumns,
+      createdAt: templates.find((item) => item.id === selectedTemplateId)?.createdAt ?? now,
+      updatedAt: now,
+    };
+    const nextTemplates = [
+      nextTemplate,
+      ...templates.filter((item) => item.id !== nextTemplate.id),
+    ].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    setTemplates(nextTemplates);
+    persistTemplatesToStorage(nextTemplates);
+    setSelectedTemplateId(nextTemplate.id);
+    toast.success(lang === 'ar' ? 'تم حفظ القالب' : 'Template saved');
+  };
+
+  const handleDeleteTemplate = (templateId: string) => {
+    const nextTemplates = templates.filter((item) => item.id !== templateId);
+    setTemplates(nextTemplates);
+    persistTemplatesToStorage(nextTemplates);
+    if (selectedTemplateId === templateId) {
+      setSelectedTemplateId('');
+      setTemplateName('');
+    }
+  };
+
   const handleReset = () => {
     setSearch('');
     setStatusFilter('all');
@@ -580,7 +739,7 @@ export function ReportBuilder() {
             <Select
               label={lang === 'ar' ? 'مصدر البيانات' : 'Data source'}
               value={source}
-              onChange={(e) => setSource(e.target.value as BuilderSource)}
+              onChange={(e) => void handleSourceChange(e.target.value as BuilderSource)}
               options={SOURCE_OPTIONS.map((opt) => ({
                 value: opt.value,
                 label: lang === 'ar' ? opt.labelAr : opt.labelEn,
@@ -650,6 +809,107 @@ export function ReportBuilder() {
             <Badge variant="secondary">
               {lang === 'ar' ? 'أعمدة قابلة للتصدير' : 'Exportable columns'}: {selectedColumnsMeta.length}
             </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60">
+        <CardContent className="space-y-5 p-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-text-main">
+                {lang === 'ar' ? 'القوالب المحفوظة' : 'Saved templates'}
+              </h2>
+              <p className="text-sm text-text-muted">
+                {lang === 'ar'
+                  ? 'احفظ إعداداتك الحالية لتعيد استخدامها بسرعة لاحقًا.'
+                  : 'Save the current configuration so you can reuse it later with one click.'}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" onClick={() => void loadSourceData(source)}>
+                <RefreshCw className="me-2 h-4 w-4" />
+                {lang === 'ar' ? 'إعادة تحميل' : 'Reload'}
+              </Button>
+              <Button variant="outline" onClick={handleExportPdf} isLoading={downloadingPdf}>
+                <FileDown className="me-2 h-4 w-4" />
+                PDF
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
+            <Input
+              label={lang === 'ar' ? 'اسم القالب' : 'Template name'}
+              placeholder={lang === 'ar' ? 'مثال: تقرير النصوص الشهري' : 'e.g. Monthly scripts report'}
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+            />
+            <div className="flex items-end gap-2">
+              <Button onClick={handleSaveTemplate}>
+                <Save className="me-2 h-4 w-4" />
+                {lang === 'ar' ? 'حفظ القالب' : 'Save template'}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+            <Select
+              label={lang === 'ar' ? 'اختيار قالب محفوظ' : 'Choose a saved template'}
+              value={selectedTemplateId}
+              onChange={(e) => {
+                const found = templates.find((item) => item.id === e.target.value);
+                if (!found) return;
+                setTemplateName(found.name);
+                void applyTemplate(found);
+              }}
+              options={[
+                { value: '', label: lang === 'ar' ? 'اختر قالبًا...' : 'Choose a template...' },
+                ...templates.map((template) => ({
+                  value: template.id,
+                  label: `${template.name} · ${template.source}`,
+                })),
+              ]}
+            />
+            <div className="flex flex-wrap items-end gap-2">
+              {selectedTemplateId ? (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const found = templates.find((item) => item.id === selectedTemplateId);
+                    if (found) {
+                      setTemplateName(found.name);
+                    }
+                  }}
+                >
+                  <Bookmark className="me-2 h-4 w-4" />
+                  {lang === 'ar' ? 'إعادة تعبئة القالب' : 'Refill template'}
+                </Button>
+              ) : null}
+              {selectedTemplateId ? (
+                <Button
+                  variant="danger"
+                  onClick={() => handleDeleteTemplate(selectedTemplateId)}
+                >
+                  <Trash2 className="me-2 h-4 w-4" />
+                  {lang === 'ar' ? 'حذف القالب' : 'Delete template'}
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {templates.length === 0 ? (
+              <Badge variant="secondary">
+                {lang === 'ar' ? 'لا توجد قوالب محفوظة بعد' : 'No saved templates yet'}
+              </Badge>
+            ) : (
+              templates.slice(0, 4).map((template) => (
+                <Badge key={template.id} variant={template.id === selectedTemplateId ? 'primary' : 'secondary'}>
+                  {template.name}
+                </Badge>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
