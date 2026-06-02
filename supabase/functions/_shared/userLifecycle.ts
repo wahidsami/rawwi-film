@@ -71,6 +71,17 @@ export function buildPermissionsForRole(roleKey: string, canAcceptReject: boolea
   return uniqueStrings(permissions);
 }
 
+export function buildPermissionMetadata(
+  roleKey: string,
+  canAcceptReject: boolean,
+  canSendForReview = false,
+): Record<string, unknown> {
+  return {
+    canAcceptReject: normalizeRoleKey(roleKey) === "regulator" ? canAcceptReject : false,
+    canSendForReview: normalizeRoleKey(roleKey) === "regulator" ? canSendForReview : false,
+  };
+}
+
 export function getRoleDisplayName(roleKey: string): string {
   const k = normalizeRoleKey(roleKey);
   if (k === "super_admin") return "Super Admin";

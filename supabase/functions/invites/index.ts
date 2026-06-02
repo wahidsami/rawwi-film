@@ -12,6 +12,7 @@ import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { logAudit } from "../_shared/audit.ts";
 import {
   buildPermissionsForRole,
+  buildPermissionMetadata,
   getDefaultSectionsForRoleKey,
   getRoleDisplayName,
   uniqueStrings,
@@ -129,6 +130,7 @@ Deno.serve(async (req: Request) => {
   const permissions = permissionsFromBody.length > 0
     ? buildPermissionsForRole(roleKey, permissionsFromBody.includes("can_accept_reject"), permissionsFromBody.includes("can_send_for_review"))
     : buildPermissionsForRole(roleKey, canAcceptReject, canSendForReview);
+  const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview);
 
   const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
   const token = base64url(tokenBytes);
@@ -164,6 +166,7 @@ Deno.serve(async (req: Request) => {
     role: roleDisplayName,
     allowedSections,
     permissions,
+    ...permissionMetadata,
   };
 
   console.log(`[invites] STEP:auth_create_user - Creating auth user for ${email}`);

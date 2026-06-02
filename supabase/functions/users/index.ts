@@ -8,6 +8,7 @@ import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import {
   buildPermissionsForRole,
+  buildPermissionMetadata,
   clearUserReferencesBeforeDelete,
   getDefaultPermissionsForRoleKey,
   getDefaultSectionsForRoleKey,
@@ -130,6 +131,15 @@ Deno.serve(async (req: Request) => {
       const permissions = permissionsFromMeta.length > 0
         ? permissionsFromMeta
         : getDefaultPermissionsForRoleKey(roleKey);
+      const canAcceptRejectFromMeta = Boolean(u.user_metadata?.canAcceptReject);
+      const canSendForReviewFromMeta = Boolean(u.user_metadata?.canSendForReview);
+      const normalizedPermissions = permissions.length > 0
+        ? uniqueStrings([
+            ...permissions,
+            ...(canAcceptRejectFromMeta ? ["can_accept_reject"] : []),
+            ...(canSendForReviewFromMeta ? ["can_send_for_review"] : []),
+          ])
+        : permissions;
       // NEW: Return allowedSections and permissions
       const allowedSections = (u.user_metadata?.allowedSections as string[]) ?? getDefaultSectionsForRoleKey(roleKey);
       return {
@@ -139,7 +149,7 @@ Deno.serve(async (req: Request) => {
         roleKey: userRoleKey.get(u.id) ?? null,
         status: u.banned_until ? "disabled" : "active",
         allowedSections, // Return this
-        permissions,
+        permissions: normalizedPermissions,
       };
     }).filter((u) => u.roleKey !== "client");
     return jsonResponse(list, 200, { origin });
@@ -185,8 +195,9 @@ Deno.serve(async (req: Request) => {
       const finalEmail = email || (existingUser.email ?? "");
       await upsertProfile(supabase, targetUserId, displayName, finalEmail);
       await ensureUserRole(supabase, targetUserId, roleKey);
+      const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview);
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
-        user_metadata: { ...(existingUser.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey) },
+        user_metadata: { ...(existingUser.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey), ...permissionMetadata },
       });
       if (metaErr) console.error("[users] updateUserById existing:", metaErr.message);
       return jsonResponse({ userId: targetUserId, invited: false, existing: true }, 200, { origin });
@@ -208,19 +219,21 @@ Deno.serve(async (req: Request) => {
       const finalEmail = email || (user.email ?? "");
       await upsertProfile(supabase, targetUserId, displayName, finalEmail);
       await ensureUserRole(supabase, targetUserId, roleKey);
+      const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview);
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
-        user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey) },
+        user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey), ...permissionMetadata },
       });
       if (metaErr) console.error("[users] updateUserById invite:", metaErr.message);
       return jsonResponse({ userId: targetUserId, invited: true }, 200, { origin });
     }
 
     const password = tempPassword && tempPassword.length >= 12 ? tempPassword : generateTempPassword(16);
+    const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview);
     const { data: createData, error: createErr } = await supabase.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { name: name || email.split("@")[0], allowedSections, permissions, role: getRoleDisplayName(roleKey) },
+      user_metadata: { name: name || email.split("@")[0], allowedSections, permissions, role: getRoleDisplayName(roleKey), ...permissionMetadata },
     });
     if (createErr) {
       console.error("[users] createUser:", createErr.message);
@@ -233,8 +246,9 @@ Deno.serve(async (req: Request) => {
     const finalEmail = email || (user.email ?? "");
     await upsertProfile(supabase, targetUserId, displayName, finalEmail);
     await ensureUserRole(supabase, targetUserId, roleKey);
+    const permissionMetadataAfterCreate = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview);
     const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
-      user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey) },
+      user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey), ...permissionMetadataAfterCreate },
     });
     if (metaErr) console.error("[users] updateUserById create:", metaErr.message);
     if (!PROD) returnedTempPassword = password;
@@ -304,7 +318,10 @@ Deno.serve(async (req: Request) => {
     const nextPermissions = permissionsFromBody.length > 0
       ? buildPermissionsForRole(effectiveRoleKey, permissionsFromBody.includes("can_accept_reject"), permissionsFromBody.includes("can_send_for_review"))
       : buildPermissionsForRole(effectiveRoleKey, canAcceptRejectFromBody, canSendForReviewFromBody);
+    const permissionMetadata = buildPermissionMetadata(effectiveRoleKey, canAcceptRejectFromBody, canSendForReviewFromBody);
     metadataUpdates.permissions = nextPermissions;
+    metadataUpdates.canAcceptReject = permissionMetadata.canAcceptReject;
+    metadataUpdates.canSendForReview = permissionMetadata.canSendForReview;
 
     if (Object.keys(metadataUpdates).length > 0) {
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {

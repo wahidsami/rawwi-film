@@ -2330,6 +2330,8 @@ export function ScriptWorkspace() {
       reasonIfDisabled: lockedAcceptedReportReason,
     };
   }, [effectiveDecisionCapabilities, selectedWorkspaceReportReviewStatus, lockedAcceptedReportReason]);
+  const canApproveReportCards = Boolean(finalDecisionCapabilities?.canApprove);
+  const canRejectReportCards = Boolean(finalDecisionCapabilities?.canReject);
 
   const workspaceCanonicalHintIds = useMemo(
     () =>
@@ -6917,7 +6919,7 @@ export function ScriptWorkspace() {
                           {lang === 'ar' ? 'عرض' : 'View'}
                         </Button>
 
-                        {r.reviewStatus !== 'approved' && (
+                        {canApproveReportCards && r.reviewStatus !== 'approved' && (
                           <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2 text-success hover:text-success" onClick={() => openApproveDecisionConfirm(r.id)}>
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             {lang === 'ar' ? 'قبول' : 'Approve'}
@@ -6929,13 +6931,13 @@ export function ScriptWorkspace() {
                             {lang === 'ar' ? 'إرسال للمراجعة' : 'Send for Review'}
                           </Button>
                         )}
-                        {r.reviewStatus !== 'rejected' && (
+                        {canRejectReportCards && r.reviewStatus !== 'rejected' && (
                           <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2 text-error hover:text-error" onClick={() => handleReview(r.id, 'rejected')}>
                             <XCircle className="w-3 h-3 mr-1" />
                             {lang === 'ar' ? 'رفض' : 'Reject'}
                           </Button>
                         )}
-                        {r.reviewStatus !== 'under_review' && (
+                        {canSendBackForReview && r.reviewStatus !== 'under_review' && (
                           <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2" onClick={() => handleReview(r.id, 'under_review')}>
                             {lang === 'ar' ? 'إعادة للمراجعة' : 'Re-review'}
                           </Button>
