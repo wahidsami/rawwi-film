@@ -330,7 +330,7 @@ function Reports() {
             ]}
           />
           {/* Admin-only: Filter by user (full user list so all users appear in dropdown) */}
-          {isAdmin && (
+          {canManageUsers && (
             <Select
               value={userFilter}
               onChange={(e) => setUserFilter(e.target.value)}
