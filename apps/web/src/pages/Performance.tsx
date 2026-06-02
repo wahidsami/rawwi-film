@@ -186,6 +186,8 @@ export function Performance() {
   const [pageSize] = useState(10);
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
   const [timelineFilter, setTimelineFilter] = useState<TimelineFilterKey>('all');
+  const [showTimelineFilters, setShowTimelineFilters] = useState(false);
+  const [visibleTimelineDays, setVisibleTimelineDays] = useState(3);
 
   const from = searchParams.get('from') ?? '';
   const to = searchParams.get('to') ?? '';
@@ -366,13 +368,21 @@ export function Performance() {
       .filter((group) => group.events.length > 0);
   }, [timelineFilter, timelineGroups]);
 
+  const pagedTimelineGroups = useMemo(() => filteredTimelineGroups.slice(0, visibleTimelineDays), [filteredTimelineGroups, visibleTimelineDays]);
+
   useEffect(() => {
     setExpandedDays({});
   }, [userId]);
 
   useEffect(() => {
     setTimelineFilter('all');
+    setShowTimelineFilters(false);
+    setVisibleTimelineDays(3);
   }, [userId]);
+
+  useEffect(() => {
+    setVisibleTimelineDays(3);
+  }, [timelineFilter, userId]);
 
   if (!isAdmin) {
     return (
@@ -846,37 +856,41 @@ export function Performance() {
                         {lang === 'ar' ? `${filteredTimelineGroups.length} يوم` : `${filteredTimelineGroups.length} days`}
                       </Badge>
                       <Button
-                        variant={timelineFilter === 'all' ? 'outline' : 'ghost'}
+                        variant={showTimelineFilters ? 'primary' : 'outline'}
                         size="sm"
-                        onClick={() => setTimelineFilter('all')}
+                        onClick={() => setShowTimelineFilters((current) => !current)}
                       >
                         <Filter className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
                         {lang === 'ar' ? 'فلتر' : 'Filter'}
                       </Button>
                     </div>
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {( ['all', 'assignments', 'analysis', 'recommendations', 'send_backs', 'decisions', 'reports'] as TimelineFilterKey[]).map((key) => (
-                      <Button
-                        key={key}
-                        size="sm"
-                        variant={timelineFilter === key ? 'primary' : 'outline'}
-                        onClick={() => setTimelineFilter(key)}
-                        className="rounded-full"
-                      >
-                        {timelineFilterLabel(key, lang === 'ar' ? 'ar' : 'en')}
-                      </Button>
-                    ))}
-                  </div>
+                  {showTimelineFilters ? (
+                    <div className="mt-4 rounded-2xl border border-border/70 bg-background/60 p-4">
+                      <div className="flex flex-wrap gap-2">
+                        {( ['all', 'assignments', 'analysis', 'recommendations', 'send_backs', 'decisions', 'reports'] as TimelineFilterKey[]).map((key) => (
+                          <Button
+                            key={key}
+                            size="sm"
+                            variant={timelineFilter === key ? 'primary' : 'outline'}
+                            onClick={() => setTimelineFilter(key)}
+                            className="rounded-full"
+                          >
+                            {timelineFilterLabel(key, lang === 'ar' ? 'ar' : 'en')}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                   <div className="mt-6 space-y-8">
-                    {filteredTimelineGroups.length === 0 ? (
+                    {pagedTimelineGroups.length === 0 ? (
                       <div className="rounded-2xl border border-dashed border-border bg-background/60 p-10 text-center text-text-muted">
                         {lang === 'ar'
                           ? 'لا توجد أحداث مطابقة لهذا الفلتر.'
                           : 'No events match this filter.'}
                       </div>
                     ) : (
-                      filteredTimelineGroups.map((group) => {
+                      pagedTimelineGroups.map((group) => {
                         const expanded = !!expandedDays[group.dayKey];
                         const visibleEvents = expanded ? group.events : group.events.slice(0, 4);
                         return (
@@ -961,6 +975,19 @@ export function Performance() {
                         );
                       })
                     )}
+                    {filteredTimelineGroups.length > visibleTimelineDays ? (
+                      <div className="flex justify-center pt-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => setVisibleTimelineDays((current) => current + 3)}
+                        >
+                          <RefreshCw className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                          {lang === 'ar'
+                            ? 'تحميل المزيد'
+                            : 'Load more'}
+                        </Button>
+                      </div>
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>
