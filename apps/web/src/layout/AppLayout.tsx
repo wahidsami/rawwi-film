@@ -98,7 +98,7 @@ export function AppLayout() {
       label: lang === 'ar' ? 'النصوص المستلمة' : 'Received Scripts',
       section: null as string | null,
       permission: null as string | null,
-      roles: ['Super Admin', 'Admin', 'Regulator'] as Array<'Super Admin' | 'Admin' | 'Regulator'>,
+      roles: ['Regulator'] as Array<'Super Admin' | 'Admin' | 'Regulator'>,
     },
     { to: '/app/scripts', icon: FileText, label: lang === 'ar' ? 'النصوص' : 'Scripts', section: 'clients', permission: 'view_scripts', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
     // Intentionally hidden for now (kept route/page in codebase).
