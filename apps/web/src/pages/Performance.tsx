@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/Badge';
 import { reportsApi, usersApi, type RegulatorPerformancePayload } from '@/api';
 import { downloadRegulatorPerformancePdf } from '@/components/reports/regulator-performance/download';
 import { APP_TIME_ZONE, formatDateTimeValue } from '@/utils/dateFormat';
-import { ArrowLeft, BarChart3, Eye, FileDown, Filter, Loader2, RefreshCw, Search, TrendingUp, Users } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, BarChart3, ClipboardCheck, Eye, FileDown, FileText, Filter, Loader2, RefreshCw, Search, TrendingUp, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 type InternalUser = {
@@ -131,6 +131,17 @@ function timelineAccent(type: string | null | undefined): { ring: string; badge:
   if (key.includes('approve') || key.includes('completed')) return { ring: 'ring-emerald-200 bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
   if (key.includes('assign') || key.includes('analysis')) return { ring: 'ring-primary/20 bg-primary', badge: 'bg-primary/5 text-primary border-primary/15' };
   return { ring: 'ring-border/70 bg-text-muted', badge: 'bg-background text-text-muted border-border' };
+}
+
+function timelineIcon(type: string | null | undefined) {
+  const key = String(type ?? '').trim().toLowerCase();
+  if (key.includes('assign')) return FileText;
+  if (key.includes('analysis')) return BarChart3;
+  if (key.includes('recommend')) return TrendingUp;
+  if (key.includes('send') || key.includes('review')) return RefreshCw;
+  if (key.includes('final') || key.includes('approve') || key.includes('reject')) return ClipboardCheck;
+  if (key.includes('report')) return FileDown;
+  return FileText;
 }
 
 function timelineFilterKey(type: string | null | undefined): TimelineFilterKey {
@@ -842,6 +853,7 @@ export function Performance() {
 
               <Card>
                 <CardContent className="p-6">
+                  <div id="performance-timeline-top" />
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                       <h2 className="text-lg font-semibold text-text-main">{lang === 'ar' ? 'الخط الزمني' : 'Timeline'}</h2>
@@ -855,6 +867,14 @@ export function Performance() {
                       <Badge variant="secondary" className="w-fit">
                         {lang === 'ar' ? `${filteredTimelineGroups.length} يوم` : `${filteredTimelineGroups.length} days`}
                       </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('performance-timeline-bottom')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                      >
+                        <ArrowDown className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                        {lang === 'ar' ? 'إلى الأسفل' : 'Bottom'}
+                      </Button>
                       <Button
                         variant={showTimelineFilters ? 'primary' : 'outline'}
                         size="sm"
@@ -916,6 +936,12 @@ export function Performance() {
                                       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                                         <div className="space-y-2">
                                           <div className="flex flex-wrap items-center gap-2">
+                                            <span className={`inline-flex h-9 w-9 items-center justify-center rounded-full border ${accent.badge}`}>
+                                              {(() => {
+                                                const Icon = timelineIcon((event as any).type);
+                                                return <Icon className="h-4 w-4" />;
+                                              })()}
+                                            </span>
                                             <Badge variant="secondary" className={accent.badge}>
                                               {title}
                                             </Badge>
@@ -988,6 +1014,16 @@ export function Performance() {
                         </Button>
                       </div>
                     ) : null}
+                    <div id="performance-timeline-bottom" className="flex justify-center pt-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => document.getElementById('performance-timeline-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                      >
+                        <ArrowUp className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                        {lang === 'ar' ? 'إلى الأعلى' : 'Top'}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
