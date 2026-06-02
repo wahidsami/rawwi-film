@@ -88,31 +88,33 @@ export function AppLayout() {
 
   const baseNavLinks = [
     // Always visible to all authenticated users
-    { to: '/app', icon: LayoutDashboard, label: t('overview'), section: null as string | null, permission: null as string | null },
+    { to: '/app', icon: LayoutDashboard, label: t('overview'), section: null as string | null, permission: null as string | null, roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
 
     // Conditional sections - supports BOTH section-based and permission-based access
-    { to: '/app/clients', icon: Users, label: t('clients'), section: 'clients', permission: 'view_clients' },
+    { to: '/app/clients', icon: Users, label: t('clients'), section: 'clients', permission: 'view_clients', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
     {
-      to: user?.role === 'Regulator' ? '/app/received-scripts' : '/app/scripts',
-      icon: user?.role === 'Regulator' ? Inbox : FileText,
-      label: user?.role === 'Regulator' ? (lang === 'ar' ? 'النصوص المستلمة' : 'Received Scripts') : (lang === 'ar' ? 'النصوص' : 'Scripts'),
-      section: 'clients',
-      permission: 'view_scripts',
+      to: '/app/received-scripts',
+      icon: Inbox,
+      label: lang === 'ar' ? 'النصوص المستلمة' : 'Received Scripts',
+      section: null as string | null,
+      permission: null as string | null,
+      roles: ['Super Admin', 'Admin', 'Regulator'] as Array<'Super Admin' | 'Admin' | 'Regulator'>,
     },
+    { to: '/app/scripts', icon: FileText, label: lang === 'ar' ? 'النصوص' : 'Scripts', section: 'clients', permission: 'view_scripts', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
     // Intentionally hidden for now (kept route/page in codebase).
     // { to: '/app/client-submissions', icon: FileText, label: lang === 'ar' ? 'طلبات المستفيدين' : 'Beneficiary Submissions', section: 'clients', permission: 'view_scripts' },
     ...(ENABLE_QUICK_ANALYSIS
-      ? [{ to: '/app/quick-analysis', icon: Wand2, label: lang === 'ar' ? 'تحليل الأعمال' : 'Works Analysis', section: null as string | null, permission: null as string | null }]
+      ? [{ to: '/app/quick-analysis', icon: Wand2, label: lang === 'ar' ? 'تحليل الأعمال' : 'Works Analysis', section: null as string | null, permission: null as string | null, roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null }]
       : []),
-    { to: '/app/glossary', icon: BookOpen, label: t('glossary'), section: 'glossary', permission: 'manage_glossary' },
-    { to: '/app/tasks', icon: FileText, label: lang === 'ar' ? 'المهام' : 'Tasks', section: 'tasks', permission: 'view_tasks' },
-    { to: '/app/reports', icon: FileText, label: t('reports'), section: 'reports', permission: 'view_reports' },
-    ...(settings?.features?.enableCertificates ? [{ to: '/app/certificates', icon: Award, label: t('certificates'), section: null as string | null, permission: null as string | null }] : []),
-    { to: '/app/access-control', icon: ShieldCheck, label: t('accessControl'), section: 'access_control', permission: 'manage_users' },
-    { to: '/app/audit', icon: History, label: t('auditLog'), section: 'audit', permission: 'view_audit' },
+    { to: '/app/glossary', icon: BookOpen, label: t('glossary'), section: 'glossary', permission: 'manage_glossary', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
+    { to: '/app/tasks', icon: FileText, label: lang === 'ar' ? 'المهام' : 'Tasks', section: 'tasks', permission: 'view_tasks', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
+    { to: '/app/reports', icon: FileText, label: t('reports'), section: 'reports', permission: 'view_reports', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
+    ...(settings?.features?.enableCertificates ? [{ to: '/app/certificates', icon: Award, label: t('certificates'), section: null as string | null, permission: null as string | null, roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null }] : []),
+    { to: '/app/access-control', icon: ShieldCheck, label: t('accessControl'), section: 'access_control', permission: 'manage_users', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
+    { to: '/app/audit', icon: History, label: t('auditLog'), section: 'audit', permission: 'view_audit', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
 
     // Always visible
-    { to: '/app/settings', icon: Settings, label: t('settings'), section: null as string | null, permission: null as string | null },
+    { to: '/app/settings', icon: Settings, label: t('settings'), section: null as string | null, permission: null as string | null, roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
   ];
 
   const adminSubtitle = lang === 'ar'
@@ -120,6 +122,13 @@ export function AppLayout() {
     : 'Reviews, scripts, reports, and operations';
 
   const navLinks = baseNavLinks.filter(link => {
+    if (link.roles && user?.role && !link.roles.includes(user.role as 'Super Admin' | 'Admin' | 'Regulator' | 'Client')) {
+      return false;
+    }
+
+    // Role-gated inbox/reporting links can opt out of section/permission checks.
+    if (link.to === '/app/received-scripts') return true;
+
     // No section/permission required → always show (Overview, Settings, Certificates)
     if (!link.section && !link.permission) return true;
 

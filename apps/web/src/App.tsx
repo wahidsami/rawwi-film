@@ -143,7 +143,7 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="received-scripts" element={
-            <ProtectedRoute requiredPermission="view_scripts">
+            <ProtectedRoute>
               <ReceivedScripts />
             </ProtectedRoute>
           } />
