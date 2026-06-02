@@ -2,7 +2,8 @@
 
 ## Status
 - Phase 1 delivered: builder page, CSV export, Excel export, saved templates, PDF export.
-- Next planned source expansion: Audit events.
+- Phase 2 delivered: Audit source with search, filters, PDF/Excel/CSV export, and template support.
+- Next planned source expansion: findings / revision cycles.
 
 ## Goal
 Create a dedicated admin section for building reports from the system data we already have, with the ability to export the result as:

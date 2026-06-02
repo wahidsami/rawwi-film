@@ -29,11 +29,12 @@ import { useLangStore } from '@/store/langStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDateTimeValue, APP_TIME_ZONE } from '@/utils/dateFormat';
 import { reportsApi, scriptsApi, usersApi, type ReportListItem, type Script, type UserListItem } from '@/api';
+import { auditService, type AuditEventRow } from '@/services/auditService';
 import { downloadCsvFile, downloadXlsxFile } from '@/utils/spreadsheetExport';
 import { downloadReportBuilderPdf } from '@/components/reports/report-builder/download';
 import { cn } from '@/utils/cn';
 
-type BuilderSource = 'scripts' | 'reports' | 'users';
+type BuilderSource = 'scripts' | 'reports' | 'users' | 'audit';
 
 type BuilderRow = {
   id: string;
@@ -78,6 +79,14 @@ const SOURCE_OPTIONS: Array<{ value: BuilderSource; labelAr: string; labelEn: st
     descriptionEn: 'Export internal users, roles, permissions, and section access.',
     supportsDateRange: false,
   },
+  {
+    value: 'audit',
+    labelAr: 'سجل التدقيق',
+    labelEn: 'Audit Log',
+    descriptionAr: 'تصدير سجل العمليات والأحداث التشغيلية مع النتائج.',
+    descriptionEn: 'Export operational events and audit actions with outcomes.',
+    supportsDateRange: true,
+  },
 ];
 
 const SOURCE_COLUMNS: Record<BuilderSource, ColumnDef[]> = {
@@ -111,12 +120,21 @@ const SOURCE_COLUMNS: Record<BuilderSource, ColumnDef[]> = {
     { key: 'permissionsCount', labelAr: 'عدد الصلاحيات', labelEn: 'Permissions Count' },
     { key: 'sectionsCount', labelAr: 'عدد الأقسام', labelEn: 'Sections Count' },
   ],
+  audit: [
+    { key: 'eventType', labelAr: 'نوع الحدث', labelEn: 'Event Type' },
+    { key: 'actor', labelAr: 'المستخدم', labelEn: 'Actor' },
+    { key: 'targetType', labelAr: 'الوجهة', labelEn: 'Target Type' },
+    { key: 'resultStatus', labelAr: 'النتيجة', labelEn: 'Result' },
+    { key: 'occurredAt', labelAr: 'الوقت', labelEn: 'Occurred At' },
+    { key: 'targetLabel', labelAr: 'الهدف', labelEn: 'Target' },
+  ],
 };
 
 const SOURCE_DEFAULT_COLUMNS: Record<BuilderSource, string[]> = {
   scripts: ['title', 'company', 'status', 'assignee', 'createdAt'],
   reports: ['scriptTitle', 'company', 'status', 'findingsCount', 'createdAt'],
   users: ['name', 'email', 'role', 'status', 'permissionsCount'],
+  audit: ['eventType', 'actor', 'targetType', 'resultStatus', 'occurredAt'],
 };
 
 type ReportBuilderTemplate = {
@@ -126,6 +144,8 @@ type ReportBuilderTemplate = {
   search: string;
   statusFilter: string;
   roleFilter: string;
+  eventTypeFilter: string;
+  targetTypeFilter: string;
   from: string;
   to: string;
   pageSize: number;
@@ -158,6 +178,16 @@ function createTemplateId(name: string): string {
   return `${Date.now()}-${name.toLowerCase().replace(/\s+/g, '-').slice(0, 24)}`;
 }
 
+const AUDIT_EVENT_TYPES = [
+  'TASK_CREATED', 'TASK_ASSIGNED', 'ANALYSIS_STARTED', 'ANALYSIS_COMPLETED', 'REPORT_GENERATED',
+  'FINDING_CREATED', 'FINDING_OVERRIDDEN', 'FINDING_MARKED_SAFE', 'FINDING_DELETED',
+  'LEXICON_TERM_ADDED', 'LEXICON_TERM_UPDATED', 'LEXICON_TERM_DELETED',
+  'CLIENT_CREATED', 'CLIENT_UPDATED', 'CLIENT_DEACTIVATED',
+  'USER_ROLE_CHANGED', 'LOGIN_SUCCESS', 'LOGIN_FAILED',
+];
+
+const AUDIT_TARGET_TYPES = ['script', 'task', 'report', 'glossary', 'client'];
+
 function formatCount(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '0';
   return new Intl.NumberFormat().format(value);
@@ -186,6 +216,7 @@ function createBuilderRows(
     scripts: Script[];
     reports: ReportListItem[];
     users: UserListItem[];
+    audit: AuditEventRow[];
     companies: Array<{ companyId: string; nameAr?: string; nameEn?: string }>;
   },
   lang: 'ar' | 'en',
@@ -279,6 +310,46 @@ function createBuilderRows(
         actionHref: `/report/${report.jobId || report.id}?by=${report.jobId ? 'job' : 'id'}`,
         actionLabelAr: 'فتح التقرير',
         actionLabelEn: 'Open report',
+      };
+    });
+  }
+
+  if (source === 'audit') {
+    return payload.audit.map((event) => {
+      const actor = event.actorName || event.actorUserId || '—';
+      const target = event.targetLabel || event.targetId || '—';
+      const values = {
+        eventType: event.eventType,
+        actor,
+        targetType: event.targetType,
+        resultStatus: event.resultStatus,
+        occurredAt: formatDateTimeValue(event.occurredAt, { lang }),
+        targetLabel: target,
+      };
+      const searchText = [
+        event.eventType,
+        event.actorName,
+        event.actorUserId,
+        event.actorRole,
+        event.targetType,
+        event.targetLabel,
+        event.targetId,
+        event.resultStatus,
+        event.resultMessage,
+      ]
+        .map(normalizeText)
+        .join(' ');
+
+      return {
+        id: event.id,
+        values,
+        searchText,
+        status: event.resultStatus,
+        roleKey: event.actorRole,
+        dateRaw: event.occurredAt || event.createdAt || null,
+        actionHref: '/app/audit',
+        actionLabelAr: 'فتح التدقيق',
+        actionLabelEn: 'Open audit',
       };
     });
   }
@@ -379,6 +450,8 @@ export function ReportBuilder() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [eventTypeFilter, setEventTypeFilter] = useState('all');
+  const [targetTypeFilter, setTargetTypeFilter] = useState('all');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [page, setPage] = useState(1);
@@ -415,10 +488,13 @@ export function ReportBuilder() {
     setError(null);
     setLoadingMessage(lang === 'ar' ? 'جاري تحميل بيانات المصدر...' : 'Loading source data...');
     try {
-      const [scriptRows, reportRows, userRows] = await Promise.all([
+      const [scriptRows, reportRows, userRows, auditRows] = await Promise.all([
         nextSource === 'scripts' ? scriptsApi.getScripts() : Promise.resolve<Script[]>([]),
         nextSource === 'reports' ? reportsApi.listAll() : Promise.resolve<ReportListItem[]>([]),
         nextSource === 'users' ? usersApi.getUsers() : Promise.resolve<UserListItem[]>([]),
+        nextSource === 'audit'
+          ? auditService.list({ page: 1, pageSize: 1000 }).then((res) => res.data)
+          : Promise.resolve<AuditEventRow[]>([]),
       ]);
 
       const nextRows = createBuilderRows(
@@ -427,6 +503,7 @@ export function ReportBuilder() {
           scripts: scriptRows,
           reports: reportRows,
           users: userRows,
+          audit: auditRows,
           companies,
         },
         lang,
@@ -456,6 +533,8 @@ export function ReportBuilder() {
     setSearch(template.search);
     setStatusFilter(template.statusFilter);
     setRoleFilter(template.roleFilter);
+    setEventTypeFilter(template.eventTypeFilter || 'all');
+    setTargetTypeFilter(template.targetTypeFilter || 'all');
     setFrom(template.from);
     setTo(template.to);
     setPageSize(template.pageSize || 10);
@@ -465,11 +544,14 @@ export function ReportBuilder() {
 
   const handleSourceChange = useCallback(async (nextSource: BuilderSource) => {
     setSelectedTemplateId('');
+    setTemplateName('');
     setSource(nextSource);
     setSelectedColumns(SOURCE_DEFAULT_COLUMNS[nextSource]);
     setSearch('');
     setStatusFilter('all');
     setRoleFilter('all');
+    setEventTypeFilter('all');
+    setTargetTypeFilter('all');
     setFrom('');
     setTo('');
     setPageSize(10);
@@ -483,12 +565,14 @@ export function ReportBuilder() {
       const matchesSearch = !q || row.searchText.includes(q);
       const matchesStatus = statusFilter === 'all' || row.status === statusFilter;
       const matchesRole = source !== 'users' || roleFilter === 'all' || row.roleKey === roleFilter;
+      const matchesEventType = source !== 'audit' || eventTypeFilter === 'all' || row.values['eventType'] === eventTypeFilter;
+      const matchesTargetType = source !== 'audit' || targetTypeFilter === 'all' || row.values['targetType'] === targetTypeFilter;
       const rowDate = dateKey(row.dateRaw);
       const matchesFrom = !from || !rowDate || rowDate >= from;
       const matchesTo = !to || !rowDate || rowDate <= to;
-      return matchesSearch && matchesStatus && matchesRole && matchesFrom && matchesTo;
+      return matchesSearch && matchesStatus && matchesRole && matchesEventType && matchesTargetType && matchesFrom && matchesTo;
     });
-  }, [rows, search, statusFilter, roleFilter, source, from, to]);
+  }, [rows, search, statusFilter, roleFilter, source, eventTypeFilter, targetTypeFilter, from, to]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
   const currentPage = Math.min(Math.max(1, page), totalPages);
@@ -496,7 +580,7 @@ export function ReportBuilder() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, roleFilter, from, to, pageSize, source]);
+  }, [search, statusFilter, roleFilter, eventTypeFilter, targetTypeFilter, from, to, pageSize, source]);
 
   useEffect(() => {
     const valid = new Set(SOURCE_COLUMNS[source].map((col) => col.key));
@@ -646,6 +730,8 @@ export function ReportBuilder() {
       search,
       statusFilter,
       roleFilter,
+      eventTypeFilter,
+      targetTypeFilter,
       from,
       to,
       pageSize,
@@ -677,6 +763,8 @@ export function ReportBuilder() {
     setSearch('');
     setStatusFilter('all');
     setRoleFilter('all');
+    setEventTypeFilter('all');
+    setTargetTypeFilter('all');
     setFrom('');
     setTo('');
     setPage(1);
@@ -763,7 +851,16 @@ export function ReportBuilder() {
             />
           </div>
 
-          <div className={cn('grid gap-4', source === 'users' ? 'lg:grid-cols-4' : 'lg:grid-cols-3')}>
+          <div
+            className={cn(
+              'grid gap-4',
+              source === 'audit'
+                ? 'lg:grid-cols-5'
+                : source === 'users'
+                  ? 'lg:grid-cols-4'
+                  : 'lg:grid-cols-3',
+            )}
+          >
             {source === 'users' && (
               <Select
                 label={lang === 'ar' ? 'الدور' : 'Role'}
@@ -772,6 +869,28 @@ export function ReportBuilder() {
                 options={[
                   { value: 'all', label: lang === 'ar' ? 'كل الأدوار' : 'All roles' },
                   ...availableRoles.map((role) => ({ value: role, label: role })),
+                ]}
+              />
+            )}
+            {source === 'audit' && (
+              <Select
+                label={lang === 'ar' ? 'نوع الحدث' : 'Event type'}
+                value={eventTypeFilter}
+                onChange={(e) => setEventTypeFilter(e.target.value)}
+                options={[
+                  { value: 'all', label: lang === 'ar' ? 'كل الأنواع' : 'All event types' },
+                  ...AUDIT_EVENT_TYPES.map((type) => ({ value: type, label: type })),
+                ]}
+              />
+            )}
+            {source === 'audit' && (
+              <Select
+                label={lang === 'ar' ? 'الوجهة' : 'Target type'}
+                value={targetTypeFilter}
+                onChange={(e) => setTargetTypeFilter(e.target.value)}
+                options={[
+                  { value: 'all', label: lang === 'ar' ? 'كل الوجهات' : 'All targets' },
+                  ...AUDIT_TARGET_TYPES.map((type) => ({ value: type, label: type })),
                 ]}
               />
             )}
