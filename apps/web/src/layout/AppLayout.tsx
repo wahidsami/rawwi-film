@@ -157,6 +157,8 @@ export function AppLayout() {
             setNotifUnreadCount(r.unreadCount);
           }).catch(() => {});
         }
+        fetchInitialData().catch(() => {});
+        window.dispatchEvent(new Event('dashboard-invalidate'));
       })
       .subscribe();
 

@@ -400,6 +400,7 @@ function normalizeStatus(s: unknown): string {
   const v = String(s).toLowerCase().replace(/\s+/g, "_");
   const allowed = [
     "draft",
+    "assigned",
     "in_review",
     "analysis_running",
     "review_required",
@@ -3050,9 +3051,21 @@ Deno.serve(async (req: Request) => {
     } else if (body.assignee_id !== undefined) {
       if (body.assignee_id === null || body.assignee_id === "") {
         updates.assignee_id = null;
-      } else if (typeof body.assignee_id === 'string' && body.assignee_id.trim()) {
+    } else if (typeof body.assignee_id === 'string' && body.assignee_id.trim()) {
         updates.assignee_id = body.assignee_id.trim();
       }
+    }
+
+    const assigneeChangeRequested =
+      body.assigneeId !== undefined || body.assignee_id !== undefined;
+    const currentStatus = String((script as any).status ?? "").trim().toLowerCase();
+    if (
+      assigneeChangeRequested &&
+      updates.assignee_id &&
+      updates.status === undefined &&
+      (currentStatus === "draft" || currentStatus === "pending")
+    ) {
+      updates.status = "assigned";
     }
 
     if (Object.keys(updates).length === 0) {
