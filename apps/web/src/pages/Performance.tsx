@@ -10,7 +10,7 @@ import { Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
 import { reportsApi, usersApi, type RegulatorPerformancePayload } from '@/api';
 import { downloadRegulatorPerformancePdf } from '@/components/reports/regulator-performance/download';
-import { formatDateTimeValue } from '@/utils/dateFormat';
+import { APP_TIME_ZONE, formatDateTimeValue } from '@/utils/dateFormat';
 import { ArrowLeft, BarChart3, Eye, FileDown, Loader2, RefreshCw, Search, TrendingUp, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -27,6 +27,8 @@ type UserPerfRow = {
   loading: boolean;
   error: string | null;
 };
+
+type TimelineEntry = NonNullable<RegulatorPerformancePayload['timeline']>[number];
 
 function safe(v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';
@@ -71,6 +73,65 @@ function SimpleBars({ items, lang }: { items: Array<{ label: string; value: numb
   );
 }
 
+function timelineDateKey(value: string): string | null {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: APP_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+}
+
+function timelineDayLabel(value: string, lang: 'ar' | 'en', dateFormat?: string): string {
+  return formatDateTimeValue(value, {
+    lang,
+    format: dateFormat,
+  });
+}
+
+function timelineActionLabel(type: string | null | undefined, lang: 'ar' | 'en'): string {
+  const key = String(type ?? '').trim().toLowerCase();
+  if (!key) return lang === 'ar' ? 'حدث' : 'Event';
+  const mapAr: Record<string, string> = {
+    recommendation_approved: 'توصية بالموافقة',
+    recommendation_rejected: 'توصية بالرفض',
+    send_for_review: 'إرجاع للمراجعة',
+    final_approved: 'اعتماد نهائي',
+    final_rejected: 'رفض نهائي',
+    analysis_started: 'بدء التحليل',
+    analysis_completed: 'اكتمال التحليل',
+    script_assigned: 'إسناد نص',
+    report_generated: 'توليد تقرير',
+    review_requested: 'طلب مراجعة',
+  };
+  const mapEn: Record<string, string> = {
+    recommendation_approved: 'Recommend approval',
+    recommendation_rejected: 'Recommend rejection',
+    send_for_review: 'Sent back for review',
+    final_approved: 'Final approval',
+    final_rejected: 'Final rejection',
+    analysis_started: 'Analysis started',
+    analysis_completed: 'Analysis completed',
+    script_assigned: 'Script assigned',
+    report_generated: 'Report generated',
+    review_requested: 'Review requested',
+  };
+  return lang === 'ar'
+    ? (mapAr[key] ?? key.replaceAll('_', ' '))
+    : (mapEn[key] ?? key.replaceAll('_', ' '));
+}
+
+function timelineAccent(type: string | null | undefined): { ring: string; badge: string } {
+  const key = String(type ?? '').trim().toLowerCase();
+  if (key.includes('reject')) return { ring: 'ring-red-200 bg-red-500', badge: 'bg-red-50 text-red-700 border-red-200' };
+  if (key.includes('send') || key.includes('review')) return { ring: 'ring-amber-200 bg-amber-500', badge: 'bg-amber-50 text-amber-700 border-amber-200' };
+  if (key.includes('approve') || key.includes('completed')) return { ring: 'ring-emerald-200 bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+  if (key.includes('assign') || key.includes('analysis')) return { ring: 'ring-primary/20 bg-primary', badge: 'bg-primary/5 text-primary border-primary/15' };
+  return { ring: 'ring-border/70 bg-text-muted', badge: 'bg-background text-text-muted border-border' };
+}
+
 export function Performance() {
   const { lang } = useLangStore();
   const { settings } = useSettingsStore();
@@ -88,6 +149,7 @@ export function Performance() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
+  const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
 
   const from = searchParams.get('from') ?? '';
   const to = searchParams.get('to') ?? '';
@@ -239,6 +301,28 @@ export function Performance() {
 
   const currentDetail = isDetail ? rows[0]?.payload ?? null : null;
   const currentDetailUser = isDetail ? rows[0]?.user ?? null : null;
+  const timelineGroups = useMemo(() => {
+    if (!currentDetail) return [];
+    const entries = (currentDetail.timeline ?? []) as TimelineEntry[];
+    const ordered = [...entries].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+    const groups = new Map<string, { dayLabel: string; events: TimelineEntry[] }>();
+    ordered.forEach((event) => {
+      const key = timelineDateKey(event.at) ?? 'unknown';
+      if (!groups.has(key)) {
+        groups.set(key, { dayLabel: event.at, events: [] });
+      }
+      groups.get(key)!.events.push(event);
+    });
+    return Array.from(groups.entries()).map(([dayKey, group]) => ({
+      dayKey,
+      dayLabel: group.dayLabel,
+      events: group.events,
+    }));
+  }, [currentDetail]);
+
+  useEffect(() => {
+    setExpandedDays({});
+  }, [userId]);
 
   if (!isAdmin) {
     return (
@@ -698,16 +782,110 @@ export function Performance() {
 
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-text-main">{lang === 'ar' ? 'الخط الزمني' : 'Timeline'}</h2>
-                  <div className="mt-4 space-y-3">
-                    {currentDetail.timeline.slice(0, 20).map((event, idx) => (
-                      <div key={idx} className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                        <p className="text-xs text-text-muted">{formatDateTimeValue((event as any).at, { lang: lang === 'ar' ? 'ar' : 'en', format: settings?.platform?.dateFormat })}</p>
-                        <p className="mt-1 text-sm font-medium text-text-main">{safe((event as any).type)}</p>
-                        <p className="mt-1 text-sm text-text-muted">{safe((event as any).actorName ?? (event as any).actor)}</p>
-                        {(event as any).note ? <p className="mt-1 text-sm text-text-main">{safe((event as any).note)}</p> : null}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold text-text-main">{lang === 'ar' ? 'الخط الزمني' : 'Timeline'}</h2>
+                      <p className="text-sm text-text-muted">
+                        {lang === 'ar'
+                          ? 'عرض مجمّع حسب اليوم مع كل حدث داخل بطاقة مستقلة.'
+                          : 'Grouped by day with each event shown as a separate activity card.'}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="w-fit">
+                      {lang === 'ar' ? `${timelineGroups.length} يوم` : `${timelineGroups.length} days`}
+                    </Badge>
+                  </div>
+                  <div className="mt-6 space-y-8">
+                    {timelineGroups.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-border bg-background/60 p-10 text-center text-text-muted">
+                        {lang === 'ar' ? 'لا توجد أحداث زمنية بعد.' : 'No timeline events yet.'}
                       </div>
-                    ))}
+                    ) : (
+                      timelineGroups.map((group) => {
+                        const expanded = !!expandedDays[group.dayKey];
+                        const visibleEvents = expanded ? group.events : group.events.slice(0, 4);
+                        return (
+                          <div key={group.dayKey} className="grid gap-4 xl:grid-cols-[180px_1fr]">
+                            <div className="space-y-2 xl:pt-2">
+                              <p className="text-lg font-semibold text-text-main">
+                                {timelineDayLabel(group.dayLabel, lang === 'ar' ? 'ar' : 'en', settings?.platform?.dateFormat)}
+                              </p>
+                              <Badge variant="secondary" className="w-fit">
+                                {lang === 'ar' ? `${group.events.length} حدث` : `${group.events.length} events`}
+                              </Badge>
+                            </div>
+                            <div className="relative space-y-4 rounded-[1.5rem] border border-border/70 bg-background/50 p-4 sm:p-5">
+                              <div className="absolute inset-y-4 left-5 w-px bg-gradient-to-b from-primary/35 via-border to-transparent rtl:left-auto rtl:right-5" />
+                              {visibleEvents.map((event, idx) => {
+                                const accent = timelineAccent((event as any).type);
+                                const title = timelineActionLabel((event as any).type, lang === 'ar' ? 'ar' : 'en');
+                                const actor = safe((event as any).actorName ?? (event as any).actorId ?? (event as any).actor);
+                                return (
+                                  <div key={`${group.dayKey}-${idx}`} className="relative pl-12 rtl:pl-0 rtl:pr-12">
+                                    <span className={`absolute left-[14px] top-5 h-3.5 w-3.5 rounded-full ring-4 ${accent.ring} rtl:left-auto rtl:right-[14px]`} />
+                                    <div className="rounded-2xl border border-border/70 bg-white/85 p-4 shadow-sm transition-shadow hover:shadow-md">
+                                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                        <div className="space-y-2">
+                                          <div className="flex flex-wrap items-center gap-2">
+                                            <Badge variant="secondary" className={accent.badge}>
+                                              {title}
+                                            </Badge>
+                                            {(event as any).toStatus ? (
+                                              <Badge variant="outline">
+                                                {safe((event as any).toStatus)}
+                                              </Badge>
+                                            ) : null}
+                                          </div>
+                                          <p className="text-sm text-text-muted">
+                                            <span className="font-medium text-text-main">{lang === 'ar' ? 'بواسطة' : 'By'}</span>{' '}
+                                            {actor}
+                                          </p>
+                                          {(event as any).reason ? (
+                                            <p className="text-sm text-text-main">
+                                              <span className="font-medium">{lang === 'ar' ? 'السبب:' : 'Reason:'}</span>{' '}
+                                              {safe((event as any).reason)}
+                                            </p>
+                                          ) : null}
+                                          {(event as any).note ? (
+                                            <p className="text-sm text-text-main">
+                                              <span className="font-medium">{lang === 'ar' ? 'ملاحظة:' : 'Note:'}</span>{' '}
+                                              {safe((event as any).note)}
+                                            </p>
+                                          ) : null}
+                                        </div>
+                                        <div className="shrink-0 rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-left rtl:text-right">
+                                          <p className="text-sm font-semibold text-text-main">
+                                            {formatDateTimeValue((event as any).at, { lang: lang === 'ar' ? 'ar' : 'en', format: settings?.platform?.dateFormat })}
+                                          </p>
+                                          <p className="mt-1 text-xs text-text-muted">
+                                            {lang === 'ar'
+                                              ? 'إجراء موثق ضمن خط الأداء'
+                                              : 'Logged in the performance timeline'}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {group.events.length > 4 ? (
+                                <div className="pl-12 rtl:pl-0 rtl:pr-12">
+                                  <Button
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => setExpandedDays((current) => ({ ...current, [group.dayKey]: !current[group.dayKey] }))}
+                                  >
+                                    {expanded
+                                      ? (lang === 'ar' ? 'إخفاء بعض الأحداث' : 'Show fewer events')
+                                      : (lang === 'ar' ? `+ ${group.events.length - 4} أحداث أخرى` : `+ ${group.events.length - 4} more events`)}
+                                  </Button>
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </CardContent>
               </Card>
