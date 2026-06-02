@@ -83,6 +83,7 @@ export function Performance() {
   const [rows, setRows] = useState<UserPerfRow[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [page, setPage] = useState(1);
@@ -145,16 +146,18 @@ export function Performance() {
   const loadDetail = useCallback(async () => {
     if (!userId) return;
     setLoadingDetail(true);
+    setDetailError(null);
     try {
       const payload = await reportsApi.getRegulatorPerformance(userId, dateRange);
       setRows([{ user: { id: payload.regulator.id, name: payload.regulator.name, email: payload.regulator.email ?? '', roleKey: payload.regulator.roleKey }, payload, loading: false, error: null }]);
     } catch (err) {
       console.error(err);
+      setDetailError(err instanceof Error ? err.message : (lang === 'ar' ? 'تعذر تحميل التقرير' : 'Failed to load report'));
       setRows([]);
     } finally {
       setLoadingDetail(false);
     }
-  }, [dateRange, userId]);
+  }, [dateRange, lang, userId]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -235,6 +238,7 @@ export function Performance() {
   };
 
   const currentDetail = isDetail ? rows[0]?.payload ?? null : null;
+  const currentDetailUser = isDetail ? rows[0]?.user ?? null : null;
 
   if (!isAdmin) {
     return (
@@ -506,8 +510,31 @@ export function Performance() {
 
       {isDetail && (
         <div className="space-y-6">
-          {loadingDetail || !currentDetail ? (
+          {loadingDetail ? (
             <Card><CardContent className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></CardContent></Card>
+          ) : detailError ? (
+            <Card>
+              <CardContent className="space-y-3 p-12 text-center">
+                <p className="text-lg font-semibold text-text-main">{lang === 'ar' ? 'تعذر تحميل تقرير الأداء' : 'Unable to load performance report'}</p>
+                <p className="text-sm text-text-muted">{detailError}</p>
+                <div className="flex justify-center gap-2 pt-2">
+                  <Button variant="outline" onClick={() => void loadDetail()}>
+                    <RefreshCw className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                    {lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate('/app/performance')}>
+                    <ArrowLeft className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                    {lang === 'ar' ? 'رجوع' : 'Back'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : !currentDetail || !currentDetailUser ? (
+            <Card>
+              <CardContent className="p-12 text-center text-text-muted">
+                {lang === 'ar' ? 'لا توجد بيانات تفصيلية بعد.' : 'No detailed data yet.'}
+              </CardContent>
+            </Card>
           ) : (
             <>
               <Card className="overflow-hidden border-primary/15 bg-gradient-to-br from-primary/12 via-background to-background shadow-[0_22px_50px_rgba(109,47,95,0.08)]">
