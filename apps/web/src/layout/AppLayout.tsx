@@ -33,7 +33,7 @@ import { ENABLE_QUICK_ANALYSIS } from '@/lib/env';
 
 export function AppLayout() {
   const { t, lang, toggleLang } = useLangStore();
-  const { user, logout, hasPermission, hasSection } = useAuthStore();
+  const { user, authReady, logout, hasPermission, hasSection } = useAuthStore();
   const { settings } = useSettingsStore();
   const navigate = useNavigate();
   const { fetchInitialData } = useDataStore();
@@ -46,6 +46,11 @@ export function AppLayout() {
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
+
+  useEffect(() => {
+    if (!authReady || !user?.id) return;
+    fetchInitialData().catch(() => {});
+  }, [authReady, fetchInitialData, user?.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
