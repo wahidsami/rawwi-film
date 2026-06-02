@@ -28,13 +28,21 @@ import { useDataStore } from '@/store/dataStore';
 import { useLangStore } from '@/store/langStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDateTimeValue, APP_TIME_ZONE } from '@/utils/dateFormat';
-import { reportsApi, scriptsApi, usersApi, type ReportListItem, type Script, type UserListItem } from '@/api';
+import {
+  reportsApi,
+  scriptsApi,
+  usersApi,
+  type ReportListItem,
+  type RegulatorPerformancePayload,
+  type Script,
+  type UserListItem,
+} from '@/api';
 import { auditService, type AuditEventRow } from '@/services/auditService';
 import { downloadCsvFile, downloadXlsxFile } from '@/utils/spreadsheetExport';
 import { downloadReportBuilderPdf } from '@/components/reports/report-builder/download';
 import { cn } from '@/utils/cn';
 
-type BuilderSource = 'scripts' | 'reports' | 'users' | 'audit';
+type BuilderSource = 'scripts' | 'reports' | 'users' | 'audit' | 'performance';
 
 type BuilderRow = {
   id: string;
@@ -87,6 +95,14 @@ const SOURCE_OPTIONS: Array<{ value: BuilderSource; labelAr: string; labelEn: st
     descriptionEn: 'Export operational events and audit actions with outcomes.',
     supportsDateRange: true,
   },
+  {
+    value: 'performance',
+    labelAr: 'الأداء',
+    labelEn: 'Performance',
+    descriptionAr: 'تصدير أداء الإداريين والمراجعين مع مؤشرات الإنجاز والسرعة.',
+    descriptionEn: 'Export admins and regulators performance with workload and turnaround metrics.',
+    supportsDateRange: true,
+  },
 ];
 
 const SOURCE_COLUMNS: Record<BuilderSource, ColumnDef[]> = {
@@ -120,6 +136,17 @@ const SOURCE_COLUMNS: Record<BuilderSource, ColumnDef[]> = {
     { key: 'permissionsCount', labelAr: 'عدد الصلاحيات', labelEn: 'Permissions Count' },
     { key: 'sectionsCount', labelAr: 'عدد الأقسام', labelEn: 'Sections Count' },
   ],
+  performance: [
+    { key: 'name', labelAr: 'الاسم', labelEn: 'Name' },
+    { key: 'email', labelAr: 'البريد الإلكتروني', labelEn: 'Email' },
+    { key: 'role', labelAr: 'الدور', labelEn: 'Role' },
+    { key: 'assignedScripts', labelAr: 'النصوص المسندة', labelEn: 'Assigned Scripts' },
+    { key: 'recommendations', labelAr: 'التوصيات', labelEn: 'Recommendations' },
+    { key: 'sendBacks', labelAr: 'الإرجاعات', labelEn: 'Send-backs' },
+    { key: 'agreementRate', labelAr: 'معدل التوافق', labelEn: 'Agreement Rate' },
+    { key: 'avgFirstAction', labelAr: 'متوسط أول إجراء', labelEn: 'Avg. First Action' },
+    { key: 'avgTurnaround', labelAr: 'متوسط زمن المعالجة', labelEn: 'Avg. Turnaround' },
+  ],
   audit: [
     { key: 'eventType', labelAr: 'نوع الحدث', labelEn: 'Event Type' },
     { key: 'actor', labelAr: 'المستخدم', labelEn: 'Actor' },
@@ -134,6 +161,7 @@ const SOURCE_DEFAULT_COLUMNS: Record<BuilderSource, string[]> = {
   scripts: ['title', 'company', 'status', 'assignee', 'createdAt'],
   reports: ['scriptTitle', 'company', 'status', 'findingsCount', 'createdAt'],
   users: ['name', 'email', 'role', 'status', 'permissionsCount'],
+  performance: ['name', 'role', 'assignedScripts', 'recommendations', 'agreementRate'],
   audit: ['eventType', 'actor', 'targetType', 'resultStatus', 'occurredAt'],
 };
 
@@ -141,6 +169,7 @@ type ReportBuilderTemplate = {
   id: string;
   name: string;
   source: BuilderSource;
+  isPreset?: boolean;
   search: string;
   statusFilter: string;
   roleFilter: string;
@@ -155,6 +184,94 @@ type ReportBuilderTemplate = {
 };
 
 const REPORT_BUILDER_TEMPLATE_KEY = 'raawi-report-builder-templates-v1';
+
+const BUILT_IN_TEMPLATES: ReportBuilderTemplate[] = [
+  {
+    id: 'preset-scripts-monthly',
+    name: 'Monthly scripts overview',
+    source: 'scripts',
+    isPreset: true,
+    search: '',
+    statusFilter: 'all',
+    roleFilter: 'all',
+    eventTypeFilter: 'all',
+    targetTypeFilter: 'all',
+    from: '',
+    to: '',
+    pageSize: 10,
+    selectedColumns: SOURCE_DEFAULT_COLUMNS.scripts,
+    createdAt: '2026-06-02T00:00:00.000Z',
+    updatedAt: '2026-06-02T00:00:00.000Z',
+  },
+  {
+    id: 'preset-reports-review',
+    name: 'Reports review export',
+    source: 'reports',
+    isPreset: true,
+    search: '',
+    statusFilter: 'all',
+    roleFilter: 'all',
+    eventTypeFilter: 'all',
+    targetTypeFilter: 'all',
+    from: '',
+    to: '',
+    pageSize: 10,
+    selectedColumns: SOURCE_DEFAULT_COLUMNS.reports,
+    createdAt: '2026-06-02T00:00:00.000Z',
+    updatedAt: '2026-06-02T00:00:00.000Z',
+  },
+  {
+    id: 'preset-team-performance',
+    name: 'Team performance snapshot',
+    source: 'performance',
+    isPreset: true,
+    search: '',
+    statusFilter: 'all',
+    roleFilter: 'all',
+    eventTypeFilter: 'all',
+    targetTypeFilter: 'all',
+    from: '',
+    to: '',
+    pageSize: 10,
+    selectedColumns: SOURCE_DEFAULT_COLUMNS.performance,
+    createdAt: '2026-06-02T00:00:00.000Z',
+    updatedAt: '2026-06-02T00:00:00.000Z',
+  },
+  {
+    id: 'preset-regulator-performance',
+    name: 'Regulator performance',
+    source: 'performance',
+    isPreset: true,
+    search: '',
+    statusFilter: 'all',
+    roleFilter: 'Regulator',
+    eventTypeFilter: 'all',
+    targetTypeFilter: 'all',
+    from: '',
+    to: '',
+    pageSize: 10,
+    selectedColumns: SOURCE_DEFAULT_COLUMNS.performance,
+    createdAt: '2026-06-02T00:00:00.000Z',
+    updatedAt: '2026-06-02T00:00:00.000Z',
+  },
+  {
+    id: 'preset-audit-log',
+    name: 'Audit log export',
+    source: 'audit',
+    isPreset: true,
+    search: '',
+    statusFilter: 'all',
+    roleFilter: 'all',
+    eventTypeFilter: 'all',
+    targetTypeFilter: 'all',
+    from: '',
+    to: '',
+    pageSize: 10,
+    selectedColumns: SOURCE_DEFAULT_COLUMNS.audit,
+    createdAt: '2026-06-02T00:00:00.000Z',
+    updatedAt: '2026-06-02T00:00:00.000Z',
+  },
+];
 
 function loadTemplatesFromStorage(): ReportBuilderTemplate[] {
   if (typeof window === 'undefined') return [];
@@ -216,6 +333,7 @@ function createBuilderRows(
     scripts: Script[];
     reports: ReportListItem[];
     users: UserListItem[];
+    performance: Array<{ user: UserListItem; payload: RegulatorPerformancePayload | null }>;
     audit: AuditEventRow[];
     companies: Array<{ companyId: string; nameAr?: string; nameEn?: string }>;
   },
@@ -354,6 +472,54 @@ function createBuilderRows(
     });
   }
 
+  if (source === 'performance') {
+    return payload.performance
+      .filter(({ user }) => user.status === 'active')
+      .filter(({ user }) => String(user.roleKey ?? '').toLowerCase() !== 'beneficiary')
+      .map(({ user, payload: perf }) => {
+        const role = user.roleKey || '—';
+        const summary = perf?.summary ?? null;
+        const values = {
+          name: user.name || '—',
+          email: user.email || '—',
+          role,
+          status: user.status,
+          assignedScripts: summary?.totalAssignedScripts ?? 0,
+          recommendations: summary?.totalRecommendations ?? 0,
+          sendBacks: summary?.totalSendBacks ?? 0,
+          agreementRate: summary?.recommendationAgreementRate == null ? '—' : `${Math.round(summary.recommendationAgreementRate * 100)}%`,
+          agreementRateValue: summary?.recommendationAgreementRate ?? null,
+          avgFirstAction: summary?.averageFirstActionMinutes == null ? '—' : `${Math.round(summary.averageFirstActionMinutes)} min`,
+          avgTurnaround: summary?.averageTurnaroundDays == null ? '—' : `${summary.averageTurnaroundDays.toFixed(1)} d`,
+        };
+        const searchText = [
+          user.name,
+          user.email,
+          user.roleKey,
+          user.status,
+          summary?.totalAssignedScripts,
+          summary?.totalRecommendations,
+          summary?.totalSendBacks,
+          summary?.averageFirstActionMinutes,
+          summary?.averageTurnaroundDays,
+        ]
+          .map(normalizeText)
+          .join(' ');
+
+        return {
+          id: user.id,
+          values,
+          searchText,
+          status: user.status,
+          roleKey: user.roleKey || null,
+          dateRaw: null,
+          actionHref: `/app/performance/${user.id}`,
+          actionLabelAr: 'عرض الأداء',
+          actionLabelEn: 'Open performance',
+        };
+      });
+  }
+
   return payload.users
     .filter((user) => user.status === 'active')
     .filter((user) => String(user.roleKey ?? '').toLowerCase() !== 'beneficiary')
@@ -401,6 +567,10 @@ function buildSummaryCards(
 ) {
   const statuses = new Set(filteredRows.map((row) => row.status).filter(Boolean));
   const roles = new Set(filteredRows.map((row) => row.roleKey).filter(Boolean) as string[]);
+  const isPerformance = source === 'performance';
+  const avgAgreement = isPerformance
+    ? filteredRows.reduce((sum, row) => sum + Number(row.values['agreementRateValue'] ?? 0), 0)
+    : 0;
   return [
     {
       label: lang === 'ar' ? 'إجمالي السجلات' : 'Total rows',
@@ -420,11 +590,25 @@ function buildSummaryCards(
     {
       label: lang === 'ar' ? 'الأعمدة المختارة' : 'Selected columns',
       value: formatCount(selectedColumns.length),
-      hint: source === 'users'
+      hint: source === 'users' || source === 'performance'
         ? (lang === 'ar' ? 'بيانات المستخدمين الداخليين' : 'Internal user columns')
         : (lang === 'ar' ? 'حقول التصدير' : 'Export fields'),
     },
-    ...(source === 'users'
+    ...(isPerformance
+      ? [
+          {
+            label: lang === 'ar' ? 'إجمالي النصوص المسندة' : 'Assigned scripts',
+            value: formatCount(filteredRows.reduce((sum, row) => sum + Number(row.values['assignedScripts'] ?? 0), 0)),
+            hint: lang === 'ar' ? 'داخل فترة التقرير' : 'Within the reporting window',
+          },
+          {
+            label: lang === 'ar' ? 'متوسط التوافق' : 'Avg. agreement',
+            value: filteredRows.length ? `${Math.round((avgAgreement / filteredRows.length) * 100)}%` : '0%',
+            hint: lang === 'ar' ? 'مع القرار النهائي' : 'Against the final decision',
+          },
+        ]
+      : []),
+    ...(source === 'users' || source === 'performance'
       ? [{
           label: lang === 'ar' ? 'الأدوار الظاهرة' : 'Visible roles',
           value: formatCount(roles.size),
@@ -465,12 +649,26 @@ export function ReportBuilder() {
   const canAccessBuilder = user?.role === 'Admin' || user?.role === 'Super Admin' || hasPermission('manage_users');
   const sourceOption = SOURCE_OPTIONS.find((opt) => opt.value === source) ?? SOURCE_OPTIONS[0];
   const selectedColumnsMeta = useMemo(() => SOURCE_COLUMNS[source].filter((col) => selectedColumns.includes(col.key)), [source, selectedColumns]);
+  const templateCatalog = useMemo(() => {
+    const custom = templates.filter((item) => !item.isPreset);
+    const byId = new Map<string, ReportBuilderTemplate>();
+    [...BUILT_IN_TEMPLATES, ...custom].forEach((template) => {
+      if (!byId.has(template.id)) {
+        byId.set(template.id, template);
+      }
+    });
+    return Array.from(byId.values()).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  }, [templates]);
+  const selectedTemplate = useMemo(
+    () => templateCatalog.find((item) => item.id === selectedTemplateId) ?? null,
+    [selectedTemplateId, templateCatalog],
+  );
   const availableStatuses = useMemo(() => {
     const values = Array.from(new Set(rows.map((row) => row.status).filter(Boolean))).sort((a, b) => a.localeCompare(b));
     return values;
   }, [rows]);
   const availableRoles = useMemo(() => {
-    if (source !== 'users') return [];
+    if (source !== 'users' && source !== 'performance') return [];
     return Array.from(new Set(rows.map((row) => row.roleKey).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b));
   }, [rows, source]);
 
@@ -482,19 +680,42 @@ export function ReportBuilder() {
     setTemplates(loadTemplatesFromStorage());
   }, []);
 
-  const loadSourceData = useCallback(async (nextSource: BuilderSource) => {
+  const loadSourceData = useCallback(async (nextSource: BuilderSource, range?: { from?: string; to?: string }) => {
     if (!canAccessBuilder) return;
     setLoading(true);
     setError(null);
     setLoadingMessage(lang === 'ar' ? 'جاري تحميل بيانات المصدر...' : 'Loading source data...');
     try {
-      const [scriptRows, reportRows, userRows, auditRows] = await Promise.all([
+      const rangeFrom = range?.from ?? from;
+      const rangeTo = range?.to ?? to;
+      const usersPromise = nextSource === 'users' || nextSource === 'performance'
+        ? usersApi.getUsers()
+        : Promise.resolve<UserListItem[]>([]);
+      const [scriptRows, reportRows, userRows, auditRows, performanceRows] = await Promise.all([
         nextSource === 'scripts' ? scriptsApi.getScripts() : Promise.resolve<Script[]>([]),
         nextSource === 'reports' ? reportsApi.listAll() : Promise.resolve<ReportListItem[]>([]),
-        nextSource === 'users' ? usersApi.getUsers() : Promise.resolve<UserListItem[]>([]),
+        usersPromise,
         nextSource === 'audit'
           ? auditService.list({ page: 1, pageSize: 1000 }).then((res) => res.data)
           : Promise.resolve<AuditEventRow[]>([]),
+        nextSource === 'performance'
+          ? usersPromise.then(async (users) => {
+              const internalUsers = users
+                .filter((u) => u.status === 'active')
+                .filter((u) => String(u.roleKey ?? '').toLowerCase() !== 'beneficiary');
+              const entries = await Promise.all(
+                internalUsers.map(async (u) => {
+                  try {
+                    const payload = await reportsApi.getRegulatorPerformance(u.id, { from: rangeFrom || undefined, to: rangeTo || undefined });
+                    return { user: u, payload };
+                  } catch {
+                    return { user: u, payload: null };
+                  }
+                }),
+              );
+              return entries;
+            })
+          : Promise.resolve<Array<{ user: UserListItem; payload: RegulatorPerformancePayload | null }>>([]),
       ]);
 
       const nextRows = createBuilderRows(
@@ -503,6 +724,7 @@ export function ReportBuilder() {
           scripts: scriptRows,
           reports: reportRows,
           users: userRows,
+          performance: performanceRows,
           audit: auditRows,
           companies,
         },
@@ -518,7 +740,7 @@ export function ReportBuilder() {
       setLoading(false);
       setLoadingMessage('');
     }
-  }, [canAccessBuilder, companies, lang]);
+  }, [canAccessBuilder, companies, from, lang, to]);
 
   useEffect(() => {
     void loadSourceData(source);
@@ -539,7 +761,9 @@ export function ReportBuilder() {
     setTo(template.to);
     setPageSize(template.pageSize || 10);
     setPage(1);
-    await loadSourceData(template.source);
+    if (template.source !== 'performance') {
+      await loadSourceData(template.source, { from: template.from, to: template.to });
+    }
   }, [loadSourceData]);
 
   const handleSourceChange = useCallback(async (nextSource: BuilderSource) => {
@@ -556,7 +780,9 @@ export function ReportBuilder() {
     setTo('');
     setPageSize(10);
     setPage(1);
-    await loadSourceData(nextSource);
+    if (nextSource !== 'performance') {
+      await loadSourceData(nextSource, { from: '', to: '' });
+    }
   }, [loadSourceData]);
 
   const filteredRows = useMemo(() => {
@@ -564,12 +790,12 @@ export function ReportBuilder() {
     return rows.filter((row) => {
       const matchesSearch = !q || row.searchText.includes(q);
       const matchesStatus = statusFilter === 'all' || row.status === statusFilter;
-      const matchesRole = source !== 'users' || roleFilter === 'all' || row.roleKey === roleFilter;
+      const matchesRole = (source !== 'users' && source !== 'performance') || roleFilter === 'all' || row.roleKey === roleFilter;
       const matchesEventType = source !== 'audit' || eventTypeFilter === 'all' || row.values['eventType'] === eventTypeFilter;
       const matchesTargetType = source !== 'audit' || targetTypeFilter === 'all' || row.values['targetType'] === targetTypeFilter;
       const rowDate = dateKey(row.dateRaw);
-      const matchesFrom = !from || !rowDate || rowDate >= from;
-      const matchesTo = !to || !rowDate || rowDate <= to;
+      const matchesFrom = source === 'performance' ? true : (!from || !rowDate || rowDate >= from);
+      const matchesTo = source === 'performance' ? true : (!to || !rowDate || rowDate <= to);
       return matchesSearch && matchesStatus && matchesRole && matchesEventType && matchesTargetType && matchesFrom && matchesTo;
     });
   }, [rows, search, statusFilter, roleFilter, source, eventTypeFilter, targetTypeFilter, from, to]);
@@ -583,6 +809,12 @@ export function ReportBuilder() {
   }, [search, statusFilter, roleFilter, eventTypeFilter, targetTypeFilter, from, to, pageSize, source]);
 
   useEffect(() => {
+    if (source !== 'performance') return;
+    void loadSourceData('performance', { from, to });
+    // Reload performance rows whenever the reporting window changes.
+  }, [from, loadSourceData, source, to]);
+
+  useEffect(() => {
     const valid = new Set(SOURCE_COLUMNS[source].map((col) => col.key));
     setSelectedColumns((current) => {
       const next = current.filter((key) => valid.has(key));
@@ -591,6 +823,15 @@ export function ReportBuilder() {
   }, [source]);
 
   const chartData = useMemo(() => {
+    if (source === 'performance') {
+      return filteredRows
+        .map((row) => ({
+          name: String(row.values['name'] ?? '—'),
+          value: Number(row.values['assignedScripts'] ?? 0),
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 8);
+    }
     const counts = new Map<string, number>();
     filteredRows.forEach((row) => {
       const key = row.status || '—';
@@ -600,7 +841,7 @@ export function ReportBuilder() {
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
-  }, [filteredRows]);
+  }, [filteredRows, source]);
 
   const summaryCards = useMemo(
     () => buildSummaryCards(source, rows, filteredRows, selectedColumns, lang),
@@ -700,7 +941,7 @@ export function ReportBuilder() {
             { label: lang === 'ar' ? 'مصدر البيانات' : 'Data source', value: sourceOption.labelEn },
             { label: lang === 'ar' ? 'بحث' : 'Search', value: search || '—' },
             { label: lang === 'ar' ? 'الحالة' : 'Status', value: statusFilter },
-            { label: lang === 'ar' ? 'الدور' : 'Role', value: source === 'users' ? roleFilter : '—' },
+            { label: lang === 'ar' ? 'الدور' : 'Role', value: source === 'users' || source === 'performance' ? roleFilter : '—' },
             { label: lang === 'ar' ? 'من تاريخ' : 'From date', value: from || '—' },
             { label: lang === 'ar' ? 'إلى تاريخ' : 'To date', value: to || '—' },
           ],
@@ -723,8 +964,9 @@ export function ReportBuilder() {
       return;
     }
     const now = new Date().toISOString();
+    const nextId = selectedTemplate?.isPreset ? createTemplateId(name) : (selectedTemplateId || createTemplateId(name));
     const nextTemplate: ReportBuilderTemplate = {
-      id: selectedTemplateId || createTemplateId(name),
+      id: nextId,
       name,
       source,
       search,
@@ -736,12 +978,12 @@ export function ReportBuilder() {
       to,
       pageSize,
       selectedColumns,
-      createdAt: templates.find((item) => item.id === selectedTemplateId)?.createdAt ?? now,
+      createdAt: selectedTemplate?.createdAt ?? now,
       updatedAt: now,
     };
     const nextTemplates = [
       nextTemplate,
-      ...templates.filter((item) => item.id !== nextTemplate.id),
+      ...templates.filter((item) => item.id !== nextTemplate.id && !item.isPreset),
     ].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
     setTemplates(nextTemplates);
     persistTemplatesToStorage(nextTemplates);
@@ -750,6 +992,11 @@ export function ReportBuilder() {
   };
 
   const handleDeleteTemplate = (templateId: string) => {
+    const template = templateCatalog.find((item) => item.id === templateId);
+    if (template?.isPreset) {
+      toast.error(lang === 'ar' ? 'القالب المبدئي لا يمكن حذفه' : 'Starter templates cannot be deleted');
+      return;
+    }
     const nextTemplates = templates.filter((item) => item.id !== templateId);
     setTemplates(nextTemplates);
     persistTemplatesToStorage(nextTemplates);
@@ -856,12 +1103,12 @@ export function ReportBuilder() {
               'grid gap-4',
               source === 'audit'
                 ? 'lg:grid-cols-5'
-                : source === 'users'
+                : source === 'users' || source === 'performance'
                   ? 'lg:grid-cols-4'
                   : 'lg:grid-cols-3',
             )}
           >
-            {source === 'users' && (
+            {(source === 'users' || source === 'performance') && (
               <Select
                 label={lang === 'ar' ? 'الدور' : 'Role'}
                 value={roleFilter}
@@ -977,16 +1224,16 @@ export function ReportBuilder() {
               label={lang === 'ar' ? 'اختيار قالب محفوظ' : 'Choose a saved template'}
               value={selectedTemplateId}
               onChange={(e) => {
-                const found = templates.find((item) => item.id === e.target.value);
+                const found = templateCatalog.find((item) => item.id === e.target.value);
                 if (!found) return;
                 setTemplateName(found.name);
                 void applyTemplate(found);
               }}
               options={[
                 { value: '', label: lang === 'ar' ? 'اختر قالبًا...' : 'Choose a template...' },
-                ...templates.map((template) => ({
+                ...templateCatalog.map((template) => ({
                   value: template.id,
-                  label: `${template.name} · ${template.source}`,
+                  label: `${template.name} · ${lang === 'ar' ? SOURCE_OPTIONS.find((opt) => opt.value === template.source)?.labelAr ?? template.source : SOURCE_OPTIONS.find((opt) => opt.value === template.source)?.labelEn ?? template.source}`,
                 })),
               ]}
             />
@@ -995,7 +1242,7 @@ export function ReportBuilder() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    const found = templates.find((item) => item.id === selectedTemplateId);
+                    const found = templateCatalog.find((item) => item.id === selectedTemplateId);
                     if (found) {
                       setTemplateName(found.name);
                     }
@@ -1005,7 +1252,7 @@ export function ReportBuilder() {
                   {lang === 'ar' ? 'إعادة تعبئة القالب' : 'Refill template'}
                 </Button>
               ) : null}
-              {selectedTemplateId ? (
+              {selectedTemplateId && !selectedTemplate?.isPreset ? (
                 <Button
                   variant="danger"
                   onClick={() => handleDeleteTemplate(selectedTemplateId)}
@@ -1017,18 +1264,33 @@ export function ReportBuilder() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {templates.length === 0 ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">
-                {lang === 'ar' ? 'لا توجد قوالب محفوظة بعد' : 'No saved templates yet'}
+                {lang === 'ar' ? 'القوالب المبدئية' : 'Starter templates'}
               </Badge>
-            ) : (
-              templates.slice(0, 4).map((template) => (
+              {BUILT_IN_TEMPLATES.map((template) => (
                 <Badge key={template.id} variant={template.id === selectedTemplateId ? 'primary' : 'secondary'}>
                   {template.name}
                 </Badge>
-              ))
-            )}
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">
+                {lang === 'ar' ? 'القوالب المحفوظة' : 'Saved templates'}
+              </Badge>
+              {templates.length === 0 ? (
+                <span className="text-sm text-text-muted">
+                  {lang === 'ar' ? 'لا توجد قوالب محفوظة بعد' : 'No saved templates yet'}
+                </span>
+              ) : (
+                templates.slice(0, 4).map((template) => (
+                  <Badge key={template.id} variant={template.id === selectedTemplateId ? 'primary' : 'secondary'}>
+                    {template.name}
+                  </Badge>
+                ))
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -1103,7 +1365,9 @@ export function ReportBuilder() {
             <div className="mb-4 flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-primary" />
               <h2 className="text-lg font-semibold text-text-main">
-                {lang === 'ar' ? 'توزيع الحالات' : 'Status distribution'}
+                {source === 'performance'
+                  ? (lang === 'ar' ? 'أعلى النصوص المسندة' : 'Top assigned scripts')
+                  : (lang === 'ar' ? 'توزيع الحالات' : 'Status distribution')}
               </h2>
             </div>
             {chartData.length > 0 ? (
