@@ -888,8 +888,8 @@ export const scriptsApi = {
   getScript: (id: string): Promise<Script> => httpClient.get(`/scripts/${encodeURIComponent(id)}`),
   addScript: (script: Script): Promise<Script> => httpClient.post('/scripts', script),
   updateScript: (id: string, updates: Partial<Script>): Promise<Script> => httpClient.patch(`/scripts/${encodeURIComponent(id)}`, updates), // NEW
-  /** Check if current user can approve/reject this script (backend policy). Use to gate UI. */
-  getDecisionCan: (id: string): Promise<{ canApprove: boolean; canReject: boolean; reason?: string }> =>
+  /** Check if current user can approve/reject/send-back this script (backend policy). Use to gate UI. */
+  getDecisionCan: (id: string): Promise<{ canApprove: boolean; canReject: boolean; canSendForReview: boolean; reason?: string }> =>
     httpClient.get(`/scripts/${encodeURIComponent(id)}/decision/can`),
   /** Check if current regulator can submit a recommendation on this script. */
   getRecommendationCan: (id: string): Promise<{ canRecommend: boolean; reason?: string }> =>
@@ -1539,6 +1539,7 @@ export interface CreateUserBody {
   roleKey: string;
   permissions?: string[];
   canAcceptReject?: boolean;
+  canSendForReview?: boolean;
   mode?: 'invite' | 'temp_password';
   tempPassword?: string;
   allowedSections?: string[];
@@ -1560,6 +1561,7 @@ export interface UpdateUserBody {
   allowedSections?: string[];
   permissions?: string[];
   canAcceptReject?: boolean;
+  canSendForReview?: boolean;
 }
 
 export interface DeleteUserBody {
@@ -1581,6 +1583,7 @@ export interface SendInviteBody {
   role: string;
   permissions?: string[]; // legacy-compatible full permission list
   canAcceptReject?: boolean;
+  canSendForReview?: boolean;
   allowedSections?: string[]; // NEW: Section-based permissions
 }
 

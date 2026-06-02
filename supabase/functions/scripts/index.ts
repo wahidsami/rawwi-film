@@ -8,6 +8,7 @@ import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { getCorrelationId, normalizeText } from "../_shared/utils.ts";
+import { uniqueStrings } from "../_shared/userLifecycle.ts";
 import { canOverrideOwnScriptDecision, isClientUser, isRegulatorOnly, isSuperAdminOrAdmin, isUserAdmin } from "../_shared/roleCheck.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
 import { loadDefaultCertificateTemplate, renderCertificatePdfBytes } from "../_shared/certificatePdf.ts";
@@ -1187,6 +1188,7 @@ async function computeScriptDecisionCan(
 ): Promise<{
   canApprove: boolean;
   canReject: boolean;
+  canSendForReview: boolean;
   reasonIfDisabled?: string;
   isCreator: boolean;
   isAssignee: boolean;
@@ -1195,6 +1197,8 @@ async function computeScriptDecisionCan(
   const assigneeId = script.assignee_id ?? null;
   const isCreator = createdBy === uid;
   const isAssignee = assigneeId === uid;
+  const isAdminUser = await isSuperAdminOrAdmin(supabase, uid);
+  const regulatorOnly = await isRegulatorOnly(supabase, uid);
 
   const [approveRpc, rejectRpc] = await Promise.all([
     supabase.rpc("user_can_approve_scripts", { p_user_id: uid }),
@@ -1202,22 +1206,41 @@ async function computeScriptDecisionCan(
   ]);
   const hasApprovePerm = approveRpc.data === true && !approveRpc.error;
   const hasRejectPerm = rejectRpc.data === true && !rejectRpc.error;
+  const { data: authUserRow } = await supabase.auth.admin.getUserById(uid);
+  const permissionKeys = new Set(
+    Array.isArray(authUserRow?.user?.user_metadata?.permissions)
+      ? uniqueStrings(authUserRow.user.user_metadata.permissions as string[])
+      : [],
+  );
+  const canSendForReviewPerm = permissionKeys.has("can_send_for_review");
 
   if (!hasApprovePerm && !hasRejectPerm) {
+    const canSendForReview = isAdminUser || (regulatorOnly && isAssignee && canSendForReviewPerm);
+    if (!canSendForReview) {
+      return {
+        canApprove: false,
+        canReject: false,
+        canSendForReview: false,
+        reasonIfDisabled: "You do not have permission to approve or reject scripts.",
+        isCreator,
+        isAssignee,
+      };
+    }
     return {
       canApprove: false,
       canReject: false,
+      canSendForReview: true,
       reasonIfDisabled: "You do not have permission to approve or reject scripts.",
       isCreator,
       isAssignee,
     };
   }
 
-  const regulatorOnly = await isRegulatorOnly(supabase, uid);
   if (regulatorOnly && !isAssignee) {
     return {
       canApprove: false,
       canReject: false,
+      canSendForReview: false,
       reasonIfDisabled:
         "Only the assigned reviewer can approve or reject this script. This script is not assigned to you.",
       isCreator,
@@ -1231,6 +1254,7 @@ async function computeScriptDecisionCan(
       return {
         canApprove: false,
         canReject: false,
+        canSendForReview: false,
         reasonIfDisabled:
           "Conflict of interest: You cannot approve/reject your own script. Ask an admin or the assigned reviewer to make the decision.",
         isCreator,
@@ -1239,7 +1263,9 @@ async function computeScriptDecisionCan(
     }
   }
 
-  return { canApprove: hasApprovePerm, canReject: hasRejectPerm, isCreator, isAssignee };
+  const canSendForReview = isAdminUser || (regulatorOnly && isAssignee && canSendForReviewPerm);
+
+  return { canApprove: hasApprovePerm, canReject: hasRejectPerm, canSendForReview, isCreator, isAssignee };
 }
 
 Deno.serve(async (req: Request) => {
@@ -2640,10 +2666,12 @@ Deno.serve(async (req: Request) => {
       isAssignee: can.isAssignee,
       canApprove: can.canApprove,
       canReject: can.canReject,
+      canSendForReview: can.canSendForReview,
     });
     return json({
       canApprove: can.canApprove,
       canReject: can.canReject,
+      canSendForReview: can.canSendForReview,
       reason: can.reasonIfDisabled ?? undefined,
     });
   }
@@ -2738,6 +2766,7 @@ Deno.serve(async (req: Request) => {
       isAssignee: can.isAssignee,
       canApprove: can.canApprove,
       canReject: can.canReject,
+      canSendForReview: can.canSendForReview,
     });
 
     const allowed =
@@ -2745,9 +2774,12 @@ Deno.serve(async (req: Request) => {
         ? can.canApprove
         : decision === 'reject'
           ? can.canReject
-          : (can.canApprove || can.canReject);
+          : can.canSendForReview;
     if (!allowed) {
-      const msg = can.reasonIfDisabled ?? `You do not have permission to ${decision} this script.`;
+      const msg =
+        decision === "send_for_review"
+          ? "You do not have permission to send this script back for review."
+          : can.reasonIfDisabled ?? `You do not have permission to ${decision} this script.`;
       return json({ error: msg }, 403);
     }
 

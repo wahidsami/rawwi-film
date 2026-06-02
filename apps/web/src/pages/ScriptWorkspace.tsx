@@ -1642,7 +1642,7 @@ export function ScriptWorkspace() {
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastFailedAnalysisAlertRef = useRef<string | null>(null);
-  const [decisionCan, setDecisionCan] = useState<{ canApprove: boolean; canReject: boolean; reason?: string } | null>(null);
+  const [decisionCan, setDecisionCan] = useState<{ canApprove: boolean; canReject: boolean; canSendForReview: boolean; reason?: string } | null>(null);
   const isImportModalOpen = uploadStatus !== 'idle';
 
   useEffect(() => {
@@ -1802,6 +1802,7 @@ export function ScriptWorkspace() {
           setDecisionCan({
             canApprove: false,
             canReject: false,
+            canSendForReview: false,
             reason: err?.message ?? 'Could not load decision permissions.',
           });
           setDecisionCanScriptId(sid);
@@ -2245,6 +2246,7 @@ export function ScriptWorkspace() {
   }, [script?.id]);
 
   const canAssignScript = isAdmin();
+  const canSendBackForReview = isAdmin() || hasPermission('can_send_for_review');
 
   const openAssignScriptModal = useCallback(async () => {
     if (!script?.id || !canAssignScript) return;
@@ -2594,6 +2596,7 @@ export function ScriptWorkspace() {
   }, [rejectDecisionSubmitting]);
 
   const openSendReviewDecisionModal = useCallback((reportId: string) => {
+    if (!canSendBackForReview) return;
     const defaultReportId = reportId || reportHistory[0]?.id || null;
     setSendReviewDecisionReportId(reportId);
     setSendReviewDecisionReason('');
@@ -2601,7 +2604,7 @@ export function ScriptWorkspace() {
     setSendReviewDecisionShareReports(true);
     setSendReviewDecisionShareFormats(['pdf', 'docx']);
     setSendReviewDecisionReportIds(defaultReportId ? [defaultReportId] : []);
-  }, [reportHistory]);
+  }, [canSendBackForReview, reportHistory]);
 
   const closeSendReviewDecisionModal = useCallback(() => {
     if (sendReviewDecisionSubmitting) return;
@@ -6920,7 +6923,7 @@ export function ScriptWorkspace() {
                             {lang === 'ar' ? 'قبول' : 'Approve'}
                           </Button>
                         )}
-                        {r.reviewStatus !== 'approved' && (
+                        {canSendBackForReview && r.reviewStatus !== 'approved' && (
                           <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2 text-warning hover:text-warning" onClick={() => openSendReviewDecisionModal(r.id)}>
                             <RotateCcw className="w-3 h-3 mr-1" />
                             {lang === 'ar' ? 'إرسال للمراجعة' : 'Send for Review'}

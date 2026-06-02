@@ -60,10 +60,13 @@ export function uniqueStrings(values: Array<string | null | undefined>): string[
   )];
 }
 
-export function buildPermissionsForRole(roleKey: string, canAcceptReject: boolean): string[] {
+export function buildPermissionsForRole(roleKey: string, canAcceptReject: boolean, canSendForReview = false): string[] {
   const permissions = getDefaultPermissionsForRoleKey(roleKey);
   if (normalizeRoleKey(roleKey) === "regulator" && canAcceptReject) {
     permissions.push("can_accept_reject");
+  }
+  if (normalizeRoleKey(roleKey) === "regulator" && canSendForReview) {
+    permissions.push("can_send_for_review");
   }
   return uniqueStrings(permissions);
 }

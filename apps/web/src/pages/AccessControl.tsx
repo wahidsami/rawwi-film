@@ -57,6 +57,7 @@ export function AccessControl() {
     roleKey: 'admin',
     allowedSections: getDefaultSectionsForRoleKey('admin'),
     canAcceptReject: false,
+    canSendForReview: false,
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -68,6 +69,7 @@ export function AccessControl() {
     status: 'active' as 'active' | 'disabled',
     allowedSections: [] as string[],
     canAcceptReject: false,
+    canSendForReview: false,
   });
   const [editSaving, setEditSaving] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
@@ -126,10 +128,11 @@ export function AccessControl() {
         role: form.roleKey,
         allowedSections: form.allowedSections.length ? form.allowedSections : undefined,
         canAcceptReject: form.canAcceptReject,
+        canSendForReview: form.canSendForReview,
       });
       toast.success(lang === 'ar' ? 'تم إرسال الدعوة إلى البريد الإلكتروني' : 'Invite sent to email');
       setIsModalOpen(false);
-      setForm({ name: '', email: '', roleKey: 'admin', allowedSections: getDefaultSectionsForRoleKey('admin'), canAcceptReject: false });
+      setForm({ name: '', email: '', roleKey: 'admin', allowedSections: getDefaultSectionsForRoleKey('admin'), canAcceptReject: false, canSendForReview: false });
       await loadUsers();
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to send invite');
@@ -147,6 +150,7 @@ export function AccessControl() {
       status: user.status,
       allowedSections: (user.allowedSections && user.allowedSections.length > 0) ? user.allowedSections : getDefaultSectionsForRoleKey(roleKey),
       canAcceptReject: Array.isArray(user.permissions) ? user.permissions.includes('can_accept_reject') : false,
+      canSendForReview: Array.isArray(user.permissions) ? user.permissions.includes('can_send_for_review') : false,
     });
   };
 
@@ -161,6 +165,7 @@ export function AccessControl() {
         status: editForm.status,
         allowedSections: editForm.allowedSections,
         canAcceptReject: editForm.canAcceptReject,
+        canSendForReview: editForm.canSendForReview,
       });
       toast.success(lang === 'ar' ? 'تم تحديث المستخدم' : 'User updated');
       setEditUser(null);
@@ -413,6 +418,14 @@ export function AccessControl() {
               </p>
             </div>
             <div>
+              <span className="text-xs text-text-muted uppercase">can_send_for_review</span>
+              <p className="text-text-main font-medium">
+                {Array.isArray(viewUser.permissions) && viewUser.permissions.includes('can_send_for_review')
+                  ? (lang === 'ar' ? 'مفعّل' : 'Enabled')
+                  : (lang === 'ar' ? 'غير مفعّل' : 'Disabled')}
+              </p>
+            </div>
+            <div>
               <span className="text-xs text-text-muted uppercase">{t('status')}</span>
               <div className="text-text-main font-medium mt-1">
                 <Badge variant={viewUser.status === 'active' ? 'success' : 'default'}>
@@ -449,6 +462,7 @@ export function AccessControl() {
                     roleKey,
                     allowedSections: getDefaultSectionsForRoleKey(roleKey),
                     canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
+                    canSendForReview: isRegulatorRoleKey(roleKey) ? f.canSendForReview : false,
                   }));
                 }}
               >
@@ -494,6 +508,19 @@ export function AccessControl() {
                     />
                     <span className="text-sm text-text-main">
                       {lang === 'ar' ? 'يمكنه قبول أو رفض النصوص' : 'Can accept or reject scripts'}
+                    </span>
+                  </label>
+                )}
+                {isRegulatorRoleKey(editForm.roleKey) && (
+                  <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={editForm.canSendForReview}
+                      onChange={(e) => setEditForm((f) => ({ ...f, canSendForReview: e.target.checked }))}
+                      className="rounded border-border"
+                    />
+                    <span className="text-sm text-text-main">
+                      {lang === 'ar' ? 'يمكنه إرجاع النص للمراجعة' : 'Can send script back for review'}
                     </span>
                   </label>
                 )}
@@ -548,13 +575,14 @@ export function AccessControl() {
               value={form.roleKey}
               onChange={(e) => {
                 const roleKey = e.target.value;
-                setForm((f) => ({
-                  ...f,
-                  roleKey,
-                  allowedSections: getDefaultSectionsForRoleKey(roleKey),
-                  canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
-                }));
-              }}
+                  setForm((f) => ({
+                    ...f,
+                    roleKey,
+                    allowedSections: getDefaultSectionsForRoleKey(roleKey),
+                    canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
+                    canSendForReview: isRegulatorRoleKey(roleKey) ? f.canSendForReview : false,
+                  }));
+                }}
             >
               {ROLE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -600,6 +628,19 @@ export function AccessControl() {
                   />
                   <span className="text-sm text-text-main">
                     {lang === 'ar' ? 'يمكنه قبول أو رفض النصوص' : 'Can accept or reject scripts'}
+                  </span>
+                </label>
+              )}
+              {isRegulatorRoleKey(form.roleKey) && (
+                <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={form.canSendForReview}
+                    onChange={(e) => setForm((f) => ({ ...f, canSendForReview: e.target.checked }))}
+                    className="rounded border-border"
+                  />
+                  <span className="text-sm text-text-main">
+                    {lang === 'ar' ? 'يمكنه إرجاع النص للمراجعة' : 'Can send script back for review'}
                   </span>
                 </label>
               )}

@@ -146,7 +146,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (method === "POST") {
-    let body: { name?: string; email?: string; roleKey?: string; permissions?: string[]; canAcceptReject?: boolean; mode?: string; tempPassword?: string; allowedSections?: string[] };
+    let body: { name?: string; email?: string; roleKey?: string; permissions?: string[]; canAcceptReject?: boolean; canSendForReview?: boolean; mode?: string; tempPassword?: string; allowedSections?: string[] };
     try {
       body = await req.json();
     } catch {
@@ -161,10 +161,11 @@ Deno.serve(async (req: Request) => {
     const defaultSections = getDefaultSectionsForRoleKey(roleKey);
     const allowedSections = allowedSectionsFromBody?.length ? allowedSectionsFromBody : defaultSections;
     const canAcceptReject = body.canAcceptReject === true;
+    const canSendForReview = body.canSendForReview === true;
     const permissionsFromBody = uniqueStrings(Array.isArray(body.permissions) ? body.permissions : []);
     const permissions = permissionsFromBody.length > 0
-      ? buildPermissionsForRole(roleKey, permissionsFromBody.includes("can_accept_reject"))
-      : buildPermissionsForRole(roleKey, canAcceptReject);
+      ? buildPermissionsForRole(roleKey, permissionsFromBody.includes("can_accept_reject"), permissionsFromBody.includes("can_send_for_review"))
+      : buildPermissionsForRole(roleKey, canAcceptReject, canSendForReview);
 
     if (!email) return jsonResponse({ error: "email is required" }, 400, { origin });
 
@@ -241,7 +242,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (method === "PATCH") {
-    let body: { userId?: string; name?: string; roleKey?: string; status?: string; permissions?: string[]; canAcceptReject?: boolean };
+    let body: { userId?: string; name?: string; roleKey?: string; status?: string; permissions?: string[]; canAcceptReject?: boolean; canSendForReview?: boolean };
     try {
       body = await req.json();
     } catch {
@@ -297,9 +298,12 @@ Deno.serve(async (req: Request) => {
     const canAcceptRejectFromBody = typeof body.canAcceptReject === "boolean"
       ? body.canAcceptReject
       : existingPermissions.includes("can_accept_reject");
+    const canSendForReviewFromBody = typeof body.canSendForReview === "boolean"
+      ? body.canSendForReview
+      : existingPermissions.includes("can_send_for_review");
     const nextPermissions = permissionsFromBody.length > 0
-      ? buildPermissionsForRole(effectiveRoleKey, permissionsFromBody.includes("can_accept_reject"))
-      : buildPermissionsForRole(effectiveRoleKey, canAcceptRejectFromBody);
+      ? buildPermissionsForRole(effectiveRoleKey, permissionsFromBody.includes("can_accept_reject"), permissionsFromBody.includes("can_send_for_review"))
+      : buildPermissionsForRole(effectiveRoleKey, canAcceptRejectFromBody, canSendForReviewFromBody);
     metadataUpdates.permissions = nextPermissions;
 
     if (Object.keys(metadataUpdates).length > 0) {

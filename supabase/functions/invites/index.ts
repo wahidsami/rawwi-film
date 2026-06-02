@@ -84,6 +84,7 @@ Deno.serve(async (req: Request) => {
     role?: string;
     permissions?: string[] | Record<string, boolean>;
     canAcceptReject?: boolean;
+    canSendForReview?: boolean;
     allowedSections?: string[]; // NEW: Section-based permissions
   };
   try {
@@ -122,9 +123,12 @@ Deno.serve(async (req: Request) => {
   const canAcceptReject = typeof body.canAcceptReject === "boolean"
     ? body.canAcceptReject
     : (permissionsFromBody.includes("can_accept_reject") || legacyPermissionMap.canAcceptReject === true);
+  const canSendForReview = typeof body.canSendForReview === "boolean"
+    ? body.canSendForReview
+    : (permissionsFromBody.includes("can_send_for_review") || legacyPermissionMap.canSendForReview === true);
   const permissions = permissionsFromBody.length > 0
-    ? buildPermissionsForRole(roleKey, permissionsFromBody.includes("can_accept_reject"))
-    : buildPermissionsForRole(roleKey, canAcceptReject);
+    ? buildPermissionsForRole(roleKey, permissionsFromBody.includes("can_accept_reject"), permissionsFromBody.includes("can_send_for_review"))
+    : buildPermissionsForRole(roleKey, canAcceptReject, canSendForReview);
 
   const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
   const token = base64url(tokenBytes);
