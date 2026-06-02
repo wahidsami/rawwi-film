@@ -33,7 +33,7 @@ export async function downloadStatusPdf(params: {
   const origin = window.location.origin;
   const [coverImageDataUrl, logoUrl] = await Promise.all([
     toDataUrl(`${origin}/cover.jpg`),
-    toDataUrl(`${origin}/dashboardlogo.png`),
+    toDataUrl(`${origin}/fclogo.png`),
   ]);
   const doc = React.createElement(StatusSectionPdf, {
     data: mapStatusDataForPdf(params.stats, params.activities, params.scripts, params.companies),

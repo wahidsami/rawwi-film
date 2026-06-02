@@ -54,9 +54,7 @@ function statusLabel(status: string | null | undefined, lang: "ar" | "en"): stri
     approved: "Approved",
     rejected: "Rejected",
   };
-  return lang === "ar"
-    ? ((mapAr[key] ?? key) || "-")
-    : ((mapEn[key] ?? key) || "-");
+  return lang === "ar" ? ((mapAr[key] ?? key) || "-") : ((mapEn[key] ?? key) || "-");
 }
 
 function beneficiaryName(item: RegulatorPerformancePayload["scripts"][number], lang: "ar" | "en"): string {
@@ -84,19 +82,20 @@ export function RegulatorPerformancePdf({
   const scriptRows = scripts.slice(0, 20);
   const cycleRows = cycles.slice(0, 18);
   const timelineRows = timeline.slice(0, 24);
+  const hasCycles = cycleRows.length > 0;
 
   return (
     <Document>
       <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
-        <View style={{ width: 595.28, height: 841.89, position: "relative" }}>
-          <View style={{ position: "absolute", left: 44, right: 44, bottom: 110 }}>
-            <View style={s.coverMetaBlock}>
-              {logoUrl ? <Image src={logoUrl} style={{ width: 120, height: 38, objectFit: "contain", marginBottom: 12 }} /> : null}
-              <Text style={[s.coverTitle, rtl]}>{isAr ? "تقرير أداء المراجع / الفريق" : "Regulator / Team Member Performance Report"}</Text>
-              <Text style={[s.coverSub, rtl]}>{isAr ? "ملخص تشغيلي لقرارات المراجعة والتوصية وإرجاع النصوص" : "Operational summary of review, recommendation, and send-back behavior"}</Text>
-              <Text style={[s.coverSub, rtl]}>{isAr ? `اسم المستخدم: ${safe(data.regulator.name)}` : `User: ${safe(data.regulator.name)}`}</Text>
-              <Text style={[s.coverSub, rtl]}>{isAr ? `البريد: ${safe(data.regulator.email)}` : `Email: ${safe(data.regulator.email)}`}</Text>
-              <Text style={[s.coverSub, rtl]}>
+        <View style={{ width: 595.28, height: 841.89, justifyContent: "center", alignItems: "center", paddingHorizontal: 44 }}>
+          <View style={{ width: "100%", alignItems: "center", textAlign: "center" }}>
+            {logoUrl ? <Image src={logoUrl} style={{ width: 150, height: 48, objectFit: "contain", marginBottom: 18 }} /> : null}
+            <View style={[s.coverMetaBlock, { width: "100%", alignItems: "center" }]}>
+              <Text style={[s.coverTitle, rtl, { textAlign: "center" }]}>{isAr ? "تقرير أداء المراجع / الفريق" : "Regulator / Team Member Performance Report"}</Text>
+              <Text style={[s.coverSub, rtl, { textAlign: "center" }]}>{isAr ? "ملخص تشغيلي لقرارات المراجعة والتوصية وإرجاع النصوص" : "Operational summary of review, recommendation, and send-back behavior"}</Text>
+              <Text style={[s.coverSub, rtl, { textAlign: "center" }]}>{isAr ? `اسم المستخدم: ${safe(data.regulator.name)}` : `User: ${safe(data.regulator.name)}`}</Text>
+              <Text style={[s.coverSub, rtl, { textAlign: "center" }]}>{isAr ? `البريد: ${safe(data.regulator.email)}` : `Email: ${safe(data.regulator.email)}`}</Text>
+              <Text style={[s.coverSub, rtl, { textAlign: "center" }]}>
                 {isAr
                   ? `الفترة: ${formatDateTimeValue(data.scope.from, { lang: "ar", format: dateFormat })} - ${formatDateTimeValue(data.scope.to, { lang: "ar", format: dateFormat })}`
                   : `Period: ${formatDateTimeValue(data.scope.from, { lang: "en", format: dateFormat })} - ${formatDateTimeValue(data.scope.to, { lang: "en", format: dateFormat })}`}
@@ -107,7 +106,6 @@ export function RegulatorPerformancePdf({
       </Page>
 
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
-        {logoUrl ? <Image src={logoUrl} style={{ width: 88, height: 28, objectFit: "contain", marginBottom: 10, alignSelf: isAr ? "flex-end" : "flex-start" }} /> : null}
         <Text style={[s.title, rtl]}>{isAr ? "الملخص التنفيذي" : "Executive Summary"}</Text>
         <Text style={[s.subtitle, rtl]}>
           {isAr ? `هذا التقرير يوضح أداء ${safe(data.regulator.name)} خلال الفترة المحددة.` : `This report summarizes the performance of ${safe(data.regulator.name)} during the selected period.`}
@@ -126,9 +124,11 @@ export function RegulatorPerformancePdf({
           <View style={s.statCard}><Text style={[s.statValue, rtl]}>{pct(recommendedAgree)}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "التوافق مع القرار النهائي" : "Recommendation agreement"}</Text></View>
           <View style={s.statCard}><Text style={[s.statValue, rtl]}>{data.summary.averageFirstActionMinutes == null ? "-" : Math.round(data.summary.averageFirstActionMinutes)}</Text><Text style={[s.statLabel, rtl]}>{isAr ? "متوسط أول إجراء بالدقائق" : "Avg. first action (min)"}</Text></View>
         </View>
+      </Page>
 
+      <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
+        <Text style={[s.title, rtl]}>{isAr ? "بيانات المستخدم" : "User Snapshot"}</Text>
         <View style={s.sectionBox}>
-          <Text style={[s.sectionTitle, rtl]}>{isAr ? "بيانات المستخدم" : "User Snapshot"}</Text>
           <View style={s.row}><Text style={[s.key, rtl]}>{isAr ? "الاسم" : "Name"}</Text><Text style={[s.value, rtl]}>{safe(data.regulator.name)}</Text></View>
           <View style={s.row}><Text style={[s.key, rtl]}>{isAr ? "البريد" : "Email"}</Text><Text style={[s.value, rtl]}>{safe(data.regulator.email)}</Text></View>
           <View style={s.row}><Text style={[s.key, rtl]}>{isAr ? "نوع الدور" : "Role"}</Text><Text style={[s.value, rtl]}>{safe(data.regulator.roleKey)}</Text></View>
@@ -141,8 +141,10 @@ export function RegulatorPerformancePdf({
             </Text>
           </View>
         </View>
+      </Page>
 
-        <Text style={[s.sectionTitle, rtl]}>{isAr ? "النصوص المسندة" : "Assigned Scripts"}</Text>
+      <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
+        <Text style={[s.title, rtl]}>{isAr ? "النصوص المسندة" : "Assigned Scripts"}</Text>
         <View style={s.table}>
           <View style={s.tr}>
             <Text style={[s.th, rtl]}>{isAr ? "النص" : "Script"}</Text>
@@ -178,22 +180,32 @@ export function RegulatorPerformancePdf({
       </Page>
 
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
-        {logoUrl ? <Image src={logoUrl} style={{ width: 88, height: 28, objectFit: "contain", marginBottom: 10, alignSelf: isAr ? "flex-end" : "flex-start" }} /> : null}
         <Text style={[s.title, rtl]}>{isAr ? "تفاصيل المسارات الزمنية" : "Cycle Timeline Details"}</Text>
-        <Text style={[s.subtitle, rtl]}>{isAr ? "كل دورة تم التعامل معها داخل فترة التقرير" : "Each handled revision cycle in the reporting window"}</Text>
+        <Text style={[s.subtitle, rtl]}>
+          {hasCycles
+            ? (isAr ? "كل دورة تم التعامل معها داخل فترة التقرير" : "Each handled revision cycle in the reporting window")
+            : (isAr ? "لا توجد دورات، لذلك نعرض الأحداث الزمنية الأحدث بدلًا منها" : "No cycles were handled, so the latest timeline events are shown instead")}
+        </Text>
 
         <View style={s.table}>
           <View style={s.tr}>
-            <Text style={[s.th, rtl]}>{isAr ? "النص" : "Script"}</Text>
-            <Text style={[s.th, rtl]}>{isAr ? "الدورة" : "Cycle"}</Text>
-            <Text style={[s.th, rtl]}>{isAr ? "أرسل في" : "Sent at"}</Text>
-            <Text style={[s.th, rtl, { borderRightWidth: 0 }]}>{isAr ? "أعاد في" : "Returned at"}</Text>
+            {hasCycles ? (
+              <>
+                <Text style={[s.th, rtl]}>{isAr ? "النص" : "Script"}</Text>
+                <Text style={[s.th, rtl]}>{isAr ? "الدورة" : "Cycle"}</Text>
+                <Text style={[s.th, rtl]}>{isAr ? "أرسل في" : "Sent at"}</Text>
+                <Text style={[s.th, rtl, { borderRightWidth: 0 }]}>{isAr ? "أعاد في" : "Returned at"}</Text>
+              </>
+            ) : (
+              <>
+                <Text style={[s.th, rtl]}>{isAr ? "الوقت" : "Time"}</Text>
+                <Text style={[s.th, rtl]}>{isAr ? "الإجراء" : "Action"}</Text>
+                <Text style={[s.th, rtl]}>{isAr ? "المستخدم" : "Actor"}</Text>
+                <Text style={[s.th, rtl, { borderRightWidth: 0 }]}>{isAr ? "ملاحظة" : "Note"}</Text>
+              </>
+            )}
           </View>
-          {cycleRows.length === 0 ? (
-            <View style={s.tr}>
-              <Text style={[s.td, rtl, { borderRightWidth: 0, flex: 4 }]}>{isAr ? "لا توجد دورات" : "No cycles handled"}</Text>
-            </View>
-          ) : (
+          {hasCycles ? (
             cycleRows.map((cycle, idx) => {
               const script = scripts.find((s) => s.id === cycle.scriptId);
               const cells = [
@@ -213,11 +225,36 @@ export function RegulatorPerformancePdf({
                 </View>
               );
             })
+          ) : (
+            timelineRows.map((event, idx) => {
+              const type = String((event as Record<string, unknown>).type ?? "");
+              const at = String((event as Record<string, unknown>).at ?? "");
+              const actor = String((event as Record<string, unknown>).actorName ?? (event as Record<string, unknown>).actor ?? "");
+              const note = String((event as Record<string, unknown>).note ?? "");
+              const cells = [
+                formatDateTimeValue(at, { lang, format: dateFormat }),
+                actionLabel(type, lang),
+                safe(actor),
+                note || "-",
+              ];
+              const ordered = isAr ? [...cells].reverse() : cells;
+              return (
+                <View key={`fallback-tl-${idx}`} style={s.tr}>
+                  {ordered.map((cell, cellIdx) => (
+                    <Text key={`fallback-cell-${idx}-${cellIdx}`} style={[s.td, rtl, cellIdx === ordered.length - 1 ? { borderRightWidth: 0 } : {}]}>
+                      {cell}
+                    </Text>
+                  ))}
+                </View>
+              );
+            })
           )}
         </View>
+      </Page>
 
+      <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
+        <Text style={[s.title, rtl]}>{isAr ? "ملاحظات تشغيلية" : "Operational Notes"}</Text>
         <View style={s.sectionBox}>
-          <Text style={[s.sectionTitle, rtl]}>{isAr ? "ملاحظات تشغيلية" : "Operational Notes"}</Text>
           {(data.notes || []).length === 0 ? (
             <Text style={[s.note, rtl]}>{isAr ? "لا توجد ملاحظات إضافية." : "No additional notes."}</Text>
           ) : (
@@ -229,7 +266,6 @@ export function RegulatorPerformancePdf({
       </Page>
 
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
-        {logoUrl ? <Image src={logoUrl} style={{ width: 88, height: 28, objectFit: "contain", marginBottom: 10, alignSelf: isAr ? "flex-end" : "flex-start" }} /> : null}
         <Text style={[s.title, rtl]}>{isAr ? "الخط الزمني الكامل" : "Full Timeline"}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? "تسلسل الأحداث الفعلية في النظام" : "Chronological action stream in the system"}</Text>
         <View style={s.sectionBox}>
@@ -243,7 +279,9 @@ export function RegulatorPerformancePdf({
               const note = String((event as Record<string, unknown>).note ?? "");
               return (
                 <View key={`tl-${idx}`} style={s.timelineItem}>
-                  <Text style={[s.timelineText, rtl]}>{formatDateTimeValue(at, { lang, format: dateFormat })} | {actionLabel(type, lang)} | {safe(actor)}</Text>
+                  <Text style={[s.timelineText, rtl]}>
+                    {formatDateTimeValue(at, { lang, format: dateFormat })} | {actionLabel(type, lang)} | {safe(actor)}
+                  </Text>
                   {note ? <Text style={[s.note, rtl]}>{note}</Text> : null}
                 </View>
               );

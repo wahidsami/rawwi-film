@@ -27,6 +27,7 @@ export async function downloadAuditPdf(params: {
   dateFormat?: string;
 }): Promise<void> {
   const coverImageDataUrl = await toDataUrl(`${window.location.origin}/cover.jpg`);
+  const logoUrl = await toDataUrl(`${window.location.origin}/fclogo.png`);
   const doc = React.createElement(AuditSectionPdf, {
     rows: mapAuditDataForPdf(params.events),
     total: params.total,
@@ -34,6 +35,7 @@ export async function downloadAuditPdf(params: {
     dateFormat: params.dateFormat,
     generatedAt: new Date().toISOString(),
     coverImageDataUrl,
+    logoUrl,
   });
   const blob = await pdf(doc).toBlob();
   const url = URL.createObjectURL(blob);

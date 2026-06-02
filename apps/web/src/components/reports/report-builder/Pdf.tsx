@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View } from '@react-pdf/renderer';
+import { Document, Image, Page, Text, View } from '@react-pdf/renderer';
 import { formatDate } from '@/utils/dateFormat';
 import { builderPdfStyles as s } from './styles';
 
@@ -34,9 +34,10 @@ export interface ReportBuilderPdfProps {
   data: ReportBuilderPdfData;
   lang: 'ar' | 'en';
   dateFormat?: string;
+  logoUrl?: string;
 }
 
-export const ReportBuilderPdf: React.FC<ReportBuilderPdfProps> = ({ data, lang, dateFormat }) => {
+export const ReportBuilderPdf: React.FC<ReportBuilderPdfProps> = ({ data, lang, dateFormat, logoUrl }) => {
   const isAr = lang === 'ar';
   const rtl = isAr ? s.rtl : {};
   const visibleRows = data.rows.slice(0, 18);
@@ -44,26 +45,29 @@ export const ReportBuilderPdf: React.FC<ReportBuilderPdfProps> = ({ data, lang, 
   return (
     <Document>
       <Page size="A4" style={[s.cover, isAr ? s.rtl : {}]}>
-        <View style={s.coverFrame}>
-          <Text style={[s.brand, rtl]}>{isAr ? 'راوي - منشئ التقارير' : 'Raawi - Report Builder'}</Text>
-          <Text style={[s.title, rtl]}>{isAr ? 'تقرير مخصص من بيانات النظام' : 'Custom report from system data'}</Text>
-          <Text style={[s.subtitle, rtl]}>
-            {isAr
-              ? 'هذا الملف يقدّم لقطة تنفيذية للبيانات التي تم تصفيتها وتصديرها من منشئ التقارير، مع ملخص للحالة والفلاتر والأعمدة المختارة.'
-              : 'This file provides an executive snapshot of the filtered data exported from the report builder, including the applied filters and selected columns.'}
-          </Text>
-          <View style={s.metaRow}>
-            <View style={s.metaChip}>
-              <Text style={s.metaLabel}>{isAr ? 'المصدر' : 'Source'}</Text>
-              <Text style={s.metaValue}>{data.sourceLabel}</Text>
-            </View>
-            <View style={s.metaChip}>
-              <Text style={s.metaLabel}>{isAr ? 'تاريخ الإنشاء' : 'Generated at'}</Text>
-              <Text style={s.metaValue}>{formatDate(new Date(data.generatedAt), { lang, format: dateFormat })}</Text>
-            </View>
-            <View style={s.metaChip}>
-              <Text style={s.metaLabel}>{isAr ? 'السجلات الظاهرة' : 'Visible rows'}</Text>
-              <Text style={s.metaValue}>{data.filteredRows}</Text>
+        <View style={[s.coverFrame, { justifyContent: "center", alignItems: "center" }]}>
+          <View style={{ width: "100%", alignItems: "center", textAlign: "center" }}>
+            {logoUrl ? <Image src={logoUrl} style={{ width: 140, height: 44, objectFit: "contain", marginBottom: 20 }} /> : null}
+            <Text style={[s.brand, rtl]}>{isAr ? 'راوي - منشئ التقارير' : 'Raawi - Report Builder'}</Text>
+            <Text style={[s.title, rtl]}>{isAr ? 'تقرير مخصص من بيانات النظام' : 'Custom report from system data'}</Text>
+            <Text style={[s.subtitle, rtl]}>
+              {isAr
+                ? 'هذا الملف يقدّم لقطة تنفيذية للبيانات التي تم تصفيتها وتصديرها من منشئ التقارير، مع ملخص للحالة والفلاتر والأعمدة المختارة.'
+                : 'This file provides an executive snapshot of the filtered data exported from the report builder, including the applied filters and selected columns.'}
+            </Text>
+            <View style={s.metaRow}>
+              <View style={s.metaChip}>
+                <Text style={s.metaLabel}>{isAr ? 'المصدر' : 'Source'}</Text>
+                <Text style={s.metaValue}>{data.sourceLabel}</Text>
+              </View>
+              <View style={s.metaChip}>
+                <Text style={s.metaLabel}>{isAr ? 'تاريخ الإنشاء' : 'Generated at'}</Text>
+                <Text style={s.metaValue}>{formatDate(new Date(data.generatedAt), { lang, format: dateFormat })}</Text>
+              </View>
+              <View style={s.metaChip}>
+                <Text style={s.metaLabel}>{isAr ? 'السجلات الظاهرة' : 'Visible rows'}</Text>
+                <Text style={s.metaValue}>{data.filteredRows}</Text>
+              </View>
             </View>
           </View>
         </View>
@@ -80,7 +84,9 @@ export const ReportBuilderPdf: React.FC<ReportBuilderPdfProps> = ({ data, lang, 
             </View>
           ))}
         </View>
+      </Page>
 
+      <Page size="A4" style={[s.page, isAr ? s.rtl : {}]}>
         <Text style={[s.sectionTitle, rtl]}>{isAr ? 'الفلاتر المطبقة' : 'Applied Filters'}</Text>
         <View style={s.table}>
           {data.filters.map((filter, idx) => (
@@ -90,7 +96,9 @@ export const ReportBuilderPdf: React.FC<ReportBuilderPdfProps> = ({ data, lang, 
             </View>
           ))}
         </View>
+      </Page>
 
+      <Page size="A4" style={[s.page, isAr ? s.rtl : {}]}>
         <Text style={[s.sectionTitle, rtl]}>{isAr ? 'معاينة الجدول' : 'Table Preview'}</Text>
         <View style={s.table}>
           <View style={s.tr}>

@@ -28,7 +28,7 @@ export async function downloadGlossaryPdf(params: {
   const origin = window.location.origin;
   const [coverImageDataUrl, logoUrl] = await Promise.all([
     toDataUrl(`${origin}/cover.jpg`),
-    toDataUrl(`${origin}/dashboardlogo.png`),
+    toDataUrl(`${origin}/fclogo.png`),
   ]);
   const mapped = mapGlossaryDataForPdf(params.terms, params.lang);
   const doc = React.createElement(GlossarySectionPdf, {

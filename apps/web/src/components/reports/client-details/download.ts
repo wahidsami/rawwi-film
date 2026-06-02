@@ -31,7 +31,7 @@ export async function downloadClientDetailsPdf(params: {
   const origin = window.location.origin;
   const [coverImageDataUrl, dashboardLogoUrl] = await Promise.all([
     toDataUrl(`${origin}/cover.jpg`),
-    toDataUrl(`${origin}/dashboardlogo.png`),
+    toDataUrl(`${origin}/fclogo.png`),
   ]);
   const mapped = mapClientDetailsForPdf({
     company: params.company,
@@ -46,6 +46,7 @@ export async function downloadClientDetailsPdf(params: {
     dateFormat: params.dateFormat,
     generatedAt: new Date().toISOString(),
     coverImageDataUrl,
+    logoUrl: dashboardLogoUrl ?? undefined,
     dashboardLogoUrl: dashboardLogoUrl ?? undefined,
     client: mapped.client,
     stats: mapped.stats,

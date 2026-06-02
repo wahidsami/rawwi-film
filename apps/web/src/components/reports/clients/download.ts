@@ -28,7 +28,7 @@ export async function downloadClientsPdf(params: {
   const origin = window.location.origin;
   const [coverImageDataUrl, logoUrl] = await Promise.all([
     toDataUrl(`${origin}/cover.jpg`),
-    toDataUrl(`${origin}/dashboardlogo.png`),
+    toDataUrl(`${origin}/fclogo.png`),
   ]);
   const mapped = mapClientsDataForPdf(params.companies, params.lang);
   const doc = React.createElement(ClientsSectionPdf, {

@@ -44,6 +44,11 @@ export const ClientsSectionPdf: React.FC<ClientsSectionPdfProps> = (props) => {
     <Document>
       <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
         <View style={{ width: A4_WIDTH, height: A4_HEIGHT, position: "relative" }}>
+          {props.logoUrl ? (
+            <View style={{ position: "absolute", top: 44, left: 44, right: 44, alignItems: "center" }}>
+              <Image src={props.logoUrl} style={{ width: 140, height: 44, objectFit: "contain" }} />
+            </View>
+          ) : null}
           {props.coverImageDataUrl ? (
             <Image
               src={props.coverImageDataUrl}
@@ -59,7 +64,6 @@ export const ClientsSectionPdf: React.FC<ClientsSectionPdfProps> = (props) => {
         </View>
       </Page>
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
-        {props.logoUrl ? <Image src={props.logoUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 10 }} /> : null}
         <Text style={[s.title, rtl]}>{isAr ? "تقرير محفظة المستفيدين" : "Beneficiaries Portfolio Report"}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? "الملخص التنفيذي" : "Executive Summary"}</Text>
         <View style={s.statRow}>

@@ -18,6 +18,7 @@ export const AuditSectionPdf: React.FC<{
   dateFormat?: string;
   generatedAt: string;
   coverImageDataUrl?: string | null;
+  logoUrl?: string;
 }> = (p) => {
   const isAr = p.lang === "ar";
   const rtl = isAr ? s.rtl : {};
@@ -25,6 +26,11 @@ export const AuditSectionPdf: React.FC<{
     <Document>
       <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
         <View style={{ width: A4_WIDTH, height: A4_HEIGHT, position: "relative" }}>
+          {p.logoUrl ? (
+            <View style={{ position: "absolute", top: 44, left: 44, right: 44, alignItems: "center" }}>
+              <Image src={p.logoUrl} style={{ width: 140, height: 44, objectFit: "contain" }} />
+            </View>
+          ) : null}
           {p.coverImageDataUrl ? (
             <Image
               src={p.coverImageDataUrl}

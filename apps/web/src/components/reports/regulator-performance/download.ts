@@ -25,7 +25,7 @@ export async function downloadRegulatorPerformancePdf(params: {
   dateFormat?: string;
 }): Promise<void> {
   const origin = window.location.origin;
-  const logoUrl = await toDataUrl(`${origin}/dashboardlogo.png`);
+  const logoUrl = await toDataUrl(`${origin}/fclogo.png`);
   const doc = React.createElement(RegulatorPerformancePdf, {
     data: params.data,
     lang: params.lang,

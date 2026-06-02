@@ -64,6 +64,11 @@ export const QuickAnalysisPdf: React.FC<{
     <Document>
       <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
         <View style={{ width: A4_WIDTH, height: A4_HEIGHT, position: "relative" }}>
+          {logoUrl ? (
+            <View style={{ position: "absolute", top: 44, left: 44, right: 44, alignItems: "center" }}>
+              <Image src={logoUrl} style={{ width: 140, height: 44, objectFit: "contain" }} />
+            </View>
+          ) : null}
           {coverImageDataUrl ? <Image src={coverImageDataUrl} style={{ position: "absolute", top: -2, left: -2, width: A4_WIDTH + 4, height: A4_HEIGHT + 4, objectFit: "cover" }} /> : null}
           <View style={{ position: "absolute", left: 44, right: 44, bottom: 92 }}>
             <View style={s.coverMetaBlock}>
@@ -77,7 +82,6 @@ export const QuickAnalysisPdf: React.FC<{
         </View>
       </Page>
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
-        {logoUrl ? <Image src={logoUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 10 }} /> : null}
         <Text style={[s.title, rtl]}>{isAr ? "تفاصيل التقرير" : "Report Details"}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? `النص: ${scriptTitle}` : `Script: ${scriptTitle}`}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? `إجمالي الملاحظات: ${safeFindings.length}` : `Total findings: ${safeFindings.length}`}</Text>

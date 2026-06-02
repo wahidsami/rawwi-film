@@ -126,7 +126,6 @@ export function ScriptJourneyPdf({ data, lang, logoUrl }: { data: ScriptJourneyP
       </Page>
 
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
-        {logoUrl ? <Image src={logoUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 10, alignSelf: isAr ? "flex-end" : "flex-start" }} /> : null}
         <Text style={[s.title, rtl]}>{isAr ? "الملخص التنفيذي" : "Executive Summary"}</Text>
         <Text style={[s.subtitle, rtl]}>{safe(data.script.title)}</Text>
 
@@ -170,7 +169,6 @@ export function ScriptJourneyPdf({ data, lang, logoUrl }: { data: ScriptJourneyP
       </Page>
 
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
-        {logoUrl ? <Image src={logoUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 10, alignSelf: isAr ? "flex-end" : "flex-start" }} /> : null}
         <Text style={[s.title, rtl]}>{isAr ? "الأنشطة الإدارية" : "Admin Activity"}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? "من قام بماذا ومتى" : "Who did what and when"}</Text>
 

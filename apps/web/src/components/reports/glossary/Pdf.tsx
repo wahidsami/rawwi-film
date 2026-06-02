@@ -28,6 +28,11 @@ export const GlossarySectionPdf: React.FC<{
     <Document>
       <Page size="A4" wrap={false} style={[s.cover, isAr ? s.pageAr : {}]}>
         <View style={{ width: A4_WIDTH, height: A4_HEIGHT, position: "relative" }}>
+          {p.logoUrl ? (
+            <View style={{ position: "absolute", top: 44, left: 44, right: 44, alignItems: "center" }}>
+              <Image src={p.logoUrl} style={{ width: 140, height: 44, objectFit: "contain" }} />
+            </View>
+          ) : null}
           {p.coverImageDataUrl ? (
             <Image
               src={p.coverImageDataUrl}
@@ -43,7 +48,6 @@ export const GlossarySectionPdf: React.FC<{
         </View>
       </Page>
       <Page size="A4" style={[s.page, isAr ? s.pageAr : {}]}>
-        {p.logoUrl ? <Image src={p.logoUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 8 }} /> : null}
         <Text style={[s.title, rtl]}>{isAr ? "تقرير المصطلحات" : "Glossary Report"}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? "ملخص الإحصائيات" : "Summary"}</Text>
         <View style={s.statRow}>

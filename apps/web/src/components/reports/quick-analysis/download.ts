@@ -47,7 +47,7 @@ export async function downloadQuickAnalysisPdf(params: {
   const origin = window.location.origin;
   const [coverImageDataUrl, logoUrl] = await Promise.all([
     toDataUrl(`${origin}/cover.jpg`),
-    toDataUrl(`${origin}/dashboardlogo.png`),
+    toDataUrl(`${origin}/fclogo.png`),
   ]);
   const hasReviewLayer = (params.reviewFindings?.length ?? 0) > 0;
   const reviewLayer = splitAnalysisReviewFindingsForPdf(params.reviewFindings);
