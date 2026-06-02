@@ -1060,15 +1060,6 @@ export function Results() {
   const approvedFindingsDeduped = hasRealFindings ? dedupeRealFindings(approvedFindings) : [];
 
   const semanticCategoriesOrdered = violationTypesForChecklist();
-  const checklistSubjectRows = semanticCategoriesOrdered
-    .map((cat) => ({
-      id: cat.id,
-      titleAr: cat.titleAr,
-      titleEn: cat.titleEn,
-      order: cat.order,
-      total: categoryViolationCounts.get(cat.id) ?? 0,
-    }))
-    .filter((row) => row.id !== 'other' || row.total > 0);
   const categoryViolationCounts = (() => {
     const m = new Map<ViolationTypeId, number>();
     const add = (id: ViolationTypeId) => {
@@ -1102,6 +1093,15 @@ export function Results() {
     }
     return m;
   })();
+  const checklistSubjectRows = semanticCategoriesOrdered
+    .map((cat) => ({
+      id: cat.id,
+      titleAr: cat.titleAr,
+      titleEn: cat.titleEn,
+      order: cat.order,
+      total: categoryViolationCounts.get(cat.id) ?? 0,
+    }))
+    .filter((row) => row.id !== 'other' || row.total > 0);
 
   const violationsUniqueCount = violationsDeduped.length;
   const preferCanonicalFindingsUi =
