@@ -23,6 +23,7 @@ import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 import { Audit } from '@/pages/Audit';
 import { Scripts } from '@/pages/Scripts';
+import { ReceivedScripts } from '@/pages/ReceivedScripts';
 import { Certificates } from '@/pages/Certificates';
 import { CertificateDesigner } from '@/pages/CertificateDesigner';
 import { NotFound } from '@/pages/NotFound';
@@ -139,6 +140,11 @@ function App() {
           <Route path="scripts" element={
             <ProtectedRoute requiredPermission="view_scripts">
               <Scripts />
+            </ProtectedRoute>
+          } />
+          <Route path="received-scripts" element={
+            <ProtectedRoute requiredPermission="view_scripts">
+              <ReceivedScripts />
             </ProtectedRoute>
           } />
           <Route path="client-submissions" element={

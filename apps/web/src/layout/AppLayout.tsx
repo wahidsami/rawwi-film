@@ -19,7 +19,8 @@ import {
   Bell,
   Wand2,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Inbox
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { formatDateTime } from '@/utils/dateFormat';
@@ -91,7 +92,13 @@ export function AppLayout() {
 
     // Conditional sections - supports BOTH section-based and permission-based access
     { to: '/app/clients', icon: Users, label: t('clients'), section: 'clients', permission: 'view_clients' },
-    { to: '/app/scripts', icon: FileText, label: lang === 'ar' ? 'النصوص' : 'Scripts', section: 'clients', permission: 'view_scripts' },
+    {
+      to: user?.role === 'Regulator' ? '/app/received-scripts' : '/app/scripts',
+      icon: user?.role === 'Regulator' ? Inbox : FileText,
+      label: user?.role === 'Regulator' ? (lang === 'ar' ? 'النصوص المستلمة' : 'Received Scripts') : (lang === 'ar' ? 'النصوص' : 'Scripts'),
+      section: 'clients',
+      permission: 'view_scripts',
+    },
     // Intentionally hidden for now (kept route/page in codebase).
     // { to: '/app/client-submissions', icon: FileText, label: lang === 'ar' ? 'طلبات المستفيدين' : 'Beneficiary Submissions', section: 'clients', permission: 'view_scripts' },
     ...(ENABLE_QUICK_ANALYSIS
