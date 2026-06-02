@@ -8,9 +8,8 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate } from '@/utils/dateFormat';
 import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
 import { downloadAnalysisWord } from '@/components/reports/analysis/downloadWord';
-import { downloadRegulatorPerformancePdf } from '@/components/reports/regulator-performance/download';
 import toast from 'react-hot-toast';
-import { reportsApi, findingsApi, scriptsApi, usersApi, type AnalysisFinding, type AnalysisReviewFinding, type RegulatorPerformancePayload } from '@/api';
+import { reportsApi, findingsApi, scriptsApi, usersApi, type AnalysisFinding, type AnalysisReviewFinding } from '@/api';
 import { ReportListItem } from '@/api/models';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -34,10 +33,6 @@ function Reports() {
   const [usersList, setUsersList] = useState<{ id: string; name: string; roleKey: string | null }[]>([]);
   const [downloadingReportId, setDownloadingReportId] = useState<string | null>(null);
   const [downloadingWordReportId, setDownloadingWordReportId] = useState<string | null>(null);
-  const [regulatorId, setRegulatorId] = useState('all');
-  const [regulatorFrom, setRegulatorFrom] = useState('');
-  const [regulatorTo, setRegulatorTo] = useState('');
-  const [downloadingRegulatorPdf, setDownloadingRegulatorPdf] = useState(false);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -71,7 +66,6 @@ function Reports() {
     loadReports();
   }, [loadReports]);
 
-  const isAdmin = user?.role === 'Admin' || user?.role === 'Super Admin';
   const canManageUsers = hasPermission('manage_users');
 
   // Load full user list only when user can manage users (avoid 403 for Regulators)
@@ -82,11 +76,6 @@ function Reports() {
       setUsersList(active.map((u) => ({ id: u.id, name: u.name || u.email || 'Unknown', roleKey: u.roleKey })).sort((a, b) => a.name.localeCompare(b.name)));
     }).catch(() => setUsersList([]));
   }, [canManageUsers]);
-
-  const reportableUsers = usersList.filter((u) => {
-    const role = String(u.roleKey ?? '').toLowerCase();
-    return role !== 'beneficiary';
-  });
 
   const filteredReports = reports.filter(r => {
     const q = search.trim().toLowerCase();
@@ -223,32 +212,6 @@ function Reports() {
     }
   };
 
-  const handleDownloadRegulatorPerformance = async () => {
-    if (!isAdmin || downloadingRegulatorPdf) return;
-    if (regulatorId === 'all') {
-      toast.error(lang === 'ar' ? 'اختر مستخدمًا أولًا' : 'Please choose a user first');
-      return;
-    }
-    setDownloadingRegulatorPdf(true);
-    try {
-      const data: RegulatorPerformancePayload = await reportsApi.getRegulatorPerformance(regulatorId, {
-        from: regulatorFrom || undefined,
-        to: regulatorTo || undefined,
-      });
-      await downloadRegulatorPerformancePdf({
-        data,
-        lang: lang === 'ar' ? 'ar' : 'en',
-        dateFormat: settings?.platform?.dateFormat,
-      });
-      toast.success(lang === 'ar' ? 'تم تنزيل تقرير الأداء' : 'Performance report downloaded');
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err?.message || (lang === 'ar' ? 'تعذر تنزيل تقرير الأداء' : 'Failed to download performance report'));
-    } finally {
-      setDownloadingRegulatorPdf(false);
-    }
-  };
-
   const decisionConfig: Record<string, { label: string; color: string }> = {
     approved: { label: t('approved' as any) || 'Approved', color: 'success' },
     rejected: { label: t('rejected' as any) || 'Rejected', color: 'error' },
@@ -292,61 +255,6 @@ function Reports() {
           <span className="hidden sm:inline">{t('exportCsv')}</span>
         </Button>
       </div>
-
-      {isAdmin && (
-        <Card className="dashboard-panel border border-border/70 shadow-[0_16px_40px_rgba(31,23,36,0.04)]">
-          <CardContent className="p-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                <h2 className="text-xl font-bold text-text-main">{lang === 'ar' ? 'تقرير أداء المراجع / الفريق' : 'Regulator / Team Member Performance Report'}</h2>
-                <p className="mt-1 text-sm text-text-muted">
-                  {lang === 'ar'
-                    ? 'اختَر مستخدمًا داخليًا وحدد فترة زمنية لإخراج تقرير PDF يوضح الأداء والقرارات والدورات.'
-                    : 'Choose an internal user and a date range to generate a PDF report covering performance, decisions, and cycles.'}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={handleDownloadRegulatorPerformance} disabled={downloadingRegulatorPdf}>
-                  {downloadingRegulatorPdf ? <Loader2 className="w-4 h-4 animate-spin mr-2 rtl:ml-2 rtl:mr-0" /> : <FileDown className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}
-                  {lang === 'ar' ? 'تنزيل PDF' : 'Download PDF'}
-                </Button>
-              </div>
-            </div>
-            <div className="mt-5 grid gap-4 lg:grid-cols-3">
-              <Select
-                value={regulatorId}
-                onChange={(e) => setRegulatorId(e.target.value)}
-                options={[
-                  { label: lang === 'ar' ? 'اختر المستخدم' : 'Choose user', value: 'all' },
-                  ...reportableUsers.map((u) => ({
-                    label: `${u.name}${u.roleKey ? ` (${u.roleKey})` : ''}`,
-                    value: u.id,
-                  })),
-                ]}
-              />
-              <Input
-                type="date"
-                value={regulatorFrom}
-                onChange={(e) => setRegulatorFrom(e.target.value)}
-                placeholder={lang === 'ar' ? 'من تاريخ' : 'From date'}
-              />
-              <Input
-                type="date"
-                value={regulatorTo}
-                onChange={(e) => setRegulatorTo(e.target.value)}
-                placeholder={lang === 'ar' ? 'إلى تاريخ' : 'To date'}
-              />
-            </div>
-            <div className="mt-3 flex items-center justify-between gap-3 text-sm text-text-muted">
-              <span>
-                {lang === 'ar'
-                  ? 'سيظهر تقرير PDF مصمم بطابع تنفيذي يتضمن الملخص، النصوص المسندة، الدورات، والخط الزمني.'
-                  : 'The PDF uses an executive style with summary cards, assigned scripts, cycles, and a full timeline.'}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

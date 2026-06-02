@@ -20,6 +20,7 @@ import { ScriptWorkspace } from '@/pages/ScriptWorkspace';
 import { Results } from '@/pages/Results';
 import { Glossary } from '@/pages/Glossary';
 import Reports from '@/pages/Reports';
+import { Performance } from '@/pages/Performance';
 import Settings from '@/pages/Settings';
 import { Audit } from '@/pages/Audit';
 import { Scripts } from '@/pages/Scripts';
@@ -179,6 +180,16 @@ function App() {
               <Reports />
             </ProtectedRoute>
           } />
+          <Route path="performance" element={
+            <ProtectedRoute requiredPermission="manage_users">
+              <Performance />
+            </ProtectedRoute>
+          } />
+          <Route path="performance/:userId" element={
+            <ProtectedRoute requiredPermission="manage_users">
+              <Performance />
+            </ProtectedRoute>
+          } />
           <Route path="audit" element={
             <ProtectedRoute requiredPermission="view_audit">
               <Audit />
@@ -206,6 +217,8 @@ function App() {
         <Route path="/workspace/:id" element={<LegacyAdminRedirect />} />
         <Route path="/report/:id" element={<LegacyAdminRedirect />} />
         <Route path="/reports" element={<LegacyAdminRedirect />} />
+        <Route path="/performance" element={<LegacyAdminRedirect />} />
+        <Route path="/performance/:userId" element={<LegacyAdminRedirect />} />
         <Route path="/audit" element={<LegacyAdminRedirect />} />
         <Route path="/certificates" element={<LegacyAdminRedirect />} />
         <Route path="/settings" element={<LegacyAdminRedirect />} />
