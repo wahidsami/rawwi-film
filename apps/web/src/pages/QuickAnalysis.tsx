@@ -5,6 +5,7 @@ import { Upload, Loader2, FileText, History, PlayCircle, Trash2 } from 'lucide-r
 
 import { useLangStore } from '@/store/langStore';
 import { useDataStore } from '@/store/dataStore';
+import { useAuthStore } from '@/store/authStore';
 import { scriptsApi, reportsApi, type DuplicateScriptCheckResponse } from '@/api';
 import type { Script } from '@/api/models';
 import type { ReportListItem } from '@/api/models';
@@ -37,6 +38,7 @@ function fileTitle(fileName: string): string {
 
 export function QuickAnalysis() {
   const { lang } = useLangStore();
+  const user = useAuthStore((s) => s.user);
   const pushScript = useDataStore((s) => s.pushScript);
   const navigate = useNavigate();
   const [history, setHistory] = useState<QuickHistoryItem[]>([]);
@@ -59,6 +61,7 @@ export function QuickAnalysis() {
 
   const isAr = lang === 'ar';
   const isImportModalOpen = uploadStatus !== 'idle';
+  const isScriptCreationBlocked = user?.role === 'Admin' || user?.role === 'Regulator';
 
   const loadHistory = useCallback(async () => {
     setLoading(true);
@@ -184,6 +187,11 @@ export function QuickAnalysis() {
   }, [isAr, loadHistory]);
 
   const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isScriptCreationBlocked) {
+      toast.error(isAr ? 'تم تعطيل إنشاء النصوص من هذه اللوحة' : 'Script creation is disabled from this dashboard');
+      if (e.target) e.target.value = '';
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
     const ext = file.name.toLowerCase().split('.').pop() || '';
@@ -442,9 +450,11 @@ export function QuickAnalysis() {
         <div>
           <h1 className="text-2xl font-bold text-text-main">{isAr ? 'التحليل السريع' : 'Quick Analysis'}</h1>
           <p className="text-sm text-text-muted mt-1">
-            {isAr
-              ? 'ارفع ملف نص بدون ربطه بشركة، وسيتم تحليله بنفس محرك التحليل الذكي.'
-              : 'Upload a script without linking to a company and run the same smart analysis pipeline.'}
+            {isScriptCreationBlocked
+              ? (isAr ? 'إنشاء نصوص جديدة غير متاح لأدوار الإدارة/المنظم.' : 'Creating new scripts is not available for Admin/Regulator roles.')
+              : (isAr
+                ? 'ارفع ملف نص بدون ربطه بشركة، وسيتم تحليله بنفس محرك التحليل الذكي.'
+                : 'Upload a script without linking to a company and run the same smart analysis pipeline.')}
           </p>
         </div>
         <div className="inline-flex">
@@ -454,11 +464,11 @@ export function QuickAnalysis() {
             className="hidden"
             accept=".pdf,.docx,.txt"
             onChange={onPickFile}
-            disabled={isUploading}
+            disabled={isUploading || isScriptCreationBlocked}
           />
           <Button
             className="gap-2"
-            disabled={isUploading}
+            disabled={isUploading || isScriptCreationBlocked}
             type="button"
             onClick={() => fileInputRef.current?.click()}
           >

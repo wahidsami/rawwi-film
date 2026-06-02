@@ -38,8 +38,13 @@ export function getScriptDecisionCapabilities(
 
   if (!script || !user) return noUser;
 
-  const hasApprovePerm = hasPermission("approve_scripts") || hasPermission("manage_script_status");
-  const hasRejectPerm = hasPermission("reject_scripts") || hasPermission("manage_script_status");
+  const hasDecisionPerm =
+    hasPermission("approve_scripts") ||
+    hasPermission("reject_scripts") ||
+    hasPermission("manage_script_status") ||
+    hasPermission("can_accept_reject");
+  const hasApprovePerm = hasDecisionPerm;
+  const hasRejectPerm = hasDecisionPerm;
 
   if (!hasApprovePerm && !hasRejectPerm) {
     return {

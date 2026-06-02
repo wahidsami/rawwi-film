@@ -118,6 +118,12 @@ export interface Script {
   created_by?: string;
   currentVersionId?: string;
   isQuickAnalysis?: boolean;
+  recommendationStatus?: 'recommended_approval' | 'recommended_rejection' | 'no_recommendation' | string | null;
+  recommendationReason?: string | null;
+  recommendedBy?: string | null;
+  recommendedByName?: string | null;
+  recommendedAt?: string | null;
+  recommendationReportId?: string | null;
   warnings?: Array<{
     code: string;
     message: string;

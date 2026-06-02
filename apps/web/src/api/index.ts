@@ -891,6 +891,9 @@ export const scriptsApi = {
   /** Check if current user can approve/reject this script (backend policy). Use to gate UI. */
   getDecisionCan: (id: string): Promise<{ canApprove: boolean; canReject: boolean; reason?: string }> =>
     httpClient.get(`/scripts/${encodeURIComponent(id)}/decision/can`),
+  /** Check if current regulator can submit a recommendation on this script. */
+  getRecommendationCan: (id: string): Promise<{ canRecommend: boolean; reason?: string }> =>
+    httpClient.get(`/scripts/${encodeURIComponent(id)}/recommendation/can`),
   /** Make approval/rejection decision on a script */
   makeDecision: (
     id: string,
@@ -914,6 +917,18 @@ export const scriptsApi = {
       ...(options?.shareReportsToClient != null ? { shareReportsToClient: options.shareReportsToClient } : {}),
       ...(options?.shareReportIds != null ? { shareReportIds: options.shareReportIds } : {}),
       ...(options?.shareReportFormats != null ? { shareReportFormats: options.shareReportFormats } : {}),
+    }),
+  /** Submit a regulator recommendation on a script. */
+  makeRecommendation: (
+    id: string,
+    recommendation: 'recommended_approval' | 'recommended_rejection',
+    reason: string,
+    relatedReportId?: string,
+  ): Promise<{ success: boolean; script: Script; message: string }> =>
+    httpClient.post(`/scripts/${encodeURIComponent(id)}/recommendation`, {
+      recommendation,
+      reason,
+      ...(relatedReportId ? { relatedReportId } : {}),
     }),
   getScriptVersions: (scriptId: string, options?: { signal?: AbortSignal }): Promise<ScriptVersion[]> =>
     httpClient.get(`/scripts/${encodeURIComponent(scriptId)}/versions`, { signal: options?.signal }),
@@ -1515,6 +1530,7 @@ export interface UserListItem {
   roleKey: string | null;
   status: 'active' | 'disabled';
   allowedSections?: string[];
+  permissions?: string[];
 }
 
 export interface CreateUserBody {
@@ -1522,6 +1538,7 @@ export interface CreateUserBody {
   email: string;
   roleKey: string;
   permissions?: string[];
+  canAcceptReject?: boolean;
   mode?: 'invite' | 'temp_password';
   tempPassword?: string;
   allowedSections?: string[];
@@ -1541,6 +1558,8 @@ export interface UpdateUserBody {
   roleKey?: string;
   status?: 'active' | 'disabled';
   allowedSections?: string[];
+  permissions?: string[];
+  canAcceptReject?: boolean;
 }
 
 export interface DeleteUserBody {
@@ -1560,7 +1579,8 @@ export interface SendInviteBody {
   email: string;
   name?: string;
   role: string;
-  permissions?: Record<string, boolean>; // LEGACY - will be deprecated
+  permissions?: string[]; // legacy-compatible full permission list
+  canAcceptReject?: boolean;
   allowedSections?: string[]; // NEW: Section-based permissions
 }
 

@@ -142,7 +142,7 @@ export function Overview() {
   const filteredScriptsRows = useMemo(() => {
     const q = scriptsSearch.trim().toLowerCase();
     return scriptsOverviewRows.filter((script) => {
-      const matchesSearch = !q || [script.title, script.id, companyNameById.get(script.companyId) ?? '', script.status ?? '']
+      const matchesSearch = !q || [script.title, script.id, companyNameById.get(script.companyId) ?? '', script.status ?? '', (script as any).recommendationStatus ?? '', (script as any).recommendedByName ?? '']
         .join(' ')
         .toLowerCase()
         .includes(q);
@@ -157,6 +157,17 @@ export function Overview() {
     (currentScriptsPage - 1) * scriptsPageSize,
     currentScriptsPage * scriptsPageSize,
   );
+
+  const recommendationBadge = useMemo(() => (status?: string | null) => {
+    const key = String(status ?? '').toLowerCase();
+    if (key === 'recommended_approval') {
+      return <Badge variant="success" className="whitespace-nowrap">{lang === 'ar' ? 'توصية بالموافقة' : 'Recommended Approval'}</Badge>;
+    }
+    if (key === 'recommended_rejection') {
+      return <Badge variant="error" className="whitespace-nowrap">{lang === 'ar' ? 'توصية بالرفض' : 'Recommended Rejection'}</Badge>;
+    }
+    return <span className="text-xs text-text-muted">—</span>;
+  }, [lang]);
 
   useEffect(() => {
     setScriptsPage(1);
@@ -493,6 +504,7 @@ export function Overview() {
                   <th className="px-4 py-2 text-start">{lang === 'ar' ? 'المستفيد' : 'Beneficiary'}</th>
                   <th className="px-4 py-2 text-start">{lang === 'ar' ? 'تاريخ الاستلام' : 'Date Received'}</th>
                   <th className="px-4 py-2 text-start">{lang === 'ar' ? 'الحالة' : 'Status'}</th>
+                  <th className="px-4 py-2 text-start">{lang === 'ar' ? 'التوصية' : 'Recommendation'}</th>
                   <th className="px-4 py-2 text-start">{lang === 'ar' ? 'تاريخ الرفض/الموافقة' : 'Rejected/Approved Date'}</th>
                 </tr>
               </thead>
@@ -500,6 +512,9 @@ export function Overview() {
                 {paginatedScriptsRows.map((script) => {
                   const status = String(script.status ?? '—');
                   const statusKey = status.toLowerCase();
+                  const recommendationStatus = String((script as any).recommendationStatus ?? '').toLowerCase();
+                  const recommendationAt = (script as any).recommendedAt ?? null;
+                  const recommendationBy = (script as any).recommendedByName ?? null;
                   const decisionDate = statusKey === 'approved'
                     ? ((script as any).approvedAt ?? decisionDatesByScript[script.id] ?? '—')
                     : statusKey === 'rejected'
@@ -514,6 +529,18 @@ export function Overview() {
                       </td>
                       <td className="px-4 py-2">{status}</td>
                       <td className="px-4 py-2">
+                        <div className="flex flex-col gap-1">
+                          {recommendationBadge(recommendationStatus)}
+                          {(recommendationAt || recommendationBy) && (
+                            <span className="text-[11px] text-text-muted">
+                              {recommendationBy ? `${lang === 'ar' ? 'بواسطة' : 'By'} ${recommendationBy}` : ''}
+                              {recommendationBy && recommendationAt ? ' • ' : ''}
+                              {recommendationAt ? formatDateTimeValue(recommendationAt, { lang, format: settings?.platform?.dateFormat }) : ''}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
                         {formatDateTimeValue(decisionDate, { lang, format: settings?.platform?.dateFormat })}
                       </td>
                     </tr>
@@ -521,7 +548,7 @@ export function Overview() {
                 })}
                 {paginatedScriptsRows.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-4 text-center text-text-muted">
+                    <td colSpan={6} className="px-4 py-4 text-center text-text-muted">
                       {lang === 'ar' ? 'لا توجد نصوص حالياً' : 'No scripts yet'}
                     </td>
                   </tr>

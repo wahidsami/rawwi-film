@@ -6,28 +6,16 @@
 import { optionsResponse, jsonResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
+import {
+  buildPermissionsForRole,
+  clearUserReferencesBeforeDelete,
+  getDefaultPermissionsForRoleKey,
+  getDefaultSectionsForRoleKey,
+  getRoleDisplayName,
+  uniqueStrings,
+} from "../_shared/userLifecycle.ts";
 
 const PROD = Deno.env.get("PROD") === "true" || Deno.env.get("SUPABASE_ENV") === "production";
-
-const ALL_SECTIONS = ["clients", "tasks", "glossary", "reports", "access_control", "audit"];
-
-function getDefaultSectionsForRoleKey(roleKey: string): string[] {
-  const k = roleKey.toLowerCase().replace(/\s/g, "_");
-  if (k === "super_admin") return [...ALL_SECTIONS];
-  if (k === "admin") return [...ALL_SECTIONS];
-  if (k === "regulator") return ["clients", "reports", "glossary"];
-  if (k === "client") return ["client_portal"];
-  return ["clients", "reports"];
-}
-
-/** Map roleKey to display name for user_metadata.role so session has correct role at login (RBAC before getMe()). */
-function getRoleDisplayName(roleKey: string): string {
-  const k = roleKey.toLowerCase().replace(/\s/g, "_");
-  if (k === "super_admin") return "Super Admin";
-  if (k === "regulator") return "Regulator";
-  if (k === "client") return "Client";
-  return "Admin";
-}
 
 function generateTempPassword(length = 20): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
@@ -135,8 +123,15 @@ Deno.serve(async (req: Request) => {
       const profile = profileByUserId.get(u.id);
       const name = profile?.name ?? (u.user_metadata?.name as string) ?? u.email?.split("@")[0] ?? "";
       const email = profile?.email ?? u.email ?? "";
-      // NEW: Return allowedSections
-      const allowedSections = (u.user_metadata?.allowedSections as string[]) ?? [];
+      const roleKey = userRoleKey.get(u.id) ?? "admin";
+      const permissionsFromMeta = Array.isArray(u.user_metadata?.permissions)
+        ? uniqueStrings(u.user_metadata.permissions as string[])
+        : [];
+      const permissions = permissionsFromMeta.length > 0
+        ? permissionsFromMeta
+        : getDefaultPermissionsForRoleKey(roleKey);
+      // NEW: Return allowedSections and permissions
+      const allowedSections = (u.user_metadata?.allowedSections as string[]) ?? getDefaultSectionsForRoleKey(roleKey);
       return {
         id: u.id,
         email,
@@ -144,13 +139,14 @@ Deno.serve(async (req: Request) => {
         roleKey: userRoleKey.get(u.id) ?? null,
         status: u.banned_until ? "disabled" : "active",
         allowedSections, // Return this
+        permissions,
       };
     }).filter((u) => u.roleKey !== "client");
     return jsonResponse(list, 200, { origin });
   }
 
   if (method === "POST") {
-    let body: { name?: string; email?: string; roleKey?: string; permissions?: string[]; mode?: string; tempPassword?: string; allowedSections?: string[] };
+    let body: { name?: string; email?: string; roleKey?: string; permissions?: string[]; canAcceptReject?: boolean; mode?: string; tempPassword?: string; allowedSections?: string[] };
     try {
       body = await req.json();
     } catch {
@@ -164,6 +160,11 @@ Deno.serve(async (req: Request) => {
     const allowedSectionsFromBody = Array.isArray(body.allowedSections) ? body.allowedSections : undefined;
     const defaultSections = getDefaultSectionsForRoleKey(roleKey);
     const allowedSections = allowedSectionsFromBody?.length ? allowedSectionsFromBody : defaultSections;
+    const canAcceptReject = body.canAcceptReject === true;
+    const permissionsFromBody = uniqueStrings(Array.isArray(body.permissions) ? body.permissions : []);
+    const permissions = permissionsFromBody.length > 0
+      ? buildPermissionsForRole(roleKey, permissionsFromBody.includes("can_accept_reject"))
+      : buildPermissionsForRole(roleKey, canAcceptReject);
 
     if (!email) return jsonResponse({ error: "email is required" }, 400, { origin });
 
@@ -184,7 +185,7 @@ Deno.serve(async (req: Request) => {
       await upsertProfile(supabase, targetUserId, displayName, finalEmail);
       await ensureUserRole(supabase, targetUserId, roleKey);
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
-        user_metadata: { ...(existingUser.user_metadata ?? {}), name: displayName, allowedSections, role: getRoleDisplayName(roleKey) },
+        user_metadata: { ...(existingUser.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey) },
       });
       if (metaErr) console.error("[users] updateUserById existing:", metaErr.message);
       return jsonResponse({ userId: targetUserId, invited: false, existing: true }, 200, { origin });
@@ -207,7 +208,7 @@ Deno.serve(async (req: Request) => {
       await upsertProfile(supabase, targetUserId, displayName, finalEmail);
       await ensureUserRole(supabase, targetUserId, roleKey);
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
-        user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, role: getRoleDisplayName(roleKey) },
+        user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey) },
       });
       if (metaErr) console.error("[users] updateUserById invite:", metaErr.message);
       return jsonResponse({ userId: targetUserId, invited: true }, 200, { origin });
@@ -218,7 +219,7 @@ Deno.serve(async (req: Request) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { name: name || email.split("@")[0], allowedSections, role: getRoleDisplayName(roleKey) },
+      user_metadata: { name: name || email.split("@")[0], allowedSections, permissions, role: getRoleDisplayName(roleKey) },
     });
     if (createErr) {
       console.error("[users] createUser:", createErr.message);
@@ -232,7 +233,7 @@ Deno.serve(async (req: Request) => {
     await upsertProfile(supabase, targetUserId, displayName, finalEmail);
     await ensureUserRole(supabase, targetUserId, roleKey);
     const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
-      user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, role: getRoleDisplayName(roleKey) },
+      user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey) },
     });
     if (metaErr) console.error("[users] updateUserById create:", metaErr.message);
     if (!PROD) returnedTempPassword = password;
@@ -240,7 +241,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (method === "PATCH") {
-    let body: { userId?: string; name?: string; roleKey?: string; status?: string };
+    let body: { userId?: string; name?: string; roleKey?: string; status?: string; permissions?: string[]; canAcceptReject?: boolean };
     try {
       body = await req.json();
     } catch {
@@ -254,6 +255,7 @@ Deno.serve(async (req: Request) => {
     const name = typeof body.name === "string" ? body.name.trim() : undefined;
     const roleKey = typeof body.roleKey === "string" ? (body.roleKey.trim() || "admin") : undefined;
     const status = body.status === "disabled" || body.status === "active" ? body.status : undefined;
+    const permissionsFromBody = uniqueStrings(Array.isArray(body.permissions) ? body.permissions : []);
 
     const { data: targetUser, error: getUserErr } = await supabase.auth.admin.getUserById(targetUserId);
     if (getUserErr || !targetUser?.user) {
@@ -263,6 +265,7 @@ Deno.serve(async (req: Request) => {
     const authUser = targetUser.user;
     const currentEmail = authUser.email ?? "";
     const existingName = (authUser.user_metadata?.name as string) ?? currentEmail.split("@")[0] ?? "User";
+    const existingPermissions = uniqueStrings(Array.isArray(authUser.user_metadata?.permissions) ? authUser.user_metadata.permissions as string[] : []);
 
     if (status !== undefined) {
       const banDuration = status === "disabled" ? "876000h" : "none";
@@ -290,6 +293,14 @@ Deno.serve(async (req: Request) => {
     if (name !== undefined) metadataUpdates.name = name;
     if (allowedSections !== undefined) metadataUpdates.allowedSections = allowedSections;
     if (roleKey !== undefined) metadataUpdates.role = getRoleDisplayName(roleKey);
+    const effectiveRoleKey = roleKey ?? ((authUser.user_metadata?.role as string) ?? "admin");
+    const canAcceptRejectFromBody = typeof body.canAcceptReject === "boolean"
+      ? body.canAcceptReject
+      : existingPermissions.includes("can_accept_reject");
+    const nextPermissions = permissionsFromBody.length > 0
+      ? buildPermissionsForRole(effectiveRoleKey, permissionsFromBody.includes("can_accept_reject"))
+      : buildPermissionsForRole(effectiveRoleKey, canAcceptRejectFromBody);
+    metadataUpdates.permissions = nextPermissions;
 
     if (Object.keys(metadataUpdates).length > 0) {
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
@@ -323,6 +334,8 @@ Deno.serve(async (req: Request) => {
     if (targetUserId === callerId) {
       return jsonResponse({ error: "Cannot delete your own account" }, 400, { origin });
     }
+
+    await clearUserReferencesBeforeDelete(supabase, targetUserId);
 
     // Attempt delete
     const { error: deleteErr } = await supabase.auth.admin.deleteUser(targetUserId);

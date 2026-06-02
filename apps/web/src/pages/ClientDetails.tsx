@@ -139,7 +139,8 @@ export function ClientDetails() {
     }),
     [companyScripts, isPortalClient],
   );
-  const canAddScript = isAdmin && hasPermission('upload_scripts') && !isPortalClient;
+  // Product policy: Admin/Regulator dashboards cannot create or import beneficiary scripts.
+  const canAddScript = false;
   const [formData, setFormData] = useState({
     title: '',
     type: '' as '' | 'Film' | 'Series',
@@ -404,7 +405,11 @@ export function ClientDetails() {
 
   const handleSaveNewScript = async () => {
     if (!canAddScript) {
-      toast.error(lang === 'ar' ? 'ليس لديك صلاحية رفع نص جديد' : 'You do not have permission to upload a new script');
+      toast.error(
+        lang === 'ar'
+          ? 'تم تعطيل إضافة النصوص من لوحة الإدارة'
+          : 'Script creation is disabled from admin dashboard'
+      );
       return;
     }
     const validationErrors: Record<string, string> = {};

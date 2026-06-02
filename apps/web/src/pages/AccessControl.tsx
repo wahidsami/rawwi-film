@@ -37,6 +37,10 @@ function getDefaultSectionsForRoleKey(roleKey: string): string[] {
   return ['clients', 'reports'];
 }
 
+function isRegulatorRoleKey(roleKey: string): boolean {
+  return roleKey.toLowerCase().replace(/\s/g, '_') === 'regulator';
+}
+
 export function AccessControl() {
   const { t, lang } = useLangStore();
   const [search, setSearch] = useState('');
@@ -52,6 +56,7 @@ export function AccessControl() {
     email: '',
     roleKey: 'admin',
     allowedSections: getDefaultSectionsForRoleKey('admin'),
+    canAcceptReject: false,
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -62,6 +67,7 @@ export function AccessControl() {
     roleKey: 'admin',
     status: 'active' as 'active' | 'disabled',
     allowedSections: [] as string[],
+    canAcceptReject: false,
   });
   const [editSaving, setEditSaving] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
@@ -119,10 +125,11 @@ export function AccessControl() {
         name: name || undefined,
         role: form.roleKey,
         allowedSections: form.allowedSections.length ? form.allowedSections : undefined,
+        canAcceptReject: form.canAcceptReject,
       });
       toast.success(lang === 'ar' ? 'تم إرسال الدعوة إلى البريد الإلكتروني' : 'Invite sent to email');
       setIsModalOpen(false);
-      setForm({ name: '', email: '', roleKey: 'admin', allowedSections: getDefaultSectionsForRoleKey('admin') });
+      setForm({ name: '', email: '', roleKey: 'admin', allowedSections: getDefaultSectionsForRoleKey('admin'), canAcceptReject: false });
       await loadUsers();
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to send invite');
@@ -139,6 +146,7 @@ export function AccessControl() {
       roleKey,
       status: user.status,
       allowedSections: (user.allowedSections && user.allowedSections.length > 0) ? user.allowedSections : getDefaultSectionsForRoleKey(roleKey),
+      canAcceptReject: Array.isArray(user.permissions) ? user.permissions.includes('can_accept_reject') : false,
     });
   };
 
@@ -152,6 +160,7 @@ export function AccessControl() {
         roleKey: editForm.roleKey,
         status: editForm.status,
         allowedSections: editForm.allowedSections,
+        canAcceptReject: editForm.canAcceptReject,
       });
       toast.success(lang === 'ar' ? 'تم تحديث المستخدم' : 'User updated');
       setEditUser(null);
@@ -396,6 +405,14 @@ export function AccessControl() {
               <p className="text-text-main font-medium">{viewUser.roleKey ?? '—'}</p>
             </div>
             <div>
+              <span className="text-xs text-text-muted uppercase">can_accept_reject</span>
+              <p className="text-text-main font-medium">
+                {Array.isArray(viewUser.permissions) && viewUser.permissions.includes('can_accept_reject')
+                  ? (lang === 'ar' ? 'مفعّل' : 'Enabled')
+                  : (lang === 'ar' ? 'غير مفعّل' : 'Disabled')}
+              </p>
+            </div>
+            <div>
               <span className="text-xs text-text-muted uppercase">{t('status')}</span>
               <div className="text-text-main font-medium mt-1">
                 <Badge variant={viewUser.status === 'active' ? 'success' : 'default'}>
@@ -427,7 +444,12 @@ export function AccessControl() {
                 value={editForm.roleKey}
                 onChange={(e) => {
                   const roleKey = e.target.value;
-                  setEditForm((f) => ({ ...f, roleKey, allowedSections: getDefaultSectionsForRoleKey(roleKey) }));
+                  setEditForm((f) => ({
+                    ...f,
+                    roleKey,
+                    allowedSections: getDefaultSectionsForRoleKey(roleKey),
+                    canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
+                  }));
                 }}
               >
                 {ROLE_OPTIONS.map((opt) => (
@@ -438,6 +460,7 @@ export function AccessControl() {
                 {lang === 'ar' ? 'يحدد صلاحيات المستخدم في النظام' : 'Defines backend permissions.'}
               </p>
             </div>
+
             <div className="space-y-2">
               <label className="block text-sm font-medium text-text-main">
                 {lang === 'ar' ? 'الأقسام الظاهرة في لوحة التحكم' : 'Dashboard sections this user can see'}
@@ -461,6 +484,19 @@ export function AccessControl() {
                     <span className="text-sm text-text-main">{t(opt.labelKey)}</span>
                   </label>
                 ))}
+                {isRegulatorRoleKey(editForm.roleKey) && (
+                  <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={editForm.canAcceptReject}
+                      onChange={(e) => setEditForm((f) => ({ ...f, canAcceptReject: e.target.checked }))}
+                      className="rounded border-border"
+                    />
+                    <span className="text-sm text-text-main">
+                      {lang === 'ar' ? 'يمكنه قبول أو رفض النصوص' : 'Can accept or reject scripts'}
+                    </span>
+                  </label>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -512,26 +548,31 @@ export function AccessControl() {
               value={form.roleKey}
               onChange={(e) => {
                 const roleKey = e.target.value;
-                setForm((f) => ({ ...f, roleKey, allowedSections: getDefaultSectionsForRoleKey(roleKey) }));
+                setForm((f) => ({
+                  ...f,
+                  roleKey,
+                  allowedSections: getDefaultSectionsForRoleKey(roleKey),
+                  canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
+                }));
               }}
             >
               {ROLE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {t(opt.labelKey)}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-text-muted">
-              {lang === 'ar' ? 'يحدد صلاحيات المستخدم وما يظهر له في القائمة' : 'Defines what they can do and which dashboard sections they see.'}
-            </p>
-          </div>
+                  <option key={opt.value} value={opt.value}>
+                    {t(opt.labelKey)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-text-muted">
+                {lang === 'ar' ? 'يحدد صلاحيات المستخدم وما يظهر له في القائمة' : 'Defines what they can do and which dashboard sections they see.'}
+              </p>
+            </div>
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-text-main">
               {lang === 'ar' ? 'الأقسام الظاهرة في لوحة التحكم' : 'Dashboard sections this user can see'}
             </label>
             <div className="flex flex-wrap gap-3">
-              {SECTION_OPTIONS.map((opt) => (
+                {SECTION_OPTIONS.map((opt) => (
                 <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -549,8 +590,21 @@ export function AccessControl() {
                   <span className="text-sm text-text-main">{t(opt.labelKey)}</span>
                 </label>
               ))}
+              {isRegulatorRoleKey(form.roleKey) && (
+                <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={form.canAcceptReject}
+                    onChange={(e) => setForm((f) => ({ ...f, canAcceptReject: e.target.checked }))}
+                    className="rounded border-border"
+                  />
+                  <span className="text-sm text-text-main">
+                    {lang === 'ar' ? 'يمكنه قبول أو رفض النصوص' : 'Can accept or reject scripts'}
+                  </span>
+                </label>
+              )}
+              </div>
             </div>
-          </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>

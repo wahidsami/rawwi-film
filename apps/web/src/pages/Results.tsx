@@ -315,11 +315,16 @@ export function Results() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { lang, t } = useLangStore();
-  const { user } = useAuthStore();
+  const { user, hasPermission } = useAuthStore();
   const { settings } = useSettingsStore();
   const dateFormat = settings?.platform?.dateFormat;
   const isAr = lang === 'ar';
   const quickFromQuery = searchParams.get('quick') === '1';
+  const canUseDecisionActions =
+    hasPermission('approve_scripts') ||
+    hasPermission('reject_scripts') ||
+    hasPermission('manage_script_status') ||
+    hasPermission('can_accept_reject');
   
   const [report, setReport] = useState<AnalysisReport | null>(null);
   const [findings, setFindings] = useState<AnalysisFinding[]>([]);
@@ -2812,42 +2817,44 @@ export function Results() {
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-10 text-xs gap-1 text-success border-success/30 hover:bg-success/10"
-              onClick={() => setApproveDecisionModalOpen(true)}
-              disabled={reviewing || report.reviewStatus === 'approved'}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              {lang === 'ar' ? 'قبول' : 'Approve'}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-10 text-xs gap-1 text-error border-error/30 hover:bg-error/10"
-              onClick={() => void handleReportReview('rejected')}
-              disabled={reviewing || report.reviewStatus === 'approved' || report.reviewStatus === 'rejected'}
-            >
-              <XCircle className="w-3.5 h-3.5" />
-              {lang === 'ar' ? 'رفض' : 'Reject'}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-10 text-xs text-warning"
-              onClick={() => void openSendReviewDecisionModal()}
-              disabled={reviewing || report.reviewStatus === 'approved' || report.reviewStatus === 'rejected'}
-            >
-              {lang === 'ar' ? 'إرسال للمراجعة' : 'Send for Review'}
-            </Button>
-            {report.reviewStatus !== 'under_review' && (
-              <Button size="sm" variant="ghost" className="h-10 text-xs" onClick={openReportReReviewModal} disabled={reviewing}>
-                {lang === 'ar' ? 'إعادة للمراجعة' : 'Re-review'}
+          {canUseDecisionActions && (
+            <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-10 text-xs gap-1 text-success border-success/30 hover:bg-success/10"
+                onClick={() => setApproveDecisionModalOpen(true)}
+                disabled={reviewing || report.reviewStatus === 'approved'}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {lang === 'ar' ? 'قبول' : 'Approve'}
               </Button>
-            )}
-          </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-10 text-xs gap-1 text-error border-error/30 hover:bg-error/10"
+                onClick={() => void handleReportReview('rejected')}
+                disabled={reviewing || report.reviewStatus === 'approved' || report.reviewStatus === 'rejected'}
+              >
+                <XCircle className="w-3.5 h-3.5" />
+                {lang === 'ar' ? 'رفض' : 'Reject'}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-10 text-xs text-warning"
+                onClick={() => void openSendReviewDecisionModal()}
+                disabled={reviewing || report.reviewStatus === 'approved' || report.reviewStatus === 'rejected'}
+              >
+                {lang === 'ar' ? 'إرسال للمراجعة' : 'Send for Review'}
+              </Button>
+              {report.reviewStatus !== 'under_review' && (
+                <Button size="sm" variant="ghost" className="h-10 text-xs" onClick={openReportReReviewModal} disabled={reviewing}>
+                  {lang === 'ar' ? 'إعادة للمراجعة' : 'Re-review'}
+                </Button>
+              )}
+            </div>
+          )}
           <div className="relative flex items-center gap-2 shrink-0" ref={reportActionsMenuRef}>
             <button
               type="button"

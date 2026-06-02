@@ -5,21 +5,12 @@
  */
 import { optionsResponse, jsonResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
-import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
-
-function defaultSectionsForRole(role: string): string[] {
-  const normalized = role.trim().toLowerCase().replace(/\s+/g, "_");
-  if (normalized === "super_admin" || normalized === "admin") {
-    return ["clients", "tasks", "glossary", "reports", "access_control", "audit"];
-  }
-  if (normalized === "regulator") {
-    return ["clients", "reports", "glossary"];
-  }
-  if (normalized === "client") {
-    return ["client_portal"];
-  }
-  return ["clients", "reports"];
-}
+import {
+  getDefaultPermissionsForRoleKey,
+  getDefaultSectionsForRoleKey,
+  normalizeRoleKey,
+  uniqueStrings,
+} from "../_shared/userLifecycle.ts";
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? undefined;
@@ -37,6 +28,8 @@ Deno.serve(async (req: Request) => {
   if (userErr || !sbUser) {
     return json({ error: "User not found" }, 404);
   }
+
+  const meta = sbUser.user_metadata ?? {};
 
   const { data: rolePermRows } = await supabase
     .from("user_roles")
@@ -68,17 +61,28 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  const meta = sbUser.user_metadata ?? {};
+  const metadataPermissionKeys = Array.isArray(meta.permissions) ? uniqueStrings(meta.permissions as string[]) : [];
   const name = (meta.name as string) || sbUser.email?.split("@")[0] || "User";
   const role = roleFromDb ?? ((meta.role as string) || (roleIds.length ? "Admin" : "Admin"));
-  const normalizedRole = role === "Super Admin" || role === "super_admin" ? "Super Admin"
-    : role === "Regulator" || role === "regulator" ? "Regulator"
-      : role === "Client" || role === "client" ? "Client"
-        : role === "admin" || role === "Admin" ? "Admin" : "Admin";
+  const roleKey = normalizeRoleKey(role);
+  const normalizedRole = roleKey === "super_admin" ? "Super Admin"
+    : roleKey === "regulator" ? "Regulator"
+      : roleKey === "client" ? "Client"
+        : "Admin";
   const allowedSectionsMeta = meta.allowedSections as string[] | undefined;
   const allowedSections = allowedSectionsMeta && allowedSectionsMeta.length > 0
     ? allowedSectionsMeta
-    : defaultSectionsForRole(normalizedRole);
+    : getDefaultSectionsForRoleKey(normalizedRole);
+
+  if (normalizedRole === "Regulator") {
+    permissionKeys = metadataPermissionKeys;
+  } else {
+    permissionKeys = uniqueStrings([...permissionKeys, ...metadataPermissionKeys]);
+  }
+
+  if (permissionKeys.length === 0) {
+    permissionKeys = getDefaultPermissionsForRoleKey(normalizedRole);
+  }
 
   return json({
     user: {

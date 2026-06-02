@@ -11,6 +11,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
+import { ScriptRecommendationBar } from '@/components/ScriptRecommendationBar';
 import { DocumentImportModal } from '@/components/import/DocumentImportModal';
 import { ArrowLeft, Bot, ShieldAlert, Check, FileText, Upload, Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Pause, Play, Square, Search, MoreVertical, RotateCcw } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -1951,6 +1952,7 @@ export function ScriptWorkspace() {
   const [rejectDecisionReason, setRejectDecisionReason] = useState('');
   const [rejectDecisionClientComment, setRejectDecisionClientComment] = useState('');
   const [rejectDecisionShareReports, setRejectDecisionShareReports] = useState(true);
+  const [rejectDecisionShareFormats, setRejectDecisionShareFormats] = useState<Array<'pdf' | 'docx'>>(['pdf', 'docx']);
   const [rejectDecisionReportIds, setRejectDecisionReportIds] = useState<string[]>([]);
   const [rejectDecisionSubmitting, setRejectDecisionSubmitting] = useState(false);
   const [sendReviewDecisionReportId, setSendReviewDecisionReportId] = useState<string | null>(null);
@@ -2490,6 +2492,7 @@ export function ScriptWorkspace() {
     setRejectDecisionReason('');
     setRejectDecisionClientComment('');
     setRejectDecisionShareReports(true);
+    setRejectDecisionShareFormats(['pdf', 'docx']);
     setRejectDecisionReportIds(defaultReportId ? [defaultReportId] : []);
   }, [reportHistory]);
 
@@ -2508,6 +2511,7 @@ export function ScriptWorkspace() {
     setRejectDecisionReason('');
     setRejectDecisionClientComment('');
     setRejectDecisionShareReports(true);
+    setRejectDecisionShareFormats(['pdf', 'docx']);
     setRejectDecisionReportIds([]);
   }, [rejectDecisionSubmitting]);
 
@@ -2562,6 +2566,7 @@ export function ScriptWorkspace() {
           clientComment: rejectDecisionClientComment.trim(),
           shareReportsToClient: rejectDecisionShareReports,
           shareReportIds: rejectDecisionShareReports ? rejectDecisionReportIds : [],
+          shareReportFormats: rejectDecisionShareReports ? rejectDecisionShareFormats : [],
         },
       );
       toast.success(lang === 'ar' ? 'تم رفض النص وإرسال الملاحظات للمستفيد' : 'Script rejected and client feedback saved');
@@ -2601,6 +2606,7 @@ export function ScriptWorkspace() {
     rejectDecisionReason,
     rejectDecisionReportId,
     rejectDecisionReportIds,
+    rejectDecisionShareFormats,
     rejectDecisionShareReports,
     script?.id,
     selectedReportForHighlights?.id,
@@ -5634,6 +5640,16 @@ export function ScriptWorkspace() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <ScriptRecommendationBar
+            scriptId={script.id}
+            scriptTitle={script.title}
+            currentStatus={script.status}
+            recommendationStatus={(script as any).recommendationStatus ?? null}
+            recommendationReason={(script as any).recommendationReason ?? null}
+            recommendedByName={(script as any).recommendedByName ?? null}
+            recommendedAt={(script as any).recommendedAt ?? null}
+            recommendationReportId={(script as any).recommendationReportId ?? null}
+          />
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -7255,6 +7271,28 @@ export function ScriptWorkspace() {
             </label>
 
             {rejectDecisionShareReports && (
+              <div className="space-y-3">
+                <div className="rounded border border-border bg-surface p-2">
+                  <p className="text-xs font-medium text-text-main">{lang === 'ar' ? 'تنسيقات الملفات المرسلة' : 'Shared file formats'}</p>
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    <label className="inline-flex items-center gap-2 text-xs text-text-muted">
+                      <input
+                        type="checkbox"
+                        checked={rejectDecisionShareFormats.includes('pdf')}
+                        onChange={(e) => setRejectDecisionShareFormats((prev) => e.target.checked ? Array.from(new Set([...prev, 'pdf'])) : prev.filter((f) => f !== 'pdf'))}
+                      />
+                      PDF
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-xs text-text-muted">
+                      <input
+                        type="checkbox"
+                        checked={rejectDecisionShareFormats.includes('docx')}
+                        onChange={(e) => setRejectDecisionShareFormats((prev) => e.target.checked ? Array.from(new Set([...prev, 'docx'])) : prev.filter((f) => f !== 'docx'))}
+                      />
+                      DOCX
+                    </label>
+                  </div>
+                </div>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {reportHistory.length === 0 ? (
                   <p className="text-xs text-text-muted">
@@ -7281,6 +7319,7 @@ export function ScriptWorkspace() {
                   ))
                 )}
               </div>
+              </div>
             )}
           </div>
 
@@ -7289,6 +7328,7 @@ export function ScriptWorkspace() {
               variant="danger"
               isLoading={rejectDecisionSubmitting}
               onClick={submitRejectDecision}
+              disabled={rejectDecisionShareReports && rejectDecisionShareFormats.length === 0}
             >
               {lang === 'ar' ? 'تأكيد الرفض' : 'Confirm Rejection'}
             </Button>

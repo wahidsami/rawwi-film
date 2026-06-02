@@ -10,20 +10,16 @@ import { optionsResponse, jsonResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { logAudit } from "../_shared/audit.ts";
+import {
+  buildPermissionsForRole,
+  getDefaultSectionsForRoleKey,
+  getRoleDisplayName,
+  uniqueStrings,
+} from "../_shared/userLifecycle.ts";
 
 const INVITE_EXPIRY_HOURS = 48;
 const RESEND_API = "https://api.resend.com/emails";
 const FROM_EMAIL = "Raawi Film <no-reply@unifinitylab.com>";
-
-const ALL_SECTIONS = ["clients", "tasks", "glossary", "reports", "access_control", "audit"];
-
-function getDefaultSectionsForRoleKey(roleKey: string): string[] {
-  const k = roleKey.toLowerCase().replace(/\s/g, "_");
-  if (k === "super_admin") return [...ALL_SECTIONS];
-  if (k === "admin") return [...ALL_SECTIONS];
-  if (k === "regulator") return ["clients", "reports", "glossary"];
-  return ["clients", "reports"];
-}
 
 async function callerHasManageUsers(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -86,7 +82,8 @@ Deno.serve(async (req: Request) => {
     email?: string;
     name?: string;
     role?: string;
-    permissions?: Record<string, boolean>;
+    permissions?: string[] | Record<string, boolean>;
+    canAcceptReject?: boolean;
     allowedSections?: string[]; // NEW: Section-based permissions
   };
   try {
@@ -114,9 +111,20 @@ Deno.serve(async (req: Request) => {
   }
   const roleId = roleRow.id;
 
-  const permissions = body.permissions != null && typeof body.permissions === "object" ? body.permissions : {};
+  const legacyPermissionMap = body.permissions != null && !Array.isArray(body.permissions) && typeof body.permissions === "object"
+    ? body.permissions as Record<string, boolean>
+    : {};
+  const permissionsFromBody = Array.isArray(body.permissions)
+    ? uniqueStrings(body.permissions as string[])
+    : [];
   const allowedSectionsFromBody = Array.isArray(body.allowedSections) ? body.allowedSections : undefined;
   const allowedSections = (allowedSectionsFromBody?.length ? allowedSectionsFromBody : getDefaultSectionsForRoleKey(roleKey)) as string[];
+  const canAcceptReject = typeof body.canAcceptReject === "boolean"
+    ? body.canAcceptReject
+    : (permissionsFromBody.includes("can_accept_reject") || legacyPermissionMap.canAcceptReject === true);
+  const permissions = permissionsFromBody.length > 0
+    ? buildPermissionsForRole(roleKey, permissionsFromBody.includes("can_accept_reject"))
+    : buildPermissionsForRole(roleKey, canAcceptReject);
 
   const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
   const token = base64url(tokenBytes);
@@ -146,11 +154,12 @@ Deno.serve(async (req: Request) => {
 
   // Step 1: Create auth user
   const tempPassword = generateTempPassword(20);
-  const roleDisplayName = roleKey === "super_admin" ? "Super Admin" : roleKey === "regulator" ? "Regulator" : "Admin";
+  const roleDisplayName = getRoleDisplayName(roleKey);
   const userMetadata: Record<string, unknown> = {
     name: (body.name ?? "").trim() || email.split("@")[0],
     role: roleDisplayName,
     allowedSections,
+    permissions,
   };
 
   console.log(`[invites] STEP:auth_create_user - Creating auth user for ${email}`);

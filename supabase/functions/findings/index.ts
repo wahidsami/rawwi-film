@@ -732,7 +732,7 @@ Deno.serve(async (req: Request) => {
 
     // ── POST /findings/review ──
     if (method === "POST" && rest === "review") {
-      let body: { findingId?: string; toStatus?: string; reason?: string };
+      let body: { findingId?: string; reviewFindingId?: string; toStatus?: string; reason?: string };
       try {
         body = await req.json();
       } catch {
@@ -740,15 +740,76 @@ Deno.serve(async (req: Request) => {
       }
 
       const findingId = body.findingId?.trim();
+      const reviewFindingId = body.reviewFindingId?.trim();
       const toStatus = body.toStatus?.trim();
       const reason = body.reason?.trim();
 
-      if (!findingId) return json({ error: "findingId required" }, 400);
+      if (!findingId && !reviewFindingId) return json({ error: "findingId or reviewFindingId required" }, 400);
       if (!toStatus || !["approved", "violation"].includes(toStatus)) {
         return json({ error: "toStatus must be 'approved' or 'violation'" }, 400);
       }
       if (!reason || reason.length < 2) {
         return json({ error: "reason is required (min 2 chars)" }, 400);
+      }
+
+      if (reviewFindingId) {
+        const { data: reviewFinding } = await supabase
+          .from("analysis_review_findings")
+          .select("id, job_id, review_status")
+          .eq("id", reviewFindingId)
+          .maybeSingle();
+        if (!reviewFinding) return json({ error: "Review finding not found" }, 404);
+
+        const reviewRow = reviewFinding as { id: string; job_id: string; review_status?: string | null };
+        const { data: job } = await supabase
+          .from("analysis_jobs")
+          .select("created_by")
+          .eq("id", reviewRow.job_id)
+          .maybeSingle();
+        if (!job) return json({ error: "Job not found" }, 404);
+        const isOwner = (job as { created_by?: string | null }).created_by === uid;
+        if (!isAdmin && !isOwner) return json({ error: "Forbidden" }, 403);
+
+        const nowIso = new Date().toISOString();
+        const { data: updatedRow, error: updErr } = await supabase
+          .from("analysis_review_findings")
+          .update({
+            review_status: toStatus,
+            approved_reason: reason,
+            reviewed_by: uid,
+            reviewed_at: nowIso,
+            updated_at: nowIso,
+          })
+          .eq("id", reviewFindingId)
+          .select(REVIEW_FINDING_COLS)
+          .maybeSingle();
+        if (updErr || !updatedRow) {
+          return json({ error: updErr?.message ?? "Could not update review finding status" }, 500);
+        }
+
+        await logAuditCanonical(supabase, {
+          event_type: toStatus === "approved" ? "FINDING_MARKED_SAFE" : "FINDING_OVERRIDDEN",
+          actor_user_id: uid,
+          actor_role: "user",
+          target_type: "report",
+          target_id: reviewRow.job_id,
+          target_label: reviewFindingId,
+          result_status: "success",
+          metadata: {
+            fromStatus: reviewRow.review_status ?? "violation",
+            toStatus,
+            reason,
+            reviewFindingId,
+          },
+        }).catch((e) => console.warn("[findings] review-layer audit canonical:", e));
+
+        return json({
+          ok: true,
+          reviewFindingId,
+          fromStatus: reviewRow.review_status ?? "violation",
+          toStatus,
+          reviewFinding: camelReviewFinding(updatedRow as Record<string, unknown>),
+        });
       }
 
       // Load finding
@@ -1135,6 +1196,7 @@ Deno.serve(async (req: Request) => {
       let body: {
         action?: string;
         findingId?: string;
+        reviewFindingId?: string;
         articleId?: number;
         atomId?: string | null;
         severity?: string;
@@ -1153,6 +1215,7 @@ Deno.serve(async (req: Request) => {
       }
 
       const findingId = body.findingId?.trim();
+      const reviewFindingId = body.reviewFindingId?.trim();
       const articleId = body.articleId;
       const atomId = body.atomId?.trim() || null;
       const severity = body.severity?.trim().toLowerCase();
@@ -1160,7 +1223,7 @@ Deno.serve(async (req: Request) => {
       const evidenceSnippetInput = body.evidenceSnippet?.trim() ?? null;
       const rationaleAr = body.rationaleAr?.trim() ?? null;
 
-      if (!findingId) return json({ error: "findingId required" }, 400);
+      if (!findingId && !reviewFindingId) return json({ error: "findingId or reviewFindingId required" }, 400);
       if (articleId == null || typeof articleId !== "number") {
         return json({ error: "articleId required" }, 400);
       }
@@ -1171,6 +1234,68 @@ Deno.serve(async (req: Request) => {
       const atomResolution = await resolveManualAtomId(supabase, articleId, atomId);
       if (atomResolution.error) {
         return json({ error: atomResolution.error }, 400);
+      }
+
+      if (reviewFindingId) {
+        const { data: reviewFinding } = await supabase
+          .from("analysis_review_findings")
+          .select("id, job_id, review_status, evidence_snippet")
+          .eq("id", reviewFindingId)
+          .maybeSingle();
+        if (!reviewFinding) return json({ error: "Review finding not found" }, 404);
+
+        const reviewRow = reviewFinding as { id: string; job_id: string; review_status?: string | null; evidence_snippet?: string | null };
+        const { data: job } = await supabase
+          .from("analysis_jobs")
+          .select("created_by")
+          .eq("id", reviewRow.job_id)
+          .maybeSingle();
+        if (!job) return json({ error: "Job not found" }, 404);
+        const isOwner = (job as { created_by?: string | null }).created_by === uid;
+        if (!isAdmin && !isOwner) return json({ error: "Forbidden" }, 403);
+
+        const nowIso = new Date().toISOString();
+        const { data: updatedRow, error: updErr } = await supabase
+          .from("analysis_review_findings")
+          .update({
+            primary_article_id: articleId,
+            primary_atom_id: atomResolution.normalizedAtomId,
+            severity,
+            manual_comment: manualComment,
+            rationale_ar: rationaleAr,
+            evidence_snippet: evidenceSnippetInput || reviewRow.evidence_snippet || "",
+            edited_by: uid,
+            edited_at: nowIso,
+            updated_at: nowIso,
+          })
+          .eq("id", reviewFindingId)
+          .select(REVIEW_FINDING_COLS)
+          .maybeSingle();
+        if (updErr || !updatedRow) {
+          return json({ error: updErr?.message ?? "Could not update review finding" }, 500);
+        }
+
+        await logAuditCanonical(supabase, {
+          event_type: "FINDING_RECLASSIFIED",
+          actor_user_id: uid,
+          actor_role: "user",
+          target_type: "report",
+          target_id: reviewRow.job_id,
+          target_label: reviewFindingId,
+          result_status: "success",
+          metadata: {
+            reviewFindingId,
+            newArticleId: articleId,
+            newAtomId: atomResolution.normalizedAtomId,
+            newSeverity: severity,
+          },
+        }).catch((e) => console.warn("[findings] review-layer reclassify audit canonical:", e));
+
+        return json({
+          ok: true,
+          reviewFinding: camelReviewFinding(updatedRow as Record<string, unknown>),
+          atomMappingWarning: atomResolution.warning,
+        });
       }
 
       const { data: finding } = await supabase

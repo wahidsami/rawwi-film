@@ -40,10 +40,10 @@ export function DecisionBar({
 
     const canApprove = capabilitiesProp != null
         ? capabilitiesProp.canApprove
-        : (hasPermission('approve_scripts') || hasPermission('manage_script_status'));
+        : (hasPermission('approve_scripts') || hasPermission('manage_script_status') || hasPermission('can_accept_reject'));
     const canReject = capabilitiesProp != null
         ? capabilitiesProp.canReject
-        : (hasPermission('reject_scripts') || hasPermission('manage_script_status'));
+        : (hasPermission('reject_scripts') || hasPermission('manage_script_status') || hasPermission('can_accept_reject'));
     const reasonIfDisabled = capabilitiesProp?.reasonIfDisabled ?? null;
 
     // Always show final state first. For approved/rejected scripts, reviewers need to see

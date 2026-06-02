@@ -133,6 +133,16 @@ type ScriptRow = {
   is_quick_analysis?: boolean | null;
 };
 
+type ScriptRecommendationRow = {
+  id: string;
+  script_id: string;
+  report_id: string | null;
+  recommended_by: string;
+  recommendation_type: string;
+  reason: string;
+  created_at: string;
+};
+
 function toScriptFrontend(row: ScriptRow) {
   const type = row.type === "film" ? "Film" : row.type === "series" ? "Series" : row.type;
   return {
@@ -157,6 +167,175 @@ function toScriptFrontend(row: ScriptRow) {
     currentVersionId: row.current_version_id ?? undefined,
     isQuickAnalysis: row.is_quick_analysis ?? false,
   };
+}
+
+function normalizeRecommendationType(value: unknown): "recommended_approval" | "recommended_rejection" | null {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (raw === "recommended_approval" || raw === "approve" || raw === "approval") return "recommended_approval";
+  if (raw === "recommended_rejection" || raw === "reject" || raw === "rejection") return "recommended_rejection";
+  return null;
+}
+
+async function loadLatestRecommendationMap(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  scriptIds: string[],
+): Promise<Map<string, {
+  recommendationStatus: "recommended_approval" | "recommended_rejection";
+  recommendationReason: string;
+  recommendedBy: string;
+  recommendedByName?: string;
+  recommendedAt: string;
+  recommendationReportId?: string | null;
+}>> {
+  const uniqueIds = [...new Set(scriptIds.filter((id) => typeof id === "string" && id.trim()))];
+  if (uniqueIds.length === 0) return new Map();
+
+  const { data: rows } = await supabase
+    .from("script_recommendation_events")
+    .select("id, script_id, report_id, recommended_by, recommendation_type, reason, created_at")
+    .in("script_id", uniqueIds)
+    .order("created_at", { ascending: false });
+
+  const latestByScript = new Map<string, ScriptRecommendationRow>();
+  const recommenders = new Set<string>();
+  for (const row of (rows ?? []) as ScriptRecommendationRow[]) {
+    if (!latestByScript.has(row.script_id)) {
+      latestByScript.set(row.script_id, row);
+      recommenders.add(row.recommended_by);
+    }
+  }
+
+  const { data: profileRows } = recommenders.size > 0
+    ? await supabase.from("profiles").select("user_id, name").in("user_id", [...recommenders])
+    : { data: [] as Array<{ user_id: string; name: string }> };
+  const nameByUserId = new Map((profileRows ?? []).map((profile) => [profile.user_id, profile.name]));
+
+  const map = new Map<string, {
+    recommendationStatus: "recommended_approval" | "recommended_rejection";
+    recommendationReason: string;
+    recommendedBy: string;
+    recommendedByName?: string;
+    recommendedAt: string;
+    recommendationReportId?: string | null;
+  }>();
+
+  for (const [scriptId, row] of latestByScript.entries()) {
+    map.set(scriptId, {
+      recommendationStatus: row.recommendation_type as "recommended_approval" | "recommended_rejection",
+      recommendationReason: row.reason,
+      recommendedBy: row.recommended_by,
+      recommendedByName: nameByUserId.get(row.recommended_by) ?? undefined,
+      recommendedAt: row.created_at,
+      recommendationReportId: row.report_id,
+    });
+  }
+
+  return map;
+}
+
+async function notifyAdminsOnScriptRecommendation(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  payload: {
+    scriptId: string;
+    scriptTitle: string;
+    companyId: string;
+    recommendationStatus: "recommended_approval" | "recommended_rejection";
+    reason: string;
+    recommendedBy: string;
+    recommendedByName?: string | null;
+    relatedReportId?: string | null;
+  },
+) {
+  const [{ data: roles }, { data: adminUserRoles }, { data: company }] = await Promise.all([
+    supabase.from("roles").select("id, key").in("key", ["super_admin", "admin"]),
+    supabase.from("user_roles").select("user_id, role_id"),
+    supabase.from("clients").select("id, name_ar, name_en").eq("id", payload.companyId).maybeSingle(),
+  ]);
+
+  const adminRoleIds = new Set((roles ?? []).map((r: { id: string }) => r.id));
+  const adminUserIds = [...new Set((adminUserRoles ?? [])
+    .filter((row: { role_id: string; user_id: string }) => adminRoleIds.has(row.role_id))
+    .map((row: { user_id: string }) => row.user_id))];
+  if (adminUserIds.length === 0) return;
+
+  const companyName =
+    ((company as { name_ar?: string | null; name_en?: string | null } | null)?.name_ar ??
+      (company as { name_ar?: string | null; name_en?: string | null } | null)?.name_en ??
+      "Beneficiary").trim() || "Beneficiary";
+  const approvalLabel = payload.recommendationStatus === "recommended_approval"
+    ? "approval"
+    : "rejection";
+  const title = `Script recommendation: ${payload.scriptTitle}`;
+  const body = `${companyName} received a regulator recommendation for ${approvalLabel} on script "${payload.scriptTitle}".`;
+  const metadata = {
+    script_id: payload.scriptId,
+    script_title: payload.scriptTitle,
+    company_id: payload.companyId,
+    company_name: companyName,
+    recommendation_status: payload.recommendationStatus,
+    recommendation_label: approvalLabel,
+    reason: payload.reason,
+    recommended_by: payload.recommendedBy,
+    recommended_by_name: payload.recommendedByName ?? null,
+    related_report_id: payload.relatedReportId ?? null,
+  };
+
+  await supabase.from("notifications").insert(
+    adminUserIds.map((adminUserId) => ({
+      user_id: adminUserId,
+      type: "script_recommendation_submitted",
+      title,
+      body,
+      metadata,
+    })),
+  );
+}
+
+async function computeScriptRecommendationCan(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  uid: string,
+  script: { created_by?: string | null; assignee_id?: string | null; status?: string | null }
+): Promise<{
+  canRecommend: boolean;
+  reasonIfDisabled?: string;
+  isCreator: boolean;
+  isAssignee: boolean;
+}> {
+  const createdBy = script.created_by ?? null;
+  const assigneeId = script.assignee_id ?? null;
+  const isCreator = createdBy === uid;
+  const isAssignee = assigneeId === uid;
+  const currentStatus = String(script.status ?? "").trim().toLowerCase();
+
+  if (["approved", "rejected"].includes(currentStatus)) {
+    return {
+      canRecommend: false,
+      reasonIfDisabled: "This script already has a final decision.",
+      isCreator,
+      isAssignee,
+    };
+  }
+
+  const regulatorOnly = await isRegulatorOnly(supabase, uid);
+  if (!regulatorOnly) {
+    return {
+      canRecommend: false,
+      reasonIfDisabled: "Only assigned regulators can submit recommendations.",
+      isCreator,
+      isAssignee,
+    };
+  }
+
+  if (!isAssignee) {
+    return {
+      canRecommend: false,
+      reasonIfDisabled: "Only the assigned regulator can submit recommendations on this script.",
+      isCreator,
+      isAssignee,
+    };
+  }
+
+  return { canRecommend: true, isCreator, isAssignee };
 }
 
 type ScriptVersionRow = {
@@ -862,6 +1041,112 @@ async function notifyBeneficiaryRevisionRequested(
   }
 }
 
+async function notifyBeneficiaryDecisionUpdate(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  params: {
+    scriptId: string;
+    scriptTitle: string;
+    companyId: string;
+    decision: "approve" | "reject";
+    reason: string;
+    clientComment?: string | null;
+  },
+) {
+  const [{ data: account }, recipients] = await Promise.all([
+    supabase
+      .from("client_portal_accounts")
+      .select("user_id")
+      .eq("company_id", params.companyId)
+      .maybeSingle(),
+    getBeneficiaryEmailRecipients(supabase, params.companyId),
+  ]);
+
+  const isApprove = params.decision === "approve";
+  const userId = ((account as { user_id?: string | null } | null)?.user_id ?? null);
+  const bodyText = isApprove
+    ? `Your script "${params.scriptTitle}" was approved.`
+    : `Your script "${params.scriptTitle}" was rejected.`;
+
+  if (userId) {
+    await supabase.from("notifications").insert({
+      user_id: userId,
+      type: isApprove ? "script_approved" : "script_rejected",
+      title: isApprove ? "Script approved" : "Script rejected",
+      body: bodyText,
+      metadata: {
+        script_id: params.scriptId,
+        script_title: params.scriptTitle,
+        company_id: params.companyId,
+        decision: params.decision,
+        reason: params.reason,
+        client_comment: params.clientComment ?? null,
+      },
+    });
+  }
+
+  const resendKey = Deno.env.get("RESEND_API_KEY");
+  if (!resendKey || recipients.length === 0) return;
+
+  const appUrl = (Deno.env.get("APP_PUBLIC_URL") ?? "https://raawifilm.com").replace(/\/+$/, "");
+  const html = isApprove
+    ? `
+      <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#111827;">
+        <h2>Script Approved</h2>
+        <p>Your script "<strong>${params.scriptTitle}</strong>" has been approved.</p>
+        <p>Reason: ${params.reason}</p>
+        ${params.clientComment ? `<p>Comment: ${params.clientComment}</p>` : ""}
+        <hr />
+        <h2 dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">تمت الموافقة على النص</h2>
+        <p dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">
+          تمت الموافقة على النص "<strong>${params.scriptTitle}</strong>".
+        </p>
+        <p dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">
+          السبب: ${params.reason}
+        </p>
+        ${params.clientComment ? `<p dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">تعليق الإدارة: ${params.clientComment}</p>` : ""}
+        <p><a href="${appUrl}/client">Open Beneficiary Portal</a></p>
+      </div>
+    `.trim()
+    : `
+      <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#111827;">
+        <h2>Script Rejected</h2>
+        <p>Your script "<strong>${params.scriptTitle}</strong>" has been rejected.</p>
+        <p>Reason: ${params.reason}</p>
+        ${params.clientComment ? `<p>Comment: ${params.clientComment}</p>` : ""}
+        <hr />
+        <h2 dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">تم رفض النص</h2>
+        <p dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">
+          تم رفض النص "<strong>${params.scriptTitle}</strong>".
+        </p>
+        <p dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">
+          السبب: ${params.reason}
+        </p>
+        ${params.clientComment ? `<p dir="rtl" style="font-family:Cairo,'Noto Kufi Arabic',Tahoma,Arial,sans-serif;">تعليق الإدارة: ${params.clientComment}</p>` : ""}
+        <p><a href="${appUrl}/client">Open Beneficiary Portal</a></p>
+      </div>
+    `.trim();
+
+  const res = await fetch(RESEND_API, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: NOTIFY_FROM_EMAIL,
+      to: recipients,
+      subject: isApprove
+        ? "Script approved | تمت الموافقة على النص"
+        : "Script rejected | تم رفض النص",
+      html,
+    }),
+  });
+
+  if (!res.ok) {
+    console.error("[scripts] decision email:", res.status, await res.text());
+  }
+}
+
 function normalizeExpectedRank(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const raw = value.trim();
@@ -997,15 +1282,29 @@ Deno.serve(async (req: Request) => {
       console.error(`[scripts] correlationId=${correlationId} list error=`, error.message);
       return json({ error: error.message }, 500);
     }
-    const list = (rows ?? []).map((r) => toScriptFrontend(r as ScriptRow));
+    const list = (rows ?? []).map((r) => toScriptFrontend(r as ScriptRow)) as any[];
     const assigneeIds = [...new Set((rows ?? []).map((r: { assignee_id: string | null }) => r.assignee_id).filter(Boolean))] as string[];
     if (assigneeIds.length > 0) {
       const { data: profileRows } = await supabase.from("profiles").select("user_id, name").in("user_id", assigneeIds);
       const nameByUserId = new Map((profileRows ?? []).map((p: { user_id: string; name: string }) => [p.user_id, p.name]));
-      list.forEach((s: { assigneeId?: string; assigneeName?: string }) => {
+      list.forEach((s) => {
         if (s.assigneeId) s.assigneeName = nameByUserId.get(s.assigneeId) ?? undefined;
       });
     }
+    const recommendationMap = await loadLatestRecommendationMap(
+      supabase,
+      (rows ?? []).map((r: { id: string }) => r.id),
+    );
+    list.forEach((s) => {
+      const rec = recommendationMap.get(String(s.id ?? ""));
+      if (!rec) return;
+      s.recommendationStatus = rec.recommendationStatus;
+      s.recommendationReason = rec.recommendationReason;
+      s.recommendedBy = rec.recommendedBy;
+      s.recommendedByName = rec.recommendedByName ?? undefined;
+      s.recommendedAt = rec.recommendedAt;
+      s.recommendationReportId = rec.recommendationReportId ?? undefined;
+    });
     return json(list);
   }
 
@@ -1601,7 +1900,150 @@ Deno.serve(async (req: Request) => {
       const { data: profile } = await supabase.from("profiles").select("name").eq("user_id", s.assignee_id).maybeSingle();
       if (profile) (out as { assigneeName?: string }).assigneeName = (profile as { name: string }).name;
     }
+    const recommendationMap = await loadLatestRecommendationMap(supabase, [scriptId]);
+    const rec = recommendationMap.get(scriptId);
+    if (rec) {
+      (out as Record<string, unknown>).recommendationStatus = rec.recommendationStatus;
+      (out as Record<string, unknown>).recommendationReason = rec.recommendationReason;
+      (out as Record<string, unknown>).recommendedBy = rec.recommendedBy;
+      (out as Record<string, unknown>).recommendedByName = rec.recommendedByName ?? undefined;
+      (out as Record<string, unknown>).recommendedAt = rec.recommendedAt;
+      (out as Record<string, unknown>).recommendationReportId = rec.recommendationReportId ?? undefined;
+    }
     return json(out);
+  }
+
+  // GET /scripts/:id/recommendation/can
+  const recommendationCanMatch = rest.match(/^([^/]+)\/recommendation\/can$/);
+  if (method === "GET" && recommendationCanMatch) {
+    const scriptId = recommendationCanMatch[1].trim();
+    const { data: script, error: findErr } = await supabase
+      .from("scripts")
+      .select("id, created_by, assignee_id, status")
+      .eq("id", scriptId)
+      .maybeSingle();
+    if (findErr || !script) return json({ error: "Script not found" }, 404);
+
+    const can = await computeScriptRecommendationCan(
+      supabase,
+      uid,
+      script as { created_by?: string | null; assignee_id?: string | null; status?: string | null },
+    );
+    return json({
+      canRecommend: can.canRecommend,
+      reason: can.reasonIfDisabled ?? undefined,
+    });
+  }
+
+  // POST /scripts/:id/recommendation
+  const recommendationMatch = rest.match(/^([^/]+)\/recommendation$/);
+  if (method === "POST" && recommendationMatch) {
+    const scriptId = recommendationMatch[1].trim();
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+
+    const recommendationType = normalizeRecommendationType(body.recommendation ?? body.recommendationType ?? body.status);
+    if (!recommendationType) {
+      return json({ error: "recommendation must be 'recommended_approval' or 'recommended_rejection'" }, 400);
+    }
+    const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+    if (!reason) {
+      return json({ error: "reason is required" }, 400);
+    }
+    const relatedReportId = typeof body.relatedReportId === "string" && body.relatedReportId.trim()
+      ? body.relatedReportId.trim()
+      : null;
+
+    const { data: script, error: findErr } = await supabase
+      .from("scripts")
+      .select("id, title, status, created_by, assignee_id, company_id, client_id")
+      .eq("id", scriptId)
+      .maybeSingle();
+    if (findErr || !script) return json({ error: "Script not found" }, 404);
+
+    const can = await computeScriptRecommendationCan(
+      supabase,
+      uid,
+      script as { created_by?: string | null; assignee_id?: string | null; status?: string | null },
+    );
+    if (!can.canRecommend) {
+      return json({ error: can.reasonIfDisabled ?? "You do not have permission to recommend this script." }, 403);
+    }
+
+    const { data: inserted, error: insertErr } = await supabase
+      .from("script_recommendation_events")
+      .insert({
+        script_id: scriptId,
+        report_id: relatedReportId,
+        recommended_by: uid,
+        recommendation_type: recommendationType,
+        reason,
+      })
+      .select("id, script_id, report_id, recommended_by, recommendation_type, reason, created_at")
+      .single();
+
+    if (insertErr || !inserted) {
+      console.error(`[scripts] recommendation insert error=`, insertErr?.message);
+      return json({ error: insertErr?.message || "Failed to save recommendation" }, 500);
+    }
+
+    const { data: profile } = await supabase.from("profiles").select("name").eq("user_id", uid).maybeSingle();
+    const recommendedByName = (profile as { name?: string | null } | null)?.name ?? null;
+    const recommendationStatusLabel = recommendationType === "recommended_approval" ? "approval" : "rejection";
+
+    logAuditCanonical(supabase, {
+      event_type: "script_recommendation_submitted",
+      actor_user_id: uid,
+      target_type: "script",
+      target_id: scriptId,
+      target_label: (script as { title?: string | null }).title ?? null,
+      result_status: "success",
+      correlation_id: correlationId,
+      metadata: {
+        recommendation_status: recommendationType,
+        recommendation_label: recommendationStatusLabel,
+        reason,
+        related_report_id: relatedReportId,
+      },
+    }).catch((e) => console.warn("[scripts] audit script recommendation:", e));
+
+    const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
+    if (ownerCompanyId) {
+      await notifyAdminsOnScriptRecommendation(supabase, {
+        scriptId,
+        scriptTitle: (script as { title?: string | null }).title ?? scriptId,
+        companyId: ownerCompanyId,
+        recommendationStatus: recommendationType,
+        reason,
+        recommendedBy: uid,
+        recommendedByName,
+        relatedReportId,
+      });
+    }
+
+    const recommendationMap = await loadLatestRecommendationMap(supabase, [scriptId]);
+    const rec = recommendationMap.get(scriptId);
+    const updatedScript = toScriptFrontend(script as ScriptRow);
+    if (rec) {
+      (updatedScript as Record<string, unknown>).recommendationStatus = rec.recommendationStatus;
+      (updatedScript as Record<string, unknown>).recommendationReason = rec.recommendationReason;
+      (updatedScript as Record<string, unknown>).recommendedBy = rec.recommendedBy;
+      (updatedScript as Record<string, unknown>).recommendedByName = rec.recommendedByName ?? undefined;
+      (updatedScript as Record<string, unknown>).recommendedAt = rec.recommendedAt;
+      (updatedScript as Record<string, unknown>).recommendationReportId = rec.recommendationReportId ?? undefined;
+    }
+
+    return json({
+      success: true,
+      script: updatedScript,
+      message: recommendationType === "recommended_approval"
+        ? "Recommendation for approval submitted"
+        : "Recommendation for rejection submitted",
+    });
   }
 
   // POST /scripts — Regulators cannot create scripts; only work on assigned ones
@@ -2370,6 +2812,29 @@ Deno.serve(async (req: Request) => {
               : "Approval cancelled: certificate generation failed",
           }, 500);
         }
+
+        await notifyBeneficiaryDecisionUpdate(supabase, {
+          scriptId,
+          scriptTitle: (script as any).title,
+          companyId: ownerCompanyId,
+          decision: "approve",
+          reason,
+          clientComment: clientComment || null,
+        });
+      }
+    }
+
+    if (decision === "reject") {
+      const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
+      if (ownerCompanyId) {
+        await notifyBeneficiaryDecisionUpdate(supabase, {
+          scriptId,
+          scriptTitle: (script as any).title,
+          companyId: ownerCompanyId,
+          decision: "reject",
+          reason,
+          clientComment: clientComment || null,
+        });
       }
     }
 

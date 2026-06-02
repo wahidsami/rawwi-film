@@ -62,7 +62,9 @@ export function Scripts() {
       filtered = filtered.filter((s) =>
         s.title?.toLowerCase().includes(q) ||
         companyById.get(s.companyId)?.nameEn?.toLowerCase().includes(q) ||
-        companyById.get(s.companyId)?.nameAr?.toLowerCase().includes(q),
+        companyById.get(s.companyId)?.nameAr?.toLowerCase().includes(q) ||
+        String((s as any).recommendationStatus ?? '').toLowerCase().includes(q) ||
+        String((s as any).recommendedByName ?? '').toLowerCase().includes(q),
       );
     }
 
@@ -99,6 +101,17 @@ export function Scripts() {
     if (n === 'review_required' || n === 'in_review') return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">{lang === 'ar' ? 'قيد المراجعة' : 'Pending'}</Badge>;
     if (n === 'draft') return <Badge variant="outline">{lang === 'ar' ? 'مسودة' : 'Draft'}</Badge>;
     return <Badge variant="outline">{normalizeScriptStatusForDisplay(status)}</Badge>;
+  };
+
+  const getRecommendationBadge = (script: any) => {
+    const key = String(script?.recommendationStatus ?? '').toLowerCase();
+    if (key === 'recommended_approval') {
+      return <Badge variant="success" className="text-[10px] whitespace-nowrap">{lang === 'ar' ? 'توصية بالموافقة' : 'Recommended Approval'}</Badge>;
+    }
+    if (key === 'recommended_rejection') {
+      return <Badge variant="error" className="text-[10px] whitespace-nowrap">{lang === 'ar' ? 'توصية بالرفض' : 'Recommended Rejection'}</Badge>;
+    }
+    return null;
   };
 
   if (isLoading) {
@@ -203,7 +216,10 @@ export function Scripts() {
                       <h3 className="font-semibold text-text-main truncate">{script.title || (lang === 'ar' ? 'بدون عنوان' : 'Untitled')}</h3>
                       <p className="text-sm text-text-muted truncate">{client ? (lang === 'ar' ? client.nameAr : client.nameEn) : '—'}</p>
                     </div>
-                    {getStatusBadge(script.status || 'draft')}
+                    <div className="flex flex-col items-end gap-1">
+                      {getStatusBadge(script.status || 'draft')}
+                      {getRecommendationBadge(script)}
+                    </div>
                   </div>
                   <div className="space-y-2 text-xs text-text-muted">
                     <div className="flex items-center justify-between">
@@ -241,7 +257,12 @@ export function Scripts() {
                     <tr key={script.id} className="cursor-pointer border-b border-border bg-transparent transition-colors" onClick={() => navigate(`/scripts/${script.id}/workspace`)}>
                       <td className="px-6 py-4 font-medium text-text-main">{script.title || (lang === 'ar' ? 'بدون عنوان' : 'Untitled')}</td>
                       <td className="px-6 py-4 text-text-muted">{client ? (lang === 'ar' ? client.nameAr : client.nameEn) : '—'}</td>
-                      <td className="px-6 py-4">{getStatusBadge(script.status || 'draft')}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col items-start gap-1">
+                          {getStatusBadge(script.status || 'draft')}
+                          {getRecommendationBadge(script)}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 text-text-muted">{formatDate(new Date(script.createdAt || Date.now()), { lang, format: settings?.platform?.dateFormat })}</td>
                       <td className="px-6 py-4 text-end">
                         <Button variant="ghost" size="sm">{lang === 'ar' ? 'فتح' : 'Open'}</Button>
