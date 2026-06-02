@@ -68,6 +68,42 @@ function camelReport(r: Record<string, unknown>, full = false) {
   return out;
 }
 
+function parseIsoDateInput(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = new Date(trimmed);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+function startOfIsoDay(value: string): string {
+  const dt = new Date(value);
+  dt.setUTCHours(0, 0, 0, 0);
+  return dt.toISOString();
+}
+
+function endOfIsoDay(value: string): string {
+  const dt = new Date(value);
+  dt.setUTCHours(23, 59, 59, 999);
+  return dt.toISOString();
+}
+
+function minutesBetween(start?: string | null, end?: string | null): number | null {
+  if (!start || !end) return null;
+  const a = new Date(start).getTime();
+  const b = new Date(end).getTime();
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return null;
+  return Math.max(0, Math.round((b - a) / 60000));
+}
+
+function daysBetween(start?: string | null, end?: string | null): number | null {
+  if (!start || !end) return null;
+  const a = new Date(start).getTime();
+  const b = new Date(end).getTime();
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return null;
+  return Math.max(0, Math.ceil((b - a) / 86_400_000));
+}
+
 /** Try to select with extended columns; if that fails, fall back to base. */
 async function selectReport(
   supabase: ReturnType<typeof createSupabaseAdmin>,
@@ -484,6 +520,354 @@ async function buildScriptJourneyPayload(
   };
 }
 
+async function buildRegulatorPerformancePayload(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  regulatorUserId: string,
+  fromIso: string | null,
+  toIso: string | null,
+) {
+  const [{ data: profile }, { data: roleRows }] = await Promise.all([
+    supabase.from("profiles").select("user_id, name, email").eq("user_id", regulatorUserId).maybeSingle(),
+    supabase.from("user_roles").select("role_id, roles(key)").eq("user_id", regulatorUserId),
+  ]);
+
+  const roleKey = ((roleRows ?? []) as Array<{ roles?: { key?: string | null } }>)
+    .map((row) => String(row.roles?.key ?? "").toLowerCase())
+    .find(Boolean) ?? null;
+
+  const rangeFrom = fromIso ? startOfIsoDay(fromIso) : null;
+  const rangeTo = toIso ? endOfIsoDay(toIso) : null;
+
+  const scriptQuery = supabase
+    .from("scripts")
+    .select("id, title, status, received_at, created_at, updated_at, assignee_id, created_by, company_id, client_id")
+    .eq("assignee_id", regulatorUserId)
+    .order("created_at", { ascending: false });
+  if (rangeFrom) scriptQuery.gte("created_at", rangeFrom);
+  if (rangeTo) scriptQuery.lte("created_at", rangeTo);
+  const { data: assignedScripts } = await scriptQuery;
+
+  const assignedScriptRows = (assignedScripts ?? []) as Array<Record<string, unknown>>;
+  const assignedScriptIds = assignedScriptRows.map((row) => String(row.id ?? "")).filter(Boolean);
+
+  const [recommendationsRes, cyclesRes, statusHistoryRes, reportsRes, cycleEventsRes, cycleComparisonsRes, notificationsRes] = await Promise.all([
+    assignedScriptIds.length > 0
+      ? supabase
+          .from("script_recommendation_events")
+          .select("id, script_id, report_id, recommended_by, recommendation_type, reason, created_at")
+          .in("script_id", assignedScriptIds)
+          .eq("recommended_by", regulatorUserId)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] as any[] }),
+    assignedScriptIds.length > 0
+      ? supabase
+          .from("script_revision_cycles")
+          .select("id, script_id, cycle_number, status, sent_by, sent_at, returned_at, reanalyzed_at, source_report_id, source_job_id, reanalyzed_job_id, reanalyzed_report_id, beneficiary_returned_version_id, admin_note, created_at, updated_at")
+          .in("script_id", assignedScriptIds)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] as any[] }),
+    assignedScriptIds.length > 0
+      ? supabase
+          .from("script_status_history")
+          .select("id, script_id, to_status, changed_at, changed_by, reason, related_report_id, metadata")
+          .in("script_id", assignedScriptIds)
+          .order("changed_at", { ascending: true })
+      : Promise.resolve({ data: [] as any[] }),
+    assignedScriptIds.length > 0
+      ? supabase
+          .from("analysis_reports")
+          .select("id, job_id, script_id, findings_count, severity_counts, summary_json, review_status, reviewed_by, reviewed_at, created_at")
+          .in("script_id", assignedScriptIds)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] as any[] }),
+    assignedScriptIds.length > 0
+      ? supabase
+          .from("script_revision_cycle_events")
+          .select("id, cycle_id, script_id, event_type, actor_user_id, payload, created_at")
+          .in("script_id", assignedScriptIds)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] as any[] }),
+    assignedScriptIds.length > 0
+      ? supabase
+          .from("script_revision_cycle_comparisons")
+          .select("id, cycle_id, comparison_summary, created_at")
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] as any[] }),
+    assignedScriptIds.length > 0
+      ? supabase
+          .from("notifications")
+          .select("id, type, title, body, metadata, created_at")
+          .eq("user_id", regulatorUserId)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+
+  const recommendations = (recommendationsRes.data ?? []) as Array<Record<string, unknown>>;
+  const cycles = (cyclesRes.data ?? []) as Array<Record<string, unknown>>;
+  const statusHistory = (statusHistoryRes.data ?? []) as Array<Record<string, unknown>>;
+  const reports = (reportsRes.data ?? []) as Array<Record<string, unknown>>;
+  const cycleEvents = (cycleEventsRes.data ?? []) as Array<Record<string, unknown>>;
+  const cycleComparisons = (cycleComparisonsRes.data ?? []) as Array<Record<string, unknown>>;
+  const notifications = (notificationsRes.data ?? []) as Array<Record<string, unknown>>;
+
+  const scriptIds = [...new Set(assignedScriptIds)];
+  const reportIds = [...new Set([
+    ...recommendations.map((row) => row.report_id).filter((v): v is string => typeof v === "string" && v.trim().length > 0),
+    ...cycles.flatMap((row) => [row.source_report_id, row.reanalyzed_report_id]).filter((v): v is string => typeof v === "string" && v.trim().length > 0),
+    ...reports.map((row) => row.id).filter((v): v is string => typeof v === "string" && v.trim().length > 0),
+  ])];
+
+  const [reportProfilesRes, scriptProfilesRes] = await Promise.all([
+    reportIds.length > 0
+      ? supabase.from("profiles").select("user_id, name, email").in("user_id", [...new Set([
+          ...recommendations.map((row) => row.recommended_by).filter((v): v is string => typeof v === "string" && v.trim().length > 0),
+          ...cycles.map((row) => row.sent_by).filter((v): v is string => typeof v === "string" && v.trim().length > 0),
+          ...statusHistory.map((row) => row.changed_by).filter((v): v is string => typeof v === "string" && v.trim().length > 0),
+          regulatorUserId,
+        ])])
+      : Promise.resolve({ data: [] as any[] }),
+    scriptIds.length > 0
+      ? supabase.from("clients").select("id, name_ar, name_en, beneficiary_type").in("id", [...new Set(assignedScriptRows.map((row) => String(row.company_id ?? row.client_id ?? "")).filter(Boolean))])
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+
+  const actorProfiles = (reportProfilesRes.data ?? []) as Array<{ user_id: string; name?: string | null; email?: string | null }>;
+  const actorNameById = new Map(actorProfiles.map((row) => [row.user_id, row.name ?? row.email ?? row.user_id]));
+  if (profile?.user_id) actorNameById.set(profile.user_id, profile.name ?? profile.email ?? profile.user_id);
+
+  const companyRows = (scriptProfilesRes.data ?? []) as Array<{ id: string; name_ar?: string | null; name_en?: string | null; beneficiary_type?: string | null }>;
+  const companyNameById = new Map(companyRows.map((row) => [row.id, row.name_ar ?? row.name_en ?? row.id]));
+  const companyTypeById = new Map(companyRows.map((row) => [row.id, row.beneficiary_type ?? null]));
+
+  const latestRecommendationByScript = new Map<string, Record<string, unknown>>();
+  for (const row of recommendations) {
+    const scriptId = String(row.script_id ?? "");
+    if (!scriptId) continue;
+    latestRecommendationByScript.set(scriptId, row);
+  }
+
+  const latestDecisionByScript = new Map<string, Record<string, unknown>>();
+  for (const row of statusHistory) {
+    const scriptId = String(row.script_id ?? "");
+    if (!scriptId) continue;
+    const status = String(row.to_status ?? "").toLowerCase();
+    if (status === "approved" || status === "rejected") {
+      latestDecisionByScript.set(scriptId, row);
+    }
+  }
+
+  const cyclesByScript = new Map<string, Array<Record<string, unknown>>>();
+  for (const row of cycles) {
+    const scriptId = String(row.script_id ?? "");
+    if (!scriptId) continue;
+    const bucket = cyclesByScript.get(scriptId) ?? [];
+    bucket.push(row);
+    cyclesByScript.set(scriptId, bucket);
+  }
+
+  const eventsByScript = new Map<string, Array<Record<string, unknown>>>();
+  for (const row of cycleEvents) {
+    const scriptId = String(row.script_id ?? "");
+    if (!scriptId) continue;
+    const bucket = eventsByScript.get(scriptId) ?? [];
+    bucket.push(row);
+    eventsByScript.set(scriptId, bucket);
+  }
+
+  const reportsByScript = new Map<string, Array<Record<string, unknown>>>();
+  for (const row of reports) {
+    const scriptId = String(row.script_id ?? "");
+    if (!scriptId) continue;
+    const bucket = reportsByScript.get(scriptId) ?? [];
+    bucket.push(row);
+    reportsByScript.set(scriptId, bucket);
+  }
+
+  const timeline = [
+    ...recommendations.map((row) => ({
+      type: "recommendation_submitted",
+      at: row.created_at ?? null,
+      scriptId: row.script_id ?? null,
+      actorId: row.recommended_by ?? null,
+      actorName: typeof row.recommended_by === "string" ? (actorNameById.get(row.recommended_by) ?? row.recommended_by) : null,
+      recommendationType: row.recommendation_type ?? null,
+      reason: row.reason ?? null,
+      reportId: row.report_id ?? null,
+    })),
+    ...cycles.map((row) => ({
+      type: "cycle_sent_for_review",
+      at: row.sent_at ?? row.created_at ?? null,
+      scriptId: row.script_id ?? null,
+      actorId: row.sent_by ?? null,
+      actorName: typeof row.sent_by === "string" ? (actorNameById.get(row.sent_by) ?? row.sent_by) : null,
+      cycleId: row.id ?? null,
+      cycleNumber: row.cycle_number ?? null,
+      note: row.admin_note ?? null,
+      status: row.status ?? null,
+    })),
+    ...cycleEvents.map((row) => ({
+      type: String(row.event_type ?? "cycle_event"),
+      at: row.created_at ?? null,
+      scriptId: row.script_id ?? null,
+      actorId: row.actor_user_id ?? null,
+      actorName: typeof row.actor_user_id === "string" ? (actorNameById.get(row.actor_user_id) ?? row.actor_user_id) : null,
+      cycleId: row.cycle_id ?? null,
+      payload: row.payload ?? null,
+    })),
+    ...statusHistory.map((row) => ({
+      type: "status_change",
+      at: row.changed_at ?? null,
+      scriptId: row.script_id ?? null,
+      actorId: row.changed_by ?? null,
+      actorName: typeof row.changed_by === "string" ? (actorNameById.get(row.changed_by) ?? row.changed_by) : null,
+      toStatus: row.to_status ?? null,
+      reason: row.reason ?? null,
+      relatedReportId: row.related_report_id ?? null,
+    })),
+    ...notifications.map((row) => ({
+      type: String(row.type ?? "notification"),
+      at: row.created_at ?? null,
+      actorId: regulatorUserId,
+      actorName: profile?.name ?? profile?.email ?? regulatorUserId,
+      notificationTitle: row.title ?? null,
+      notificationBody: row.body ?? null,
+      metadata: row.metadata ?? null,
+    })),
+  ]
+    .filter((row) => row.at != null && row.at !== "")
+    .filter((row) => {
+      const at = String(row.at);
+      if (rangeFrom && at < rangeFrom) return false;
+      if (rangeTo && at > rangeTo) return false;
+      return true;
+    })
+    .sort((a, b) => String(a.at).localeCompare(String(b.at)));
+
+  const scriptRows = assignedScriptRows.map((script) => {
+    const scriptId = String(script.id ?? "");
+    const recs = recommendations.filter((row) => String(row.script_id ?? "") === scriptId);
+    const cyclesForScript = cyclesByScript.get(scriptId) ?? [];
+    const eventsForScript = eventsByScript.get(scriptId) ?? [];
+    const reportsForScript = reportsByScript.get(scriptId) ?? [];
+    const latestRec = latestRecommendationByScript.get(scriptId) ?? null;
+    const finalDecision = latestDecisionByScript.get(scriptId) ?? null;
+    const firstActionAt = [...recs, ...cyclesForScript, ...eventsForScript]
+      .map((row) => String((row.created_at ?? row.sent_at ?? row.at ?? "") || ""))
+      .filter(Boolean)
+      .sort()[0] ?? null;
+    const lastActionAt = [...recs, ...cyclesForScript, ...eventsForScript]
+      .map((row) => String((row.created_at ?? row.updated_at ?? row.sent_at ?? row.at ?? "") || ""))
+      .filter(Boolean)
+      .sort()
+      .at(-1) ?? null;
+    const finalDecisionStatus = String(finalDecision?.to_status ?? "").toLowerCase() || null;
+    const firstReceivedAt = String(script.received_at ?? script.created_at ?? "");
+    return {
+      id: scriptId,
+      title: script.title ?? null,
+      status: script.status ?? null,
+      beneficiaryId: script.company_id ?? script.client_id ?? null,
+      beneficiaryName: companyNameById.get(String(script.company_id ?? script.client_id ?? "")) ?? null,
+      beneficiaryType: companyTypeById.get(String(script.company_id ?? script.client_id ?? "")) ?? null,
+      receivedAt: script.received_at ?? script.created_at ?? null,
+      assignedAt: script.updated_at ?? null,
+      firstActionAt,
+      lastActionAt,
+      firstActionMinutes: minutesBetween(firstReceivedAt, firstActionAt),
+      turnaroundDays: daysBetween(firstReceivedAt, finalDecision?.changed_at ?? lastActionAt ?? null),
+      recommendationsCount: recs.length,
+      recommendationApprovalCount: recs.filter((row) => String(row.recommendation_type ?? "").toLowerCase() === "recommended_approval").length,
+      recommendationRejectionCount: recs.filter((row) => String(row.recommendation_type ?? "").toLowerCase() === "recommended_rejection").length,
+      sendBackCount: cyclesForScript.filter((row) => String(row.sent_by ?? "") === regulatorUserId).length,
+      cycleCount: cyclesForScript.length,
+      latestRecommendation: latestRec ? {
+        type: latestRec.recommendation_type ?? null,
+        reason: latestRec.reason ?? null,
+        at: latestRec.created_at ?? null,
+        reportId: latestRec.report_id ?? null,
+      } : null,
+      finalDecision: finalDecisionStatus ? {
+        status: finalDecisionStatus,
+        at: finalDecision?.changed_at ?? null,
+        by: finalDecision?.changed_by ?? null,
+        byName: typeof finalDecision?.changed_by === "string" ? (actorNameById.get(finalDecision.changed_by) ?? finalDecision.changed_by) : null,
+        reason: finalDecision?.reason ?? null,
+      } : null,
+      reportsCount: reportsForScript.length,
+    };
+  });
+
+  const totalRecommendations = recommendations.length;
+  const totalApprovalRecommendations = recommendations.filter((row) => String(row.recommendation_type ?? "").toLowerCase() === "recommended_approval").length;
+  const totalRejectionRecommendations = recommendations.filter((row) => String(row.recommendation_type ?? "").toLowerCase() === "recommended_rejection").length;
+  const totalSendBacks = cycles.filter((row) => String(row.sent_by ?? "") === regulatorUserId).length;
+  const finalDecisions = scriptRows.filter((row) => Boolean(row.finalDecision));
+  const matchingRecommendations = scriptRows.filter((row) => {
+    const latest = row.latestRecommendation as { type?: string | null } | null;
+    const final = row.finalDecision as { status?: string | null } | null;
+    if (!latest || !final?.status) return false;
+    const latestType = String(latest.type ?? "").toLowerCase();
+    const finalStatus = String(final.status ?? "").toLowerCase();
+    return (latestType === "recommended_approval" && finalStatus === "approved")
+      || (latestType === "recommended_rejection" && finalStatus === "rejected");
+  }).length;
+
+  const firstActionMinutesValues = scriptRows.map((row) => row.firstActionMinutes).filter((v): v is number => typeof v === "number");
+  const turnaroundDaysValues = scriptRows.map((row) => row.turnaroundDays).filter((v): v is number => typeof v === "number");
+
+  return {
+    regulator: {
+      id: regulatorUserId,
+      name: profile?.name ?? profile?.email ?? regulatorUserId,
+      email: profile?.email ?? null,
+      roleKey,
+    },
+    scope: {
+      from: rangeFrom,
+      to: rangeTo,
+      generatedAt: new Date().toISOString(),
+    },
+    summary: {
+      totalAssignedScripts: assignedScriptRows.length,
+      totalRecommendations,
+      totalApprovalRecommendations,
+      totalRejectionRecommendations,
+      totalSendBacks,
+      totalCyclesHandled: cycles.length,
+      finalDecisionCount: finalDecisions.length,
+      finalApprovedCount: finalDecisions.filter((row) => String(row.finalDecision?.status ?? row.to_status ?? "").toLowerCase() === "approved").length,
+      finalRejectedCount: finalDecisions.filter((row) => String(row.finalDecision?.status ?? row.to_status ?? "").toLowerCase() === "rejected").length,
+      recommendationAgreementRate: totalRecommendations > 0 ? Number(((matchingRecommendations / totalRecommendations) * 100).toFixed(1)) : null,
+      averageFirstActionMinutes: firstActionMinutesValues.length > 0 ? Number((firstActionMinutesValues.reduce((a, b) => a + b, 0) / firstActionMinutesValues.length).toFixed(1)) : null,
+      averageTurnaroundDays: turnaroundDaysValues.length > 0 ? Number((turnaroundDaysValues.reduce((a, b) => a + b, 0) / turnaroundDaysValues.length).toFixed(1)) : null,
+    },
+    scripts: scriptRows,
+    cycles: cycles.map((cycle) => ({
+      id: cycle.id,
+      scriptId: cycle.script_id ?? null,
+      cycleNumber: cycle.cycle_number ?? null,
+      status: cycle.status ?? null,
+      sentAt: cycle.sent_at ?? null,
+      returnedAt: cycle.returned_at ?? null,
+      reanalyzedAt: cycle.reanalyzed_at ?? null,
+      sentBy: cycle.sent_by ?? null,
+      sentByName: typeof cycle.sent_by === "string" ? (actorNameById.get(cycle.sent_by) ?? cycle.sent_by) : null,
+      adminNote: cycle.admin_note ?? null,
+      sourceReportId: cycle.source_report_id ?? null,
+      reanalyzedReportId: cycle.reanalyzed_report_id ?? null,
+      sourceJobId: cycle.source_job_id ?? null,
+      reanalyzedJobId: cycle.reanalyzed_job_id ?? null,
+      cycleEvents: (eventsByScript.get(String(cycle.script_id ?? "")) ?? []).filter((event) => String(event.cycle_id ?? "") === String(cycle.id ?? "")),
+      comparison: cycleComparisons.find((cmp) => String(cmp.cycle_id ?? "") === String(cycle.id ?? "")) ?? null,
+    })),
+    timeline,
+    notes: [
+      "First-action timing is based on recorded recommendations, cycle sends, and cycle events. First view/open time is not tracked yet.",
+      "Alignment compares the regulator's latest recorded recommendation with the final approved/rejected outcome.",
+    ],
+  };
+}
+
 function pathAfter(base: string, url: string): string {
   const pathname = new URL(url).pathname;
   const match = pathname.match(new RegExp(`/${base}/?(.*)$`));
@@ -530,6 +914,16 @@ Deno.serve(async (req: Request) => {
         if (access.error) return json({ error: access.error }, access.error === "Script not found" ? 404 : 500);
         if (!access.allowed) return json({ error: "Forbidden" }, 403);
         const payload = await buildScriptJourneyPayload(supabase, access.script as Record<string, unknown>);
+        return json(payload);
+      }
+
+      if (pathRest === "regulator-performance") {
+        if (!isAdmin) return json({ error: "Forbidden" }, 403);
+        const regulatorUserId = url.searchParams.get("userId")?.trim();
+        if (!regulatorUserId) return json({ error: "userId query param required" }, 400);
+        const fromIso = parseIsoDateInput(url.searchParams.get("from"));
+        const toIso = parseIsoDateInput(url.searchParams.get("to"));
+        const payload = await buildRegulatorPerformancePayload(supabase, regulatorUserId, fromIso, toIso);
         return json(payload);
       }
 

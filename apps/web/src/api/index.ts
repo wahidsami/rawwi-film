@@ -1425,6 +1425,9 @@ export const reportsApi = {
   /** Get lifecycle payload for Script Journey report. */
   getScriptJourney: (scriptId: string): Promise<ScriptJourneyPayload> =>
     requestReports(() => httpClient.get(`/reports/script-journey?scriptId=${encodeURIComponent(scriptId)}`)),
+  /** Get regulator performance payload for admin reporting. */
+  getRegulatorPerformance: (userId: string, range?: { from?: string; to?: string }): Promise<RegulatorPerformancePayload> =>
+    requestReports(() => httpClient.get(`/reports/regulator-performance?userId=${encodeURIComponent(userId)}${range?.from ? `&from=${encodeURIComponent(range.from)}` : ''}${range?.to ? `&to=${encodeURIComponent(range.to)}` : ''}`)),
 };
 
 export interface ScriptJourneyPayload {
@@ -1521,6 +1524,87 @@ export interface ScriptJourneyPayload {
       };
     } | null;
   }>;
+}
+
+export interface RegulatorPerformancePayload {
+  regulator: {
+    id: string;
+    name: string;
+    email: string | null;
+    roleKey: string | null;
+  };
+  scope: {
+    from: string | null;
+    to: string | null;
+    generatedAt: string;
+  };
+  summary: {
+    totalAssignedScripts: number;
+    totalRecommendations: number;
+    totalApprovalRecommendations: number;
+    totalRejectionRecommendations: number;
+    totalSendBacks: number;
+    totalCyclesHandled: number;
+    finalDecisionCount: number;
+    finalApprovedCount: number;
+    finalRejectedCount: number;
+    recommendationAgreementRate: number | null;
+    averageFirstActionMinutes: number | null;
+    averageTurnaroundDays: number | null;
+  };
+  scripts: Array<{
+    id: string;
+    title: string | null;
+    status: string | null;
+    beneficiaryId: string | null;
+    beneficiaryName: string | null;
+    beneficiaryType: string | null;
+    receivedAt: string | null;
+    assignedAt: string | null;
+    firstActionAt: string | null;
+    lastActionAt: string | null;
+    firstActionMinutes: number | null;
+    turnaroundDays: number | null;
+    recommendationsCount: number;
+    recommendationApprovalCount: number;
+    recommendationRejectionCount: number;
+    sendBackCount: number;
+    cycleCount: number;
+    latestRecommendation: {
+      type: string | null;
+      reason: string | null;
+      at: string | null;
+      reportId: string | null;
+    } | null;
+    finalDecision: {
+      status: string | null;
+      at: string | null;
+      by: string | null;
+      byName: string | null;
+      reason: string | null;
+    } | null;
+    reportsCount: number;
+  }>;
+  cycles: Array<{
+    id: string;
+    scriptId: string | null;
+    cycleNumber: number | null;
+    status: string | null;
+    sentAt: string | null;
+    returnedAt: string | null;
+    reanalyzedAt: string | null;
+    sentBy: string | null;
+    sentByName: string | null;
+    adminNote: string | null;
+    sourceReportId: string | null;
+    reanalyzedReportId: string | null;
+    sourceJobId: string | null;
+    reanalyzedJobId: string | null;
+    cycleEvents: Array<Record<string, unknown>>;
+    comparison: Record<string, unknown> | null;
+  }>;
+  timeline: Array<Record<string, unknown>>;
+  notes: string[];
 }
 
 export interface UserListItem {
