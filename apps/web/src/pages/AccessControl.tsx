@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { AdminTableFilters } from '@/components/ui/AdminTableFilters';
 import { Search, Plus, UserCog, Shield, Eye, Pencil, UserX, UserCheck, Trash2 } from 'lucide-react';
-import { usersApi, invitesApi } from '@/api';
-import type { UserListItem } from '@/api';
+import { usersApi, invitesApi, reportsApi, type UserListItem } from '@/api';
+import { downloadRegulatorPerformancePdf } from '@/components/reports/regulator-performance/download';
 import toast from 'react-hot-toast';
 const PAGE_SIZE = 10;
 
@@ -72,6 +72,7 @@ export function AccessControl() {
     canSendForReview: false,
   });
   const [editSaving, setEditSaving] = useState(false);
+  const [downloadingPerformanceReportUserId, setDownloadingPerformanceReportUserId] = useState<string | null>(null);
   const [accessDenied, setAccessDenied] = useState(false);
 
   const loadUsers = useCallback(async () => {
@@ -199,6 +200,29 @@ export function AccessControl() {
       await loadUsers();
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to delete user');
+    }
+  };
+
+  const handleDownloadPerformanceReport = async (user: UserListItem) => {
+    const role = String(user.roleKey ?? '').toLowerCase();
+    if (role === 'beneficiary') {
+      toast.error(lang === 'ar' ? 'هذا التقرير مخصص للمستخدمين الداخليين' : 'This report is for internal users');
+      return;
+    }
+    if (downloadingPerformanceReportUserId) return;
+    setDownloadingPerformanceReportUserId(user.id);
+    try {
+      const data = await reportsApi.getRegulatorPerformance(user.id);
+      await downloadRegulatorPerformancePdf({
+        data,
+        lang: lang === 'ar' ? 'ar' : 'en',
+        dateFormat: undefined,
+      });
+      toast.success(lang === 'ar' ? 'تم تنزيل تقرير الأداء' : 'Performance report downloaded');
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذر تنزيل تقرير الأداء' : 'Failed to download performance report'));
+    } finally {
+      setDownloadingPerformanceReportUserId(null);
     }
   };
 
@@ -434,7 +458,20 @@ export function AccessControl() {
               </div>
             </div>
             <div className="flex justify-end pt-2">
-              <Button variant="outline" onClick={() => setViewUser(null)}>{t('cancel')}</Button>
+              <div className="flex items-center gap-2">
+                {viewUser && String(viewUser.roleKey ?? '').toLowerCase() !== 'beneficiary' && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleDownloadPerformanceReport(viewUser)}
+                    disabled={downloadingPerformanceReportUserId === viewUser.id}
+                  >
+                    {downloadingPerformanceReportUserId === viewUser.id
+                      ? (lang === 'ar' ? 'جاري التنزيل…' : 'Downloading…')
+                      : (lang === 'ar' ? 'تقرير الأداء' : 'Performance report')}
+                  </Button>
+                )}
+                <Button variant="outline" onClick={() => setViewUser(null)}>{t('cancel')}</Button>
+              </div>
             </div>
           </div>
         )}
