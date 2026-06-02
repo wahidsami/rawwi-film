@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/Badge';
 import { reportsApi, usersApi, type RegulatorPerformancePayload } from '@/api';
 import { downloadRegulatorPerformancePdf } from '@/components/reports/regulator-performance/download';
 import { APP_TIME_ZONE, formatDateTimeValue } from '@/utils/dateFormat';
-import { ArrowLeft, BarChart3, Eye, FileDown, Loader2, RefreshCw, Search, TrendingUp, Users } from 'lucide-react';
+import { ArrowLeft, BarChart3, Eye, FileDown, Filter, Loader2, RefreshCw, Search, TrendingUp, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 type InternalUser = {
@@ -29,6 +29,7 @@ type UserPerfRow = {
 };
 
 type TimelineEntry = NonNullable<RegulatorPerformancePayload['timeline']>[number];
+type TimelineFilterKey = 'all' | 'assignments' | 'analysis' | 'recommendations' | 'send_backs' | 'decisions' | 'reports';
 
 function safe(v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';
@@ -132,6 +133,40 @@ function timelineAccent(type: string | null | undefined): { ring: string; badge:
   return { ring: 'ring-border/70 bg-text-muted', badge: 'bg-background text-text-muted border-border' };
 }
 
+function timelineFilterKey(type: string | null | undefined): TimelineFilterKey {
+  const key = String(type ?? '').trim().toLowerCase();
+  if (!key) return 'all';
+  if (key.includes('assign')) return 'assignments';
+  if (key.includes('analysis')) return 'analysis';
+  if (key.includes('recommend')) return 'recommendations';
+  if (key.includes('send') || key.includes('review')) return 'send_backs';
+  if (key.includes('final') || key.includes('approve') || key.includes('reject')) return 'decisions';
+  if (key.includes('report')) return 'reports';
+  return 'all';
+}
+
+function timelineFilterLabel(key: TimelineFilterKey, lang: 'ar' | 'en'): string {
+  const ar: Record<TimelineFilterKey, string> = {
+    all: 'كل الأحداث',
+    assignments: 'الإسنادات',
+    analysis: 'التحليل',
+    recommendations: 'التوصيات',
+    send_backs: 'الإرجاعات',
+    decisions: 'القرارات النهائية',
+    reports: 'التقارير',
+  };
+  const en: Record<TimelineFilterKey, string> = {
+    all: 'All events',
+    assignments: 'Assignments',
+    analysis: 'Analysis',
+    recommendations: 'Recommendations',
+    send_backs: 'Send-backs',
+    decisions: 'Final decisions',
+    reports: 'Reports',
+  };
+  return lang === 'ar' ? ar[key] : en[key];
+}
+
 export function Performance() {
   const { lang } = useLangStore();
   const { settings } = useSettingsStore();
@@ -150,6 +185,7 @@ export function Performance() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
+  const [timelineFilter, setTimelineFilter] = useState<TimelineFilterKey>('all');
 
   const from = searchParams.get('from') ?? '';
   const to = searchParams.get('to') ?? '';
@@ -320,8 +356,22 @@ export function Performance() {
     }));
   }, [currentDetail]);
 
+  const filteredTimelineGroups = useMemo(() => {
+    if (timelineFilter === 'all') return timelineGroups;
+    return timelineGroups
+      .map((group) => {
+        const events = group.events.filter((event) => timelineFilterKey((event as any).type) === timelineFilter);
+        return { ...group, events };
+      })
+      .filter((group) => group.events.length > 0);
+  }, [timelineFilter, timelineGroups]);
+
   useEffect(() => {
     setExpandedDays({});
+  }, [userId]);
+
+  useEffect(() => {
+    setTimelineFilter('all');
   }, [userId]);
 
   if (!isAdmin) {
@@ -791,17 +841,42 @@ export function Performance() {
                           : 'Grouped by day with each event shown as a separate activity card.'}
                       </p>
                     </div>
-                    <Badge variant="secondary" className="w-fit">
-                      {lang === 'ar' ? `${timelineGroups.length} يوم` : `${timelineGroups.length} days`}
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary" className="w-fit">
+                        {lang === 'ar' ? `${filteredTimelineGroups.length} يوم` : `${filteredTimelineGroups.length} days`}
+                      </Badge>
+                      <Button
+                        variant={timelineFilter === 'all' ? 'outline' : 'ghost'}
+                        size="sm"
+                        onClick={() => setTimelineFilter('all')}
+                      >
+                        <Filter className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                        {lang === 'ar' ? 'فلتر' : 'Filter'}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {( ['all', 'assignments', 'analysis', 'recommendations', 'send_backs', 'decisions', 'reports'] as TimelineFilterKey[]).map((key) => (
+                      <Button
+                        key={key}
+                        size="sm"
+                        variant={timelineFilter === key ? 'primary' : 'outline'}
+                        onClick={() => setTimelineFilter(key)}
+                        className="rounded-full"
+                      >
+                        {timelineFilterLabel(key, lang === 'ar' ? 'ar' : 'en')}
+                      </Button>
+                    ))}
                   </div>
                   <div className="mt-6 space-y-8">
-                    {timelineGroups.length === 0 ? (
+                    {filteredTimelineGroups.length === 0 ? (
                       <div className="rounded-2xl border border-dashed border-border bg-background/60 p-10 text-center text-text-muted">
-                        {lang === 'ar' ? 'لا توجد أحداث زمنية بعد.' : 'No timeline events yet.'}
+                        {lang === 'ar'
+                          ? 'لا توجد أحداث مطابقة لهذا الفلتر.'
+                          : 'No events match this filter.'}
                       </div>
                     ) : (
-                      timelineGroups.map((group) => {
+                      filteredTimelineGroups.map((group) => {
                         const expanded = !!expandedDays[group.dayKey];
                         const visibleEvents = expanded ? group.events : group.events.slice(0, 4);
                         return (
