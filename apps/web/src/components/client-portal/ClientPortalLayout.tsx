@@ -146,9 +146,9 @@ export function ClientPortalLayout({
     : (isSidebarCollapsed ? ChevronRight : ChevronLeft);
 
   return (
-    <div className="client-portal-theme client-portal-shell min-h-screen text-text-main">
+    <div className="client-portal-theme client-portal-shell relative isolate min-h-screen text-text-main">
       <div className="flex min-h-screen w-full flex-col px-3 py-3 md:px-5 md:py-5">
-        <header className="client-portal-panel mb-4 rounded-[calc(var(--radius)+0.75rem)] border border-border/70 px-4 py-4 shadow-[0_20px_60px_rgba(31,23,36,0.08)] md:px-6">
+        <header className="client-portal-panel relative z-[200] mb-4 rounded-[calc(var(--radius)+0.75rem)] border border-border/70 px-4 py-4 shadow-[0_20px_60px_rgba(31,23,36,0.08)] md:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -190,7 +190,7 @@ export function ClientPortalLayout({
                     ) : null}
                   </Button>
                   {isNotifMenuOpen ? (
-                    <div className="absolute end-0 top-full z-[1200] mt-2 w-[360px] rounded-xl border border-border bg-background p-3 shadow-[0_24px_60px_rgba(31,23,36,0.25)]">
+                    <div className="absolute end-0 top-full z-[5000] mt-2 w-[360px] rounded-xl border border-border bg-background p-3 shadow-[0_24px_60px_rgba(31,23,36,0.25)]">
                       <div className="mb-2 flex items-center justify-between">
                         <p className="text-sm font-semibold text-text-main">{isArabic ? 'الإشعارات' : 'Notifications'}</p>
                         <button
@@ -247,7 +247,7 @@ export function ClientPortalLayout({
           </div>
         </header>
 
-        <div className={cn('grid flex-1 gap-4', isSidebarCollapsed ? 'lg:grid-cols-[92px_minmax(0,1fr)]' : 'lg:grid-cols-[300px_minmax(0,1fr)]')}>
+        <div className={cn('relative z-0 grid flex-1 gap-4', isSidebarCollapsed ? 'lg:grid-cols-[92px_minmax(0,1fr)]' : 'lg:grid-cols-[300px_minmax(0,1fr)]')}>
           <aside className={cn('client-portal-panel hidden rounded-[calc(var(--radius)+0.75rem)] border border-border/70 p-4 shadow-[0_20px_60px_rgba(31,23,36,0.06)] lg:block', isSidebarCollapsed && 'px-3')}>
             <div className="mb-4 flex items-center justify-between gap-2">
               {!isSidebarCollapsed ? (
