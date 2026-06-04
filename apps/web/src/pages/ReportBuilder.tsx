@@ -27,6 +27,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useDataStore } from '@/store/dataStore';
 import { useLangStore } from '@/store/langStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { supabase } from '@/lib/supabaseClient';
 import { formatDateTimeValue, APP_TIME_ZONE } from '@/utils/dateFormat';
 import {
   reportsApi,
@@ -183,6 +184,25 @@ type ReportBuilderTemplate = {
   updatedAt: string;
 };
 
+type ReportBuilderTemplateRow = {
+  id: string;
+  name: string;
+  source: BuilderSource;
+  template_data: {
+    search?: string;
+    statusFilter?: string;
+    roleFilter?: string;
+    eventTypeFilter?: string;
+    targetTypeFilter?: string;
+    from?: string;
+    to?: string;
+    pageSize?: number;
+    selectedColumns?: string[];
+  } | null;
+  created_at: string;
+  updated_at: string;
+};
+
 const REPORT_BUILDER_TEMPLATE_KEY = 'raawi-report-builder-templates-v1';
 
 const BUILT_IN_TEMPLATES: ReportBuilderTemplate[] = [
@@ -291,8 +311,84 @@ function persistTemplatesToStorage(templates: ReportBuilderTemplate[]): void {
   window.localStorage.setItem(REPORT_BUILDER_TEMPLATE_KEY, JSON.stringify(templates));
 }
 
+function toTemplatePayload(template: ReportBuilderTemplate) {
+  return {
+    search: template.search,
+    statusFilter: template.statusFilter,
+    roleFilter: template.roleFilter,
+    eventTypeFilter: template.eventTypeFilter,
+    targetTypeFilter: template.targetTypeFilter,
+    from: template.from,
+    to: template.to,
+    pageSize: template.pageSize,
+    selectedColumns: template.selectedColumns,
+  };
+}
+
+function fromTemplateRow(row: ReportBuilderTemplateRow): ReportBuilderTemplate {
+  const data = row.template_data ?? {};
+  return {
+    id: row.id,
+    name: row.name,
+    source: row.source,
+    isPreset: false,
+    search: data.search ?? '',
+    statusFilter: data.statusFilter ?? 'all',
+    roleFilter: data.roleFilter ?? 'all',
+    eventTypeFilter: data.eventTypeFilter ?? 'all',
+    targetTypeFilter: data.targetTypeFilter ?? 'all',
+    from: data.from ?? '',
+    to: data.to ?? '',
+    pageSize: data.pageSize ?? 10,
+    selectedColumns: Array.isArray(data.selectedColumns) ? data.selectedColumns : SOURCE_DEFAULT_COLUMNS[row.source],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function mergeUniqueTemplates(items: ReportBuilderTemplate[]): ReportBuilderTemplate[] {
+  const byId = new Map<string, ReportBuilderTemplate>();
+  items.forEach((template) => {
+    const existing = byId.get(template.id);
+    if (!existing || existing.updatedAt.localeCompare(template.updatedAt) < 0) {
+      byId.set(template.id, template);
+    }
+  });
+  return Array.from(byId.values()).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
 function createTemplateId(name: string): string {
   return `${Date.now()}-${name.toLowerCase().replace(/\s+/g, '-').slice(0, 24)}`;
+}
+
+async function loadTemplatesFromServer(userId: string): Promise<ReportBuilderTemplate[]> {
+  const { data, error } = await supabase
+    .from('report_builder_templates')
+    .select('id, name, source, template_data, created_at, updated_at')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((row) => fromTemplateRow(row as ReportBuilderTemplateRow));
+}
+
+async function upsertTemplateToServer(userId: string, template: ReportBuilderTemplate): Promise<void> {
+  const { error } = await supabase.from('report_builder_templates').upsert({
+    id: template.id,
+    user_id: userId,
+    name: template.name,
+    source: template.source,
+    template_data: toTemplatePayload(template),
+  }, { onConflict: 'id' });
+  if (error) throw error;
+}
+
+async function deleteTemplateFromServer(userId: string, templateId: string): Promise<void> {
+  const { error } = await supabase
+    .from('report_builder_templates')
+    .delete()
+    .eq('id', templateId)
+    .eq('user_id', userId);
+  if (error) throw error;
 }
 
 const AUDIT_EVENT_TYPES = [
@@ -680,6 +776,37 @@ export function ReportBuilder() {
     setTemplates(loadTemplatesFromStorage());
   }, []);
 
+  const syncSavedTemplates = useCallback(async () => {
+    const localTemplates = mergeUniqueTemplates(loadTemplatesFromStorage());
+    setTemplates(localTemplates);
+
+    if (!user?.id) return;
+
+    try {
+      const remoteTemplates = await loadTemplatesFromServer(user.id);
+      const merged = mergeUniqueTemplates([...remoteTemplates, ...localTemplates]);
+      setTemplates(merged);
+      persistTemplatesToStorage(merged);
+
+      const remoteById = new Map(remoteTemplates.map((template) => [template.id, template]));
+      const templatesToBackfill = localTemplates.filter((template) => {
+        const remote = remoteById.get(template.id);
+        if (!remote) return true;
+        return remote.updatedAt.localeCompare(template.updatedAt) < 0;
+      });
+      if (templatesToBackfill.length > 0) {
+        await Promise.all(templatesToBackfill.map((template) => upsertTemplateToServer(user.id, template)));
+      }
+    } catch {
+      // Keep the local cache available if the server read fails; exports still work from the browser state.
+      setTemplates(localTemplates);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    void syncSavedTemplates();
+  }, [syncSavedTemplates]);
+
   const loadSourceData = useCallback(async (nextSource: BuilderSource, range?: { from?: string; to?: string }) => {
     if (!canAccessBuilder) return;
     setLoading(true);
@@ -956,10 +1083,14 @@ export function ReportBuilder() {
     }
   };
 
-  const handleSaveTemplate = () => {
+  const handleSaveTemplate = async () => {
     const name = templateName.trim();
     if (!name) {
       toast.error(lang === 'ar' ? 'اكتب اسمًا للقالب أولًا' : 'Enter a template name first');
+      return;
+    }
+    if (!user?.id) {
+      toast.error(lang === 'ar' ? 'تعذّر تحديد المستخدم الحالي' : 'Unable to identify the current user');
       return;
     }
     const now = new Date().toISOString();
@@ -980,20 +1111,36 @@ export function ReportBuilder() {
       createdAt: selectedTemplate?.createdAt ?? now,
       updatedAt: now,
     };
-    const nextTemplates = [
+    const nextTemplates = mergeUniqueTemplates([
       nextTemplate,
       ...templates.filter((item) => item.id !== nextTemplate.id && !item.isPreset),
-    ].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    ]);
+    try {
+      await upsertTemplateToServer(user.id, nextTemplate);
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذّر حفظ القالب على الخادم' : 'Failed to save template on the server'));
+      return;
+    }
     setTemplates(nextTemplates);
     persistTemplatesToStorage(nextTemplates);
     setSelectedTemplateId(nextTemplate.id);
     toast.success(lang === 'ar' ? 'تم حفظ القالب' : 'Template saved');
   };
 
-  const handleDeleteTemplate = (templateId: string) => {
+  const handleDeleteTemplate = async (templateId: string) => {
     const template = templateCatalog.find((item) => item.id === templateId);
     if (template?.isPreset) {
       toast.error(lang === 'ar' ? 'القالب المبدئي لا يمكن حذفه' : 'Starter templates cannot be deleted');
+      return;
+    }
+    if (!user?.id) {
+      toast.error(lang === 'ar' ? 'تعذّر تحديد المستخدم الحالي' : 'Unable to identify the current user');
+      return;
+    }
+    try {
+      await deleteTemplateFromServer(user.id, templateId);
+    } catch (err: any) {
+      toast.error(err?.message ?? (lang === 'ar' ? 'تعذّر حذف القالب من الخادم' : 'Failed to delete template from server'));
       return;
     }
     const nextTemplates = templates.filter((item) => item.id !== templateId);
