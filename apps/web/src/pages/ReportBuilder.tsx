@@ -879,7 +879,6 @@ export function ReportBuilder() {
       const headers = selectedColumnsMeta.map((col) => (lang === 'ar' ? col.labelAr : col.labelEn));
       const dataRows = filteredRows.map((row) => selectedColumnsMeta.map((col) => row.values[col.key] ?? ''));
       const summaryRows = [
-        ['Report Builder', sourceOption.labelEn],
         ['Generated At', new Intl.DateTimeFormat('en-GB', {
           timeZone: APP_TIME_ZONE,
           dateStyle: 'medium',
