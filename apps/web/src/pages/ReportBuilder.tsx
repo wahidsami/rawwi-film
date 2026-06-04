@@ -184,6 +184,8 @@ type ReportBuilderTemplate = {
   updatedAt: string;
 };
 
+type TemplateSyncStatus = 'loading' | 'synced' | 'local' | 'error';
+
 type ReportBuilderTemplateRow = {
   id: string;
   name: string;
@@ -741,6 +743,7 @@ export function ReportBuilder() {
   const [templateName, setTemplateName] = useState('');
   const [templates, setTemplates] = useState<ReportBuilderTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [templateSyncStatus, setTemplateSyncStatus] = useState<TemplateSyncStatus>('loading');
 
   const canAccessBuilder = user?.role === 'Admin' || user?.role === 'Super Admin' || hasPermission('manage_users');
   const sourceOption = SOURCE_OPTIONS.find((opt) => opt.value === source) ?? SOURCE_OPTIONS[0];
@@ -777,16 +780,21 @@ export function ReportBuilder() {
   }, []);
 
   const syncSavedTemplates = useCallback(async () => {
+    setTemplateSyncStatus('loading');
     const localTemplates = mergeUniqueTemplates(loadTemplatesFromStorage());
     setTemplates(localTemplates);
 
-    if (!user?.id) return;
+    if (!user?.id) {
+      setTemplateSyncStatus('local');
+      return;
+    }
 
     try {
       const remoteTemplates = await loadTemplatesFromServer(user.id);
       const merged = mergeUniqueTemplates([...remoteTemplates, ...localTemplates]);
       setTemplates(merged);
       persistTemplatesToStorage(merged);
+      setTemplateSyncStatus('synced');
 
       const remoteById = new Map(remoteTemplates.map((template) => [template.id, template]));
       const templatesToBackfill = localTemplates.filter((template) => {
@@ -800,6 +808,7 @@ export function ReportBuilder() {
     } catch {
       // Keep the local cache available if the server read fails; exports still work from the browser state.
       setTemplates(localTemplates);
+      setTemplateSyncStatus(localTemplates.length > 0 ? 'local' : 'error');
     }
   }, [user?.id]);
 
@@ -1117,7 +1126,9 @@ export function ReportBuilder() {
     ]);
     try {
       await upsertTemplateToServer(user.id, nextTemplate);
+      setTemplateSyncStatus('synced');
     } catch (err: any) {
+      setTemplateSyncStatus('error');
       toast.error(err?.message ?? (lang === 'ar' ? 'تعذّر حفظ القالب على الخادم' : 'Failed to save template on the server'));
       return;
     }
@@ -1139,7 +1150,9 @@ export function ReportBuilder() {
     }
     try {
       await deleteTemplateFromServer(user.id, templateId);
+      setTemplateSyncStatus('synced');
     } catch (err: any) {
+      setTemplateSyncStatus('error');
       toast.error(err?.message ?? (lang === 'ar' ? 'تعذّر حذف القالب من الخادم' : 'Failed to delete template from server'));
       return;
     }
@@ -1329,13 +1342,51 @@ export function ReportBuilder() {
         <CardContent className="space-y-5 p-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-text-main">
-                {lang === 'ar' ? 'القوالب المحفوظة' : 'Saved templates'}
-              </h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-semibold text-text-main">
+                  {lang === 'ar' ? 'القوالب المحفوظة' : 'Saved templates'}
+                </h2>
+                <Badge
+                  variant={
+                    templateSyncStatus === 'synced'
+                      ? 'success'
+                      : templateSyncStatus === 'error'
+                        ? 'error'
+                        : templateSyncStatus === 'loading'
+                          ? 'warning'
+                          : 'outline'
+                  }
+                >
+                  {templateSyncStatus === 'synced'
+                    ? (lang === 'ar' ? 'متزامن' : 'Synced')
+                    : templateSyncStatus === 'loading'
+                      ? (lang === 'ar' ? 'جاري المزامنة' : 'Syncing')
+                      : templateSyncStatus === 'local'
+                        ? (lang === 'ar' ? 'نسخة محلية' : 'Local cache')
+                        : (lang === 'ar' ? 'تعذر الاتصال بالخادم' : 'Server unavailable')}
+                </Badge>
+              </div>
               <p className="text-sm text-text-muted">
                 {lang === 'ar'
                   ? 'احفظ إعداداتك الحالية لتعيد استخدامها بسرعة لاحقًا.'
                   : 'Save the current configuration so you can reuse it later with one click.'}
+              </p>
+              <p className="mt-1 text-xs text-text-muted">
+                {templateSyncStatus === 'synced'
+                  ? (lang === 'ar'
+                    ? 'القوالب محفوظة على الخادم وتبقى متاحة عبر الأجهزة.'
+                    : 'Templates are saved on the server and available across devices.')
+                  : templateSyncStatus === 'local'
+                    ? (lang === 'ar'
+                      ? 'توجد قوالب محلية محفوظة مؤقتًا حتى تعود المزامنة.'
+                      : 'Local templates are cached temporarily until sync resumes.')
+                    : templateSyncStatus === 'loading'
+                      ? (lang === 'ar'
+                        ? 'يتم تحميل القوالب الآن...'
+                        : 'Loading templates...')
+                      : (lang === 'ar'
+                        ? 'سيعمل القسم بالقوالب المحلية حتى تعود المزامنة.'
+                        : 'The builder will keep working with local templates until sync resumes.')}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
