@@ -744,6 +744,8 @@ export function ReportBuilder() {
   const [templates, setTemplates] = useState<ReportBuilderTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [templateSyncStatus, setTemplateSyncStatus] = useState<TemplateSyncStatus>('loading');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showTemplatesPanel, setShowTemplatesPanel] = useState(false);
 
   const canAccessBuilder = user?.role === 'Admin' || user?.role === 'Super Admin' || hasPermission('manage_users');
   const sourceOption = SOURCE_OPTIONS.find((opt) => opt.value === source) ?? SOURCE_OPTIONS[0];
@@ -770,6 +772,17 @@ export function ReportBuilder() {
     if (source !== 'users' && source !== 'performance') return [];
     return Array.from(new Set(rows.map((row) => row.roleKey).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b));
   }, [rows, source]);
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (search.trim()) count += 1;
+    if (statusFilter !== 'all') count += 1;
+    if ((source === 'users' || source === 'performance') && roleFilter !== 'all') count += 1;
+    if (source === 'audit' && eventTypeFilter !== 'all') count += 1;
+    if (source === 'audit' && targetTypeFilter !== 'all') count += 1;
+    if (sourceOption.supportsDateRange && from) count += 1;
+    if (sourceOption.supportsDateRange && to) count += 1;
+    return count;
+  }, [eventTypeFilter, from, roleFilter, search, source, sourceOption.supportsDateRange, statusFilter, targetTypeFilter, to]);
 
   useEffect(() => {
     fetchInitialData();
@@ -1229,6 +1242,35 @@ export function ReportBuilder() {
 
       <Card className="border-border/60">
         <CardContent className="space-y-5 p-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-text-main">
+                  {lang === 'ar' ? '1. اختر المصدر والفلترة' : '1. Choose source and filters'}
+                </h2>
+                <Badge variant="secondary">
+                  {lang === 'ar' ? 'الخطوة 1' : 'Step 1'}
+                </Badge>
+              </div>
+              <p className="text-sm text-text-muted">
+                {lang === 'ar'
+                  ? 'أبقينا الصفوف الأساسية ظاهرة، وأخفينا الفلاتر المتقدمة حتى تحتاجها.'
+                  : 'We keep the basic controls visible and tuck advanced filters away until you need them.'}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">
+                {lang === 'ar' ? 'المصدر' : 'Source'}: {lang === 'ar' ? sourceOption.labelAr : sourceOption.labelEn}
+              </Badge>
+              <Badge variant="secondary">
+                {lang === 'ar' ? 'الفلاتر النشطة' : 'Active filters'}: {activeFilterCount}
+              </Badge>
+              <Badge variant="secondary">
+                {lang === 'ar' ? 'أعمدة التصدير' : 'Export columns'}: {selectedColumnsMeta.length}
+              </Badge>
+            </div>
+          </div>
+
           <div className="grid gap-4 lg:grid-cols-3">
             <Select
               label={lang === 'ar' ? 'مصدر البيانات' : 'Data source'}
@@ -1240,7 +1282,7 @@ export function ReportBuilder() {
               }))}
             />
             <Input
-              label={lang === 'ar' ? 'بحث' : 'Search'}
+              label={lang === 'ar' ? 'بحث داخل الصفوف' : 'Search rows'}
               icon={<Search className="h-4 w-4" />}
               placeholder={lang === 'ar' ? 'ابحث في السجلات المعروضة فقط...' : 'Search the currently loaded rows only...'}
               value={search}
@@ -1255,245 +1297,238 @@ export function ReportBuilder() {
                 ...availableStatuses.map((status) => ({ value: status, label: status })),
               ]}
             />
-            <p className="text-xs text-text-muted lg:col-span-3">
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-border bg-background/40 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-text-main">
+                  {lang === 'ar' ? 'الفلاتر المتقدمة' : 'Advanced filters'}
+                </p>
+                <p className="text-xs text-text-muted">
+                  {lang === 'ar'
+                    ? 'الدور، نوع الحدث، الوجهة، والفترة الزمنية.'
+                    : 'Role, event type, target type, and date range.'}
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setShowAdvancedFilters((open) => !open)}>
+                {showAdvancedFilters
+                  ? (lang === 'ar' ? 'إخفاء' : 'Hide')
+                  : (lang === 'ar' ? 'إظهار' : 'Show')}
+              </Button>
+            </div>
+
+            {showAdvancedFilters ? (
+              <div
+                className={cn(
+                  'grid gap-4',
+                  source === 'audit'
+                    ? 'lg:grid-cols-5'
+                    : source === 'users' || source === 'performance'
+                      ? 'lg:grid-cols-4'
+                      : 'lg:grid-cols-3',
+                )}
+              >
+                {(source === 'users' || source === 'performance') && (
+                  <Select
+                    label={lang === 'ar' ? 'الدور' : 'Role'}
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    options={[
+                      { value: 'all', label: lang === 'ar' ? 'كل الأدوار' : 'All roles' },
+                      ...availableRoles.map((role) => ({ value: role, label: role })),
+                    ]}
+                  />
+                )}
+                {source === 'audit' && (
+                  <Select
+                    label={lang === 'ar' ? 'نوع الحدث' : 'Event type'}
+                    value={eventTypeFilter}
+                    onChange={(e) => setEventTypeFilter(e.target.value)}
+                    options={[
+                      { value: 'all', label: lang === 'ar' ? 'كل الأنواع' : 'All event types' },
+                      ...AUDIT_EVENT_TYPES.map((type) => ({ value: type, label: type })),
+                    ]}
+                  />
+                )}
+                {source === 'audit' && (
+                  <Select
+                    label={lang === 'ar' ? 'الوجهة' : 'Target type'}
+                    value={targetTypeFilter}
+                    onChange={(e) => setTargetTypeFilter(e.target.value)}
+                    options={[
+                      { value: 'all', label: lang === 'ar' ? 'كل الوجهات' : 'All targets' },
+                      ...AUDIT_TARGET_TYPES.map((type) => ({ value: type, label: type })),
+                    ]}
+                  />
+                )}
+                {sourceOption.supportsDateRange ? (
+                  <>
+                    <Input
+                      label={lang === 'ar' ? 'من تاريخ' : 'From date'}
+                      type="date"
+                      value={from}
+                      onChange={(e) => setFrom(e.target.value)}
+                    />
+                    <Input
+                      label={lang === 'ar' ? 'إلى تاريخ' : 'To date'}
+                      type="date"
+                      value={to}
+                      onChange={(e) => setTo(e.target.value)}
+                    />
+                  </>
+                ) : (
+                  <div className="lg:col-span-2 rounded-[var(--radius)] border border-dashed border-border bg-background/50 p-4 text-sm text-text-muted">
+                    {lang === 'ar'
+                      ? 'هذا المصدر لا يعتمد حاليًا على فلترة زمنية.'
+                      : 'This source does not currently support date-range filtering.'}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-text-muted">
+                {lang === 'ar'
+                  ? 'الفلاتر المتقدمة مخفية الآن للحفاظ على بساطة الواجهة.'
+                  : 'Advanced filters are hidden to keep the page uncluttered.'}
+              </p>
+            )}
+
+            <p className="text-xs text-text-muted">
               {lang === 'ar'
                 ? 'هذا الحقل يفلتر الصفوف المعروضة حاليًا حسب النص أو الاسم أو البريد أو تفاصيل السجل وفقًا للمصدر المحدد.'
                 : 'This field filters the rows currently loaded for the selected source by text, name, email, or event details.'}
             </p>
-          </div>
-
-          <div
-            className={cn(
-              'grid gap-4',
-              source === 'audit'
-                ? 'lg:grid-cols-5'
-                : source === 'users' || source === 'performance'
-                  ? 'lg:grid-cols-4'
-                  : 'lg:grid-cols-3',
-            )}
-          >
-            {(source === 'users' || source === 'performance') && (
-              <Select
-                label={lang === 'ar' ? 'الدور' : 'Role'}
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                options={[
-                  { value: 'all', label: lang === 'ar' ? 'كل الأدوار' : 'All roles' },
-                  ...availableRoles.map((role) => ({ value: role, label: role })),
-                ]}
-              />
-            )}
-            {source === 'audit' && (
-              <Select
-                label={lang === 'ar' ? 'نوع الحدث' : 'Event type'}
-                value={eventTypeFilter}
-                onChange={(e) => setEventTypeFilter(e.target.value)}
-                options={[
-                  { value: 'all', label: lang === 'ar' ? 'كل الأنواع' : 'All event types' },
-                  ...AUDIT_EVENT_TYPES.map((type) => ({ value: type, label: type })),
-                ]}
-              />
-            )}
-            {source === 'audit' && (
-              <Select
-                label={lang === 'ar' ? 'الوجهة' : 'Target type'}
-                value={targetTypeFilter}
-                onChange={(e) => setTargetTypeFilter(e.target.value)}
-                options={[
-                  { value: 'all', label: lang === 'ar' ? 'كل الوجهات' : 'All targets' },
-                  ...AUDIT_TARGET_TYPES.map((type) => ({ value: type, label: type })),
-                ]}
-              />
-            )}
-            {sourceOption.supportsDateRange ? (
-              <>
-                <Input
-                  label={lang === 'ar' ? 'من تاريخ' : 'From date'}
-                  type="date"
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
-                />
-                <Input
-                  label={lang === 'ar' ? 'إلى تاريخ' : 'To date'}
-                  type="date"
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                />
-              </>
-            ) : (
-              <div className="lg:col-span-2 rounded-[var(--radius)] border border-dashed border-border bg-background/40 p-4 text-sm text-text-muted">
-                {lang === 'ar'
-                  ? 'هذا المصدر لا يعتمد حاليًا على فلترة زمنية.'
-                  : 'This source does not currently support date-range filtering.'}
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">
-              {lang === 'ar' ? 'المصدر الحالي' : 'Current source'}: {lang === 'ar' ? sourceOption.labelAr : sourceOption.labelEn}
-            </Badge>
-            <Badge variant="secondary">
-              {lang === 'ar' ? 'الصفحة' : 'Page'}: {currentPage}/{totalPages}
-            </Badge>
-            <Badge variant="secondary">
-              {lang === 'ar' ? 'أعمدة قابلة للتصدير' : 'Exportable columns'}: {selectedColumnsMeta.length}
-            </Badge>
           </div>
         </CardContent>
       </Card>
 
       <Card className="border-border/60">
         <CardContent className="space-y-5 p-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-text-main">
-                  {lang === 'ar' ? 'القوالب المحفوظة' : 'Saved templates'}
+                  {lang === 'ar' ? '2. القوالب' : '2. Templates'}
                 </h2>
-                <Badge
-                  variant={
-                    templateSyncStatus === 'synced'
-                      ? 'success'
-                      : templateSyncStatus === 'error'
-                        ? 'error'
-                        : templateSyncStatus === 'loading'
-                          ? 'warning'
-                          : 'outline'
-                  }
-                >
-                  {templateSyncStatus === 'synced'
-                    ? (lang === 'ar' ? 'متزامن' : 'Synced')
-                    : templateSyncStatus === 'loading'
-                      ? (lang === 'ar' ? 'جاري المزامنة' : 'Syncing')
-                      : templateSyncStatus === 'local'
-                        ? (lang === 'ar' ? 'نسخة محلية' : 'Local cache')
-                        : (lang === 'ar' ? 'تعذر الاتصال بالخادم' : 'Server unavailable')}
+                <Badge variant="secondary">
+                  {lang === 'ar' ? 'الخطوة 2' : 'Step 2'}
                 </Badge>
               </div>
               <p className="text-sm text-text-muted">
                 {lang === 'ar'
-                  ? 'احفظ إعداداتك الحالية لتعيد استخدامها بسرعة لاحقًا.'
-                  : 'Save the current configuration so you can reuse it later with one click.'}
+                  ? 'اختر قالبًا لتطبيق المصدر والفلاتر والأعمدة وحجم الصفحة دفعة واحدة، أو احفظ الإعداد الحالي كقالب جديد.'
+                  : 'Choose a template to apply the source, filters, columns, and page size in one step, or save the current setup as a new template.'}
               </p>
-              <p className="mt-1 text-xs text-text-muted">
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant={
+                  templateSyncStatus === 'synced'
+                    ? 'success'
+                    : templateSyncStatus === 'error'
+                      ? 'error'
+                      : templateSyncStatus === 'loading'
+                        ? 'warning'
+                        : 'outline'
+                }
+              >
                 {templateSyncStatus === 'synced'
-                  ? (lang === 'ar'
-                    ? 'القوالب محفوظة على الخادم وتبقى متاحة عبر الأجهزة.'
-                    : 'Templates are saved on the server and available across devices.')
-                  : templateSyncStatus === 'local'
-                    ? (lang === 'ar'
-                      ? 'توجد قوالب محلية محفوظة مؤقتًا حتى تعود المزامنة.'
-                      : 'Local templates are cached temporarily until sync resumes.')
-                    : templateSyncStatus === 'loading'
-                      ? (lang === 'ar'
-                        ? 'يتم تحميل القوالب الآن...'
-                        : 'Loading templates...')
-                      : (lang === 'ar'
-                        ? 'جدول القوالب غير متاح على الخادم أو لم تُطبق الهجرة بعد. حدّث قاعدة البيانات ثم أعد تحميل الصفحة.'
-                        : 'The templates table is unavailable on the server or the migration has not been applied yet. Update the database, then reload the page.')}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" onClick={() => void loadSourceData(source)}>
-                <RefreshCw className="me-2 h-4 w-4" />
-                {lang === 'ar' ? 'إعادة تحميل' : 'Reload'}
-              </Button>
-              <Button variant="outline" onClick={handleExportPdf} isLoading={downloadingPdf}>
-                <FileDown className="me-2 h-4 w-4" />
-                PDF
+                  ? (lang === 'ar' ? 'متزامن' : 'Synced')
+                  : templateSyncStatus === 'loading'
+                    ? (lang === 'ar' ? 'جاري المزامنة' : 'Syncing')
+                    : templateSyncStatus === 'local'
+                      ? (lang === 'ar' ? 'نسخة محلية' : 'Local cache')
+                      : (lang === 'ar' ? 'تعذر الاتصال بالخادم' : 'Server unavailable')}
+              </Badge>
+              <Badge variant="secondary">
+                {lang === 'ar' ? 'قوالب جاهزة' : 'Starter templates'}: {BUILT_IN_TEMPLATES.length}
+              </Badge>
+              <Badge variant="secondary">
+                {lang === 'ar' ? 'محفوظة' : 'Saved'}: {templates.length}
+              </Badge>
+              <Button variant="outline" onClick={() => setShowTemplatesPanel((open) => !open)}>
+                {showTemplatesPanel
+                  ? (lang === 'ar' ? 'إخفاء القوالب' : 'Hide templates')
+                  : (lang === 'ar' ? 'عرض القوالب' : 'Show templates')}
               </Button>
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
-            <Input
-              label={lang === 'ar' ? 'اسم القالب' : 'Template name'}
-              placeholder={lang === 'ar' ? 'مثال: تقرير النصوص الشهري' : 'e.g. Monthly scripts report'}
-              value={templateName}
-              onChange={(e) => setTemplateName(e.target.value)}
-            />
-            <div className="flex items-end gap-2">
-              <Button onClick={handleSaveTemplate}>
-                <Save className="me-2 h-4 w-4" />
-                {lang === 'ar' ? 'حفظ القالب' : 'Save template'}
-              </Button>
-            </div>
-          </div>
+          {showTemplatesPanel ? (
+            <>
+              <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
+                <Input
+                  label={lang === 'ar' ? 'اسم القالب' : 'Template name'}
+                  placeholder={lang === 'ar' ? 'مثال: تقرير النصوص الشهري' : 'e.g. Monthly scripts report'}
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                />
+                <div className="flex items-end gap-2">
+                  <Button onClick={handleSaveTemplate}>
+                    <Save className="me-2 h-4 w-4" />
+                    {lang === 'ar' ? 'حفظ القالب' : 'Save template'}
+                  </Button>
+                </div>
+              </div>
 
-          <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-            <Select
-              label={lang === 'ar' ? 'اختيار قالب محفوظ' : 'Choose a saved template'}
-              value={selectedTemplateId}
-              onChange={(e) => {
-                const found = templateCatalog.find((item) => item.id === e.target.value);
-                if (!found) return;
-                setTemplateName(found.name);
-                void applyTemplate(found);
-              }}
-              options={[
-                { value: '', label: lang === 'ar' ? 'اختر قالبًا...' : 'Choose a template...' },
-                ...templateCatalog.map((template) => ({
-                  value: template.id,
-                  label: `${template.name} · ${lang === 'ar' ? SOURCE_OPTIONS.find((opt) => opt.value === template.source)?.labelAr ?? template.source : SOURCE_OPTIONS.find((opt) => opt.value === template.source)?.labelEn ?? template.source}`,
-                })),
-              ]}
-            />
-            <div className="flex flex-wrap items-end gap-2">
-              {selectedTemplateId ? (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const found = templateCatalog.find((item) => item.id === selectedTemplateId);
-                    if (found) {
-                      setTemplateName(found.name);
-                    }
+              <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                <Select
+                  label={lang === 'ar' ? 'استخدم قالبًا محفوظًا' : 'Use a saved template'}
+                  value={selectedTemplateId}
+                  onChange={(e) => {
+                    const found = templateCatalog.find((item) => item.id === e.target.value);
+                    if (!found) return;
+                    setTemplateName(found.name);
+                    void applyTemplate(found);
                   }}
-                >
-                  <Bookmark className="me-2 h-4 w-4" />
-                  {lang === 'ar' ? 'إعادة تعبئة القالب' : 'Refill template'}
-                </Button>
-              ) : null}
-              {selectedTemplateId && !selectedTemplate?.isPreset ? (
-                <Button
-                  variant="danger"
-                  onClick={() => handleDeleteTemplate(selectedTemplateId)}
-                >
-                  <Trash2 className="me-2 h-4 w-4" />
-                  {lang === 'ar' ? 'حذف القالب' : 'Delete template'}
-                </Button>
-              ) : null}
-            </div>
-          </div>
+                  options={[
+                    { value: '', label: lang === 'ar' ? 'اختر قالبًا...' : 'Choose a template...' },
+                    ...templateCatalog.map((template) => ({
+                      value: template.id,
+                      label: `${template.name} · ${lang === 'ar' ? SOURCE_OPTIONS.find((opt) => opt.value === template.source)?.labelAr ?? template.source : SOURCE_OPTIONS.find((opt) => opt.value === template.source)?.labelEn ?? template.source}`,
+                    })),
+                  ]}
+                />
+                <div className="flex flex-wrap items-end gap-2">
+                  {selectedTemplateId ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const found = templateCatalog.find((item) => item.id === selectedTemplateId);
+                        if (found) {
+                          setTemplateName(found.name);
+                        }
+                      }}
+                    >
+                      <Bookmark className="me-2 h-4 w-4" />
+                      {lang === 'ar' ? 'إعادة تعبئة' : 'Refill'}
+                    </Button>
+                  ) : null}
+                  {selectedTemplateId && !selectedTemplate?.isPreset ? (
+                    <Button
+                      variant="danger"
+                      onClick={() => handleDeleteTemplate(selectedTemplateId)}
+                    >
+                      <Trash2 className="me-2 h-4 w-4" />
+                      {lang === 'ar' ? 'حذف' : 'Delete'}
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
 
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">
-                {lang === 'ar' ? 'القوالب المبدئية' : 'Starter templates'}
-              </Badge>
-              {BUILT_IN_TEMPLATES.map((template) => (
-                <Badge key={template.id} variant={template.id === selectedTemplateId ? 'primary' : 'secondary'}>
-                  {template.name}
-                </Badge>
-              ))}
+              <p className="text-xs text-text-muted">
+                {lang === 'ar'
+                  ? 'القالب يغيّر المصدر والفلاتر والأعمدة وحجم الصفحة مباشرة.'
+                  : 'A template applies the source, filters, selected columns, and page size immediately.'}
+              </p>
+            </>
+          ) : (
+            <div className="rounded-[var(--radius)] border border-dashed border-border bg-background/40 p-4 text-sm text-text-muted">
+              {lang === 'ar'
+                ? 'القوالب مخفية الآن. افتحها عندما تريد حفظ إعداد أو استعادة قالب جاهز.'
+                : 'Templates are hidden for now. Open them when you want to save the current setup or restore a preset.'}
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">
-                {lang === 'ar' ? 'القوالب المحفوظة' : 'Saved templates'}
-              </Badge>
-              {templates.length === 0 ? (
-                <span className="text-sm text-text-muted">
-                  {lang === 'ar' ? 'لا توجد قوالب محفوظة بعد' : 'No saved templates yet'}
-                </span>
-              ) : (
-                templates.slice(0, 4).map((template) => (
-                  <Badge key={template.id} variant={template.id === selectedTemplateId ? 'primary' : 'secondary'}>
-                    {template.name}
-                  </Badge>
-                ))
-              )}
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
