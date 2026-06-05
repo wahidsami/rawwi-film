@@ -1,8 +1,13 @@
-import { StyleSheet, Font } from '@react-pdf/renderer';
+import { Font, StyleSheet } from '@react-pdf/renderer';
+
+const fontBase = typeof window !== 'undefined' ? window.location.origin : '';
 
 Font.register({
-  family: 'NotoSans',
-  src: 'https://fonts.gstatic.com/s/notosans/v39/o-0IIpQlx3QUlC5A4PNr5TRA.woff2',
+  family: 'ReportBuilderCairo',
+  fonts: [
+    { src: `${fontBase}/fonts/Cairo-Regular.ttf` },
+    { src: `${fontBase}/fonts/Cairo-Bold.ttf`, fontWeight: 'bold' },
+  ],
 });
 
 export const builderPdfStyles = StyleSheet.create({
@@ -10,17 +15,19 @@ export const builderPdfStyles = StyleSheet.create({
     paddingTop: 36,
     paddingHorizontal: 32,
     paddingBottom: 32,
-    fontFamily: 'NotoSans',
+    fontFamily: 'ReportBuilderCairo',
     fontSize: 9.5,
     color: '#1f1630',
     backgroundColor: '#ffffff',
   },
   rtl: {
     direction: 'rtl',
+    textAlign: 'right',
   },
   cover: {
     padding: 0,
     backgroundColor: '#f7f4f8',
+    fontFamily: 'ReportBuilderCairo',
   },
   coverFrame: {
     position: 'relative',
