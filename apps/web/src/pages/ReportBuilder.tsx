@@ -1242,7 +1242,7 @@ export function ReportBuilder() {
             <Input
               label={lang === 'ar' ? 'بحث' : 'Search'}
               icon={<Search className="h-4 w-4" />}
-              placeholder={lang === 'ar' ? 'ابحث في السجلات أو الأسماء...' : 'Search rows, names, titles...'}
+              placeholder={lang === 'ar' ? 'ابحث في السجلات المعروضة فقط...' : 'Search the currently loaded rows only...'}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -1255,6 +1255,11 @@ export function ReportBuilder() {
                 ...availableStatuses.map((status) => ({ value: status, label: status })),
               ]}
             />
+            <p className="text-xs text-text-muted lg:col-span-3">
+              {lang === 'ar'
+                ? 'هذا الحقل يفلتر الصفوف المعروضة حاليًا حسب النص أو الاسم أو البريد أو تفاصيل السجل وفقًا للمصدر المحدد.'
+                : 'This field filters the rows currently loaded for the selected source by text, name, email, or event details.'}
+            </p>
           </div>
 
           <div
@@ -1385,8 +1390,8 @@ export function ReportBuilder() {
                         ? 'يتم تحميل القوالب الآن...'
                         : 'Loading templates...')
                       : (lang === 'ar'
-                        ? 'سيعمل القسم بالقوالب المحلية حتى تعود المزامنة.'
-                        : 'The builder will keep working with local templates until sync resumes.')}
+                        ? 'جدول القوالب غير متاح على الخادم أو لم تُطبق الهجرة بعد. حدّث قاعدة البيانات ثم أعد تحميل الصفحة.'
+                        : 'The templates table is unavailable on the server or the migration has not been applied yet. Update the database, then reload the page.')}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
