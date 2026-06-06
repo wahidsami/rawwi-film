@@ -4,14 +4,11 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
-  Bookmark,
   Download,
   FileDown,
   Loader2,
   RefreshCw,
-  Save,
   SlidersHorizontal,
-  Trash2,
   Table2,
 } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -26,7 +23,6 @@ import { useAuthStore } from '@/store/authStore';
 import { useDataStore } from '@/store/dataStore';
 import { useLangStore } from '@/store/langStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { supabase } from '@/lib/supabaseClient';
 import { formatDateTimeValue, APP_TIME_ZONE } from '@/utils/dateFormat';
 import {
   reportsApi,
@@ -164,233 +160,6 @@ const SOURCE_DEFAULT_COLUMNS: Record<BuilderSource, string[]> = {
   performance: ['name', 'role', 'assignedScripts', 'recommendations', 'agreementRate'],
   audit: ['eventType', 'actor', 'targetType', 'resultStatus', 'occurredAt'],
 };
-
-type ReportBuilderTemplate = {
-  id: string;
-  name: string;
-  source: BuilderSource;
-  isPreset?: boolean;
-  search: string;
-  statusFilter: string;
-  roleFilter: string;
-  eventTypeFilter: string;
-  targetTypeFilter: string;
-  from: string;
-  to: string;
-  pageSize: number;
-  selectedColumns: string[];
-  createdAt: string;
-  updatedAt: string;
-};
-
-type TemplateSyncStatus = 'loading' | 'synced' | 'local' | 'error';
-
-type ReportBuilderTemplateRow = {
-  id: string;
-  name: string;
-  source: BuilderSource;
-  template_data: {
-    search?: string;
-    statusFilter?: string;
-    roleFilter?: string;
-    eventTypeFilter?: string;
-    targetTypeFilter?: string;
-    from?: string;
-    to?: string;
-    pageSize?: number;
-    selectedColumns?: string[];
-  } | null;
-  created_at: string;
-  updated_at: string;
-};
-
-const REPORT_BUILDER_TEMPLATE_KEY = 'raawi-report-builder-templates-v1';
-
-const BUILT_IN_TEMPLATES: ReportBuilderTemplate[] = [
-  {
-    id: 'preset-scripts-monthly',
-    name: 'Monthly scripts overview',
-    source: 'scripts',
-    isPreset: true,
-    search: '',
-    statusFilter: 'all',
-    roleFilter: 'all',
-    eventTypeFilter: 'all',
-    targetTypeFilter: 'all',
-    from: '',
-    to: '',
-    pageSize: 10,
-    selectedColumns: SOURCE_DEFAULT_COLUMNS.scripts,
-    createdAt: '2026-06-02T00:00:00.000Z',
-    updatedAt: '2026-06-02T00:00:00.000Z',
-  },
-  {
-    id: 'preset-reports-review',
-    name: 'Reports review export',
-    source: 'reports',
-    isPreset: true,
-    search: '',
-    statusFilter: 'all',
-    roleFilter: 'all',
-    eventTypeFilter: 'all',
-    targetTypeFilter: 'all',
-    from: '',
-    to: '',
-    pageSize: 10,
-    selectedColumns: SOURCE_DEFAULT_COLUMNS.reports,
-    createdAt: '2026-06-02T00:00:00.000Z',
-    updatedAt: '2026-06-02T00:00:00.000Z',
-  },
-  {
-    id: 'preset-team-performance',
-    name: 'Team performance snapshot',
-    source: 'performance',
-    isPreset: true,
-    search: '',
-    statusFilter: 'all',
-    roleFilter: 'all',
-    eventTypeFilter: 'all',
-    targetTypeFilter: 'all',
-    from: '',
-    to: '',
-    pageSize: 10,
-    selectedColumns: SOURCE_DEFAULT_COLUMNS.performance,
-    createdAt: '2026-06-02T00:00:00.000Z',
-    updatedAt: '2026-06-02T00:00:00.000Z',
-  },
-  {
-    id: 'preset-regulator-performance',
-    name: 'Regulator performance',
-    source: 'performance',
-    isPreset: true,
-    search: '',
-    statusFilter: 'all',
-    roleFilter: 'Regulator',
-    eventTypeFilter: 'all',
-    targetTypeFilter: 'all',
-    from: '',
-    to: '',
-    pageSize: 10,
-    selectedColumns: SOURCE_DEFAULT_COLUMNS.performance,
-    createdAt: '2026-06-02T00:00:00.000Z',
-    updatedAt: '2026-06-02T00:00:00.000Z',
-  },
-  {
-    id: 'preset-audit-log',
-    name: 'Audit log export',
-    source: 'audit',
-    isPreset: true,
-    search: '',
-    statusFilter: 'all',
-    roleFilter: 'all',
-    eventTypeFilter: 'all',
-    targetTypeFilter: 'all',
-    from: '',
-    to: '',
-    pageSize: 10,
-    selectedColumns: SOURCE_DEFAULT_COLUMNS.audit,
-    createdAt: '2026-06-02T00:00:00.000Z',
-    updatedAt: '2026-06-02T00:00:00.000Z',
-  },
-];
-
-function loadTemplatesFromStorage(): ReportBuilderTemplate[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(REPORT_BUILDER_TEMPLATE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as ReportBuilderTemplate[];
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((item) => typeof item?.id === 'string' && typeof item?.name === 'string');
-  } catch {
-    return [];
-  }
-}
-
-function persistTemplatesToStorage(templates: ReportBuilderTemplate[]): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(REPORT_BUILDER_TEMPLATE_KEY, JSON.stringify(templates));
-}
-
-function toTemplatePayload(template: ReportBuilderTemplate) {
-  return {
-    search: template.search,
-    statusFilter: template.statusFilter,
-    roleFilter: template.roleFilter,
-    eventTypeFilter: template.eventTypeFilter,
-    targetTypeFilter: template.targetTypeFilter,
-    from: template.from,
-    to: template.to,
-    pageSize: template.pageSize,
-    selectedColumns: template.selectedColumns,
-  };
-}
-
-function fromTemplateRow(row: ReportBuilderTemplateRow): ReportBuilderTemplate {
-  const data = row.template_data ?? {};
-  return {
-    id: row.id,
-    name: row.name,
-    source: row.source,
-    isPreset: false,
-    search: data.search ?? '',
-    statusFilter: data.statusFilter ?? 'all',
-    roleFilter: data.roleFilter ?? 'all',
-    eventTypeFilter: data.eventTypeFilter ?? 'all',
-    targetTypeFilter: data.targetTypeFilter ?? 'all',
-    from: data.from ?? '',
-    to: data.to ?? '',
-    pageSize: data.pageSize ?? 10,
-    selectedColumns: Array.isArray(data.selectedColumns) ? data.selectedColumns : SOURCE_DEFAULT_COLUMNS[row.source],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
-
-function mergeUniqueTemplates(items: ReportBuilderTemplate[]): ReportBuilderTemplate[] {
-  const byId = new Map<string, ReportBuilderTemplate>();
-  items.forEach((template) => {
-    const existing = byId.get(template.id);
-    if (!existing || existing.updatedAt.localeCompare(template.updatedAt) < 0) {
-      byId.set(template.id, template);
-    }
-  });
-  return Array.from(byId.values()).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-}
-
-function createTemplateId(name: string): string {
-  return `${Date.now()}-${name.toLowerCase().replace(/\s+/g, '-').slice(0, 24)}`;
-}
-
-async function loadTemplatesFromServer(userId: string): Promise<ReportBuilderTemplate[]> {
-  const { data, error } = await supabase
-    .from('report_builder_templates')
-    .select('id, name, source, template_data, created_at, updated_at')
-    .eq('user_id', userId)
-    .order('updated_at', { ascending: false });
-  if (error) throw error;
-  return (data ?? []).map((row) => fromTemplateRow(row as ReportBuilderTemplateRow));
-}
-
-async function upsertTemplateToServer(userId: string, template: ReportBuilderTemplate): Promise<void> {
-  const { error } = await supabase.from('report_builder_templates').upsert({
-    id: template.id,
-    user_id: userId,
-    name: template.name,
-    source: template.source,
-    template_data: toTemplatePayload(template),
-  }, { onConflict: 'id' });
-  if (error) throw error;
-}
-
-async function deleteTemplateFromServer(userId: string, templateId: string): Promise<void> {
-  const { error } = await supabase
-    .from('report_builder_templates')
-    .delete()
-    .eq('id', templateId)
-    .eq('user_id', userId);
-  if (error) throw error;
-}
 
 const AUDIT_EVENT_TYPES = [
   'TASK_CREATED', 'TASK_ASSIGNED', 'ANALYSIS_STARTED', 'ANALYSIS_COMPLETED', 'REPORT_GENERATED',
@@ -738,31 +507,12 @@ export function ReportBuilder() {
   const [pageSize, setPageSize] = useState(10);
   const [downloading, setDownloading] = useState<'csv' | 'xlsx' | null>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [templateName, setTemplateName] = useState('');
-  const [templates, setTemplates] = useState<ReportBuilderTemplate[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState('');
-  const [templateSyncStatus, setTemplateSyncStatus] = useState<TemplateSyncStatus>('loading');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [showTemplatesPanel, setShowTemplatesPanel] = useState(false);
   const [reportCreated, setReportCreated] = useState(false);
 
   const canAccessBuilder = user?.role === 'Admin' || user?.role === 'Super Admin' || hasPermission('manage_users');
   const sourceOption = SOURCE_OPTIONS.find((opt) => opt.value === source) ?? SOURCE_OPTIONS[0];
   const selectedColumnsMeta = useMemo(() => SOURCE_COLUMNS[source].filter((col) => selectedColumns.includes(col.key)), [source, selectedColumns]);
-  const templateCatalog = useMemo(() => {
-    const custom = templates.filter((item) => !item.isPreset);
-    const byId = new Map<string, ReportBuilderTemplate>();
-    [...BUILT_IN_TEMPLATES, ...custom].forEach((template) => {
-      if (!byId.has(template.id)) {
-        byId.set(template.id, template);
-      }
-    });
-    return Array.from(byId.values()).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  }, [templates]);
-  const selectedTemplate = useMemo(
-    () => templateCatalog.find((item) => item.id === selectedTemplateId) ?? null,
-    [selectedTemplateId, templateCatalog],
-  );
   const availableStatuses = useMemo(() => {
     const values = Array.from(new Set(rows.map((row) => row.status).filter(Boolean))).sort((a, b) => a.localeCompare(b));
     return values;
@@ -774,47 +524,6 @@ export function ReportBuilder() {
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
-
-  useEffect(() => {
-    setTemplates(loadTemplatesFromStorage());
-  }, []);
-
-  const syncSavedTemplates = useCallback(async () => {
-    setTemplateSyncStatus('loading');
-    const localTemplates = mergeUniqueTemplates(loadTemplatesFromStorage());
-    setTemplates(localTemplates);
-
-    if (!user?.id) {
-      setTemplateSyncStatus('local');
-      return;
-    }
-
-    try {
-      const remoteTemplates = await loadTemplatesFromServer(user.id);
-      const merged = mergeUniqueTemplates([...remoteTemplates, ...localTemplates]);
-      setTemplates(merged);
-      persistTemplatesToStorage(merged);
-      setTemplateSyncStatus('synced');
-
-      const remoteById = new Map(remoteTemplates.map((template) => [template.id, template]));
-      const templatesToBackfill = localTemplates.filter((template) => {
-        const remote = remoteById.get(template.id);
-        if (!remote) return true;
-        return remote.updatedAt.localeCompare(template.updatedAt) < 0;
-      });
-      if (templatesToBackfill.length > 0) {
-        await Promise.all(templatesToBackfill.map((template) => upsertTemplateToServer(user.id, template)));
-      }
-    } catch {
-      // Keep the local cache available if the server read fails; exports still work from the browser state.
-      setTemplates(localTemplates);
-      setTemplateSyncStatus(localTemplates.length > 0 ? 'local' : 'error');
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    void syncSavedTemplates();
-  }, [syncSavedTemplates]);
 
   const loadSourceData = useCallback(async (nextSource: BuilderSource, range?: { from?: string; to?: string }): Promise<boolean> => {
     if (!canAccessBuilder) return false;
@@ -880,25 +589,7 @@ export function ReportBuilder() {
     }
   }, [canAccessBuilder, companies, from, lang, to]);
 
-  const applyTemplate = useCallback(async (template: ReportBuilderTemplate) => {
-    setSelectedTemplateId(template.id);
-    setSource(template.source);
-    setSelectedColumns(template.selectedColumns.length > 0 ? template.selectedColumns : SOURCE_DEFAULT_COLUMNS[template.source]);
-    setStatusFilter(template.statusFilter);
-    setRoleFilter(template.roleFilter);
-    setEventTypeFilter(template.eventTypeFilter || 'all');
-    setTargetTypeFilter(template.targetTypeFilter || 'all');
-    setFrom(template.from);
-    setTo(template.to);
-    setPageSize(template.pageSize || 10);
-    setPage(1);
-    const success = await loadSourceData(template.source, { from: template.from, to: template.to });
-    setReportCreated(success);
-  }, [loadSourceData]);
-
   const handleSourceChange = useCallback((nextSource: BuilderSource) => {
-    setSelectedTemplateId('');
-    setTemplateName('');
     setSource(nextSource);
     setSelectedColumns(SOURCE_DEFAULT_COLUMNS[nextSource]);
     setStatusFilter('all');
@@ -1092,79 +783,6 @@ export function ReportBuilder() {
     }
   };
 
-  const handleSaveTemplate = async () => {
-    const name = templateName.trim();
-    if (!name) {
-      toast.error(lang === 'ar' ? 'اكتب اسمًا للقالب أولًا' : 'Enter a template name first');
-      return;
-    }
-    if (!user?.id) {
-      toast.error(lang === 'ar' ? 'تعذّر تحديد المستخدم الحالي' : 'Unable to identify the current user');
-      return;
-    }
-    const now = new Date().toISOString();
-    const nextId = selectedTemplate?.isPreset ? createTemplateId(name) : (selectedTemplateId || createTemplateId(name));
-    const nextTemplate: ReportBuilderTemplate = {
-      id: nextId,
-      name,
-      source,
-      search: '',
-      statusFilter,
-      roleFilter,
-      eventTypeFilter,
-      targetTypeFilter,
-      from,
-      to,
-      pageSize,
-      selectedColumns,
-      createdAt: selectedTemplate?.createdAt ?? now,
-      updatedAt: now,
-    };
-    const nextTemplates = mergeUniqueTemplates([
-      nextTemplate,
-      ...templates.filter((item) => item.id !== nextTemplate.id && !item.isPreset),
-    ]);
-    try {
-      await upsertTemplateToServer(user.id, nextTemplate);
-      setTemplateSyncStatus('synced');
-    } catch (err: any) {
-      setTemplateSyncStatus('error');
-      toast.error(err?.message ?? (lang === 'ar' ? 'تعذّر حفظ القالب على الخادم' : 'Failed to save template on the server'));
-      return;
-    }
-    setTemplates(nextTemplates);
-    persistTemplatesToStorage(nextTemplates);
-    setSelectedTemplateId(nextTemplate.id);
-    toast.success(lang === 'ar' ? 'تم حفظ القالب' : 'Template saved');
-  };
-
-  const handleDeleteTemplate = async (templateId: string) => {
-    const template = templateCatalog.find((item) => item.id === templateId);
-    if (template?.isPreset) {
-      toast.error(lang === 'ar' ? 'القالب المبدئي لا يمكن حذفه' : 'Starter templates cannot be deleted');
-      return;
-    }
-    if (!user?.id) {
-      toast.error(lang === 'ar' ? 'تعذّر تحديد المستخدم الحالي' : 'Unable to identify the current user');
-      return;
-    }
-    try {
-      await deleteTemplateFromServer(user.id, templateId);
-      setTemplateSyncStatus('synced');
-    } catch (err: any) {
-      setTemplateSyncStatus('error');
-      toast.error(err?.message ?? (lang === 'ar' ? 'تعذّر حذف القالب من الخادم' : 'Failed to delete template from server'));
-      return;
-    }
-    const nextTemplates = templates.filter((item) => item.id !== templateId);
-    setTemplates(nextTemplates);
-    persistTemplatesToStorage(nextTemplates);
-    if (selectedTemplateId === templateId) {
-      setSelectedTemplateId('');
-      setTemplateName('');
-    }
-  };
-
   const handleReset = () => {
     setStatusFilter('all');
     setRoleFilter('all');
@@ -1263,101 +881,177 @@ export function ReportBuilder() {
             />
           </div>
 
+            <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
+              <Card className="border-border/60">
+                <CardContent className="p-6">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-semibold text-text-main">
+                        {lang === 'ar' ? 'الأعمدة المختارة' : 'Selected columns'}
+                      </h2>
+                      <p className="text-sm text-text-muted">
+                        {lang === 'ar'
+                          ? 'اختر الحقول التي تريد تضمينها في التقرير.'
+                          : 'Choose the fields you want to include in the report.'}
+                      </p>
+                    </div>
+                    <Button variant="outline" onClick={() => setSelectedColumns(SOURCE_DEFAULT_COLUMNS[source])}>
+                      {lang === 'ar' ? 'الافتراضي' : 'Default'}
+                    </Button>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {SOURCE_COLUMNS[source].map((column) => {
+                      const checked = selectedColumns.includes(column.key);
+                      return (
+                        <label
+                          key={column.key}
+                          className={cn(
+                            'flex cursor-pointer items-center justify-between gap-3 rounded-[var(--radius)] border p-3 text-sm transition-colors',
+                            checked ? 'border-primary/40 bg-primary/5' : 'border-border bg-background/40',
+                          )}
+                        >
+                          <div className="space-y-0.5">
+                            <div className="font-medium text-text-main">
+                              {lang === 'ar' ? column.labelAr : column.labelEn}
+                            </div>
+                            <div className="text-xs text-text-muted">{column.key}</div>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const next = e.target.checked
+                                ? Array.from(new Set([...selectedColumns, column.key]))
+                                : selectedColumns.filter((key) => key !== column.key);
+                              setSelectedColumns(next.length > 0 ? next : [SOURCE_DEFAULT_COLUMNS[source][0]]);
+                            }}
+                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20"
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-primary/15 bg-primary/5 p-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-text-main">
+                    {lang === 'ar' ? '3. إنشاء التقرير' : '3. Create report'}
+                  </p>
+                  <p className="text-xs text-text-muted">
+                    {lang === 'ar'
+                      ? 'اضغط لإنشاء التقرير بحسب المصدر والحقول والفلاتر المختارة.'
+                      : 'Generate the report using the chosen source, fields, and filters.'}
+                  </p>
+                </div>
+                <div className="mt-auto flex flex-wrap items-center gap-2">
+                  <Button variant="outline" onClick={handleReset}>
+                    {lang === 'ar' ? 'إعادة ضبط التقرير' : 'Reset report'}
+                  </Button>
+                  <Button onClick={() => void handleCreateReport()} isLoading={loading}>
+                    <Table2 className="me-2 h-4 w-4" />
+                    {lang === 'ar' ? 'إنشاء التقرير' : 'Create Report'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
             <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-border bg-background/40 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium text-text-main">
                     {lang === 'ar' ? 'الفلاتر المتقدمة' : 'Advanced filters'}
-                </p>
-                <p className="text-xs text-text-muted">
-                  {lang === 'ar'
-                    ? 'الدور، نوع الحدث، الوجهة، والفترة الزمنية.'
-                    : 'Role, event type, target type, and date range.'}
-                </p>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => setShowAdvancedFilters((open) => !open)}>
-                {showAdvancedFilters
-                  ? (lang === 'ar' ? 'إخفاء' : 'Hide')
-                  : (lang === 'ar' ? 'إظهار' : 'Show')}
-              </Button>
-            </div>
-
-            {showAdvancedFilters ? (
-              <div
-                className={cn(
-                  'grid gap-4',
-                  source === 'audit'
-                    ? 'lg:grid-cols-5'
-                    : source === 'users' || source === 'performance'
-                      ? 'lg:grid-cols-4'
-                    : 'lg:grid-cols-3',
-                )}
-              >
-                <Select
-                  label={lang === 'ar' ? 'الحالة' : 'Status'}
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  options={[
-                    { value: 'all', label: lang === 'ar' ? 'كل الحالات' : 'All statuses' },
-                    ...availableStatuses.map((status) => ({ value: status, label: status })),
-                  ]}
-                />
-                {(source === 'users' || source === 'performance') && (
-                  <Select
-                    label={lang === 'ar' ? 'الدور' : 'Role'}
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value)}
-                    options={[
-                      { value: 'all', label: lang === 'ar' ? 'كل الأدوار' : 'All roles' },
-                      ...availableRoles.map((role) => ({ value: role, label: role })),
-                    ]}
-                  />
-                )}
-                {source === 'audit' && (
-                  <Select
-                    label={lang === 'ar' ? 'نوع الحدث' : 'Event type'}
-                    value={eventTypeFilter}
-                    onChange={(e) => setEventTypeFilter(e.target.value)}
-                    options={[
-                      { value: 'all', label: lang === 'ar' ? 'كل الأنواع' : 'All event types' },
-                      ...AUDIT_EVENT_TYPES.map((type) => ({ value: type, label: type })),
-                    ]}
-                  />
-                )}
-                {source === 'audit' && (
-                  <Select
-                    label={lang === 'ar' ? 'الوجهة' : 'Target type'}
-                    value={targetTypeFilter}
-                    onChange={(e) => setTargetTypeFilter(e.target.value)}
-                    options={[
-                      { value: 'all', label: lang === 'ar' ? 'كل الوجهات' : 'All targets' },
-                      ...AUDIT_TARGET_TYPES.map((type) => ({ value: type, label: type })),
-                    ]}
-                  />
-                )}
-                {sourceOption.supportsDateRange ? (
-                  <>
-                    <Input
-                      label={lang === 'ar' ? 'من تاريخ' : 'From date'}
-                      type="date"
-                      value={from}
-                      onChange={(e) => setFrom(e.target.value)}
-                    />
-                    <Input
-                      label={lang === 'ar' ? 'إلى تاريخ' : 'To date'}
-                      type="date"
-                      value={to}
-                      onChange={(e) => setTo(e.target.value)}
-                    />
-                  </>
-                ) : (
-                  <div className="lg:col-span-2 rounded-[var(--radius)] border border-dashed border-border bg-background/50 p-4 text-sm text-text-muted">
+                  </p>
+                  <p className="text-xs text-text-muted">
                     {lang === 'ar'
-                      ? 'هذا المصدر لا يعتمد حاليًا على فلترة زمنية.'
-                      : 'This source does not currently support date-range filtering.'}
-                  </div>
-                )}
+                      ? 'الدور، نوع الحدث، الوجهة، والفترة الزمنية.'
+                      : 'Role, event type, target type, and date range.'}
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowAdvancedFilters((open) => !open)}>
+                  {showAdvancedFilters
+                    ? (lang === 'ar' ? 'إخفاء' : 'Hide')
+                    : (lang === 'ar' ? 'إظهار' : 'Show')}
+                </Button>
               </div>
+
+              {showAdvancedFilters ? (
+                <div
+                  className={cn(
+                    'grid gap-4',
+                    source === 'audit'
+                      ? 'lg:grid-cols-5'
+                      : source === 'users' || source === 'performance'
+                        ? 'lg:grid-cols-4'
+                        : 'lg:grid-cols-3',
+                  )}
+                >
+                  <Select
+                    label={lang === 'ar' ? 'الحالة' : 'Status'}
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    options={[
+                      { value: 'all', label: lang === 'ar' ? 'كل الحالات' : 'All statuses' },
+                      ...availableStatuses.map((status) => ({ value: status, label: status })),
+                    ]}
+                  />
+                  {(source === 'users' || source === 'performance') && (
+                    <Select
+                      label={lang === 'ar' ? 'الدور' : 'Role'}
+                      value={roleFilter}
+                      onChange={(e) => setRoleFilter(e.target.value)}
+                      options={[
+                        { value: 'all', label: lang === 'ar' ? 'كل الأدوار' : 'All roles' },
+                        ...availableRoles.map((role) => ({ value: role, label: role })),
+                      ]}
+                    />
+                  )}
+                  {source === 'audit' && (
+                    <Select
+                      label={lang === 'ar' ? 'نوع الحدث' : 'Event type'}
+                      value={eventTypeFilter}
+                      onChange={(e) => setEventTypeFilter(e.target.value)}
+                      options={[
+                        { value: 'all', label: lang === 'ar' ? 'كل الأنواع' : 'All event types' },
+                        ...AUDIT_EVENT_TYPES.map((type) => ({ value: type, label: type })),
+                      ]}
+                    />
+                  )}
+                  {source === 'audit' && (
+                    <Select
+                      label={lang === 'ar' ? 'الوجهة' : 'Target type'}
+                      value={targetTypeFilter}
+                      onChange={(e) => setTargetTypeFilter(e.target.value)}
+                      options={[
+                        { value: 'all', label: lang === 'ar' ? 'كل الوجهات' : 'All targets' },
+                        ...AUDIT_TARGET_TYPES.map((type) => ({ value: type, label: type })),
+                      ]}
+                    />
+                  )}
+                  {sourceOption.supportsDateRange ? (
+                    <>
+                      <Input
+                        label={lang === 'ar' ? 'من تاريخ' : 'From date'}
+                        type="date"
+                        value={from}
+                        onChange={(e) => setFrom(e.target.value)}
+                      />
+                      <Input
+                        label={lang === 'ar' ? 'إلى تاريخ' : 'To date'}
+                        type="date"
+                        value={to}
+                        onChange={(e) => setTo(e.target.value)}
+                      />
+                    </>
+                  ) : (
+                    <div className="lg:col-span-2 rounded-[var(--radius)] border border-dashed border-border bg-background/50 p-4 text-sm text-text-muted">
+                      {lang === 'ar'
+                        ? 'هذا المصدر لا يعتمد حاليًا على فلترة زمنية.'
+                        : 'This source does not currently support date-range filtering.'}
+                    </div>
+                  )}
+                </div>
               ) : (
                 <p className="text-xs text-text-muted">
                   {lang === 'ar'
@@ -1365,159 +1059,8 @@ export function ReportBuilder() {
                     : 'Advanced filters are hidden to keep the page uncluttered.'}
                 </p>
               )}
-
-            <div className="flex flex-wrap items-center gap-3 rounded-[var(--radius)] border border-primary/15 bg-primary/5 p-4">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-text-main">
-                  {lang === 'ar' ? '3. إنشاء التقرير' : '3. Create report'}
-                </p>
-                <p className="text-xs text-text-muted">
-                  {lang === 'ar'
-                    ? 'اضغط لإنشاء التقرير بحسب المصدر والحقول والفلاتر المختارة.'
-                    : 'Generate the report using the chosen source, fields, and filters.'}
-                </p>
-              </div>
-              <div className="ms-auto flex flex-wrap items-center gap-2">
-                <Button variant="outline" onClick={handleReset}>
-                  {lang === 'ar' ? 'إعادة ضبط التقرير' : 'Reset report'}
-                </Button>
-                <Button onClick={() => void handleCreateReport()} isLoading={loading}>
-                  <Table2 className="me-2 h-4 w-4" />
-                  {lang === 'ar' ? 'إنشاء التقرير' : 'Create Report'}
-                </Button>
-              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/60">
-        <CardContent className="space-y-5 p-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-text-main">
-                  {lang === 'ar' ? 'القوالب الاختيارية' : 'Optional templates'}
-                </h2>
-              </div>
-              <p className="text-sm text-text-muted">
-                {lang === 'ar'
-                  ? 'القوالب ليست جزءًا من المسار الأساسي. افتحها فقط عند الحاجة إلى حفظ إعداد أو استعادة قالب جاهز.'
-                  : 'Templates are optional. Open them only when you want to save or restore a setup.'}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" onClick={() => setShowTemplatesPanel((open) => !open)}>
-                {showTemplatesPanel
-                  ? (lang === 'ar' ? 'إخفاء القوالب' : 'Hide templates')
-                  : (lang === 'ar' ? 'عرض القوالب' : 'Show templates')}
-              </Button>
-            </div>
-          </div>
-
-          {showTemplatesPanel ? (
-            <>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge
-                  variant={
-                    templateSyncStatus === 'synced'
-                      ? 'success'
-                      : templateSyncStatus === 'error'
-                        ? 'error'
-                        : templateSyncStatus === 'loading'
-                          ? 'warning'
-                          : 'outline'
-                  }
-                >
-                  {templateSyncStatus === 'synced'
-                    ? (lang === 'ar' ? 'متزامن' : 'Synced')
-                    : templateSyncStatus === 'loading'
-                      ? (lang === 'ar' ? 'جاري المزامنة' : 'Syncing')
-                      : templateSyncStatus === 'local'
-                        ? (lang === 'ar' ? 'نسخة محلية' : 'Local cache')
-                        : (lang === 'ar' ? 'تعذر الاتصال بالخادم' : 'Server unavailable')}
-                </Badge>
-                <Badge variant="secondary">
-                  {lang === 'ar' ? 'قوالب جاهزة' : 'Starter templates'}: {BUILT_IN_TEMPLATES.length}
-                </Badge>
-                <Badge variant="secondary">
-                  {lang === 'ar' ? 'محفوظة' : 'Saved'}: {templates.length}
-                </Badge>
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
-                <Input
-                  label={lang === 'ar' ? 'اسم القالب' : 'Template name'}
-                  placeholder={lang === 'ar' ? 'مثال: تقرير النصوص الشهري' : 'e.g. Monthly scripts report'}
-                  value={templateName}
-                  onChange={(e) => setTemplateName(e.target.value)}
-                />
-                <div className="flex items-end gap-2">
-                  <Button onClick={handleSaveTemplate}>
-                    <Save className="me-2 h-4 w-4" />
-                    {lang === 'ar' ? 'حفظ القالب' : 'Save template'}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                <Select
-                  label={lang === 'ar' ? 'استخدم قالبًا محفوظًا' : 'Use a saved template'}
-                  value={selectedTemplateId}
-                  onChange={(e) => {
-                    const found = templateCatalog.find((item) => item.id === e.target.value);
-                    if (!found) return;
-                    setTemplateName(found.name);
-                    void applyTemplate(found);
-                  }}
-                  options={[
-                    { value: '', label: lang === 'ar' ? 'اختر قالبًا...' : 'Choose a template...' },
-                    ...templateCatalog.map((template) => ({
-                      value: template.id,
-                      label: `${template.name} · ${lang === 'ar' ? SOURCE_OPTIONS.find((opt) => opt.value === template.source)?.labelAr ?? template.source : SOURCE_OPTIONS.find((opt) => opt.value === template.source)?.labelEn ?? template.source}`,
-                    })),
-                  ]}
-                />
-                <div className="flex flex-wrap items-end gap-2">
-                  {selectedTemplateId ? (
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        const found = templateCatalog.find((item) => item.id === selectedTemplateId);
-                        if (found) {
-                          setTemplateName(found.name);
-                        }
-                      }}
-                    >
-                      <Bookmark className="me-2 h-4 w-4" />
-                      {lang === 'ar' ? 'إعادة تعبئة' : 'Refill'}
-                    </Button>
-                  ) : null}
-                  {selectedTemplateId && !selectedTemplate?.isPreset ? (
-                    <Button
-                      variant="danger"
-                      onClick={() => handleDeleteTemplate(selectedTemplateId)}
-                    >
-                      <Trash2 className="me-2 h-4 w-4" />
-                      {lang === 'ar' ? 'حذف' : 'Delete'}
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
-
-              <p className="text-xs text-text-muted">
-                {lang === 'ar'
-                  ? 'القالب يغيّر المصدر والفلاتر والأعمدة وحجم الصفحة مباشرة.'
-                  : 'A template applies the source, filters, selected columns, and page size immediately.'}
-              </p>
-            </>
-          ) : (
-            <div className="rounded-[var(--radius)] border border-dashed border-border bg-background/40 p-4 text-sm text-text-muted">
-              {lang === 'ar'
-                ? 'القوالب مخفية الآن. افتحها عندما تريد حفظ إعداد أو استعادة قالب جاهز.'
-                : 'Templates are hidden for now. Open them when you want to save the current setup or restore a preset.'}
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -1545,59 +1088,7 @@ export function ReportBuilder() {
         </Card>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
-        <Card className="border-border/60">
-          <CardContent className="p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-text-main">
-                  {lang === 'ar' ? 'الأعمدة المختارة' : 'Selected columns'}
-                </h2>
-                <p className="text-sm text-text-muted">
-                  {lang === 'ar'
-                    ? 'اختر الحقول التي تريد تضمينها في التقرير.'
-                    : 'Choose the fields you want to include in the report.'}
-                </p>
-              </div>
-              <Button variant="outline" onClick={() => setSelectedColumns(SOURCE_DEFAULT_COLUMNS[source])}>
-                {lang === 'ar' ? 'الافتراضي' : 'Default'}
-              </Button>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {SOURCE_COLUMNS[source].map((column) => {
-                const checked = selectedColumns.includes(column.key);
-                return (
-                  <label
-                    key={column.key}
-                    className={cn(
-                      'flex cursor-pointer items-center justify-between gap-3 rounded-[var(--radius)] border p-3 text-sm transition-colors',
-                      checked ? 'border-primary/40 bg-primary/5' : 'border-border bg-background/40',
-                    )}
-                  >
-                    <div className="space-y-0.5">
-                      <div className="font-medium text-text-main">
-                        {lang === 'ar' ? column.labelAr : column.labelEn}
-                      </div>
-                      <div className="text-xs text-text-muted">{column.key}</div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => {
-                        const next = e.target.checked
-                          ? Array.from(new Set([...selectedColumns, column.key]))
-                          : selectedColumns.filter((key) => key !== column.key);
-                        setSelectedColumns(next.length > 0 ? next : [SOURCE_DEFAULT_COLUMNS[source][0]]);
-                      }}
-                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20"
-                    />
-                  </label>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-4">
         <Card className="border-border/60">
           <CardContent className="p-6">
             <div className="mb-4 flex items-center gap-2">
