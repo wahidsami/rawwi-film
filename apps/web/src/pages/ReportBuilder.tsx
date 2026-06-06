@@ -804,7 +804,7 @@ export function ReportBuilder() {
               {lang === 'ar' ? 'هذه الصفحة مخصصة للمسؤولين فقط.' : 'This page is available to admins only.'}
             </p>
           </CardContent>
-        </Card>
+      </Card>
       </div>
     );
   }
@@ -835,7 +835,7 @@ export function ReportBuilder() {
               </Button>
             </div>
           </div>
-        </CardContent>
+          </CardContent>
       </Card>
 
       <Card className="border-border/60">
@@ -1060,8 +1060,7 @@ export function ReportBuilder() {
                 </p>
               )}
             </div>
-          </div>
-        </CardContent>
+          </CardContent>
       </Card>
 
       {reportCreated ? (
