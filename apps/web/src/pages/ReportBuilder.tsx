@@ -9,7 +9,6 @@ import {
   FileDown,
   Loader2,
   RefreshCw,
-  Search,
   Save,
   SlidersHorizontal,
   Trash2,
@@ -729,7 +728,6 @@ export function ReportBuilder() {
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<BuilderRow[]>([]);
   const [selectedColumns, setSelectedColumns] = useState<string[]>(SOURCE_DEFAULT_COLUMNS.scripts);
-  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [eventTypeFilter, setEventTypeFilter] = useState('all');
@@ -746,6 +744,7 @@ export function ReportBuilder() {
   const [templateSyncStatus, setTemplateSyncStatus] = useState<TemplateSyncStatus>('loading');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showTemplatesPanel, setShowTemplatesPanel] = useState(false);
+  const [reportCreated, setReportCreated] = useState(false);
 
   const canAccessBuilder = user?.role === 'Admin' || user?.role === 'Super Admin' || hasPermission('manage_users');
   const sourceOption = SOURCE_OPTIONS.find((opt) => opt.value === source) ?? SOURCE_OPTIONS[0];
@@ -772,18 +771,6 @@ export function ReportBuilder() {
     if (source !== 'users' && source !== 'performance') return [];
     return Array.from(new Set(rows.map((row) => row.roleKey).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b));
   }, [rows, source]);
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (search.trim()) count += 1;
-    if (statusFilter !== 'all') count += 1;
-    if ((source === 'users' || source === 'performance') && roleFilter !== 'all') count += 1;
-    if (source === 'audit' && eventTypeFilter !== 'all') count += 1;
-    if (source === 'audit' && targetTypeFilter !== 'all') count += 1;
-    if (sourceOption.supportsDateRange && from) count += 1;
-    if (sourceOption.supportsDateRange && to) count += 1;
-    return count;
-  }, [eventTypeFilter, from, roleFilter, search, source, sourceOption.supportsDateRange, statusFilter, targetTypeFilter, to]);
-
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
@@ -829,8 +816,8 @@ export function ReportBuilder() {
     void syncSavedTemplates();
   }, [syncSavedTemplates]);
 
-  const loadSourceData = useCallback(async (nextSource: BuilderSource, range?: { from?: string; to?: string }) => {
-    if (!canAccessBuilder) return;
+  const loadSourceData = useCallback(async (nextSource: BuilderSource, range?: { from?: string; to?: string }): Promise<boolean> => {
+    if (!canAccessBuilder) return false;
     setLoading(true);
     setError(null);
     setLoadingMessage(lang === 'ar' ? 'جاري تحميل بيانات المصدر...' : 'Loading source data...');
@@ -882,26 +869,21 @@ export function ReportBuilder() {
 
       setRows(nextRows);
       setPage(1);
+      return true;
     } catch (err: any) {
       setError(err?.message ?? (lang === 'ar' ? 'تعذر تحميل البيانات' : 'Failed to load data'));
       setRows([]);
+      return false;
     } finally {
       setLoading(false);
       setLoadingMessage('');
     }
   }, [canAccessBuilder, companies, from, lang, to]);
 
-  useEffect(() => {
-    void loadSourceData(source);
-    // Only run initial fetch on mount; source changes use the handler below.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const applyTemplate = useCallback(async (template: ReportBuilderTemplate) => {
     setSelectedTemplateId(template.id);
     setSource(template.source);
     setSelectedColumns(template.selectedColumns.length > 0 ? template.selectedColumns : SOURCE_DEFAULT_COLUMNS[template.source]);
-    setSearch(template.search);
     setStatusFilter(template.statusFilter);
     setRoleFilter(template.roleFilter);
     setEventTypeFilter(template.eventTypeFilter || 'all');
@@ -910,17 +892,15 @@ export function ReportBuilder() {
     setTo(template.to);
     setPageSize(template.pageSize || 10);
     setPage(1);
-    if (template.source !== 'performance') {
-      await loadSourceData(template.source, { from: template.from, to: template.to });
-    }
+    const success = await loadSourceData(template.source, { from: template.from, to: template.to });
+    setReportCreated(success);
   }, [loadSourceData]);
 
-  const handleSourceChange = useCallback(async (nextSource: BuilderSource) => {
+  const handleSourceChange = useCallback((nextSource: BuilderSource) => {
     setSelectedTemplateId('');
     setTemplateName('');
     setSource(nextSource);
     setSelectedColumns(SOURCE_DEFAULT_COLUMNS[nextSource]);
-    setSearch('');
     setStatusFilter('all');
     setRoleFilter('all');
     setEventTypeFilter('all');
@@ -929,15 +909,17 @@ export function ReportBuilder() {
     setTo('');
     setPageSize(10);
     setPage(1);
-    if (nextSource !== 'performance') {
-      await loadSourceData(nextSource, { from: '', to: '' });
-    }
-  }, [loadSourceData]);
+    setRows([]);
+    setReportCreated(false);
+  }, []);
+
+  const handleCreateReport = useCallback(async () => {
+    const success = await loadSourceData(source, { from, to });
+    setReportCreated(success);
+  }, [from, loadSourceData, source, to]);
 
   const filteredRows = useMemo(() => {
-    const q = search.trim().toLowerCase();
     return rows.filter((row) => {
-      const matchesSearch = !q || row.searchText.includes(q);
       const matchesStatus = statusFilter === 'all' || row.status === statusFilter;
       const matchesRole = (source !== 'users' && source !== 'performance') || roleFilter === 'all' || row.roleKey === roleFilter;
       const matchesEventType = source !== 'audit' || eventTypeFilter === 'all' || row.values['eventType'] === eventTypeFilter;
@@ -945,9 +927,9 @@ export function ReportBuilder() {
       const rowDate = dateKey(row.dateRaw);
       const matchesFrom = source === 'performance' ? true : (!from || !rowDate || rowDate >= from);
       const matchesTo = source === 'performance' ? true : (!to || !rowDate || rowDate <= to);
-      return matchesSearch && matchesStatus && matchesRole && matchesEventType && matchesTargetType && matchesFrom && matchesTo;
+      return matchesStatus && matchesRole && matchesEventType && matchesTargetType && matchesFrom && matchesTo;
     });
-  }, [rows, search, statusFilter, roleFilter, source, eventTypeFilter, targetTypeFilter, from, to]);
+  }, [rows, statusFilter, roleFilter, source, eventTypeFilter, targetTypeFilter, from, to]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
   const currentPage = Math.min(Math.max(1, page), totalPages);
@@ -955,13 +937,7 @@ export function ReportBuilder() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, roleFilter, eventTypeFilter, targetTypeFilter, from, to, pageSize, source]);
-
-  useEffect(() => {
-    if (source !== 'performance') return;
-    void loadSourceData('performance', { from, to });
-    // Reload performance rows whenever the reporting window changes.
-  }, [from, loadSourceData, source, to]);
+  }, [statusFilter, roleFilter, eventTypeFilter, targetTypeFilter, from, to, pageSize, source]);
 
   useEffect(() => {
     const valid = new Set(SOURCE_COLUMNS[source].map((col) => col.key));
@@ -1004,6 +980,10 @@ export function ReportBuilder() {
 
   const handleExportCsv = async () => {
     if (downloading) return;
+    if (!reportCreated) {
+      toast.error(lang === 'ar' ? 'أنشئ التقرير أولًا' : 'Create the report first');
+      return;
+    }
     setDownloading('csv');
     try {
       const headers = selectedColumnsMeta.map((col) => (lang === 'ar' ? col.labelAr : col.labelEn));
@@ -1023,6 +1003,10 @@ export function ReportBuilder() {
 
   const handleExportXlsx = async () => {
     if (downloading) return;
+    if (!reportCreated) {
+      toast.error(lang === 'ar' ? 'أنشئ التقرير أولًا' : 'Create the report first');
+      return;
+    }
     setDownloading('xlsx');
     try {
       const headers = selectedColumnsMeta.map((col) => (lang === 'ar' ? col.labelAr : col.labelEn));
@@ -1066,6 +1050,10 @@ export function ReportBuilder() {
 
   const handleExportPdf = async () => {
     if (downloadingPdf) return;
+    if (!reportCreated) {
+      toast.error(lang === 'ar' ? 'أنشئ التقرير أولًا' : 'Create the report first');
+      return;
+    }
     setDownloadingPdf(true);
     try {
       const pdfRows = filteredRows.slice(0, 30).map((row) => ({
@@ -1087,7 +1075,6 @@ export function ReportBuilder() {
           })),
           filters: [
             { label: lang === 'ar' ? 'مصدر البيانات' : 'Data source', value: sourceOption.labelEn },
-            { label: lang === 'ar' ? 'بحث' : 'Search', value: search || '—' },
             { label: lang === 'ar' ? 'الحالة' : 'Status', value: statusFilter },
             { label: lang === 'ar' ? 'الدور' : 'Role', value: source === 'users' || source === 'performance' ? roleFilter : '—' },
             { label: lang === 'ar' ? 'من تاريخ' : 'From date', value: from || '—' },
@@ -1121,7 +1108,7 @@ export function ReportBuilder() {
       id: nextId,
       name,
       source,
-      search,
+      search: '',
       statusFilter,
       roleFilter,
       eventTypeFilter,
@@ -1179,7 +1166,6 @@ export function ReportBuilder() {
   };
 
   const handleReset = () => {
-    setSearch('');
     setStatusFilter('all');
     setRoleFilter('all');
     setEventTypeFilter('all');
@@ -1187,6 +1173,8 @@ export function ReportBuilder() {
     setFrom('');
     setTo('');
     setPage(1);
+    setRows([]);
+    setReportCreated(false);
   };
 
   if (!canAccessBuilder) {
@@ -1214,26 +1202,18 @@ export function ReportBuilder() {
                 {lang === 'ar' ? 'منشئ التقارير' : 'Report Builder'}
               </div>
               <h1 className="text-2xl font-bold text-text-main">
-                {lang === 'ar' ? 'إنشاء تقارير مخصصة من بيانات النظام' : 'Build custom reports from system data'}
+                {lang === 'ar' ? 'أنشئ تقريرًا مخصصًا من بيانات النظام' : 'Build a custom report from system data'}
               </h1>
               <p className="max-w-3xl text-sm text-text-muted">
                 {lang === 'ar'
-                  ? 'اختر مصدر البيانات، صفّها، ثم صدّرها كملف CSV أو Excel. هذا القسم مصمم للتقارير السريعة والمرنة دون لمس بنية البيانات الأساسية.'
-                  : 'Choose a data source, filter it, and export the result as CSV or Excel. This section is designed for flexible admin reporting without changing the underlying data model.'}
+                  ? 'اختر نوع التقرير، حدّد الحقول المطلوبة، ثم أنشئ التقرير وصدّره كملف PDF أو Excel.'
+                  : 'Choose the report type, pick the fields you need, then create the report and export it as PDF or Excel.'}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Button variant="outline" onClick={handleReset}>
                 <RefreshCw className="me-2 h-4 w-4" />
                 {lang === 'ar' ? 'إعادة الضبط' : 'Reset filters'}
-              </Button>
-              <Button variant="outline" onClick={handleExportCsv} isLoading={downloading === 'csv'}>
-                <Download className="me-2 h-4 w-4" />
-                CSV
-              </Button>
-              <Button onClick={handleExportXlsx} isLoading={downloading === 'xlsx'}>
-                <FileDown className="me-2 h-4 w-4" />
-                Excel
               </Button>
             </div>
           </div>
@@ -1246,7 +1226,7 @@ export function ReportBuilder() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-text-main">
-                  {lang === 'ar' ? '1. اختر المصدر والفلترة' : '1. Choose source and filters'}
+                  {lang === 'ar' ? '1. اختر التقرير والحقول' : '1. Choose report and fields'}
                 </h2>
                 <Badge variant="secondary">
                   {lang === 'ar' ? 'الخطوة 1' : 'Step 1'}
@@ -1254,8 +1234,8 @@ export function ReportBuilder() {
               </div>
               <p className="text-sm text-text-muted">
                 {lang === 'ar'
-                  ? 'أبقينا الصفوف الأساسية ظاهرة، وأخفينا الفلاتر المتقدمة حتى تحتاجها.'
-                  : 'We keep the basic controls visible and tuck advanced filters away until you need them.'}
+                  ? 'أبقينا الخطوة الأساسية واضحة، وأخفينا ما هو اختياري حتى تحتاجه.'
+                  : 'We keep the main step clear and tuck optional controls away until you need them.'}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -1263,15 +1243,15 @@ export function ReportBuilder() {
                 {lang === 'ar' ? 'المصدر' : 'Source'}: {lang === 'ar' ? sourceOption.labelAr : sourceOption.labelEn}
               </Badge>
               <Badge variant="secondary">
-                {lang === 'ar' ? 'الفلاتر النشطة' : 'Active filters'}: {activeFilterCount}
+                {lang === 'ar' ? 'أعمدة التصدير' : 'Export columns'}: {selectedColumnsMeta.length}
               </Badge>
               <Badge variant="secondary">
-                {lang === 'ar' ? 'أعمدة التصدير' : 'Export columns'}: {selectedColumnsMeta.length}
+                {lang === 'ar' ? 'حالة التقرير' : 'Report state'}: {reportCreated ? (lang === 'ar' ? 'جاهز' : 'Ready') : (lang === 'ar' ? 'غير منشأ' : 'Not created')}
               </Badge>
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 lg:grid-cols-2">
             <Select
               label={lang === 'ar' ? 'مصدر البيانات' : 'Data source'}
               value={source}
@@ -1281,29 +1261,13 @@ export function ReportBuilder() {
                 label: lang === 'ar' ? opt.labelAr : opt.labelEn,
               }))}
             />
-            <Input
-              label={lang === 'ar' ? 'بحث داخل الصفوف' : 'Search rows'}
-              icon={<Search className="h-4 w-4" />}
-              placeholder={lang === 'ar' ? 'ابحث في السجلات المعروضة فقط...' : 'Search the currently loaded rows only...'}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <Select
-              label={lang === 'ar' ? 'الحالة' : 'Status'}
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              options={[
-                { value: 'all', label: lang === 'ar' ? 'كل الحالات' : 'All statuses' },
-                ...availableStatuses.map((status) => ({ value: status, label: status })),
-              ]}
-            />
           </div>
 
-          <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-border bg-background/40 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-text-main">
-                  {lang === 'ar' ? 'الفلاتر المتقدمة' : 'Advanced filters'}
+            <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-border bg-background/40 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-text-main">
+                    {lang === 'ar' ? 'الفلاتر المتقدمة' : 'Advanced filters'}
                 </p>
                 <p className="text-xs text-text-muted">
                   {lang === 'ar'
@@ -1326,9 +1290,18 @@ export function ReportBuilder() {
                     ? 'lg:grid-cols-5'
                     : source === 'users' || source === 'performance'
                       ? 'lg:grid-cols-4'
-                      : 'lg:grid-cols-3',
+                    : 'lg:grid-cols-3',
                 )}
               >
+                <Select
+                  label={lang === 'ar' ? 'الحالة' : 'Status'}
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  options={[
+                    { value: 'all', label: lang === 'ar' ? 'كل الحالات' : 'All statuses' },
+                    ...availableStatuses.map((status) => ({ value: status, label: status })),
+                  ]}
+                />
                 {(source === 'users' || source === 'performance') && (
                   <Select
                     label={lang === 'ar' ? 'الدور' : 'Role'}
@@ -1385,19 +1358,35 @@ export function ReportBuilder() {
                   </div>
                 )}
               </div>
-            ) : (
-              <p className="text-xs text-text-muted">
-                {lang === 'ar'
-                  ? 'الفلاتر المتقدمة مخفية الآن للحفاظ على بساطة الواجهة.'
-                  : 'Advanced filters are hidden to keep the page uncluttered.'}
-              </p>
-            )}
+              ) : (
+                <p className="text-xs text-text-muted">
+                  {lang === 'ar'
+                    ? 'الفلاتر المتقدمة مخفية الآن للحفاظ على بساطة الواجهة.'
+                    : 'Advanced filters are hidden to keep the page uncluttered.'}
+                </p>
+              )}
 
-            <p className="text-xs text-text-muted">
-              {lang === 'ar'
-                ? 'هذا الحقل يفلتر الصفوف المعروضة حاليًا حسب النص أو الاسم أو البريد أو تفاصيل السجل وفقًا للمصدر المحدد.'
-                : 'This field filters the rows currently loaded for the selected source by text, name, email, or event details.'}
-            </p>
+            <div className="flex flex-wrap items-center gap-3 rounded-[var(--radius)] border border-primary/15 bg-primary/5 p-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-text-main">
+                  {lang === 'ar' ? '3. إنشاء التقرير' : '3. Create report'}
+                </p>
+                <p className="text-xs text-text-muted">
+                  {lang === 'ar'
+                    ? 'اضغط لإنشاء التقرير بحسب المصدر والحقول والفلاتر المختارة.'
+                    : 'Generate the report using the chosen source, fields, and filters.'}
+                </p>
+              </div>
+              <div className="ms-auto flex flex-wrap items-center gap-2">
+                <Button variant="outline" onClick={handleReset}>
+                  {lang === 'ar' ? 'إعادة ضبط التقرير' : 'Reset report'}
+                </Button>
+                <Button onClick={() => void handleCreateReport()} isLoading={loading}>
+                  <Table2 className="me-2 h-4 w-4" />
+                  {lang === 'ar' ? 'إنشاء التقرير' : 'Create Report'}
+                </Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -1408,44 +1397,16 @@ export function ReportBuilder() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-text-main">
-                  {lang === 'ar' ? '2. القوالب' : '2. Templates'}
+                  {lang === 'ar' ? 'القوالب الاختيارية' : 'Optional templates'}
                 </h2>
-                <Badge variant="secondary">
-                  {lang === 'ar' ? 'الخطوة 2' : 'Step 2'}
-                </Badge>
               </div>
               <p className="text-sm text-text-muted">
                 {lang === 'ar'
-                  ? 'اختر قالبًا لتطبيق المصدر والفلاتر والأعمدة وحجم الصفحة دفعة واحدة، أو احفظ الإعداد الحالي كقالب جديد.'
-                  : 'Choose a template to apply the source, filters, columns, and page size in one step, or save the current setup as a new template.'}
+                  ? 'القوالب ليست جزءًا من المسار الأساسي. افتحها فقط عند الحاجة إلى حفظ إعداد أو استعادة قالب جاهز.'
+                  : 'Templates are optional. Open them only when you want to save or restore a setup.'}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge
-                variant={
-                  templateSyncStatus === 'synced'
-                    ? 'success'
-                    : templateSyncStatus === 'error'
-                      ? 'error'
-                      : templateSyncStatus === 'loading'
-                        ? 'warning'
-                        : 'outline'
-                }
-              >
-                {templateSyncStatus === 'synced'
-                  ? (lang === 'ar' ? 'متزامن' : 'Synced')
-                  : templateSyncStatus === 'loading'
-                    ? (lang === 'ar' ? 'جاري المزامنة' : 'Syncing')
-                    : templateSyncStatus === 'local'
-                      ? (lang === 'ar' ? 'نسخة محلية' : 'Local cache')
-                      : (lang === 'ar' ? 'تعذر الاتصال بالخادم' : 'Server unavailable')}
-              </Badge>
-              <Badge variant="secondary">
-                {lang === 'ar' ? 'قوالب جاهزة' : 'Starter templates'}: {BUILT_IN_TEMPLATES.length}
-              </Badge>
-              <Badge variant="secondary">
-                {lang === 'ar' ? 'محفوظة' : 'Saved'}: {templates.length}
-              </Badge>
               <Button variant="outline" onClick={() => setShowTemplatesPanel((open) => !open)}>
                 {showTemplatesPanel
                   ? (lang === 'ar' ? 'إخفاء القوالب' : 'Hide templates')
@@ -1456,6 +1417,34 @@ export function ReportBuilder() {
 
           {showTemplatesPanel ? (
             <>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  variant={
+                    templateSyncStatus === 'synced'
+                      ? 'success'
+                      : templateSyncStatus === 'error'
+                        ? 'error'
+                        : templateSyncStatus === 'loading'
+                          ? 'warning'
+                          : 'outline'
+                  }
+                >
+                  {templateSyncStatus === 'synced'
+                    ? (lang === 'ar' ? 'متزامن' : 'Synced')
+                    : templateSyncStatus === 'loading'
+                      ? (lang === 'ar' ? 'جاري المزامنة' : 'Syncing')
+                      : templateSyncStatus === 'local'
+                        ? (lang === 'ar' ? 'نسخة محلية' : 'Local cache')
+                        : (lang === 'ar' ? 'تعذر الاتصال بالخادم' : 'Server unavailable')}
+                </Badge>
+                <Badge variant="secondary">
+                  {lang === 'ar' ? 'قوالب جاهزة' : 'Starter templates'}: {BUILT_IN_TEMPLATES.length}
+                </Badge>
+                <Badge variant="secondary">
+                  {lang === 'ar' ? 'محفوظة' : 'Saved'}: {templates.length}
+                </Badge>
+              </div>
+
               <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
                 <Input
                   label={lang === 'ar' ? 'اسم القالب' : 'Template name'}
@@ -1532,17 +1521,29 @@ export function ReportBuilder() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        {summaryCards.map((card) => (
-          <Card key={card.label} className="border-border/60">
-            <CardContent className="p-5">
-              <div className="text-xs uppercase tracking-wide text-text-muted">{card.label}</div>
-              <div className="mt-3 text-3xl font-semibold text-text-main">{card.value}</div>
-              <div className="mt-2 text-xs text-text-muted">{card.hint}</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {reportCreated ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          {summaryCards.map((card) => (
+            <Card key={card.label} className="border-border/60">
+              <CardContent className="p-5">
+                <div className="text-xs uppercase tracking-wide text-text-muted">{card.label}</div>
+                <div className="mt-3 text-3xl font-semibold text-text-main">{card.value}</div>
+                <div className="mt-2 text-xs text-text-muted">{card.hint}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card className="border-border/60">
+          <CardContent className="p-8 text-center">
+            <p className="text-sm text-text-muted">
+              {lang === 'ar'
+                ? 'اختر المصدر والحقول ثم اضغط إنشاء التقرير لعرض الملخص والمخطط والجدول.'
+                : 'Choose the source and fields, then click Create Report to show the summary, chart, and table.'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
         <Card className="border-border/60">
@@ -1554,8 +1555,8 @@ export function ReportBuilder() {
                 </h2>
                 <p className="text-sm text-text-muted">
                   {lang === 'ar'
-                    ? 'اختر الحقول التي تريد تضمينها في التصدير والجدول.'
-                    : 'Choose the fields you want to include in the preview and exports.'}
+                    ? 'اختر الحقول التي تريد تضمينها في التقرير.'
+                    : 'Choose the fields you want to include in the report.'}
                 </p>
               </div>
               <Button variant="outline" onClick={() => setSelectedColumns(SOURCE_DEFAULT_COLUMNS[source])}>
@@ -1607,7 +1608,13 @@ export function ReportBuilder() {
                   : (lang === 'ar' ? 'توزيع الحالات' : 'Status distribution')}
               </h2>
             </div>
-            {chartData.length > 0 ? (
+            {!reportCreated ? (
+              <div className="flex h-64 items-center justify-center rounded-[var(--radius)] border border-dashed border-border bg-background/30 text-sm text-text-muted">
+                {lang === 'ar'
+                  ? 'أنشئ التقرير أولًا لعرض المخطط.'
+                  : 'Create the report first to display the chart.'}
+              </div>
+            ) : chartData.length > 0 ? (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
@@ -1637,8 +1644,8 @@ export function ReportBuilder() {
               </h2>
               <p className="text-sm text-text-muted">
                 {lang === 'ar'
-                  ? 'هذه المعاينة تعتمد على التصفية الحالية وستستخدم نفسها في CSV وExcel.'
-                  : 'This preview follows the current filters and powers both CSV and Excel exports.'}
+                  ? 'المعاينة التالية هي ما سيصدر في PDF وCSV وExcel.'
+                  : 'This preview is what will be exported as PDF, CSV, and Excel.'}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -1655,10 +1662,30 @@ export function ReportBuilder() {
               <Button variant="outline" onClick={handleReset}>
                 {lang === 'ar' ? 'تصفير' : 'Clear'}
               </Button>
+              <Button variant="outline" onClick={handleExportPdf} isLoading={downloadingPdf} disabled={!reportCreated || pageRows.length === 0}>
+                <FileDown className="me-2 h-4 w-4" />
+                PDF
+              </Button>
+              <Button variant="outline" onClick={handleExportCsv} isLoading={downloading === 'csv'} disabled={!reportCreated || pageRows.length === 0}>
+                <Download className="me-2 h-4 w-4" />
+                CSV
+              </Button>
+              <Button onClick={handleExportXlsx} isLoading={downloading === 'xlsx'} disabled={!reportCreated || pageRows.length === 0}>
+                <FileDown className="me-2 h-4 w-4" />
+                Excel
+              </Button>
             </div>
           </div>
 
-          {loading ? (
+          {!reportCreated ? (
+            <div className="flex min-h-[18rem] items-center justify-center">
+              <div className="max-w-lg rounded-[var(--radius)] border border-dashed border-border bg-background/30 p-8 text-center text-sm text-text-muted">
+                {lang === 'ar'
+                  ? 'هذا القسم سيظهر بعد إنشاء التقرير. اختر المصدر والحقول ثم اضغط إنشاء التقرير.'
+                  : 'This section appears after you create the report. Choose the source and fields, then click Create Report.'}
+              </div>
+            </div>
+          ) : loading ? (
             <div className="flex min-h-[18rem] items-center justify-center">
               <div className="flex items-center gap-3 text-text-muted">
                 <Loader2 className="h-5 w-5 animate-spin" />
