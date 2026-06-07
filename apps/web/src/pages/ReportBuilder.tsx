@@ -107,6 +107,9 @@ const SOURCE_COLUMNS: Record<BuilderSource, ColumnDef[]> = {
     { key: 'company', labelAr: 'المستفيد', labelEn: 'Beneficiary' },
     { key: 'type', labelAr: 'النوع', labelEn: 'Type' },
     { key: 'classification', labelAr: 'التصنيف', labelEn: 'Classification' },
+    { key: 'episodeCount', labelAr: 'عدد الحلقات', labelEn: 'Episode Count' },
+    { key: 'expectedRank', labelAr: 'الرتبة المتوقعة', labelEn: 'Expected Rank' },
+    { key: 'hasSecurityScenes', labelAr: 'مشاهد أمنية', labelEn: 'Security Scenes' },
     { key: 'status', labelAr: 'الحالة', labelEn: 'Status' },
     { key: 'assignee', labelAr: 'المسند إليه', labelEn: 'Assignee' },
     { key: 'recommendation', labelAr: 'التوصية', labelEn: 'Recommendation' },
@@ -122,6 +125,7 @@ const SOURCE_COLUMNS: Record<BuilderSource, ColumnDef[]> = {
     { key: 'rejectedCount', labelAr: 'الملاحظات المرفوضة', labelEn: 'Rejected Findings' },
     { key: 'reviewedBy', labelAr: 'المراجع', labelEn: 'Reviewed By' },
     { key: 'reviewedAt', labelAr: 'تاريخ المراجعة', labelEn: 'Reviewed At' },
+    { key: 'createdAt', labelAr: 'تاريخ الإنشاء', labelEn: 'Created At' },
     { key: 'creator', labelAr: 'منشئ التقرير', labelEn: 'Created By' },
   ],
   users: [
@@ -155,7 +159,7 @@ const SOURCE_COLUMNS: Record<BuilderSource, ColumnDef[]> = {
 
 const SOURCE_DEFAULT_COLUMNS: Record<BuilderSource, string[]> = {
   scripts: ['title', 'company', 'status', 'assignee', 'receivedAt', 'createdAt'],
-  reports: ['scriptTitle', 'company', 'status', 'findingsCount', 'createdAt'],
+  reports: ['scriptTitle', 'company', 'status', 'findingsCount', 'reviewedAt', 'createdAt'],
   users: ['name', 'email', 'role', 'status', 'permissionsCount'],
   performance: ['name', 'role', 'assignedScripts', 'recommendations', 'agreementRate'],
   audit: ['eventType', 'actor', 'targetType', 'resultStatus', 'occurredAt'],
@@ -193,6 +197,20 @@ function normalizeText(value: unknown): string {
   return String(value).toLowerCase();
 }
 
+function hasRenderableValue(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (typeof value === 'boolean') return true;
+  const text = String(value).trim();
+  return text !== '' && text !== '—' && text !== 'null' && text !== 'undefined';
+}
+
+function autoSelectColumnsForRows(source: BuilderSource, rows: BuilderRow[]): string[] {
+  const allColumns = SOURCE_COLUMNS[source].map((column) => column.key);
+  const populatedColumns = allColumns.filter((key) => rows.some((row) => hasRenderableValue(row.values[key])));
+  return populatedColumns.length > 0 ? populatedColumns : SOURCE_DEFAULT_COLUMNS[source];
+}
+
 function createBuilderRows(
   source: BuilderSource,
   payload: {
@@ -223,6 +241,11 @@ function createBuilderRows(
         company: beneficiary,
         type: script.type || '—',
         classification: script.workClassification || '—',
+        episodeCount: script.episodeCount ?? '—',
+        expectedRank: script.expectedRank || '—',
+        hasSecurityScenes: script.hasSecurityScenes === null || script.hasSecurityScenes === undefined
+          ? '—'
+          : (script.hasSecurityScenes ? (lang === 'ar' ? 'نعم' : 'Yes') : (lang === 'ar' ? 'لا' : 'No')),
         status,
         assignee: script.assigneeName || script.assigneeId || '—',
         recommendation: script.recommendationStatus || '—',
@@ -234,6 +257,9 @@ function createBuilderRows(
         beneficiary,
         script.type,
         script.workClassification,
+        script.episodeCount,
+        script.expectedRank,
+        script.hasSecurityScenes,
         status,
         script.assigneeName,
         script.assigneeId,
@@ -269,6 +295,7 @@ function createBuilderRows(
         rejectedCount: report.rejectedCount ?? 0,
         reviewedBy: report.reportCreatorName || report.reviewedBy || '—',
         reviewedAt: formatDateTimeValue(report.reviewedAt || report.lastReviewedAt || report.createdAt, { lang }),
+        createdAt: formatDateTimeValue(report.createdAt, { lang }),
         creator: report.reportCreatorName || '—',
       };
       const searchText = [
@@ -280,6 +307,7 @@ function createBuilderRows(
         report.reviewedBy,
         report.lastReviewedBy,
         report.createdBy,
+        report.createdAt,
       ]
         .map(normalizeText)
         .join(' ');
@@ -577,6 +605,7 @@ export function ReportBuilder() {
       );
 
       setRows(nextRows);
+      setSelectedColumns(autoSelectColumnsForRows(nextSource, nextRows));
       setPage(1);
       return true;
     } catch (err: any) {
