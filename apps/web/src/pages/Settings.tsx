@@ -394,6 +394,10 @@ export default function Settings() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentPassword.trim()) {
+      toast.error(lang === 'ar' ? 'أدخل كلمة المرور الحالية' : 'Enter your current password');
+      return;
+    }
     if (!newPassword.trim()) {
       toast.error(lang === 'ar' ? 'أدخل كلمة المرور الجديدة' : 'Enter new password');
       return;
@@ -409,6 +413,19 @@ export default function Settings() {
     }
     setChangingPassword(true);
     try {
+      const email = user?.email?.trim();
+      if (!email) {
+        throw new Error(lang === 'ar' ? 'تعذر تحديد البريد الإلكتروني للحساب' : 'Unable to resolve account email');
+      }
+
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password: currentPassword,
+      });
+      if (authError) {
+        throw new Error(lang === 'ar' ? 'كلمة المرور الحالية غير صحيحة' : 'Current password is incorrect');
+      }
+
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
       toast.success(lang === 'ar' ? 'تم تغيير كلمة المرور' : 'Password updated');
