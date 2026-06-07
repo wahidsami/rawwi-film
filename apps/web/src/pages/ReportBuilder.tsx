@@ -541,6 +541,18 @@ export function ReportBuilder() {
   const canAccessBuilder = user?.role === 'Admin' || user?.role === 'Super Admin' || hasPermission('manage_users');
   const sourceOption = SOURCE_OPTIONS.find((opt) => opt.value === source) ?? SOURCE_OPTIONS[0];
   const selectedColumnsMeta = useMemo(() => SOURCE_COLUMNS[source].filter((col) => selectedColumns.includes(col.key)), [source, selectedColumns]);
+  const coverageMatrix = useMemo(() => {
+    const allColumns = SOURCE_COLUMNS[source];
+    const populated = allColumns.filter((column) => rows.some((row) => hasRenderableValue(row.values[column.key])));
+    const visibleKeys = new Set(selectedColumnsMeta.map((column) => column.key));
+    const hidden = allColumns.filter((column) => !visibleKeys.has(column.key));
+    return {
+      total: allColumns.length,
+      populated,
+      hidden,
+      visibleCount: selectedColumnsMeta.length,
+    };
+  }, [rows, selectedColumnsMeta, source]);
   const availableStatuses = useMemo(() => {
     const values = Array.from(new Set(rows.map((row) => row.status).filter(Boolean))).sort((a, b) => a.localeCompare(b));
     return values;
@@ -908,6 +920,62 @@ export function ReportBuilder() {
                 label: lang === 'ar' ? opt.labelAr : opt.labelEn,
               }))}
             />
+          </div>
+
+          <div className="rounded-[var(--radius)] border border-border bg-background/50 p-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-text-main">
+                  {lang === 'ar' ? 'مصفوفة تغطية البيانات' : 'Data coverage matrix'}
+                </p>
+                <p className="text-xs text-text-muted">
+                  {lang === 'ar'
+                    ? 'نعرض فقط الحقول التي تحتوي على بيانات فعلية أو تضيف قيمة واضحة للتقرير.'
+                    : 'We only surface fields that have real data or add clear value to the report.'}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
+                <Badge variant="secondary">{lang === 'ar' ? 'إجمالي الحقول' : 'Total fields'}: {coverageMatrix.total}</Badge>
+                <Badge variant="secondary">{lang === 'ar' ? 'المعبّأ' : 'Populated'}: {coverageMatrix.populated.length}</Badge>
+                <Badge variant="secondary">{lang === 'ar' ? 'الظاهرة' : 'Visible'}: {coverageMatrix.visibleCount}</Badge>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 xl:grid-cols-2">
+              <div className="rounded-[var(--radius)] border border-border/70 bg-surface/40 p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
+                  {lang === 'ar' ? 'متوفر ببيانات فعلية' : 'Populated with real data'}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {coverageMatrix.populated.length > 0 ? coverageMatrix.populated.map((column) => (
+                    <Badge key={column.key} variant="secondary">
+                      {lang === 'ar' ? column.labelAr : column.labelEn}
+                    </Badge>
+                  )) : (
+                    <span className="text-sm text-text-muted">
+                      {lang === 'ar' ? 'لا توجد حقول ممتلئة بعد.' : 'No populated fields yet.'}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-[var(--radius)] border border-border/70 bg-surface/40 p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
+                  {lang === 'ar' ? 'مخفية افتراضيًا' : 'Hidden by default'}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {coverageMatrix.hidden.length > 0 ? coverageMatrix.hidden.map((column) => (
+                    <Badge key={column.key} variant="outline">
+                      {lang === 'ar' ? column.labelAr : column.labelEn}
+                    </Badge>
+                  )) : (
+                    <span className="text-sm text-text-muted">
+                      {lang === 'ar' ? 'كل الحقول ظاهرة.' : 'All fields are visible.'}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
             <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
