@@ -3,7 +3,7 @@ import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore, AppSettings } from '@/store/settingsStore';
 import { cn } from '@/utils/cn';
-import { User, Settings as SettingsIcon, Shield, FileText, FlaskConical, LogOut } from 'lucide-react';
+import { Eye, EyeOff, User, Settings as SettingsIcon, Shield, FileText, FlaskConical, LogOut } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -32,6 +32,9 @@ export default function Settings() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const {
     options: scriptClassificationOptions,
@@ -432,6 +435,9 @@ export default function Settings() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تغيير كلمة المرور' : 'Failed to update password'));
     } finally {
@@ -527,15 +533,63 @@ export default function Settings() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2 max-w-md">
                         <label className="block text-sm font-medium text-text-muted mb-1.5">{t('currentPassword')}</label>
-                        <Input type="password" autoComplete="current-password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+                        <div className="relative">
+                          <Input
+                            type={showCurrentPassword ? 'text' : 'password'}
+                            autoComplete="current-password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            className="pe-11"
+                          />
+                          <button
+                            type="button"
+                            aria-label={showCurrentPassword ? (lang === 'ar' ? 'إخفاء كلمة المرور الحالية' : 'Hide current password') : (lang === 'ar' ? 'إظهار كلمة المرور الحالية' : 'Show current password')}
+                            className="absolute inset-y-0 end-0 flex items-center justify-center px-3 text-text-muted transition-colors hover:text-text-main"
+                            onClick={() => setShowCurrentPassword((v) => !v)}
+                          >
+                            {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
                       </div>
                       <div className="max-w-md">
                         <label className="block text-sm font-medium text-text-muted mb-1.5">{t('newPassword')}</label>
-                        <Input type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                        <div className="relative">
+                          <Input
+                            type={showNewPassword ? 'text' : 'password'}
+                            autoComplete="new-password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="pe-11"
+                          />
+                          <button
+                            type="button"
+                            aria-label={showNewPassword ? (lang === 'ar' ? 'إخفاء كلمة المرور الجديدة' : 'Hide new password') : (lang === 'ar' ? 'إظهار كلمة المرور الجديدة' : 'Show new password')}
+                            className="absolute inset-y-0 end-0 flex items-center justify-center px-3 text-text-muted transition-colors hover:text-text-main"
+                            onClick={() => setShowNewPassword((v) => !v)}
+                          >
+                            {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
                       </div>
                       <div className="max-w-md">
                         <label className="block text-sm font-medium text-text-muted mb-1.5">{t('confirmPassword')}</label>
-                        <Input type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                        <div className="relative">
+                          <Input
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            autoComplete="new-password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="pe-11"
+                          />
+                          <button
+                            type="button"
+                            aria-label={showConfirmPassword ? (lang === 'ar' ? 'إخفاء تأكيد كلمة المرور' : 'Hide confirm password') : (lang === 'ar' ? 'إظهار تأكيد كلمة المرور' : 'Show confirm password')}
+                            className="absolute inset-y-0 end-0 flex items-center justify-center px-3 text-text-muted transition-colors hover:text-text-main"
+                            onClick={() => setShowConfirmPassword((v) => !v)}
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
                       </div>
                     </div>
                     <button type="submit" className="px-4 py-2 bg-primary text-white text-sm rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50" disabled={changingPassword}>
