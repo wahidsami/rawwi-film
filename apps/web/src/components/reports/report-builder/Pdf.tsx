@@ -46,9 +46,12 @@ export const ReportBuilderPdf: React.FC<ReportBuilderPdfProps> = ({ data, lang, 
   return (
     <Document>
       <Page size="A4" style={[s.cover, isAr ? s.rtl : {}]}>
-        <View style={[s.coverFrame, { justifyContent: "center", alignItems: "center" }]}>
-          <View style={{ width: "100%", alignItems: "center", textAlign: "center" }}>
-            {logoUrl ? <Image src={logoUrl} style={{ width: 140, height: 44, objectFit: "contain", marginBottom: 20 }} /> : null}
+        <View style={s.coverFrame}>
+          <View style={s.coverInner}>
+            <View style={s.coverBadge}>
+              <Text style={s.coverBadgeText}>{isAr ? 'تقرير تنفيذي' : 'Executive Report'}</Text>
+            </View>
+            {logoUrl ? <Image src={logoUrl} style={{ width: 160, height: 50, objectFit: "contain", marginBottom: 16 }} /> : null}
             <Text style={[s.brand, rtl]}>{isAr ? 'راوي - منشئ التقارير' : 'Raawi - Report Builder'}</Text>
             <Text style={[s.title, rtl]}>{isAr ? 'تقرير مخصص من بيانات النظام' : 'Custom report from system data'}</Text>
             <Text style={[s.subtitle, rtl]}>
@@ -56,20 +59,38 @@ export const ReportBuilderPdf: React.FC<ReportBuilderPdfProps> = ({ data, lang, 
                 ? 'هذا الملف يقدّم لقطة تنفيذية للبيانات التي تم تصفيتها وتصديرها من منشئ التقارير، مع ملخص للحالة والفلاتر والأعمدة المختارة.'
                 : 'This file provides an executive snapshot of the filtered data exported from the report builder, including the applied filters and selected columns.'}
             </Text>
-            <View style={s.metaRow}>
-              <View style={s.metaChip}>
-                <Text style={s.metaLabel}>{isAr ? 'المصدر' : 'Source'}</Text>
-                <Text style={s.metaValue}>{data.sourceLabel}</Text>
-              </View>
-              <View style={s.metaChip}>
-                <Text style={s.metaLabel}>{isAr ? 'تاريخ الإنشاء' : 'Generated at'}</Text>
-                <Text style={s.metaValue}>{formatDate(new Date(data.generatedAt), { lang, format: dateFormat })}</Text>
-              </View>
-              <View style={s.metaChip}>
-                <Text style={s.metaLabel}>{isAr ? 'السجلات الظاهرة' : 'Visible rows'}</Text>
-                <Text style={s.metaValue}>{data.filteredRows}</Text>
+            <View style={s.coverRule} />
+            <View style={s.coverPanel}>
+              <Text style={s.coverPanelTitle}>{isAr ? 'لقطة التقرير' : 'Report snapshot'}</Text>
+              <View style={s.coverGrid}>
+                <View style={s.coverStat}>
+                  <Text style={s.coverStatLabel}>{isAr ? 'المصدر' : 'Source'}</Text>
+                  <Text style={s.coverStatValue}>{data.sourceLabel}</Text>
+                </View>
+                <View style={s.coverStat}>
+                  <Text style={s.coverStatLabel}>{isAr ? 'تاريخ الإنشاء' : 'Generated at'}</Text>
+                  <Text style={s.coverStatValue}>{formatDate(new Date(data.generatedAt), { lang, format: dateFormat })}</Text>
+                </View>
+                <View style={s.coverStat}>
+                  <Text style={s.coverStatLabel}>{isAr ? 'الصفوف الظاهرة' : 'Visible rows'}</Text>
+                  <Text style={s.coverStatValue}>{data.filteredRows}</Text>
+                </View>
+                <View style={s.coverStat}>
+                  <Text style={s.coverStatLabel}>{isAr ? 'الأعمدة المختارة' : 'Selected columns'}</Text>
+                  <Text style={s.coverStatValue}>{data.selectedColumns}</Text>
+                </View>
               </View>
             </View>
+            <Text style={[s.coverNote, rtl]}>
+              {isAr
+                ? 'يعرض الغلاف هنا ملخصًا تنفيذيًا واضحًا قبل تفاصيل الملخص والجداول، حتى يشعر التقرير بأنه وثيقة مكتملة وليست مجرد تصدير بيانات.'
+                : 'The cover now gives a concise executive summary before the detail pages, so the report feels like a finished document rather than a raw data export.'}
+            </Text>
+            <Text style={[s.coverNote, rtl]}>
+              {isAr
+                ? 'سيتبع ذلك ملخص تنفيذي، ثم معاينة الجدول، مع ترقيم صفحات واضح.'
+                : 'The following pages provide the summary and table preview, with clear page numbering.'}
+            </Text>
           </View>
         </View>
       </Page>
