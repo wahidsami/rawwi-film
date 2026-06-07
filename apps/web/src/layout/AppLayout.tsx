@@ -113,7 +113,7 @@ export function AppLayout() {
     { to: '/app/reports', icon: FileText, label: t('reports'), section: 'reports', permission: 'view_reports', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
     { to: '/app/report-builder', icon: Table2, label: lang === 'ar' ? 'منشئ التقارير' : 'Report Builder', section: null as string | null, permission: 'manage_users', roles: ['Super Admin', 'Admin'] as Array<'Super Admin' | 'Admin'> },
     { to: '/app/performance', icon: BarChart3, label: lang === 'ar' ? 'الأداء' : 'Performance', section: null as string | null, permission: 'manage_users', roles: ['Super Admin', 'Admin'] as Array<'Super Admin' | 'Admin'> },
-    ...(settings?.features?.enableCertificates ? [{ to: '/app/certificates', icon: Award, label: t('certificates'), section: null as string | null, permission: null as string | null, roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null }] : []),
+    ...(settings?.features?.enableCertificates ? [{ to: '/app/certificates', icon: Award, label: t('certificates'), section: null as string | null, permission: null as string | null, roles: ['Super Admin', 'Admin', 'Client'] as Array<'Super Admin' | 'Admin' | 'Client'> }] : []),
     { to: '/app/access-control', icon: ShieldCheck, label: t('accessControl'), section: 'access_control', permission: 'manage_users', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
     { to: '/app/audit', icon: History, label: t('auditLog'), section: 'audit', permission: 'view_audit', roles: null as Array<'Super Admin' | 'Admin' | 'Regulator' | 'Client'> | null },
 
@@ -133,7 +133,7 @@ export function AppLayout() {
     // Role-gated inbox/reporting links can opt out of section/permission checks.
     if (link.to === '/app/received-scripts') return true;
 
-    // No section/permission required → always show (Overview, Settings, Certificates)
+    // No section/permission required → always show for eligible roles (Overview, Settings, Certificates)
     if (!link.section && !link.permission) return true;
 
     // Section-based: single source of truth — show only if user has this section
