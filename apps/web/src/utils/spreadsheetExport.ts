@@ -10,10 +10,15 @@ export interface SpreadsheetSheet {
 type SharedStringTable = {
   values: string[];
   indexByValue: Map<string, number>;
+  count: number;
 };
 
+function sanitizeXmlText(value: string): string {
+  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, '');
+}
+
 function escapeXml(value: string): string {
-  return value
+  return sanitizeXmlText(value)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -41,6 +46,7 @@ function sheetDimension(rows: SpreadsheetCell[][]): string {
 function buildSharedStringTable(sheets: SpreadsheetSheet[]): SharedStringTable {
   const values: string[] = [];
   const indexByValue = new Map<string, number>();
+  let count = 0;
 
   const add = (value: string) => {
     if (indexByValue.has(value)) return;
@@ -53,12 +59,13 @@ function buildSharedStringTable(sheets: SpreadsheetSheet[]): SharedStringTable {
       row.forEach((cell) => {
         if (typeof cell !== 'string') return;
         if (cell === '') return;
+        count += 1;
         add(cell);
       });
     });
   });
 
-  return { values, indexByValue };
+  return { values, indexByValue, count };
 }
 
 function sharedStringCellXml(cell: SpreadsheetCell, ref: string, sharedStrings: SharedStringTable): string {
@@ -148,7 +155,7 @@ function buildSharedStringsXml(sharedStrings: SharedStringTable): string {
     .map((value) => `<si><t xml:space="preserve">${escapeXml(value)}</t></si>`)
     .join('');
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${sharedStrings.values.length}" uniqueCount="${sharedStrings.values.length}">
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${sharedStrings.count}" uniqueCount="${sharedStrings.values.length}">
   ${items}
 </sst>`;
 }
