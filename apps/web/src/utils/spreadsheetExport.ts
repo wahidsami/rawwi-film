@@ -14,7 +14,7 @@ type SharedStringTable = {
 };
 
 function sanitizeXmlText(value: string): string {
-  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, '');
+  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFE\uFFFF]/g, '');
 }
 
 function escapeXml(value: string): string {
@@ -102,8 +102,8 @@ function buildSheetXml(sheet: SpreadsheetSheet, sharedStrings: SharedStringTable
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  ${frozenPane}
   <dimension ref="${dimension}"/>
+  ${frozenPane}
   <sheetFormatPr defaultRowHeight="18"/>
   <sheetData>${rowsXml}</sheetData>
   <autoFilter ref="${dimension}"/>
