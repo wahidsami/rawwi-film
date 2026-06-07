@@ -205,6 +205,41 @@ function hasRenderableValue(value: unknown): boolean {
   return text !== '' && text !== '—' && text !== 'null' && text !== 'undefined';
 }
 
+function formatStatusLabel(value: string | null | undefined, lang: 'ar' | 'en'): string {
+  const status = String(value ?? '').trim().toLowerCase();
+  if (!status) return '—';
+
+  const labels: Record<string, { ar: string; en: string }> = {
+    active: { ar: 'نشط', en: 'Active' },
+    invited: { ar: 'مدعو', en: 'Invited' },
+    draft: { ar: 'مسودة', en: 'Draft' },
+    pending: { ar: 'قيد الانتظار', en: 'Pending' },
+    assigned: { ar: 'مُسند', en: 'Assigned' },
+    in_review: { ar: 'قيد المراجعة', en: 'In Review' },
+    analysis_running: { ar: 'التحليل جارٍ', en: 'Analysis Running' },
+    resubmitted: { ar: 'مُعاد الإرسال', en: 'Resubmitted' },
+    reviewed: { ar: 'تمت المراجعة', en: 'Reviewed' },
+    approved: { ar: 'معتمد', en: 'Approved' },
+    rejected: { ar: 'مرفوض', en: 'Rejected' },
+    completed: { ar: 'مكتمل', en: 'Completed' },
+    success: { ar: 'ناجح', en: 'Success' },
+    failed: { ar: 'فشل', en: 'Failed' },
+    warning: { ar: 'تحذير', en: 'Warning' },
+    info: { ar: 'معلومة', en: 'Info' },
+    error: { ar: 'خطأ', en: 'Error' },
+  };
+
+  const label = labels[status];
+  if (label) return lang === 'ar' ? label.ar : label.en;
+
+  const humanized = status
+    .split(/[_\s-]+/g)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+  return humanized || '—';
+}
+
 function autoSelectColumnsForRows(source: BuilderSource, rows: BuilderRow[]): string[] {
   const allColumns = SOURCE_COLUMNS[source].map((column) => column.key);
   const populatedColumns = allColumns.filter((key) => rows.some((row) => hasRenderableValue(row.values[key])));
@@ -236,6 +271,7 @@ function createBuilderRows(
     return payload.scripts.map((script) => {
       const beneficiary = companyName(script.companyId);
       const status = String(script.status ?? '—');
+      const receivedAtValue = script.receivedAt || script.createdAt || null;
       const values = {
         title: script.title || '—',
         company: beneficiary,
@@ -246,10 +282,10 @@ function createBuilderRows(
         hasSecurityScenes: script.hasSecurityScenes === null || script.hasSecurityScenes === undefined
           ? '—'
           : (script.hasSecurityScenes ? (lang === 'ar' ? 'نعم' : 'Yes') : (lang === 'ar' ? 'لا' : 'No')),
-        status,
+        status: formatStatusLabel(status, lang),
         assignee: script.assigneeName || script.assigneeId || '—',
         recommendation: script.recommendationStatus || '—',
-        receivedAt: formatDateTimeValue(script.receivedAt || null, { lang }),
+        receivedAt: formatDateTimeValue(receivedAtValue, { lang }),
         createdAt: formatDateTimeValue(script.createdAt, { lang }),
       };
       const searchText = [
@@ -274,7 +310,7 @@ function createBuilderRows(
         searchText,
         status,
         roleKey: null,
-        dateRaw: script.receivedAt || script.createdAt || null,
+        dateRaw: receivedAtValue,
         actionHref: `/app/workspace/${script.id}`,
         actionLabelAr: 'فتح النص',
         actionLabelEn: 'Open script',
@@ -289,7 +325,7 @@ function createBuilderRows(
       const values = {
         scriptTitle: report.scriptTitle || '—',
         company: beneficiary,
-        status,
+        status: formatStatusLabel(status, lang),
         findingsCount: report.findingsCount,
         approvedCount: report.approvedCount,
         rejectedCount: report.rejectedCount ?? 0,
@@ -331,10 +367,10 @@ function createBuilderRows(
       const actor = event.actorName || event.actorUserId || '—';
       const target = event.targetLabel || event.targetId || '—';
       const values = {
-        eventType: event.eventType,
+        eventType: formatStatusLabel(event.eventType, lang),
         actor,
-        targetType: event.targetType,
-        resultStatus: event.resultStatus,
+        targetType: formatStatusLabel(event.targetType, lang),
+        resultStatus: formatStatusLabel(event.resultStatus, lang),
         occurredAt: formatDateTimeValue(event.occurredAt, { lang }),
         targetLabel: target,
       };
@@ -373,14 +409,14 @@ function createBuilderRows(
       .map(({ user, payload: perf }) => {
         const role = user.roleKey || '—';
         const summary = perf?.summary ?? null;
-        const values = {
-          name: user.name || '—',
-          email: user.email || '—',
-          role,
-          status: user.status,
-          assignedScripts: summary?.totalAssignedScripts ?? 0,
-          recommendations: summary?.totalRecommendations ?? 0,
-          sendBacks: summary?.totalSendBacks ?? 0,
+      const values = {
+        name: user.name || '—',
+        email: user.email || '—',
+        role: formatStatusLabel(role, lang),
+        status: formatStatusLabel(user.status, lang),
+        assignedScripts: summary?.totalAssignedScripts ?? 0,
+        recommendations: summary?.totalRecommendations ?? 0,
+        sendBacks: summary?.totalSendBacks ?? 0,
           agreementRate: summary?.recommendationAgreementRate == null ? '—' : `${Math.round(summary.recommendationAgreementRate * 100)}%`,
           agreementRateValue: summary?.recommendationAgreementRate ?? null,
           avgFirstAction: summary?.averageFirstActionMinutes == null ? '—' : `${Math.round(summary.averageFirstActionMinutes)} min`,
@@ -422,8 +458,8 @@ function createBuilderRows(
       const values = {
         name: user.name || '—',
         email: user.email || '—',
-        role,
-        status: user.status,
+        role: formatStatusLabel(role, lang),
+        status: formatStatusLabel(user.status, lang),
         permissionsCount: user.permissions?.length ?? 0,
         sectionsCount: user.allowedSections?.length ?? 0,
       };
