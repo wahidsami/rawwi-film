@@ -7,12 +7,6 @@ export interface SpreadsheetSheet {
   rows: SpreadsheetCell[][];
 }
 
-type SharedStringTable = {
-  values: string[];
-  indexByValue: Map<string, number>;
-  count: number;
-};
-
 function sanitizeXmlText(value: string): string {
   return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFE\uFFFF]/g, '');
 }
@@ -43,32 +37,7 @@ function sheetDimension(rows: SpreadsheetCell[][]): string {
   return `A1:${columnLetter(colCount - 1)}${rowCount}`;
 }
 
-function buildSharedStringTable(sheets: SpreadsheetSheet[]): SharedStringTable {
-  const values: string[] = [];
-  const indexByValue = new Map<string, number>();
-  let count = 0;
-
-  const add = (value: string) => {
-    if (indexByValue.has(value)) return;
-    indexByValue.set(value, values.length);
-    values.push(value);
-  };
-
-  sheets.forEach((sheet) => {
-    sheet.rows.forEach((row) => {
-      row.forEach((cell) => {
-        if (typeof cell !== 'string') return;
-        if (cell === '') return;
-        count += 1;
-        add(cell);
-      });
-    });
-  });
-
-  return { values, indexByValue, count };
-}
-
-function sharedStringCellXml(cell: SpreadsheetCell, ref: string, sharedStrings: SharedStringTable): string {
+function inlineStringCellXml(cell: SpreadsheetCell, ref: string): string {
   if (cell === null || cell === undefined || cell === '') return '';
   if (typeof cell === 'number') {
     return `<c r="${ref}" t="n"><v>${Number.isFinite(cell) ? cell : 0}</v></c>`;
@@ -76,11 +45,10 @@ function sharedStringCellXml(cell: SpreadsheetCell, ref: string, sharedStrings: 
   if (typeof cell === 'boolean') {
     return `<c r="${ref}" t="b"><v>${cell ? 1 : 0}</v></c>`;
   }
-  const index = sharedStrings.indexByValue.get(String(cell)) ?? 0;
-  return `<c r="${ref}" t="s"><v>${index}</v></c>`;
+  return `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${escapeXml(String(cell))}</t></is></c>`;
 }
 
-function buildSheetXml(sheet: SpreadsheetSheet, sharedStrings: SharedStringTable): string {
+function buildSheetXml(sheet: SpreadsheetSheet): string {
   const dimension = sheetDimension(sheet.rows);
   const frozenPane = [
     '<sheetViews>',
@@ -93,7 +61,7 @@ function buildSheetXml(sheet: SpreadsheetSheet, sharedStrings: SharedStringTable
 
   const rowsXml = sheet.rows.map((row, rowIndex) => {
     const cells = row
-      .map((cell, colIndex) => sharedStringCellXml(cell, `${columnLetter(colIndex)}${rowIndex + 1}`, sharedStrings))
+      .map((cell, colIndex) => inlineStringCellXml(cell, `${columnLetter(colIndex)}${rowIndex + 1}`))
       .filter(Boolean)
       .join('');
     return `<row r="${rowIndex + 1}">${cells}</row>`;
@@ -145,19 +113,8 @@ function buildContentTypesXml(sheetCount: number): string {
   <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
   <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-  <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
   ${sheetOverrides}
 </Types>`;
-}
-
-function buildSharedStringsXml(sharedStrings: SharedStringTable): string {
-  const items = sharedStrings.values
-    .map((value) => `<si><t xml:space="preserve">${escapeXml(value)}</t></si>`)
-    .join('');
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${sharedStrings.count}" uniqueCount="${sharedStrings.values.length}">
-  ${items}
-</sst>`;
 }
 
 function buildStylesXml(): string {
@@ -245,7 +202,6 @@ export async function downloadXlsxFile(params: {
   sheets: SpreadsheetSheet[];
 }): Promise<void> {
   const zip = new JSZip();
-  const sharedStrings = buildSharedStringTable(params.sheets);
   zip.file('[Content_Types].xml', buildContentTypesXml(params.sheets.length));
   zip.folder('_rels')?.file('.rels', buildRootRelsXml());
   zip.folder('docProps')?.file('core.xml', buildCorePropsXml(params.fileName));
@@ -255,12 +211,11 @@ export async function downloadXlsxFile(params: {
   if (!xl) return;
   xl.file('workbook.xml', buildWorkbookXml(params.sheets));
   xl.file('styles.xml', buildStylesXml());
-  xl.file('sharedStrings.xml', buildSharedStringsXml(sharedStrings));
   const rels = xl.folder('_rels');
   rels?.file('workbook.xml.rels', buildWorkbookRelsXml(params.sheets));
   const worksheets = xl.folder('worksheets');
   params.sheets.forEach((sheet, index) => {
-    worksheets?.file(`sheet${index + 1}.xml`, buildSheetXml(sheet, sharedStrings));
+    worksheets?.file(`sheet${index + 1}.xml`, buildSheetXml(sheet));
   });
 
   const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });

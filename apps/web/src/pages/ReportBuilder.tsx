@@ -154,7 +154,7 @@ const SOURCE_COLUMNS: Record<BuilderSource, ColumnDef[]> = {
 };
 
 const SOURCE_DEFAULT_COLUMNS: Record<BuilderSource, string[]> = {
-  scripts: ['title', 'company', 'status', 'assignee', 'createdAt'],
+  scripts: ['title', 'company', 'status', 'assignee', 'receivedAt', 'createdAt'],
   reports: ['scriptTitle', 'company', 'status', 'findingsCount', 'createdAt'],
   users: ['name', 'email', 'role', 'status', 'permissionsCount'],
   performance: ['name', 'role', 'assignedScripts', 'recommendations', 'agreementRate'],
