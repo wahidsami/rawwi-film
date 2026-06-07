@@ -154,7 +154,7 @@ function toScriptFrontend(row: ScriptRow) {
     workClassification: row.work_classification ?? undefined,
     episodeCount: row.episode_count ?? null,
     expectedRank: row.expected_rank ?? null,
-    receivedAt: row.received_at ?? null,
+    receivedAt: row.received_at ?? row.created_at ?? null,
     synopsis: row.synopsis ?? undefined,
     storySummary: row.story_summary ?? undefined,
     scriptSummaryPdfUrl: row.script_summary_pdf_url ?? undefined,
