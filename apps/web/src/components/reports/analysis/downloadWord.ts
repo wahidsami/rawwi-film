@@ -110,6 +110,10 @@ const LABEL_FONT = "Cairo ExtraLight";
 const VALUE_FONT = "Cairo ExtraLight";
 const TITLE_FONT = "Tahoma";
 const TABLE_FONT = "Cairo ExtraLight";
+const DEFAULT_ACTION_TEXT = {
+  ar: "للتعديل او الحذف",
+  en: "Edit or delete",
+} as const;
 
 function escapeXml(value: string): string {
   return value
@@ -153,6 +157,11 @@ function formatNullableValue(value: string | number | null | undefined): string 
   if (value == null) return "—";
   const text = String(value).trim();
   return text || "—";
+}
+
+function formatActionText(value: string | null | undefined, lang: "ar" | "en"): string {
+  const text = plainText(value);
+  return text || DEFAULT_ACTION_TEXT[lang];
 }
 
 function normalizeScriptType(value: string | null | undefined, lang: "ar" | "en"): string {
@@ -463,7 +472,7 @@ function buildFindingsTable(params: DownloadAnalysisWordParams): string {
           finding.pageNumber ?? null
         );
         const findingText = plainText(finding.evidenceSnippet) || "—";
-        const actionText = plainText(finding.actionText) || "";
+        const actionText = formatActionText(finding.actionText, params.lang);
         return `<w:tr>
           ${makeTableCell(formatNullableValue(page), 800, { align: "center", rtl: false })}
           ${makeTableCell(findingText, 2800)}
