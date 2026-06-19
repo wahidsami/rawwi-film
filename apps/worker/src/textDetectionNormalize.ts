@@ -1,4 +1,5 @@
 import { canonicalArabicToken, findStringMatches } from "./lexiconCache.js";
+import { isExactContiguousSpan } from "./exactContiguousMatch.js";
 
 const ARABIC_CHAR_RE = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/u;
 const ARABIC_LETTER_GAP_RE = /(?<=[\u0621-\u064A\u066E-\u066F\u0671-\u06D3\u06FA-\u06FC\u06FF])\s+(?=[\u0621-\u064A\u066E-\u066F\u0671-\u06D3\u06FA-\u06FC\u06FF])/gu;
@@ -85,7 +86,6 @@ export function containsAnyNormalized(
 }
 
 export function isDetectionVerbatim(sourceText: string, snippet: string): boolean {
-  if (!snippet || snippet.trim().length === 0) return false;
-  if (includesNormalizedNeedle(sourceText, snippet)) return true;
-  return includesNormalizedNeedle(sourceText, snippet, { stripPunctuation: true });
+  if (!snippet || snippet.length === 0) return false;
+  return isExactContiguousSpan(sourceText, snippet);
 }

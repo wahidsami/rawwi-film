@@ -1,5 +1,5 @@
 /**
- * Tests for conservative Arabic lexicon normalization and obfuscated matching.
+ * Tests for exact Arabic lexicon matching.
  * Run: npx tsx src/lexiconCache.test.ts
  */
 import { canonicalArabicToken, findStringMatches } from "./lexiconCache.js";
@@ -15,19 +15,26 @@ function testCanonicalArabicToken() {
   console.log("✓ canonicalArabicToken removes common Arabic obfuscation");
 }
 
-function testObfuscatedWordMatch() {
-  const text = "هذا وصف قـ ذر وغير مقبول.";
+function testExactArabicWordMatch() {
+  const text = "هذا وصف قذر وغير مقبول.";
   const matches = findStringMatches(text, "قذر", "word");
-  assert(matches.length === 1, `expected 1 obfuscated match, got ${matches.length}`);
-  assert(matches[0]?.matchedText === "قـ ذر", `expected matched text to preserve raw evidence, got "${matches[0]?.matchedText}"`);
-  console.log("✓ word match catches spaced/tatweel Arabic profanity");
+  assert(matches.length === 1, `expected 1 exact match, got ${matches.length}`);
+  assert(matches[0]?.matchedText === "قذر", `expected matched text to preserve raw evidence, got "${matches[0]?.matchedText}"`);
+  console.log("✓ word match keeps exact Arabic evidence contiguous");
 }
 
 function testDiacriticsAndAlefVariants() {
-  const text = "هذا النص فيه أَلْفاظ قذرة.";
-  const matches = findStringMatches(text, "الفاظ", "word");
-  assert(matches.length === 1, `expected 1 alef/diacritic match, got ${matches.length}`);
-  console.log("✓ word match catches common alef/diacritic normalization");
+  const text = "هذا النص فيه ألفاظ قذرة.";
+  const matches = findStringMatches(text, "ألفاظ", "word");
+  assert(matches.length === 1, `expected 1 exact Arabic match, got ${matches.length}`);
+  console.log("✓ word match keeps literal Arabic text");
+}
+
+function testNoCrossWordMatch() {
+  const text = "المسؤول عن توزيع أمريكا";
+  const matches = findStringMatches(text, "لعن", "word");
+  assert(matches.length === 0, `expected 0 cross-word matches, got ${matches.length}`);
+  console.log("✓ word match rejects cross-word evidence");
 }
 
 function testNoFalsePositiveAcrossDifferentLetters() {
@@ -39,8 +46,9 @@ function testNoFalsePositiveAcrossDifferentLetters() {
 
 async function main() {
   testCanonicalArabicToken();
-  testObfuscatedWordMatch();
+  testExactArabicWordMatch();
   testDiacriticsAndAlefVariants();
+  testNoCrossWordMatch();
   testNoFalsePositiveAcrossDifferentLetters();
   console.log("\nAll lexicon normalization tests passed.");
 }

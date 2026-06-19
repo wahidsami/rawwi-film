@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { config } from "./config.js";
 import { logger } from "./logger.js";
+import { findExactContiguousMatches } from "./exactContiguousMatch.js";
 
 export type LexiconTerm = {
   id: string;
@@ -29,10 +30,8 @@ let isRefreshing = false;
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
 const ARABIC_NON_SIGNAL_WORDS = new Set<string>(["ال"]);
 const ARABIC_CHAR_RE = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/u;
-const ARABIC_LETTER_RE = /[\u0621-\u064A\u066E-\u066F\u0671-\u06D3\u06FA-\u06FC\u06FF]/u;
 const ARABIC_DIACRITICS_RE = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g;
 const ARABIC_OBFUSCATION_RE = /[\u0640\u200B-\u200F\u2060\uFEFF]/g;
-const FLEXIBLE_ARABIC_GAP = String.raw`(?:[\s\u00A0\u0610-\u061A\u0640\u064B-\u065F\u0670\u06D6-\u06ED\u200B-\u200F\u2060\uFEFF.,،;:!?\-_\/\\|~*]*)`;
 
 function escapeRegex(v: string): string {
   return v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -40,10 +39,6 @@ function escapeRegex(v: string): string {
 
 function hasArabicChars(v: string): boolean {
   return ARABIC_CHAR_RE.test(v);
-}
-
-function isArabicLetter(ch: string): boolean {
-  return ARABIC_LETTER_RE.test(ch);
 }
 
 /**
@@ -63,24 +58,6 @@ export function canonicalArabicToken(v: string): string {
     .toLowerCase();
 }
 
-function arabicCharPattern(ch: string): string {
-  const normalized = canonicalArabicToken(ch);
-  if (!normalized) return "";
-  if (normalized === "ا") return "[اأإآٱ]";
-  if (normalized === "ي") return "[يى]";
-  return escapeRegex(normalized);
-}
-
-function buildFlexibleArabicBody(term: string): string {
-  const normalized = canonicalArabicToken(term);
-  if (!normalized) return "";
-  const tokens = normalized.split(" ").filter(Boolean);
-  return tokens
-    .map((token) => [...token].map(arabicCharPattern).filter(Boolean).join(FLEXIBLE_ARABIC_GAP))
-    .filter(Boolean)
-    .join(`${FLEXIBLE_ARABIC_GAP}+`);
-}
-
 export function findStringMatches(
   text: string,
   rawNeedle: string,
@@ -89,37 +66,26 @@ export function findStringMatches(
   const needle = rawNeedle.trim();
   if (!needle) return [];
 
-  const useFlexibleArabic = hasArabicChars(needle);
   const results: Array<Omit<LexiconMatch, "term">> = [];
 
-  let regex: RegExp;
-  let captureGroup = 1;
-
-  if (useFlexibleArabic) {
-    const body = buildFlexibleArabicBody(needle);
-    if (!body) return [];
-    if (termType === "word") {
-      regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${body})(?=[^\\p{L}\\p{N}_]|$)`, "gu");
-      captureGroup = 2;
-    } else {
-      regex = new RegExp(`(${body})`, "gu");
+  if (hasArabicChars(needle)) {
+    const matches = findExactContiguousMatches(text, needle, termType);
+    for (const match of matches) {
+      results.push(match);
     }
-  } else {
-    const escaped = escapeRegex(needle);
-    if (termType === "word") {
-      regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${escaped})(?=[^\\p{L}\\p{N}_]|$)`, "giu");
-      captureGroup = 2;
-    } else {
-      regex = new RegExp(`(${escaped})`, "giu");
-    }
+    return results;
   }
 
+  const escaped = escapeRegex(needle);
+  const regex = termType === "word"
+    ? new RegExp(`(^|[^\\p{L}\\p{N}_])(${escaped})(?=[^\\p{L}\\p{N}_]|$)`, "giu")
+    : new RegExp(`(${escaped})`, "giu");
   let m: RegExpExecArray | null;
   regex.lastIndex = 0;
   while ((m = regex.exec(text)) !== null) {
-    const matchedText = m[captureGroup] ?? "";
+    const matchedText = m[2] ?? m[1] ?? m[0] ?? "";
     if (!matchedText) continue;
-    const startIndex = m.index + (captureGroup === 2 ? (m[1]?.length ?? 0) : 0);
+    const startIndex = termType === "word" ? m.index + (m[1]?.length ?? 0) : m.index;
     const endIndex = startIndex + matchedText.length;
     const { line, column } = getLineAndColumn(text, startIndex);
     results.push({ matchedText, startIndex, endIndex, line, column });
@@ -206,7 +172,7 @@ export class LexiconCache {
           const after = match.endIndex < text.length ? text[match.endIndex] ?? "" : "";
           if (
             term.term_type === "word" &&
-            ((before && isArabicLetter(before)) || (after && isArabicLetter(after)))
+            ((before && /[\p{L}\p{N}]/u.test(before)) || (after && /[\p{L}\p{N}]/u.test(after)))
           ) {
             continue;
           }

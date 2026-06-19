@@ -945,8 +945,8 @@ function getPassSpecificEvidenceIssue(
 }
 
 function getEvidenceQualityIssue(finding: JudgeFinding, chunkText: string): string | null {
-  const evidence = compactNormalizedEvidence(finding.evidence_snippet);
-  if (!evidence) return "empty";
+  const evidence = typeof finding.evidence_snippet === "string" ? finding.evidence_snippet : "";
+  if (evidence.trim().length === 0) return "empty";
   if (!/[\p{L}]/u.test(evidence)) return "non_text";
   if (evidence.length < 2) return "too_short";
 
@@ -959,20 +959,12 @@ function getEvidenceQualityIssue(finding: JudgeFinding, chunkText: string): stri
     end > start &&
     end <= chunkText.length
   ) {
-    const before = start > 0 ? chunkText[start - 1] : undefined;
-    const first = chunkText[start];
-    const last = chunkText[end - 1];
-    const after = end < chunkText.length ? chunkText[end] : undefined;
-    if (isWordLikeChar(before) && isWordLikeChar(first)) return "starts_mid_word";
-    if (isWordLikeChar(last) && isWordLikeChar(after)) return "ends_mid_word";
+    const span = chunkText.slice(start, end);
+    if (span !== evidence) return "evidence_mismatch";
+    return null;
   }
 
-  const tinyFragments = evidence.split(/\s+/).filter(Boolean);
-  if (tinyFragments.length >= 3 && tinyFragments.some((fragment) => fragment.length === 1)) {
-    return "fragmented";
-  }
-
-  return null;
+  return "missing_offsets";
 }
 
 function getStoredEvidenceQualityIssue(
@@ -981,16 +973,11 @@ function getStoredEvidenceQualityIssue(
   startOffsetGlobal: number | null | undefined,
   endOffsetGlobal: number | null | undefined,
 ): string | null {
-  const evidence = compactNormalizedEvidence(evidenceSnippet);
-  if (!evidence) return "empty";
+  const evidence = typeof evidenceSnippet === "string" ? evidenceSnippet : "";
+  if (evidence.trim().length === 0) return "empty";
   if (!/[\p{L}]/u.test(evidence)) return "non_text";
   if (evidence.length < 2) return "too_short";
   if (isHeadingLikeEvidence(evidence)) return "heading_like";
-
-  const tinyFragments = evidence.split(/\s+/).filter(Boolean);
-  if (tinyFragments.length >= 3 && tinyFragments.some((fragment) => fragment.length === 1)) {
-    return "fragmented";
-  }
 
   if (
     typeof fullText === "string" &&
@@ -1000,15 +987,12 @@ function getStoredEvidenceQualityIssue(
     endOffsetGlobal > startOffsetGlobal &&
     endOffsetGlobal <= fullText.length
   ) {
-    const before = startOffsetGlobal > 0 ? fullText[startOffsetGlobal - 1] : undefined;
-    const first = fullText[startOffsetGlobal];
-    const last = fullText[endOffsetGlobal - 1];
-    const after = endOffsetGlobal < fullText.length ? fullText[endOffsetGlobal] : undefined;
-    if (isWordLikeChar(before) && isWordLikeChar(first)) return "starts_mid_word";
-    if (isWordLikeChar(last) && isWordLikeChar(after)) return "ends_mid_word";
+    const span = fullText.slice(startOffsetGlobal, endOffsetGlobal);
+    if (span !== evidence) return "evidence_mismatch";
+    return null;
   }
 
-  return null;
+  return "missing_offsets";
 }
 
 function normalizeEvidenceSpanToWordBoundaries(
@@ -2450,10 +2434,8 @@ export async function processChunkJudge(
         end <= normalizedText.length &&
         (end - start) <= MAX_EVIDENCE_SPAN;
 
-      const modelSnippet = compactEvidenceText(f.evidence_snippet ?? "");
-      let canonicalSnippet = hasSaneGlobalOffsets
-        ? compactEvidenceText(normalizedText!.slice(start, end))
-        : "";
+      const modelSnippet = typeof f.evidence_snippet === "string" ? f.evidence_snippet : "";
+      let canonicalSnippet = hasSaneGlobalOffsets ? normalizedText!.slice(start, end) : "";
       // Prefer canonical script text whenever offsets are sane so report evidence stays literal.
       let excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
 
@@ -2463,36 +2445,8 @@ export async function processChunkJudge(
         hasSaneGlobalOffsets ? start : null,
         hasSaneGlobalOffsets ? end : null,
       );
-      if (
-        finalEvidenceIssue &&
-        (finalEvidenceIssue === "starts_mid_word" || finalEvidenceIssue === "ends_mid_word") &&
-        hasSaneGlobalOffsets &&
-        normalizedText
-      ) {
-        const repaired = normalizeEvidenceSpanToWordBoundaries(normalizedText, start, end);
-        if (repaired) {
-          start = repaired.start;
-          end = repaired.end;
-          canonicalSnippet = repaired.excerpt;
-          excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
-          finalEvidenceIssue = getStoredEvidenceQualityIssue(excerpt, normalizedText, start, end);
-          if (!finalEvidenceIssue) {
-            logger.info("Auto-repaired evidence span to word boundaries", {
-              jobId,
-              chunkId: chunk.id,
-              runKey,
-              article: f.article_id,
-              oldStart: initialStart,
-              oldEnd: initialEnd,
-              newStart: start,
-              newEnd: end,
-              excerpt: excerpt.slice(0, 120),
-            });
-          }
-        }
-      }
-        if (finalEvidenceIssue) {
-          postCanonicalEvidenceDroppedCount++;
+      if (finalEvidenceIssue) {
+        postCanonicalEvidenceDroppedCount++;
         logger.warn("Low-quality final evidence excerpt (dropping finding before insert)", {
           jobId,
           chunkId: chunk.id,
@@ -2503,26 +2457,26 @@ export async function processChunkJudge(
           modelSnippet: modelSnippet.slice(0, 80),
           canonicalSnippet: canonicalSnippet.slice(0, 80),
         });
-          return [];
-        }
+        return [];
+      }
 
-        const passSpecificEvidenceIssue = getPassSpecificEvidenceIssue(f, excerpt, normalizedText, sceneIndex);
-        if (passSpecificEvidenceIssue) {
-          postCanonicalEvidenceDroppedCount++;
-          logger.warn("Pass-specific final evidence issue (dropping finding before insert)", {
-            jobId,
-            chunkId: chunk.id,
-            runKey,
-            article: f.article_id,
-            pass: f.detection_pass ?? null,
-            canonicalAtom: f.canonical_atom ?? null,
-            issue: passSpecificEvidenceIssue,
-            excerpt: excerpt.slice(0, 120),
-          });
-          return [];
-        }
+      const passSpecificEvidenceIssue = getPassSpecificEvidenceIssue(f, excerpt, normalizedText, sceneIndex);
+      if (passSpecificEvidenceIssue) {
+        postCanonicalEvidenceDroppedCount++;
+        logger.warn("Pass-specific final evidence issue (dropping finding before insert)", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          article: f.article_id,
+          pass: f.detection_pass ?? null,
+          canonicalAtom: f.canonical_atom ?? null,
+          issue: passSpecificEvidenceIssue,
+          excerpt: excerpt.slice(0, 120),
+        });
+        return [];
+      }
 
-        if (canonicalSnippet.length > 0 && modelSnippet.length > 0 && !snippetsReasonablyAlign(modelSnippet, canonicalSnippet)) {
+      if (canonicalSnippet.length > 0 && modelSnippet.length > 0 && !snippetsReasonablyAlign(modelSnippet, canonicalSnippet)) {
         canonicalModelMismatchDroppedCount++;
         logger.warn("Canonical/model evidence mismatch (dropping finding before insert)", {
           jobId,

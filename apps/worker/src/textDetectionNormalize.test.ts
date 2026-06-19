@@ -8,22 +8,24 @@ function testNormalizeDetectionTextHandlesArabicObfuscation() {
   console.log("✓ normalizeDetectionText collapses common Arabic obfuscation");
 }
 
-function testIncludesNormalizedNeedleMatchesObfuscatedArabic() {
-  const text = "قال له: أنت قـ ذر ولا أحد يطيقك.";
+function testIncludesNormalizedNeedleMatchesLiteralArabic() {
+  const text = "قال له: أنت قذر ولا أحد يطيقك.";
   assert.equal(includesNormalizedNeedle(text, "قذر"), true);
-  console.log("✓ includesNormalizedNeedle matches spaced/tatweel Arabic text");
+  console.log("✓ includesNormalizedNeedle matches literal Arabic text");
 }
 
-function testIsDetectionVerbatimMatchesArabicVariants() {
-  const source = "ضاري يصرخ: انت قـ ذر ثم يدفع الباب.";
+function testIsDetectionVerbatimRequiresExactContiguousText() {
+  const source = "ضاري يصرخ: انت قذر ثم يدفع الباب.";
   assert.equal(isDetectionVerbatim(source, "انت قذر"), true);
-  console.log("✓ isDetectionVerbatim accepts equivalent Arabic evidence text");
+  assert.equal(isDetectionVerbatim("المسؤول عن", "لعن"), false);
+  assert.equal(isDetectionVerbatim("المسؤول\nعن", "لعن"), false);
+  console.log("✓ isDetectionVerbatim requires exact contiguous text");
 }
 
 function testContainsAnyNormalizedMatchesNarrativeHints() {
-  const text = "في النهاية عُـوقب على فعله وظهر ندمه بوضوح.";
+  const text = "في النهاية عوقب على فعله وظهر ندمه بوضوح.";
   assert.equal(containsAnyNormalized(text, ["عوقب", "ندم"]), true);
-  console.log("✓ containsAnyNormalized catches obfuscated Arabic narrative hints");
+  console.log("✓ containsAnyNormalized catches Arabic narrative hints");
 }
 
 function testArabicWordBoundaryAvoidsFalsePositives() {
@@ -34,8 +36,8 @@ function testArabicWordBoundaryAvoidsFalsePositives() {
 
 function main() {
   testNormalizeDetectionTextHandlesArabicObfuscation();
-  testIncludesNormalizedNeedleMatchesObfuscatedArabic();
-  testIsDetectionVerbatimMatchesArabicVariants();
+  testIncludesNormalizedNeedleMatchesLiteralArabic();
+  testIsDetectionVerbatimRequiresExactContiguousText();
   testContainsAnyNormalizedMatchesNarrativeHints();
   testArabicWordBoundaryAvoidsFalsePositives();
 }
