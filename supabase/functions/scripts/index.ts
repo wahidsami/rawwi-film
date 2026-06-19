@@ -1273,23 +1273,24 @@ Deno.serve(async (req: Request) => {
   const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
   if (req.method === "OPTIONS") return optionsResponse(req);
 
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
+  try {
+    const auth = await requireAuth(req);
+    if (auth instanceof Response) return auth;
 
-  const correlationId = getCorrelationId(req);
-  const supabase = createSupabaseAdmin();
-  const rest = pathAfter("scripts", req.url);
-  const method = req.method;
-  const uid = auth.userId;
+    const correlationId = getCorrelationId(req);
+    const supabase = createSupabaseAdmin();
+    const rest = pathAfter("scripts", req.url);
+    const method = req.method;
+    const uid = auth.userId;
 
-  console.log(`[scripts] Request: ${method} ${req.url}`);
-  console.log(`[scripts] Parsed rest path: '${rest}'`);
+    console.log(`[scripts] Request: ${method} ${req.url}`);
+    console.log(`[scripts] Parsed rest path: '${rest}'`);
 
-  // GET /scripts
-  // - Super Admin/Admin: see all
-  // - Regulator-only: assigned scripts only
-  // - Other users (including client portal users): own scripts + assigned scripts
-  if (method === "GET" && rest === "") {
+    // GET /scripts
+    // - Super Admin/Admin: see all
+    // - Regulator-only: assigned scripts only
+    // - Other users (including client portal users): own scripts + assigned scripts
+    if (method === "GET" && rest === "") {
     let query = supabase
       .from("scripts")
       .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
@@ -3240,5 +3241,9 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Not implemented" }, 501);
   }
 
-  return json({ error: "Not Found" }, 404);
+    return json({ error: "Not Found" }, 404);
+  } catch (e) {
+    console.error("[scripts] UNHANDLED ERROR:", e);
+    return json({ error: String(e) }, 500);
+  }
 });
