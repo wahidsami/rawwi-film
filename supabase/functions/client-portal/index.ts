@@ -642,7 +642,6 @@ Deno.serve(async (req: Request) => {
     const effectiveCompanyEmail = companyEmail || email;
 
     if (!email || !isValidEmail(email)) return json({ error: "Valid email is required" }, 400);
-    if (!otpVerificationToken) return json({ error: "Email verification is required before registration" }, 400);
     if (beneficiaryType === "company" && (!effectiveCompanyEmail || !isValidEmail(effectiveCompanyEmail))) return json({ error: "Valid company email is required" }, 400);
     if (!password || password.length < 8) return json({ error: "Password must be at least 8 characters" }, 400);
     if (!name) return json({ error: "Name is required" }, 400);
@@ -652,18 +651,41 @@ Deno.serve(async (req: Request) => {
     if (!acceptedTerms) return json({ error: "Terms must be accepted" }, 400);
     if (!acceptedRegulations) return json({ error: "Regulations must be accepted" }, 400);
 
-    const tokenHash = await sha256Hex(otpVerificationToken);
-    const { data: verifiedOtp } = await supabase
-      .from("registration_email_otps")
-      .select("id, email, verification_token_expires_at, consumed_at")
-      .eq("email", email)
-      .eq("verification_token_hash", tokenHash)
-      .not("verified_at", "is", null)
-      .is("consumed_at", null)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (!verifiedOtp?.id) return json({ error: "Invalid or missing email verification token" }, 401);
+    let verifiedOtp:
+      | { id: string; email: string; verification_token_expires_at: string | null; consumed_at: string | null; verified_at?: string | null }
+      | null = null;
+    if (otpVerificationToken) {
+      const tokenHash = await sha256Hex(otpVerificationToken);
+      const { data } = await supabase
+        .from("registration_email_otps")
+        .select("id, email, verification_token_expires_at, consumed_at, verified_at")
+        .eq("email", email)
+        .eq("verification_token_hash", tokenHash)
+        .not("verified_at", "is", null)
+        .is("consumed_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      verifiedOtp = data ?? null;
+    } else {
+      const { data } = await supabase
+        .from("registration_email_otps")
+        .select("id, email, verification_token_expires_at, consumed_at, verified_at")
+        .eq("email", email)
+        .not("verified_at", "is", null)
+        .is("consumed_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      verifiedOtp = data ?? null;
+    }
+    if (!verifiedOtp?.id) {
+      return json({
+        error: otpVerificationToken
+          ? "Invalid or missing email verification token"
+          : "Email verification is required before registration",
+      }, otpVerificationToken ? 401 : 400);
+    }
     if (verifiedOtp.consumed_at) return json({ error: "Verification token already used" }, 409);
     if (!verifiedOtp.verification_token_expires_at || new Date(verifiedOtp.verification_token_expires_at).getTime() < Date.now()) {
       return json({ error: "Email verification token expired" }, 410);
