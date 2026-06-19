@@ -40,6 +40,12 @@ const COUNTRY_DIAL_CODES: ReadonlyArray<{ country: string; code: string }> = [
   { country: 'Other', code: '+000' },
 ];
 
+const OTP_STORAGE_KEY = 'raawi.clientPortal.otpVerification';
+
+function getOtpStorageKey(email: string): string {
+  return `${OTP_STORAGE_KEY}:${email.trim().toLowerCase()}`;
+}
+
 function composeInternationalPhone(countryCode: string, localNumber: string): string {
   const normalizedCode = countryCode.trim().replace(/\s+/g, '');
   const normalizedNumber = localNumber.trim().replace(/\s+/g, '');
@@ -181,6 +187,22 @@ export function ClientRegister() {
     }
   }, [otpVerifiedEmail, registrationEmail]);
 
+  useEffect(() => {
+    if (!registrationEmail) return;
+    try {
+      const raw = window.localStorage.getItem(getOtpStorageKey(registrationEmail));
+      if (!raw) return;
+      const saved = JSON.parse(raw) as { token?: string; email?: string };
+      if (saved?.email?.toLowerCase() !== registrationEmail) return;
+      if (saved?.token) {
+        setOtpVerificationToken(saved.token);
+        setOtpVerifiedEmail(registrationEmail);
+      }
+    } catch {
+      // Ignore malformed storage and continue with a clean state.
+    }
+  }, [registrationEmail]);
+
   const validateStep = (targetStep: number): string | null => {
     if (!beneficiaryType) return isArabic ? 'اختر نوع التسجيل أولاً' : 'Please select registration type first';
     if (beneficiaryType === 'company') {
@@ -272,6 +294,14 @@ export function ClientRegister() {
       });
       setOtpVerificationToken(response.verificationToken);
       setOtpVerifiedEmail(registrationEmail);
+      try {
+        window.localStorage.setItem(
+          getOtpStorageKey(registrationEmail),
+          JSON.stringify({ email: registrationEmail, token: response.verificationToken, expiresAt: response.verificationTokenExpiresAt })
+        );
+      } catch {
+        // Local storage is a best-effort cache only.
+      }
       setOtpPanelOpen(false);
       setOtpMessage(isArabic ? 'تم تأكيد البريد الإلكتروني بنجاح' : 'Email verified successfully');
       setStep((prev) => Math.min(maxSteps, prev + 1));
@@ -382,6 +412,13 @@ export function ClientRegister() {
         });
       }
       setSuccess(isArabic ? 'تم إرسال طلب التسجيل بنجاح. ستصلك رسالة بريدية بعد مراجعة الطلب.' : 'Registration request submitted successfully. You will receive an email after review.');
+      if (registrationEmail) {
+        try {
+          window.localStorage.removeItem(getOtpStorageKey(registrationEmail));
+        } catch {
+          // Best-effort cleanup.
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : (isArabic ? 'فشل التسجيل' : 'Registration failed'));
     } finally {
