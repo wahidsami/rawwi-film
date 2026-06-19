@@ -44,6 +44,7 @@ function getRuntimeConfigLogPayload() {
     rationaleModel: config.OPENAI_RATIONALE_MODEL,
     judgeTimeoutMs: config.JUDGE_TIMEOUT_MS,
     passHardTimeoutMs: config.PASS_HARD_TIMEOUT_MS,
+    chunkSoftTimeoutMs: config.CHUNK_SOFT_TIMEOUT_MS,
     hybridHardTimeoutMs: config.HYBRID_HARD_TIMEOUT_MS,
     chunkHardTimeoutMs: config.CHUNK_HARD_TIMEOUT_MS,
     chunkHardTimeoutMaxRetries: config.CHUNK_HARD_TIMEOUT_MAX_RETRIES,
@@ -136,16 +137,17 @@ async function processClaimedChunk(
 ): Promise<ChunkProcessResult> {
   setContext({ jobId: job.id, chunkId: claimed.id });
   const abortController = new AbortController();
+  const chunkTimeoutMs = Math.min(config.CHUNK_SOFT_TIMEOUT_MS, config.CHUNK_HARD_TIMEOUT_MS);
   let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
   try {
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutHandle = setTimeout(() => {
         const error = new ChunkTimeoutError(
-          `Chunk exceeded hard timeout of ${config.CHUNK_HARD_TIMEOUT_MS}ms`,
+          `Chunk exceeded timeout of ${chunkTimeoutMs}ms`,
         );
         abortController.abort(error);
         reject(error);
-      }, config.CHUNK_HARD_TIMEOUT_MS);
+      }, chunkTimeoutMs);
     });
     await Promise.race([
       processChunkForJob(job as any, claimed as any, normalizedText, abortController.signal),
@@ -176,7 +178,7 @@ async function processClaimedChunk(
           chunkId: claimed.id,
           retryCount,
           maxRetries: config.CHUNK_HARD_TIMEOUT_MAX_RETRIES,
-          timeoutMs: config.CHUNK_HARD_TIMEOUT_MS,
+          timeoutMs: chunkTimeoutMs,
         });
         await setChunkPending(claimed.id, encodeChunkTimeoutRetry(errMsg, retryCount));
         return { ok: false, retryable: true, error: CHUNK_TIMEOUT_REQUEUED_PUBLIC_MESSAGE };
@@ -187,7 +189,7 @@ async function processClaimedChunk(
         chunkId: claimed.id,
         retryCount,
         maxRetries: config.CHUNK_HARD_TIMEOUT_MAX_RETRIES,
-        timeoutMs: config.CHUNK_HARD_TIMEOUT_MS,
+        timeoutMs: chunkTimeoutMs,
       });
       await setChunkFailed(claimed.id, CHUNK_TIMEOUT_FAILED_PUBLIC_MESSAGE);
       await setJobFailed(job.id, CHUNK_TIMEOUT_FAILED_PUBLIC_MESSAGE);

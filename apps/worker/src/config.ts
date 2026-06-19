@@ -11,6 +11,10 @@ export const config = {
   /** Model for rationale-only pass. Use gpt-4.1 by default (gpt-4o if your project has access). */
   OPENAI_RATIONALE_MODEL: process.env.OPENAI_RATIONALE_MODEL ?? "gpt-4.1",
   JUDGE_TIMEOUT_MS: parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10),
+  CHUNK_SOFT_TIMEOUT_MS: Math.max(
+    60_000,
+    parseInt(process.env.CHUNK_SOFT_TIMEOUT_MS ?? "240000", 10) || 240_000
+  ),
   PASS_HARD_TIMEOUT_MS: Math.max(
     parseInt(process.env.PASS_HARD_TIMEOUT_MS ?? "180000", 10) || 180000,
     parseInt(process.env.JUDGE_TIMEOUT_MS ?? "120000", 10) || 120000
