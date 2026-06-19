@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { config } from "./config.js";
 import { logger } from "./logger.js";
-import { findExactContiguousMatches } from "./exactContiguousMatch.js";
 
 export type LexiconTerm = {
   id: string;
@@ -32,6 +31,7 @@ const ARABIC_NON_SIGNAL_WORDS = new Set<string>(["ال"]);
 const ARABIC_CHAR_RE = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/u;
 const ARABIC_DIACRITICS_RE = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g;
 const ARABIC_OBFUSCATION_RE = /[\u0640\u200B-\u200F\u2060\uFEFF]/g;
+const WORD_TOKEN_RE = /[\p{L}\p{N}]+/gu;
 
 function escapeRegex(v: string): string {
   return v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -39,6 +39,65 @@ function escapeRegex(v: string): string {
 
 function hasArabicChars(v: string): boolean {
   return ARABIC_CHAR_RE.test(v);
+}
+
+type TokenSpan = {
+  token: string;
+  normalized: string;
+  startIndex: number;
+  endIndex: number;
+};
+
+function tokenizeWordSpans(text: string): TokenSpan[] {
+  const tokens: TokenSpan[] = [];
+  const source = text ?? "";
+  for (const match of source.matchAll(WORD_TOKEN_RE)) {
+    const token = match[0] ?? "";
+    if (!token) continue;
+    const startIndex = match.index ?? 0;
+    const endIndex = startIndex + token.length;
+    const normalized = canonicalArabicToken(token);
+    if (!normalized) continue;
+    tokens.push({ token, normalized, startIndex, endIndex });
+  }
+  return tokens;
+}
+
+function isArabicTokenTerm(term: string): boolean {
+  return hasArabicChars(term);
+}
+
+function findArabicTokenMatches(
+  text: string,
+  rawNeedle: string,
+  termType: "word" | "phrase"
+): Array<Omit<LexiconMatch, "term">> {
+  const needleTokens = tokenizeWordSpans(rawNeedle).map((token) => token.normalized).filter(Boolean);
+  if (needleTokens.length === 0) return [];
+  if (termType === "word" && needleTokens.length !== 1) return [];
+
+  const sourceTokens = tokenizeWordSpans(text);
+  if (sourceTokens.length === 0) return [];
+
+  const windowSize = needleTokens.length;
+  const results: Array<Omit<LexiconMatch, "term">> = [];
+  for (let i = 0; i <= sourceTokens.length - windowSize; i++) {
+    const window = sourceTokens.slice(i, i + windowSize);
+    let matched = true;
+    for (let j = 0; j < windowSize; j++) {
+      if (window[j]?.normalized !== needleTokens[j]) {
+        matched = false;
+        break;
+      }
+    }
+    if (!matched) continue;
+    const startIndex = window[0]?.startIndex ?? 0;
+    const endIndex = window[window.length - 1]?.endIndex ?? startIndex;
+    const matchedText = text.slice(startIndex, endIndex);
+    const { line, column } = getLineAndColumn(text, startIndex);
+    results.push({ matchedText, startIndex, endIndex, line, column });
+  }
+  return results;
 }
 
 /**
@@ -68,11 +127,9 @@ export function findStringMatches(
 
   const results: Array<Omit<LexiconMatch, "term">> = [];
 
-  if (hasArabicChars(needle)) {
-    const matches = findExactContiguousMatches(text, needle, termType);
-    for (const match of matches) {
-      results.push(match);
-    }
+  if (isArabicTokenTerm(needle)) {
+    const matches = findArabicTokenMatches(text, needle, termType);
+    for (const match of matches) results.push(match);
     return results;
   }
 

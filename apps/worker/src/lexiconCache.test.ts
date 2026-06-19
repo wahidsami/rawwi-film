@@ -37,6 +37,17 @@ function testNoCrossWordMatch() {
   console.log("✓ word match rejects cross-word evidence");
 }
 
+function testNoPartialSubstringMatchInsideArabicWord() {
+  const falsePositives = ["الجبنة", "البنت", "مبنى", "تبني"];
+  for (const sample of falsePositives) {
+    const matches = findStringMatches(sample, "بن", "word");
+    assert(matches.length === 0, `expected 0 partial matches inside "${sample}", got ${matches.length}`);
+  }
+  const positive = findStringMatches("بن", "بن", "word");
+  assert(positive.length === 1, `expected 1 standalone token match, got ${positive.length}`);
+  console.log("✓ word match rejects partial Arabic substrings and keeps standalone tokens");
+}
+
 function testNoFalsePositiveAcrossDifferentLetters() {
   const text = "هذه قصة عن رجل ذكي وراقي.";
   const matches = findStringMatches(text, "قذر", "word");
@@ -49,6 +60,7 @@ async function main() {
   testExactArabicWordMatch();
   testDiacriticsAndAlefVariants();
   testNoCrossWordMatch();
+  testNoPartialSubstringMatchInsideArabicWord();
   testNoFalsePositiveAcrossDifferentLetters();
   console.log("\nAll lexicon normalization tests passed.");
 }
