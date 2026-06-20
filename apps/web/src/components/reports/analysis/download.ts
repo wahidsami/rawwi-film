@@ -3,6 +3,7 @@ import { pdf } from "@react-pdf/renderer";
 import { AnalysisSectionPdf } from "./Pdf";
 import { mapAnalysisFindingsForPdf, splitAnalysisReviewFindingsForPdf } from "./mapper";
 import type { AnalysisFinding, AnalysisReviewFinding } from "@/api";
+import type { ViewerPageSlice } from "@/utils/findingContext";
 
 async function toDataUrl(url: string): Promise<string | null> {
   try {
@@ -63,6 +64,7 @@ export interface DownloadAnalysisPdfParams {
     confidence: number;
   } | null;
   wordsToRevisit?: Array<{ term: string; snippet: string; start_offset: number; end_offset: number }> | null;
+  viewerPages?: ViewerPageSlice[] | null;
   lang: "ar" | "en";
   dateFormat?: string;
 }
@@ -104,6 +106,7 @@ export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Pr
       reportHints: reportHintsMapped,
       scriptSummary: params.scriptSummary ?? undefined,
       wordsToRevisit: params.wordsToRevisit ?? undefined,
+      viewerPages: params.viewerPages ?? undefined,
       lang: params.lang,
     },
     dateFormat: params.dateFormat,

@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import type { AnalysisFinding, AnalysisReviewFinding } from "@/api";
 import { mapAnalysisFindingsForPdf, splitAnalysisReviewFindingsForPdf } from "./mapper";
 import { displayPageForFinding, type ViewerPageSlice } from "@/utils/viewerPageFromOffset";
+import { getGlossarySentenceContext } from "@/utils/findingContext";
 
 type ReportHint = {
   canonical_finding_id: string;
@@ -162,6 +163,10 @@ function formatNullableValue(value: string | number | null | undefined): string 
 function formatActionText(value: string | null | undefined, lang: "ar" | "en"): string {
   const text = plainText(value);
   return text || DEFAULT_ACTION_TEXT[lang];
+}
+
+function isGlossaryFindingSource(source?: string | null): boolean {
+  return source === "lexicon_mandatory" || source === "glossary";
 }
 
 function normalizeScriptType(value: string | null | undefined, lang: "ar" | "en"): string {
@@ -472,10 +477,21 @@ function buildFindingsTable(params: DownloadAnalysisWordParams): string {
           finding.pageNumber ?? null
         );
         const findingText = plainText(finding.evidenceSnippet) || "—";
+        const glossarySentenceContext = isGlossaryFindingSource(finding.source)
+          ? getGlossarySentenceContext({
+              evidenceSnippet: finding.evidenceSnippet,
+              pageNumber: page ?? finding.pageNumber ?? null,
+              startOffsetGlobal: finding.startOffsetGlobal ?? null,
+              viewerPages: params.viewerPages ?? null,
+            })
+          : null;
         const actionText = formatActionText(finding.actionText, params.lang);
+        const textCell = glossarySentenceContext
+          ? `${findingText}\n${params.lang === "ar" ? "السياق: " : "Context: "}${glossarySentenceContext}`
+          : findingText;
         return `<w:tr>
           ${makeTableCell(formatNullableValue(page), 800, { align: "center", rtl: false })}
-          ${makeTableCell(findingText, 2800)}
+          ${makeTableCell(textCell, 2800)}
           ${makeTableCell(actionText, 1400)}
         </w:tr>`;
       });

@@ -7,6 +7,7 @@ import {
   violationTypesForChecklist,
   type ViolationTypeId,
 } from "@/data/violationTypes";
+import { getGlossarySentenceContext, type ViewerPageSlice } from "@/utils/findingContext";
 import { analysisStyles as s } from "./styles";
 import type { AnalysisPdfFinding } from "./mapper";
 const A4_WIDTH = 595.28;
@@ -36,6 +37,7 @@ export interface AnalysisSectionPdfData {
   reportHints?: AnalysisPdfFinding[];
   scriptSummary?: ScriptSummaryForPdf | null;
   wordsToRevisit?: RevisitMentionPdf[];
+  viewerPages?: ViewerPageSlice[] | null;
   lang?: "ar" | "en";
 }
 
@@ -161,17 +163,31 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
             </Text>
             {list.filter(Boolean).map((f, idx) => {
               return (
-                <View key={`${f?.id ?? `finding-${idx}`}-${idx}`} style={s.finding}>
-                  <Text style={[s.findingTitle, rtl]}>{f.titleAr || "—"}</Text>
-                  <Text style={[s.findingSnippet, rtl]}>
-                    {isAr ? "النص المخالف: " : "Violation text: "}
-                    "{f.evidenceSnippet || "—"}"
-                  </Text>
-                  {(f.pageNumber != null && f.pageNumber > 0) && (
-                    <Text style={[s.findingMeta, rtl]}>
-                      {isAr ? `صفحة ${f.pageNumber}` : `Page ${f.pageNumber}`}
+              <View key={`${f?.id ?? `finding-${idx}`}-${idx}`} style={s.finding}>
+                <Text style={[s.findingTitle, rtl]}>{f.titleAr || "—"}</Text>
+                <Text style={[s.findingSnippet, rtl]}>
+                  {isAr ? "النص المخالف: " : "Violation text: "}
+                  "{f.evidenceSnippet || "—"}"
+                </Text>
+                {((f.source === "lexicon_mandatory" || f.source === "glossary") && data.viewerPages?.length) ? (() => {
+                  const context = getGlossarySentenceContext({
+                    evidenceSnippet: f.evidenceSnippet,
+                    pageNumber: f.pageNumber ?? null,
+                    startOffsetGlobal: f.startOffsetGlobal ?? null,
+                    viewerPages: data.viewerPages ?? null,
+                  });
+                  return context ? (
+                    <Text style={[s.findingContext, rtl]}>
+                      {isAr ? "السياق: " : "Context: "}
+                      {context}
                     </Text>
-                  )}
+                  ) : null;
+                })() : null}
+                {(f.pageNumber != null && f.pageNumber > 0) && (
+                  <Text style={[s.findingMeta, rtl]}>
+                    {isAr ? `صفحة ${f.pageNumber}` : `Page ${f.pageNumber}`}
+                  </Text>
+                )}
                   {f.startLineChunk != null && (
                     <Text style={[s.findingMeta, rtl]}>
                       {isAr

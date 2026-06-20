@@ -35,6 +35,7 @@ export const analysisStyles = StyleSheet.create({
   finding: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 4, padding: 6, marginBottom: 6 },
   findingTitle: { fontSize: 10, fontWeight: "bold", marginBottom: 3 },
   findingSnippet: { fontSize: 9, lineHeight: 1.45, marginBottom: 6 },
+  findingContext: { fontSize: 8.5, lineHeight: 1.4, color: "#4B5563", marginBottom: 6 },
   findingChipsRow: { flexDirection: "row", gap: 6, marginBottom: 4 },
   chip: { borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2, fontSize: 8, color: "#111827", borderWidth: 1, borderColor: "#D1D5DB" },
   chipSeverityCritical: { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5", color: "#991B1B" },

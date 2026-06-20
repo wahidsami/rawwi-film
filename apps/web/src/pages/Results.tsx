@@ -21,6 +21,7 @@ import { downloadAnalysisPdf } from '@/components/reports/analysis/download';
 import { downloadAnalysisWord } from '@/components/reports/analysis/downloadWord';
 import { downloadQuickAnalysisPdf } from '@/components/reports/quick-analysis/download';
 import { resolveStorageUrl } from '@/utils/storage';
+import { getGlossarySentenceContext } from '@/utils/findingContext';
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
@@ -1606,6 +1607,7 @@ export function Results() {
         canonicalFindings: summary?.canonical_findings,
         reportHints: summary?.report_hints ?? undefined,
         scriptSummary: summary?.script_summary ?? undefined,
+        viewerPages: reportViewerPages,
         lang: isAr ? ('ar' as const) : ('en' as const),
         dateFormat,
       };
@@ -1824,6 +1826,10 @@ export function Results() {
     return t('findingSourceAi');
   }
 
+  function isGlossarySource(source: string | null | undefined): boolean {
+    return source === 'lexicon_mandatory' || source === 'glossary';
+  }
+
   function displayFindingTitle(params: {
     title: string | null | undefined;
     description?: string | null;
@@ -1909,6 +1915,14 @@ export function Results() {
       resolveSceneLabelFromOffset(f.startOffsetGlobal ?? null, reportViewerPages),
       lang
     );
+    const glossarySentenceContext = isGlossarySource(f.source)
+      ? getGlossarySentenceContext({
+          evidenceSnippet: f.evidenceSnippet,
+          pageNumber: displayPage ?? f.pageNumber ?? null,
+          startOffsetGlobal: f.startOffsetGlobal ?? null,
+          viewerPages: reportViewerPages,
+        })
+      : null;
     const displayTitle = displayFindingTitle({
       title: f.titleAr,
       description: f.descriptionAr ?? null,
@@ -2063,6 +2077,14 @@ export function Results() {
         <div className={cn("p-3 rounded-md border text-sm font-medium text-text-main italic", isApproved ? "bg-success/5 border-success/10" : "bg-background/50 border-border/50")} dir="rtl">
           "{f.evidenceSnippet}"
         </div>
+        {glossarySentenceContext && (
+          <p className="mt-2 text-xs leading-6 text-text-muted" dir="rtl">
+            <span className="font-semibold text-text-main">
+              {lang === 'ar' ? 'السياق:' : 'Context:'}
+            </span>{' '}
+            {glossarySentenceContext}
+          </p>
+        )}
         <div className="mt-2 text-xs text-text-muted space-y-1">
           {pillarId && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{pillarId}</span></div>}
           {showRationale && (
@@ -2100,6 +2122,14 @@ export function Results() {
       resolveSceneLabelFromOffset(f.startOffsetGlobal ?? null, reportViewerPages),
       lang
     );
+    const glossarySentenceContext = isGlossarySource(f.sourceKind)
+      ? getGlossarySentenceContext({
+          evidenceSnippet: f.evidenceSnippet,
+          pageNumber: displayPage ?? f.pageNumber ?? null,
+          startOffsetGlobal: f.startOffsetGlobal ?? null,
+          viewerPages: reportViewerPages,
+        })
+      : null;
     const displayTitle = displayFindingTitle({
       title: f.titleAr,
       description: f.descriptionAr ?? null,
@@ -2312,6 +2342,14 @@ export function Results() {
         <div className={cn("p-3 rounded-md border text-sm font-medium text-text-main italic", isApproved ? "bg-success/5 border-success/10" : "bg-background/50 border-border/50")} dir="rtl">
           "{f.evidenceSnippet}"
         </div>
+        {glossarySentenceContext && (
+          <p className="mt-2 text-xs leading-6 text-text-muted" dir="rtl">
+            <span className="font-semibold text-text-main">
+              {lang === 'ar' ? 'السياق:' : 'Context:'}
+            </span>{' '}
+            {glossarySentenceContext}
+          </p>
+        )}
         <div className="mt-2 text-xs text-text-muted space-y-1">
           {rationale && (
             <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{rationale}</span></div>
