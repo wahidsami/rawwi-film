@@ -41,6 +41,105 @@ function isRegulatorRoleKey(roleKey: string): boolean {
   return roleKey.toLowerCase().replace(/\s/g, '_') === 'regulator';
 }
 
+type UserPermissionBlockProps = {
+  roleKey: string;
+  allowedSections: string[];
+  canAcceptReject: boolean;
+  canSendForReview: boolean;
+  onRoleKeyChange: (roleKey: string) => void;
+  onAllowedSectionsChange: (sections: string[]) => void;
+  onCanAcceptRejectChange: (value: boolean) => void;
+  onCanSendForReviewChange: (value: boolean) => void;
+  t: (key: any) => string;
+  lang: string;
+  roleHelpText: string;
+};
+
+function UserPermissionBlock({
+  roleKey,
+  allowedSections,
+  canAcceptReject,
+  canSendForReview,
+  onRoleKeyChange,
+  onAllowedSectionsChange,
+  onCanAcceptRejectChange,
+  onCanSendForReviewChange,
+  t,
+  lang,
+  roleHelpText,
+}: UserPermissionBlockProps) {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-text-main">{t('role')}</label>
+        <select
+          className="flex h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
+          value={roleKey}
+          onChange={(e) => onRoleKeyChange(e.target.value)}
+        >
+          {ROLE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {t(opt.labelKey)}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-text-muted">{roleHelpText}</p>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-text-main">
+          {lang === 'ar' ? 'الأقسام الظاهرة في لوحة التحكم' : 'Dashboard sections this user can see'}
+        </label>
+        <div className="flex flex-wrap gap-3">
+          {SECTION_OPTIONS.map((opt) => (
+            <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={allowedSections.includes(opt.value)}
+                onChange={(e) => {
+                  onAllowedSectionsChange(
+                    e.target.checked
+                      ? [...allowedSections, opt.value]
+                      : allowedSections.filter((s) => s !== opt.value),
+                  );
+                }}
+                className="rounded border-border"
+              />
+              <span className="text-sm text-text-main">{t(opt.labelKey)}</span>
+            </label>
+          ))}
+          {isRegulatorRoleKey(roleKey) && (
+            <>
+              <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
+                <input
+                  type="checkbox"
+                  checked={canAcceptReject}
+                  onChange={(e) => onCanAcceptRejectChange(e.target.checked)}
+                  className="rounded border-border"
+                />
+                <span className="text-sm text-text-main">
+                  {lang === 'ar' ? 'يمكنه قبول أو رفض النصوص' : 'Can accept or reject scripts'}
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
+                <input
+                  type="checkbox"
+                  checked={canSendForReview}
+                  onChange={(e) => onCanSendForReviewChange(e.target.checked)}
+                  className="rounded border-border"
+                />
+                <span className="text-sm text-text-main">
+                  {lang === 'ar' ? 'يمكنه إرجاع النص للمراجعة' : 'Can send script back for review'}
+                </span>
+              </label>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AccessControl() {
   const { t, lang } = useLangStore();
   const [search, setSearch] = useState('');
@@ -487,82 +586,27 @@ export function AccessControl() {
               onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="Display name"
             />
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-main">{t('role')}</label>
-              <select
-                className="flex h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
-                value={editForm.roleKey}
-                onChange={(e) => {
-                  const roleKey = e.target.value;
-                  setEditForm((f) => ({
-                    ...f,
-                    roleKey,
-                    allowedSections: getDefaultSectionsForRoleKey(roleKey),
-                    canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
-                    canSendForReview: isRegulatorRoleKey(roleKey) ? f.canSendForReview : false,
-                  }));
-                }}
-              >
-                {ROLE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
-                ))}
-              </select>
-              <p className="text-xs text-text-muted">
-                {lang === 'ar' ? 'يحدد صلاحيات المستخدم في النظام' : 'Defines backend permissions.'}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-main">
-                {lang === 'ar' ? 'الأقسام الظاهرة في لوحة التحكم' : 'Dashboard sections this user can see'}
-              </label>
-              <div className="flex flex-wrap gap-3">
-                {SECTION_OPTIONS.map((opt) => (
-                  <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={editForm.allowedSections.includes(opt.value)}
-                      onChange={(e) => {
-                        setEditForm((f) => ({
-                          ...f,
-                          allowedSections: e.target.checked
-                            ? [...f.allowedSections, opt.value]
-                            : f.allowedSections.filter((s) => s !== opt.value),
-                        }));
-                      }}
-                      className="rounded border-border"
-                    />
-                    <span className="text-sm text-text-main">{t(opt.labelKey)}</span>
-                  </label>
-                ))}
-                {isRegulatorRoleKey(editForm.roleKey) && (
-                  <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={editForm.canAcceptReject}
-                      onChange={(e) => setEditForm((f) => ({ ...f, canAcceptReject: e.target.checked }))}
-                      className="rounded border-border"
-                    />
-                    <span className="text-sm text-text-main">
-                      {lang === 'ar' ? 'يمكنه قبول أو رفض النصوص' : 'Can accept or reject scripts'}
-                    </span>
-                  </label>
-                )}
-                {isRegulatorRoleKey(editForm.roleKey) && (
-                  <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={editForm.canSendForReview}
-                      onChange={(e) => setEditForm((f) => ({ ...f, canSendForReview: e.target.checked }))}
-                      className="rounded border-border"
-                    />
-                    <span className="text-sm text-text-main">
-                      {lang === 'ar' ? 'يمكنه إرجاع النص للمراجعة' : 'Can send script back for review'}
-                    </span>
-                  </label>
-                )}
-              </div>
-            </div>
+            <UserPermissionBlock
+              roleKey={editForm.roleKey}
+              allowedSections={editForm.allowedSections}
+              canAcceptReject={editForm.canAcceptReject}
+              canSendForReview={editForm.canSendForReview}
+              onRoleKeyChange={(roleKey) => {
+                setEditForm((f) => ({
+                  ...f,
+                  roleKey,
+                  allowedSections: getDefaultSectionsForRoleKey(roleKey),
+                  canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
+                  canSendForReview: isRegulatorRoleKey(roleKey) ? f.canSendForReview : false,
+                }));
+              }}
+              onAllowedSectionsChange={(sections) => setEditForm((f) => ({ ...f, allowedSections: sections }))}
+              onCanAcceptRejectChange={(value) => setEditForm((f) => ({ ...f, canAcceptReject: value }))}
+              onCanSendForReviewChange={(value) => setEditForm((f) => ({ ...f, canSendForReview: value }))}
+              t={t}
+              lang={lang}
+              roleHelpText={lang === 'ar' ? 'يحدد صلاحيات المستخدم في النظام' : 'Defines backend permissions.'}
+            />
             <div className="space-y-2">
               <label className="block text-sm font-medium text-text-main">{t('status')}</label>
               <select
@@ -604,85 +648,27 @@ export function AccessControl() {
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             />
           </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-text-main">{t('role')}</label>
-            <select
-              className="flex h-10 w-full rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
-              value={form.roleKey}
-              onChange={(e) => {
-                const roleKey = e.target.value;
-                  setForm((f) => ({
-                    ...f,
-                    roleKey,
-                    allowedSections: getDefaultSectionsForRoleKey(roleKey),
-                    canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
-                    canSendForReview: isRegulatorRoleKey(roleKey) ? f.canSendForReview : false,
-                  }));
-                }}
-            >
-              {ROLE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {t(opt.labelKey)}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-text-muted">
-                {lang === 'ar' ? 'يحدد صلاحيات المستخدم وما يظهر له في القائمة' : 'Defines what they can do and which dashboard sections they see.'}
-              </p>
-            </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-text-main">
-              {lang === 'ar' ? 'الأقسام الظاهرة في لوحة التحكم' : 'Dashboard sections this user can see'}
-            </label>
-            <div className="flex flex-wrap gap-3">
-                {SECTION_OPTIONS.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.allowedSections.includes(opt.value)}
-                    onChange={(e) => {
-                      setForm((f) => ({
-                        ...f,
-                        allowedSections: e.target.checked
-                          ? [...f.allowedSections, opt.value]
-                          : f.allowedSections.filter((s) => s !== opt.value),
-                      }));
-                    }}
-                    className="rounded border-border"
-                  />
-                  <span className="text-sm text-text-main">{t(opt.labelKey)}</span>
-                </label>
-              ))}
-              {isRegulatorRoleKey(form.roleKey) && (
-                <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
-                  <input
-                    type="checkbox"
-                    checked={form.canAcceptReject}
-                    onChange={(e) => setForm((f) => ({ ...f, canAcceptReject: e.target.checked }))}
-                    className="rounded border-border"
-                  />
-                  <span className="text-sm text-text-main">
-                    {lang === 'ar' ? 'يمكنه قبول أو رفض النصوص' : 'Can accept or reject scripts'}
-                  </span>
-                </label>
-              )}
-              {isRegulatorRoleKey(form.roleKey) && (
-                <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
-                  <input
-                    type="checkbox"
-                    checked={form.canSendForReview}
-                    onChange={(e) => setForm((f) => ({ ...f, canSendForReview: e.target.checked }))}
-                    className="rounded border-border"
-                  />
-                  <span className="text-sm text-text-main">
-                    {lang === 'ar' ? 'يمكنه إرجاع النص للمراجعة' : 'Can send script back for review'}
-                  </span>
-                </label>
-              )}
-              </div>
-            </div>
+          <UserPermissionBlock
+            roleKey={form.roleKey}
+            allowedSections={form.allowedSections}
+            canAcceptReject={form.canAcceptReject}
+            canSendForReview={form.canSendForReview}
+            onRoleKeyChange={(roleKey) => {
+              setForm((f) => ({
+                ...f,
+                roleKey,
+                allowedSections: getDefaultSectionsForRoleKey(roleKey),
+                canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
+                canSendForReview: isRegulatorRoleKey(roleKey) ? f.canSendForReview : false,
+              }));
+            }}
+            onAllowedSectionsChange={(sections) => setForm((f) => ({ ...f, allowedSections: sections }))}
+            onCanAcceptRejectChange={(value) => setForm((f) => ({ ...f, canAcceptReject: value }))}
+            onCanSendForReviewChange={(value) => setForm((f) => ({ ...f, canSendForReview: value }))}
+            t={t}
+            lang={lang}
+            roleHelpText={lang === 'ar' ? 'يحدد صلاحيات المستخدم وما يظهر له في القائمة' : 'Defines what they can do and which dashboard sections they see.'}
+          />
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
