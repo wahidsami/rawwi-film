@@ -4583,6 +4583,7 @@ export function ScriptWorkspace() {
     () => getWorkspaceDocumentFlags((currentPageData?.meta as Record<string, unknown> | undefined) ?? undefined),
     [currentPageData?.meta]
   );
+  const currentPageLooksLikeTable = currentPageDocumentFlags.some((item) => item.flag === 'probable_table_detected');
   const currentPageStrikeSpanCount = useMemo(() => {
     const meta = (currentPageData?.meta as Record<string, unknown> | undefined) ?? undefined;
     const spans = meta && Array.isArray(meta.strikeSpans) ? meta.strikeSpans : [];
@@ -5966,6 +5967,11 @@ export function ScriptWorkspace() {
                           {pageNoticesOpen ? <ChevronUp className="w-3.5 h-3.5 ms-1" /> : <ChevronDown className="w-3.5 h-3.5 ms-1" />}
                         </Button>
                       </>
+                    )}
+                    {currentPageLooksLikeTable && (
+                      <Badge variant="outline" className="h-8 px-3 text-[11px] border-warning/30 bg-warning/5 text-warning">
+                        {lang === 'ar' ? 'صفحة جدول' : 'Table page'}
+                      </Badge>
                     )}
                     </div>
                     {pageNoticesOpen && pageViewerNotices.length > 0 && (
