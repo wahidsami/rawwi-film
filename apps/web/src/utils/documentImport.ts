@@ -231,6 +231,22 @@ export function formatImportDocumentCaseSummary(cases: ImportDocumentCases, lang
     : 'The importer detected document structure that may need manual review.';
 }
 
+export function formatImportDocumentStructureNote(cases: ImportDocumentCases, lang: 'ar' | 'en'): string {
+  if (cases.htmlTableDetected || cases.probableTableCount > 0) {
+    return lang === 'ar'
+      ? 'الجداول داخل ملف Word ستبقى أوضح في العرض المنسق، بينما يعتمد التحليل على النص المحايد لضمان ثبات النتائج.'
+      : 'Tables inside the Word file stay clearer in the formatted viewer, while analysis still uses neutral text to keep results stable.';
+  }
+  if (cases.multiColumnCount > 0 || cases.formLayoutCount > 0) {
+    return lang === 'ar'
+      ? 'قد تبدو بعض الصفحات مختلفة بصريًا عن الملف الأصلي، لكن النص المستخرج يبقى مناسبًا للمراجعة والتحليل.'
+      : 'Some pages may look visually different from the original file, but the extracted text remains suitable for review and analysis.';
+  }
+  return lang === 'ar'
+    ? 'يمكنك متابعة الاستيراد، وسيظل النص الأساسي متاحًا للمراجعة حتى لو احتاج التنسيق إلى بعض الضبط البصري.'
+    : 'You can continue the import; the core text remains available for review even if the layout needs some visual adjustment.';
+}
+
 export function createImportAbortError(): Error {
   const error = new Error('Import aborted');
   error.name = 'AbortError';

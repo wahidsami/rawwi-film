@@ -8,6 +8,7 @@ import {
   type ImportDocumentCases,
   type ImportStatus,
   formatImportDocumentCaseSummary,
+  formatImportDocumentStructureNote,
   formatImportDuplicateDate,
   formatImportElapsed,
   formatPageListSummary,
@@ -270,6 +271,14 @@ export function DocumentImportModal({
                   })}
                 </p>
               )}
+              <div className="rounded-lg border border-border bg-background px-3 py-2">
+                <p className="text-[11px] font-semibold text-text-muted">
+                  {lang === 'ar' ? 'ملاحظة عرض' : 'Viewer note'}
+                </p>
+                <p className="mt-1 text-xs leading-6 text-text-main">
+                  {formatImportDocumentStructureNote(documentCases, lang)}
+                </p>
+              </div>
             </div>
           )}
           <div className="space-y-1 rounded-xl border border-info/20 bg-info/5 px-4 py-3">
