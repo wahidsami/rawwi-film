@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { clientPortalApi } from '@/api';
 import { useLangStore } from '@/store/langStore';
+import { getPhoneExample, validatePhoneForCountry } from '@/utils/phone';
 
 type BeneficiaryType = 'company' | 'individual' | null;
 
@@ -46,13 +47,6 @@ function getOtpStorageKey(email: string): string {
   return `${OTP_STORAGE_KEY}:${email.trim().toLowerCase()}`;
 }
 
-function composeInternationalPhone(countryCode: string, localNumber: string): string {
-  const normalizedCode = countryCode.trim().replace(/\s+/g, '');
-  const normalizedNumber = localNumber.trim().replace(/\s+/g, '');
-  if (!normalizedCode || !normalizedNumber) return '';
-  return `${normalizedCode}${normalizedNumber}`;
-}
-
 function PhoneInputWithCountryCode(props: {
   label: string;
   codeLabel: string;
@@ -66,6 +60,7 @@ function PhoneInputWithCountryCode(props: {
 }) {
   const { label, codeLabel, numberLabel, countryCode, onCountryCodeChange, number, onNumberChange, required, isArabic } = props;
   const [search, setSearch] = useState('');
+  const example = useMemo(() => getPhoneExample(countryCode), [countryCode]);
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return COUNTRY_DIAL_CODES;
@@ -105,8 +100,11 @@ function PhoneInputWithCountryCode(props: {
             onChange={(e) => onNumberChange(e.target.value)}
             required={required}
             placeholder={isArabic ? 'أدخل رقم الجوال' : 'Enter mobile number'}
+            inputMode="numeric"
+            pattern="[0-9]*"
             dir="ltr"
           />
+          <p className="text-xs text-text-muted">{isArabic ? `مثال: ${example}` : `Example: ${example}`}</p>
         </div>
       </div>
     </div>
@@ -207,10 +205,12 @@ export function ClientRegister() {
       if (targetStep === 1) {
         if (!form.companyNameAr.trim() || !form.companyNameEn.trim()) return isArabic ? 'يرجى إدخال اسم الشركة بالعربية والإنجليزية' : 'Please enter company name in Arabic and English';
         if (!EMAIL_REGEX.test(form.email.trim())) return isArabic ? 'يرجى إدخال بريد شركة صحيح' : 'Please enter a valid company email';
-        if (!form.phoneCountryCode.trim() || !form.phone.trim()) return isArabic ? 'يرجى إدخال رقم هاتف الشركة مع مفتاح الدولة' : 'Please enter company phone with country code';
         if (!form.contactName.trim() || !form.contactPosition.trim()) return isArabic ? 'يرجى إدخال اسم مسؤول التواصل والمسمى الوظيفي' : 'Please enter contact person name and job title';
         if (!EMAIL_REGEX.test(form.contactEmail.trim())) return isArabic ? 'يرجى إدخال بريد مسؤول التواصل بشكل صحيح' : 'Please enter a valid contact person email';
-        if (!form.contactMobileCountryCode.trim() || !form.contactMobile.trim()) return isArabic ? 'يرجى إدخال جوال مسؤول التواصل مع مفتاح الدولة' : 'Please enter contact mobile with country code';
+        const companyPhone = validatePhoneForCountry({ countryCode: form.phoneCountryCode, rawNumber: form.phone, isArabic, label: isArabic ? 'رقم هاتف الشركة' : 'Company phone' });
+        if (companyPhone.error) return companyPhone.error;
+        const contactMobile = validatePhoneForCountry({ countryCode: form.contactMobileCountryCode, rawNumber: form.contactMobile, isArabic, label: isArabic ? 'جوال مسؤول التواصل' : 'Contact mobile' });
+        if (contactMobile.error) return contactMobile.error;
       }
       if (targetStep === 2) {
         if (form.password.length < 8) return isArabic ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters';
@@ -231,11 +231,12 @@ export function ClientRegister() {
       if (!form.dateOfBirth) return isArabic ? 'تاريخ الميلاد مطلوب' : 'Date of birth is required';
       if (!form.nationality.trim()) return isArabic ? 'الجنسية مطلوبة' : 'Nationality is required';
       if (!EMAIL_REGEX.test(form.contactEmail.trim())) return isArabic ? 'يرجى إدخال بريد صحيح' : 'Please enter a valid email';
-      if (!form.individualMobileCountryCode.trim() || !form.individualMobile.trim()) return isArabic ? 'يرجى إدخال الجوال مع مفتاح الدولة' : 'Please enter mobile with country code';
       if (isSaudiIndividual && !NATIONAL_ID_REGEX.test(form.nationalIdOrIqama.trim())) return isArabic ? 'الهوية الوطنية يجب أن تكون 10 أرقام وتبدأ بـ 1' : 'National ID must be 10 digits and start with 1';
       if (!isSaudiIndividual && !IQAMA_REGEX.test(form.nationalIdOrIqama.trim())) return isArabic ? 'الإقامة يجب أن تكون 10 أرقام وتبدأ بـ 2' : 'Iqama must be 10 digits and start with 2';
       if (form.password.length < 8) return isArabic ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters';
       if (form.password !== form.confirmPassword) return isArabic ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match';
+      const mobile = validatePhoneForCountry({ countryCode: form.individualMobileCountryCode, rawNumber: form.individualMobile, isArabic, label: isArabic ? 'الجوال' : 'Mobile number' });
+      if (mobile.error) return mobile.error;
     }
     if (targetStep === 2) {
       if (!cvFile) return isArabic ? 'يرجى رفع السيرة الذاتية' : 'Please upload CV';
@@ -359,8 +360,10 @@ export function ClientRegister() {
     setIsSaving(true);
     try {
       if (beneficiaryType === 'company') {
-        const companyPhone = composeInternationalPhone(form.phoneCountryCode, form.phone);
-        const contactMobile = composeInternationalPhone(form.contactMobileCountryCode, form.contactMobile);
+        const companyPhone = validatePhoneForCountry({ countryCode: form.phoneCountryCode, rawNumber: form.phone, isArabic, label: isArabic ? 'رقم هاتف الشركة' : 'Company phone' });
+        const contactMobile = validatePhoneForCountry({ countryCode: form.contactMobileCountryCode, rawNumber: form.contactMobile, isArabic, label: isArabic ? 'جوال مسؤول التواصل' : 'Contact mobile' });
+        if (companyPhone.error) throw new Error(companyPhone.error);
+        if (contactMobile.error) throw new Error(contactMobile.error);
         await clientPortalApi.register({
           beneficiaryType: 'company',
           name: form.contactName.trim(),
@@ -370,12 +373,12 @@ export function ClientRegister() {
           companyNameAr: form.companyNameAr.trim(),
           companyNameEn: form.companyNameEn.trim(),
           website: form.website.trim() || undefined,
-          phone: companyPhone,
+          phone: companyPhone.international,
           representativeName: form.contactName.trim(),
           representativeTitle: form.contactPosition.trim(),
-          mobile: companyPhone,
+          mobile: companyPhone.international,
           contactEmail: form.contactEmail.trim().toLowerCase(),
-          contactMobile,
+          contactMobile: contactMobile.international,
           companyLogoFile,
           legalDocuments: { cr: crDocument, mediaContentProductionLicense: mediaContentLicenseDocument },
           acceptedTerms: form.acceptedTerms,
@@ -383,7 +386,8 @@ export function ClientRegister() {
           otpVerificationToken: otpVerificationToken ?? undefined,
         });
       } else {
-        const individualMobile = composeInternationalPhone(form.individualMobileCountryCode, form.individualMobile);
+        const individualMobile = validatePhoneForCountry({ countryCode: form.individualMobileCountryCode, rawNumber: form.individualMobile, isArabic, label: isArabic ? 'الجوال' : 'Mobile number' });
+        if (individualMobile.error) throw new Error(individualMobile.error);
         await clientPortalApi.register({
           beneficiaryType: 'individual',
           name: form.fullName.trim(),
@@ -391,10 +395,10 @@ export function ClientRegister() {
           password: form.password,
           companyNameAr: form.fullName.trim(),
           companyNameEn: form.fullName.trim(),
-          phone: individualMobile,
-          mobile: individualMobile,
+          phone: individualMobile.international,
+          mobile: individualMobile.international,
           contactEmail: form.contactEmail.trim().toLowerCase(),
-          contactMobile: individualMobile,
+          contactMobile: individualMobile.international,
           acceptedTerms: form.acceptedTerms,
           acceptedRegulations: form.acceptedRegulations,
           otpVerificationToken: otpVerificationToken ?? undefined,
@@ -403,7 +407,7 @@ export function ClientRegister() {
             dateOfBirth: form.dateOfBirth,
             nationality: form.nationality,
             nationalIdOrIqama: form.nationalIdOrIqama.trim(),
-            mobile: individualMobile,
+            mobile: individualMobile.international,
             cvFile,
             idDocumentFile,
           },
