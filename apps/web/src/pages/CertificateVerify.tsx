@@ -56,12 +56,12 @@ export function CertificateVerify() {
               <Award className="h-6 w-6 text-primary" />
             </div>
             <h1 className="text-3xl font-bold text-text-main">
-              {lang === 'ar' ? 'التحقق من الشهادة' : 'Certificate Verification'}
+              {lang === 'ar' ? 'التحقق من الشهادة والنص المعتمد' : 'Certificate and Approved Script Verification'}
             </h1>
             <p className="mt-2 text-text-muted">
               {lang === 'ar'
-                ? 'هذه الصفحة تعرض بيانات التحقق العامة المرتبطة برقم الشهادة.'
-                : 'This page shows the public verification data tied to the certificate number.'}
+                ? 'هذه الصفحة تعرض بيانات التحقق العامة، ويمكن من خلالها تنزيل النص المعتمد إذا كان متاحاً.'
+                : 'This page shows the public verification data and allows downloading the approved script if available.'}
             </p>
           </div>
           <Link
@@ -134,7 +134,7 @@ export function CertificateVerify() {
             {certificate.approvedScript?.downloadUrl && (
               <Card>
                 <CardHeader>
-                  <CardTitle>{lang === 'ar' ? 'النص المعتمد' : 'Approved Script'}</CardTitle>
+                  <CardTitle>{lang === 'ar' ? 'نسخة النص المعتمدة' : 'Approved Script Copy'}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
