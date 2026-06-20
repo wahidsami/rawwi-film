@@ -532,6 +532,11 @@ export interface CertificateVerificationResponse {
     approvedAt?: string | null;
     companyNameAr?: string | null;
     companyNameEn?: string | null;
+    approvedScript?: {
+      downloadUrl: string;
+      fileName: string;
+      fileType?: string | null;
+    } | null;
     payment?: {
       status: string;
       totalAmount: number;

@@ -514,7 +514,7 @@ async function loadCertificateVerification(
   const [{ data: script, error: scriptError }, { data: approvedHistory }, { data: payment }] = await Promise.all([
     supabase
       .from("scripts")
-      .select("id, title, type, status, company_id, client_id, created_at")
+      .select("id, title, type, status, company_id, client_id, created_at, current_version_id, file_url")
       .eq("id", scriptId)
       .maybeSingle(),
     supabase
@@ -541,6 +541,36 @@ async function loadCertificateVerification(
     ? await supabase.from("clients").select("id, name_ar, name_en").eq("id", ownerCompanyId).maybeSingle()
     : { data: null };
 
+  const currentVersionId = ((script as any)?.current_version_id ?? "").toString().trim();
+  const versionSource = currentVersionId
+    ? await supabase
+        .from("script_versions")
+        .select("source_file_name, source_file_type, source_file_path, source_file_url")
+        .eq("id", currentVersionId)
+        .maybeSingle()
+    : { data: null, error: null };
+  if ((versionSource as { error?: { message?: string } | null }).error) {
+    throw new Error((versionSource as { error?: { message?: string } | null }).error?.message || "Failed to load approved script version");
+  }
+  const versionRow = (versionSource as { data?: Record<string, unknown> | null }).data ?? null;
+  const sourceCandidate = String(
+    (versionRow?.source_file_path as string | undefined)
+      ?? (versionRow?.source_file_url as string | undefined)
+      ?? (script as any)?.file_url
+      ?? ""
+  ).trim();
+  let approvedScriptDownloadUrl: string | null = null;
+  if (sourceCandidate) {
+    const normalizedCandidate = /^https?:\/\//i.test(sourceCandidate)
+      ? null
+      : sourceCandidate.replace(/^\/+/, "");
+    if (normalizedCandidate) {
+      const sourceKey = normalizedCandidate.startsWith("scripts/") ? normalizedCandidate : `scripts/${normalizedCandidate}`;
+      const signed = await supabase.storage.from("scripts").createSignedUrl(sourceKey, 60 * 15, { download: true });
+      approvedScriptDownloadUrl = signed.data?.signedUrl ?? null;
+    }
+  }
+
   return {
     certificateNumber: (certificate as any).certificate_number,
     certificateStatus: (certificate as any).certificate_status,
@@ -552,6 +582,13 @@ async function loadCertificateVerification(
     approvedAt: ((approvedHistory as any)?.changed_at ?? certificateData.approved_at ?? null) as string | null,
     companyNameAr: ((company as any)?.name_ar ?? certificateData.company_name_ar ?? null) as string | null,
     companyNameEn: ((company as any)?.name_en ?? certificateData.company_name_en ?? null) as string | null,
+    approvedScript: approvedScriptDownloadUrl
+      ? {
+          downloadUrl: approvedScriptDownloadUrl,
+          fileName: String((versionRow?.source_file_name as string | undefined) ?? (script as any)?.title ?? certificateData.script_title ?? "approved-script"),
+          fileType: String((versionRow?.source_file_type as string | undefined) ?? "").trim() || null,
+        }
+      : null,
     payment: payment
       ? {
           status: (payment as any).payment_status,

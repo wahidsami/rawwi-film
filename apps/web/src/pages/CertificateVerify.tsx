@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Award, CheckCircle2, Loader2, ShieldCheck, XCircle } from 'lucide-react';
+import { Award, CheckCircle2, Download, Loader2, ShieldCheck, XCircle } from 'lucide-react';
 import { certificatesApi, type CertificateVerificationResponse } from '@/api';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -131,10 +131,39 @@ export function CertificateVerify() {
               </CardContent>
             </Card>
 
+            {certificate.approvedScript?.downloadUrl && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{lang === 'ar' ? 'النص المعتمد' : 'Approved Script'}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm text-text-muted">
+                      {lang === 'ar'
+                        ? 'يمكنك تنزيل نسخة النص التي تم اعتمادها من خلال هذا الرابط الآمن.'
+                        : 'You can download the approved script version through this secure link.'}
+                    </p>
+                    <p className="mt-1 font-semibold text-text-main">
+                      {certificate.approvedScript.fileName}
+                    </p>
+                  </div>
+                  <a
+                    href={certificate.approvedScript.downloadUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-10 items-center justify-center rounded-[var(--radius)] bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
+                  >
+                    <Download className="me-2 h-4 w-4" />
+                    {lang === 'ar' ? 'تنزيل النص المعتمد' : 'Download approved script'}
+                  </a>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="rounded-[var(--radius)] border border-warning/20 bg-warning/10 p-4 text-sm leading-7 text-warning">
               {lang === 'ar'
-                ? 'يتحقق رمز QR حالياً من بيانات الشهادة العامة فقط. ربط نسخة النص المعتمدة أو بصمتها الرقمية سيتم في مرحلة الحماية التالية.'
-                : 'The QR currently verifies public certificate metadata only. Approved-script snapshot or hash verification will be added in the next security phase.'}
+                ? 'يفتح رمز QR صفحة التحقق العامة، ومنها يمكنك تنزيل النص المعتمد إذا كان متاحاً.'
+                : 'The QR opens the public verification page, where you can download the approved script if available.'}
             </div>
           </>
         )}
