@@ -2652,7 +2652,11 @@ export function ScriptWorkspace() {
           shareReportFormats: rejectDecisionShareReports ? rejectDecisionShareFormats : [],
         },
       );
-      toast.success(lang === 'ar' ? 'تم رفض النص وإرسال الملاحظات للمستفيد' : 'Script rejected and client feedback saved');
+      toast.success(
+        isQuickContext
+          ? (lang === 'ar' ? 'تم رفض التحليل السريع داخلياً' : 'Quick analysis rejected internally')
+          : (lang === 'ar' ? 'تم رفض النص وإرسال الملاحظات للمستفيد' : 'Script rejected and client feedback saved')
+      );
 
       if (selectedReportForHighlights?.id === rejectDecisionReportId) {
         setSelectedReportForHighlights((prev) =>
@@ -2700,6 +2704,7 @@ export function ScriptWorkspace() {
     if (!script?.id || !approveDecisionReportId) return;
     setApproveDecisionSubmitting(true);
     try {
+      const issueCertificate = !isQuickContext;
       await scriptsApi.makeDecision(
         script.id,
         'approve',
@@ -2707,12 +2712,16 @@ export function ScriptWorkspace() {
           ? 'تم اعتماد النص من الإدارة'
           : 'Script approved by administration',
         approveDecisionReportId,
-        { issueCertificate: true },
+        issueCertificate ? { issueCertificate: true } : undefined,
       );
-      toast.success(lang === 'ar' ? 'تم اعتماد النص وتوليد الشهادة' : 'Script approved and certificate generation started');
+      toast.success(
+        isQuickContext
+          ? (lang === 'ar' ? 'تم اعتماد التحليل السريع داخلياً' : 'Quick analysis approved internally')
+          : (lang === 'ar' ? 'تم اعتماد النص وتوليد الشهادة' : 'Script approved and certificate generation started')
+      );
       await Promise.all([loadReportHistory(), fetchInitialData()]);
       closeApproveDecisionConfirm(true);
-      setApproveSuccessModalOpen(true);
+      if (!isQuickContext) setApproveSuccessModalOpen(true);
     } catch (err: any) {
       toast.error(err?.message ?? (lang === 'ar' ? 'فشل تنفيذ قرار القبول' : 'Failed to approve script'));
     } finally {
@@ -2721,6 +2730,7 @@ export function ScriptWorkspace() {
   }, [
     approveDecisionReportId,
     closeApproveDecisionConfirm,
+    isQuickContext,
     fetchInitialData,
     lang,
     loadReportHistory,
@@ -2749,7 +2759,11 @@ export function ScriptWorkspace() {
           shareReportFormats: sendReviewDecisionShareReports ? sendReviewDecisionShareFormats : [],
         },
       );
-      toast.success(lang === 'ar' ? 'تم إرسال النص للمستفيد للمراجعة' : 'Script sent to beneficiary for review');
+      toast.success(
+        isQuickContext
+          ? (lang === 'ar' ? 'تم وضع التحليل السريع قيد المراجعة الداخلية' : 'Quick analysis marked for internal review')
+          : (lang === 'ar' ? 'تم إرسال النص للمستفيد للمراجعة' : 'Script sent to beneficiary for review')
+      );
       if (selectedReportForHighlights?.id === sendReviewDecisionReportId) {
         setSelectedReportForHighlights((prev) =>
           prev && prev.id === sendReviewDecisionReportId

@@ -1988,7 +1988,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: script, error: findErr } = await supabase
       .from("scripts")
-      .select("id, title, status, created_by, assignee_id, company_id, client_id")
+      .select("id, title, status, created_by, assignee_id, company_id, client_id, is_quick_analysis")
       .eq("id", scriptId)
       .maybeSingle();
     if (findErr || !script) return json({ error: "Script not found" }, 404);
@@ -2719,18 +2719,19 @@ Deno.serve(async (req: Request) => {
     if (findErr || !script) return json({ error: "Script not found" }, 404);
 
     const currentStatus = (script as any).status || 'draft';
+    const isQuickAnalysisScript = (script as { is_quick_analysis?: boolean | null }).is_quick_analysis === true;
     const newStatus =
       decision === 'approve'
         ? 'approved'
         : decision === 'reject'
           ? 'rejected'
           : 'revision_requested';
-    if (decision === "approve" && !issueCertificate) {
+    if (decision === "approve" && !issueCertificate && !isQuickAnalysisScript) {
       return json({ error: "Approval requires certificate generation confirmation." }, 409);
     }
     let sharedReportIds: string[] = [];
 
-    if ((decision === 'reject' || decision === 'send_for_review') && shareReportsToClient) {
+    if (!isQuickAnalysisScript && (decision === 'reject' || decision === 'send_for_review') && shareReportsToClient) {
       const candidateIds = [
         ...new Set<string>([
           ...requestedShareReportIds,
@@ -2820,7 +2821,7 @@ Deno.serve(async (req: Request) => {
 
     if (decision === "approve") {
       const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
-      if (ownerCompanyId) {
+      if (ownerCompanyId && !isQuickAnalysisScript) {
         try {
           await ensureCertificateGeneratedOnApproval(supabase, {
             scriptId,
@@ -2860,7 +2861,7 @@ Deno.serve(async (req: Request) => {
 
     if (decision === "reject") {
       const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
-      if (ownerCompanyId) {
+      if (ownerCompanyId && !isQuickAnalysisScript) {
         await notifyBeneficiaryDecisionUpdate(supabase, {
           scriptId,
           scriptTitle: (script as any).title,
@@ -2874,7 +2875,7 @@ Deno.serve(async (req: Request) => {
 
     if (decision === "send_for_review") {
       const ownerCompanyId = ((script as any).company_id ?? (script as any).client_id ?? "").toString();
-      if (ownerCompanyId) {
+      if (ownerCompanyId && !isQuickAnalysisScript) {
         const sourceReportId = relatedReportId ?? sharedReportIds[0] ?? null;
         let sourceJobId: string | null = null;
         let findingsCount = 0;
@@ -2993,11 +2994,21 @@ Deno.serve(async (req: Request) => {
       success: true,
       script: updated ? toScriptFrontend(updated as ScriptRow) : null,
       message:
-        decision === 'approve'
-          ? `Script approved successfully`
-          : decision === 'reject'
-            ? `Script rejected: ${reason}`
-            : `Script sent back to beneficiary for revision`
+        isQuickAnalysisScript
+          ? (
+              decision === 'approve'
+                ? `Quick analysis approved internally`
+                : decision === 'reject'
+                  ? `Quick analysis rejected internally: ${reason}`
+                  : `Quick analysis marked for internal review`
+            )
+          : (
+              decision === 'approve'
+                ? `Script approved successfully`
+                : decision === 'reject'
+                  ? `Script rejected: ${reason}`
+                  : `Script sent back to beneficiary for revision`
+            )
     });
   }
 

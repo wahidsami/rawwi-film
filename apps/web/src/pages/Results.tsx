@@ -657,6 +657,7 @@ export function Results() {
     if (!report?.scriptId || !report?.id) return;
     setApproveDecisionSubmitting(true);
     try {
+      const issueCertificate = !isQuickAnalysisReport;
       await scriptsApi.makeDecision(
         report.scriptId,
         'approve',
@@ -664,21 +665,25 @@ export function Results() {
           ? 'تم اعتماد النص من صفحة التقرير'
           : 'Script approved from report page',
         report.id,
-        { issueCertificate: true },
+        issueCertificate ? { issueCertificate: true } : undefined,
       );
 
       const refreshedReport = await reportsApi.getById(report.id);
       setReport(refreshedReport);
       setUpdateScriptStatus(true);
       setApproveDecisionModalOpen(false);
-      setApproveSuccessModalOpen(true);
-      toast.success(lang === 'ar' ? 'تم اعتماد النص وتوليد الشهادة' : 'Script approved and certificate generated');
+      if (!isQuickAnalysisReport) setApproveSuccessModalOpen(true);
+      toast.success(
+        isQuickAnalysisReport
+          ? (lang === 'ar' ? 'تم اعتماد التحليل السريع داخلياً' : 'Quick analysis approved internally')
+          : (lang === 'ar' ? 'تم اعتماد النص وتوليد الشهادة' : 'Script approved and certificate generated')
+      );
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : (lang === 'ar' ? 'فشل تنفيذ قرار القبول' : 'Failed to approve script'));
     } finally {
       setApproveDecisionSubmitting(false);
     }
-  }, [lang, report?.id, report?.scriptId]);
+  }, [isQuickAnalysisReport, lang, report?.id, report?.scriptId]);
 
   // Report-level review
   const handleReportReview = async (status: ReviewStatus, explicitReviewNotes?: string) => {
