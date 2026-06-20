@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Upload, Loader2, FileText, History, PlayCircle, Trash2 } from 'lucide-react';
+import { Upload, Loader2, FileText, History, PlayCircle, Trash2, ShieldAlert } from 'lucide-react';
 
 import { useLangStore } from '@/store/langStore';
 import { useDataStore } from '@/store/dataStore';
@@ -61,7 +61,8 @@ export function QuickAnalysis() {
 
   const isAr = lang === 'ar';
   const isImportModalOpen = uploadStatus !== 'idle';
-  const isScriptCreationBlocked = user?.role === 'Admin' || user?.role === 'Regulator';
+  const canAccessQuickAnalysis = user?.role === 'Super Admin' || user?.role === 'Admin';
+  const isScriptCreationBlocked = !canAccessQuickAnalysis;
 
   const loadHistory = useCallback(async () => {
     setLoading(true);
@@ -87,8 +88,13 @@ export function QuickAnalysis() {
   }, [isAr]);
 
   useEffect(() => {
+    if (!canAccessQuickAnalysis) {
+      setLoading(false);
+      setHistory([]);
+      return;
+    }
     loadHistory();
-  }, [loadHistory]);
+  }, [canAccessQuickAnalysis, loadHistory]);
 
   useEffect(() => {
     if (!isImportModalOpen || uploadStartedAt == null) return;
@@ -420,6 +426,30 @@ export function QuickAnalysis() {
           ? (isAr ? 'سيتم فتح مساحة العمل تلقائياً بعد لحظة قصيرة.' : 'The workspace will open automatically shortly.')
           : (isAr ? 'سيبقى هذا المؤشر مفتوحاً حتى نعرف أين وصلت عملية الاستيراد.' : 'This panel stays open so you can see where the import currently stands.');
 
+  if (!canAccessQuickAnalysis) {
+    return (
+      <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center p-6">
+        <Card className="w-full max-w-2xl">
+          <CardContent className="flex flex-col items-center justify-center gap-4 p-10 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-error/10 text-error">
+              <ShieldAlert className="h-8 w-8" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold text-text-main">
+                {isAr ? 'التحليل الداخلي للمشرفين فقط' : 'Internal analysis is admin only'}
+              </h1>
+              <p className="text-sm leading-7 text-text-muted">
+                {isAr
+                  ? 'هذا القسم مخصص لإنشاء نصوص التحليل الداخلية في لوحة الإدارة. يمكنك متابعة النصوص المستلمة من المستفيدين من الأقسام الأخرى.'
+                  : 'This section is reserved for internal analysis scripts in the admin dashboard. Beneficiary submissions are handled in their dedicated workflow.'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-8">
       {isImportModalOpen && (
@@ -451,10 +481,10 @@ export function QuickAnalysis() {
           <h1 className="text-2xl font-bold text-text-main">{isAr ? 'التحليل السريع' : 'Quick Analysis'}</h1>
           <p className="text-sm text-text-muted mt-1">
             {isScriptCreationBlocked
-              ? (isAr ? 'إنشاء نصوص جديدة غير متاح لأدوار الإدارة/المنظم.' : 'Creating new scripts is not available for Admin/Regulator roles.')
+              ? (isAr ? 'إنشاء التحليل الداخلي متاح للمشرفين فقط.' : 'Internal analysis creation is available to Super Admin and Admin users only.')
               : (isAr
-                ? 'ارفع ملف نص بدون ربطه بشركة، وسيتم تحليله بنفس محرك التحليل الذكي.'
-                : 'Upload a script without linking to a company and run the same smart analysis pipeline.')}
+                ? 'ارفع ملف نص داخلي بدون ربطه بالمستفيد، وسيتم فتحه مباشرة في مساحة العمل للتحليل.'
+                : 'Upload an internal script without beneficiary linkage, then open it directly in the workspace for analysis.')}
           </p>
         </div>
         <div className="inline-flex">
