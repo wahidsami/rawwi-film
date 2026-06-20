@@ -7,8 +7,9 @@ import DOMPurify from 'dompurify';
 const FORMATTED_VIEW_ALLOWED_TAGS = [
   'p', 'br', 'strong', 'em', 'b', 'i', 'ul', 'ol', 'li',
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'span', 'div',
+  'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption', 'colgroup', 'col',
 ];
-const FORMATTED_VIEW_ALLOWED_ATTR = ['dir', 'class'];
+const FORMATTED_VIEW_ALLOWED_ATTR = ['dir', 'class', 'rowspan', 'colspan', 'scope', 'align', 'valign'];
 
 /**
  * Sanitize HTML for the script Formatted viewer.
