@@ -7206,13 +7206,17 @@ export function ScriptWorkspace() {
       <Modal
         isOpen={approveDecisionReportId != null}
         onClose={closeApproveDecisionConfirm}
-        title={lang === 'ar' ? 'تأكيد اعتماد النص' : 'Confirm Script Approval'}
+        title={isQuickContext ? (lang === 'ar' ? 'تأكيد الاعتماد الداخلي' : 'Confirm Internal Approval') : (lang === 'ar' ? 'تأكيد اعتماد النص' : 'Confirm Script Approval')}
       >
         <div className="space-y-4">
           <p className="text-sm leading-7 text-text-muted">
-            {lang === 'ar'
-              ? 'هل تريد اعتماد النص وإصدار الشهادة؟'
-              : 'Do you want to approve the script and issue the certificate?'}
+            {isQuickContext
+              ? (lang === 'ar'
+                  ? 'هل تريد اعتماد هذا التحليل السريع داخلياً؟'
+                  : 'Do you want to approve this quick analysis internally?')
+              : (lang === 'ar'
+                  ? 'هل تريد اعتماد النص وإصدار الشهادة؟'
+                  : 'Do you want to approve the script and issue the certificate?')}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -7236,13 +7240,17 @@ export function ScriptWorkspace() {
       <Modal
         isOpen={approveSuccessModalOpen}
         onClose={() => setApproveSuccessModalOpen(false)}
-        title={lang === 'ar' ? 'تم إرسال الشهادة' : 'Certificate Sent'}
+        title={isQuickContext ? (lang === 'ar' ? 'تم الاعتماد الداخلي' : 'Internal Approval') : (lang === 'ar' ? 'تم إرسال الشهادة' : 'Certificate Sent')}
       >
         <div className="space-y-4">
           <p className="text-sm leading-7 text-text-muted">
-            {lang === 'ar'
-              ? 'تم ارسال شهادة فسح النص الى المستفيد'
-              : 'The script approval certificate was sent to the beneficiary.'}
+            {isQuickContext
+              ? (lang === 'ar'
+                  ? 'تم اعتماد التحليل السريع داخلياً ولم تُرسل شهادة أو إشعار للمستفيد.'
+                  : 'The quick analysis was approved internally. No certificate or beneficiary notification was sent.')
+              : (lang === 'ar'
+                  ? 'تم ارسال شهادة فسح النص الى المستفيد'
+                  : 'The script approval certificate was sent to the beneficiary.')}
           </p>
           <div className="flex justify-end">
             <Button onClick={() => setApproveSuccessModalOpen(false)}>
@@ -7255,7 +7263,7 @@ export function ScriptWorkspace() {
       <Modal
         isOpen={sendReviewDecisionReportId != null}
         onClose={closeSendReviewDecisionModal}
-        title={lang === 'ar' ? 'إرسال النص للمستفيد للمراجعة' : 'Send Script for Beneficiary Review'}
+        title={isQuickContext ? (lang === 'ar' ? 'إعادة التحليل للمراجعة الداخلية' : 'Send Internal Review') : (lang === 'ar' ? 'إرسال النص للمستفيد للمراجعة' : 'Send Script for Beneficiary Review')}
       >
         <div className="space-y-4">
           <Textarea
@@ -7263,15 +7271,19 @@ export function ScriptWorkspace() {
             value={sendReviewDecisionReason}
             onChange={(e) => setSendReviewDecisionReason(e.target.value)}
             rows={4}
-            placeholder={lang === 'ar' ? 'اكتب سبب الإعادة للمراجعة…' : 'Write the reason for sending back to review…'}
+            placeholder={isQuickContext
+              ? (lang === 'ar' ? 'اكتب سبب الإعادة للمراجعة الداخلية…' : 'Write the internal review reason…')
+              : (lang === 'ar' ? 'اكتب سبب الإعادة للمراجعة…' : 'Write the reason for sending back to review…')}
           />
 
           <Textarea
-            label={lang === 'ar' ? 'ملاحظة للمستفيد (اختياري)' : 'Beneficiary comment (optional)'}
+            label={isQuickContext ? (lang === 'ar' ? 'ملاحظة داخلية (اختياري)' : 'Internal note (optional)') : (lang === 'ar' ? 'ملاحظة للمستفيد (اختياري)' : 'Beneficiary comment (optional)')}
             value={sendReviewDecisionClientComment}
             onChange={(e) => setSendReviewDecisionClientComment(e.target.value)}
             rows={3}
-            placeholder={lang === 'ar' ? 'سيظهر هذا النص للمستفيد في بوابة المستفيد.' : 'This message will be shown to the beneficiary in their portal.'}
+            placeholder={isQuickContext
+              ? (lang === 'ar' ? 'ستبقى هذه الملاحظة داخلية.' : 'This note stays internal.')
+              : (lang === 'ar' ? 'سيظهر هذا النص للمستفيد في بوابة المستفيد.' : 'This message will be shown to the beneficiary in their portal.')}
           />
 
           <div className="rounded-md border border-border bg-background p-3 space-y-3">
@@ -7281,7 +7293,7 @@ export function ScriptWorkspace() {
                 checked={sendReviewDecisionShareReports}
                 onChange={(e) => setSendReviewDecisionShareReports(e.target.checked)}
               />
-              <span>{lang === 'ar' ? 'إرفاق تقارير/مخرجات التحليل مع الإعادة للمراجعة' : 'Attach analysis report(s) to this review return'}</span>
+              <span>{isQuickContext ? (lang === 'ar' ? 'إرفاق المخرجات مع المراجعة الداخلية' : 'Attach outputs to internal review') : (lang === 'ar' ? 'إرفاق تقارير/مخرجات التحليل مع الإعادة للمراجعة' : 'Attach analysis report(s) to this review return')}</span>
             </label>
 
             {sendReviewDecisionShareReports && (
@@ -7344,7 +7356,7 @@ export function ScriptWorkspace() {
               onClick={submitSendReviewDecision}
               disabled={sendReviewDecisionShareReports && sendReviewDecisionShareFormats.length === 0}
             >
-              {lang === 'ar' ? 'تأكيد الإرسال للمراجعة' : 'Confirm Send for Review'}
+              {isQuickContext ? (lang === 'ar' ? 'تأكيد الإرسال الداخلي' : 'Confirm Internal Review') : (lang === 'ar' ? 'تأكيد الإرسال للمراجعة' : 'Confirm Send for Review')}
             </Button>
             <Button
               variant="outline"
@@ -7360,7 +7372,7 @@ export function ScriptWorkspace() {
       <Modal
         isOpen={rejectDecisionReportId != null}
         onClose={closeRejectDecisionModal}
-        title={lang === 'ar' ? 'رفض النص وإرسال الملاحظات للمستفيد' : 'Reject Script & Send Beneficiary Feedback'}
+        title={isQuickContext ? (lang === 'ar' ? 'رفض التحليل السريع داخلياً' : 'Reject Internal Analysis') : (lang === 'ar' ? 'رفض النص وإرسال الملاحظات للمستفيد' : 'Reject Script & Send Beneficiary Feedback')}
       >
         <div className="space-y-4">
           <Textarea
@@ -7368,15 +7380,19 @@ export function ScriptWorkspace() {
             value={rejectDecisionReason}
             onChange={(e) => setRejectDecisionReason(e.target.value)}
             rows={4}
-            placeholder={lang === 'ar' ? 'اكتب سبب الرفض المطلوب في السجل الداخلي…' : 'Write the internal rejection reason…'}
+            placeholder={isQuickContext
+              ? (lang === 'ar' ? 'اكتب سبب الرفض الداخلي…' : 'Write the internal rejection reason…')
+              : (lang === 'ar' ? 'اكتب سبب الرفض المطلوب في السجل الداخلي…' : 'Write the internal rejection reason…')}
           />
 
           <Textarea
-            label={lang === 'ar' ? 'ملاحظة للمستفيد (اختياري)' : 'Beneficiary comment (optional)'}
+            label={isQuickContext ? (lang === 'ar' ? 'ملاحظة داخلية (اختياري)' : 'Internal note (optional)') : (lang === 'ar' ? 'ملاحظة للمستفيد (اختياري)' : 'Beneficiary comment (optional)')}
             value={rejectDecisionClientComment}
             onChange={(e) => setRejectDecisionClientComment(e.target.value)}
             rows={3}
-            placeholder={lang === 'ar' ? 'سيظهر هذا النص للمستفيد في بوابة المستفيد.' : 'This message will be shown to the beneficiary in their portal.'}
+            placeholder={isQuickContext
+              ? (lang === 'ar' ? 'ستبقى هذه الملاحظة داخلية.' : 'This note stays internal.')
+              : (lang === 'ar' ? 'سيظهر هذا النص للمستفيد في بوابة المستفيد.' : 'This message will be shown to the beneficiary in their portal.')}
           />
 
           <div className="rounded-md border border-border bg-background p-3 space-y-3">
@@ -7386,7 +7402,7 @@ export function ScriptWorkspace() {
                 checked={rejectDecisionShareReports}
                 onChange={(e) => setRejectDecisionShareReports(e.target.checked)}
               />
-              <span>{lang === 'ar' ? 'إرفاق تقارير/مخرجات التحليل مع قرار الرفض' : 'Attach analysis report(s) to this rejection'}</span>
+              <span>{isQuickContext ? (lang === 'ar' ? 'إرفاق المخرجات مع الرفض الداخلي' : 'Attach outputs to internal rejection') : (lang === 'ar' ? 'إرفاق تقارير/مخرجات التحليل مع قرار الرفض' : 'Attach analysis report(s) to this rejection')}</span>
             </label>
 
             {rejectDecisionShareReports && (
@@ -7449,7 +7465,7 @@ export function ScriptWorkspace() {
               onClick={submitRejectDecision}
               disabled={rejectDecisionShareReports && rejectDecisionShareFormats.length === 0}
             >
-              {lang === 'ar' ? 'تأكيد الرفض' : 'Confirm Rejection'}
+              {isQuickContext ? (lang === 'ar' ? 'تأكيد الرفض الداخلي' : 'Confirm Internal Rejection') : (lang === 'ar' ? 'تأكيد الرفض' : 'Confirm Rejection')}
             </Button>
             <Button
               variant="outline"
