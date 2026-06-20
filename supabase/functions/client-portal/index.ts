@@ -578,8 +578,6 @@ Deno.serve(async (req: Request) => {
       }
       for (const item of [
         { key: "crDocument", type: "cr" },
-        { key: "licenseDocument", type: "license" },
-        { key: "nationalAddressDocument", type: "national_address" },
         { key: "mediaContentProductionLicenseDocument", type: "media_content_production_license" },
       ]) {
         const candidate = formData.get(item.key);
@@ -691,10 +689,8 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Email verification token expired" }, 410);
     }
     if (beneficiaryType === "company") {
-      const hasRequiredDocs = ["cr", "license", "national_address"].every((requiredType) =>
-        legalFiles.some((doc) => doc.type === requiredType)
-      );
-      if (!hasRequiredDocs) return json({ error: "CR, license, and national address documents are required" }, 400);
+      const hasCrDocument = legalFiles.some((doc) => doc.type === "cr");
+      if (!hasCrDocument) return json({ error: "CR document is required" }, 400);
     } else {
       if (!individualFullName || !individualDateOfBirth || !individualNationality || !individualNationalIdOrIqama || !individualMobile) {
         return json({ error: "Individual profile fields are required" }, 400);
