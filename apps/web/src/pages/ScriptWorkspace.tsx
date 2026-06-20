@@ -5969,9 +5969,13 @@ export function ScriptWorkspace() {
                       </>
                     )}
                     {currentPageLooksLikeTable && (
-                      <Badge variant="outline" className="h-8 px-3 text-[11px] border-warning/30 bg-warning/5 text-warning">
+                      <button
+                        type="button"
+                        onClick={() => setPageNoticesOpen(true)}
+                        className="inline-flex items-center rounded-full border border-warning/30 bg-warning/5 px-3 h-8 text-[11px] font-medium text-warning transition-colors hover:bg-warning/10"
+                      >
                         {lang === 'ar' ? 'صفحة جدول' : 'Table page'}
-                      </Badge>
+                      </button>
                     )}
                     </div>
                     {pageNoticesOpen && pageViewerNotices.length > 0 && (
