@@ -28,6 +28,8 @@ function mapSupabaseUserToAppUser(sbUser: SupabaseUser): User {
   const rawPermissions = Array.isArray(meta.permissions) ? meta.permissions as string[] : [];
   const explicitQuickAnalysis = typeof meta.canUseQuickAnalysis === 'boolean'
     ? meta.canUseQuickAnalysis
+    : typeof meta.can_use_quick_analysis === 'boolean'
+      ? meta.can_use_quick_analysis
     : undefined;
   let permissions = rawPermissions.length > 0 ? rawPermissions : getDefaultPermissionsForRole(role);
   if (explicitQuickAnalysis === true) {

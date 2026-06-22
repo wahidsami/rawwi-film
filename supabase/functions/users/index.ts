@@ -151,7 +151,11 @@ Deno.serve(async (req: Request) => {
         : getDefaultPermissionsForRoleKey(roleKey);
       const canAcceptRejectFromMeta = Boolean(u.user_metadata?.canAcceptReject);
       const canSendForReviewFromMeta = Boolean(u.user_metadata?.canSendForReview);
-      const canUseQuickAnalysisFromMeta = Boolean(u.user_metadata?.canUseQuickAnalysis);
+      const canUseQuickAnalysisFromMeta = Boolean(
+        typeof u.user_metadata?.canUseQuickAnalysis === "boolean"
+          ? u.user_metadata.canUseQuickAnalysis
+          : u.user_metadata?.can_use_quick_analysis,
+      );
       const normalizedPermissions = resolveQuickAnalysisPermission(
         roleKey,
         permissions.length > 0
@@ -164,6 +168,8 @@ Deno.serve(async (req: Request) => {
           : permissions,
         typeof u.user_metadata?.canUseQuickAnalysis === "boolean"
           ? Boolean(u.user_metadata.canUseQuickAnalysis)
+          : typeof u.user_metadata?.can_use_quick_analysis === "boolean"
+            ? Boolean(u.user_metadata.can_use_quick_analysis)
           : undefined,
       );
       // NEW: Return allowedSections and permissions
@@ -370,6 +376,7 @@ Deno.serve(async (req: Request) => {
     metadataUpdates.canAcceptReject = permissionMetadata.canAcceptReject;
     metadataUpdates.canSendForReview = permissionMetadata.canSendForReview;
     metadataUpdates.canUseQuickAnalysis = permissionMetadata.canUseQuickAnalysis;
+    metadataUpdates.can_use_quick_analysis = permissionMetadata.canUseQuickAnalysis;
 
     if (Object.keys(metadataUpdates).length > 0) {
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {

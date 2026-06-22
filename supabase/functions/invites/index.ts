@@ -130,7 +130,7 @@ Deno.serve(async (req: Request) => {
     : (permissionsFromBody.includes("can_send_for_review") || legacyPermissionMap.canSendForReview === true);
   const canUseQuickAnalysis = typeof (body as { canUseQuickAnalysis?: unknown }).canUseQuickAnalysis === "boolean"
     ? (body as { canUseQuickAnalysis: boolean }).canUseQuickAnalysis
-    : (permissionsFromBody.includes("can_use_quick_analysis") || legacyPermissionMap.canUseQuickAnalysis === true || normalizeRoleKey(roleKey) !== "regulator");
+    : (permissionsFromBody.includes("can_use_quick_analysis") || legacyPermissionMap.canUseQuickAnalysis === true || legacyPermissionMap.can_use_quick_analysis === true || normalizeRoleKey(roleKey) !== "regulator");
   const permissions = permissionsFromBody.length > 0
     ? buildPermissionsForRole(
         roleKey,
@@ -176,6 +176,7 @@ Deno.serve(async (req: Request) => {
     allowedSections,
     permissions,
     ...permissionMetadata,
+    can_use_quick_analysis: permissionMetadata.canUseQuickAnalysis,
   };
 
   console.log(`[invites] STEP:auth_create_user - Creating auth user for ${email}`);

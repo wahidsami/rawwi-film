@@ -75,6 +75,8 @@ Deno.serve(async (req: Request) => {
     : getDefaultSectionsForRoleKey(normalizedRole);
   const explicitQuickAnalysis = typeof meta.canUseQuickAnalysis === "boolean"
     ? meta.canUseQuickAnalysis
+    : typeof meta.can_use_quick_analysis === "boolean"
+      ? meta.can_use_quick_analysis
     : undefined;
 
   permissionKeys = uniqueStrings([...permissionKeys, ...metadataPermissionKeys]);
