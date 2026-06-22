@@ -41,15 +41,22 @@ function isRegulatorRoleKey(roleKey: string): boolean {
   return roleKey.toLowerCase().replace(/\s/g, '_') === 'regulator';
 }
 
+function getDefaultQuickAnalysisAccessForRoleKey(roleKey: string): boolean {
+  const normalized = roleKey.toLowerCase().replace(/\s/g, '_');
+  return normalized === 'super_admin' || normalized === 'admin';
+}
+
 type UserPermissionBlockProps = {
   roleKey: string;
   allowedSections: string[];
   canAcceptReject: boolean;
   canSendForReview: boolean;
+  canUseQuickAnalysis: boolean;
   onRoleKeyChange: (roleKey: string) => void;
   onAllowedSectionsChange: (sections: string[]) => void;
   onCanAcceptRejectChange: (value: boolean) => void;
   onCanSendForReviewChange: (value: boolean) => void;
+  onCanUseQuickAnalysisChange: (value: boolean) => void;
   t: (key: any) => string;
   lang: string;
   roleHelpText: string;
@@ -60,10 +67,12 @@ function UserPermissionBlock({
   allowedSections,
   canAcceptReject,
   canSendForReview,
+  canUseQuickAnalysis,
   onRoleKeyChange,
   onAllowedSectionsChange,
   onCanAcceptRejectChange,
   onCanSendForReviewChange,
+  onCanUseQuickAnalysisChange,
   t,
   lang,
   roleHelpText,
@@ -121,6 +130,21 @@ function UserPermissionBlock({
                   {lang === 'ar' ? 'يمكنه قبول أو رفض النصوص' : 'Can accept or reject scripts'}
                 </span>
               </label>
+            </>
+          )}
+          <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
+            <input
+              type="checkbox"
+              checked={canUseQuickAnalysis}
+              onChange={(e) => onCanUseQuickAnalysisChange(e.target.checked)}
+              className="rounded border-border"
+            />
+            <span className="text-sm text-text-main">
+              {lang === 'ar' ? 'يمكنه الوصول إلى تحليل الأعمال' : 'Can access Works Analysis'}
+            </span>
+          </label>
+          {isRegulatorRoleKey(roleKey) && (
+            <>
               <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2">
                 <input
                   type="checkbox"
@@ -157,6 +181,7 @@ export function AccessControl() {
     allowedSections: getDefaultSectionsForRoleKey('admin'),
     canAcceptReject: false,
     canSendForReview: false,
+    canUseQuickAnalysis: getDefaultQuickAnalysisAccessForRoleKey('admin'),
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -169,6 +194,7 @@ export function AccessControl() {
     allowedSections: [] as string[],
     canAcceptReject: false,
     canSendForReview: false,
+    canUseQuickAnalysis: false,
   });
   const [editSaving, setEditSaving] = useState(false);
   const [downloadingPerformanceReportUserId, setDownloadingPerformanceReportUserId] = useState<string | null>(null);
@@ -229,10 +255,19 @@ export function AccessControl() {
         allowedSections: form.allowedSections.length ? form.allowedSections : undefined,
         canAcceptReject: form.canAcceptReject,
         canSendForReview: form.canSendForReview,
+        canUseQuickAnalysis: form.canUseQuickAnalysis,
       });
       toast.success(lang === 'ar' ? 'تم إرسال الدعوة إلى البريد الإلكتروني' : 'Invite sent to email');
       setIsModalOpen(false);
-      setForm({ name: '', email: '', roleKey: 'admin', allowedSections: getDefaultSectionsForRoleKey('admin'), canAcceptReject: false, canSendForReview: false });
+      setForm({
+        name: '',
+        email: '',
+        roleKey: 'admin',
+        allowedSections: getDefaultSectionsForRoleKey('admin'),
+        canAcceptReject: false,
+        canSendForReview: false,
+        canUseQuickAnalysis: getDefaultQuickAnalysisAccessForRoleKey('admin'),
+      });
       await loadUsers();
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to send invite');
@@ -251,6 +286,7 @@ export function AccessControl() {
       allowedSections: (user.allowedSections && user.allowedSections.length > 0) ? user.allowedSections : getDefaultSectionsForRoleKey(roleKey),
       canAcceptReject: Array.isArray(user.permissions) ? user.permissions.includes('can_accept_reject') : false,
       canSendForReview: Array.isArray(user.permissions) ? user.permissions.includes('can_send_for_review') : false,
+      canUseQuickAnalysis: Array.isArray(user.permissions) ? user.permissions.includes('can_use_quick_analysis') : getDefaultQuickAnalysisAccessForRoleKey(roleKey),
     });
   };
 
@@ -266,6 +302,7 @@ export function AccessControl() {
         allowedSections: editForm.allowedSections,
         canAcceptReject: editForm.canAcceptReject,
         canSendForReview: editForm.canSendForReview,
+        canUseQuickAnalysis: editForm.canUseQuickAnalysis,
       });
       toast.success(lang === 'ar' ? 'تم تحديث المستخدم' : 'User updated');
       setEditUser(null);
@@ -549,6 +586,14 @@ export function AccessControl() {
               </p>
             </div>
             <div>
+              <span className="text-xs text-text-muted uppercase">can_use_quick_analysis</span>
+              <p className="text-text-main font-medium">
+                {Array.isArray(viewUser.permissions) && viewUser.permissions.includes('can_use_quick_analysis')
+                  ? (lang === 'ar' ? 'مفعّل' : 'Enabled')
+                  : (lang === 'ar' ? 'غير مفعّل' : 'Disabled')}
+              </p>
+            </div>
+            <div>
               <span className="text-xs text-text-muted uppercase">{t('status')}</span>
               <div className="text-text-main font-medium mt-1">
                 <Badge variant={viewUser.status === 'active' ? 'success' : 'default'}>
@@ -591,6 +636,7 @@ export function AccessControl() {
               allowedSections={editForm.allowedSections}
               canAcceptReject={editForm.canAcceptReject}
               canSendForReview={editForm.canSendForReview}
+              canUseQuickAnalysis={editForm.canUseQuickAnalysis}
               onRoleKeyChange={(roleKey) => {
                 setEditForm((f) => ({
                   ...f,
@@ -598,11 +644,13 @@ export function AccessControl() {
                   allowedSections: getDefaultSectionsForRoleKey(roleKey),
                   canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
                   canSendForReview: isRegulatorRoleKey(roleKey) ? f.canSendForReview : false,
+                  canUseQuickAnalysis: getDefaultQuickAnalysisAccessForRoleKey(roleKey),
                 }));
               }}
               onAllowedSectionsChange={(sections) => setEditForm((f) => ({ ...f, allowedSections: sections }))}
               onCanAcceptRejectChange={(value) => setEditForm((f) => ({ ...f, canAcceptReject: value }))}
               onCanSendForReviewChange={(value) => setEditForm((f) => ({ ...f, canSendForReview: value }))}
+              onCanUseQuickAnalysisChange={(value) => setEditForm((f) => ({ ...f, canUseQuickAnalysis: value }))}
               t={t}
               lang={lang}
               roleHelpText={lang === 'ar' ? 'يحدد صلاحيات المستخدم في النظام' : 'Defines backend permissions.'}
@@ -648,27 +696,30 @@ export function AccessControl() {
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             />
           </div>
-          <UserPermissionBlock
-            roleKey={form.roleKey}
-            allowedSections={form.allowedSections}
-            canAcceptReject={form.canAcceptReject}
-            canSendForReview={form.canSendForReview}
-            onRoleKeyChange={(roleKey) => {
-              setForm((f) => ({
-                ...f,
-                roleKey,
-                allowedSections: getDefaultSectionsForRoleKey(roleKey),
-                canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
-                canSendForReview: isRegulatorRoleKey(roleKey) ? f.canSendForReview : false,
-              }));
-            }}
-            onAllowedSectionsChange={(sections) => setForm((f) => ({ ...f, allowedSections: sections }))}
-            onCanAcceptRejectChange={(value) => setForm((f) => ({ ...f, canAcceptReject: value }))}
-            onCanSendForReviewChange={(value) => setForm((f) => ({ ...f, canSendForReview: value }))}
-            t={t}
-            lang={lang}
-            roleHelpText={lang === 'ar' ? 'يحدد صلاحيات المستخدم وما يظهر له في القائمة' : 'Defines what they can do and which dashboard sections they see.'}
-          />
+            <UserPermissionBlock
+              roleKey={form.roleKey}
+              allowedSections={form.allowedSections}
+              canAcceptReject={form.canAcceptReject}
+              canSendForReview={form.canSendForReview}
+              canUseQuickAnalysis={form.canUseQuickAnalysis}
+              onRoleKeyChange={(roleKey) => {
+                setForm((f) => ({
+                  ...f,
+                  roleKey,
+                  allowedSections: getDefaultSectionsForRoleKey(roleKey),
+                  canAcceptReject: isRegulatorRoleKey(roleKey) ? f.canAcceptReject : false,
+                  canSendForReview: isRegulatorRoleKey(roleKey) ? f.canSendForReview : false,
+                  canUseQuickAnalysis: getDefaultQuickAnalysisAccessForRoleKey(roleKey),
+                }));
+              }}
+              onAllowedSectionsChange={(sections) => setForm((f) => ({ ...f, allowedSections: sections }))}
+              onCanAcceptRejectChange={(value) => setForm((f) => ({ ...f, canAcceptReject: value }))}
+              onCanSendForReviewChange={(value) => setForm((f) => ({ ...f, canSendForReview: value }))}
+              onCanUseQuickAnalysisChange={(value) => setForm((f) => ({ ...f, canUseQuickAnalysis: value }))}
+              t={t}
+              lang={lang}
+              roleHelpText={lang === 'ar' ? 'يحدد صلاحيات المستخدم وما يظهر له في القائمة' : 'Defines what they can do and which dashboard sections they see.'}
+            />
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>

@@ -73,15 +73,26 @@ Deno.serve(async (req: Request) => {
   const allowedSections = allowedSectionsMeta && allowedSectionsMeta.length > 0
     ? allowedSectionsMeta
     : getDefaultSectionsForRoleKey(normalizedRole);
+  const explicitQuickAnalysis = typeof meta.canUseQuickAnalysis === "boolean"
+    ? meta.canUseQuickAnalysis
+    : undefined;
 
-  if (normalizedRole === "Regulator") {
-    permissionKeys = metadataPermissionKeys;
-  } else {
-    permissionKeys = uniqueStrings([...permissionKeys, ...metadataPermissionKeys]);
+  permissionKeys = uniqueStrings([...permissionKeys, ...metadataPermissionKeys]);
+  if (explicitQuickAnalysis === true) {
+    permissionKeys = uniqueStrings([...permissionKeys, "can_use_quick_analysis"]);
+  } else if (explicitQuickAnalysis === false) {
+    permissionKeys = permissionKeys.filter((key) => key !== "can_use_quick_analysis");
+  } else if (normalizedRole !== "Regulator") {
+    permissionKeys = uniqueStrings([...permissionKeys, "can_use_quick_analysis"]);
   }
 
   if (permissionKeys.length === 0) {
     permissionKeys = getDefaultPermissionsForRoleKey(normalizedRole);
+    if (explicitQuickAnalysis === false) {
+      permissionKeys = permissionKeys.filter((key) => key !== "can_use_quick_analysis");
+    } else if (explicitQuickAnalysis === true || normalizedRole !== "Regulator") {
+      permissionKeys = uniqueStrings([...permissionKeys, "can_use_quick_analysis"]);
+    }
   }
 
   return json({
@@ -92,6 +103,7 @@ Deno.serve(async (req: Request) => {
       role: normalizedRole,
       permissions: permissionKeys,
       allowedSections,
+      canUseQuickAnalysis: explicitQuickAnalysis ?? (normalizedRole !== "Regulator"),
     },
   });
 });

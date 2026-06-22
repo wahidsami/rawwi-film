@@ -25,7 +25,18 @@ function mapSupabaseUserToAppUser(sbUser: SupabaseUser): User {
       : roleFromMeta === 'Super Admin' || roleFromMeta === 'super_admin'
         ? 'Super Admin'
         : 'Admin';
-  const permissions = (meta.permissions as string[] | undefined) ?? getDefaultPermissionsForRole(role);
+  const rawPermissions = Array.isArray(meta.permissions) ? meta.permissions as string[] : [];
+  const explicitQuickAnalysis = typeof meta.canUseQuickAnalysis === 'boolean'
+    ? meta.canUseQuickAnalysis
+    : undefined;
+  let permissions = rawPermissions.length > 0 ? rawPermissions : getDefaultPermissionsForRole(role);
+  if (explicitQuickAnalysis === true) {
+    permissions = Array.from(new Set([...permissions, 'can_use_quick_analysis']));
+  } else if (explicitQuickAnalysis === false) {
+    permissions = permissions.filter((permission) => permission !== 'can_use_quick_analysis');
+  } else if (role === 'Super Admin' || role === 'Admin') {
+    permissions = Array.from(new Set([...permissions, 'can_use_quick_analysis']));
+  }
 
   // NEW: Support allowedSections if present, otherwise derive from permissions
   // validation: if array is empty, fall back to defaults (prevents lockouts from bad migration)
@@ -71,7 +82,8 @@ function getDefaultPermissionsForRole(role: Role): string[] {
         'view_tasks', 'assign_tasks',
         'run_analysis', 'view_findings', 'override_findings', 'add_manual_findings',
         'view_reports', 'generate_reports',
-        'manage_glossary', 'manage_users', 'view_audit'
+        'manage_glossary', 'manage_users', 'view_audit',
+        'can_use_quick_analysis',
       ];
     case 'Regulator':
       // Regulator: View-only access plus glossary management
@@ -86,7 +98,8 @@ function getDefaultPermissionsForRole(role: Role): string[] {
         'view_tasks', 'assign_tasks',
         'run_analysis', 'view_findings', 'override_findings',
         'view_reports', 'generate_reports',
-        'manage_glossary', 'view_audit'
+        'manage_glossary', 'view_audit',
+        'can_use_quick_analysis',
       ];
   }
 }
@@ -132,13 +145,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .then((res) => {
           if (res?.user) {
             const role = (res.user.role as Role) || 'Admin';
+            const permissions = Array.isArray(res.user.permissions) ? res.user.permissions : [];
+            const explicitQuickAnalysis = typeof res.user.canUseQuickAnalysis === 'boolean'
+              ? res.user.canUseQuickAnalysis
+              : undefined;
+            const resolvedPermissions = explicitQuickAnalysis === true
+              ? Array.from(new Set([...permissions, 'can_use_quick_analysis']))
+              : explicitQuickAnalysis === false
+                ? permissions.filter((permission) => permission !== 'can_use_quick_analysis')
+                : permissions.includes('can_use_quick_analysis') || role === 'Regulator'
+                  ? permissions
+                  : ['Super Admin', 'Admin'].includes(role)
+                    ? Array.from(new Set([...permissions, 'can_use_quick_analysis']))
+                    : permissions;
             set({
               user: {
                 id: res.user.id,
                 email: res.user.email,
                 name: res.user.name,
                 role,
-                permissions: res.user.permissions ?? [],
+                permissions: resolvedPermissions,
                 allowedSections: (!res.user.allowedSections || res.user.allowedSections.length === 0)
                   ? getDefaultSectionsForRole(role)
                   : res.user.allowedSections,
@@ -225,13 +251,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .then((res) => {
           if (res?.user) {
             const role = (res.user.role as Role) || 'Admin';
+            const permissions = Array.isArray(res.user.permissions) ? res.user.permissions : [];
+            const explicitQuickAnalysis = typeof res.user.canUseQuickAnalysis === 'boolean'
+              ? res.user.canUseQuickAnalysis
+              : undefined;
+            const resolvedPermissions = explicitQuickAnalysis === true
+              ? Array.from(new Set([...permissions, 'can_use_quick_analysis']))
+              : explicitQuickAnalysis === false
+                ? permissions.filter((permission) => permission !== 'can_use_quick_analysis')
+                : permissions.includes('can_use_quick_analysis') || role === 'Regulator'
+                  ? permissions
+                  : ['Super Admin', 'Admin'].includes(role)
+                    ? Array.from(new Set([...permissions, 'can_use_quick_analysis']))
+                    : permissions;
             set({
               user: {
                 id: res.user.id,
                 email: res.user.email,
                 name: res.user.name,
                 role,
-                permissions: res.user.permissions ?? [],
+                permissions: resolvedPermissions,
                 allowedSections: (!res.user.allowedSections || res.user.allowedSections.length === 0)
                   ? getDefaultSectionsForRole(role)
                   : (res.user.allowedSections ?? []),

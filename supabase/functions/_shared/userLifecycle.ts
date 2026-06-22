@@ -26,6 +26,7 @@ export function getDefaultPermissionsForRoleKey(roleKey: string): string[] {
       "view_reports", "generate_reports",
       "manage_glossary", "manage_users", "view_audit",
       "approve_scripts", "reject_scripts", "manage_script_status",
+      "can_use_quick_analysis",
     ];
   }
   if (k === "admin") {
@@ -37,6 +38,7 @@ export function getDefaultPermissionsForRoleKey(roleKey: string): string[] {
       "view_reports", "generate_reports",
       "manage_glossary", "view_audit",
       "approve_scripts", "reject_scripts", "manage_script_status",
+      "can_use_quick_analysis",
     ];
   }
   if (k === "regulator") {
@@ -60,13 +62,24 @@ export function uniqueStrings(values: Array<string | null | undefined>): string[
   )];
 }
 
-export function buildPermissionsForRole(roleKey: string, canAcceptReject: boolean, canSendForReview = false): string[] {
+export function buildPermissionsForRole(
+  roleKey: string,
+  canAcceptReject: boolean,
+  canSendForReview = false,
+  canUseQuickAnalysis = false,
+): string[] {
   const permissions = getDefaultPermissionsForRoleKey(roleKey);
   if (normalizeRoleKey(roleKey) === "regulator" && canAcceptReject) {
     permissions.push("can_accept_reject");
   }
   if (normalizeRoleKey(roleKey) === "regulator" && canSendForReview) {
     permissions.push("can_send_for_review");
+  }
+  if (canUseQuickAnalysis) {
+    permissions.push("can_use_quick_analysis");
+  } else if (normalizeRoleKey(roleKey) === "admin" || normalizeRoleKey(roleKey) === "super_admin") {
+    const idx = permissions.indexOf("can_use_quick_analysis");
+    if (idx >= 0) permissions.splice(idx, 1);
   }
   return uniqueStrings(permissions);
 }
@@ -75,10 +88,12 @@ export function buildPermissionMetadata(
   roleKey: string,
   canAcceptReject: boolean,
   canSendForReview = false,
+  canUseQuickAnalysis = false,
 ): Record<string, unknown> {
   return {
     canAcceptReject: normalizeRoleKey(roleKey) === "regulator" ? canAcceptReject : false,
     canSendForReview: normalizeRoleKey(roleKey) === "regulator" ? canSendForReview : false,
+    canUseQuickAnalysis,
   };
 }
 

@@ -13,6 +13,7 @@ import {
   getDefaultPermissionsForRoleKey,
   getDefaultSectionsForRoleKey,
   getRoleDisplayName,
+  normalizeRoleKey,
   uniqueStrings,
 } from "../_shared/userLifecycle.ts";
 
@@ -87,6 +88,23 @@ async function ensureUserRole(
   if (error) console.error("[users] user_roles upsert:", error.message);
 }
 
+function resolveQuickAnalysisPermission(
+  roleKey: string,
+  permissions: string[],
+  explicitValue?: boolean,
+): string[] {
+  const normalizedRole = roleKey.toLowerCase();
+  let resolved = uniqueStrings(permissions);
+  if (explicitValue === true) {
+    resolved = uniqueStrings([...resolved, "can_use_quick_analysis"]);
+  } else if (explicitValue === false) {
+    resolved = resolved.filter((permission) => permission !== "can_use_quick_analysis");
+  } else if (normalizedRole === "admin" || normalizedRole === "super_admin") {
+    resolved = uniqueStrings([...resolved, "can_use_quick_analysis"]);
+  }
+  return resolved;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return optionsResponse(req);
 
@@ -133,13 +151,21 @@ Deno.serve(async (req: Request) => {
         : getDefaultPermissionsForRoleKey(roleKey);
       const canAcceptRejectFromMeta = Boolean(u.user_metadata?.canAcceptReject);
       const canSendForReviewFromMeta = Boolean(u.user_metadata?.canSendForReview);
-      const normalizedPermissions = permissions.length > 0
-        ? uniqueStrings([
-            ...permissions,
-            ...(canAcceptRejectFromMeta ? ["can_accept_reject"] : []),
-            ...(canSendForReviewFromMeta ? ["can_send_for_review"] : []),
-          ])
-        : permissions;
+      const canUseQuickAnalysisFromMeta = Boolean(u.user_metadata?.canUseQuickAnalysis);
+      const normalizedPermissions = resolveQuickAnalysisPermission(
+        roleKey,
+        permissions.length > 0
+          ? uniqueStrings([
+              ...permissions,
+              ...(canAcceptRejectFromMeta ? ["can_accept_reject"] : []),
+              ...(canSendForReviewFromMeta ? ["can_send_for_review"] : []),
+              ...(canUseQuickAnalysisFromMeta ? ["can_use_quick_analysis"] : []),
+            ])
+          : permissions,
+        typeof u.user_metadata?.canUseQuickAnalysis === "boolean"
+          ? Boolean(u.user_metadata.canUseQuickAnalysis)
+          : undefined,
+      );
       // NEW: Return allowedSections and permissions
       const allowedSections = (u.user_metadata?.allowedSections as string[]) ?? getDefaultSectionsForRoleKey(roleKey);
       return {
@@ -156,7 +182,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (method === "POST") {
-    let body: { name?: string; email?: string; roleKey?: string; permissions?: string[]; canAcceptReject?: boolean; canSendForReview?: boolean; mode?: string; tempPassword?: string; allowedSections?: string[] };
+    let body: { name?: string; email?: string; roleKey?: string; permissions?: string[]; canAcceptReject?: boolean; canSendForReview?: boolean; canUseQuickAnalysis?: boolean; mode?: string; tempPassword?: string; allowedSections?: string[] };
     try {
       body = await req.json();
     } catch {
@@ -172,10 +198,18 @@ Deno.serve(async (req: Request) => {
     const allowedSections = allowedSectionsFromBody?.length ? allowedSectionsFromBody : defaultSections;
     const canAcceptReject = body.canAcceptReject === true;
     const canSendForReview = body.canSendForReview === true;
+    const canUseQuickAnalysis = typeof body.canUseQuickAnalysis === "boolean"
+      ? body.canUseQuickAnalysis
+      : roleKey.toLowerCase() !== "regulator";
     const permissionsFromBody = uniqueStrings(Array.isArray(body.permissions) ? body.permissions : []);
     const permissions = permissionsFromBody.length > 0
-      ? buildPermissionsForRole(roleKey, permissionsFromBody.includes("can_accept_reject"), permissionsFromBody.includes("can_send_for_review"))
-      : buildPermissionsForRole(roleKey, canAcceptReject, canSendForReview);
+      ? buildPermissionsForRole(
+          roleKey,
+          permissionsFromBody.includes("can_accept_reject"),
+          permissionsFromBody.includes("can_send_for_review"),
+          permissionsFromBody.includes("can_use_quick_analysis"),
+        )
+      : buildPermissionsForRole(roleKey, canAcceptReject, canSendForReview, canUseQuickAnalysis);
 
     if (!email) return jsonResponse({ error: "email is required" }, 400, { origin });
 
@@ -195,7 +229,7 @@ Deno.serve(async (req: Request) => {
       const finalEmail = email || (existingUser.email ?? "");
       await upsertProfile(supabase, targetUserId, displayName, finalEmail);
       await ensureUserRole(supabase, targetUserId, roleKey);
-      const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview);
+      const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview, canUseQuickAnalysis);
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
         user_metadata: { ...(existingUser.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey), ...permissionMetadata },
       });
@@ -219,7 +253,7 @@ Deno.serve(async (req: Request) => {
       const finalEmail = email || (user.email ?? "");
       await upsertProfile(supabase, targetUserId, displayName, finalEmail);
       await ensureUserRole(supabase, targetUserId, roleKey);
-      const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview);
+      const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview, canUseQuickAnalysis);
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
         user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey), ...permissionMetadata },
       });
@@ -228,7 +262,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const password = tempPassword && tempPassword.length >= 12 ? tempPassword : generateTempPassword(16);
-    const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview);
+    const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview, canUseQuickAnalysis);
     const { data: createData, error: createErr } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -246,7 +280,7 @@ Deno.serve(async (req: Request) => {
     const finalEmail = email || (user.email ?? "");
     await upsertProfile(supabase, targetUserId, displayName, finalEmail);
     await ensureUserRole(supabase, targetUserId, roleKey);
-    const permissionMetadataAfterCreate = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview);
+    const permissionMetadataAfterCreate = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview, canUseQuickAnalysis);
     const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {
       user_metadata: { ...(user.user_metadata ?? {}), name: displayName, allowedSections, permissions, role: getRoleDisplayName(roleKey), ...permissionMetadataAfterCreate },
     });
@@ -256,7 +290,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (method === "PATCH") {
-    let body: { userId?: string; name?: string; roleKey?: string; status?: string; permissions?: string[]; canAcceptReject?: boolean; canSendForReview?: boolean };
+    let body: { userId?: string; name?: string; roleKey?: string; status?: string; permissions?: string[]; canAcceptReject?: boolean; canSendForReview?: boolean; canUseQuickAnalysis?: boolean };
     try {
       body = await req.json();
     } catch {
@@ -315,13 +349,27 @@ Deno.serve(async (req: Request) => {
     const canSendForReviewFromBody = typeof body.canSendForReview === "boolean"
       ? body.canSendForReview
       : existingPermissions.includes("can_send_for_review");
+    const existingQuickAnalysisMeta = typeof authUser.user_metadata?.canUseQuickAnalysis === "boolean"
+      ? Boolean(authUser.user_metadata.canUseQuickAnalysis)
+      : undefined;
+    const canUseQuickAnalysisFromBody = typeof body.canUseQuickAnalysis === "boolean"
+      ? body.canUseQuickAnalysis
+      : existingQuickAnalysisMeta !== undefined
+        ? existingQuickAnalysisMeta
+        : normalizeRoleKey(effectiveRoleKey) !== "regulator";
     const nextPermissions = permissionsFromBody.length > 0
-      ? buildPermissionsForRole(effectiveRoleKey, permissionsFromBody.includes("can_accept_reject"), permissionsFromBody.includes("can_send_for_review"))
-      : buildPermissionsForRole(effectiveRoleKey, canAcceptRejectFromBody, canSendForReviewFromBody);
-    const permissionMetadata = buildPermissionMetadata(effectiveRoleKey, canAcceptRejectFromBody, canSendForReviewFromBody);
+      ? buildPermissionsForRole(
+          effectiveRoleKey,
+          permissionsFromBody.includes("can_accept_reject"),
+          permissionsFromBody.includes("can_send_for_review"),
+          permissionsFromBody.includes("can_use_quick_analysis"),
+        )
+      : buildPermissionsForRole(effectiveRoleKey, canAcceptRejectFromBody, canSendForReviewFromBody, canUseQuickAnalysisFromBody);
+    const permissionMetadata = buildPermissionMetadata(effectiveRoleKey, canAcceptRejectFromBody, canSendForReviewFromBody, canUseQuickAnalysisFromBody);
     metadataUpdates.permissions = nextPermissions;
     metadataUpdates.canAcceptReject = permissionMetadata.canAcceptReject;
     metadataUpdates.canSendForReview = permissionMetadata.canSendForReview;
+    metadataUpdates.canUseQuickAnalysis = permissionMetadata.canUseQuickAnalysis;
 
     if (Object.keys(metadataUpdates).length > 0) {
       const { error: metaErr } = await supabase.auth.admin.updateUserById(targetUserId, {

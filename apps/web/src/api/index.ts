@@ -12,6 +12,7 @@ export interface MeResponse {
     role: string;
     permissions: string[];
     allowedSections?: string[]; // NEW: Section-based permissions
+    canUseQuickAnalysis?: boolean;
   };
 }
 
@@ -1629,6 +1630,7 @@ export interface CreateUserBody {
   permissions?: string[];
   canAcceptReject?: boolean;
   canSendForReview?: boolean;
+  canUseQuickAnalysis?: boolean;
   mode?: 'invite' | 'temp_password';
   tempPassword?: string;
   allowedSections?: string[];
@@ -1651,6 +1653,7 @@ export interface UpdateUserBody {
   permissions?: string[];
   canAcceptReject?: boolean;
   canSendForReview?: boolean;
+  canUseQuickAnalysis?: boolean;
 }
 
 export interface DeleteUserBody {
@@ -1673,6 +1676,7 @@ export interface SendInviteBody {
   permissions?: string[]; // legacy-compatible full permission list
   canAcceptReject?: boolean;
   canSendForReview?: boolean;
+  canUseQuickAnalysis?: boolean;
   allowedSections?: string[]; // NEW: Section-based permissions
 }
 

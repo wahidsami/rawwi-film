@@ -15,6 +15,7 @@ import {
   buildPermissionMetadata,
   getDefaultSectionsForRoleKey,
   getRoleDisplayName,
+  normalizeRoleKey,
   uniqueStrings,
 } from "../_shared/userLifecycle.ts";
 
@@ -127,10 +128,18 @@ Deno.serve(async (req: Request) => {
   const canSendForReview = typeof body.canSendForReview === "boolean"
     ? body.canSendForReview
     : (permissionsFromBody.includes("can_send_for_review") || legacyPermissionMap.canSendForReview === true);
+  const canUseQuickAnalysis = typeof (body as { canUseQuickAnalysis?: unknown }).canUseQuickAnalysis === "boolean"
+    ? (body as { canUseQuickAnalysis: boolean }).canUseQuickAnalysis
+    : (permissionsFromBody.includes("can_use_quick_analysis") || legacyPermissionMap.canUseQuickAnalysis === true || normalizeRoleKey(roleKey) !== "regulator");
   const permissions = permissionsFromBody.length > 0
-    ? buildPermissionsForRole(roleKey, permissionsFromBody.includes("can_accept_reject"), permissionsFromBody.includes("can_send_for_review"))
-    : buildPermissionsForRole(roleKey, canAcceptReject, canSendForReview);
-  const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview);
+    ? buildPermissionsForRole(
+        roleKey,
+        permissionsFromBody.includes("can_accept_reject"),
+        permissionsFromBody.includes("can_send_for_review"),
+        permissionsFromBody.includes("can_use_quick_analysis"),
+      )
+    : buildPermissionsForRole(roleKey, canAcceptReject, canSendForReview, canUseQuickAnalysis);
+  const permissionMetadata = buildPermissionMetadata(roleKey, canAcceptReject, canSendForReview, canUseQuickAnalysis);
 
   const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
   const token = base64url(tokenBytes);

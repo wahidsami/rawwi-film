@@ -8,7 +8,7 @@ import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { getCorrelationId, normalizeText } from "../_shared/utils.ts";
-import { uniqueStrings } from "../_shared/userLifecycle.ts";
+import { getDefaultPermissionsForRoleKey, uniqueStrings } from "../_shared/userLifecycle.ts";
 import { canOverrideOwnScriptDecision, isClientUser, isRegulatorOnly, isSuperAdminOrAdmin, isUserAdmin } from "../_shared/roleCheck.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
 import { loadDefaultCertificateTemplate, renderCertificatePdfBytes } from "../_shared/certificatePdf.ts";
@@ -526,6 +526,20 @@ async function ensureQuickAnalysisClientId(
     .single();
   if (createErr || !created) throw new Error(createErr?.message || "Failed to create quick analysis client");
   return (created as { id: string }).id;
+}
+
+async function canUseQuickAnalysis(
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  uid: string,
+): Promise<boolean> {
+  const { data: authUserRow } = await supabase.auth.admin.getUserById(uid);
+  const meta = authUserRow?.user?.user_metadata ?? {};
+  const metaPermissions = Array.isArray(meta.permissions) ? uniqueStrings(meta.permissions as string[]) : [];
+  if (metaPermissions.length > 0) {
+    return metaPermissions.includes("can_use_quick_analysis");
+  }
+  const roleKey = String(meta.role ?? "admin");
+  return getDefaultPermissionsForRoleKey(roleKey).includes("can_use_quick_analysis");
 }
 
 async function clearScriptAnalysisArtifacts(
@@ -1338,6 +1352,9 @@ Deno.serve(async (req: Request) => {
 
   // POST /scripts/quick — create a standalone quick-analysis script for current user.
   if (method === "POST" && rest === "quick") {
+    if (!(await canUseQuickAnalysis(supabase, uid))) {
+      return json({ error: "You do not have permission to use Works Analysis." }, 403);
+    }
     let body: Record<string, unknown>;
     try {
       body = await req.json();
@@ -1391,6 +1408,9 @@ Deno.serve(async (req: Request) => {
 
   // GET /scripts/quick — quick-analysis history (own items only).
   if (method === "GET" && rest === "quick") {
+    if (!(await canUseQuickAnalysis(supabase, uid))) {
+      return json({ error: "You do not have permission to use Works Analysis." }, 403);
+    }
     const { data: rows, error } = await supabase
       .from("scripts")
       .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
