@@ -45,10 +45,7 @@ export async function downloadQuickAnalysisPdf(params: {
   dateFormat?: string;
 }): Promise<void> {
   const origin = window.location.origin;
-  const [coverImageDataUrl, logoUrl] = await Promise.all([
-    toDataUrl(`${origin}/cover.jpg`),
-    toDataUrl(`${origin}/fclogo.png`),
-  ]);
+  const logoUrl = await toDataUrl(`${origin}/fclogo.png`);
   const hasReviewLayer = (params.reviewFindings?.length ?? 0) > 0;
   const reviewLayer = splitAnalysisReviewFindingsForPdf(params.reviewFindings);
   const findings = hasReviewLayer
@@ -106,7 +103,7 @@ export async function downloadQuickAnalysisPdf(params: {
     lang: params.lang,
     dateFormat: params.dateFormat,
     logoUrl: logoUrl ?? undefined,
-    coverImageDataUrl,
+    coverImageDataUrl: null,
   });
   const blob = await pdf(doc).toBlob();
   const objectUrl = URL.createObjectURL(blob);
