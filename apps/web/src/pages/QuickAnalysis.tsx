@@ -39,6 +39,7 @@ function fileTitle(fileName: string): string {
 export function QuickAnalysis() {
   const { lang } = useLangStore();
   const user = useAuthStore((s) => s.user);
+  const hasPermission = useAuthStore((s) => s.hasPermission);
   const pushScript = useDataStore((s) => s.pushScript);
   const navigate = useNavigate();
   const [history, setHistory] = useState<QuickHistoryItem[]>([]);
@@ -61,7 +62,7 @@ export function QuickAnalysis() {
 
   const isAr = lang === 'ar';
   const isImportModalOpen = uploadStatus !== 'idle';
-  const canAccessQuickAnalysis = user?.role === 'Super Admin' || user?.role === 'Admin';
+  const canAccessQuickAnalysis = Boolean(user && hasPermission('can_use_quick_analysis'));
   const isScriptCreationBlocked = !canAccessQuickAnalysis;
 
   const loadHistory = useCallback(async () => {
