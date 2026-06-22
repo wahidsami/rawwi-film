@@ -414,6 +414,7 @@ export function Results() {
   const [checklistModalOpen, setChecklistModalOpen] = useState(false);
   const [summaryModalOpen, setSummaryModalOpen] = useState(false);
   const reportActionsMenuRef = useRef<HTMLDivElement | null>(null);
+  const reportLoadTokenRef = useRef(0);
   const [editFindingForm, setEditFindingForm] = useState({
     articleId: String(DEFAULT_ACTIONABLE_ARTICLE_ID),
     atomId: '',
@@ -748,27 +749,36 @@ export function Results() {
   }, [handleReportReview, lang, reportReviewReason]);
 
   // Load report + findings
-  const loadFindings = useCallback(async (jobId: string) => {
+  const loadFindings = useCallback(async (jobId: string, requestToken: number) => {
     try {
       const f = await findingsApi.getByJob(jobId);
+      if (reportLoadTokenRef.current !== requestToken) return;
       setFindings(f);
     } catch { /* findings endpoint may not exist yet, rely on summary */ }
   }, []);
 
-  const loadReviewFindings = useCallback(async (reportId: string) => {
+  const loadReviewFindings = useCallback(async (reportId: string, requestToken: number) => {
     try {
       const rows = await findingsApi.getReviewByReport(reportId);
+      if (reportLoadTokenRef.current !== requestToken) return;
       setReviewFindings(rows);
     } catch {
-      setReviewFindings([]);
+      if (reportLoadTokenRef.current === requestToken) setReviewFindings([]);
     }
   }, []);
 
   useEffect(() => {
     if (!paramId) return;
     let cancelled = false;
+    const requestToken = ++reportLoadTokenRef.current;
     setLoading(true);
     setError(null);
+    setReport(null);
+    setFindings([]);
+    setReviewFindings([]);
+    setReportScriptMeta(null);
+    setReportViewerPages(null);
+    setIsQuickAnalysisReport(quickFromQuery);
 
     const by = searchParams.get('by') ?? 'job';
 
@@ -785,6 +795,7 @@ export function Results() {
           r = await reportsApi.getByJob(paramId);
         }
         if (!cancelled) {
+          if (reportLoadTokenRef.current !== requestToken) return;
           setReport(r);
           setReportScriptMeta(null);
           setReportViewerPages(null);
@@ -793,7 +804,7 @@ export function Results() {
             scriptsApi
               .getEditor(r.scriptId, r.versionId)
               .then((ed) => {
-                if (cancelled) return;
+                if (cancelled || reportLoadTokenRef.current !== requestToken) return;
                 if (ed.pages && ed.pages.length > 0) {
                   setReportViewerPages(
                     ed.pages.map((p) => ({ pageNumber: p.pageNumber, content: p.content ?? '' }))
@@ -801,7 +812,7 @@ export function Results() {
                 }
               })
               .catch(() => {
-                if (!cancelled) setReportViewerPages(null);
+                if (!cancelled && reportLoadTokenRef.current === requestToken) setReportViewerPages(null);
               });
           }
           if (quickFromQuery) {
@@ -809,12 +820,12 @@ export function Results() {
           } else if (r.scriptId) {
             try {
               const script = await scriptsApi.getScript(r.scriptId);
-              if (!cancelled) {
+              if (!cancelled && reportLoadTokenRef.current === requestToken) {
                 setReportScriptMeta(script ?? null);
                 setIsQuickAnalysisReport(Boolean(script?.isQuickAnalysis));
               }
             } catch {
-              if (!cancelled) {
+              if (!cancelled && reportLoadTokenRef.current === requestToken) {
                 setReportScriptMeta(null);
                 setIsQuickAnalysisReport(false);
               }
@@ -824,11 +835,12 @@ export function Results() {
             setIsQuickAnalysisReport(false);
           }
           setLoading(false);
-          if (r.jobId) loadFindings(r.jobId);
-          if (r.id) loadReviewFindings(r.id);
+          if (r.jobId) loadFindings(r.jobId, requestToken);
+          if (r.id) loadReviewFindings(r.id, requestToken);
         }
       } catch (e: unknown) {
         if (!cancelled) {
+          if (reportLoadTokenRef.current !== requestToken) return;
           setError(e instanceof Error ? e.message : (lang === 'ar' ? 'لم يتم العثور على التقرير' : 'Report not found'));
           setLoading(false);
         }
