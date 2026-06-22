@@ -106,13 +106,21 @@ function getDefaultPermissionsForRole(role: Role): string[] {
   }
 }
 
-function setAuthFromSession(session: Session | null, set: (state: Partial<AuthState>) => void) {
+function setAuthFromSession(
+  session: Session | null,
+  set: (state: Partial<AuthState>) => void,
+  currentUser: User | null = null,
+) {
   if (!session?.user) {
     set({ user: null, isAuthenticated: false });
     return;
   }
+  const mappedUser = mapSupabaseUserToAppUser(session.user);
+  if (currentUser && currentUser.id === mappedUser.id) {
+    return;
+  }
   set({
-    user: mapSupabaseUserToAppUser(session.user),
+    user: mappedUser,
     isAuthenticated: true,
   });
 }
@@ -244,7 +252,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initializeAuth: () => {
     const applySession = (session: Session | null) => {
-      setAuthFromSession(session, set);
+      setAuthFromSession(session, set, get().user);
       if (!session?.user) {
         set({ authReady: true });
         return;
