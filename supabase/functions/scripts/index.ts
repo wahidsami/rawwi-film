@@ -3234,7 +3234,7 @@ Deno.serve(async (req: Request) => {
     const scriptId = rest.trim();
     const { data: script, error: findErr } = await supabase
       .from("scripts")
-      .select("id, created_by, title, company_id, client_id, status")
+      .select("id, created_by, title, company_id, client_id, status, is_quick_analysis")
       .eq("id", scriptId)
       .maybeSingle();
     if (findErr || !script) return json({ error: "Script not found" }, 404);
@@ -3243,6 +3243,19 @@ Deno.serve(async (req: Request) => {
     const currentStatus = String((script as any).status ?? "").toLowerCase();
     if (currentStatus === "canceled" || currentStatus === "cancelled") {
       return json({ ok: true, alreadyCanceled: true });
+    }
+
+    const isQuickAnalysisScript = (script as { is_quick_analysis?: boolean | null }).is_quick_analysis === true;
+    if (isQuickAnalysisScript) {
+      const { error: deleteErr } = await supabase
+        .from("scripts")
+        .delete()
+        .eq("id", scriptId);
+      if (deleteErr) {
+        console.error(`[scripts] correlationId=${correlationId} quick delete error=`, deleteErr.message);
+        return json({ error: deleteErr.message || "Failed to delete quick analysis script" }, 500);
+      }
+      return json({ ok: true, deleted: true });
     }
 
     const { data: updated, error: updateErr } = await supabase

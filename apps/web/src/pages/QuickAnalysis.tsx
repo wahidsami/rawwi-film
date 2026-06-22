@@ -187,6 +187,7 @@ export function QuickAnalysis() {
     setDeletingScriptId(script.id);
     try {
       await scriptsApi.deleteScript(script.id);
+      setHistory((prev) => prev.filter((item) => item.script.id !== script.id));
       toast.success(isAr ? 'تم حذف التحليل السريع' : 'Quick analysis deleted');
       await loadHistory();
     } catch (err: any) {
@@ -386,6 +387,7 @@ export function QuickAnalysis() {
         try {
           await scriptsApi.deleteScript(quickScript.id);
         } catch (_) {}
+        setHistory((prev) => prev.filter((item) => item.script.id !== quickScript.id));
         await loadHistory();
       }
       if (isImportAbortError(err)) {
