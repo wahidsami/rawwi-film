@@ -1415,6 +1415,8 @@ Deno.serve(async (req: Request) => {
       .from("scripts")
       .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("is_quick_analysis", true)
+      .neq("status", "canceled")
+      .neq("status", "cancelled")
       .eq("created_by", uid)
       .order("created_at", { ascending: false });
     if (error) {

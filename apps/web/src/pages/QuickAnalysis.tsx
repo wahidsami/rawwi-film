@@ -79,7 +79,10 @@ export function QuickAnalysis() {
           }
         }),
       );
-      setHistory(rows);
+      setHistory(rows.filter(({ script }) => {
+        const status = String(script.status ?? '').toLowerCase();
+        return status !== 'canceled' && status !== 'cancelled';
+      }));
     } catch (err: any) {
       toast.error(err?.message ?? (isAr ? 'فشل تحميل سجل التحليل السريع' : 'Failed to load quick analysis history'));
       setHistory([]);
