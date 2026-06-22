@@ -1605,6 +1605,7 @@ export function Results() {
     setIsDownloadingPdf(true);
     try {
       let latestReviewFindings = reviewFindings;
+      let latestFindings = findings;
       if (report.id) {
         try {
           latestReviewFindings = await findingsApi.getReviewByReport(report.id);
@@ -1613,16 +1614,27 @@ export function Results() {
           // Keep current in-memory review findings as fallback.
         }
       }
+      if (report.jobId) {
+        try {
+          latestFindings = await findingsApi.getByJob(report.jobId);
+          setFindings(latestFindings);
+        } catch {
+          // Keep current in-memory findings as fallback.
+        }
+      }
+      const safeFindingsForPdf = (latestFindings || []).filter((finding): finding is AnalysisFinding => Boolean(finding));
+      const safeReviewFindingsForPdf = (latestReviewFindings || []).filter((finding): finding is AnalysisReviewFinding => Boolean(finding));
+      const safeReportHintsForPdf = (summary?.report_hints || []).filter((hint): hint is CanonicalSummaryFinding => Boolean(hint));
       const basePayload = {
         scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
         clientName: report.clientName || (isAr ? 'مستفيد' : 'Beneficiary'),
         createdAt: report.createdAt,
         logoUrl: settings?.branding?.logoUrl,
-        findings: (findings || []).filter((f): f is AnalysisFinding => Boolean(f)),
-        reviewFindings: latestReviewFindings,
+        findings: safeFindingsForPdf,
+        reviewFindings: safeReviewFindingsForPdf,
         findingsByArticle: summary?.findings_by_article,
         canonicalFindings: summary?.canonical_findings,
-        reportHints: summary?.report_hints ?? undefined,
+        reportHints: safeReportHintsForPdf,
         scriptSummary: summary?.script_summary ?? undefined,
         viewerPages: reportViewerPages,
         lang: isAr ? ('ar' as const) : ('en' as const),
@@ -1633,7 +1645,7 @@ export function Results() {
           ...basePayload,
           clientName: undefined,
           // Use same ملاحظات خاصة data as UI so quick-analysis PDF always includes the section when visible
-          reportHints: reportHints.length > 0 ? reportHints : (summary?.report_hints ?? undefined),
+          reportHints: reportHints.length > 0 ? reportHints : safeReportHintsForPdf,
         });
       } else {
         await downloadAnalysisPdf(basePayload);
