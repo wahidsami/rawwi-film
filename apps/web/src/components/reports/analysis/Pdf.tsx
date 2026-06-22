@@ -67,6 +67,17 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
       confidence: f.confidence ?? 0,
       evidenceSnippet: f.evidenceSnippet ?? "",
     }));
+  const safeReportHints: AnalysisPdfFinding[] = (data.reportHints || [])
+    .filter((f): f is AnalysisPdfFinding => !!f)
+    .map((f, idx) => ({
+      ...f,
+      id: f.id ?? `hint-${idx}`,
+      articleId: Number.isFinite(f.articleId) ? f.articleId : 0,
+      titleAr: f.titleAr ?? "—",
+      severity: f.severity ?? "info",
+      confidence: f.confidence ?? 0,
+      evidenceSnippet: f.evidenceSnippet ?? "",
+    }));
 
   const groups = safeFindings.reduce<Partial<Record<ViolationTypeId, AnalysisPdfFinding[]>>>((acc, f) => {
     const key =
@@ -89,7 +100,7 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
     },
     { ai: 0, manual: 0, glossary: 0 },
   );
-  const specialNotesCount = (data.reportHints ?? []).length;
+  const specialNotesCount = safeReportHints.length;
 
   return (
     <Document>
@@ -214,7 +225,7 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
             .filter(Boolean)
         )}
 
-        {((data.reportHints ?? []).length > 0) && (
+        {safeReportHints.length > 0 && (
           <View style={{ marginTop: 16 }}>
             <Text style={[s.sectionTitle, rtl]}>{isAr ? "ملاحظات خاصة" : "Special notes"}</Text>
             <Text style={[s.findingMeta, rtl]}>
@@ -222,7 +233,7 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
                 ? "هذه النقاط ليست مخالفات؛ يُنصح بمراعاتها عند التصوير (مثلاً ضوابط المظهر العام والقيم الإسلامية)."
                 : "These are not violations; consider them when filming (e.g. modesty and Islamic guidelines)."}
             </Text>
-            {(data.reportHints ?? []).filter(Boolean).map((f, idx) => (
+            {safeReportHints.map((f, idx) => (
               <View key={`hint-${f.id ?? idx}`} style={[s.finding, { backgroundColor: "#f0f9ff", borderColor: "#7dd3fc", marginTop: 8 }]}>
                 <Text style={[s.findingTitle, rtl]}>{isAr ? "ملاحظة" : "Note"}</Text>
                 <Text style={[s.findingSnippet, rtl]}>

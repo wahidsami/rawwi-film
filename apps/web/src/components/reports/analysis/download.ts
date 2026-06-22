@@ -73,12 +73,15 @@ export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Pr
   const origin = window.location.origin;
   const hasReviewLayer = (params.reviewFindings?.length ?? 0) > 0;
   const reviewLayer = splitAnalysisReviewFindingsForPdf(params.reviewFindings);
+  const safeReportHints = Array.isArray(params.reportHints)
+    ? params.reportHints.filter((hint): hint is NonNullable<typeof hint> => Boolean(hint))
+    : [];
   const findings = hasReviewLayer
     ? reviewLayer.findings
     : mapAnalysisFindingsForPdf(params.findings, params.findingsByArticle, params.canonicalFindings);
   const reportHintsMapped = hasReviewLayer
     ? reviewLayer.reportHints
-    : (params.reportHints || []).map((f, idx) => ({
+    : safeReportHints.map((f, idx) => ({
         id: f.canonical_finding_id ?? `hint-${idx}`,
         articleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
         titleAr: f.title_ar ?? "—",
