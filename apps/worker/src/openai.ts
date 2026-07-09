@@ -18,6 +18,7 @@ import {
 } from "./schemas.js";
 import { logger } from "./logger.js";
 import { AUDITOR_SYSTEM_MSG, RATIONALE_ONLY_SYSTEM_MSG, ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG } from "./aiConstants.js";
+import { sha256 } from "./hash.js";
 
 const openai = new OpenAI({ apiKey: config.OPENAI_API_KEY });
 
@@ -45,6 +46,38 @@ function buildJudgeArticlesPayload(articles: GCAMArticle[]): string {
     .join("\n\n");
 }
 
+export type RouterTraceSummary = {
+  candidateArticles: number[];
+  candidateAtoms: string[];
+  confidence: Array<{ article_id: number; confidence: number }>;
+  sortedOrder: number[];
+  hash: string;
+};
+
+export function buildRouterTraceSummary(routerOutput?: { candidate_articles?: Array<{ article_id?: number | null; confidence?: number | null }> | null } | null): RouterTraceSummary {
+  const rawCandidates = (routerOutput?.candidate_articles ?? [])
+    .filter((candidate): candidate is { article_id: number; confidence: number } => typeof candidate?.article_id === "number" && typeof candidate?.confidence === "number")
+    .map((candidate) => ({ article_id: Number(candidate.article_id), confidence: Number(candidate.confidence) }));
+
+  const sortedCandidates = [...rawCandidates].sort((a, b) => {
+    const confDiff = (b.confidence ?? 0) - (a.confidence ?? 0);
+    if (Math.abs(confDiff) > 0.0001) return confDiff;
+    return (a.article_id ?? 0) - (b.article_id ?? 0);
+  });
+
+  const trace = {
+    candidateArticles: sortedCandidates.map((candidate) => candidate.article_id),
+    candidateAtoms: [] as string[],
+    confidence: sortedCandidates.map((candidate) => ({ article_id: candidate.article_id, confidence: candidate.confidence })),
+    sortedOrder: sortedCandidates.map((candidate) => candidate.article_id),
+  };
+
+  return {
+    ...trace,
+    hash: sha256(JSON.stringify(trace)),
+  };
+}
+
 /**
  * Router: select up to K relevant articles; output JSON only.
  * Sorts candidates by confidence (desc) then ID (asc) to ensure determinism.
@@ -60,6 +93,14 @@ export async function callRouter(
   const textSlice = chunkText.slice(0, 15_000);
   const userContent = `${payload}\n\n---\nمقطع النص:\n${textSlice}\n\nأرجع JSON بقائمة candidate_articles فقط.`;
 
+  logger.info("[DEBUG] Router request prepared", {
+    model: jobConfig.router_model,
+    temperature: jobConfig.temperature,
+    seed: jobConfig.seed,
+    articleCount: articleList.length,
+    chunkPreviewLength: textSlice.length,
+  });
+
   const resp = await openai.chat.completions.create({
     model: jobConfig.router_model,
     messages: [
@@ -73,6 +114,12 @@ export async function callRouter(
 
   const raw = resp.choices[0]?.message?.content ?? "{}";
   const parsed = parseRouterOutput(raw);
+
+  logger.info("[DEBUG] Router response parsed", {
+    model: jobConfig.router_model,
+    rawLength: raw.length,
+    candidateCount: parsed.candidate_articles?.length ?? 0,
+  });
 
   // Enforce deterministic sorting: valid candidates, sort by confidence desc, then ID asc
   const candidates = (parsed.candidate_articles || [])
@@ -103,16 +150,33 @@ export async function callJudgeRaw(
   judgeSystemPrompt?: string,
   userPromptAddition?: string | null,
   options: OpenAiCallOptions = {}
-): Promise<string> {
+): Promise<{ raw_judge_response: string; prompt_hash: string | null }> {
   const payload = buildJudgeArticlesPayload(selectedArticles);
   const textSlice = chunkText.slice(0, 30_000);
   const allowedArticleIds = selectedArticles.map((a) => a.id).join(", ");
+  const systemPrompt = judgeSystemPrompt || JUDGE_SYSTEM_MSG;
   const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nقواعد تنسيق إلزامية:\n- article_id (اختياري): إذا استخدمته فيجب أن يكون رقماً صحيحاً من المواد المعروضة فقط: [${allowedArticleIds}]. إذا لم تُحدده استخدم canonical_atom.\n- canonical_atom مطلوب: واحدة من INSULT, VIOLENCE, SEXUAL, SUBSTANCES, DISCRIMINATION, CHILD_SAFETY, WOMEN, MISINFORMATION, PUBLIC_ORDER, EXTREMISM, INTERNATIONAL, ECONOMIC, PRIVACY, APPEARANCE.\n- intensity, context_impact, legal_sensitivity, audience_risk مطلوبة وكل واحدة رقماً بين 1 و 4.\n- rationale_ar مطلوبة: جملة أو جملتان بالعربية تشرح أين يظهر المقتطف، ما الذي تم رصده، ولماذا يندرج تحت المادة. امنع الشرح العام مثل "وجود لفظ مخالف" دون توضيح.\n- يجب أن يطابق rationale_ar المادة الأساسية المختارة، ولا تذكر مادة مختلفة عنها في الشرح.\n- لا تُرجع severity — تُحسب في الخلفية.\n- evidence_snippet يجب أن يكون أصغر اقتباس حرفي ممكن يثبت المخالفة، وليس فقرة واسعة إلا إذا تعذر غير ذلك.\n- location.start_offset و location.end_offset يجب أن يحددا نفس المقتطف القصير داخل chunk الحالي (لا تُرجع null ولا نافذة واسعة بلا حاجة).\n- confidence رقماً بين 0 و 1.\n- evidence_snippet نصاً غير null.\n${userPromptAddition && userPromptAddition.trim().length > 0 ? `\n${userPromptAddition.trim()}\n` : ""}أرجع JSON بمصفوفة findings فقط.`;
+  const promptHash = config.ENABLE_AI_DIAGNOSTICS
+    ? sha256(JSON.stringify({
+        system: systemPrompt,
+        user: userContent,
+      }))
+    : null;
+
+  logger.info("[DEBUG] Judge request prepared", {
+    model: jobConfig.judge_model,
+    temperature: jobConfig.temperature,
+    seed: jobConfig.seed,
+    selectedArticleCount: selectedArticles.length,
+    chunkPreviewLength: textSlice.length,
+    globalStart,
+    globalEnd,
+  });
 
   const resp = await openai.chat.completions.create({
     model: jobConfig.judge_model,
     messages: [
-      { role: "system", content: judgeSystemPrompt || JUDGE_SYSTEM_MSG },
+      { role: "system", content: systemPrompt },
       { role: "user", content: userContent },
     ],
     response_format: { type: "json_object" },
@@ -121,7 +185,12 @@ export async function callJudgeRaw(
     seed: jobConfig.seed,
   }, { timeout: config.JUDGE_TIMEOUT_MS, signal: options.signal });
 
-  return resp.choices[0]?.message?.content ?? '{"findings":[]}';
+  const content = resp.choices[0]?.message?.content ?? '{"findings":[]}';
+  logger.info("[DEBUG] Judge response received", {
+    model: jobConfig.judge_model,
+    contentLength: content.length,
+  });
+  return { raw_judge_response: content, prompt_hash: promptHash };
 }
 
 /**
@@ -134,6 +203,11 @@ export async function callRepairJson(
   options: OpenAiCallOptions = {}
 ): Promise<string> {
   const slice = brokenContent.slice(0, 8000);
+  logger.info("[DEBUG] Judge repair request prepared", {
+    model,
+    brokenContentLength: brokenContent.length,
+    sliceLength: slice.length,
+  });
   const resp = await openai.chat.completions.create({
     model,
     messages: [
@@ -154,11 +228,19 @@ export async function parseJudgeWithRepair(
   options: OpenAiCallOptions = {}
 ): Promise<{ findings: JudgeFinding[] }> {
   let content = raw;
+  logger.info("[DEBUG] Judge parse/repair started", {
+    model,
+    rawLength: content.length,
+  });
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const json = extractJsonFromText(content);
       const parsed = JSON.parse(json) as unknown;
       const out = judgeOutputSchema.parse(parsed);
+      logger.info("[DEBUG] Judge parse succeeded", {
+        model,
+        findingsCount: out.findings.length,
+      });
       return { findings: out.findings };
     } catch (e) {
       logger.warn("Judge parse/validation failed, attempting repair", { attempt, error: String(e) });
@@ -200,6 +282,11 @@ export async function parseJudgeWithRepair(
       }
 
       content = await callRepairJson(model, content, "Judge findings JSON", options);
+      logger.info("[DEBUG] Judge repair attempted", {
+        model,
+        attempt: attempt + 1,
+        repairedLength: content.length,
+      });
     }
   }
   return { findings: [] };

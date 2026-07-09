@@ -134,5 +134,6 @@ export const config = {
   ANALYSIS_SKIP_SCRIPT_SUMMARY_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_SCRIPT_SUMMARY_ON_LARGE_JOBS ?? "true").toLowerCase() !== "false",
   ANALYSIS_SKIP_REVISIT_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_REVISIT_ON_LARGE_JOBS ?? "true").toLowerCase() !== "false",
   ANALYSIS_SKIP_DEEP_AUDITOR_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_DEEP_AUDITOR_ON_LARGE_JOBS ?? "false").toLowerCase() === "true",
+  ENABLE_AI_DIAGNOSTICS: (process.env.ENABLE_AI_DIAGNOSTICS ?? "false").toLowerCase() === "true",
   EXTRACT_STRIP_REPEATED_HEADERS: (process.env.EXTRACT_STRIP_REPEATED_HEADERS ?? "false").toLowerCase() === "true",
 } as const;

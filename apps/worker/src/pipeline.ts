@@ -13,7 +13,7 @@ import {
 import { analyzeLexiconMatches } from "./lexiconMatcher.js";
 import { findStringMatches, getLexiconCache } from "./lexiconCache.js";
 import { logger } from "./logger.js";
-import { callJudgeRaw, callRouter, parseJudgeWithRepair } from "./openai.js";
+import { buildRouterTraceSummary, callJudgeRaw, callRouter, parseJudgeWithRepair } from "./openai.js";
 import { config } from "./config.js";
 import { isValidAtomForArticle, normalizeAtomId } from "./policyMap.js";
 import type { JudgeFinding } from "./schemas.js";
@@ -22,6 +22,7 @@ import { ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG, injectLexiconIntoPrompts, PROMPT_V
 import { runMultiPassDetection, DETECTION_PASSES, planDetectionPassExecution, type LexiconTerm } from "./multiPassJudge.js";
 import { PASS_GATING_VERSION } from "./passGating.js";
 import { normalizeFindingTitleAgainstRationale, normalizeMisusedGlossaryPassTitle } from "./findingTitleNormalize.js";
+import { persistJudgeDiagnostic } from "./judgeDiagnostics.js";
 import { runHybridContextPipeline } from "./methodology-v3/index.js";
 import { runSceneAnalyzer } from "./policyV1/sceneAnalyzer.js";
 import { runPolicyEngine } from "./policyV1/policyEngine.js";
@@ -1671,6 +1672,13 @@ export async function processChunkJudge(
   if (hardFallbackInserted > 0) {
     logger.info("Hard fallback insults inserted", { jobId, chunkId: chunk.id, inserted: hardFallbackInserted });
   }
+  logger.info("[DEBUG] Lexicon stage complete", {
+    jobId,
+    chunkId: chunk.id,
+    mandatoryFindings: mandatoryFindings.length,
+    hardFallbackInserted,
+    deferredLexiconCandidates: deferredLexiconCandidates.length,
+  });
 
   // 1b) Idempotency Check & Config Setup
   // Build logicVersion dynamically so cache invalidates automatically when prompts/passes change.
@@ -1735,6 +1743,8 @@ export async function processChunkJudge(
 
   // Variables for subsequent steps
   let allFindings: FindingWithGlobal[] = [];
+  let groundedFindingCount: number | null = null;
+  let validatedFindingCount: number | null = null;
   let selectedIds: number[];
   let routerOutputJson: any = null;
 
@@ -1804,8 +1814,21 @@ export async function processChunkJudge(
           }, routerPrompt, { signal });
           throwIfAborted(signal);
           routerOutputJson = routerOut;
+          const routerTrace = buildRouterTraceSummary(routerOut);
           const candidateIds = routerOut.candidate_articles.map((a) => a.article_id);
           selectedIds = [...new Set([...ALWAYS_CHECK_ARTICLES, ...candidateIds])].sort((a, b) => a - b).slice(0, 25);
+
+          logger.info("[DEBUG] Router trace summary", {
+            chunkId: chunk.id,
+            runKey,
+            candidateArticles: routerTrace.candidateArticles,
+            candidateAtoms: routerTrace.candidateAtoms,
+            confidence: routerTrace.confidence,
+            sortedOrder: routerTrace.sortedOrder,
+            hash: routerTrace.hash,
+            model: routerModel,
+            seed,
+          });
 
           // Verification Log: Proof of determinism for Router
           if (isDev) {
@@ -1833,6 +1856,13 @@ export async function processChunkJudge(
     const routerDurationMs = Date.now() - routerStartedAt;
     const selectedArticles: GCAMArticle[] = selectedIds.map((id) => getScriptStandardArticle(id));
     logger.info("Articles selected for Multi-Pass Judge", { chunkId: chunk.id, count: selectedIds.length, ids: selectedIds });
+    logger.info("[DEBUG] Router stage complete", {
+      jobId,
+      chunkId: chunk.id,
+      selectedArticleIds: selectedIds,
+      selectedArticleCount: selectedIds.length,
+      routerDurationMs,
+    });
     logger.info("[DEBUG] Articles passed to multi-pass", {
       chunkId: chunk.id,
       selectedArticlesCount: selectedArticles.length,
@@ -1856,7 +1886,12 @@ export async function processChunkJudge(
         { chunkId: chunk.id },
         passExecutionPlan,
         v2PromptContext ?? undefined,
-        signal
+        signal,
+        {
+          jobId,
+          chunkId: chunk.id,
+          routerCandidates: routerOutputJson,
+        }
       );
       throwIfAborted(signal);
       await setChunkPhase(chunk.id, "postprocess");
@@ -1908,6 +1943,16 @@ export async function processChunkJudge(
         return true;
       });
       const withGlobal = qualityFiltered.map((f) => toGlobalFinding(f, chunkStart));
+      logger.info("[DEBUG] Multi-pass refinement stage complete", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        rawFindingsCount: enforced.length,
+        groundedCount: grounded.length,
+        qualityFilteredCount: qualityFiltered.length,
+        globalizedCount: withGlobal.length,
+      });
+      groundedFindingCount = grounded.length;
       logger.info("Post-multipass refinement completed", {
         jobId,
         chunkId: chunk.id,
@@ -2011,6 +2056,15 @@ export async function processChunkJudge(
     const afterOverlapCount = allFindings.length;
     allFindings = dropRedundantArticleFourFindings(allFindings);
     const afterArticleFourCollapseCount = allFindings.length;
+    logger.info("[DEBUG] Dedupe/overlap stage complete", {
+      jobId,
+      chunkId: chunk.id,
+      runKey,
+      beforeDedupe: beforeDedupeCount,
+      afterDedupe: afterDedupeCount,
+      afterOverlap: afterOverlapCount,
+      afterArticleFourCollapse: afterArticleFourCollapseCount,
+    });
     logger.info("Dedupe + overlap stats", {
       chunkId: chunk.id,
       runKey,
@@ -2098,6 +2152,9 @@ export async function processChunkJudge(
         chunkText,
         chunkStart,
         chunkEnd,
+        jobId,
+        chunkId: chunk.id,
+        routerCandidates: routerOutputJson,
         signal,
       });
       throwIfAborted(signal);
@@ -2321,6 +2378,16 @@ export async function processChunkJudge(
       if (hybridTimeoutHandle) clearTimeout(hybridTimeoutHandle);
     }
   }
+  logger.info("[DEBUG] Hybrid/validation stage complete", {
+    jobId,
+    chunkId: chunk.id,
+    runKey,
+    persistedFindingsCount: persistedFindings.length,
+    analysisEngine,
+    hybridMode,
+    policyV1Mode,
+  });
+  validatedFindingCount = persistedFindings.length;
   logger.info("Analysis contradiction metrics", {
     jobId,
     chunkId: chunk.id,
@@ -2592,6 +2659,28 @@ export async function processChunkJudge(
     // Log first row shape for debugging column mismatch
     /* logger.info("AI findings upsert payload sample", ... ); */
 
+    await persistJudgeDiagnostic({
+      diagnostic_kind: "chunk_final",
+      job_id: jobId,
+      chunk_id: chunk.id,
+      prompt_hash: "",
+      router_candidates: routerOutputJson,
+      raw_judge_response: "",
+      parsed_judge_response: null,
+      parsed_finding_count: 0,
+      grounded_finding_count: groundedFindingCount,
+      validated_finding_count: validatedFindingCount,
+      final_chunk_finding_count: rows.length,
+      final_chunk_findings: rows,
+    });
+
+    logger.info("[DEBUG] Persistence stage preparing", {
+      jobId,
+      chunkId: chunk.id,
+      runKey,
+      resolvedFindingsCount: resolvedFindings.length,
+      normalizedTextLength: normalizedText?.length ?? 0,
+    });
     logger.info("AI findings upsert starting", {
       jobId,
       chunkId: chunk.id,
@@ -2612,6 +2701,14 @@ export async function processChunkJudge(
     );
     throwIfAborted(signal);
 
+    logger.info("[DEBUG] Persistence stage complete", {
+      jobId,
+      chunkId: chunk.id,
+      runKey,
+      attempted: rows.length,
+      inserted: data?.length ?? 0,
+      dropped: rows.length - (data?.length ?? 0),
+    });
     logger.info("AI findings upsert result", {
       jobId, chunkId: chunk.id,
       attempted: rows.length,
@@ -2647,6 +2744,20 @@ export async function processChunkJudge(
       jobResourcesDurationMs,
     });
   } else {
+    await persistJudgeDiagnostic({
+      diagnostic_kind: "chunk_final",
+      job_id: jobId,
+      chunk_id: chunk.id,
+      prompt_hash: "",
+      router_candidates: routerOutputJson,
+      raw_judge_response: "",
+      parsed_judge_response: null,
+      parsed_finding_count: 0,
+      grounded_finding_count: groundedFindingCount,
+      validated_finding_count: validatedFindingCount,
+      final_chunk_finding_count: 0,
+      final_chunk_findings: [],
+    });
     logger.info("No AI findings to insert for chunk", { jobId, chunkId: chunk.id, runKey });
   }
 

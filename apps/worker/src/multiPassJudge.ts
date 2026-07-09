@@ -16,6 +16,7 @@
 import type { GCAMArticle } from "./gcam.js";
 import type { JudgeFinding } from "./schemas.js";
 import { callJudgeRaw, parseJudgeWithRepair } from "./openai.js";
+import { extractRawFindingCount, persistJudgeDiagnostic } from "./judgeDiagnostics.js";
 import { logger } from "./logger.js";
 import { getFrameworkPromptSection } from "./canonicalAtomFramework.js";
 import { flushChunkPassProgress, reportChunkPassProgressDebounced } from "./jobs.js";
@@ -56,6 +57,12 @@ export interface PlannedPassSkip {
   matchedSignals?: string[];
   model?: string;
 }
+
+type JudgeDiagnosticContext = {
+  jobId: string;
+  chunkId: string;
+  routerCandidates: unknown;
+};
 
 function compareNullableNumber(a: number | null | undefined, b: number | null | undefined): number {
   const left = a ?? Number.POSITIVE_INFINITY;
@@ -1791,7 +1798,8 @@ async function runSinglePass(
   lexiconTerms: LexiconTerm[],
   jobConfig: { temperature: number; seed: number },
   promptContext?: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  diagnosticContext?: JudgeDiagnosticContext
 ): Promise<PassResult> {
   const startTime = Date.now();
   
@@ -1848,7 +1856,7 @@ async function runSinglePass(
     
     // Call OpenAI with specialized prompt
     const model = pass.model || "gpt-4.1";
-    const raw = await callJudgeRaw(
+    const judgeCall = await callJudgeRaw(
       chunkText,
       articles,
       chunkStart,
@@ -1861,7 +1869,20 @@ async function runSinglePass(
     throwIfAborted(signal);
 
     // Parse findings
-    const { findings } = await parseJudgeWithRepair(raw, model, { signal });
+    const { findings } = await parseJudgeWithRepair(judgeCall.raw_judge_response, model, { signal });
+    if (diagnosticContext) {
+      const rawFindingCount = extractRawFindingCount(judgeCall.raw_judge_response);
+      await persistJudgeDiagnostic({
+        job_id: diagnosticContext.jobId,
+        chunk_id: diagnosticContext.chunkId,
+        prompt_hash: judgeCall.prompt_hash ?? "",
+        router_candidates: diagnosticContext.routerCandidates,
+        raw_judge_response: judgeCall.raw_judge_response,
+        parsed_judge_response: { findings },
+        raw_finding_count: rawFindingCount,
+        parsed_finding_count: findings.length,
+      });
+    }
     const tagged = findings.map((f) => ({
       ...f,
       detection_pass: pass.name,
@@ -1930,7 +1951,8 @@ async function runSinglePassWithHardTimeout(
   lexiconTerms: LexiconTerm[],
   jobConfig: { temperature: number; seed: number },
   promptContext?: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  diagnosticContext?: JudgeDiagnosticContext
 ): Promise<PassResult> {
   return new Promise<PassResult>((resolve, reject) => {
     throwIfAborted(signal);
@@ -1978,7 +2000,18 @@ async function runSinglePassWithHardTimeout(
       });
     }, config.PASS_HARD_TIMEOUT_MS);
 
-    runSinglePass(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig, promptContext, passAbortController.signal).then(
+    runSinglePass(
+      chunkText,
+      chunkStart,
+      chunkEnd,
+      pass,
+      allArticles,
+      lexiconTerms,
+      jobConfig,
+      promptContext,
+      passAbortController.signal,
+      diagnosticContext
+    ).then(
       (result) => {
         resolveOnce(result);
       },
@@ -2022,7 +2055,8 @@ export async function runMultiPassDetection(
   progressOpts?: { chunkId: string },
   executionPlan?: DetectionPassExecutionPlan,
   promptContext?: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  diagnosticContext?: JudgeDiagnosticContext
 ): Promise<{
   findings: JudgeFinding[];
   passResults: PassResult[];
@@ -2094,7 +2128,18 @@ export async function runMultiPassDetection(
   let completed = 0;
   const activeResultsRaw = await Promise.all(
     plan.activePasses.map((pass) =>
-      runSinglePassWithHardTimeout(chunkText, chunkStart, chunkEnd, pass, allArticles, lexiconTerms, jobConfig, promptContext, signal).then(
+      runSinglePassWithHardTimeout(
+        chunkText,
+        chunkStart,
+        chunkEnd,
+        pass,
+        allArticles,
+        lexiconTerms,
+        jobConfig,
+        promptContext,
+        signal,
+        diagnosticContext
+      ).then(
         (result) => {
           completed++;
           if (progressOpts?.chunkId) {

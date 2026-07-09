@@ -1,6 +1,7 @@
 import { callJudgeRaw } from "../openai.js";
 import type { GCAMArticle } from "../gcam.js";
 import { logger } from "../logger.js";
+import { extractRawFindingCount, persistJudgeDiagnostic } from "../judgeDiagnostics.js";
 import { normalizeSceneAnalysisResult, type SceneAnalysisResult } from "./sceneEventSchema.js";
 
 const SCENE_ANALYZER_SYSTEM_PROMPT = `You are a neutral scene-analysis extractor for regulatory workflows.
@@ -44,6 +45,9 @@ export async function runSceneAnalyzer(args: {
   chunkText: string;
   chunkStart: number;
   chunkEnd: number;
+  jobId?: string;
+  chunkId?: string;
+  routerCandidates?: unknown;
   model?: string;
   temperature?: number;
   seed?: number;
@@ -54,7 +58,7 @@ export async function runSceneAnalyzer(args: {
   const seed = args.seed ?? 12345;
 
   const noArticles: GCAMArticle[] = [];
-  const raw = await callJudgeRaw(
+  const judgeCall = await callJudgeRaw(
     args.chunkText,
     noArticles,
     args.chunkStart,
@@ -66,9 +70,36 @@ export async function runSceneAnalyzer(args: {
   );
 
   try {
-    const parsed = JSON.parse(raw);
-    return normalizeSceneAnalysisResult(parsed);
+    const parsed = JSON.parse(judgeCall.raw_judge_response);
+    const normalized = normalizeSceneAnalysisResult(parsed);
+    if (args.jobId && args.chunkId) {
+      const rawFindingCount = extractRawFindingCount(judgeCall.raw_judge_response);
+      await persistJudgeDiagnostic({
+        job_id: args.jobId,
+        chunk_id: args.chunkId,
+        prompt_hash: judgeCall.prompt_hash,
+        router_candidates: args.routerCandidates ?? null,
+        raw_judge_response: judgeCall.raw_judge_response,
+        parsed_judge_response: normalized,
+        raw_finding_count: rawFindingCount,
+        parsed_finding_count: normalized.events.length,
+      });
+    }
+    return normalized;
   } catch (error) {
+    if (args.jobId && args.chunkId) {
+      const rawFindingCount = extractRawFindingCount(judgeCall.raw_judge_response);
+      await persistJudgeDiagnostic({
+        job_id: args.jobId,
+        chunk_id: args.chunkId,
+        prompt_hash: judgeCall.prompt_hash,
+        router_candidates: args.routerCandidates ?? null,
+        raw_judge_response: judgeCall.raw_judge_response,
+        parsed_judge_response: null,
+        raw_finding_count: rawFindingCount,
+        parsed_finding_count: 0,
+      });
+    }
     logger.warn("Scene analyzer returned non-JSON response", {
       error: error instanceof Error ? error.message : String(error),
     });
