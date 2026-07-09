@@ -1438,10 +1438,11 @@ export function buildSummaryJson(
   }
 
   const canonical_findings = [...canonicalMap.values()].sort(compareCanonicalItemsStable);
+  const report_hints: SummaryJson["report_hints"] = [];
   logger.info("[DEBUG] Aggregation canonicalization complete", {
     jobId,
     canonicalFindingCount: canonical_findings.length,
-    reportHintCount: summary.report_hints?.length ?? 0,
+    reportHintCount: report_hints.length,
   });
 
   // Severity counts from canonical (unique incidents).
@@ -1601,7 +1602,7 @@ export function buildSummaryJson(
     findings_by_article,
     canonical_findings,
     findings_by_canonical_atom,
-    report_hints: [] as SummaryJson["report_hints"],
+    report_hints,
   };
 }
 
