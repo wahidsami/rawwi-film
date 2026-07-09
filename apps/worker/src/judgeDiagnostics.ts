@@ -41,7 +41,18 @@ export async function persistJudgeDiagnostic(row: JudgeDiagnosticInsert): Promis
   const promptHash = row.prompt_hash ?? "";
 
   try {
-    await supabase.from("analysis_judge_diagnostics").insert({
+    logger.info("[JudgeDiagnostics] About to insert diagnostics...", {
+      job_id: row.job_id,
+      chunk_id: row.chunk_id,
+      diagnostic_kind: row.diagnostic_kind ?? "judge_call",
+      raw_finding_count: computedRawFindingCount,
+      parsed_finding_count: row.parsed_finding_count ?? 0,
+      grounded_finding_count: row.grounded_finding_count ?? null,
+      validated_finding_count: row.validated_finding_count ?? null,
+      final_chunk_finding_count: row.final_chunk_finding_count ?? null,
+    });
+
+    const { error } = await supabase.from("analysis_judge_diagnostics").insert({
       job_id: row.job_id,
       chunk_id: row.chunk_id,
       diagnostic_kind: row.diagnostic_kind ?? "judge_call",
@@ -58,10 +69,30 @@ export async function persistJudgeDiagnostic(row: JudgeDiagnosticInsert): Promis
       final_chunk_findings: row.final_chunk_findings ?? null,
       timestamp: row.timestamp ?? new Date().toISOString(),
     });
-  } catch (error) {
-    logger.warn("Failed to persist judge diagnostics row", {
+
+    if (error) {
+      logger.warn("[JudgeDiagnostics] Insert failed", {
+        job_id: row.job_id,
+        chunk_id: row.chunk_id,
+        diagnostic_kind: row.diagnostic_kind ?? "judge_call",
+        error: error.message,
+        errorCode: error.code,
+        errorDetails: error.details,
+        errorHint: error.hint,
+      });
+      return;
+    }
+
+    logger.info("[JudgeDiagnostics] Insert successful.", {
       job_id: row.job_id,
       chunk_id: row.chunk_id,
+      diagnostic_kind: row.diagnostic_kind ?? "judge_call",
+    });
+  } catch (error) {
+    logger.warn("[JudgeDiagnostics] Insert failed", {
+      job_id: row.job_id,
+      chunk_id: row.chunk_id,
+      diagnostic_kind: row.diagnostic_kind ?? "judge_call",
       error: error instanceof Error ? error.message : String(error),
     });
   }

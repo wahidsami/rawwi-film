@@ -1330,6 +1330,13 @@ export function buildSummaryJson(
   const generated_at = new Date().toISOString();
   const filtered = findings.filter((f) => f.article_id !== OUT_OF_SCOPE_ARTICLE_ID);
   const deduped = dedupeFindings([...filtered].sort(compareDbFindingStable));
+  logger.info("[DEBUG] Aggregation input summary", {
+    jobId,
+    rawFindings: findings.length,
+    filteredFindings: filtered.length,
+    dedupedFindings: deduped.length,
+    mergeStrategy: analysisOptions?.mergeStrategy ?? "default",
+  });
   const policyArticles = getPolicyArticles();
 
   const severityOrder = (s: string) => (SEVERITIES.indexOf(s as (typeof SEVERITIES)[number]) + 1) || 0;
@@ -1431,6 +1438,11 @@ export function buildSummaryJson(
   }
 
   const canonical_findings = [...canonicalMap.values()].sort(compareCanonicalItemsStable);
+  logger.info("[DEBUG] Aggregation canonicalization complete", {
+    jobId,
+    canonicalFindingCount: canonical_findings.length,
+    reportHintCount: summary.report_hints?.length ?? 0,
+  });
 
   // Severity counts from canonical (unique incidents).
   const severity_counts = { low: 0, medium: 0, high: 0, critical: 0 };
@@ -2104,6 +2116,13 @@ export async function runAggregation(jobId: string): Promise<void> {
   applyReportGate(summary);
 
   const reportHtml = buildReportHtml(summary);
+
+  logger.info("[DEBUG] Aggregation report payload ready", {
+    jobId,
+    findingsCount: summary.totals.findings_count,
+    canonicalFindingCount: summary.canonical_findings?.length ?? 0,
+    reportHintCount: summary.report_hints?.length ?? 0,
+  });
 
   const reportRow: Record<string, unknown> = {
     job_id: jobId,

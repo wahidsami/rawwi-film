@@ -13,6 +13,24 @@ export type GroundedFindingResult = {
   grounded: boolean;
   method: "rationale_quote" | "evidence_exact" | "line_candidate" | "sentence_candidate" | "offset_span" | "unresolved";
   reason?: string;
+  diagnostics?: {
+    finding_id?: string | null;
+    evidence: string;
+    candidate_matches: Array<{
+      method: "rationale_quote" | "evidence_exact" | "line_candidate" | "sentence_candidate" | "offset_span";
+      text: string;
+      start: number;
+      end: number;
+    }>;
+    selected_match: {
+      method: "rationale_quote" | "evidence_exact" | "line_candidate" | "sentence_candidate" | "offset_span" | "unresolved";
+      text: string | null;
+      start: number | null;
+      end: number | null;
+    } | null;
+    grounding_score: number;
+    rejection_reason: string | null;
+  };
 };
 
 export const PIPELINE_EVIDENCE_GROUNDING_VERSION = "v1";
@@ -152,6 +170,36 @@ function chooseContainingCandidate(
   return [...overlapping].sort((a, b) => a.text.length - b.text.length || a.start - b.start)[0] ?? null;
 }
 
+function buildDiagnostics(args: {
+  finding: JudgeFinding;
+  evidence: string;
+  candidateMatches: Array<{
+    method: "rationale_quote" | "evidence_exact" | "line_candidate" | "sentence_candidate" | "offset_span";
+    text: string;
+    start: number;
+    end: number;
+  }>;
+  selectedMatch: {
+    method: "rationale_quote" | "evidence_exact" | "line_candidate" | "sentence_candidate" | "offset_span" | "unresolved";
+    text: string | null;
+    start: number | null;
+    end: number | null;
+  } | null;
+  grounded: boolean;
+  reason?: string;
+}): GroundedFindingResult["diagnostics"] {
+  return {
+    finding_id: (args.finding as { finding_id?: string | null }).finding_id ?? null,
+    evidence: args.evidence,
+    candidate_matches: args.candidateMatches,
+    selected_match: args.selectedMatch,
+    grounding_score: args.grounded
+      ? (args.selectedMatch?.method === "rationale_quote" || args.selectedMatch?.method === "evidence_exact" ? 1 : 0.75)
+      : 0,
+    rejection_reason: args.grounded ? null : args.reason ?? null,
+  };
+}
+
 export function groundFindingEvidenceToChunk(finding: JudgeFinding, chunkText: string): GroundedFindingResult {
   const rawEvidence = compactSpace(finding.evidence_snippet ?? "");
   const hintStart = typeof finding.location?.start_offset === "number" ? finding.location.start_offset : null;
@@ -162,10 +210,19 @@ export function groundFindingEvidenceToChunk(finding: JudgeFinding, chunkText: s
       : null;
 
   const quotedNeedles = extractQuotedNeedles(finding.rationale_ar, finding.description_ar, finding.title_ar);
+  const candidateMatches: NonNullable<GroundedFindingResult["diagnostics"]>["candidate_matches"] = [];
   for (const needle of quotedNeedles) {
     const matches = findNeedleMatches(chunkText, needle, hintStart);
     const chosen = chooseBestMatch(matches, hintStart);
     if (isMeaningfulSpan(chosen) && isDetectionVerbatim(chunkText, chosen.text)) {
+      candidateMatches.push({ method: "rationale_quote", text: compactSpace(chosen.text), start: chosen.start, end: chosen.end });
+      const diagnostics = buildDiagnostics({
+        finding,
+        evidence: compactSpace(chosen.text),
+        candidateMatches,
+        selectedMatch: { method: "rationale_quote", text: compactSpace(chosen.text), start: chosen.start, end: chosen.end },
+        grounded: true,
+      });
       return {
         finding: {
           ...finding,
@@ -178,6 +235,7 @@ export function groundFindingEvidenceToChunk(finding: JudgeFinding, chunkText: s
         },
         grounded: true,
         method: "rationale_quote",
+        diagnostics,
       };
     }
   }
@@ -186,6 +244,14 @@ export function groundFindingEvidenceToChunk(finding: JudgeFinding, chunkText: s
     const matches = findNeedleMatches(chunkText, rawEvidence, hintStart);
     const chosen = chooseBestMatch(matches, hintStart);
     if (isMeaningfulSpan(chosen) && isDetectionVerbatim(chunkText, chosen.text)) {
+      candidateMatches.push({ method: "evidence_exact", text: compactSpace(chosen.text), start: chosen.start, end: chosen.end });
+      const diagnostics = buildDiagnostics({
+        finding,
+        evidence: compactSpace(chosen.text),
+        candidateMatches,
+        selectedMatch: { method: "evidence_exact", text: compactSpace(chosen.text), start: chosen.start, end: chosen.end },
+        grounded: true,
+      });
       return {
         finding: {
           ...finding,
@@ -198,6 +264,7 @@ export function groundFindingEvidenceToChunk(finding: JudgeFinding, chunkText: s
         },
         grounded: true,
         method: "evidence_exact",
+        diagnostics,
       };
     }
   }
@@ -206,6 +273,14 @@ export function groundFindingEvidenceToChunk(finding: JudgeFinding, chunkText: s
   const sentenceCandidates = buildSentenceCandidates(chunkText);
 
   if (isMeaningfulSpan(offsetSpan) && isDetectionVerbatim(chunkText, offsetSpan.text)) {
+    candidateMatches.push({ method: "offset_span", text: compactSpace(offsetSpan.text), start: offsetSpan.start, end: offsetSpan.end });
+    const diagnostics = buildDiagnostics({
+      finding,
+      evidence: compactSpace(offsetSpan.text),
+      candidateMatches,
+      selectedMatch: { method: "offset_span", text: compactSpace(offsetSpan.text), start: offsetSpan.start, end: offsetSpan.end },
+      grounded: true,
+    });
     return {
       finding: {
         ...finding,
@@ -218,12 +293,21 @@ export function groundFindingEvidenceToChunk(finding: JudgeFinding, chunkText: s
       },
       grounded: true,
       method: "offset_span",
+      diagnostics,
     };
   }
 
   if (hintStart != null && hintEnd != null && hintEnd > hintStart) {
     const lineCandidate = chooseContainingCandidate(lineCandidates, hintStart, hintEnd);
     if (isMeaningfulSpan(lineCandidate) && isDetectionVerbatim(chunkText, lineCandidate.text)) {
+      candidateMatches.push({ method: "line_candidate", text: compactSpace(lineCandidate.text), start: lineCandidate.start, end: lineCandidate.end });
+      const diagnostics = buildDiagnostics({
+        finding,
+        evidence: compactSpace(lineCandidate.text),
+        candidateMatches,
+        selectedMatch: { method: "line_candidate", text: compactSpace(lineCandidate.text), start: lineCandidate.start, end: lineCandidate.end },
+        grounded: true,
+      });
       return {
         finding: {
           ...finding,
@@ -236,11 +320,20 @@ export function groundFindingEvidenceToChunk(finding: JudgeFinding, chunkText: s
         },
         grounded: true,
         method: "line_candidate",
+        diagnostics,
       };
     }
 
     const sentenceCandidate = chooseContainingCandidate(sentenceCandidates, hintStart, hintEnd);
     if (isMeaningfulSpan(sentenceCandidate) && isDetectionVerbatim(chunkText, sentenceCandidate.text)) {
+      candidateMatches.push({ method: "sentence_candidate", text: compactSpace(sentenceCandidate.text), start: sentenceCandidate.start, end: sentenceCandidate.end });
+      const diagnostics = buildDiagnostics({
+        finding,
+        evidence: compactSpace(sentenceCandidate.text),
+        candidateMatches,
+        selectedMatch: { method: "sentence_candidate", text: compactSpace(sentenceCandidate.text), start: sentenceCandidate.start, end: sentenceCandidate.end },
+        grounded: true,
+      });
       return {
         finding: {
           ...finding,
@@ -253,14 +346,30 @@ export function groundFindingEvidenceToChunk(finding: JudgeFinding, chunkText: s
         },
         grounded: true,
         method: "sentence_candidate",
+        diagnostics,
       };
     }
   }
+
+  const diagnostics = buildDiagnostics({
+    finding,
+    evidence: rawEvidence,
+    candidateMatches,
+    selectedMatch: {
+      method: "unresolved",
+      text: null,
+      start: null,
+      end: null,
+    },
+    grounded: false,
+    reason: "no_meaningful_exact_local_evidence",
+  });
 
   return {
     finding,
     grounded: false,
     method: "unresolved",
     reason: "no_meaningful_exact_local_evidence",
+    diagnostics,
   };
 }

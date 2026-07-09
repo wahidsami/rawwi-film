@@ -3,8 +3,8 @@
 
 WITH params AS (
   SELECT
-    'JOB_ID_A'::uuid AS job_a,
-    'JOB_ID_B'::uuid AS job_b
+    '66b3f529-f4f0-49de-a2a5-460805e3b5bc'::uuid AS job_a,
+    '8722f16b-33ad-4d7b-b354-1bbd1c38c440'::uuid AS job_b
 ),
 chunk_order AS (
   SELECT id AS chunk_id, job_id, chunk_index

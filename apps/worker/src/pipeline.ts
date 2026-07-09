@@ -33,6 +33,7 @@ import { getPrimaryGcamForCanonicalAtom, getPrimaryCanonicalAtomForGcam } from "
 import { offsetToPageNumber, computePageLocalSpan, globalOffsetForPageStart, SCRIPT_PAGE_SEPARATOR } from "./offsetToPage.js";
 import { getCachedJobResources } from "./jobAnalysisCache.js";
 import { refineAtomPrecision } from "./atomPrecision.js";
+import { sha256 } from "./hash.js";
 import { isDetectionVerbatim } from "./textDetectionNormalize.js";
 import { PIPELINE_V2_EVIDENCE_PINNING_VERSION, pinFindingEvidenceToChunk } from "./pipelineV2/evidencePinning.js";
 import { PIPELINE_V2_MEMORY_VERSION } from "./pipelineV2/contextMemory.js";
@@ -1908,7 +1909,72 @@ export async function processChunkJudge(
       const enforced = multiPassResult.findings.map(f => enforceAtomIds([f])[0]);
       const precisionRefined = enforced.map((f) => refineAtomPrecision(f));
       const evidencePinned = precisionRefined.map((f) => pinFindingEvidenceToChunk(f, chunkText));
-      const groundedResults = evidencePinned.map((f) => groundFindingEvidenceToChunk(f, chunkText));
+      const groundedResults = evidencePinned.map((f) => {
+        const passName = (f as { detection_pass?: string | null }).detection_pass ?? null;
+        const judgeCallIndex = passName != null
+          ? DETECTION_PASSES.findIndex((pass) => pass.name === passName)
+          : -1;
+        const startOffset = typeof f.location?.start_offset === "number" ? f.location.start_offset : null;
+        const endOffset = typeof f.location?.end_offset === "number" ? f.location.end_offset : null;
+        const hintOffset = startOffset;
+        const evidenceSnippet = f.evidence_snippet ?? null;
+        const findingHash = sha256(JSON.stringify({
+          pass_name: passName,
+          article_id: f.article_id ?? null,
+          atom_id: f.atom_id ?? null,
+          evidence_snippet: evidenceSnippet,
+          start_offset: startOffset,
+          end_offset: endOffset,
+          hint_offset: hintOffset,
+          title_ar: f.title_ar ?? null,
+          description_ar: f.description_ar ?? null,
+          rationale_ar: f.rationale_ar ?? null,
+          confidence: f.confidence ?? null,
+          detection_pass: f.detection_pass ?? null,
+        }));
+        logger.info("[GroundingDiagnostics] Finding input", {
+          jobId,
+          chunkId: chunk.id,
+          pass_name: passName,
+          judge_call_index: judgeCallIndex,
+          article_id: f.article_id ?? null,
+          atom_id: f.atom_id ?? null,
+          evidence_snippet: evidenceSnippet,
+          start_offset: startOffset,
+          end_offset: endOffset,
+          hint_offset: hintOffset,
+          finding_hash: findingHash,
+          evidence_hash: evidenceSnippet != null ? sha256(evidenceSnippet) : null,
+        });
+        const result = groundFindingEvidenceToChunk(f, chunkText);
+        const findingId = (f as { canonical_finding_id?: string | null; finding_id?: string | null }).finding_id
+          ?? (f as { canonical_finding_id?: string | null }).canonical_finding_id
+          ?? null;
+        logger.info("[GroundingDiagnostics] Finding evaluated", {
+          jobId,
+          chunkId: chunk.id,
+          pass_name: passName,
+          judge_call_index: judgeCallIndex,
+          finding_id: findingId,
+          article_id: f.article_id ?? null,
+          atom_id: f.atom_id ?? null,
+          evidence: result.diagnostics?.evidence ?? evidenceSnippet,
+          evidence_snippet: evidenceSnippet,
+          start_offset: startOffset,
+          end_offset: endOffset,
+          hint_offset: hintOffset,
+          finding_hash: findingHash,
+          evidence_hash: evidenceSnippet != null ? sha256(evidenceSnippet) : null,
+          candidate_matches: result.diagnostics?.candidate_matches ?? [],
+          selected_match: result.diagnostics?.selected_match ?? null,
+          grounding_score: result.diagnostics?.grounding_score ?? 0,
+          rejection_reason: result.diagnostics?.rejection_reason ?? null,
+          grounded: result.grounded,
+          method: result.method,
+          reason: result.reason ?? null,
+        });
+        return result;
+      });
       const grounded = groundedResults
         .filter((result) => result.grounded)
         .filter((result) => {
