@@ -18,6 +18,7 @@ import { shouldSkipRevisitForJob, shouldSkipScriptSummaryForJob } from "./perfor
 import { config } from "./config.js";
 import { containsAnyNormalized } from "./textDetectionNormalize.js";
 import { normalizeReviewFindingConsistency } from "./reviewFindingConsistency.js";
+import { buildLineageEvent, persistLineageEvents } from "./findingLineage.js";
 
 export type SummaryJson = {
   job_id: string;
@@ -1120,6 +1121,10 @@ type DbFinding = {
   context_impact?: number | null;
   legal_sensitivity?: number | null;
   audience_risk?: number | null;
+  lineage_id?: string | null;
+  parent_lineage_id?: string | null;
+  evidence_hash?: string | null;
+  canonical_hash?: string | null;
 };
 
 const SEVERITIES = ["low", "medium", "high", "critical"] as const;
@@ -1965,7 +1970,7 @@ export async function runAggregation(jobId: string): Promise<void> {
   const { data: findings, error: findingsErr } = await supabase
     .from("analysis_findings")
     .select(
-      "source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_line_chunk, end_line_chunk, page_number, location, rationale_ar, canonical_atom, intensity, context_impact, legal_sensitivity, audience_risk"
+      "source, article_id, atom_id, severity, confidence, title_ar, description_ar, evidence_snippet, start_offset_global, end_offset_global, start_line_chunk, end_line_chunk, page_number, location, rationale_ar, canonical_atom, intensity, context_impact, legal_sensitivity, audience_risk, lineage_id, parent_lineage_id, evidence_hash, canonical_hash"
     )
     .eq("job_id", jobId);
 
@@ -1974,6 +1979,16 @@ export async function runAggregation(jobId: string): Promise<void> {
   }
 
   const list = (findings ?? []) as DbFinding[];
+  await persistLineageEvents(
+    list.map((finding) =>
+      buildLineageEvent(finding, {
+        jobId,
+        chunkId: null,
+        stageName: "aggregation",
+        passName: null,
+      })
+    )
+  );
   logger.info("Aggregation findings loaded", {
     jobId,
     findingsLoaded: list.length,
@@ -2148,6 +2163,16 @@ export async function runAggregation(jobId: string): Promise<void> {
   }
   const reportId = (savedReport as { id?: string } | null)?.id ?? null;
   if (reportId) {
+    await persistLineageEvents(
+      list.map((finding) =>
+        buildLineageEvent(finding, {
+          jobId,
+          chunkId: null,
+          stageName: "final_report",
+          passName: null,
+        })
+      )
+    );
     await materializeReviewFindings(reportId, summary, job.version_id, fullScriptText);
     await finalizeRevisionCycleReanalysis(reportId);
   }

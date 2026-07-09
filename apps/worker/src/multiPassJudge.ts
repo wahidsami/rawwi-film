@@ -18,6 +18,7 @@ import type { JudgeFinding } from "./schemas.js";
 import { callJudgeRaw, parseJudgeWithRepair } from "./openai.js";
 import { extractRawFindingCount, persistJudgeDiagnostic } from "./judgeDiagnostics.js";
 import { logger } from "./logger.js";
+import { buildLineageEvent, ensureFindingLineageId, persistLineageEvents } from "./findingLineage.js";
 import { getFrameworkPromptSection } from "./canonicalAtomFramework.js";
 import { flushChunkPassProgress, reportChunkPassProgressDebounced } from "./jobs.js";
 import { evaluatePassGating } from "./passGating.js";
@@ -1896,7 +1897,28 @@ async function runSinglePass(
       final_ruling: f.final_ruling ?? null,
       narrative_consequence: f.narrative_consequence ?? "unknown",
     })).map((f) => normalizeFindingForPass(f, articles));
-    const stableTagged = sortJudgeFindingsStable(tagged);
+    const stableTagged = sortJudgeFindingsStable(tagged).map((finding, index) => {
+      if (!diagnosticContext) return finding;
+      ensureFindingLineageId(finding, {
+        jobId: diagnosticContext.jobId,
+        chunkId: diagnosticContext.chunkId,
+        passName: pass.name,
+        index,
+      });
+      return finding;
+    });
+    if (diagnosticContext) {
+      await persistLineageEvents(
+        stableTagged.map((finding) =>
+          buildLineageEvent(finding, {
+            jobId: diagnosticContext.jobId,
+            chunkId: diagnosticContext.chunkId,
+            stageName: "pass_output",
+            passName: pass.name,
+          })
+        )
+      );
+    }
     if (diagnosticContext) {
       await persistJudgeDiagnostic({
         diagnostic_kind: "pass_output_snapshot",
@@ -2205,6 +2227,48 @@ export async function runMultiPassDetection(
   
   // Deduplicate
   const deduplicated = deduplicateFindings(allFindings);
+  if (diagnosticContext) {
+    const keptLineage = new Set(
+      deduplicated
+        .map((finding) => ensureFindingLineageId(finding, {
+          jobId: diagnosticContext.jobId,
+          chunkId: diagnosticContext.chunkId,
+          passName: finding.detection_pass ?? null,
+          index: null,
+        }))
+    );
+
+    const canonicalizationEvents = [
+      ...deduplicated.map((finding) =>
+        buildLineageEvent(finding, {
+          jobId: diagnosticContext.jobId,
+          chunkId: diagnosticContext.chunkId,
+          stageName: "canonicalization",
+          passName: finding.detection_pass ?? null,
+        })
+      ),
+      ...allFindings
+        .filter((finding) => {
+          const lineageId = ensureFindingLineageId(finding, {
+            jobId: diagnosticContext.jobId,
+            chunkId: diagnosticContext.chunkId,
+            passName: finding.detection_pass ?? null,
+            index: null,
+          });
+          return !keptLineage.has(lineageId);
+        })
+        .map((finding) =>
+          buildLineageEvent(finding, {
+            jobId: diagnosticContext.jobId,
+            chunkId: diagnosticContext.chunkId,
+            stageName: "canonicalization",
+            passName: finding.detection_pass ?? null,
+            reasonIfRemoved: "deduplicated_multi_pass",
+          })
+        ),
+    ];
+    await persistLineageEvents(canonicalizationEvents);
+  }
   
   const totalDuration = Date.now() - startTime;
   

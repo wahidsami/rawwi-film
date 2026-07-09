@@ -69,6 +69,10 @@ export const judgeFindingSchema = z.object({
   rationale_ar: z.string().optional().nullable().transform((v) => v ?? null),
   final_ruling: z.enum(["violation", "needs_review", "context_ok"]).optional().nullable().transform((v) => v ?? null),
   detection_pass: z.string().optional().nullable().transform((v) => v ?? null),
+  lineage_id: z.string().optional().nullable().transform((v) => v ?? null),
+  parent_lineage_id: z.string().optional().nullable().transform((v) => v ?? null),
+  canonical_hash: z.string().optional().nullable().transform((v) => v ?? null),
+  evidence_hash: z.string().optional().nullable().transform((v) => v ?? null),
   evidence_snippet: z.string().nullable().transform((v) => v ?? ""),
   location: locationSchema
     .nullable()

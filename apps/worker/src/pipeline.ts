@@ -41,11 +41,16 @@ import { PIPELINE_V2_SCENE_MEMORY_VERSION } from "./pipelineV2/sceneMemory.js";
 import { PIPELINE_V2_SCRIPT_MEMORY_VERSION } from "./pipelineV2/scriptMemory.js";
 import { PIPELINE_EVIDENCE_GROUNDING_VERSION, groundFindingEvidenceToChunk } from "./evidenceGrounding.js";
 import { V3_SUBJECT_DEFINITIONS } from "./v3PromptPack.js";
+import { buildLineageEvent, ensureFindingLineageId, persistLineageEvents } from "./findingLineage.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
   start_offset_global: number;
   end_offset_global: number;
+  lineage_id?: string | null;
+  parent_lineage_id?: string | null;
+  canonical_hash?: string | null;
+  evidence_hash?: string | null;
   policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
   primary_article_id?: number | null;
   related_article_ids?: number[];
@@ -1982,6 +1987,30 @@ export async function processChunkJudge(
           return allowsStrictGroundingMethod(result.method);
         })
         .map((result) => result.finding);
+      await persistLineageEvents(
+        groundedResults.map((result) => {
+          const strictRejected =
+            result.grounded &&
+            requiresStrictExactProof(result.finding) &&
+            !allowsStrictGroundingMethod(result.method);
+          const reasonIfRemoved = !result.grounded
+            ? (result.reason ?? result.diagnostics?.rejection_reason ?? "grounding_rejected")
+            : strictRejected
+              ? "strict_exact_proof_required"
+              : null;
+          return buildLineageEvent(result.finding, {
+            jobId,
+            chunkId: chunk.id,
+            stageName: "grounding",
+            passName: result.finding.detection_pass ?? null,
+            reasonIfRemoved,
+            metadata: {
+              method: result.method,
+              grounded: result.grounded,
+            },
+          });
+        })
+      );
       const enriched = grounded.map((f) => {
         const localStart = Math.max(0, f.location?.start_offset ?? 0);
         const localEnd = Math.min(chunkText.length, f.location?.end_offset ?? localStart);
@@ -2009,6 +2038,14 @@ export async function processChunkJudge(
         return true;
       });
       const withGlobal = qualityFiltered.map((f) => toGlobalFinding(f, chunkStart));
+      withGlobal.forEach((finding, index) => {
+        ensureFindingLineageId(finding, {
+          jobId,
+          chunkId: chunk.id,
+          passName: finding.detection_pass ?? null,
+          index,
+        });
+      });
       logger.info("[DEBUG] Multi-pass refinement stage complete", {
         jobId,
         chunkId: chunk.id,
@@ -2116,6 +2153,7 @@ export async function processChunkJudge(
 
     // 5) Dedupe + overlap
     const beforeDedupeCount = allFindings.length;
+    const beforeCanonicalization = [...allFindings];
     allFindings = dedupeByHash(allFindings);
     const afterDedupeCount = allFindings.length;
     allFindings = overlapCollapse(allFindings);
@@ -2144,6 +2182,43 @@ export async function processChunkJudge(
       finalAiFindings: afterArticleFourCollapseCount,
       lexiconFindings: mandatoryFindings.length,
     });
+    const canonicalizationKept = new Set(
+      allFindings.map((finding) => ensureFindingLineageId(finding, {
+        jobId,
+        chunkId: chunk.id,
+        passName: finding.detection_pass ?? null,
+        index: null,
+      }))
+    );
+    await persistLineageEvents([
+      ...allFindings.map((finding) =>
+        buildLineageEvent(finding, {
+          jobId,
+          chunkId: chunk.id,
+          stageName: "canonicalization",
+          passName: finding.detection_pass ?? null,
+        })
+      ),
+      ...beforeCanonicalization
+        .filter((finding) => {
+          const lineageId = ensureFindingLineageId(finding, {
+            jobId,
+            chunkId: chunk.id,
+            passName: finding.detection_pass ?? null,
+            index: null,
+          });
+          return !canonicalizationKept.has(lineageId);
+        })
+        .map((finding) =>
+          buildLineageEvent(finding, {
+            jobId,
+            chunkId: chunk.id,
+            stageName: "canonicalization",
+            passName: finding.detection_pass ?? null,
+            reasonIfRemoved: "dedupe_overlap_article4",
+          })
+        ),
+    ]);
 
     // CACHE PURGE / PERSIST
     logger.info("Persisting analysis_chunk_run started", {
@@ -2454,6 +2529,43 @@ export async function processChunkJudge(
     policyV1Mode,
   });
   validatedFindingCount = persistedFindings.length;
+  const persistedLineage = new Set(
+    persistedFindings.map((finding) => ensureFindingLineageId(finding, {
+      jobId,
+      chunkId: chunk.id,
+      passName: finding.detection_pass ?? null,
+      index: null,
+    }))
+  );
+  await persistLineageEvents([
+    ...persistedFindings.map((finding) =>
+      buildLineageEvent(finding, {
+        jobId,
+        chunkId: chunk.id,
+        stageName: "validation",
+        passName: finding.detection_pass ?? null,
+      })
+    ),
+    ...baselineFindings
+      .filter((finding) => {
+        const lineageId = ensureFindingLineageId(finding, {
+          jobId,
+          chunkId: chunk.id,
+          passName: finding.detection_pass ?? null,
+          index: null,
+        });
+        return !persistedLineage.has(lineageId);
+      })
+      .map((finding) =>
+        buildLineageEvent(finding, {
+          jobId,
+          chunkId: chunk.id,
+          stageName: "validation",
+          passName: finding.detection_pass ?? null,
+          reasonIfRemoved: "validation_filtered",
+        })
+      ),
+  ]);
   await persistJudgeDiagnostic({
     diagnostic_kind: "validated_snapshot",
     job_id: jobId,
@@ -2669,6 +2781,12 @@ export async function processChunkJudge(
         end,
         excerpt
       );
+      const lineageId = ensureFindingLineageId(f, {
+        jobId,
+        chunkId: chunk.id,
+        passName: f.detection_pass ?? null,
+        index: null,
+      });
       const findingPageNumber = pageNumAt(start);
       return [{
         job_id: jobId,
@@ -2708,6 +2826,9 @@ export async function processChunkJudge(
             secondary_pillar_ids: (f as { secondary_pillar_ids?: string[] }).secondary_pillar_ids ?? [],
           },
         },
+        lineage_id: lineageId,
+        parent_lineage_id: f.parent_lineage_id ?? null,
+        canonical_hash: f.canonical_hash ?? null,
         evidence_hash: h,
         rationale_ar: f.rationale_ar ?? null,
         canonical_atom: f.canonical_atom ?? null,
@@ -2804,6 +2925,17 @@ export async function processChunkJudge(
         errorCode: error.code,
       });
     } else {
+      await persistLineageEvents(
+        rows.map((row) =>
+          buildLineageEvent(row, {
+            jobId,
+            chunkId: chunk.id,
+            stageName: "aggregation",
+            passName: (row as { location?: { v3?: { detection_pass?: string | null } } }).location?.v3?.detection_pass ?? null,
+            metadata: { inserted: true },
+          })
+        )
+      );
       await upsertFindingPolicyLinks(
         (data ?? []).map((r) => ({
           id: (r as { id: string }).id,
