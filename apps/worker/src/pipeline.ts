@@ -2454,6 +2454,18 @@ export async function processChunkJudge(
     policyV1Mode,
   });
   validatedFindingCount = persistedFindings.length;
+  await persistJudgeDiagnostic({
+    diagnostic_kind: "validated_snapshot",
+    job_id: jobId,
+    chunk_id: chunk.id,
+    prompt_hash: "",
+    router_candidates: routerOutputJson,
+    raw_judge_response: "",
+    parsed_judge_response: null,
+    parsed_finding_count: 0,
+    validated_finding_count: validatedFindingCount,
+    validated_findings_json: persistedFindings,
+  });
   logger.info("Analysis contradiction metrics", {
     jobId,
     chunkId: chunk.id,

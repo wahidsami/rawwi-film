@@ -13,9 +13,10 @@ export type JudgeDiagnosticInsert = {
   parsed_judge_response?: unknown;
   raw_finding_count?: number | null;
   parsed_finding_count?: number | null;
-  diagnostic_kind?: "judge_call" | "chunk_final";
+  diagnostic_kind?: "judge_call" | "chunk_final" | "validated_snapshot";
   grounded_finding_count?: number | null;
   validated_finding_count?: number | null;
+  validated_findings_json?: unknown;
   final_chunk_finding_count?: number | null;
   final_chunk_findings?: unknown;
   timestamp?: string;
@@ -65,6 +66,7 @@ export async function persistJudgeDiagnostic(row: JudgeDiagnosticInsert): Promis
       parsed_finding_count: row.parsed_finding_count ?? 0,
       grounded_finding_count: row.grounded_finding_count ?? null,
       validated_finding_count: row.validated_finding_count ?? null,
+      validated_findings_json: row.validated_findings_json ?? null,
       final_chunk_finding_count: row.final_chunk_finding_count ?? null,
       final_chunk_findings: row.final_chunk_findings ?? null,
       timestamp: row.timestamp ?? new Date().toISOString(),
