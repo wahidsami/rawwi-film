@@ -1897,6 +1897,22 @@ async function runSinglePass(
       narrative_consequence: f.narrative_consequence ?? "unknown",
     })).map((f) => normalizeFindingForPass(f, articles));
     const stableTagged = sortJudgeFindingsStable(tagged);
+    if (diagnosticContext) {
+      await persistJudgeDiagnostic({
+        diagnostic_kind: "pass_output_snapshot",
+        job_id: diagnosticContext.jobId,
+        chunk_id: diagnosticContext.chunkId,
+        pass_name: pass.name,
+        prompt_hash: judgeCall.prompt_hash ?? "",
+        router_candidates: diagnosticContext.routerCandidates,
+        raw_judge_response: judgeCall.raw_judge_response,
+        parsed_judge_response: null,
+        findings_json: stableTagged,
+        finding_count: stableTagged.length,
+        raw_finding_count: null,
+        parsed_finding_count: 0,
+      });
+    }
     
     const duration = Date.now() - startTime;
     logger.info(`Pass ${pass.name} completed`, { 

@@ -13,7 +13,10 @@ export type JudgeDiagnosticInsert = {
   parsed_judge_response?: unknown;
   raw_finding_count?: number | null;
   parsed_finding_count?: number | null;
-  diagnostic_kind?: "judge_call" | "chunk_final" | "validated_snapshot";
+  diagnostic_kind?: "judge_call" | "chunk_final" | "validated_snapshot" | "pass_output_snapshot";
+  pass_name?: string | null;
+  findings_json?: unknown;
+  finding_count?: number | null;
   grounded_finding_count?: number | null;
   validated_finding_count?: number | null;
   validated_findings_json?: unknown;
@@ -57,11 +60,14 @@ export async function persistJudgeDiagnostic(row: JudgeDiagnosticInsert): Promis
       job_id: row.job_id,
       chunk_id: row.chunk_id,
       diagnostic_kind: row.diagnostic_kind ?? "judge_call",
+      pass_name: row.pass_name ?? null,
       prompt_hash: promptHash,
       router_candidates: row.router_candidates ?? null,
       raw_judge_response: rawJudgeResponse,
       judge_response_hash: rawJudgeResponse.length > 0 ? sha256(rawJudgeResponse) : null,
       parsed_judge_response: row.parsed_judge_response ?? null,
+      findings_json: row.findings_json ?? null,
+      finding_count: row.finding_count ?? null,
       raw_finding_count: computedRawFindingCount,
       parsed_finding_count: row.parsed_finding_count ?? 0,
       grounded_finding_count: row.grounded_finding_count ?? null,
