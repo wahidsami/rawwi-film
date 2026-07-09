@@ -50,6 +50,8 @@ export type LineageEventInsert = {
   metadata?: Record<string, unknown> | null;
 };
 
+const LINEAGE_PERSIST_TIMEOUT_MS = 2500;
+
 function pickStart(finding: LineageFindingLike): number {
   if (typeof finding.start_offset_global === "number") return finding.start_offset_global;
   if (typeof finding.location?.start_offset === "number") return finding.location.start_offset;
@@ -157,14 +159,46 @@ export function buildLineageEvent(
 }
 
 export async function persistLineageEvents(events: LineageEventInsert[]): Promise<void> {
-  if (!config.ENABLE_FINDING_LINEAGE) return;
-  if (events.length === 0) return;
+  try {
+    if (!config.ENABLE_FINDING_LINEAGE) return;
+    if (events.length === 0) return;
 
-  const { error } = await supabase.from("analysis_finding_lineage_events").insert(events);
-  if (error) {
-    logger.warn("Finding lineage persist failed", {
-      error: error.message,
+    const insertPromise: Promise<{ error?: { message?: string } | null }> = supabase
+      .from("analysis_finding_lineage_events")
+      .insert(events)
+      .then((result) => ({ error: result.error ?? null }))
+      .catch((error: unknown) => ({
+        error: { message: error instanceof Error ? error.message : String(error) },
+      }));
+
+    const timeoutPromise: Promise<{ timedOut: true }> = new Promise((resolve) => {
+      setTimeout(() => resolve({ timedOut: true }), LINEAGE_PERSIST_TIMEOUT_MS);
+    });
+
+    const outcome = await Promise.race<[Awaited<typeof insertPromise> | { timedOut: true }]>([
+      insertPromise,
+      timeoutPromise,
+    ]);
+
+    if ("timedOut" in outcome) {
+      logger.warn("Finding lineage persist timed out; continuing analysis", {
+        timeoutMs: LINEAGE_PERSIST_TIMEOUT_MS,
+        events: events.length,
+      });
+      return;
+    }
+
+    if (outcome.error) {
+      logger.warn("Finding lineage persist failed; continuing analysis", {
+        error: outcome.error.message ?? "unknown_error",
+        events: events.length,
+      });
+    }
+  } catch (error) {
+    logger.warn("Finding lineage persist threw; continuing analysis", {
+      error: error instanceof Error ? error.message : String(error),
       events: events.length,
     });
+    return;
   }
 }
