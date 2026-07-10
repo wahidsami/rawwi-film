@@ -69,6 +69,26 @@ export async function runSceneAnalyzer(args: {
     { signal: args.signal },
   );
 
+  if (args.jobId && args.chunkId) {
+    await persistJudgeDiagnostic({
+      diagnostic_kind: "raw_judge_snapshot",
+      job_id: args.jobId,
+      chunk_id: args.chunkId,
+      pass_name: "policy_v1_scene_analyzer",
+      prompt_hash: judgeCall.prompt_hash,
+      router_candidates: args.routerCandidates ?? null,
+      raw_judge_response: judgeCall.raw_judge_response,
+      rendered_system_prompt: judgeCall.rendered_system_prompt,
+      rendered_user_prompt: judgeCall.rendered_user_prompt,
+      parsed_judge_response: null,
+      judge_model: judgeCall.model,
+      finish_reason: judgeCall.finish_reason,
+      openai_usage: judgeCall.usage,
+      openai_response_id: judgeCall.response_id,
+      raw_response_timestamp: judgeCall.response_timestamp,
+    });
+  }
+
   try {
     const parsed = JSON.parse(judgeCall.raw_judge_response);
     const normalized = normalizeSceneAnalysisResult(parsed);
@@ -80,6 +100,8 @@ export async function runSceneAnalyzer(args: {
         prompt_hash: judgeCall.prompt_hash,
         router_candidates: args.routerCandidates ?? null,
         raw_judge_response: judgeCall.raw_judge_response,
+        rendered_system_prompt: judgeCall.rendered_system_prompt,
+        rendered_user_prompt: judgeCall.rendered_user_prompt,
         parsed_judge_response: normalized,
         raw_finding_count: rawFindingCount,
         parsed_finding_count: normalized.events.length,
@@ -95,6 +117,8 @@ export async function runSceneAnalyzer(args: {
         prompt_hash: judgeCall.prompt_hash,
         router_candidates: args.routerCandidates ?? null,
         raw_judge_response: judgeCall.raw_judge_response,
+        rendered_system_prompt: judgeCall.rendered_system_prompt,
+        rendered_user_prompt: judgeCall.rendered_user_prompt,
         parsed_judge_response: null,
         raw_finding_count: rawFindingCount,
         parsed_finding_count: 0,

@@ -1868,9 +1868,28 @@ async function runSinglePass(
       { signal }
     );
     throwIfAborted(signal);
+    if (diagnosticContext) {
+      await persistJudgeDiagnostic({
+        diagnostic_kind: "raw_judge_snapshot",
+        job_id: diagnosticContext.jobId,
+        chunk_id: diagnosticContext.chunkId,
+        pass_name: pass.name,
+        prompt_hash: judgeCall.prompt_hash ?? "",
+        router_candidates: diagnosticContext.routerCandidates,
+        raw_judge_response: judgeCall.raw_judge_response,
+        rendered_system_prompt: judgeCall.rendered_system_prompt,
+        rendered_user_prompt: judgeCall.rendered_user_prompt,
+        parsed_judge_response: null,
+        judge_model: judgeCall.model,
+        finish_reason: judgeCall.finish_reason,
+        openai_usage: judgeCall.usage,
+        openai_response_id: judgeCall.response_id,
+        raw_response_timestamp: judgeCall.response_timestamp,
+      });
+    }
 
     // Parse findings
-    const { findings } = await parseJudgeWithRepair(judgeCall.raw_judge_response, model, { signal });
+    const { findings, diagnostics } = await parseJudgeWithRepair(judgeCall.raw_judge_response, model, { signal });
     if (diagnosticContext) {
       const rawFindingCount = extractRawFindingCount(judgeCall.raw_judge_response);
       await persistJudgeDiagnostic({
@@ -1879,9 +1898,17 @@ async function runSinglePass(
         prompt_hash: judgeCall.prompt_hash ?? "",
         router_candidates: diagnosticContext.routerCandidates,
         raw_judge_response: judgeCall.raw_judge_response,
+        rendered_system_prompt: judgeCall.rendered_system_prompt,
+        rendered_user_prompt: judgeCall.rendered_user_prompt,
         parsed_judge_response: { findings },
         raw_finding_count: rawFindingCount,
         parsed_finding_count: findings.length,
+        parse_status: diagnostics.parse_status,
+        repair_reason: diagnostics.repair_reason,
+        salvage_reason: diagnostics.salvage_reason,
+        repaired_finding_count: diagnostics.repaired_findings_count,
+        salvaged_finding_count: diagnostics.salvaged_findings_count,
+        parser_validation_errors: diagnostics.parser_validation_errors,
       });
     }
     const tagged = findings.map((f) => ({

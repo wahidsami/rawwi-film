@@ -150,7 +150,21 @@ export async function callJudgeRaw(
   judgeSystemPrompt?: string,
   userPromptAddition?: string | null,
   options: OpenAiCallOptions = {}
-): Promise<{ raw_judge_response: string; prompt_hash: string | null }> {
+): Promise<{
+  raw_judge_response: string;
+  prompt_hash: string | null;
+  rendered_system_prompt: string;
+  rendered_user_prompt: string;
+  model: string;
+  finish_reason: string | null;
+  usage: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  } | null;
+  response_id: string | null;
+  response_timestamp: string;
+}> {
   const payload = buildJudgeArticlesPayload(selectedArticles);
   const textSlice = chunkText.slice(0, 30_000);
   const allowedArticleIds = selectedArticles.map((a) => a.id).join(", ");
@@ -186,12 +200,46 @@ export async function callJudgeRaw(
   }, { timeout: config.JUDGE_TIMEOUT_MS, signal: options.signal });
 
   const content = resp.choices[0]?.message?.content ?? '{"findings":[]}';
+  const finishReason = resp.choices[0]?.finish_reason ?? null;
+  const usage = resp.usage
+    ? {
+        prompt_tokens: resp.usage.prompt_tokens,
+        completion_tokens: resp.usage.completion_tokens,
+        total_tokens: resp.usage.total_tokens,
+      }
+    : null;
+  const responseId = resp.id ?? null;
+  const responseTimestamp = new Date().toISOString();
   logger.info("[DEBUG] Judge response received", {
     model: jobConfig.judge_model,
     contentLength: content.length,
+    finishReason,
   });
-  return { raw_judge_response: content, prompt_hash: promptHash };
+  return {
+    raw_judge_response: content,
+    prompt_hash: promptHash,
+    rendered_system_prompt: systemPrompt,
+    rendered_user_prompt: userContent,
+    model: jobConfig.judge_model,
+    finish_reason: finishReason,
+    usage,
+    response_id: responseId,
+    response_timestamp: responseTimestamp,
+  };
 }
+
+export type JudgeParseStatus = "SUCCESS" | "REPAIRED" | "SALVAGED" | "FAILED";
+
+export type JudgeParseDiagnostics = {
+  raw_findings_count: number | null;
+  parsed_findings_count: number;
+  repaired_findings_count: number | null;
+  salvaged_findings_count: number | null;
+  parse_status: JudgeParseStatus;
+  repair_reason: string | null;
+  salvage_reason: string | null;
+  parser_validation_errors: string[];
+};
 
 /**
  * Repair broken JSON then re-parse/validate. Used when parse or zod fails.
@@ -219,6 +267,17 @@ export async function callRepairJson(
   return resp.choices[0]?.message?.content ?? "{}";
 }
 
+function extractRawFindingsCount(raw: string): number | null {
+  try {
+    const json = extractJsonFromText(raw);
+    const parsed = JSON.parse(json) as { findings?: unknown };
+    if (!Array.isArray(parsed.findings)) return null;
+    return parsed.findings.length;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Parse judge output with repair loop: if JSON parse or zod fails, call repair and retry once.
  */
@@ -226,8 +285,12 @@ export async function parseJudgeWithRepair(
   raw: string,
   model: string,
   options: OpenAiCallOptions = {}
-): Promise<{ findings: JudgeFinding[] }> {
+): Promise<{ findings: JudgeFinding[]; diagnostics: JudgeParseDiagnostics }> {
   let content = raw;
+  let usedRepair = false;
+  let repairReason: string | null = null;
+  const parserValidationErrors: string[] = [];
+  const rawFindingsCount = extractRawFindingsCount(raw);
   logger.info("[DEBUG] Judge parse/repair started", {
     model,
     rawLength: content.length,
@@ -241,8 +304,21 @@ export async function parseJudgeWithRepair(
         model,
         findingsCount: out.findings.length,
       });
-      return { findings: out.findings };
+      return {
+        findings: out.findings,
+        diagnostics: {
+          raw_findings_count: rawFindingsCount,
+          parsed_findings_count: out.findings.length,
+          repaired_findings_count: usedRepair ? out.findings.length : null,
+          salvaged_findings_count: null,
+          parse_status: usedRepair ? "REPAIRED" : "SUCCESS",
+          repair_reason: repairReason,
+          salvage_reason: null,
+          parser_validation_errors: parserValidationErrors,
+        },
+      };
     } catch (e) {
+      parserValidationErrors.push(String(e));
       logger.warn("Judge parse/validation failed, attempting repair", { attempt, error: String(e) });
 
       // Salvage valid findings instead of dropping entire pass when some items are malformed.
@@ -274,14 +350,28 @@ export async function parseJudgeWithRepair(
               salvaged: salvaged.length,
               dropped,
             });
-            return { findings: salvaged };
+            return {
+              findings: salvaged,
+              diagnostics: {
+                raw_findings_count: rawFindingsCount,
+                parsed_findings_count: 0,
+                repaired_findings_count: null,
+                salvaged_findings_count: salvaged.length,
+                parse_status: "SALVAGED",
+                repair_reason: String(e),
+                salvage_reason: `partial_valid_findings_salvage_dropped_${dropped}`,
+                parser_validation_errors: parserValidationErrors,
+              },
+            };
           }
         }
       } catch {
         // ignore salvage errors; continue to repair path
       }
 
+      repairReason = String(e);
       content = await callRepairJson(model, content, "Judge findings JSON", options);
+      usedRepair = true;
       logger.info("[DEBUG] Judge repair attempted", {
         model,
         attempt: attempt + 1,
@@ -289,7 +379,19 @@ export async function parseJudgeWithRepair(
       });
     }
   }
-  return { findings: [] };
+  return {
+    findings: [],
+    diagnostics: {
+      raw_findings_count: rawFindingsCount,
+      parsed_findings_count: 0,
+      repaired_findings_count: null,
+      salvaged_findings_count: null,
+      parse_status: "FAILED",
+      repair_reason: repairReason,
+      salvage_reason: null,
+      parser_validation_errors: parserValidationErrors,
+    },
+  };
 }
 
 export async function callAuditorRaw(
