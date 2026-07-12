@@ -19,6 +19,8 @@ import {
 import { logger } from "./logger.js";
 import { AUDITOR_SYSTEM_MSG, RATIONALE_ONLY_SYSTEM_MSG, ROUTER_SYSTEM_MSG, JUDGE_SYSTEM_MSG } from "./aiConstants.js";
 import { sha256 } from "./hash.js";
+import { canonicalStringify } from "./canonicalJson.js";
+import { persistAnalysisExecutionSignature, type AnalysisExecutionSignatureInput } from "./executionSignature.js";
 
 const openai = new OpenAI({ apiKey: config.OPENAI_API_KEY });
 
@@ -74,7 +76,7 @@ export function buildRouterTraceSummary(routerOutput?: { candidate_articles?: Ar
 
   return {
     ...trace,
-    hash: sha256(JSON.stringify(trace)),
+    hash: sha256(canonicalStringify(trace)),
   };
 }
 
@@ -146,7 +148,7 @@ export async function callJudgeRaw(
   selectedArticles: GCAMArticle[],
   globalStart: number,
   globalEnd: number,
-  jobConfig: { judge_model: string; temperature: number; seed: number },
+  jobConfig: { judge_model: string; temperature: number; seed: number; analysis_signature_context?: AnalysisExecutionSignatureInput | null },
   judgeSystemPrompt?: string,
   userPromptAddition?: string | null,
   options: OpenAiCallOptions = {}
@@ -171,11 +173,24 @@ export async function callJudgeRaw(
   const systemPrompt = judgeSystemPrompt || JUDGE_SYSTEM_MSG;
   const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nقواعد تنسيق إلزامية:\n- article_id (اختياري): إذا استخدمته فيجب أن يكون رقماً صحيحاً من المواد المعروضة فقط: [${allowedArticleIds}]. إذا لم تُحدده استخدم canonical_atom.\n- canonical_atom مطلوب: واحدة من INSULT, VIOLENCE, SEXUAL, SUBSTANCES, DISCRIMINATION, CHILD_SAFETY, WOMEN, MISINFORMATION, PUBLIC_ORDER, EXTREMISM, INTERNATIONAL, ECONOMIC, PRIVACY, APPEARANCE.\n- intensity, context_impact, legal_sensitivity, audience_risk مطلوبة وكل واحدة رقماً بين 1 و 4.\n- rationale_ar مطلوبة: جملة أو جملتان بالعربية تشرح أين يظهر المقتطف، ما الذي تم رصده، ولماذا يندرج تحت المادة. امنع الشرح العام مثل "وجود لفظ مخالف" دون توضيح.\n- يجب أن يطابق rationale_ar المادة الأساسية المختارة، ولا تذكر مادة مختلفة عنها في الشرح.\n- لا تُرجع severity — تُحسب في الخلفية.\n- evidence_snippet يجب أن يكون أصغر اقتباس حرفي ممكن يثبت المخالفة، وليس فقرة واسعة إلا إذا تعذر غير ذلك.\n- location.start_offset و location.end_offset يجب أن يحددا نفس المقتطف القصير داخل chunk الحالي (لا تُرجع null ولا نافذة واسعة بلا حاجة).\n- confidence رقماً بين 0 و 1.\n- evidence_snippet نصاً غير null.\n${userPromptAddition && userPromptAddition.trim().length > 0 ? `\n${userPromptAddition.trim()}\n` : ""}أرجع JSON بمصفوفة findings فقط.`;
   const promptHash = config.ENABLE_AI_DIAGNOSTICS
-    ? sha256(JSON.stringify({
+    ? sha256(canonicalStringify({
         system: systemPrompt,
         user: userContent,
       }))
     : null;
+
+  if (jobConfig.analysis_signature_context) {
+    await persistAnalysisExecutionSignature(
+      {
+        ...jobConfig.analysis_signature_context,
+        provider_name: jobConfig.analysis_signature_context.provider_name ?? "openai",
+        model_name: jobConfig.judge_model,
+        model_version: jobConfig.analysis_signature_context.model_version ?? null,
+      },
+      systemPrompt,
+      userContent,
+    );
+  }
 
   logger.info("[DEBUG] Judge request prepared", {
     model: jobConfig.judge_model,
@@ -236,6 +251,7 @@ export type JudgeParseDiagnostics = {
   repaired_findings_count: number | null;
   salvaged_findings_count: number | null;
   parse_status: JudgeParseStatus;
+  repair_invoked: boolean;
   repair_reason: string | null;
   salvage_reason: string | null;
   parser_validation_errors: string[];
@@ -312,6 +328,7 @@ export async function parseJudgeWithRepair(
           repaired_findings_count: usedRepair ? out.findings.length : null,
           salvaged_findings_count: null,
           parse_status: usedRepair ? "REPAIRED" : "SUCCESS",
+          repair_invoked: usedRepair,
           repair_reason: repairReason,
           salvage_reason: null,
           parser_validation_errors: parserValidationErrors,
@@ -358,6 +375,7 @@ export async function parseJudgeWithRepair(
                 repaired_findings_count: null,
                 salvaged_findings_count: salvaged.length,
                 parse_status: "SALVAGED",
+                repair_invoked: false,
                 repair_reason: String(e),
                 salvage_reason: `partial_valid_findings_salvage_dropped_${dropped}`,
                 parser_validation_errors: parserValidationErrors,
@@ -387,6 +405,7 @@ export async function parseJudgeWithRepair(
       repaired_findings_count: null,
       salvaged_findings_count: null,
       parse_status: "FAILED",
+      repair_invoked: usedRepair,
       repair_reason: repairReason,
       salvage_reason: null,
       parser_validation_errors: parserValidationErrors,

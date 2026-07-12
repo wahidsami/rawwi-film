@@ -6,6 +6,7 @@ export type AnalysisJob = {
   id: string;
   script_id: string;
   version_id: string;
+  created_at?: string | null;
   status: string;
   progress_total: number;
   progress_done: number;
@@ -45,12 +46,13 @@ export type ExtractionVersion = {
 
 async function fetchCandidateJobsBase(): Promise<AnalysisJob[]> {
   const selectWithControls =
-    "id, script_id, version_id, status, progress_total, progress_done, started_at, pause_requested, paused_at, partial_finalize_requested, partial_finalize_requested_at";
+    "id, script_id, version_id, created_at, status, progress_total, progress_done, started_at, pause_requested, paused_at, partial_finalize_requested, partial_finalize_requested_at";
   const { data, error } = await supabase
     .from("analysis_jobs")
     .select(selectWithControls)
     .in("status", ["queued", "running"])
     .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
     .limit(20);
 
   if (!error) return (data ?? []) as AnalysisJob[];
@@ -61,9 +63,10 @@ async function fetchCandidateJobsBase(): Promise<AnalysisJob[]> {
 
   const { data: legacyData, error: legacyError } = await supabase
     .from("analysis_jobs")
-    .select("id, script_id, version_id, status, progress_total, progress_done, started_at")
+    .select("id, script_id, version_id, created_at, status, progress_total, progress_done, started_at")
     .in("status", ["queued", "running"])
     .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
     .limit(20);
 
   if (legacyError) {
@@ -170,6 +173,7 @@ export async function fetchNextPendingExtractionVersion(): Promise<ExtractionVer
     .is("extracted_text", null)
     .not("source_file_path", "is", null)
     .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
     .limit(20);
 
   if (error) {
@@ -210,6 +214,7 @@ export async function fetchNextPendingChunk(jobId: string): Promise<AnalysisChun
     .eq("job_id", jobId)
     .eq("status", "pending")
     .order("chunk_index", { ascending: true })
+    .order("id", { ascending: true })
     .limit(1)
     .single();
   return data as AnalysisChunk | null;
@@ -226,6 +231,7 @@ export async function fetchNextPendingChunks(jobId: string, limit: number): Prom
     .eq("job_id", jobId)
     .eq("status", "pending")
     .order("chunk_index", { ascending: true })
+    .order("id", { ascending: true })
     .limit(safeLimit);
   return (data ?? []) as AnalysisChunk[];
 }
@@ -542,6 +548,7 @@ export async function recoverStaleJudgingChunks(maxAgeMs: number): Promise<numbe
     .not("judging_started_at", "is", null)
     .lt("judging_started_at", cutoffIso)
     .order("judging_started_at", { ascending: true })
+    .order("id", { ascending: true })
     .limit(20);
 
   if (error) {

@@ -36,6 +36,7 @@ import {
   V4_SUBJECT_DEFINITIONS,
   type V4SubjectDefinition,
 } from "./v4PromptPack.js";
+import type { AnalysisExecutionSignatureInput } from "./executionSignature.js";
 
 export interface LexiconTerm {
   term: string;
@@ -82,11 +83,20 @@ function compareJudgeFindingsStable(a: JudgeFinding, b: JudgeFinding): number {
     compareNullableText(a.canonical_atom, b.canonical_atom) ||
     compareNullableNumber(a.location?.start_offset, b.location?.start_offset) ||
     compareNullableNumber(a.location?.end_offset, b.location?.end_offset) ||
+    compareNullableNumber(a.location?.start_line, b.location?.start_line) ||
+    compareNullableNumber(a.location?.end_line, b.location?.end_line) ||
+    compareNullableNumber(a.confidence, b.confidence) ||
+    compareNullableText(a.severity, b.severity) ||
+    compareNullableNumber(a.intensity, b.intensity) ||
+    compareNullableNumber(a.context_impact, b.context_impact) ||
+    compareNullableNumber(a.legal_sensitivity, b.legal_sensitivity) ||
+    compareNullableNumber(a.audience_risk, b.audience_risk) ||
     compareNullableText(a.evidence_snippet, b.evidence_snippet) ||
     compareNullableText(a.title_ar, b.title_ar) ||
     compareNullableText(a.description_ar, b.description_ar) ||
     compareNullableText(a.detection_pass, b.detection_pass) ||
-    compareNullableText(a.rationale_ar, b.rationale_ar)
+    compareNullableText(a.rationale_ar, b.rationale_ar) ||
+    compareNullableText(a.source, b.source)
   );
 }
 
@@ -1797,7 +1807,7 @@ async function runSinglePass(
   pass: PassDefinition,
   allArticles: GCAMArticle[],
   lexiconTerms: LexiconTerm[],
-  jobConfig: { temperature: number; seed: number },
+  jobConfig: { temperature: number; seed: number; analysis_signature_context?: AnalysisExecutionSignatureInput | null },
   promptContext?: string,
   signal?: AbortSignal,
   diagnosticContext?: JudgeDiagnosticContext
@@ -1862,7 +1872,7 @@ async function runSinglePass(
       articles,
       chunkStart,
       chunkEnd,
-      { judge_model: model, temperature: jobConfig.temperature, seed: jobConfig.seed },
+      { judge_model: model, temperature: jobConfig.temperature, seed: jobConfig.seed, analysis_signature_context: jobConfig.analysis_signature_context ?? null },
       prompt,
       userPromptAddition,
       { signal }
@@ -1904,6 +1914,7 @@ async function runSinglePass(
         raw_finding_count: rawFindingCount,
         parsed_finding_count: findings.length,
         parse_status: diagnostics.parse_status,
+        repair_invoked: diagnostics.repair_invoked,
         repair_reason: diagnostics.repair_reason,
         salvage_reason: diagnostics.salvage_reason,
         repaired_finding_count: diagnostics.repaired_findings_count,
@@ -2014,7 +2025,7 @@ async function runSinglePassWithHardTimeout(
   pass: PassDefinition,
   allArticles: GCAMArticle[],
   lexiconTerms: LexiconTerm[],
-  jobConfig: { temperature: number; seed: number },
+  jobConfig: { temperature: number; seed: number; analysis_signature_context?: AnalysisExecutionSignatureInput | null },
   promptContext?: string,
   signal?: AbortSignal,
   diagnosticContext?: JudgeDiagnosticContext
@@ -2116,7 +2127,7 @@ export async function runMultiPassDetection(
   chunkEnd: number,
   allArticles: GCAMArticle[],
   lexiconTerms: LexiconTerm[],
-  jobConfig: { temperature: number; seed: number },
+  jobConfig: { temperature: number; seed: number; analysis_signature_context?: AnalysisExecutionSignatureInput | null },
   progressOpts?: { chunkId: string },
   executionPlan?: DetectionPassExecutionPlan,
   promptContext?: string,

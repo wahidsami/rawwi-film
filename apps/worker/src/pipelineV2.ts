@@ -6,6 +6,8 @@ import { persistMemory2Artifacts } from "./pipelineV2/memory2Persistence.js";
 import { buildChunkSceneMemory, buildSceneMemoryPromptContext } from "./pipelineV2/sceneMemory.js";
 import { buildScriptMemoryPromptContext, getCachedPipelineV2ScriptMemory } from "./pipelineV2/scriptMemory.js";
 import { buildMemory2StageBundle, buildMemory2StagePromptContext } from "./pipelineV2/stagedMemory2.js";
+import { sha256 } from "./hash.js";
+import { canonicalStringify } from "./canonicalJson.js";
 
 /**
  * Pipeline V2 scaffold:
@@ -70,10 +72,24 @@ export async function processChunkJudgeV2(
   });
 
   const originalConfig = job.config_snapshot ?? {};
+  const originalSignature = (originalConfig as { analysis_signature?: Record<string, unknown> | null }).analysis_signature ?? {};
   const v2Job: AnalysisJob = {
     ...job,
     config_snapshot: {
       ...originalConfig,
+      analysis_signature: {
+        ...originalSignature,
+        memory_version: "memory2-v1",
+        scene_memory_version: "v1",
+        script_memory_version: "v2",
+        summary_hash: scriptMemory.summaryHash ?? null,
+        memory_hash: sha256(canonicalStringify(stageBundle)),
+        summary_source: scriptMemory.summarySource ?? "unavailable",
+        summary_generation_duration_ms: scriptMemory.summaryGenerationDurationMs ?? null,
+        summary_generation_timestamp: scriptMemory.summaryGenerationTimestamp ?? null,
+        summary_model: scriptMemory.summaryModel ?? null,
+        summary_version: scriptMemory.summaryVersion ?? null,
+      },
       pipeline_version: "v2",
       v2_prompt_context: promptContext,
     },

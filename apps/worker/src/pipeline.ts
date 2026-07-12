@@ -42,6 +42,7 @@ import { PIPELINE_V2_SCRIPT_MEMORY_VERSION } from "./pipelineV2/scriptMemory.js"
 import { PIPELINE_EVIDENCE_GROUNDING_VERSION, groundFindingEvidenceToChunk } from "./evidenceGrounding.js";
 import { V3_SUBJECT_DEFINITIONS } from "./v3PromptPack.js";
 import { buildLineageEvent, ensureFindingLineageId, persistLineageEvents } from "./findingLineage.js";
+import { canonicalStringify } from "./canonicalJson.js";
 
 export type FindingWithGlobal = JudgeFinding & {
   source?: "ai" | "lexicon_mandatory" | "manual";
@@ -465,12 +466,19 @@ function compareFindingsStable(a: FindingWithGlobal, b: FindingWithGlobal): numb
     compareNullableText(a.atom_id, b.atom_id) ||
     compareNullableNumber(a.start_offset_global, b.start_offset_global) ||
     compareNullableNumber(a.end_offset_global, b.end_offset_global) ||
+    compareNullableText(a.severity, b.severity) ||
+    compareNullableNumber(a.confidence, b.confidence) ||
+    compareNullableText(a.canonical_atom, b.canonical_atom) ||
     compareNullableText(a.evidence_snippet, b.evidence_snippet) ||
     compareNullableText(a.title_ar, b.title_ar) ||
     compareNullableText(a.description_ar, b.description_ar) ||
     compareNullableText(a.source, b.source) ||
     compareNullableText(a.detection_pass, b.detection_pass) ||
-    compareNullableText(a.rationale_ar, b.rationale_ar)
+    compareNullableText(a.rationale_ar, b.rationale_ar) ||
+    compareNullableText(a.lineage_id, b.lineage_id) ||
+    compareNullableText(a.parent_lineage_id, b.parent_lineage_id) ||
+    compareNullableText(a.evidence_hash, b.evidence_hash) ||
+    compareNullableText(a.canonical_hash, b.canonical_hash)
   );
 }
 
@@ -1716,6 +1724,64 @@ export async function processChunkJudge(
   const maxRouter = typeof jobConfig.max_router_candidates === "number"
     ? jobConfig.max_router_candidates
     : 8;
+  const analysisSignatureConfig = (jobConfig.analysis_signature as {
+    chunk_size?: number;
+    overlap_size?: number;
+    total_chunks?: number;
+    total_detection_passes?: number;
+    memory_version?: string | null;
+    scene_memory_version?: string | null;
+    script_memory_version?: string | null;
+    evidence_pinning_version?: string | null;
+    summary_hash?: string | null;
+    memory_hash?: string | null;
+    summary_source?: "cache" | "generated" | "unavailable" | null;
+    summary_generation_timestamp?: string | null;
+    summary_model?: string | null;
+    summary_version?: string | null;
+  } | null) ?? null;
+  const analysisSignatureBase = {
+    job_id: jobId,
+    script_id: scriptId,
+    version_id: versionId,
+    created_at: job.created_at ?? null,
+    provider_name: "openai",
+    model_name: judgeModel,
+    model_version: null,
+    router_model_name: routerModel,
+    auditor_model_name: config.OPENAI_AUDITOR_MODEL,
+    rationale_model_name: config.OPENAI_RATIONALE_MODEL,
+    temperature,
+    top_p: null,
+    seed: seed ?? null,
+    max_tokens: 4096,
+    reasoning_effort: null,
+    response_format: "json_object",
+    pipeline_version: pipelineVersion,
+    analysis_engine_version: analysisEngine,
+    memory_version: analysisSignatureConfig?.memory_version ?? null,
+    scene_memory_version: analysisSignatureConfig?.scene_memory_version ?? null,
+    script_memory_version: analysisSignatureConfig?.script_memory_version ?? null,
+    evidence_pinning_version: analysisSignatureConfig?.evidence_pinning_version ?? null,
+    router_version: PROMPT_VERSIONS.router,
+    grounding_version: PIPELINE_EVIDENCE_GROUNDING_VERSION,
+    validator_version: config.AUDITOR_LAYER_VERSION,
+    aggregation_version: PIPELINE_LOGIC_VERSION,
+    auditor_version: PROMPT_VERSIONS.auditor,
+    violation_system_version: config.VIOLATION_SYSTEM_VERSION,
+    summary_hash: analysisSignatureConfig?.summary_hash ?? null,
+    memory_hash: analysisSignatureConfig?.memory_hash ?? null,
+    summary_source: analysisSignatureConfig?.summary_source ?? null,
+    summary_generation_timestamp: analysisSignatureConfig?.summary_generation_timestamp ?? null,
+    summary_model: analysisSignatureConfig?.summary_model ?? null,
+    summary_version: analysisSignatureConfig?.summary_version ?? null,
+    chunk_size: analysisSignatureConfig?.chunk_size ?? 12_000,
+    overlap_size: analysisSignatureConfig?.overlap_size ?? 800,
+    total_chunks: analysisSignatureConfig?.total_chunks ?? Math.max(0, job.progress_total - 1),
+    total_detection_passes: analysisSignatureConfig?.total_detection_passes ?? (analysisEngine === "policy_v1" ? 1 : DETECTION_PASSES.length),
+    diagnostics_enabled: config.ENABLE_AI_DIAGNOSTICS,
+    lineage_enabled: config.ENABLE_FINDING_LINEAGE,
+  } as const;
 
   const runKey = computeChunkRunKey(chunkText, {
     router_model: routerModel,
@@ -1888,7 +1954,7 @@ export async function processChunkJudge(
         chunkEnd,
         selectedArticles,
         terms,
-        { temperature, seed },
+        { temperature, seed, analysis_signature_context: analysisSignatureBase },
         { chunkId: chunk.id },
         passExecutionPlan,
         v2PromptContext ?? undefined,
@@ -1923,7 +1989,7 @@ export async function processChunkJudge(
         const endOffset = typeof f.location?.end_offset === "number" ? f.location.end_offset : null;
         const hintOffset = startOffset;
         const evidenceSnippet = f.evidence_snippet ?? null;
-        const findingHash = sha256(JSON.stringify({
+        const findingHash = sha256(canonicalStringify({
           pass_name: passName,
           article_id: f.article_id ?? null,
           atom_id: f.atom_id ?? null,
@@ -2296,6 +2362,7 @@ export async function processChunkJudge(
         jobId,
         chunkId: chunk.id,
         routerCandidates: routerOutputJson,
+        analysis_signature_context: analysisSignatureBase,
         signal,
       });
       throwIfAborted(signal);

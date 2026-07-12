@@ -3,6 +3,7 @@ import type { GCAMArticle } from "../gcam.js";
 import { logger } from "../logger.js";
 import { extractRawFindingCount, persistJudgeDiagnostic } from "../judgeDiagnostics.js";
 import { normalizeSceneAnalysisResult, type SceneAnalysisResult } from "./sceneEventSchema.js";
+import type { AnalysisExecutionSignatureInput } from "../executionSignature.js";
 
 const SCENE_ANALYZER_SYSTEM_PROMPT = `You are a neutral scene-analysis extractor for regulatory workflows.
 Return JSON only in this shape:
@@ -51,6 +52,7 @@ export async function runSceneAnalyzer(args: {
   model?: string;
   temperature?: number;
   seed?: number;
+  analysis_signature_context?: AnalysisExecutionSignatureInput | null;
   signal?: AbortSignal;
 }): Promise<SceneAnalysisResult> {
   const model = args.model ?? "gpt-4.1";
@@ -63,7 +65,7 @@ export async function runSceneAnalyzer(args: {
     noArticles,
     args.chunkStart,
     args.chunkEnd,
-    { judge_model: model, temperature, seed },
+    { judge_model: model, temperature, seed, analysis_signature_context: args.analysis_signature_context ?? null },
     SCENE_ANALYZER_SYSTEM_PROMPT,
     null,
     { signal: args.signal },

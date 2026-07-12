@@ -58,6 +58,12 @@ type JobRow = {
     analysis_engine?: "v2" | "hybrid" | "policy_v1";
     hybrid_mode?: "off" | "shadow" | "enforce";
     policy_v1_mode?: "shadow" | "enforce";
+    analysis_signature?: {
+      chunk_size?: number;
+      overlap_size?: number;
+      total_chunks?: number;
+      total_detection_passes?: number;
+    };
     manual_review_context?: {
       carried_forward_count?: number;
       source_job_ids?: string[];
@@ -806,6 +812,9 @@ Deno.serve(async (req: Request) => {
     : chunkText(normalized, 12_000, 800);
   const progress_total = chunks.length + 1;
   const manualReviewSnapshot = await loadManualReviewSnapshot(supabase, scriptId, versionId.trim());
+  const chunkSize = 12_000;
+  const overlapSize = usePageChunks ? 0 : 800;
+  const totalDetectionPasses = requestedAnalysisEngine === "policy_v1" ? 1 : 11;
 
   const { data: job, error: jobErr } = await supabase
     .from("analysis_jobs")
@@ -836,6 +845,12 @@ Deno.serve(async (req: Request) => {
         judge_prompt_version: PROMPT_VERSIONS.judge,
         judge_prompt_hash: await sha256Hash(JUDGE_SYSTEM_MSG),
         schema_version: PROMPT_VERSIONS.schema,
+        analysis_signature: {
+          chunk_size: chunkSize,
+          overlap_size: overlapSize,
+          total_chunks: chunks.length,
+          total_detection_passes: totalDetectionPasses,
+        },
         ...(manualReviewSnapshot.carriedForwardCount > 0
           ? {
               manual_review_context: {
