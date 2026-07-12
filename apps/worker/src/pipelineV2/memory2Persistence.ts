@@ -140,6 +140,12 @@ export async function persistMemory2Artifacts(args: PersistArgs): Promise<void> 
     trace_payload: {
       analysis_memory_mode: "memory2",
       has_script_summary: Boolean(args.scriptMemory.summary),
+      script_summary_hash: args.scriptMemory.summaryHash ?? null,
+      script_summary_source: args.scriptMemory.summarySource ?? null,
+      script_summary_generation_duration_ms: args.scriptMemory.summaryGenerationDurationMs ?? null,
+      script_summary_generation_timestamp: args.scriptMemory.summaryGenerationTimestamp ?? null,
+      script_summary_model: args.scriptMemory.summaryModel ?? null,
+      script_summary_version: args.scriptMemory.summaryVersion ?? null,
       detected_scene_count: args.sceneMemory.detectedSceneCount,
       speaker_hints: args.contextEnvelope.memory.speakerHints,
       prompt_context_chars: args.promptContext.length,
