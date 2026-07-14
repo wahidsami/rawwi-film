@@ -446,6 +446,38 @@ const PROCESSING_PHASE_LABELS: Record<string, { ar: string; en: string }> = {
   cached: { ar: 'نتائج مخزنة', en: 'Cached AI results' },
 };
 
+const V3_RUNTIME_STAGE_LABELS: Record<string, { ar: string; en: string }> = {
+  initialization: { ar: 'التهيئة', en: 'Initialization' },
+  context_analysis: { ar: 'تحليل السياق', en: 'Context Analysis' },
+  semantic_analysis: { ar: 'التحليل الدلالي', en: 'Semantic Analysis' },
+  evidence_analysis: { ar: 'تحليل الأدلة', en: 'Evidence Analysis' },
+  narrative_analysis: { ar: 'تحليل السرد', en: 'Narrative Analysis' },
+  intent_analysis: { ar: 'تحليل النية', en: 'Intent Analysis' },
+  relationship_analysis: { ar: 'تحليل العلاقات', en: 'Relationship Analysis' },
+  legal_mapping: { ar: 'الربط القانوني', en: 'Legal Mapping' },
+  gcam_mapping: { ar: 'ربط GCAM', en: 'GCAM Mapping' },
+  reviewer_judgment: { ar: 'حكم المراجع', en: 'Reviewer Judgment' },
+  finding_generation: { ar: 'توليد النتائج', en: 'Finding Generation' },
+  report_generation: { ar: 'توليد التقرير', en: 'Report Generation' },
+  fallback: { ar: 'العودة التلقائية', en: 'Automatic Fallback' },
+  v2_fallback: { ar: 'V2 (العودة التلقائية)', en: 'V2 (Automatic Fallback)' },
+  router: PROCESSING_PHASE_LABELS.router,
+  multipass: PROCESSING_PHASE_LABELS.multipass,
+  hybrid: PROCESSING_PHASE_LABELS.hybrid,
+  aggregating: PROCESSING_PHASE_LABELS.aggregating,
+  cached: PROCESSING_PHASE_LABELS.cached,
+};
+
+function normalizeStageKey(value: string): string {
+  return value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+}
+
+function formatRuntimeStageLabel(stage: string | null | undefined, lang: 'ar' | 'en'): string | null {
+  if (!stage || !stage.trim()) return null;
+  const mapped = V3_RUNTIME_STAGE_LABELS[normalizeStageKey(stage)];
+  return mapped ? (lang === 'ar' ? mapped.ar : mapped.en) : stage;
+}
+
 const ANALYSIS_MODE_OPTIONS: Array<{
   value: AnalysisModeProfile;
   labelAr: string;
@@ -3445,6 +3477,7 @@ export function ScriptWorkspace() {
         forceFresh: true,
         analysisProfile: analysisModeProfile,
         pipelineVersion: 'v2',
+        analysisEngine: 'v3',
       });
       setAnalysisJobId(jobId);
       setAnalysisJob(null);
@@ -3698,9 +3731,68 @@ export function ScriptWorkspace() {
       ? 'text-warning'
       : isPausedJobStatus(analysisJob?.status)
         ? 'text-warning'
-        : (analysisJob?.status ?? '').toLowerCase() === 'failed'
+      : (analysisJob?.status ?? '').toLowerCase() === 'failed'
           ? 'text-error'
           : 'text-primary';
+
+  const v3RuntimeSummary = useMemo(() => {
+    if (!analysisJob) {
+      return {
+        analysisEngineLabel: null as string | null,
+        currentStageLabel: null as string | null,
+        reasoningTraceStageLabel: null as string | null,
+        fallbackLabel: null as string | null,
+        fallbackReason: null as string | null,
+        gcamMappingStatusLabel: null as string | null,
+        engineAttemptedLabel: null as string | null,
+        engineUsedLabel: null as string | null,
+        knowledgeUsage: null as AnalysisJob['knowledgeUsage'],
+      };
+    }
+
+    const fallbackActive = analysisJob.engineUsed === 'v2_fallback';
+    const engineAttemptedLabel = analysisJob.engineAttempted
+      ? String(analysisJob.engineAttempted).trim().toUpperCase()
+      : null;
+    const engineUsedLabel = fallbackActive
+      ? (lang === 'ar' ? 'V2 (العودة التلقائية)' : 'V2 (Automatic Fallback)')
+      : analysisJob.engineUsed
+        ? String(analysisJob.engineUsed).trim().toUpperCase()
+        : null;
+    const analysisEngineLabel = fallbackActive
+      ? (lang === 'ar' ? 'V2 (العودة التلقائية)' : 'V2 (Automatic Fallback)')
+      : analysisJob.analysisEngine === 'v3'
+        ? 'V3'
+        : analysisJob.analysisEngine === 'hybrid'
+          ? 'Hybrid'
+          : analysisJob.analysisEngine === 'v2'
+            ? 'V2'
+            : null;
+    const currentStageLabel = formatRuntimeStageLabel(
+      analysisJob.currentStage ?? analysisJob.reasoningTraceStage ?? activeChunk?.processingPhase ?? null,
+      lang,
+    );
+    const reasoningTraceStageLabel = formatRuntimeStageLabel(analysisJob.reasoningTraceStage ?? null, lang);
+    const fallbackLabel = fallbackActive
+      ? (lang === 'ar' ? 'نعم' : 'Yes')
+      : (analysisJob.fallbackReason ? (lang === 'ar' ? 'نعم' : 'Yes') : (lang === 'ar' ? 'لا' : 'No'));
+    const gcamMappingStatusLabel = analysisJob.gcamMappingStatus
+      ? String(analysisJob.gcamMappingStatus).trim()
+      : null;
+    const fallbackReason = analysisJob.fallbackReason?.trim() || null;
+
+    return {
+      analysisEngineLabel,
+      currentStageLabel,
+      reasoningTraceStageLabel,
+      fallbackLabel,
+      fallbackReason,
+      gcamMappingStatusLabel,
+      engineAttemptedLabel,
+      engineUsedLabel,
+      knowledgeUsage: analysisJob.knowledgeUsage ?? null,
+    };
+  }, [analysisJob, activeChunk?.processingPhase, lang]);
 
   const selectedAnalysisModeMeta = useMemo(
     () => ANALYSIS_MODE_OPTIONS.find((option) => option.value === (analysisJob?.analysisMode ?? analysisModeProfile)) ?? ANALYSIS_MODE_OPTIONS[0],
@@ -7530,8 +7622,8 @@ export function ScriptWorkspace() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline" className="text-[11px]">
                       {lang === 'ar'
-                        ? `نمط التحليل: ${selectedAnalysisModeMeta.labelAr}`
-                        : `Mode: ${selectedAnalysisModeMeta.labelEn}`}
+                        ? `محرك التحليل: ${v3RuntimeSummary.analysisEngineLabel ?? selectedAnalysisModeMeta.labelAr}`
+                        : `Analysis Engine: ${v3RuntimeSummary.analysisEngineLabel ?? selectedAnalysisModeMeta.labelEn}`}
                     </Badge>
                     <Badge variant="outline" className="text-[11px]">
                       {lang === 'ar'
@@ -7544,6 +7636,19 @@ export function ScriptWorkspace() {
                       </Badge>
                     )}
                   </div>
+                  {v3RuntimeSummary.fallbackLabel === (lang === 'ar' ? 'نعم' : 'Yes') && (
+                    <div className="flex items-start gap-2 rounded-2xl border border-warning/30 bg-warning/10 px-3 py-2 text-warning">
+                      <ShieldAlert className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                      <div className="text-xs leading-6">
+                        <div className="font-semibold">
+                          {lang === 'ar' ? 'تم تفعيل العودة التلقائية' : 'Automatic fallback activated'}
+                        </div>
+                        <div className="text-warning/90">
+                          {v3RuntimeSummary.fallbackReason ?? (lang === 'ar' ? 'السبب غير متاح.' : 'Reason unavailable.')}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -7604,6 +7709,76 @@ export function ScriptWorkspace() {
                 </p>
                 {activePhaseLabel && (
                   <p className="mt-1 text-xs text-text-muted">{activePhaseLabel}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-background/50 p-4 space-y-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <p className="text-sm font-semibold text-text-main">
+                  {lang === 'ar' ? 'ملخص تشغيل V3' : 'V3 runtime snapshot'}
+                </p>
+                <p className="text-xs text-text-muted">
+                  {lang === 'ar'
+                    ? 'يعرض هذا الملخص فقط القيم التي وصلت من المهمة أو من حالة الجزء الجاري.'
+                    : 'This snapshot shows only values that arrived from the job or the active chunk state.'}
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-2xl border border-border bg-background/60 p-4">
+                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المرحلة الحالية' : 'Current stage'}</p>
+                  <p className="text-base font-semibold text-text-main">
+                    {v3RuntimeSummary.currentStageLabel ?? (activePhaseLabel ?? '—')}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border bg-background/60 p-4">
+                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المرحلة المرجعية' : 'Reasoning trace stage'}</p>
+                  <p className="text-base font-semibold text-text-main">
+                    {v3RuntimeSummary.reasoningTraceStageLabel ?? '—'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border bg-background/60 p-4">
+                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'العودة التلقائية' : 'Fallback'}</p>
+                  <p className="text-base font-semibold text-text-main">
+                    {v3RuntimeSummary.fallbackLabel ?? '—'}
+                  </p>
+                  {v3RuntimeSummary.fallbackReason && (
+                    <p className="mt-1 text-xs text-text-muted leading-6">{v3RuntimeSummary.fallbackReason}</p>
+                  )}
+                </div>
+                <div className="rounded-2xl border border-border bg-background/60 p-4">
+                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المحرك المطلوب / المستخدم' : 'Engine attempted / used'}</p>
+                  <p className="text-base font-semibold text-text-main">
+                    {v3RuntimeSummary.engineAttemptedLabel ?? '—'} / {v3RuntimeSummary.engineUsedLabel ?? '—'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border bg-background/60 p-4">
+                  <p className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'حالة ربط GCAM' : 'GCAM mapping status'}</p>
+                  <p className="text-base font-semibold text-text-main">
+                    {v3RuntimeSummary.gcamMappingStatusLabel ?? '—'}
+                  </p>
+                </div>
+                {v3RuntimeSummary.knowledgeUsage && (
+                  <div className="rounded-2xl border border-border bg-background/60 p-4 md:col-span-2 xl:col-span-3">
+                    <p className="text-[11px] text-text-muted mb-2">{lang === 'ar' ? 'استخدام المعرفة' : 'Knowledge usage'}</p>
+                    <div className="grid gap-2 text-xs text-text-main">
+                      {v3RuntimeSummary.knowledgeUsage.lessonsUsed?.length ? (
+                        <div><span className="text-text-muted">{lang === 'ar' ? 'الدروس' : 'Lessons'}:</span> {v3RuntimeSummary.knowledgeUsage.lessonsUsed.join(', ')}</div>
+                      ) : null}
+                      {v3RuntimeSummary.knowledgeUsage.decisionRecordsUsed?.length ? (
+                        <div><span className="text-text-muted">{lang === 'ar' ? 'سجلات القرار' : 'Decision records'}:</span> {v3RuntimeSummary.knowledgeUsage.decisionRecordsUsed.join(', ')}</div>
+                      ) : null}
+                      {v3RuntimeSummary.knowledgeUsage.patternsUsed?.length ? (
+                        <div><span className="text-text-muted">{lang === 'ar' ? 'القوالب' : 'Patterns'}:</span> {v3RuntimeSummary.knowledgeUsage.patternsUsed.join(', ')}</div>
+                      ) : null}
+                      {v3RuntimeSummary.knowledgeUsage.reviewerNotesUsed?.length ? (
+                        <div><span className="text-text-muted">{lang === 'ar' ? 'ملاحظات المراجع' : 'Reviewer notes'}:</span> {v3RuntimeSummary.knowledgeUsage.reviewerNotesUsed.join(', ')}</div>
+                      ) : null}
+                      {v3RuntimeSummary.knowledgeUsage.benchmarksReferenced?.length ? (
+                        <div><span className="text-text-muted">{lang === 'ar' ? 'المقاييس' : 'Benchmarks'}:</span> {v3RuntimeSummary.knowledgeUsage.benchmarksReferenced.join(', ')}</div>
+                      ) : null}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

@@ -1002,6 +1002,7 @@ export const scriptsApi = {
       forceFresh?: boolean;
       analysisProfile?: AnalysisModeProfile;
       pipelineVersion?: 'v1' | 'v2';
+      analysisEngine?: 'v2' | 'v3' | 'hybrid' | 'policy_v1';
       analysisOptions?: { mergeStrategy?: 'same_location_only' | 'every_occurrence' };
     }
   ): Promise<{ jobId: string; manualReviewContextCount?: number; linkedRevisionCycleNumber?: number | null }> =>
@@ -1010,6 +1011,7 @@ export const scriptsApi = {
       ...(options?.forceFresh ? { forceFresh: true } : {}),
       ...(options?.analysisProfile ? { analysisProfile: options.analysisProfile } : {}),
       pipelineVersion: options?.pipelineVersion ?? 'v2',
+      ...(options?.analysisEngine ? { analysisEngine: options.analysisEngine } : {}),
       ...(options?.analysisOptions ? { analysisOptions: options.analysisOptions } : {}),
     }),
   /** Get editor content and sections for a version. GET /scripts/editor?scriptId=...&versionId=... */

@@ -55,7 +55,7 @@ type JobRow = {
   config_snapshot?: {
     pipeline_version?: "v1" | "v2";
     analysis_profile?: "quality" | "balanced" | "turbo";
-    analysis_engine?: "v2" | "hybrid" | "policy_v1";
+    analysis_engine?: "v2" | "v3" | "hybrid" | "policy_v1";
     hybrid_mode?: "off" | "shadow" | "enforce";
     policy_v1_mode?: "shadow" | "enforce";
     analysis_signature?: {
@@ -658,12 +658,14 @@ Deno.serve(async (req: Request) => {
   const analysisMemoryMode = await loadAnalysisMemoryMode(supabase);
   const envDefaultEngine = (() => {
     const raw = String(Deno.env.get("ANALYSIS_ENGINE") ?? "v2").toLowerCase();
+    if (raw === "v3") return "v3" as const;
     if (raw === "policy_v1") return "policy_v1" as const;
     if (raw === "hybrid") return "hybrid" as const;
     return "v2" as const;
   })();
   const requestedAnalysisEngine = (() => {
     const raw = String(body?.analysisEngine ?? envDefaultEngine).toLowerCase();
+    if (raw === "v3") return "v3" as const;
     if (raw === "policy_v1") return "policy_v1" as const;
     if (raw === "hybrid") return "hybrid" as const;
     return "v2" as const;
