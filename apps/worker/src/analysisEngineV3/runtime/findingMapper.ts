@@ -68,6 +68,23 @@ function inferConcepts(intelligence: IntelligenceContext): readonly string[] {
     concepts.add("state_security");
     concepts.add("national_security");
   }
+  if (hasAny(evidenceText, ["طفل", "طفلة", "قاصر", "minor", "child", "children", "infant", "teenager", "vulnerable person", "vulnerable_person", "disabled child", "disabled_child", "disabled adult", "disabled_adult", "elderly person", "elderly_person"])) {
+    concepts.add("child");
+    concepts.add("minor");
+    concepts.add("infant");
+    concepts.add("teenager");
+    concepts.add("vulnerable_person");
+  }
+  if (hasAny(evidenceText, ["إساءة", "abuse", "يضرب الطفل", "يضرب القاصر", "beat the child", "hit the child", "ترك الطفل", "ترك القاصر", "abandonment", "استغل الطفل", "استغلال الطفل", "exploit", "grooming", "استدرج الطفل", "threaten the child", "bullying", "humiliation", "fear induction", "isolation", "mocking disability", "disability abuse", "forced the child to steal", "forced the child to smuggle", "child crime", "criminal exploitation", "trafficking", "يسخرون", "يسخر من الطفل", "يذلونه", "إذلال", "إهانة", "تنمر", "يخيف الطفل", "خوف الطفل", "يرهب الطفل"])) {
+    concepts.add("grooming");
+    concepts.add("exploitation");
+    concepts.add("bullying");
+    concepts.add("humiliation");
+    concepts.add("fear_induction");
+    concepts.add("isolation");
+    concepts.add("abuse");
+    concepts.add("neglect");
+  }
   if (hasAny(evidenceText, ["إرهاب", "إرهابي", "متطرف", "تطرف", "extremism", "terrorism", "داعش", "القاعدة"])) {
     concepts.add("terrorism");
     concepts.add("extremism");
