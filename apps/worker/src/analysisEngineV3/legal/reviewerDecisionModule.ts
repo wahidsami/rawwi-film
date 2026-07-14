@@ -75,3 +75,5 @@ export abstract class ReviewerDecisionModuleBase implements ReviewerDecisionModu
   }
 }
 
+export const BaseReviewerModule = ReviewerDecisionModuleBase;
+export const BaseLegalModule = ReviewerDecisionModuleBase;
