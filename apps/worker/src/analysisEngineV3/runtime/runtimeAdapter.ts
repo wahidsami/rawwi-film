@@ -11,6 +11,7 @@ import { RELIGION_MODULE } from "../legal/modules/religion/religionModule.js";
 import { NATIONAL_SECURITY_MODULE } from "../legal/modules/nationalSecurity/nationalSecurityModule.js";
 import { STATE_LEADERSHIP_MODULE } from "../legal/modules/stateLeadership/stateLeadershipModule.js";
 import { CHILDREN_MODULE } from "../legal/modules/children/childrenModule.js";
+import { VIOLENCE_MODULE } from "../legal/modules/violence/violenceModule.js";
 import { createLegalEngine } from "../legal/legalEngine.js";
 import { createLegalModuleLoader } from "../legal/legalModuleLoader.js";
 import { LegalModuleRegistry } from "../legal/legalModuleRegistry.js";
@@ -245,7 +246,7 @@ export async function runV3RuntimeAdapter(
     glossary: analysisRequest.glossary,
   });
   const legalEngine = createLegalEngine(
-    createLegalModuleLoader(new LegalModuleRegistry().register(PROFANITY_MODULE).register(RELIGION_MODULE).register(STATE_LEADERSHIP_MODULE).register(NATIONAL_SECURITY_MODULE).register(CHILDREN_MODULE)),
+    createLegalModuleLoader(new LegalModuleRegistry().register(PROFANITY_MODULE).register(RELIGION_MODULE).register(STATE_LEADERSHIP_MODULE).register(NATIONAL_SECURITY_MODULE).register(CHILDREN_MODULE).register(VIOLENCE_MODULE)),
   );
   const legalDecision = legalEngine.evaluate({
     moduleId: analysisRequest.subjectModule.id,

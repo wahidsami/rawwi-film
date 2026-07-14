@@ -68,6 +68,16 @@ function inferConcepts(intelligence: IntelligenceContext): readonly string[] {
     concepts.add("state_security");
     concepts.add("national_security");
   }
+  if (hasAny(evidenceText, ["violence", "violent", "عنف", "عنيف", "graphic violence", "domestic violence", "self-defense", "self defense", "justified violence", "documentary violence", "violence event", "violence threat", "violence attempt", "violence glorification", "violence encouragement", "violence instruction", "violence reward", "violence revenge", "violence self defense", "violence law enforcement", "violence accident", "violence negligence", "violence condemnation", "violence documentary", "violence historical", "violence training", "violence game", "violence fantasy", "violence comedy", "violence dream", "violence flashback", "violence memory", "violence imagination", "violence failed attempt", "violence offscreen", "violence scene description", "violence dialogue", "violence reported by character", "violence observed", "violence implied", "murder", "torture", "kill", "قتل", "طعن", "ضرب", "اعتداء", "تعذيب", "weapon", "weapons", "knife", "gun", "pistol", "rifle", "سلاح", "سكاكين", "مسدس", "بندقية"])) {
+    concepts.add("violence");
+    concepts.add("violence_event");
+    if (hasAny(evidenceText, ["threat", "violence threat", "violence_threat", "سأقتلك", "سأضربك", "سأطعنك", "هدده", "هددها", "هددوه", "تهديد", "يهدد", "يهددها", "يهدده"])) {
+      concepts.add("violence_threat");
+    }
+    if (hasAny(evidenceText, ["attempt", "violence attempt", "violence_attempt", "حاول", "يحاول", "failed attempt", "فشل", "failed to kill", "failed to attack"])) {
+      concepts.add("violence_attempt");
+    }
+  }
   if (hasAny(evidenceText, ["طفل", "طفلة", "قاصر", "minor", "child", "children", "infant", "teenager", "vulnerable person", "vulnerable_person", "disabled child", "disabled_child", "disabled adult", "disabled_adult", "elderly person", "elderly_person"])) {
     concepts.add("child");
     concepts.add("minor");
@@ -199,6 +209,9 @@ function inferTargets(intelligence: IntelligenceContext): readonly string[] {
     inferredTargets.push("military");
     inferredTargets.push("information");
     inferredTargets.push("state");
+  }
+  if (hasAny(evidenceText, ["violence", "violent", "graphic violence", "domestic violence", "self-defense", "self defense", "justified violence", "documentary violence", "murder", "torture", "kill", "قتل", "طعن", "ضرب", "اعتداء", "تعذيب", "weapon", "weapons", "knife", "gun", "pistol", "rifle", "سلاح", "سكاكين", "مسدس", "بندقية", "سأقتلك", "هدده", "هددها", "هددوه"])) {
+    inferredTargets.push("person");
   }
   if (hasAny(evidenceText, ["الحكومة", "الدولة", "الرئاسة", "government", "state", "public order", "riot", "فوضى"])) {
     inferredTargets.push("state");

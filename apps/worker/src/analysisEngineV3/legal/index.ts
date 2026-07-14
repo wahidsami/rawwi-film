@@ -14,3 +14,4 @@ export * from "./modules/religion/index.js";
 export * from "./modules/stateLeadership/index.js";
 export * from "./modules/nationalSecurity/index.js";
 export * from "./modules/children/index.js";
+export * from "./modules/violence/index.js";
