@@ -372,19 +372,29 @@ export function buildV3ReasoningTrace(input: {
     confidence: response.legalDecision.confidence,
     title_ar: response.legalDecision.moduleTitle,
     description_ar: response.legalDecision.reason,
-    evidence_snippet: response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.text ?? "",
+    evidence_snippet: response.legalDecision.evidence.primaryCandidateIndex === null
+      ? ""
+      : response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.text ?? "",
     rationale_ar: response.legalDecision.reason,
     final_ruling: response.legalDecision.status,
     detection_pass: response.legalDecision.moduleId,
     location: {
-      start_offset: response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.startOffset ?? 0,
-      end_offset: response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.endOffset ?? 0,
+      start_offset: response.legalDecision.evidence.primaryCandidateIndex === null
+        ? 0
+        : response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.startOffset ?? 0,
+      end_offset: response.legalDecision.evidence.primaryCandidateIndex === null
+        ? 0
+        : response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.endOffset ?? 0,
       start_line: null,
       end_line: null,
       v3: {},
     },
-    start_offset_global: response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.startOffset ?? 0,
-    end_offset_global: response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.endOffset ?? 0,
+    start_offset_global: response.legalDecision.evidence.primaryCandidateIndex === null
+      ? 0
+      : response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.startOffset ?? 0,
+    end_offset_global: response.legalDecision.evidence.primaryCandidateIndex === null
+      ? 0
+      : response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.endOffset ?? 0,
     canonical_atom: null,
     lineage_id: null,
     parent_lineage_id: null,

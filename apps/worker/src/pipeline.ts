@@ -46,6 +46,7 @@ import { canonicalStringify } from "./canonicalJson.js";
 import { runV3RuntimeAdapter } from "./analysisEngineV3/runtime/runtimeAdapter.js";
 import { runWithV3AutomaticFallback } from "./analysisEngineV3/runtime/automaticFallback.js";
 import { recordV3FallbackExecution } from "./analysisEngineV3/runtime/runtimeMetrics.js";
+import { processChunkJudgeV2 } from "./pipelineV2.js";
 
 export type FindingWithGlobal = Omit<JudgeFinding, "source" | "evidence_hash" | "canonical_hash" | "lineage_id" | "parent_lineage_id" | "related_article_ids"> & {
   source?: string | null;
@@ -1874,9 +1875,10 @@ export async function processChunkJudge(
           config_snapshot: {
             ...jobConfig,
             analysis_engine: "v2",
+            pipeline_version: "v2",
           },
         } as AnalysisJob;
-        await processChunkJudge(fallbackJob, chunk, normalizedText, signal);
+        await processChunkJudgeV2(fallbackJob, chunk, normalizedText, signal);
       };
 
       await runWithV3AutomaticFallback({

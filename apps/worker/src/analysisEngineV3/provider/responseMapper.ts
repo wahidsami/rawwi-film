@@ -81,7 +81,7 @@ function normalizeEvidenceResult(value: unknown): LegalEvidenceResult {
   const candidates = Array.isArray(input.candidates) ? input.candidates.map(normalizeEvidenceCandidate) : [];
   const primaryCandidateIndex = candidates.length > 0 && Number.isFinite(Number(input.primaryCandidateIndex))
     ? Math.min(Math.max(0, Number(input.primaryCandidateIndex)), candidates.length - 1)
-    : 0;
+    : null;
 
   return Object.freeze({
     candidates,

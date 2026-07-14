@@ -23,6 +23,7 @@ function containsAny(value: string, terms: readonly string[]): boolean {
 }
 
 function getPrimaryEvidence(input: LegalModuleEvaluationInput) {
+  if (input.intelligence.evidence.primaryCandidateIndex === null) return null;
   return input.intelligence.evidence.candidates[input.intelligence.evidence.primaryCandidateIndex] ?? null;
 }
 

@@ -25,7 +25,7 @@ export enum OverrideEventType {
 
 export type AnalysisModeProfile = 'quality' | 'balanced' | 'turbo';
 export type AnalysisPipelineVersion = 'v1' | 'v2';
-export type AnalysisEngine = 'v2' | 'hybrid';
+export type AnalysisEngine = 'v2' | 'hybrid' | 'v3';
 export type AnalysisHybridMode = 'off' | 'shadow' | 'enforce';
 
 export interface User {
@@ -165,6 +165,19 @@ export interface AnalysisJob {
   partialFinalizeRequestedAt?: string | null;
   isPartialReport?: boolean;
   errorMessage: string | null;
+  engineAttempted?: string | null;
+  engineUsed?: string | null;
+  fallbackReason?: string | null;
+  currentStage?: string | null;
+  reasoningTraceStage?: string | null;
+  gcamMappingStatus?: string | null;
+  knowledgeUsage?: {
+    lessonsUsed?: readonly string[] | null;
+    decisionRecordsUsed?: readonly string[] | null;
+    patternsUsed?: readonly string[] | null;
+    reviewerNotesUsed?: readonly string[] | null;
+    benchmarksReferenced?: readonly string[] | null;
+  } | null;
   /** Hash of canonical text used for this job; must match editor content to highlight. */
   scriptContentHash?: string | null;
   canonicalLength?: number | null;

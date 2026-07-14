@@ -122,7 +122,10 @@ export function normalizeIntelligenceContext(context: IntelligenceContext): Inte
       primaryText: normalizeText(context.evidenceAssessment.primaryText),
       primaryStartOffset: Math.max(0, Math.floor(context.evidenceAssessment.primaryStartOffset)),
       primaryEndOffset: Math.max(0, Math.floor(context.evidenceAssessment.primaryEndOffset)),
-      primaryCandidateIndex: Math.max(0, Math.floor(context.evidenceAssessment.primaryCandidateIndex)),
+      primaryCandidateIndex:
+        context.evidenceAssessment.primaryCandidateIndex === null
+          ? null
+          : Math.max(0, Math.floor(context.evidenceAssessment.primaryCandidateIndex)),
       candidateCount: Math.max(0, Math.floor(context.evidenceAssessment.candidateCount)),
       admissible: Boolean(context.evidenceAssessment.admissible),
       confidence: clampConfidence(context.evidenceAssessment.confidence),

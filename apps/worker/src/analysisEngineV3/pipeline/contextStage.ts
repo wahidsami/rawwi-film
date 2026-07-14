@@ -2,6 +2,7 @@ import type { LegalContextResult, LegalEvidenceResult, LegalNarrativeResult, Leg
 import type { V3PipelineChunk } from "./pipelineTypes.js";
 
 function evidenceText(evidence: LegalEvidenceResult): string {
+  if (evidence.primaryCandidateIndex === null) return "";
   return evidence.candidates[evidence.primaryCandidateIndex]?.text ?? "";
 }
 
@@ -40,4 +41,3 @@ export function runContextStage(args: {
     notes: [],
   });
 }
-

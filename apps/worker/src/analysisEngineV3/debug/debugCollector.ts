@@ -185,7 +185,10 @@ function getTruthLayerMapping(input: V3DebugCollectorInput, fallbackFinding: V3D
 
 function buildReviewerJudgmentSection(response: AnalysisResponse, input: V3DebugCollectorInput): V3DebugReviewerJudgmentSection {
   const finding = input.findings?.[0] ?? null;
-  const evidenceUsed = finding ? [finding.evidence_snippet, response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.text ?? ""].filter(Boolean) : response.legalDecision.evidence.candidates.map((candidate) => candidate.text);
+  const primaryEvidenceText = response.legalDecision.evidence.primaryCandidateIndex === null
+    ? ""
+    : response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.text ?? "";
+  const evidenceUsed = finding ? [finding.evidence_snippet, primaryEvidenceText].filter(Boolean) : response.legalDecision.evidence.candidates.map((candidate) => candidate.text);
   const alternativeDecisions = input.acceptedHypotheses ?? (response.legalDecision.exceptions.length > 0 ? response.legalDecision.exceptions.map((exception) => exception.reason) : []);
   const rejectedInterpretations = input.discardedHypotheses ?? response.legalDecision.exceptions.filter((exception) => exception.disposition === "block" || exception.disposition === "review").map((exception) => exception.reason);
   const decisionRecordsUsed = Object.freeze([
@@ -276,7 +279,12 @@ function buildFindingGenerationSection(
     evidence: Object.freeze(
       normalizedStrings(
         finding
-          ? [finding.evidence_snippet, response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.text ?? ""]
+          ? [
+              finding.evidence_snippet,
+              response.legalDecision.evidence.primaryCandidateIndex === null
+                ? ""
+                : response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.text ?? "",
+            ]
           : response.legalDecision.evidence.candidates.map((candidate) => candidate.text),
       ),
     ),

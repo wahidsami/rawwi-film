@@ -19,6 +19,7 @@ function clampConfidence(value: number): number {
 }
 
 function primaryEvidence(evidence: LegalEvidenceResult): LegalEvidenceCandidate | null {
+  if (evidence.primaryCandidateIndex === null) return null;
   return evidence.candidates[evidence.primaryCandidateIndex] ?? null;
 }
 
@@ -174,7 +175,7 @@ export function buildIntelligenceContext(input: IntelligenceBuilderInput, concep
   const references = buildGlossaryReferences(input);
   const entities = buildEntities(input);
   const evidenceAssessment = {
-    primaryText: normalizeText(primary?.text ?? input.context.localContext),
+    primaryText: normalizeText(primary?.text ?? input.context.localContext ?? ""),
     primaryStartOffset: primary?.startOffset ?? 0,
     primaryEndOffset: primary?.endOffset ?? 0,
     primaryCandidateIndex: input.evidence.primaryCandidateIndex,

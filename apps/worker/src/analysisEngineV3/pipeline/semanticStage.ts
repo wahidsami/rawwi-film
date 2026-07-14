@@ -2,6 +2,7 @@ import type { LegalSemanticResult } from "../legal/legalTypes.js";
 import type { LegalEvidenceResult, LegalNarrativeResult } from "../legal/legalTypes.js";
 
 function primaryEvidenceText(evidence: LegalEvidenceResult): string {
+  if (evidence.primaryCandidateIndex === null) return "";
   return evidence.candidates[evidence.primaryCandidateIndex]?.text ?? "";
 }
 
@@ -35,4 +36,3 @@ export function runSemanticStage(narrative: LegalNarrativeResult, evidence: Lega
     notes: [],
   });
 }
-

@@ -149,7 +149,12 @@ const mockModule: LegalModule = {
     ];
   },
   buildFinding(input, decision, exceptions) {
-    const primary = input.intelligence.evidence.candidates[input.intelligence.evidence.primaryCandidateIndex];
+    const primary = input.intelligence.evidence.primaryCandidateIndex === null
+      ? null
+      : input.intelligence.evidence.candidates[input.intelligence.evidence.primaryCandidateIndex];
+    if (!primary) {
+      throw new Error("primary evidence required for test finding construction");
+    }
     return createLegalFinding({
       findingKey: `${this.id}:${primary.startOffset}-${primary.endOffset}:${decision.status}`,
       moduleId: this.id,

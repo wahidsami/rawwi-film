@@ -89,7 +89,9 @@ function testReasoningTrace(): void {
     confidence: response.legalDecision.confidence,
     title_ar: response.legalDecision.moduleTitle,
     description_ar: response.legalDecision.reason,
-    evidence_snippet: response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.text ?? request.chunk.text,
+    evidence_snippet: response.legalDecision.evidence.primaryCandidateIndex === null
+      ? request.chunk.text
+      : response.legalDecision.evidence.candidates[response.legalDecision.evidence.primaryCandidateIndex]?.text ?? request.chunk.text,
     rationale_ar: response.legalDecision.reason,
     final_ruling:
       response.legalDecision.status === "accept"

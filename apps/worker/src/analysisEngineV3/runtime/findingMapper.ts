@@ -21,6 +21,7 @@ function clampOffset(value: number | null | undefined, fallback: number): number
 }
 
 function pickPrimaryEvidence(decision: LegalDecision): LegalEvidenceCandidate | null {
+  if (decision.evidence.primaryCandidateIndex === null) return null;
   return decision.evidence.candidates[decision.evidence.primaryCandidateIndex] ?? null;
 }
 

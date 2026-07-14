@@ -116,7 +116,10 @@ function toRuntimeFinding(
   }>,
   response: Awaited<ReturnType<ReturnType<typeof createAnalysisFactory>["analyze"]>>,
 ): V3RuntimeFinding {
-  const candidate = response.evidence.candidates[response.evidence.primaryCandidateIndex] ?? response.evidence.candidates[0];
+  const primaryIndex = response.evidence.primaryCandidateIndex;
+  const candidate = primaryIndex === null
+    ? response.evidence.candidates[0]
+    : response.evidence.candidates[primaryIndex] ?? response.evidence.candidates[0];
   const endOffset = candidate?.endOffset ?? caseItem.scriptSnippet.length;
   return Object.freeze({
     source: "ai",

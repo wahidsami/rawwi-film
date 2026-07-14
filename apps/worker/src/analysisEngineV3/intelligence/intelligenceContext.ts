@@ -63,7 +63,7 @@ export type IntelligenceEvidenceAssessment = Readonly<{
   primaryText: string;
   primaryStartOffset: number;
   primaryEndOffset: number;
-  primaryCandidateIndex: number;
+  primaryCandidateIndex: number | null;
   candidateCount: number;
   admissible: boolean;
   confidence: number;

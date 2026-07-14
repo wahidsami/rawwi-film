@@ -59,7 +59,7 @@ export type LegalEvidenceCandidate = {
 
 export type LegalEvidenceResult = {
   readonly candidates: readonly LegalEvidenceCandidate[];
-  readonly primaryCandidateIndex: number;
+  readonly primaryCandidateIndex: number | null;
   readonly admissible: boolean;
   readonly confidence: number;
   readonly notes?: readonly string[];

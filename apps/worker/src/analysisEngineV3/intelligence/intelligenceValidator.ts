@@ -18,10 +18,14 @@ export function validateIntelligenceContext(context: IntelligenceContext): Intel
   if (!isValidNumber(context.evidenceAssessment.confidence)) addIssue(issues, "evidenceAssessment.confidence", "evidence confidence must be between 0 and 1");
 
   if (context.evidenceAssessment.candidateCount <= 0) {
-    addIssue(issues, "evidenceAssessment.candidateCount", "at least one evidence candidate is required");
-  }
-
-  if (context.evidenceAssessment.primaryCandidateIndex < 0 || context.evidenceAssessment.primaryCandidateIndex >= context.evidenceAssessment.candidateCount) {
+    if (context.evidenceAssessment.primaryCandidateIndex !== null) {
+      addIssue(issues, "evidenceAssessment.primaryCandidateIndex", "primaryCandidateIndex must be null when no evidence candidates exist");
+    }
+  } else if (
+    context.evidenceAssessment.primaryCandidateIndex === null ||
+    context.evidenceAssessment.primaryCandidateIndex < 0 ||
+    context.evidenceAssessment.primaryCandidateIndex >= context.evidenceAssessment.candidateCount
+  ) {
     addIssue(issues, "evidenceAssessment.primaryCandidateIndex", "primaryCandidateIndex must refer to an existing candidate");
   }
 
@@ -29,7 +33,7 @@ export function validateIntelligenceContext(context: IntelligenceContext): Intel
     addIssue(issues, "evidenceAssessment.primaryEndOffset", "primaryEndOffset must be greater than or equal to primaryStartOffset");
   }
 
-  if (!context.evidenceAssessment.primaryText.trim()) {
+  if (context.evidenceAssessment.candidateCount > 0 && !context.evidenceAssessment.primaryText.trim()) {
     addIssue(issues, "evidenceAssessment.primaryText", "primaryText is required");
   }
 
