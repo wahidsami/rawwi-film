@@ -63,6 +63,34 @@ function inferConcepts(intelligence: IntelligenceContext): readonly string[] {
     concepts.add("state_reference");
     concepts.add("government_institution");
   }
+  if (hasAny(evidenceText, ["إرهاب", "إرهابي", "متطرف", "تطرف", "extremism", "terrorism", "داعش", "القاعدة", "جندوا", "جند", "يجند", "تجنيد", "انضموا", "بايعوا", "sabotage", "تخريب", "اختراق", "cyber", "هجوم إلكتروني", "شغب", "فوضى", "riot", "riots", "civil unrest", "public disorder", "mass panic"])) {
+    concepts.add("security");
+    concepts.add("state_security");
+    concepts.add("national_security");
+  }
+  if (hasAny(evidenceText, ["إرهاب", "إرهابي", "متطرف", "تطرف", "extremism", "terrorism", "داعش", "القاعدة"])) {
+    concepts.add("terrorism");
+    concepts.add("extremism");
+  }
+  if (hasAny(evidenceText, ["جندوا", "جند", "يجند", "تجنيد", "انضموا", "بايعوا", "recruit", "recruitment"])) {
+    concepts.add("recruitment");
+    concepts.add("banned_group");
+  }
+  if (hasAny(evidenceText, ["sabotage", "تخريب", "تفجير", "destroy", "disable", "قطع الاتصالات"])) {
+    concepts.add("sabotage");
+  }
+  if (hasAny(evidenceText, ["cyber", "اختراق", "hacking", "hack", "ddos", "attack", "attack", "malware", "breach"])) {
+    concepts.add("cyber_attack");
+  }
+  if (hasAny(evidenceText, ["سربوا", "سرب", "كشفوا", "كشف", "أسرار عسكرية", "معلومات سرية", "classified", "secret", "military disclosure", "leak"])) {
+    concepts.add("military_disclosure");
+    concepts.add("confidential_information");
+  }
+  if (hasAny(evidenceText, ["شغب", "فوضى", "riot", "riots", "civil unrest", "public disorder", "mass panic"])) {
+    concepts.add("public_order");
+    concepts.add("riot");
+    concepts.add("civil_unrest");
+  }
 
   return Object.freeze([...concepts].sort((left, right) => left.localeCompare(right)));
 }
@@ -114,6 +142,10 @@ function inferDomains(intelligence: IntelligenceContext): readonly string[] {
   if ([..."state_reference government_reference head_of_state royal_family government_institution public_official foreign_government foreign_leader international_organization national_flag national_anthem national_symbol national_identity".split(" ")].some((concept) => concepts.has(concept))) {
     domains.add("politics");
   }
+  if (concepts.has("military_disclosure") || concepts.has("confidential_information") || hasAny(evidenceText, ["أسرار عسكرية", "معلومات سرية", "classified", "secret", "military disclosure", "leak"])) {
+    domains.add("security");
+    domains.add("politics");
+  }
   if (/[رر]ئيس|حكومة|دولة|ملك|أمير|زعيم|حاكم|وزارة|برلمان|مجلس|government|president|state|king|leader|minister/.test(targetText) || hasAny(evidenceText, ["الرئيس", "الحكومة", "الدولة", "الملك", "الأمير", "الزعيم", "الحاكم", "الوزارة", "البرلمان", "government", "president", "state", "king", "leader", "minister"])) {
     domains.add("politics");
     domains.add("security");
@@ -126,7 +158,15 @@ function inferDomains(intelligence: IntelligenceContext): readonly string[] {
 }
 
 function inferTargets(intelligence: IntelligenceContext): readonly string[] {
-  return uniqueSorted([
+  const evidenceText = normalizeText([
+    intelligence.semantic.semanticMeaning,
+    intelligence.context.localContext,
+    intelligence.context.narrativeContext,
+    intelligence.context.chunkContext,
+    intelligence.storyMemory ?? "",
+    intelligence.evidenceAssessment.primaryText,
+  ].join(" "));
+  const inferredTargets = [
     intelligence.target ?? "",
     intelligence.victim ?? "",
     intelligence.semantic.target ?? "",
@@ -134,7 +174,21 @@ function inferTargets(intelligence: IntelligenceContext): readonly string[] {
     ...intelligence.entities
       .filter((entity) => entity.role === "target" || entity.role === "victim")
       .map((entity) => entity.label),
-  ]);
+  ];
+  if (hasAny(evidenceText, ["التنظيم", "group", "organization", "جماعة", "متطرف", "terror", "extremist", "recruitment"])) {
+    inferredTargets.push("group");
+  }
+  if (hasAny(evidenceText, ["الجيش", "عسكري", "military", "السرية", "secret", "classified", "أسرار عسكرية", "معلومات سرية"])) {
+    inferredTargets.push("military");
+    inferredTargets.push("information");
+    inferredTargets.push("state");
+  }
+  if (hasAny(evidenceText, ["الحكومة", "الدولة", "الرئاسة", "government", "state", "public order", "riot", "فوضى"])) {
+    inferredTargets.push("state");
+    inferredTargets.push("government");
+    inferredTargets.push("public");
+  }
+  return uniqueSorted(inferredTargets);
 }
 
 function inferActions(intelligence: IntelligenceContext): readonly string[] {
@@ -168,6 +222,27 @@ function inferActions(intelligence: IntelligenceContext): readonly string[] {
   if (concepts.some((concept) => concept.includes("crime")) || hasAny(reason, ["رشوة", "corruption", "bribery", "fraud", "smuggle"])) {
     actions.add("bribery");
     actions.add("corruption");
+  }
+  if (concepts.some((concept) => concept.includes("recruitment") || concept.includes("terrorism") || concept.includes("extremism") || concept.includes("banned_group")) || hasAny(reason, ["تجنيد", "جندوا", "انضموا", "بايعوا", "recruit", "recruitment", "extremism", "terrorism"])) {
+    actions.add("recruitment");
+    actions.add("promotion");
+    actions.add("glorification");
+    actions.add("support");
+  }
+  if (concepts.some((concept) => concept.includes("sabotage")) || hasAny(reason, ["sabotage", "تخريب", "تفجير", "تعطيل"])) {
+    actions.add("sabotage");
+    actions.add("attack");
+    actions.add("damage");
+  }
+  if (concepts.some((concept) => concept.includes("cyber_attack")) || hasAny(reason, ["cyber", "اختراق", "hacking", "hack", "ddos", "breach"])) {
+    actions.add("cyber_attack");
+    actions.add("attack");
+    actions.add("breach");
+  }
+  if (concepts.some((concept) => concept.includes("military_disclosure") || concept.includes("confidential_information")) || hasAny(reason, ["سربوا", "سرب", "كشفوا", "أسرار عسكرية", "معلومات سرية", "classified", "secret", "disclosure", "leak"])) {
+    actions.add("disclosure");
+    actions.add("leak");
+    actions.add("expose");
   }
   if (concepts.some((concept) => concept === "government" || concept === "military") || hasAny(reason, ["الدولة", "الحكومة", "الرئيس", "الملك", "الأمير", "الزعيم", "الحاكم"])) {
     if (hasAny(reason, ["كذاب", "فاسد", "غبي", "أحمق", "خائن", "حقير", "تافه", "سخيف", "فاشل", "مخزي", "محتال"])) {

@@ -12,3 +12,4 @@ export * from "./reviewerDecisionTypes.js";
 export * from "./modules/profanity/index.js";
 export * from "./modules/religion/index.js";
 export * from "./modules/stateLeadership/index.js";
+export * from "./modules/nationalSecurity/index.js";

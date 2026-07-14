@@ -55,6 +55,36 @@ function testKnownMappings(): void {
   assert.equal(religion.articleId, 8);
   assert.equal(religion.atomId, "8-1");
 
+  const extremistRecruitment = registry.map({
+    concepts: ["terrorism", "extremism", "recruitment", "banned_group"],
+    domains: ["security", "politics"],
+    targets: ["group"],
+    actions: ["recruitment", "promotion"],
+    intents: ["promotion"],
+    contexts: ["dialogue"],
+    evidence: ["انضموا للتنظيم المتطرف"],
+    reviewerJudgment: "extremist recruitment",
+    confidence: 94,
+  });
+  assert.equal(extremistRecruitment.status, "MAPPED");
+  assert.equal(extremistRecruitment.articleId, 15);
+  assert.equal(extremistRecruitment.atomId, "15-2");
+
+  const militaryDisclosure = registry.map({
+    concepts: ["military_disclosure", "confidential_information"],
+    domains: ["security"],
+    targets: ["military"],
+    actions: ["disclosure", "leak"],
+    intents: ["neutral"],
+    contexts: ["news"],
+    evidence: ["سربوا الأسرار العسكرية"],
+    reviewerJudgment: "military disclosure",
+    confidence: 92,
+  });
+  assert.equal(militaryDisclosure.status, "MAPPED");
+  assert.equal(militaryDisclosure.articleId, 21);
+  assert.equal(militaryDisclosure.atomId, "21-2");
+
   const unmapped = registry.map({
     concepts: ["weather_reference"],
     domains: ["travel"],

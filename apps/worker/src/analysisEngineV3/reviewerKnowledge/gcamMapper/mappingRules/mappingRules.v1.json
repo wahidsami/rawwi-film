@@ -44,6 +44,44 @@
       "debtNote": "Use the public order article only when a more specific security rule is not a better fit."
     },
     {
+      "id": "rule.security.banned_groups",
+      "version": "1.0.0",
+      "title": "Security banned groups rule",
+      "description": "Match extremist ideology, recruitment, and support for banned groups.",
+      "priority": 96,
+      "match": {
+        "concepts": ["terrorism", "extremism", "recruitment", "banned_group", "violent_ideology", "radicalization"],
+        "domains": ["security", "politics"],
+        "targets": ["group", "audience", "youth", "state", "government", "military"],
+        "actions": ["recruitment", "promotion", "support", "glorification", "instruction"],
+        "intents": ["promotion", "encouragement", "glorification", "instruction"],
+        "contexts": ["dialogue", "narration", "news", "historical", "documentary", "educational", "fiction"]
+      },
+      "articleMappingId": "article.security.banned_groups",
+      "atomMappingId": "atom.security.banned_groups.recruitment",
+      "relatedRuleIds": ["rule.security.overthrow"],
+      "debtNote": "Use when the security harm is recruitment into an extremist or banned group."
+    },
+    {
+      "id": "rule.security.military_disclosure",
+      "version": "1.0.0",
+      "title": "Security military disclosure rule",
+      "description": "Match disclosure or leaking of protected military or secret information.",
+      "priority": 97,
+      "match": {
+        "concepts": ["military_disclosure", "confidential_information", "classified_information", "secret_information"],
+        "domains": ["security", "politics"],
+        "targets": ["military", "state", "government", "official", "information"],
+        "actions": ["disclosure", "leak", "reveal", "expose"],
+        "intents": ["promotion", "encouragement", "instruction", "neutral"],
+        "contexts": ["dialogue", "narration", "news", "historical", "documentary", "educational", "court", "police_investigation"]
+      },
+      "articleMappingId": "article.security.military_disclosure",
+      "atomMappingId": "atom.security.military_disclosure",
+      "relatedRuleIds": [],
+      "debtNote": "Use when the security harm is the leak or exposure of secret military information."
+    },
+    {
       "id": "rule.religion.mockery",
       "version": "1.0.0",
       "title": "Religion mockery rule",
