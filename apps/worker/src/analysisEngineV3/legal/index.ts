@@ -7,4 +7,7 @@ export * from "./legalModuleLoader.js";
 export * from "./legalModuleRegistry.js";
 export * from "./legalResult.js";
 export * from "./legalTypes.js";
+export * from "./reviewerDecisionModule.js";
+export * from "./reviewerDecisionTypes.js";
 export * from "./modules/profanity/index.js";
+export * from "./modules/religion/index.js";

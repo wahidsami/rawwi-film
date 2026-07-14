@@ -8,6 +8,7 @@ import type { AnalysisHooks } from "./analysisHooks.js";
 import type { LegalModuleRegistry } from "../legal/legalModuleRegistry.js";
 import { LegalModuleRegistry as Registry } from "../legal/legalModuleRegistry.js";
 import { PROFANITY_MODULE } from "../legal/modules/profanity/profanityModule.js";
+import { RELIGION_MODULE } from "../legal/modules/religion/religionModule.js";
 
 export type AnalysisEngineConfig = Readonly<{
   reasoningContract: V3PromptReasoningContract;
@@ -126,7 +127,7 @@ function buildSemanticLayer(): V3PromptSemanticLayer {
 }
 
 export function createDefaultAnalysisEngineConfig(overrides?: Partial<AnalysisEngineConfig>): AnalysisEngineConfig {
-  const registry = overrides?.registry ?? new Registry().register(PROFANITY_MODULE);
+  const registry = overrides?.registry ?? new Registry().register(PROFANITY_MODULE).register(RELIGION_MODULE);
   return {
     reasoningContract: overrides?.reasoningContract ?? buildReasoningContract(),
     decisionGraph: overrides?.decisionGraph ?? buildDecisionGraph(),
@@ -136,4 +137,3 @@ export function createDefaultAnalysisEngineConfig(overrides?: Partial<AnalysisEn
     diagnostics: overrides?.diagnostics ?? { enabled: false },
   };
 }
-

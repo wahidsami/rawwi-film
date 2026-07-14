@@ -7,6 +7,7 @@ import { createV3ProviderFactory } from "../provider/providerFactory.js";
 import { mapV3ProviderResponse } from "../provider/responseMapper.js";
 import { buildIntelligenceContext } from "../intelligence/intelligenceBuilder.js";
 import { PROFANITY_MODULE } from "../legal/modules/profanity/profanityModule.js";
+import { RELIGION_MODULE } from "../legal/modules/religion/religionModule.js";
 import { createLegalEngine } from "../legal/legalEngine.js";
 import { createLegalModuleLoader } from "../legal/legalModuleLoader.js";
 import { LegalModuleRegistry } from "../legal/legalModuleRegistry.js";
@@ -234,7 +235,9 @@ export async function runV3RuntimeAdapter(
     context: mapped.context,
     glossary: analysisRequest.glossary,
   });
-  const legalEngine = createLegalEngine(createLegalModuleLoader(new LegalModuleRegistry().register(PROFANITY_MODULE)));
+  const legalEngine = createLegalEngine(
+    createLegalModuleLoader(new LegalModuleRegistry().register(PROFANITY_MODULE).register(RELIGION_MODULE)),
+  );
   const legalDecision = legalEngine.evaluate({
     moduleId: analysisRequest.subjectModule.id,
     intelligence,

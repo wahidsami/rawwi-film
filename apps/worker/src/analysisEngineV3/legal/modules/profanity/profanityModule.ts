@@ -1,11 +1,11 @@
 import type { LegalDecision } from "../../legalDecision.js";
-import type { LegalModule, LegalModuleEvaluationInput } from "../../legalModule.js";
 import type { LegalExceptionResult, LegalFinding } from "../../legalResult.js";
 import { createLegalDecision } from "../../legalDecision.js";
 import { createLegalExceptionResult, createLegalFinding } from "../../legalResult.js";
 import { PROFANITY_DECISION_TREE } from "./profanityDecisionTree.js";
 import type { ProfanityDecisionStep } from "./profanityDecisionTree.js";
 import { PROFANITY_RULES } from "./profanityRules.js";
+import { ReviewerDecisionModuleBase, type ReviewerDecisionModuleInput } from "../../reviewerDecisionModule.js";
 
 export const PROFANITY_MODULE_ID = "v4_11_profanity";
 
@@ -22,12 +22,12 @@ function containsAny(value: string, terms: readonly string[]): boolean {
   return terms.some((term) => normalized.includes(normalizeText(term)));
 }
 
-function getPrimaryEvidence(input: LegalModuleEvaluationInput) {
+function getPrimaryEvidence(input: ReviewerDecisionModuleInput) {
   if (input.intelligence.evidence.primaryCandidateIndex === null) return null;
   return input.intelligence.evidence.candidates[input.intelligence.evidence.primaryCandidateIndex] ?? null;
 }
 
-function hasProfanityConcept(input: LegalModuleEvaluationInput): boolean {
+function hasProfanityConcept(input: ReviewerDecisionModuleInput): boolean {
   return input.intelligence.conceptContext.conceptIds.includes("profanity");
 }
 
@@ -35,7 +35,7 @@ function isLiteralProfanity(evidenceText: string): boolean {
   return containsAny(evidenceText, PROFANITY_RULES.directTerms) || containsAny(evidenceText, PROFANITY_RULES.directPhrases);
 }
 
-function isQuoteContext(input: LegalModuleEvaluationInput): boolean {
+function isQuoteContext(input: ReviewerDecisionModuleInput): boolean {
   const combined = [
     input.intelligence.semantic.semanticMeaning,
     input.intelligence.semantic.narrativeIntent,
@@ -48,7 +48,7 @@ function isQuoteContext(input: LegalModuleEvaluationInput): boolean {
   return containsAny(combined, PROFANITY_RULES.quotationSignals);
 }
 
-function isEducationalContext(input: LegalModuleEvaluationInput): boolean {
+function isEducationalContext(input: ReviewerDecisionModuleInput): boolean {
   const combined = [
     input.intelligence.semantic.semanticMeaning,
     input.intelligence.semantic.narrativeIntent,
@@ -59,7 +59,7 @@ function isEducationalContext(input: LegalModuleEvaluationInput): boolean {
   return containsAny(combined, PROFANITY_RULES.educationalSignals);
 }
 
-function isCondemnationContext(input: LegalModuleEvaluationInput): boolean {
+function isCondemnationContext(input: ReviewerDecisionModuleInput): boolean {
   const combined = [
     input.intelligence.semantic.semanticMeaning,
     input.intelligence.semantic.narrativeIntent,
@@ -71,7 +71,7 @@ function isCondemnationContext(input: LegalModuleEvaluationInput): boolean {
   return input.intelligence.narrative.condemnation === true || containsAny(combined, PROFANITY_RULES.condemnationSignals);
 }
 
-function buildTrace(input: LegalModuleEvaluationInput, status: LegalDecision["status"], reason: string): readonly string[] {
+function buildTrace(input: ReviewerDecisionModuleInput, status: LegalDecision["status"], reason: string): readonly string[] {
   return [
     "profanity:evidence_exists",
     `profanity:admissible:${String(input.intelligence.evidence.admissible)}`,
@@ -93,17 +93,23 @@ function summarizeReason(parts: readonly string[]): string {
   return [...new Set(parts.map((part) => part.trim()).filter(Boolean))].join(" | ");
 }
 
-export const PROFANITY_MODULE: LegalModule = {
-  id: PROFANITY_MODULE_ID,
-  title: "الألفاظ النابية",
-  articleIds: [4, 5, 17],
-  applies(input: LegalModuleEvaluationInput): boolean {
+export class ProfanityReviewerDecisionModule extends ReviewerDecisionModuleBase {
+  constructor() {
+    super({
+      id: PROFANITY_MODULE_ID,
+      title: "الألفاظ النابية",
+      articleIds: [4, 5, 17],
+    });
+  }
+
+  applies(input: ReviewerDecisionModuleInput): boolean {
     const primary = getPrimaryEvidence(input);
     if (!primary) return false;
     if (!input.intelligence.evidence.admissible) return false;
     return hasProfanityConcept(input) || isLiteralProfanity(primary.text);
-  },
-  evaluate(input: LegalModuleEvaluationInput): LegalDecision {
+  }
+
+  evaluate(input: ReviewerDecisionModuleInput): LegalDecision {
     const primary = getPrimaryEvidence(input);
     const quote = isQuoteContext(input);
     const educational = isEducationalContext(input);
@@ -145,8 +151,9 @@ export const PROFANITY_MODULE: LegalModule = {
       finding: null,
       trace: buildTrace(input, status, reason),
     });
-  },
-  exceptions(input: LegalModuleEvaluationInput, decision: LegalDecision): readonly LegalExceptionResult[] {
+  }
+
+  exceptions(input: ReviewerDecisionModuleInput, decision: LegalDecision): readonly LegalExceptionResult[] {
     const primary = getPrimaryEvidence(input);
     const literal = primary ? isLiteralProfanity(primary.text) : false;
     if (!primary || !input.intelligence.evidence.admissible || !(literal || hasProfanityConcept(input))) return [];
@@ -198,8 +205,9 @@ export const PROFANITY_MODULE: LegalModule = {
         confidence: 0.95,
       }),
     ];
-  },
-  buildFinding(input: LegalModuleEvaluationInput, decision: LegalDecision, exceptions: readonly LegalExceptionResult[]): LegalFinding | null {
+  }
+
+  buildFinding(input: ReviewerDecisionModuleInput, decision: LegalDecision, exceptions: readonly LegalExceptionResult[]): LegalFinding | null {
     const primary = getPrimaryEvidence(input);
     if (!primary) return null;
     if (!input.intelligence.evidence.admissible) return null;
@@ -220,8 +228,10 @@ export const PROFANITY_MODULE: LegalModule = {
       context: input.intelligence.context,
       exceptionCodes: exceptions.filter((exception) => exception.applies).map((exception) => exception.code),
     });
-  },
-};
+  }
+}
+
+export const PROFANITY_MODULE = new ProfanityReviewerDecisionModule();
 
 export function isProfanityEvidenceText(text: string): boolean {
   return isLiteralProfanity(text);
