@@ -38,8 +38,54 @@ function hasAny(text: string, terms: readonly string[]): boolean {
   return terms.some((term) => normalized.includes(normalizeText(term)));
 }
 
-function inferDomains(intelligence: IntelligenceContext): readonly string[] {
+function inferConcepts(intelligence: IntelligenceContext): readonly string[] {
   const concepts = new Set(intelligence.conceptContext.conceptIds.map((concept) => normalizeText(concept)));
+  const targetText = normalizeText([
+    intelligence.target ?? "",
+    intelligence.victim ?? "",
+    intelligence.semantic.target ?? "",
+    intelligence.semantic.victim ?? "",
+    ...intelligence.entities
+      .filter((entity) => entity.role === "target" || entity.role === "victim")
+      .map((entity) => entity.label),
+  ].join(" "));
+  const evidenceText = normalizeText([
+    intelligence.semantic.semanticMeaning,
+    intelligence.context.localContext,
+    intelligence.context.narrativeContext,
+    intelligence.context.chunkContext,
+    intelligence.storyMemory ?? "",
+    intelligence.evidenceAssessment.primaryText,
+  ].join(" "));
+
+  if (/[رر]ئيس|حكومة|دولة|ملك|أمير|زعيم|حاكم|وزارة|برلمان|مجلس|government|president|state|king|leader|minister/.test(targetText) || hasAny(evidenceText, ["الرئيس", "الحكومة", "الدولة", "الملك", "الأمير", "الزعيم", "الحاكم", "الوزارة", "البرلمان", "government", "president", "state", "king", "leader", "minister"])) {
+    concepts.add("government_reference");
+    concepts.add("state_reference");
+    concepts.add("government_institution");
+  }
+
+  return Object.freeze([...concepts].sort((left, right) => left.localeCompare(right)));
+}
+
+function inferDomains(intelligence: IntelligenceContext): readonly string[] {
+  const concepts = new Set(inferConcepts(intelligence).map((concept) => normalizeText(concept)));
+  const targetText = normalizeText([
+    intelligence.target ?? "",
+    intelligence.victim ?? "",
+    intelligence.semantic.target ?? "",
+    intelligence.semantic.victim ?? "",
+    ...intelligence.entities
+      .filter((entity) => entity.role === "target" || entity.role === "victim")
+      .map((entity) => entity.label),
+  ].join(" "));
+  const evidenceText = normalizeText([
+    intelligence.semantic.semanticMeaning,
+    intelligence.context.localContext,
+    intelligence.context.narrativeContext,
+    intelligence.context.chunkContext,
+    intelligence.storyMemory ?? "",
+    intelligence.evidenceAssessment.primaryText,
+  ].join(" "));
   const domains = new Set<string>();
 
   if (concepts.has("profanity")) domains.add("society");
@@ -67,6 +113,10 @@ function inferDomains(intelligence: IntelligenceContext): readonly string[] {
   }
   if ([..."state_reference government_reference head_of_state royal_family government_institution public_official foreign_government foreign_leader international_organization national_flag national_anthem national_symbol national_identity".split(" ")].some((concept) => concepts.has(concept))) {
     domains.add("politics");
+  }
+  if (/[رر]ئيس|حكومة|دولة|ملك|أمير|زعيم|حاكم|وزارة|برلمان|مجلس|government|president|state|king|leader|minister/.test(targetText) || hasAny(evidenceText, ["الرئيس", "الحكومة", "الدولة", "الملك", "الأمير", "الزعيم", "الحاكم", "الوزارة", "البرلمان", "government", "president", "state", "king", "leader", "minister"])) {
+    domains.add("politics");
+    domains.add("security");
   }
   if ([..."historical_person historical_leader historical_event historical_battle historical_conflict historical_documentary historical_education historical_reference historical_quote historical_narration alternate_history historical_fiction".split(" ")].some((concept) => concepts.has(concept))) {
     domains.add("history");
@@ -118,6 +168,18 @@ function inferActions(intelligence: IntelligenceContext): readonly string[] {
   if (concepts.some((concept) => concept.includes("crime")) || hasAny(reason, ["رشوة", "corruption", "bribery", "fraud", "smuggle"])) {
     actions.add("bribery");
     actions.add("corruption");
+  }
+  if (concepts.some((concept) => concept === "government" || concept === "military") || hasAny(reason, ["الدولة", "الحكومة", "الرئيس", "الملك", "الأمير", "الزعيم", "الحاكم"])) {
+    if (hasAny(reason, ["كذاب", "فاسد", "غبي", "أحمق", "خائن", "حقير", "تافه", "سخيف", "فاشل", "مخزي", "محتال"])) {
+      actions.add("insult");
+      actions.add("mockery");
+    }
+    if (hasAny(reason, ["اسقطوا", "اقلبوا", "اطيح", "أطيح", "تمردوا", "ثوروا", "اهتفوا ضد", "احرقوا"])) {
+      actions.add("incitement");
+      actions.add("propaganda");
+      actions.add("support");
+      actions.add("glorification");
+    }
   }
   if (narrativeIntent === "condemnation" || semanticIntent === "condemnation") actions.add("condemnation");
   if (narrativeIntent === "education" || semanticIntent === "education") actions.add("instruction");
@@ -174,7 +236,7 @@ function inferContexts(intelligence: IntelligenceContext): readonly string[] {
 
 export function buildRuntimeGcamMapperInput(decision: LegalDecision, intelligence: IntelligenceContext): GcamMapperInput {
   return Object.freeze({
-    concepts: uniqueSorted(intelligence.conceptContext.conceptIds),
+    concepts: uniqueSorted(inferConcepts(intelligence)),
     domains: inferDomains(intelligence),
     targets: inferTargets(intelligence),
     actions: inferActions(intelligence),
