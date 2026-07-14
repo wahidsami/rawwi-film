@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "children_domain",
+  "title": "Children and Vulnerable Persons Domain Blueprint",
+  "description": "Top-level ontology for child safety and vulnerable-person reasoning.",
+  "entries": [
+    {
+      "id": "children_domain",
+      "title": "Children and Vulnerable Persons",
+      "description": "Domain overview for child-safety and vulnerable-person protection."
+    }
+  ]
+}

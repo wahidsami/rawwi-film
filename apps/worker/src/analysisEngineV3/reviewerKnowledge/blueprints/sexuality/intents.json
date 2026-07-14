@@ -1,0 +1,118 @@
+{
+  "version": "1.0.0",
+  "id": "sexuality_intents",
+  "title": "Sexuality Intents",
+  "description": "Canonical sexual-content intents for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "sexual_intent_reference",
+      "title": "Sexual Intent Reference",
+      "description": "Intent marker for reference."
+    },
+    {
+      "id": "sexual_intent_flirtation",
+      "title": "Sexual Intent Flirtation",
+      "description": "Intent marker for flirtation."
+    },
+    {
+      "id": "sexual_intent_romance",
+      "title": "Sexual Intent Romance",
+      "description": "Intent marker for romance."
+    },
+    {
+      "id": "sexual_intent_suggestion",
+      "title": "Sexual Intent Suggestion",
+      "description": "Intent marker for suggestion."
+    },
+    {
+      "id": "sexual_intent_invitation",
+      "title": "Sexual Intent Invitation",
+      "description": "Intent marker for invitation."
+    },
+    {
+      "id": "sexual_intent_harassment",
+      "title": "Sexual Intent Harassment",
+      "description": "Intent marker for harassment."
+    },
+    {
+      "id": "sexual_intent_assault",
+      "title": "Sexual Intent Assault",
+      "description": "Intent marker for assault."
+    },
+    {
+      "id": "sexual_intent_abuse",
+      "title": "Sexual Intent Abuse",
+      "description": "Intent marker for abuse."
+    },
+    {
+      "id": "sexual_intent_exploitation",
+      "title": "Sexual Intent Exploitation",
+      "description": "Intent marker for exploitation."
+    },
+    {
+      "id": "sexual_intent_grooming",
+      "title": "Sexual Intent Grooming",
+      "description": "Intent marker for grooming."
+    },
+    {
+      "id": "sexual_intent_normalization",
+      "title": "Sexual Intent Normalization",
+      "description": "Intent marker for normalization."
+    },
+    {
+      "id": "sexual_intent_glorification",
+      "title": "Sexual Intent Glorification",
+      "description": "Intent marker for glorification."
+    },
+    {
+      "id": "sexual_intent_instruction",
+      "title": "Sexual Intent Instruction",
+      "description": "Intent marker for instruction."
+    },
+    {
+      "id": "sexual_intent_condemnation",
+      "title": "Sexual Intent Condemnation",
+      "description": "Intent marker for condemnation."
+    },
+    {
+      "id": "sexual_intent_education",
+      "title": "Sexual Intent Education",
+      "description": "Intent marker for education."
+    },
+    {
+      "id": "sexual_intent_medical",
+      "title": "Sexual Intent Medical",
+      "description": "Intent marker for medical."
+    },
+    {
+      "id": "sexual_intent_historical",
+      "title": "Sexual Intent Historical",
+      "description": "Intent marker for historical."
+    },
+    {
+      "id": "sexual_intent_documentary",
+      "title": "Sexual Intent Documentary",
+      "description": "Intent marker for documentary."
+    },
+    {
+      "id": "sexual_intent_comedy",
+      "title": "Sexual Intent Comedy",
+      "description": "Intent marker for comedy."
+    },
+    {
+      "id": "sexual_intent_fantasy",
+      "title": "Sexual Intent Fantasy",
+      "description": "Intent marker for fantasy."
+    },
+    {
+      "id": "sexual_intent_neutral",
+      "title": "Sexual Intent Neutral",
+      "description": "Intent marker for neutral."
+    },
+    {
+      "id": "sexual_intent_reported_speech",
+      "title": "Sexual Intent Reported Speech",
+      "description": "Intent marker for reported speech."
+    }
+  ]
+}

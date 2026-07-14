@@ -1,0 +1,54 @@
+{
+  "id": "decision_003_psychological_abuse_direct",
+  "version": "1.0.0",
+  "title": "Psychological abuse (direct)",
+  "summary": "Psychological abuse in direct framing.",
+  "originalScenario": "سأخيفه حتى يبكي",
+  "reviewQuestion": "Is this psychological abuse?",
+  "initialSuspicion": "Emotional control.",
+  "possibleConcepts": [
+    "children_child",
+    "children_psychological_abuse"
+  ],
+  "supportingEvidence": [
+    "سأخيفه حتى يبكي"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-2"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "psychological_abuse",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child",
+    "children_psychological_abuse"
+  ]
+}

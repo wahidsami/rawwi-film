@@ -1,0 +1,77 @@
+{
+  "id": "decision_019_sexual_false_accusation",
+  "version": "1.0.0",
+  "title": "Sexual False Accusation decision record",
+  "summary": "Reviewer reasoning record for sexual false accusation.",
+  "originalScenario": "One character falsely accuses another of sexual misconduct and later evidence clears the name.",
+  "reviewQuestion": "Is this a reviewable sexual false accusation case?",
+  "initialSuspicion": "Sexual False Accusation appears in the scene or context.",
+  "possibleConcepts": [
+    "sexual_false_accusation"
+  ],
+  "supportingEvidence": [
+    "One character falsely accuses another of sexual misconduct and later evidence clears the name.",
+    "Sexual False Accusation is the active concept."
+  ],
+  "contradictingEvidence": [
+    "The context is exception-heavy or corrected later."
+  ],
+  "requiredMissingEvidence": [
+    "No confirmed wrongdoing"
+  ],
+  "sceneContext": "One character falsely accuses another of sexual misconduct and later evidence clears the name.",
+  "speakerAnalysis": "The speaker and target must be checked explicitly.",
+  "targetAnalysis": "The target must be identified from context.",
+  "intentAnalysis": "Accusation or correction",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check evidence quality",
+    "Apply context and exception rules",
+    "Map to article guidance"
+  ],
+  "reviewerDecision": "The allegation is not established as a finding.",
+  "confidence": "needs_review",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-2",
+        "17-3",
+        "17-5",
+        "17-6"
+      ],
+      "note": "Use when sexual accusation language is later corrected or disproved."
+    }
+  ],
+  "falsePositiveRisk": "High",
+  "reviewerNotes": "Use the false_accusation bucket rules and preserve the exact evidence span for sexual_false_accusation.",
+  "benchmarkTags": [
+    "false_accusation",
+    "sexual_false_accusation"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "sexual_pattern_19_sexual_false_accusation"
+  ],
+  "relatedBlueprintConcepts": [
+    "sexual_false_accusation",
+    "sexual_reference"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "sexuality_domain",
+  "title": "Sexual Content Domain Blueprint",
+  "description": "Semantic universe for sexual reference, intimacy, framing, context, and false-positive control.",
+  "entries": [
+    {
+      "id": "sexuality_domain",
+      "title": "Sexual Content",
+      "description": "Independent semantic universe for sexual meaning, depiction, context, framing, and exception handling."
+    }
+  ]
+}

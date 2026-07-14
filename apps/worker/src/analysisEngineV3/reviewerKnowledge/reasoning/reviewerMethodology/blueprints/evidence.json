@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_methodology_evidence",
+  "title": "Reviewer Methodology Evidence",
+  "description": "Evidence states used by the reviewer methodology layer.",
+  "entries": [
+    {
+      "id": "methodology_evidence_local_chunk",
+      "title": "Local Chunk",
+      "description": "The literal chunk is the primary evidence source."
+    },
+    {
+      "id": "methodology_evidence_neighboring_sentence",
+      "title": "Neighboring Sentence",
+      "description": "The sentence before or after the chunk."
+    },
+    {
+      "id": "methodology_evidence_story_memory",
+      "title": "Story Memory",
+      "description": "Long-range story memory used as context."
+    },
+    {
+      "id": "methodology_evidence_scene_memory",
+      "title": "Scene Memory",
+      "description": "Local scene continuity used as context."
+    },
+    {
+      "id": "methodology_evidence_speaker_cue",
+      "title": "Speaker Cue",
+      "description": "A literal cue that identifies the speaker."
+    },
+    {
+      "id": "methodology_evidence_target_cue",
+      "title": "Target Cue",
+      "description": "A literal cue that identifies the target."
+    },
+    {
+      "id": "methodology_evidence_relationship_cue",
+      "title": "Relationship Cue",
+      "description": "A clue about power or relationship."
+    },
+    {
+      "id": "methodology_evidence_contradiction",
+      "title": "Contradiction",
+      "description": "A clue that weakens the first impression."
+    },
+    {
+      "id": "methodology_evidence_exception",
+      "title": "Exception",
+      "description": "An exception signal such as quotation or fiction."
+    },
+    {
+      "id": "methodology_evidence_corroboration",
+      "title": "Corroboration",
+      "description": "Another signal that supports the reading."
+    }
+  ]
+}

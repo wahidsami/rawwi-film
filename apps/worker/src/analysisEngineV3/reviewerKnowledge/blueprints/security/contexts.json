@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "id": "security_contexts",
+  "title": "Security Contexts",
+  "description": "Contextual situations that change security interpretation.",
+  "entries": [
+    { "id": "security_context_educational", "title": "Educational", "description": "Instructional or teaching context." },
+    { "id": "security_context_historical", "title": "Historical", "description": "Past event used as historical reference." },
+    { "id": "security_context_documentary", "title": "Documentary", "description": "Documentary or report-style context." },
+    { "id": "security_context_news", "title": "News", "description": "News reporting or journalistic context." },
+    { "id": "security_context_court", "title": "Court", "description": "Court proceedings or testimony." },
+    { "id": "security_context_police_investigation", "title": "Police Investigation", "description": "Investigation or evidence-gathering context." },
+    { "id": "security_context_education", "title": "Education", "description": "Teaching or training context." },
+    { "id": "security_context_fiction", "title": "Fiction", "description": "Fictional or narrative-only context." },
+    { "id": "security_context_roleplay", "title": "Role Play", "description": "In-character or simulated speech context." }
+  ]
+}

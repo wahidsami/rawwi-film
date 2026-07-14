@@ -1,0 +1,370 @@
+{
+  "version": "1.0.0",
+  "id": "evidence_evaluation_benchmark_catalog",
+  "title": "Evidence Evaluation Benchmark Catalog",
+  "description": "Deterministic benchmark cases for evidence collection, quality, priority, and conflict handling.",
+  "cases": [
+    {
+      "id": "evidence-evaluation-bench-001",
+      "title": "Explicit direct evidence",
+      "scriptSnippet": "سأقتلك.",
+      "storyMemory": "No contradictory context is present.",
+      "sceneMemory": "The line is delivered directly by a character.",
+      "neighboringSentences": [
+        "The speaker is clearly identified.",
+        "There is no additional ambiguity."
+      ],
+      "glossary": {
+        "title": "Evidence Glossary",
+        "entries": [
+          {
+            "term": "explicit_evidence",
+            "articleId": 11,
+            "variants": [
+              "explicit evidence",
+              "direct evidence"
+            ],
+            "definition": "Evidence stated directly in the text."
+          }
+        ],
+        "notes": [
+          "Direct evidence outranks inference."
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": [
+          "Evidence collection starts with explicit support."
+        ]
+      },
+      "expectedConcepts": [
+        "evidence_collection",
+        "strong_evidence"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "finding",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "threat",
+        "evidenceStrength": 0.96,
+        "contextClassification": "literal",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_15_reviewer_methodology | disposition=match | articles=11 | concepts=evidence_collection,strong_evidence"
+      },
+      "expectedExplanation": "The line is explicit, traceable, and self-contained, so the reviewer should treat it as strong direct evidence.",
+      "expectedConfidenceRange": {
+        "min": 0.9,
+        "max": 1
+      }
+    },
+    {
+      "id": "evidence-evaluation-bench-002",
+      "title": "Multiple evidence sources",
+      "scriptSnippet": "هذا ظرف بسيط.\nوافق على الترخيص.",
+      "storyMemory": "The exchange is about an apparent disguised payment.",
+      "sceneMemory": "Two separate sentences point to the same underlying act.",
+      "neighboringSentences": [
+        "The first sentence alone is ambiguous.",
+        "The second sentence strengthens the interpretation."
+      ],
+      "glossary": {
+        "title": "Evidence Glossary",
+        "entries": [
+          {
+            "term": "multiple_sources",
+            "articleId": 17,
+            "variants": [
+              "multiple evidence sources",
+              "corroborated evidence"
+            ],
+            "definition": "Independent evidence sources that reinforce the same reading."
+          }
+        ],
+        "notes": [
+          "Corroboration raises confidence."
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": [
+          "Multiple sources can justify a stronger reading than a lone cue."
+        ]
+      },
+      "expectedConcepts": [
+        "evidence_collection",
+        "evidence_prioritization",
+        "multiple_evidence_sources"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "possible_finding",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "implied_request",
+        "evidenceStrength": 0.7,
+        "contextClassification": "multi_sentence",
+        "literalVsImpliedMeaning": "implied",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_15_reviewer_methodology | disposition=review | articles=17 | concepts=multiple_evidence_sources,evidence_prioritization"
+      },
+      "expectedExplanation": "The first sentence is weak on its own, but the second sentence corroborates the reading, so the reviewer should prioritize the combined evidence.",
+      "expectedConfidenceRange": {
+        "min": 0.6,
+        "max": 0.8
+      }
+    },
+    {
+      "id": "evidence-evaluation-bench-003",
+      "title": "Weak evidence only",
+      "scriptSnippet": "نظر إليه بغضب.",
+      "storyMemory": "No later scene confirms a violation.",
+      "sceneMemory": "The line is isolated and could be emotional rather than evidentiary.",
+      "neighboringSentences": [
+        "No harmful action follows.",
+        "The scene remains ambiguous."
+      ],
+      "glossary": {
+        "title": "Evidence Glossary",
+        "entries": [
+          {
+            "term": "weak_evidence",
+            "articleId": 11,
+            "variants": [
+              "weak evidence"
+            ],
+            "definition": "Evidence that is too partial or ambiguous to support a stable finding."
+          }
+        ],
+        "notes": [
+          "A weak cue should not be promoted to a finding by itself."
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": [
+          "Weak evidence should remain low confidence."
+        ]
+      },
+      "expectedConcepts": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "observation",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "neutral",
+        "evidenceStrength": 0.42,
+        "contextClassification": "local",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_15_reviewer_methodology | disposition=reject | articles=11 | concepts=weak_evidence,insufficient_evidence"
+      },
+      "expectedExplanation": "The cue is too weak and too isolated to support a stable conclusion, so the reviewer should reject escalation.",
+      "expectedConfidenceRange": {
+        "min": 0.25,
+        "max": 0.5
+      }
+    },
+    {
+      "id": "evidence-evaluation-bench-004",
+      "title": "Conflicting evidence",
+      "scriptSnippet": "قالت إنه هددها.\nثم نفى ذلك في السطر التالي.",
+      "storyMemory": "The scene contains a dispute about what really happened.",
+      "sceneMemory": "The initial claim is immediately challenged.",
+      "neighboringSentences": [
+        "The first line is not stable.",
+        "The second line weakens the first interpretation."
+      ],
+      "glossary": {
+        "title": "Evidence Glossary",
+        "entries": [
+          {
+            "term": "conflicting_evidence",
+            "articleId": 17,
+            "variants": [
+              "conflicting evidence"
+            ],
+            "definition": "Evidence that pushes the reviewer toward review rather than immediate acceptance."
+          }
+        ],
+        "notes": [
+          "Conflict reduces confidence."
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": [
+          "Conflicting evidence should trigger re-evaluation."
+        ]
+      },
+      "expectedConcepts": [
+        "conflicting_evidence",
+        "contradiction_resolution"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "comment",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "uncertain",
+        "evidenceStrength": 0.51,
+        "contextClassification": "multi_sentence",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_15_reviewer_methodology | disposition=review | articles=17 | concepts=conflicting_evidence,contradiction_resolution"
+      },
+      "expectedExplanation": "The second line conflicts with the first, so the reviewer should not finalize a finding until the contradiction is resolved.",
+      "expectedConfidenceRange": {
+        "min": 0.35,
+        "max": 0.6
+      }
+    },
+    {
+      "id": "evidence-evaluation-bench-005",
+      "title": "Insufficient evidence",
+      "scriptSnippet": "قد يكون هذا تطرفاً.",
+      "storyMemory": "No later clarification resolves the ambiguity.",
+      "sceneMemory": "The line is speculative rather than evidentiary.",
+      "neighboringSentences": [
+        "Nothing else in the scene confirms the claim.",
+        "The reviewer should wait for more context."
+      ],
+      "glossary": {
+        "title": "Evidence Glossary",
+        "entries": [
+          {
+            "term": "insufficient_evidence",
+            "articleId": 4,
+            "variants": [
+              "insufficient evidence"
+            ],
+            "definition": "A state where available support is too weak to justify a finding."
+          }
+        ],
+        "notes": [
+          "Speculation is not evidence."
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          4
+        ],
+        "notes": [
+          "Insufficient evidence should remain unresolved."
+        ]
+      },
+      "expectedConcepts": [
+        "insufficient_evidence"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "observation",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "uncertain",
+        "evidenceStrength": 0.18,
+        "contextClassification": "local",
+        "literalVsImpliedMeaning": "implied",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        4
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_15_reviewer_methodology | disposition=reject | articles=4 | concepts=insufficient_evidence"
+      },
+      "expectedExplanation": "The line is speculative and unsupported, so the reviewer should not escalate it without more evidence.",
+      "expectedConfidenceRange": {
+        "min": 0.05,
+        "max": 0.3
+      }
+    }
+  ]
+}

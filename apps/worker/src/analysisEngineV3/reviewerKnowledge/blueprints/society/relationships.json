@@ -1,0 +1,253 @@
+{
+  "version": "1.0.0",
+  "id": "society_relationships",
+  "title": "Society Relationships",
+  "description": "Canonical society relationships for reviewer reasoning.",
+  "entries": [
+    {
+      "from": "society_domain",
+      "to": "society_family_values",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_family_breakdown",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_family_respect",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_parents",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_mother",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_father",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_elderly",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_disabled_persons",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_women",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_children",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_caregiving",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_domestic_abuse",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_neglect",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_bullying",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_harassment",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_discrimination",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_racism",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_tribalism",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_social_exclusion",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_humiliation",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_insult",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_defamation",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_mockery",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_hate",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_abuse_of_authority",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_cyber_bullying",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_rumor_spreading",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_public_panic",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_public_behavior",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_public_decency",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_social_responsibility",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_volunteering",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_charity",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_kindness",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_community_support",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_neighbor_relations",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_workplace_behavior",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_school_behavior",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_teacher_behavior",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_student_behavior",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_professional_ethics",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_civil_behavior",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_social_media_behavior",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_social_cohesion",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_cultural_identity",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_national_identity",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_social_dialogue",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_social_scene_description",
+      "type": "supports"
+    },
+    {
+      "from": "society_domain",
+      "to": "society_social_observation",
+      "type": "supports"
+    }
+  ]
+}

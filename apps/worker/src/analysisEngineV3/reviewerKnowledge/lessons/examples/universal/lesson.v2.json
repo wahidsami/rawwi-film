@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "lesson_version": { "major": 1, "minor": 0, "patch": 1 },
+  "lesson": {
+    "id": "universal_intro",
+    "title": "Universal Narrative Reading",
+    "version": { "major": 1, "minor": 0, "patch": 1 },
+    "language": "en",
+    "summary": "Teach the reviewer to read narrative structure before any subject decision, with better speaker tracing.",
+    "learningObjectives": [
+      "Identify dialogue versus narration.",
+      "Identify speaker and listener cues.",
+      "Preserve ambiguity when the text does not settle the role.",
+      "Prefer the newest curated lesson revision when multiple versions exist."
+    ],
+    "concepts": [
+      {
+        "id": "universal_intro",
+        "title": "Narrative framing",
+        "summary": "How the scene is framed before classification.",
+        "tags": ["universal", "narrative", "versioned"],
+        "target": null,
+        "articleIds": [12]
+      }
+    ],
+    "reviewerQuestions": [
+      {
+        "id": "universal-q1",
+        "purpose": "Check the scene frame.",
+        "expectedAnswerFormat": "short answer",
+        "reasoningGuidance": "Ask what kind of scene this is before looking for a violation.",
+        "evidenceRequirements": ["local chunk", "speaker cues"]
+      }
+    ],
+    "examples": ["A dialogue exchange with visible speakers."],
+    "counterExamples": ["A forced legal conclusion without narrative support."],
+    "exceptions": ["Quoted speech", "Narration"],
+    "evidenceRules": {
+      "minimum": ["A visible dialogue marker."],
+      "strong": ["A full quoted exchange."],
+      "weak": ["A nearby cue that suggests speech."],
+      "insufficient": ["A guess about the speaker with no textual support."],
+      "confidenceGuidance": ["Lower confidence when the frame is ambiguous."]
+    },
+    "conceptRelationships": [],
+    "glossaryReferences": [
+      { "term": "dialogue", "conceptId": "universal_intro", "relation": "anchor", "note": null }
+    ],
+    "gcamMappings": [
+      { "articleId": 12, "articleTitle": "Public order", "articleNumber": "12", "atomNumber": "12-1", "reportTitle": "Universal narrative framing", "note": null }
+    ],
+    "reportTemplates": [
+      { "findingTitle": "Narrative framing note", "reasonTemplate": "The scene is framed as dialogue.", "recommendationTemplate": "Read the speaker cues before classifying.", "severity": "low", "priority": 10, "reportCategory": "universal" }
+    ],
+    "benchmarkReferences": ["universal-benchmark-01"],
+    "prerequisites": [],
+    "relatedLessons": ["security_basics"],
+    "metadata": { "subject": "universal", "category": "academy", "tags": ["universal", "narrative"], "source": "example" }
+  }
+}
+

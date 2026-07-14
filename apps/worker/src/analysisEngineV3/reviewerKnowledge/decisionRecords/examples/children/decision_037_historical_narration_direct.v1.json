@@ -1,0 +1,52 @@
+{
+  "id": "decision_037_historical_narration_direct",
+  "version": "1.0.0",
+  "title": "Historical narration (direct)",
+  "summary": "Historical narration in direct framing.",
+  "originalScenario": "الوثائقي يروي حادثة قديمة عن الإهمال",
+  "reviewQuestion": "Is this historical narration?",
+  "initialSuspicion": "Historical framing.",
+  "possibleConcepts": [
+    "children_neglect"
+  ],
+  "supportingEvidence": [
+    "الوثائقي يروي حادثة قديمة عن الإهمال"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-3"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "historical_narration",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_neglect"
+  ]
+}

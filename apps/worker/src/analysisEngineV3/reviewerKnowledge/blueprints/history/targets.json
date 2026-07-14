@@ -1,0 +1,78 @@
+{
+  "version": "1.0.0",
+  "id": "historical_targets",
+  "title": "History Targets",
+  "description": "Canonical history targets for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "historical_target_person",
+      "title": "Target Person",
+      "description": "Target Person as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_leader",
+      "title": "Target Leader",
+      "description": "Target Leader as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_event",
+      "title": "Target Event",
+      "description": "Target Event as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_battle",
+      "title": "Target Battle",
+      "description": "Target Battle as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_state",
+      "title": "Target State",
+      "description": "Target State as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_empire",
+      "title": "Target Empire",
+      "description": "Target Empire as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_dynasty",
+      "title": "Target Dynasty",
+      "description": "Target Dynasty as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_symbol",
+      "title": "Target Symbol",
+      "description": "Target Symbol as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_site",
+      "title": "Target Site",
+      "description": "Target Site as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_archive",
+      "title": "Target Archive",
+      "description": "Target Archive as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_timeline",
+      "title": "Target Timeline",
+      "description": "Target Timeline as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_culture",
+      "title": "Target Culture",
+      "description": "Target Culture as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_identity",
+      "title": "Target Identity",
+      "description": "Target Identity as a reviewer-relevant historical target."
+    },
+    {
+      "id": "historical_target_tradition",
+      "title": "Target Tradition",
+      "description": "Target Tradition as a reviewer-relevant historical target."
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "session": "GCAM POPULATION SESSION 001",
+  "topic": "Finding Identification",
+  "coverageBefore": {
+    "sourceBackedNotes": 0,
+    "lessonUpdates": 0,
+    "patternUpdates": 0,
+    "decisionRecordUpdates": 0,
+    "benchmarkUpdates": 0,
+    "reviewerNotesUpdates": 0,
+    "knowledgeDebtItems": 0
+  },
+  "coverageAfter": {
+    "sourceBackedNotes": 1,
+    "lessonUpdates": 1,
+    "patternUpdates": 1,
+    "decisionRecordUpdates": 1,
+    "benchmarkUpdates": 1,
+    "reviewerNotesUpdates": 1,
+    "knowledgeDebtItems": 1
+  },
+  "knowledgeAdded": [
+    "A single finding may map to multiple canonical atoms.",
+    "Primary atom selection is deterministic and uses semantic strength, severity, and clarity.",
+    "Article-based clustering should not override canonical atom clustering."
+  ],
+  "decisionRecordsAdded": 0,
+  "decisionRecordsUpdated": 1,
+  "lessonsUpdated": 1,
+  "benchmarksUpdated": 1,
+  "patternLibrariesUpdated": 1,
+  "reviewerNotesUpdated": 1,
+  "knowledgeDebtCreated": [
+    "KD-GCAM-FINDING-IDENTIFICATION-001"
+  ],
+  "reviewerConfidence": "high",
+  "remainingGaps": [
+    "No dedicated official GCAM finding-identification article or slide was found in the repository source set."
+  ],
+  "readyForSession002": true
+}

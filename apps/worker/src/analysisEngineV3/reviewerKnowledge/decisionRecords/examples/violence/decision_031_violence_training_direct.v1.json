@@ -1,0 +1,55 @@
+{
+  "id": "violence_031_violence_training_direct",
+  "version": "1.0.0",
+  "title": "Violence Training (direct)",
+  "summary": "Violence Training in direct framing.",
+  "originalScenario": "التدريب يوضح كيف نتجنب العنف.",
+  "reviewQuestion": "Is this violence training?",
+  "initialSuspicion": "Possible violence training.",
+  "possibleConcepts": [
+    "violence_training"
+  ],
+  "supportingEvidence": [
+    "التدريب يوضح كيف نتجنب العنف."
+  ],
+  "contradictingEvidence": [
+    "Clear condemnation or factual reporting."
+  ],
+  "requiredMissingEvidence": [
+    "Violent endorsement."
+  ],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "exception",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_training",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_training"
+  ]
+}

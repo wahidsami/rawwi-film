@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "religion_evidence",
+  "title": "Religion Evidence",
+  "description": "Evidence hierarchy for religion reasoning.",
+  "entries": [
+    {
+      "id": "religion_evidence_direct_insult",
+      "title": "Direct Insult",
+      "description": "A literal insult against religion or its sanctities."
+    },
+    {
+      "id": "religion_evidence_indirect_mockery",
+      "title": "Indirect Mockery",
+      "description": "An implied or coded mockery that still clearly targets religion."
+    },
+    {
+      "id": "religion_evidence_desecration",
+      "title": "Desecration",
+      "description": "A literal act or statement showing desecration of a sacred object or place."
+    },
+    {
+      "id": "religion_evidence_symbols",
+      "title": "Symbols",
+      "description": "A visible symbol or sacred marker used in a harmful way."
+    },
+    {
+      "id": "religion_evidence_sectarian",
+      "title": "Sectarian Language",
+      "description": "Language that divides communities or creates hostility."
+    },
+    {
+      "id": "religion_evidence_historical",
+      "title": "Historical Reference",
+      "description": "A historical reference that is descriptive rather than endorsing."
+    },
+    {
+      "id": "religion_evidence_academic",
+      "title": "Academic Discussion",
+      "description": "A scholarly explanation with no endorsement."
+    },
+    {
+      "id": "religion_evidence_quotation",
+      "title": "Quotation",
+      "description": "A quoted line rather than direct endorsement."
+    },
+    {
+      "id": "religion_evidence_condemnation",
+      "title": "Condemnation",
+      "description": "A line explicitly rejecting harmful content."
+    },
+    {
+      "id": "religion_evidence_context",
+      "title": "Contextual Support",
+      "description": "Surrounding context that clarifies the religious meaning."
+    }
+  ]
+}

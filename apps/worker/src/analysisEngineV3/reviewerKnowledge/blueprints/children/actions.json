@@ -1,0 +1,103 @@
+{
+  "version": "1.0.0",
+  "id": "children_actions",
+  "title": "Children Actions",
+  "description": "Canonical harmful actions for child-safety reasoning.",
+  "entries": [
+    {
+      "id": "children_action_physical_abuse",
+      "title": "Physical Abuse",
+      "description": "Direct bodily harm or violent treatment."
+    },
+    {
+      "id": "children_action_psychological_abuse",
+      "title": "Psychological Abuse",
+      "description": "Emotional cruelty, coercion, or mental pressure."
+    },
+    {
+      "id": "children_action_humiliation",
+      "title": "Humiliation",
+      "description": "Degrading or shaming behaviour."
+    },
+    {
+      "id": "children_action_bullying",
+      "title": "Bullying",
+      "description": "Repeated intimidation or harassment."
+    },
+    {
+      "id": "children_action_threatening",
+      "title": "Threatening",
+      "description": "Threats or intimidation."
+    },
+    {
+      "id": "children_action_fear_induction",
+      "title": "Fear Induction",
+      "description": "Deliberately causing fear."
+    },
+    {
+      "id": "children_action_neglect",
+      "title": "Neglect",
+      "description": "Withholding care, food, safety, or supervision."
+    },
+    {
+      "id": "children_action_abandonment",
+      "title": "Abandonment",
+      "description": "Leaving a dependent person unsupported."
+    },
+    {
+      "id": "children_action_exploitation",
+      "title": "Exploitation",
+      "description": "Using a person for gain or labour."
+    },
+    {
+      "id": "children_action_sexual_exploitation",
+      "title": "Sexual Exploitation",
+      "description": "Sexual abuse, coercion, or exploitation."
+    },
+    {
+      "id": "children_action_grooming",
+      "title": "Grooming",
+      "description": "Manipulative preparation for abuse or exploitation."
+    },
+    {
+      "id": "children_action_trafficking",
+      "title": "Human Trafficking",
+      "description": "Recruiting or moving a person for exploitation."
+    },
+    {
+      "id": "children_action_recruitment",
+      "title": "Child Recruitment",
+      "description": "Recruiting a child into harmful activity."
+    },
+    {
+      "id": "children_action_forced_labor",
+      "title": "Forced Labor",
+      "description": "Compelling work through pressure or control."
+    },
+    {
+      "id": "children_action_criminal_exploitation",
+      "title": "Criminal Exploitation",
+      "description": "Using a vulnerable person for criminal activity."
+    },
+    {
+      "id": "children_action_mocking_disability",
+      "title": "Mocking Disability",
+      "description": "Ridicule aimed at disability."
+    },
+    {
+      "id": "children_action_discrimination",
+      "title": "Discrimination",
+      "description": "Unequal or hostile treatment of a protected person."
+    },
+    {
+      "id": "children_action_isolation",
+      "title": "Isolation",
+      "description": "Deliberate social exclusion."
+    },
+    {
+      "id": "children_action_endangerment",
+      "title": "Endangerment",
+      "description": "Exposing a vulnerable person to danger."
+    }
+  ]
+}

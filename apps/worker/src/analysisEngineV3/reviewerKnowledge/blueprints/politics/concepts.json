@@ -1,0 +1,253 @@
+{
+  "version": "1.0.0",
+  "id": "politics_concepts",
+  "title": "Politics Concepts",
+  "description": "Canonical politics concepts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "state_reference",
+      "title": "State Reference",
+      "description": "State Reference reasoning in politics and state content."
+    },
+    {
+      "id": "government_reference",
+      "title": "Government Reference",
+      "description": "Government Reference reasoning in politics and state content."
+    },
+    {
+      "id": "head_of_state",
+      "title": "Head Of State",
+      "description": "Head Of State reasoning in politics and state content."
+    },
+    {
+      "id": "royal_family",
+      "title": "Royal Family",
+      "description": "Royal Family reasoning in politics and state content."
+    },
+    {
+      "id": "government_institution",
+      "title": "Government Institution",
+      "description": "Government Institution reasoning in politics and state content."
+    },
+    {
+      "id": "public_official",
+      "title": "Public Official",
+      "description": "Public Official reasoning in politics and state content."
+    },
+    {
+      "id": "constitutional_reference",
+      "title": "Constitutional Reference",
+      "description": "Constitutional Reference reasoning in politics and state content."
+    },
+    {
+      "id": "state_scene_description",
+      "title": "State Scene Description",
+      "description": "State Scene Description reasoning in politics and state content."
+    },
+    {
+      "id": "state_observation",
+      "title": "State Observation",
+      "description": "State Observation reasoning in politics and state content."
+    },
+    {
+      "id": "national_flag",
+      "title": "National Flag",
+      "description": "National Flag reasoning in politics and state content."
+    },
+    {
+      "id": "national_anthem",
+      "title": "National Anthem",
+      "description": "National Anthem reasoning in politics and state content."
+    },
+    {
+      "id": "national_symbol",
+      "title": "National Symbol",
+      "description": "National Symbol reasoning in politics and state content."
+    },
+    {
+      "id": "national_identity",
+      "title": "National Identity",
+      "description": "National Identity reasoning in politics and state content."
+    },
+    {
+      "id": "national_unity",
+      "title": "National Unity",
+      "description": "National Unity reasoning in politics and state content."
+    },
+    {
+      "id": "patriotism",
+      "title": "Patriotism",
+      "description": "Patriotism reasoning in politics and state content."
+    },
+    {
+      "id": "foreign_government",
+      "title": "Foreign Government",
+      "description": "Foreign Government reasoning in politics and state content."
+    },
+    {
+      "id": "foreign_leader",
+      "title": "Foreign Leader",
+      "description": "Foreign Leader reasoning in politics and state content."
+    },
+    {
+      "id": "international_organization",
+      "title": "International Organization",
+      "description": "International Organization reasoning in politics and state content."
+    },
+    {
+      "id": "diplomatic_relations",
+      "title": "Diplomatic Relations",
+      "description": "Diplomatic Relations reasoning in politics and state content."
+    },
+    {
+      "id": "international_conflict",
+      "title": "International Conflict",
+      "description": "International Conflict reasoning in politics and state content."
+    },
+    {
+      "id": "state_security",
+      "title": "State Security",
+      "description": "State Security reasoning in politics and state content."
+    },
+    {
+      "id": "national_security",
+      "title": "National Security",
+      "description": "National Security reasoning in politics and state content."
+    },
+    {
+      "id": "treason",
+      "title": "Treason",
+      "description": "Treason reasoning in politics and state content."
+    },
+    {
+      "id": "espionage",
+      "title": "Espionage",
+      "description": "Espionage reasoning in politics and state content."
+    },
+    {
+      "id": "military_reference",
+      "title": "Military Reference",
+      "description": "Military Reference reasoning in politics and state content."
+    },
+    {
+      "id": "armed_forces",
+      "title": "Armed Forces",
+      "description": "Armed Forces reasoning in politics and state content."
+    },
+    {
+      "id": "intelligence_services",
+      "title": "Intelligence Services",
+      "description": "Intelligence Services reasoning in politics and state content."
+    },
+    {
+      "id": "police_institution",
+      "title": "Police Institution",
+      "description": "Police Institution reasoning in politics and state content."
+    },
+    {
+      "id": "political_dialogue",
+      "title": "Political Dialogue",
+      "description": "Political Dialogue reasoning in politics and state content."
+    },
+    {
+      "id": "political_debate",
+      "title": "Political Debate",
+      "description": "Political Debate reasoning in politics and state content."
+    },
+    {
+      "id": "political_satire",
+      "title": "Political Satire",
+      "description": "Political Satire reasoning in politics and state content."
+    },
+    {
+      "id": "political_criticism",
+      "title": "Political Criticism",
+      "description": "Political Criticism reasoning in politics and state content."
+    },
+    {
+      "id": "political_support",
+      "title": "Political Support",
+      "description": "Political Support reasoning in politics and state content."
+    },
+    {
+      "id": "political_glorification",
+      "title": "Political Glorification",
+      "description": "Political Glorification reasoning in politics and state content."
+    },
+    {
+      "id": "political_encouragement",
+      "title": "Political Encouragement",
+      "description": "Political Encouragement reasoning in politics and state content."
+    },
+    {
+      "id": "political_propaganda",
+      "title": "Political Propaganda",
+      "description": "Political Propaganda reasoning in politics and state content."
+    },
+    {
+      "id": "political_instruction",
+      "title": "Political Instruction",
+      "description": "Political Instruction reasoning in politics and state content."
+    },
+    {
+      "id": "political_documentary",
+      "title": "Political Documentary",
+      "description": "Political Documentary reasoning in politics and state content."
+    },
+    {
+      "id": "political_news",
+      "title": "Political News",
+      "description": "Political News reasoning in politics and state content."
+    },
+    {
+      "id": "political_historical",
+      "title": "Political Historical",
+      "description": "Political Historical reasoning in politics and state content."
+    },
+    {
+      "id": "political_educational",
+      "title": "Political Educational",
+      "description": "Political Educational reasoning in politics and state content."
+    },
+    {
+      "id": "political_rally",
+      "title": "Political Rally",
+      "description": "Political Rally reasoning in politics and state content."
+    },
+    {
+      "id": "public_demonstration",
+      "title": "Public Demonstration",
+      "description": "Public Demonstration reasoning in politics and state content."
+    },
+    {
+      "id": "civil_unrest",
+      "title": "Civil Unrest",
+      "description": "Civil Unrest reasoning in politics and state content."
+    },
+    {
+      "id": "riot",
+      "title": "Riot",
+      "description": "Riot reasoning in politics and state content."
+    },
+    {
+      "id": "revolution_reference",
+      "title": "Revolution Reference",
+      "description": "Revolution Reference reasoning in politics and state content."
+    },
+    {
+      "id": "coup_reference",
+      "title": "Coup Reference",
+      "description": "Coup Reference reasoning in politics and state content."
+    },
+    {
+      "id": "election_reference",
+      "title": "Election Reference",
+      "description": "Election Reference reasoning in politics and state content."
+    },
+    {
+      "id": "voting_reference",
+      "title": "Voting Reference",
+      "description": "Voting Reference reasoning in politics and state content."
+    }
+  ]
+}

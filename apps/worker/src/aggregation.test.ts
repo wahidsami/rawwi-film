@@ -2,10 +2,10 @@
  * Tests for report aggregation: taxonomy order, dedup, article 26 excluded.
  * Run: npx tsx src/aggregation.test.ts (from apps/worker or repo root)
  */
-import { buildSummaryJson } from "./aggregation.js";
+import { buildReportHtml, buildSummaryJson } from "./aggregation.js";
 import { getPolicyArticles } from "./policyMap.js";
 
-type DbFinding = {
+type TestFinding = {
   source?: string;
   article_id: number;
   atom_id: string | null;
@@ -18,7 +18,8 @@ type DbFinding = {
   end_offset_global: number | null;
   start_line_chunk: number | null;
   end_line_chunk: number | null;
-  location: unknown;
+  location: ({ start_offset?: number | null; end_offset?: number | null } & Record<string, unknown>) | null;
+  rationale_ar?: string | null;
 };
 
 function assert(cond: boolean, msg: string) {
@@ -29,7 +30,7 @@ function assert(cond: boolean, msg: string) {
 function testArticleOrder() {
   const policyArticles = getPolicyArticles().filter((a) => a.articleId !== 26);
   const expectedIds = policyArticles.map((a) => a.articleId);
-  const findings: DbFinding[] = [
+  const findings: TestFinding[] = [
     { article_id: 8, atom_id: "8-1", severity: "low", confidence: 0.9, title_ar: "x", description_ar: "", evidence_snippet: "a", start_offset_global: 0, end_offset_global: 1, start_line_chunk: null, end_line_chunk: null, location: {} },
     { article_id: 5, atom_id: "5-1", severity: "medium", confidence: 0.8, title_ar: "y", description_ar: "", evidence_snippet: "b", start_offset_global: 10, end_offset_global: 11, start_line_chunk: null, end_line_chunk: null, location: {} },
     { article_id: 5, atom_id: "5-2", severity: "low", confidence: 0.7, title_ar: "z", description_ar: "", evidence_snippet: "c", start_offset_global: 20, end_offset_global: 21, start_line_chunk: null, end_line_chunk: null, location: {} },
@@ -51,7 +52,7 @@ function testArticleOrder() {
 // Dedup: same source+article+atom+span+snippet → one finding, highest severity kept
 function testDedup() {
   const snippet = "same evidence text";
-  const findings: DbFinding[] = [
+  const findings: TestFinding[] = [
     { source: "ai", article_id: 5, atom_id: "5-1", severity: "low", confidence: 0.5, title_ar: "a", description_ar: "", evidence_snippet: snippet, start_offset_global: 0, end_offset_global: 10, start_line_chunk: null, end_line_chunk: null, location: {} },
     { source: "ai", article_id: 5, atom_id: "5-1", severity: "high", confidence: 0.9, title_ar: "b", description_ar: "", evidence_snippet: snippet, start_offset_global: 0, end_offset_global: 10, start_line_chunk: null, end_line_chunk: null, location: {} },
   ];
@@ -63,7 +64,7 @@ function testDedup() {
 
 // Article 26 excluded from report
 function testArticle26Excluded() {
-  const findings: DbFinding[] = [
+  const findings: TestFinding[] = [
     { article_id: 26, atom_id: null, severity: "critical", confidence: 1, title_ar: "out", description_ar: "", evidence_snippet: "x", start_offset_global: 0, end_offset_global: 1, start_line_chunk: null, end_line_chunk: null, location: {} },
   ];
   const summary = buildSummaryJson("job1", "script1", findings);
@@ -74,7 +75,7 @@ function testArticle26Excluded() {
 
 // Source badge labels (conceptual: we only test that summary builds; badge is UI)
 function testSummaryHasFindingsByArticle() {
-  const findings: DbFinding[] = [
+  const findings: TestFinding[] = [
     { source: "manual", article_id: 5, atom_id: "5-1", severity: "medium", confidence: 1, title_ar: "ملاحظة يدوية", description_ar: "", evidence_snippet: "m", start_offset_global: 0, end_offset_global: 1, start_line_chunk: null, end_line_chunk: null, location: {} },
     { source: "ai", article_id: 5, atom_id: "5-2", severity: "low", confidence: 0.8, title_ar: "AI", description_ar: "", evidence_snippet: "ai", start_offset_global: 2, end_offset_global: 3, start_line_chunk: null, end_line_chunk: null, location: {} },
     { source: "lexicon_mandatory", article_id: 8, atom_id: "8-1", severity: "high", confidence: 1, title_ar: "قاموس", description_ar: "", evidence_snippet: "lex", start_offset_global: 5, end_offset_global: 6, start_line_chunk: null, end_line_chunk: null, location: {} },
@@ -85,11 +86,68 @@ function testSummaryHasFindingsByArticle() {
   console.log("✓ Summary includes findings from AI, manual, glossary (sources for badge)");
 }
 
+function testReportOverviewAndHtml() {
+  const findings: TestFinding[] = [
+    {
+      source: "ai",
+      article_id: 5,
+      atom_id: "5-1",
+      severity: "high",
+      confidence: 0.91,
+      title_ar: "تهديد مباشر",
+      description_ar: "وصف داعم للمخالفة",
+      evidence_snippet: "سأقتلك",
+      start_offset_global: 10,
+      end_offset_global: 14,
+      start_line_chunk: 1,
+      end_line_chunk: 1,
+      location: { v3: { scene: "scene-1" } },
+    },
+    {
+      source: "ai",
+      article_id: 8,
+      atom_id: "8-1",
+      severity: "low",
+      confidence: 0.72,
+      title_ar: "Travel observation",
+      description_ar: "Travel mention only",
+      evidence_snippet: "Travel to India",
+      start_offset_global: 20,
+      end_offset_global: 24,
+      start_line_chunk: 2,
+      end_line_chunk: 2,
+      location: { v3: { scene: "scene-2" } },
+      rationale_ar: "ليس مخالفة؛ مجرد ملاحظة سياقية.",
+    },
+  ];
+
+  const summary = buildSummaryJson("job-report", "script-report", findings);
+  const canonical = [...(summary.canonical_findings ?? [])];
+  summary.canonical_findings = [canonical[0]];
+  summary.report_hints = [canonical[1]];
+  summary.totals.findings_count = summary.canonical_findings.length;
+  summary.totals.severity_counts = { low: 0, medium: 0, high: 1, critical: 0 };
+  summary.report_overview = undefined;
+
+  const html = buildReportHtml(summary);
+  assert(html.includes("ملخص التقرير"), "Report summary section should render");
+  assert(html.includes("إجمالي الملاحظات"), "Report summary should include observation totals");
+  assert(html.includes("5"), "Report summary should include article 5");
+  assert(html.includes("8"), "Report summary should include article 8");
+  assert(html.includes("GCAM Article Number"), "Finding detail should expose GCAM article number");
+  assert(html.includes("Observation Title"), "Observation section should expose observation title");
+  assert(html.includes("Decision Records Used"), "Finding detail should expose decision record placeholder");
+  assert(html.includes("Pattern Libraries Used"), "Finding detail should expose pattern library placeholder");
+  assert(html.includes("Reviewer Notes Used"), "Finding detail should expose reviewer notes placeholder");
+  console.log("✓ Report summary and presentation fields render deterministically");
+}
+
 async function main() {
   testArticleOrder();
   testDedup();
   testArticle26Excluded();
   testSummaryHasFindingsByArticle();
+  testReportOverviewAndHtml();
   console.log("\nAll aggregation tests passed.");
 }
 

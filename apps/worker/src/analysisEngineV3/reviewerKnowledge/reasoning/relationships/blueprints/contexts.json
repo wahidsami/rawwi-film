@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "id": "relationships_contexts",
+  "title": "Relationship Contexts",
+  "description": "Scene contexts that influence relationship meaning.",
+  "entries": [
+    {
+      "id": "relationship_context_dialogue",
+      "title": "Dialogue",
+      "description": "Speech exchanged between characters."
+    },
+    {
+      "id": "relationship_context_narration",
+      "title": "Narration",
+      "description": "Narrative description rather than dialogue."
+    },
+    {
+      "id": "relationship_context_scene_description",
+      "title": "Scene Description",
+      "description": "Visual or staging description."
+    },
+    {
+      "id": "relationship_context_documentary",
+      "title": "Documentary",
+      "description": "Documentary framing or reporting."
+    },
+    {
+      "id": "relationship_context_court",
+      "title": "Court",
+      "description": "Courtroom or legal testimony context."
+    },
+    {
+      "id": "relationship_context_news",
+      "title": "News",
+      "description": "News reporting or journalistic framing."
+    },
+    {
+      "id": "relationship_context_education",
+      "title": "Education",
+      "description": "Teaching, explanation, or instruction."
+    },
+    {
+      "id": "relationship_context_flashback",
+      "title": "Flashback",
+      "description": "A recollected past event."
+    },
+    {
+      "id": "relationship_context_dream",
+      "title": "Dream",
+      "description": "A dream or dreamlike frame."
+    }
+  ]
+}

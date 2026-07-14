@@ -1,0 +1,58 @@
+{
+  "id": "decision_028_isolation_quoted",
+  "version": "1.0.0",
+  "title": "Isolation (quoted)",
+  "summary": "Isolation in quoted framing.",
+  "originalScenario": "قال الراوي: \"يعزله عن أصدقائه\"",
+  "reviewQuestion": "Is this isolation?",
+  "initialSuspicion": "Deliberate exclusion.",
+  "possibleConcepts": [
+    "children_vulnerable_person",
+    "children_isolation"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: يعزله عن أصدقائه"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-5"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "isolation",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_vulnerable_person",
+    "children_isolation"
+  ]
+}

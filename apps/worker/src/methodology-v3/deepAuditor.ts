@@ -46,8 +46,8 @@ function uniqueNums(values: Array<number | null | undefined>): number[] {
   return [...new Set(values.filter((v): v is number => typeof v === "number" && Number.isFinite(v)))];
 }
 
-function normalizeRelated(related: number[], primaryArticle: number): number[] {
-  return uniqueNums(related)
+function normalizeRelated(related: readonly number[], primaryArticle: number): number[] {
+  return uniqueNums([...related])
     .filter((id) => id >= 1 && id <= 25 && id !== primaryArticle);
 }
 

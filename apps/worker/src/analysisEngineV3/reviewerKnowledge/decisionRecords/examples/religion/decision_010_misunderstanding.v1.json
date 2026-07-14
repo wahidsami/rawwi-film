@@ -1,0 +1,70 @@
+{
+  "id": "decision_010_misunderstanding",
+  "version": "1.0.0",
+  "title": "Misunderstanding of religious term",
+  "summary": "A term is misunderstood and should not be treated as abuse.",
+  "originalScenario": "A character uses a religious term in a way that another character misreads.",
+  "reviewQuestion": "Is the meaning actually hostile?",
+  "initialSuspicion": "Possible misunderstanding.",
+  "possibleConcepts": [
+    "religion_islamic_religion",
+    "religious_scholars"
+  ],
+  "supportingEvidence": [
+    "another character misreads the term"
+  ],
+  "contradictingEvidence": [
+    "later clarification"
+  ],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Dialogue clarification.",
+  "speakerAnalysis": "Speaker later clarifies intent.",
+  "targetAnalysis": "No protected target intended.",
+  "intentAnalysis": "Neutral clarification.",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check context",
+    "Apply religion pack heuristics",
+    "Map to GCAM article"
+  ],
+  "reviewerDecision": "No finding",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 3,
+      "atom_ids": [],
+      "note": "Clarification only."
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Do not convert misunderstanding into a finding.",
+  "benchmarkTags": [
+    "religion",
+    "misunderstanding"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "religion_pattern_academic"
+  ],
+  "relatedBlueprintConcepts": [
+    "religion_islamic_religion",
+    "religion_religious_scholars"
+  ]
+}

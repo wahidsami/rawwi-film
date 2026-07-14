@@ -1,0 +1,188 @@
+{
+  "version": "1.0.0",
+  "id": "narrative_concepts",
+  "title": "Narrative Concepts",
+  "description": "Core story-level concepts used by the narrative reasoning layer.",
+  "entries": [
+    {
+      "id": "story_arc",
+      "title": "Story Arc",
+      "description": "Overall story progression from setup to resolution."
+    },
+    {
+      "id": "story_goal",
+      "title": "Story Goal",
+      "description": "The objective driving the story forward."
+    },
+    {
+      "id": "story_conflict",
+      "title": "Story Conflict",
+      "description": "The central pressure or opposition in the story."
+    },
+    {
+      "id": "story_resolution",
+      "title": "Story Resolution",
+      "description": "The ending phase that resolves or transforms the conflict."
+    },
+    {
+      "id": "story_progression",
+      "title": "Story Progression",
+      "description": "The ordered movement of events across the narrative."
+    },
+    {
+      "id": "scene_goal",
+      "title": "Scene Goal",
+      "description": "The purpose of a scene at the local level."
+    },
+    {
+      "id": "scene_transition",
+      "title": "Scene Transition",
+      "description": "A shift between scenes, beats, or locations."
+    },
+    {
+      "id": "character_arc",
+      "title": "Character Arc",
+      "description": "A character's evolution across the story."
+    },
+    {
+      "id": "relationship_arc",
+      "title": "Relationship Arc",
+      "description": "The changing bond between characters over time."
+    },
+    {
+      "id": "motivation_change",
+      "title": "Motivation Change",
+      "description": "A shift in what a character wants or why they act."
+    },
+    {
+      "id": "belief_change",
+      "title": "Belief Change",
+      "description": "A shift in what a character believes to be true."
+    },
+    {
+      "id": "moral_change",
+      "title": "Moral Change",
+      "description": "A shift in a character's ethical stance."
+    },
+    {
+      "id": "tone_shift",
+      "title": "Tone Shift",
+      "description": "A noticeable change in emotional or stylistic tone."
+    },
+    {
+      "id": "theme",
+      "title": "Theme",
+      "description": "The central idea or message of the story."
+    },
+    {
+      "id": "subtext",
+      "title": "Subtext",
+      "description": "Meaning implied beneath the literal wording."
+    },
+    {
+      "id": "hidden_meaning",
+      "title": "Hidden Meaning",
+      "description": "Meaning revealed by context rather than explicit wording."
+    },
+    {
+      "id": "symbolism",
+      "title": "Symbolism",
+      "description": "Objects or actions that stand for deeper meaning."
+    },
+    {
+      "id": "foreshadowing",
+      "title": "Foreshadowing",
+      "description": "An earlier clue that points toward a later event."
+    },
+    {
+      "id": "callback",
+      "title": "Callback",
+      "description": "A later reference to an earlier detail."
+    },
+    {
+      "id": "plot_twist",
+      "title": "Plot Twist",
+      "description": "A surprising change that reinterprets previous events."
+    },
+    {
+      "id": "red_herring",
+      "title": "Red Herring",
+      "description": "A misleading clue that pulls attention away from the real meaning."
+    },
+    {
+      "id": "flashback",
+      "title": "Flashback",
+      "description": "A return to an earlier event in time."
+    },
+    {
+      "id": "flashforward",
+      "title": "Flashforward",
+      "description": "A preview of a later event or outcome."
+    },
+    {
+      "id": "dream",
+      "title": "Dream",
+      "description": "A scene framed as a dream or dreamlike experience."
+    },
+    {
+      "id": "hallucination",
+      "title": "Hallucination",
+      "description": "A scene framed as perception that may not be real."
+    },
+    {
+      "id": "imaginary_sequence",
+      "title": "Imaginary Sequence",
+      "description": "A sequence that exists only in a character's mind."
+    },
+    {
+      "id": "voice_over",
+      "title": "Voice Over",
+      "description": "Narration spoken over the visual scene."
+    },
+    {
+      "id": "unreliable_narrator",
+      "title": "Unreliable Narrator",
+      "description": "A narrator whose account may not be trustworthy."
+    },
+    {
+      "id": "parallel_story",
+      "title": "Parallel Story",
+      "description": "A second story line that mirrors or contrasts the first."
+    },
+    {
+      "id": "background_story",
+      "title": "Background Story",
+      "description": "Events that happened before the current scene."
+    },
+    {
+      "id": "scene_description",
+      "title": "Scene Description",
+      "description": "Visual or written description of what is happening."
+    },
+    {
+      "id": "environmental_storytelling",
+      "title": "Environmental Storytelling",
+      "description": "Meaning conveyed through objects, space, or setting."
+    },
+    {
+      "id": "off_screen_event",
+      "title": "Off Screen Event",
+      "description": "An event that happens outside the visible scene."
+    },
+    {
+      "id": "implicit_event",
+      "title": "Implicit Event",
+      "description": "An event inferred from context rather than directly shown."
+    },
+    {
+      "id": "missing_information",
+      "title": "Missing Information",
+      "description": "A gap that prevents a full conclusion."
+    },
+    {
+      "id": "time_skip",
+      "title": "Time Skip",
+      "description": "A jump forward or backward in time."
+    }
+  ]
+}

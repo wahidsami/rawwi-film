@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "religion_relationships",
+  "title": "Religion Relationships",
+  "description": "Graph relationships between religion blueprint entities.",
+  "entries": [
+    {
+      "from": "religion_islamic_religion",
+      "to": "religion_religious_sanctities",
+      "type": "supports"
+    },
+    {
+      "from": "religion_religious_sanctities",
+      "to": "religion_holy_places",
+      "type": "related"
+    },
+    {
+      "from": "religion_holy_books",
+      "to": "religion_religious_symbols",
+      "type": "supports"
+    },
+    {
+      "from": "religion_prophets",
+      "to": "religion_companions",
+      "type": "related"
+    },
+    {
+      "from": "religion_religious_rituals",
+      "to": "religion_religious_unity",
+      "type": "supports"
+    },
+    {
+      "from": "religion_religious_hate_speech",
+      "to": "religion_sectarian_division",
+      "type": "supports"
+    },
+    {
+      "from": "religion_sectarian_division",
+      "to": "religion_religious_unity",
+      "type": "opposite"
+    },
+    {
+      "from": "religion_religious_scholars",
+      "to": "religion_religious_rituals",
+      "type": "supports"
+    },
+    {
+      "from": "religion_prophets",
+      "to": "religion_holy_books",
+      "type": "related"
+    },
+    {
+      "from": "religion_holy_places",
+      "to": "religion_religious_symbols",
+      "type": "related"
+    }
+  ]
+}

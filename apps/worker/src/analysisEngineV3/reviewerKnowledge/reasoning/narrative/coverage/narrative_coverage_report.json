@@ -1,0 +1,557 @@
+{
+  "domainId": "narrative",
+  "domainTitle": "Narrative Intelligence Framework",
+  "domainVersion": "1.0.0",
+  "blueprint": {
+    "title": "Blueprint",
+    "present": 9,
+    "expected": 9,
+    "coveragePercent": 100,
+    "missing": [
+      "actions.json",
+      "concepts.json",
+      "contexts.json",
+      "domain.json",
+      "evidence.json",
+      "intents.json",
+      "relationships.json",
+      "reviewquestions.json",
+      "targets.json"
+    ],
+    "warnings": [],
+    "notes": [
+      "86930d59cab7c1d50664f3bf2c049cd486d110670b74c42880c0856c1117b81b"
+    ],
+    "hash": "083eac1922c86d4dba78aff48b3873ace7c42d7493ff2908c9502267c7824697"
+  },
+  "knowledgePack": {
+    "title": "Knowledge Pack",
+    "present": 36,
+    "expected": 36,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "narrative intelligence framework",
+      "pack=d:\\waheed\\mypprojects\\raawifilm fix\\apps\\worker\\src\\analysisenginev3\\reviewerknowledge\\reasoning\\narrative\\academy\\pack.v1.json"
+    ],
+    "hash": "4e221ec1e61f85474e55ed221957ec03a3530e41f58b39e8b8bb9eb3bb4fece6"
+  },
+  "lessons": {
+    "title": "Lessons",
+    "present": 14,
+    "expected": 14,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [],
+    "hash": "e76f9e3c84e022aeacb5e6fca83cc350654bceedbaa715282f7ca2a60d14bbe1"
+  },
+  "patterns": {
+    "title": "Patterns",
+    "present": 36,
+    "expected": 36,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "1 pattern library documents loaded"
+    ],
+    "hash": "b44ee6b72ed199d5fee7f5a4ae5b7972dcf4925b1a6bec759ad5d4f1bf55085a"
+  },
+  "decisionRecords": {
+    "title": "Decision Records",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "144 decision records loaded"
+    ],
+    "hash": "8814029dcb7233b80aa0444d179ddd0d4904b153e4e24749a7aae0cea8704467"
+  },
+  "benchmarks": {
+    "title": "Benchmarks",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "324 benchmark cases loaded"
+    ],
+    "hash": "33ab7a30dc2feb2b19da737d373e708a89eedea8f4dec060eb2803588cf89294"
+  },
+  "metrics": {
+    "conceptCount": 36,
+    "duplicateConceptCount": 0,
+    "missingConceptCount": 0,
+    "missingPatternCoverage": 0,
+    "missingDecisionCoverage": 0,
+    "missingBenchmarkCoverage": 0,
+    "glossaryCoverage": 100,
+    "crossSentenceCoverage": 100,
+    "crossSceneCoverage": 100,
+    "descriptionCoverage": 100,
+    "dialogueCoverage": 100,
+    "observationCoverage": 100,
+    "contextsCoverage": 100,
+    "targetsCoverage": 100,
+    "actionsCoverage": 100,
+    "intentsCoverage": 100,
+    "relationshipsCoverage": 100,
+    "evidenceRulesCoverage": 100,
+    "exceptionsCoverage": 100,
+    "falsePositivesCoverage": 100,
+    "falseNegativesCoverage": 100,
+    "reviewerQuestionsCoverage": 100,
+    "methodologyCoverage": 0,
+    "gcamMappingCoverage": 100,
+    "topics": [
+      {
+        "id": "actions",
+        "title": "Actions Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "narrative_action_contrast",
+          "narrative_action_foreshadow",
+          "narrative_action_imply",
+          "narrative_action_intensify",
+          "narrative_action_mirror",
+          "narrative_action_observe",
+          "narrative_action_reinterpret",
+          "narrative_action_resolve",
+          "narrative_action_reveal",
+          "narrative_action_transition"
+        ],
+        "missing": []
+      },
+      {
+        "id": "concepts",
+        "title": "Concept Coverage",
+        "present": 36,
+        "expected": 36,
+        "coveragePercent": 100,
+        "evidence": [
+          "background_story",
+          "belief_change",
+          "callback",
+          "character_arc",
+          "dream",
+          "environmental_storytelling",
+          "flashback",
+          "flashforward",
+          "foreshadowing",
+          "hallucination",
+          "hidden_meaning",
+          "imaginary_sequence",
+          "implicit_event",
+          "missing_information",
+          "moral_change",
+          "motivation_change",
+          "off_screen_event",
+          "parallel_story",
+          "plot_twist",
+          "red_herring",
+          "relationship_arc",
+          "scene_description",
+          "scene_goal",
+          "scene_transition",
+          "story_arc",
+          "story_conflict",
+          "story_goal",
+          "story_progression",
+          "story_resolution",
+          "subtext",
+          "symbolism",
+          "theme",
+          "time_skip",
+          "tone_shift",
+          "unreliable_narrator",
+          "voice_over"
+        ],
+        "missing": []
+      },
+      {
+        "id": "contexts",
+        "title": "Contexts Coverage",
+        "present": 16,
+        "expected": 16,
+        "coveragePercent": 100,
+        "evidence": [
+          "narrative_context_author_endorsement",
+          "narrative_context_character_endorsement",
+          "narrative_context_cross_scene_memory",
+          "narrative_context_dialogue",
+          "narrative_context_dream",
+          "narrative_context_fantasy",
+          "narrative_context_fiction",
+          "narrative_context_flashback",
+          "narrative_context_flashforward",
+          "narrative_context_historical_narration",
+          "narrative_context_narration",
+          "narrative_context_scene_description",
+          "narrative_context_story_endorsement",
+          "narrative_context_unreliable_narrator",
+          "narrative_context_viewer_interpretation",
+          "narrative_context_voice_over"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_scene",
+        "title": "Cross Scene Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross scene reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_sentence",
+        "title": "Cross Sentence Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross sentence reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "description",
+        "title": "Description Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "description coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "dialogue",
+        "title": "Dialogue Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "dialogue coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "duplicate_concepts",
+        "title": "Duplicate Concepts",
+        "present": 0,
+        "expected": 0,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "evidence_rules",
+        "title": "Evidence Rules Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "narrative_evidence_cross_scene",
+          "narrative_evidence_cross_sentence",
+          "narrative_evidence_dialogue",
+          "narrative_evidence_implicit_event",
+          "narrative_evidence_narration",
+          "narrative_evidence_off_screen_event",
+          "narrative_evidence_relationship_shift",
+          "narrative_evidence_scene_action",
+          "narrative_evidence_scene_description",
+          "narrative_evidence_symbolic_detail"
+        ],
+        "missing": []
+      },
+      {
+        "id": "exceptions",
+        "title": "Exceptions Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "dream",
+          "fantasy",
+          "fiction",
+          "flashback",
+          "flashforward",
+          "hallucination",
+          "historical narration",
+          "quotation",
+          "unreliable_narrator",
+          "voice_over"
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_negatives",
+        "title": "False Negatives Coverage",
+        "present": 4,
+        "expected": 4,
+        "coveragePercent": 100,
+        "evidence": [
+          "a dream sequence treated as literal story reality.",
+          "a metaphor or symbol treated as a direct factual event with no supporting context.",
+          "a narrator opinion treated as author endorsement.",
+          "a single sentence treated as the whole story."
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_positives",
+        "title": "False Positives Coverage",
+        "present": 7,
+        "expected": 7,
+        "coveragePercent": 100,
+        "evidence": [
+          "confusing viewer interpretation with story endorsement.",
+          "ignoring later reversal in a cross-scene story arc.",
+          "missing symbolic or off-screen meaning.",
+          "over-reading figurative language that the story does not actually support.",
+          "treating a scene purpose as final story meaning when later scenes alter it.",
+          "treating character speech as the author's own belief.",
+          "treating indirect speech as a direct statement."
+        ],
+        "missing": []
+      },
+      {
+        "id": "gcam_mapping",
+        "title": "GCAM Mapping Coverage",
+        "present": 3,
+        "expected": 3,
+        "coveragePercent": 100,
+        "evidence": [
+          "11",
+          "17",
+          "4"
+        ],
+        "missing": []
+      },
+      {
+        "id": "glossary",
+        "title": "Glossary Coverage",
+        "present": 13,
+        "expected": 13,
+        "coveragePercent": 100,
+        "evidence": [
+          "character arc",
+          "cross scene",
+          "indirect speech",
+          "metaphor",
+          "narrative context",
+          "relationship evolution",
+          "scene",
+          "scene purpose",
+          "story",
+          "story resolution",
+          "subtext",
+          "symbolism",
+          "unreliable narrator"
+        ],
+        "missing": []
+      },
+      {
+        "id": "intents",
+        "title": "Intents Coverage",
+        "present": 12,
+        "expected": 12,
+        "coveragePercent": 100,
+        "evidence": [
+          "narrative_intent_character_opinion",
+          "narrative_intent_documentary",
+          "narrative_intent_educational",
+          "narrative_intent_fictional",
+          "narrative_intent_historical",
+          "narrative_intent_informative",
+          "narrative_intent_interpretive_uncertainty",
+          "narrative_intent_narrator_opinion",
+          "narrative_intent_neutral",
+          "narrative_intent_story_endorsement",
+          "narrative_intent_story_reversal",
+          "narrative_intent_symbolic"
+        ],
+        "missing": []
+      },
+      {
+        "id": "missing_benchmark_coverage",
+        "title": "Missing Benchmark Coverage",
+        "present": 0,
+        "expected": 36,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_concepts",
+        "title": "Missing Concepts",
+        "present": 0,
+        "expected": 36,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_decision_coverage",
+        "title": "Missing Decision Coverage",
+        "present": 0,
+        "expected": 36,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_pattern_coverage",
+        "title": "Missing Pattern Coverage",
+        "present": 0,
+        "expected": 36,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "observation",
+        "title": "Observation Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "observation coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "relationships",
+        "title": "Relationships Coverage",
+        "present": 31,
+        "expected": 31,
+        "coveragePercent": 100,
+        "evidence": [
+          "background_story",
+          "belief_change",
+          "character_arc",
+          "dream",
+          "flashback",
+          "flashforward",
+          "foreshadowing",
+          "hallucination",
+          "implicit_event",
+          "missing_information",
+          "moral_change",
+          "motivation_change",
+          "narrative_domain",
+          "off_screen_event",
+          "parallel_story",
+          "plot_twist",
+          "relationship_arc",
+          "scene_description",
+          "scene_goal",
+          "scene_transition",
+          "story_arc",
+          "story_conflict",
+          "story_goal",
+          "story_resolution",
+          "subtext",
+          "symbolism",
+          "theme",
+          "time_skip",
+          "tone_shift",
+          "unreliable_narrator",
+          "voice_over"
+        ],
+        "missing": []
+      },
+      {
+        "id": "reviewer_questions",
+        "title": "Reviewer Questions Coverage",
+        "present": 111,
+        "expected": 111,
+        "coveragePercent": 100,
+        "evidence": [
+          "narrative_question_confidence",
+          "narrative_question_context",
+          "narrative_question_intent",
+          "narrative_question_memory",
+          "narrative_question_relationship",
+          "narrative_question_speaker",
+          "narrative_question_story",
+          "narrative_question_target",
+          "q01",
+          "q02",
+          "q03",
+          "q04",
+          "q05",
+          "q06",
+          "q07",
+          "q08",
+          "q09",
+          "q10",
+          "q11",
+          "q12",
+          "q13",
+          "q14",
+          "q15"
+        ],
+        "missing": []
+      },
+      {
+        "id": "targets",
+        "title": "Targets Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "narrative_target_audience",
+          "narrative_target_character",
+          "narrative_target_memory",
+          "narrative_target_narrator",
+          "narrative_target_relationship",
+          "narrative_target_scene",
+          "narrative_target_story",
+          "narrative_target_symbol",
+          "narrative_target_theme",
+          "narrative_target_timeline"
+        ],
+        "missing": []
+      },
+      {
+        "id": "universal_reviewer_methodology_v1",
+        "title": "Universal Reviewer Methodology",
+        "present": 11,
+        "expected": 11,
+        "coveragePercent": 100,
+        "evidence": [
+          "applicable concept validation",
+          "confidence assessment",
+          "context classification",
+          "evidence strength",
+          "exception detection",
+          "literal vs implied meaning",
+          "narrative intent",
+          "narrative understanding",
+          "speaker identification",
+          "target identification",
+          "victim identification"
+        ],
+        "missing": []
+      }
+    ],
+    "hash": "79683cb5c0ad1a826c1b138d01d619b15e5cfb2e035c8885fef0c0879c405459"
+  },
+  "productionReadiness": 100,
+  "recommendation": "READY",
+  "coverageGaps": [],
+  "criticalGaps": [],
+  "warnings": [],
+  "hash": "efaa8caa03510e694b183479424db7534ee027badc65777abf6d45a124ec1565"
+}

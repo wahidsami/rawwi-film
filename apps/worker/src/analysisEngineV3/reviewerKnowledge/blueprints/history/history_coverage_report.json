@@ -1,0 +1,560 @@
+{
+  "domainId": "history",
+  "domainTitle": "History",
+  "domainVersion": "1.0.0",
+  "blueprint": {
+    "title": "Blueprint",
+    "present": 9,
+    "expected": 9,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "b10e9c1be9a5417a1f78023cd0f1d09a0c32c53fd8430f702b55271d3573664b"
+    ],
+    "hash": "8503dc34b1718603af7c37d27f62f5e3008248beda8ab00a7997bda718f0c2b3"
+  },
+  "knowledgePack": {
+    "title": "Knowledge Pack",
+    "present": 43,
+    "expected": 43,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "history reviewer knowledge pack",
+      "pack=d:\\waheed\\mypprojects\\raawifilm fix\\apps\\worker\\src\\analysisenginev3\\reviewerknowledge\\academy\\history\\pack.v1.json"
+    ],
+    "hash": "4afed2523c7dda8036f8aacddf0f7f5735d4fbe1efc1f0c5c5b9b95ba199f94e"
+  },
+  "lessons": {
+    "title": "Lessons",
+    "present": 14,
+    "expected": 14,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [],
+    "hash": "e76f9e3c84e022aeacb5e6fca83cc350654bceedbaa715282f7ca2a60d14bbe1"
+  },
+  "patterns": {
+    "title": "Patterns",
+    "present": 43,
+    "expected": 43,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "1 pattern library documents loaded"
+    ],
+    "hash": "fbc17bc83df9202255e519672300cc669f4373f13e5ac90f27ca9532a938bcfa"
+  },
+  "decisionRecords": {
+    "title": "Decision Records",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "86 decision records loaded"
+    ],
+    "hash": "77a146ee30164d8800acc4eeecfadddab0d0814504c6482efa13f8f6f21a4a4b"
+  },
+  "benchmarks": {
+    "title": "Benchmarks",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "215 benchmark cases loaded"
+    ],
+    "hash": "a26ba1e1f9f7e125161ca8479d3169d22265a09c5999f7f453490f1bdc2e5db3"
+  },
+  "metrics": {
+    "conceptCount": 43,
+    "duplicateConceptCount": 0,
+    "missingConceptCount": 0,
+    "missingPatternCoverage": 0,
+    "missingDecisionCoverage": 0,
+    "missingBenchmarkCoverage": 0,
+    "glossaryCoverage": 100,
+    "crossSentenceCoverage": 100,
+    "crossSceneCoverage": 100,
+    "descriptionCoverage": 100,
+    "dialogueCoverage": 100,
+    "observationCoverage": 100,
+    "contextsCoverage": 100,
+    "targetsCoverage": 100,
+    "actionsCoverage": 100,
+    "intentsCoverage": 100,
+    "relationshipsCoverage": 100,
+    "evidenceRulesCoverage": 100,
+    "exceptionsCoverage": 100,
+    "falsePositivesCoverage": 100,
+    "falseNegativesCoverage": 100,
+    "reviewerQuestionsCoverage": 100,
+    "methodologyCoverage": 0,
+    "gcamMappingCoverage": 100,
+    "topics": [
+      {
+        "id": "actions",
+        "title": "Actions Coverage",
+        "present": 12,
+        "expected": 12,
+        "coveragePercent": 100,
+        "evidence": [
+          "historical_action_distortion",
+          "historical_action_documentary",
+          "historical_action_education",
+          "historical_action_memory",
+          "historical_action_narration",
+          "historical_action_news",
+          "historical_action_observation",
+          "historical_action_quote",
+          "historical_action_reenactment",
+          "historical_action_reference",
+          "historical_action_revisionism",
+          "historical_action_symbolism"
+        ],
+        "missing": []
+      },
+      {
+        "id": "concepts",
+        "title": "Concept Coverage",
+        "present": 43,
+        "expected": 43,
+        "coveragePercent": 100,
+        "evidence": [
+          "alternate_history",
+          "historical_archive",
+          "historical_battle",
+          "historical_character",
+          "historical_conflict",
+          "historical_context",
+          "historical_criticism",
+          "historical_culture",
+          "historical_custom",
+          "historical_dialogue",
+          "historical_distortion",
+          "historical_documentary",
+          "historical_dynasty",
+          "historical_education",
+          "historical_empire",
+          "historical_event",
+          "historical_fiction",
+          "historical_flashback",
+          "historical_government",
+          "historical_identity",
+          "historical_leader",
+          "historical_map",
+          "historical_memory",
+          "historical_mockery",
+          "historical_monument",
+          "historical_narration",
+          "historical_news",
+          "historical_observation",
+          "historical_person",
+          "historical_praise",
+          "historical_quote",
+          "historical_reenactment",
+          "historical_reference",
+          "historical_religious_event",
+          "historical_revisionism",
+          "historical_scene_description",
+          "historical_site",
+          "historical_society",
+          "historical_state",
+          "historical_symbol",
+          "historical_timeline",
+          "historical_tradition",
+          "mythological_history"
+        ],
+        "missing": []
+      },
+      {
+        "id": "contexts",
+        "title": "Contexts Coverage",
+        "present": 16,
+        "expected": 16,
+        "coveragePercent": 100,
+        "evidence": [
+          "historical_context_alternate_history",
+          "historical_context_archive",
+          "historical_context_dialogue",
+          "historical_context_documentary",
+          "historical_context_education",
+          "historical_context_fiction",
+          "historical_context_flashback",
+          "historical_context_narration",
+          "historical_context_news",
+          "historical_context_observation",
+          "historical_context_political",
+          "historical_context_quote",
+          "historical_context_reenactment",
+          "historical_context_religious",
+          "historical_context_satire",
+          "historical_context_symbolic"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_scene",
+        "title": "Cross Scene Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross scene reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_sentence",
+        "title": "Cross Sentence Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross sentence reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "description",
+        "title": "Description Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "description coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "dialogue",
+        "title": "Dialogue Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "dialogue coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "duplicate_concepts",
+        "title": "Duplicate Concepts",
+        "present": 0,
+        "expected": 0,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "evidence_rules",
+        "title": "Evidence Rules Coverage",
+        "present": 16,
+        "expected": 16,
+        "coveragePercent": 100,
+        "evidence": [
+          "historical_evidence_archive_reference",
+          "historical_evidence_cross_scene",
+          "historical_evidence_cultural_marker",
+          "historical_evidence_direct_reference",
+          "historical_evidence_documentary_frame",
+          "historical_evidence_educational_frame",
+          "historical_evidence_event_name",
+          "historical_evidence_flashback_marker",
+          "historical_evidence_narration_frame",
+          "historical_evidence_news_frame",
+          "historical_evidence_person_name",
+          "historical_evidence_political_marker",
+          "historical_evidence_quote_marker",
+          "historical_evidence_religious_marker",
+          "historical_evidence_site_name",
+          "historical_evidence_symbol_name"
+        ],
+        "missing": []
+      },
+      {
+        "id": "exceptions",
+        "title": "Exceptions Coverage",
+        "present": 15,
+        "expected": 15,
+        "coveragePercent": 100,
+        "evidence": [
+          "academic discussion",
+          "alternate history",
+          "documentary",
+          "dramatic reenactment",
+          "dream",
+          "educational",
+          "fiction",
+          "flashback",
+          "historical narration",
+          "news reporting",
+          "political narration",
+          "quotation",
+          "religious narration",
+          "satire",
+          "symbolic representation"
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_negatives",
+        "title": "False Negatives Coverage",
+        "present": 6,
+        "expected": 6,
+        "coveragePercent": 100,
+        "evidence": [
+          "a court transcript repeating a historical claim as evidence.",
+          "a documentary about history without distortion.",
+          "a fictional line that the story clearly labels as alternate history.",
+          "a neutral discussion of tradition and culture in class.",
+          "a news report describing a monument without endorsing myth.",
+          "a teacher calmly explaining why a historical event matters."
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_positives",
+        "title": "False Positives Coverage",
+        "present": 6,
+        "expected": 6,
+        "coveragePercent": 100,
+        "evidence": [
+          "a criticism or mockery of a historical claim mistaken for factual distortion.",
+          "a quotation or documentary mention mistaken for endorsement of fiction.",
+          "a reenactment mistaken for a live factual event.",
+          "a symbolic reference mistaken for factual historical claim.",
+          "academic discussion mistaken for historical distortion.",
+          "alternate history mistaken for actual history."
+        ],
+        "missing": []
+      },
+      {
+        "id": "gcam_mapping",
+        "title": "GCAM Mapping Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "16"
+        ],
+        "missing": []
+      },
+      {
+        "id": "glossary",
+        "title": "Glossary Coverage",
+        "present": 43,
+        "expected": 43,
+        "coveragePercent": 100,
+        "evidence": [
+          "alternate history",
+          "archive",
+          "battle",
+          "character",
+          "conflict",
+          "context",
+          "criticism",
+          "culture",
+          "custom",
+          "dialogue",
+          "distortion",
+          "documentary",
+          "dynasty",
+          "education",
+          "empire",
+          "event",
+          "fiction",
+          "flashback",
+          "government",
+          "identity",
+          "leader",
+          "map",
+          "memory",
+          "mockery",
+          "monument",
+          "mythological history",
+          "narration",
+          "news",
+          "observation",
+          "person",
+          "praise",
+          "quote",
+          "reenactment",
+          "reference",
+          "religious event",
+          "revisionism",
+          "scene description",
+          "site",
+          "society",
+          "state",
+          "symbol",
+          "timeline",
+          "tradition"
+        ],
+        "missing": []
+      },
+      {
+        "id": "intents",
+        "title": "Intents Coverage",
+        "present": 15,
+        "expected": 15,
+        "coveragePercent": 100,
+        "evidence": [
+          "historical_intent_academic",
+          "historical_intent_alternate_history",
+          "historical_intent_criticism",
+          "historical_intent_documentary",
+          "historical_intent_education",
+          "historical_intent_fact",
+          "historical_intent_fiction",
+          "historical_intent_interpretation",
+          "historical_intent_political_narration",
+          "historical_intent_praise",
+          "historical_intent_quote",
+          "historical_intent_reenactment",
+          "historical_intent_religious_narration",
+          "historical_intent_satire",
+          "historical_intent_symbolic_representation"
+        ],
+        "missing": []
+      },
+      {
+        "id": "missing_benchmark_coverage",
+        "title": "Missing Benchmark Coverage",
+        "present": 0,
+        "expected": 43,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_concepts",
+        "title": "Missing Concepts",
+        "present": 0,
+        "expected": 43,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_decision_coverage",
+        "title": "Missing Decision Coverage",
+        "present": 0,
+        "expected": 43,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_pattern_coverage",
+        "title": "Missing Pattern Coverage",
+        "present": 0,
+        "expected": 43,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "observation",
+        "title": "Observation Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "observation coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "relationships",
+        "title": "Relationships Coverage",
+        "present": 43,
+        "expected": 43,
+        "coveragePercent": 100,
+        "evidence": [
+          "historical_domain"
+        ],
+        "missing": []
+      },
+      {
+        "id": "reviewer_questions",
+        "title": "Reviewer Questions Coverage",
+        "present": 91,
+        "expected": 91,
+        "coveragePercent": 100,
+        "evidence": [
+          "q01",
+          "q02",
+          "q03",
+          "q04",
+          "q05",
+          "q06",
+          "q07",
+          "q08",
+          "q09",
+          "q10"
+        ],
+        "missing": []
+      },
+      {
+        "id": "targets",
+        "title": "Targets Coverage",
+        "present": 14,
+        "expected": 14,
+        "coveragePercent": 100,
+        "evidence": [
+          "historical_target_archive",
+          "historical_target_battle",
+          "historical_target_culture",
+          "historical_target_dynasty",
+          "historical_target_empire",
+          "historical_target_event",
+          "historical_target_identity",
+          "historical_target_leader",
+          "historical_target_person",
+          "historical_target_site",
+          "historical_target_state",
+          "historical_target_symbol",
+          "historical_target_timeline",
+          "historical_target_tradition"
+        ],
+        "missing": []
+      },
+      {
+        "id": "universal_reviewer_methodology_v1",
+        "title": "Universal Reviewer Methodology",
+        "present": 11,
+        "expected": 11,
+        "coveragePercent": 100,
+        "evidence": [
+          "applicable concept validation",
+          "confidence assessment",
+          "context classification",
+          "evidence strength",
+          "exception detection",
+          "literal vs implied meaning",
+          "narrative intent",
+          "narrative understanding",
+          "speaker identification",
+          "target identification",
+          "victim identification"
+        ],
+        "missing": []
+      }
+    ],
+    "hash": "94fa2d7e60d827477b031979876af9b4295a53f6f71db2726ceef1a792351ad3"
+  },
+  "productionReadiness": 100,
+  "recommendation": "READY",
+  "coverageGaps": [],
+  "criticalGaps": [],
+  "warnings": [],
+  "hash": "0f20a813696bb0cbddd958167cd5d74266d96774ebe90ea6aa789b684d00b61f"
+}

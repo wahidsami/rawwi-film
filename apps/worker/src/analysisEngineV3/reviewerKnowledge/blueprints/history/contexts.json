@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "historical_contexts",
+  "title": "History Contexts",
+  "description": "Canonical history contexts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "historical_context_dialogue",
+      "title": "Context Dialogue",
+      "description": "Context Dialogue for history reasoning."
+    },
+    {
+      "id": "historical_context_narration",
+      "title": "Context Narration",
+      "description": "Context Narration for history reasoning."
+    },
+    {
+      "id": "historical_context_quote",
+      "title": "Context Quote",
+      "description": "Context Quote for history reasoning."
+    },
+    {
+      "id": "historical_context_documentary",
+      "title": "Context Documentary",
+      "description": "Context Documentary for history reasoning."
+    },
+    {
+      "id": "historical_context_education",
+      "title": "Context Education",
+      "description": "Context Education for history reasoning."
+    },
+    {
+      "id": "historical_context_news",
+      "title": "Context News",
+      "description": "Context News for history reasoning."
+    },
+    {
+      "id": "historical_context_fiction",
+      "title": "Context Fiction",
+      "description": "Context Fiction for history reasoning."
+    },
+    {
+      "id": "historical_context_alternate_history",
+      "title": "Context Alternate History",
+      "description": "Context Alternate History for history reasoning."
+    },
+    {
+      "id": "historical_context_satire",
+      "title": "Context Satire",
+      "description": "Context Satire for history reasoning."
+    },
+    {
+      "id": "historical_context_reenactment",
+      "title": "Context Reenactment",
+      "description": "Context Reenactment for history reasoning."
+    },
+    {
+      "id": "historical_context_religious",
+      "title": "Context Religious",
+      "description": "Context Religious for history reasoning."
+    },
+    {
+      "id": "historical_context_political",
+      "title": "Context Political",
+      "description": "Context Political for history reasoning."
+    },
+    {
+      "id": "historical_context_symbolic",
+      "title": "Context Symbolic",
+      "description": "Context Symbolic for history reasoning."
+    },
+    {
+      "id": "historical_context_archive",
+      "title": "Context Archive",
+      "description": "Context Archive for history reasoning."
+    },
+    {
+      "id": "historical_context_flashback",
+      "title": "Context Flashback",
+      "description": "Context Flashback for history reasoning."
+    },
+    {
+      "id": "historical_context_observation",
+      "title": "Context Observation",
+      "description": "Context Observation for history reasoning."
+    }
+  ]
+}

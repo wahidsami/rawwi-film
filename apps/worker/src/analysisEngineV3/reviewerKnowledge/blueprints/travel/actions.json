@@ -1,0 +1,98 @@
+{
+  "version": "1.0.0",
+  "id": "travel_actions",
+  "title": "Travel Actions",
+  "description": "Actions used in travel and country reasoning.",
+  "entries": [
+    {
+      "id": "travel_action_travel",
+      "title": "Travel",
+      "description": "Move, journey, or visit a place."
+    },
+    {
+      "id": "travel_action_depart",
+      "title": "Depart",
+      "description": "Leave a place or set out on a journey."
+    },
+    {
+      "id": "travel_action_arrive",
+      "title": "Arrive",
+      "description": "Reach a destination or end point."
+    },
+    {
+      "id": "travel_action_cross",
+      "title": "Cross",
+      "description": "Cross a border, checkpoint, or boundary."
+    },
+    {
+      "id": "travel_action_board",
+      "title": "Board",
+      "description": "Get on a flight, train, bus, or ship."
+    },
+    {
+      "id": "travel_action_land",
+      "title": "Land",
+      "description": "Touch down or arrive by flight."
+    },
+    {
+      "id": "travel_action_stay",
+      "title": "Stay",
+      "description": "Remain in a place during travel."
+    },
+    {
+      "id": "travel_action_migrate",
+      "title": "Migrate",
+      "description": "Move to a new country or region for residence."
+    },
+    {
+      "id": "travel_action_reside",
+      "title": "Reside",
+      "description": "Live in or settle within a place."
+    },
+    {
+      "id": "travel_action_study",
+      "title": "Study Abroad",
+      "description": "Attend study, training, or education outside the home country."
+    },
+    {
+      "id": "travel_action_tour",
+      "title": "Tour",
+      "description": "Visit places as a tourist or visitor."
+    },
+    {
+      "id": "travel_action_compare",
+      "title": "Compare Countries",
+      "description": "Compare one country, city, or culture with another."
+    },
+    {
+      "id": "travel_action_insult",
+      "title": "Insult",
+      "description": "Use derogatory evaluative language."
+    },
+    {
+      "id": "travel_action_praise",
+      "title": "Praise",
+      "description": "Use positive evaluative language."
+    },
+    {
+      "id": "travel_action_mock",
+      "title": "Mock",
+      "description": "Ridicule or make fun of a country or its people."
+    },
+    {
+      "id": "travel_action_document",
+      "title": "Document",
+      "description": "Record or report a travel scene factually."
+    },
+    {
+      "id": "travel_action_observe",
+      "title": "Observe",
+      "description": "Describe what is seen without judgment."
+    },
+    {
+      "id": "travel_action_report",
+      "title": "Report",
+      "description": "Communicate travel facts in a factual register."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "id": "security_concepts",
+  "title": "Security Concepts",
+  "description": "Canonical security concepts for reviewer reasoning.",
+  "entries": [
+    { "id": "security_terrorism", "title": "Terrorism", "description": "Promotion, support, glorification, or operational discussion of terrorism." },
+    { "id": "security_extremism", "title": "Extremism", "description": "Support for extremist ideology or extremist violence." },
+    { "id": "security_military", "title": "Military", "description": "Armed forces, military institutions, or military targets." },
+    { "id": "security_police", "title": "Police", "description": "Police officers, police institutions, or police targets." },
+    { "id": "security_weapons", "title": "Weapons", "description": "Weapons, explosives, or operational weapon use." },
+    { "id": "security_riots", "title": "Riots", "description": "Rioting, unrest, disorder, or deliberate public disturbance." },
+    { "id": "security_public_order", "title": "Public Order", "description": "Order, stability, compliance, and societal calm." },
+    { "id": "security_violence", "title": "Violence", "description": "Physical harm, violent action, or violent escalation." },
+    { "id": "security_state_institutions", "title": "State Institutions", "description": "Government institutions, state authority, and public order bodies." },
+    { "id": "security_national_unity", "title": "National Unity", "description": "Social cohesion, public peace, and rejection of division." }
+  ]
+}

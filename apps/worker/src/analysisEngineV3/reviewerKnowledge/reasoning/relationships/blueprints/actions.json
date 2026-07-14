@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "relationships_actions",
+  "title": "Relationship Actions",
+  "description": "Actions that change meaning through relationship.",
+  "entries": [
+    {
+      "id": "relationship_action_command",
+      "title": "Command",
+      "description": "A direct order that reveals authority or control."
+    },
+    {
+      "id": "relationship_action_release",
+      "title": "Release",
+      "description": "A procedural or discretionary release."
+    },
+    {
+      "id": "relationship_action_ignore",
+      "title": "Ignore",
+      "description": "A refusal or decision not to respond."
+    },
+    {
+      "id": "relationship_action_discipline",
+      "title": "Discipline",
+      "description": "A corrective or punitive action within a relationship."
+    },
+    {
+      "id": "relationship_action_recruit",
+      "title": "Recruit",
+      "description": "An attempt to draw someone into a group or cause."
+    },
+    {
+      "id": "relationship_action_request",
+      "title": "Request",
+      "description": "A polite or indirect appeal."
+    }
+  ]
+}

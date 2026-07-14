@@ -1,0 +1,218 @@
+{
+  "version": "1.0.0",
+  "id": "relationships_concepts",
+  "title": "Relationship Concepts",
+  "description": "Canonical relationship concepts.",
+  "entries": [
+    {
+      "id": "relationship_family_parent_child",
+      "title": "Family Parent Child",
+      "description": "The reviewer treats family parent child as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_family_siblings",
+      "title": "Family Siblings",
+      "description": "The reviewer treats family siblings as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_family_spouses",
+      "title": "Family Spouses",
+      "description": "The reviewer treats family spouses as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_family_extended",
+      "title": "Family Extended",
+      "description": "The reviewer treats family extended as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_father_child",
+      "title": "Father Child",
+      "description": "The reviewer treats father child as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_mother_child",
+      "title": "Mother Child",
+      "description": "The reviewer treats mother child as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_guardian_child",
+      "title": "Guardian Child",
+      "description": "The reviewer treats guardian child as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_child_child",
+      "title": "Child Child",
+      "description": "The reviewer treats child child as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_adult_child",
+      "title": "Adult Child",
+      "description": "The reviewer treats adult child as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_adult_adult",
+      "title": "Adult Adult",
+      "description": "The reviewer treats adult adult as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_teacher_student",
+      "title": "Teacher Student",
+      "description": "The reviewer treats teacher student as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_doctor_patient",
+      "title": "Doctor Patient",
+      "description": "The reviewer treats doctor patient as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_therapist_patient",
+      "title": "Therapist Patient",
+      "description": "The reviewer treats therapist patient as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_imam_follower",
+      "title": "Imam Follower",
+      "description": "The reviewer treats imam follower as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_leader_follower",
+      "title": "Leader Follower",
+      "description": "The reviewer treats leader follower as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_commander_soldier",
+      "title": "Commander Soldier",
+      "description": "The reviewer treats commander soldier as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_police_suspect",
+      "title": "Police Suspect",
+      "description": "The reviewer treats police suspect as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_police_commander",
+      "title": "Police Commander",
+      "description": "The reviewer treats police commander as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_police_officer_public",
+      "title": "Police Officer Public",
+      "description": "The reviewer treats police officer public as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_judge_accused",
+      "title": "Judge Accused",
+      "description": "The reviewer treats judge accused as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_judge_public",
+      "title": "Judge Public",
+      "description": "The reviewer treats judge public as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_lawyer_client",
+      "title": "Lawyer Client",
+      "description": "The reviewer treats lawyer client as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_employer_employee",
+      "title": "Employer Employee",
+      "description": "The reviewer treats employer employee as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_coworkers",
+      "title": "Coworkers",
+      "description": "The reviewer treats coworkers as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_friend_friend",
+      "title": "Friend Friend",
+      "description": "The reviewer treats friend friend as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_neighbor_neighbor",
+      "title": "Neighbor Neighbor",
+      "description": "The reviewer treats neighbor neighbor as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_stranger_stranger",
+      "title": "Stranger Stranger",
+      "description": "The reviewer treats stranger stranger as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_government_citizen",
+      "title": "Government Citizen",
+      "description": "The reviewer treats government citizen as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_government_employee_public",
+      "title": "Government Employee Public",
+      "description": "The reviewer treats government employee public as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_journalist_source",
+      "title": "Journalist Source",
+      "description": "The reviewer treats journalist source as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_actor_audience",
+      "title": "Actor Audience",
+      "description": "The reviewer treats actor audience as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_story_narrator",
+      "title": "Story Narrator",
+      "description": "The reviewer treats story narrator as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_narrator_character",
+      "title": "Narrator Character",
+      "description": "The reviewer treats narrator character as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_customer_vendor",
+      "title": "Customer Vendor",
+      "description": "The reviewer treats customer vendor as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_officer_public",
+      "title": "Officer Public",
+      "description": "The reviewer treats officer public as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_criminal_victim",
+      "title": "Criminal Victim",
+      "description": "The reviewer treats criminal victim as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_criminal_accomplice",
+      "title": "Criminal Accomplice",
+      "description": "The reviewer treats criminal accomplice as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_gang_member",
+      "title": "Gang Member",
+      "description": "The reviewer treats gang member as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_gang_leader",
+      "title": "Gang Leader",
+      "description": "The reviewer treats gang leader as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_terrorist_recruit",
+      "title": "Terrorist Recruit",
+      "description": "The reviewer treats terrorist recruit as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_disabled_caregiver",
+      "title": "Disabled Caregiver",
+      "description": "The reviewer treats disabled caregiver as a separate reasoning concept."
+    },
+    {
+      "id": "relationship_elderly_caregiver",
+      "title": "Elderly Caregiver",
+      "description": "The reviewer treats elderly caregiver as a separate reasoning concept."
+    }
+  ]
+}

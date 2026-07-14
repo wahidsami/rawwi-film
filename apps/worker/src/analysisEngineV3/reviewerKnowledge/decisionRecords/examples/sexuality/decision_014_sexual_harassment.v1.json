@@ -1,0 +1,100 @@
+{
+  "id": "decision_014_sexual_harassment",
+  "version": "1.0.0",
+  "title": "Sexual Harassment decision record",
+  "summary": "Reviewer reasoning record for sexual harassment.",
+  "originalScenario": "A police investigation and later court note describe coercion or grooming across scenes.",
+  "reviewQuestion": "Is this a reviewable sexual harassment case?",
+  "initialSuspicion": "Sexual Harassment appears in the scene or context.",
+  "possibleConcepts": [
+    "sexual_harassment",
+    "sexual_assault",
+    "sexual_abuse"
+  ],
+  "supportingEvidence": [
+    "A police investigation and later court note describe coercion or grooming across scenes.",
+    "Sexual Harassment is the active concept."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [
+    "No explicit coercion or unwanted pressure"
+  ],
+  "sceneContext": "A police investigation and later court note describe coercion or grooming across scenes.",
+  "speakerAnalysis": "The speaker and target must be checked explicitly.",
+  "targetAnalysis": "The target is vulnerable or pressured.",
+  "intentAnalysis": "Pressure, coercion, or exploitation",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check evidence quality",
+    "Apply context and exception rules",
+    "Map to article guidance"
+  ],
+  "reviewerDecision": "The finding is supported by the evidence.",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 7,
+      "atom_ids": [
+        "7-1",
+        "7-3",
+        "7-4",
+        "7-5"
+      ],
+      "note": "Use when the scene turns sexual language into coercive harm."
+    },
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-1",
+        "6-3",
+        "6-4",
+        "6-5"
+      ],
+      "note": "Use when the sexual harm targets a child or minor."
+    },
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-1",
+        "17-2",
+        "17-3",
+        "17-5",
+        "17-6"
+      ],
+      "note": "Use for abuse, invasive framing, or false sexual allegations."
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Use the harm bucket rules and preserve the exact evidence span for sexual_harassment.",
+  "benchmarkTags": [
+    "harm",
+    "sexual_harassment",
+    "sexual_harm"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "sexual_pattern_14_sexual_harassment"
+  ],
+  "relatedBlueprintConcepts": [
+    "sexual_harassment",
+    "sexual_assault",
+    "sexual_reference"
+  ]
+}

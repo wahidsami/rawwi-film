@@ -40,6 +40,7 @@ const factor1to4 = z.preprocess(
 );
 
 export const judgeFindingSchema = z.object({
+  source: z.string().optional().nullable().transform((v) => v ?? null),
   article_id: z.preprocess(toNullableNumber, z.number().int().min(1).max(25).optional().nullable()).transform((v) => (typeof v === "number" ? v : 0)),
   atom_id: z.string().optional().nullable(),
   canonical_atom: z.string().optional().nullable(),

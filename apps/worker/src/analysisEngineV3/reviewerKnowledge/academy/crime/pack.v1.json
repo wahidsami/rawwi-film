@@ -1,0 +1,359 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_09_crime",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Crime Reviewer Knowledge Pack",
+    "description": "Production crime academy knowledge pack.",
+    "supported_concepts": [
+      "crime_reference",
+      "crime_attempt",
+      "crime_conspiracy",
+      "crime_planning",
+      "crime_execution",
+      "crime_glorification",
+      "crime_encouragement",
+      "crime_instruction",
+      "crime_normalization",
+      "crime_reward",
+      "crime_coverup",
+      "crime_escape",
+      "crime_evasion",
+      "crime_theft",
+      "crime_robbery",
+      "crime_burglary",
+      "crime_fraud",
+      "crime_forgery",
+      "crime_blackmail",
+      "crime_extortion",
+      "crime_bribery",
+      "crime_corruption",
+      "crime_money_laundering",
+      "crime_kidnapping",
+      "crime_hostage",
+      "crime_murder",
+      "crime_attempted_murder",
+      "crime_assault",
+      "crime_property_damage",
+      "crime_vandalism",
+      "crime_arson",
+      "crime_human_trafficking",
+      "crime_smuggling",
+      "crime_organized_crime",
+      "crime_cybercrime",
+      "crime_identity_theft",
+      "crime_documentary",
+      "crime_news",
+      "crime_historical",
+      "crime_educational",
+      "crime_police_investigation",
+      "crime_court_case",
+      "crime_false_accusation",
+      "crime_confession",
+      "crime_scene_description",
+      "crime_dialogue",
+      "crime_observation",
+      "crime_reported_event"
+    ]
+  },
+  "pack": {
+    "id": "v3_09_crime",
+    "module_id": "v3_09_crime",
+    "title": "Crime Reviewer Knowledge Pack",
+    "default_question_set_id": "default_crime_question_set",
+    "trigger_concept_ids": [
+      "crime_reference",
+      "crime_attempt",
+      "crime_conspiracy",
+      "crime_planning",
+      "crime_execution",
+      "crime_glorification",
+      "crime_encouragement",
+      "crime_instruction",
+      "crime_normalization",
+      "crime_reward",
+      "crime_coverup",
+      "crime_escape",
+      "crime_evasion",
+      "crime_theft",
+      "crime_robbery",
+      "crime_burglary",
+      "crime_fraud",
+      "crime_forgery",
+      "crime_blackmail",
+      "crime_extortion",
+      "crime_bribery",
+      "crime_corruption",
+      "crime_money_laundering",
+      "crime_kidnapping",
+      "crime_hostage",
+      "crime_murder",
+      "crime_attempted_murder",
+      "crime_assault",
+      "crime_property_damage",
+      "crime_vandalism",
+      "crime_arson",
+      "crime_human_trafficking",
+      "crime_smuggling",
+      "crime_organized_crime",
+      "crime_cybercrime",
+      "crime_identity_theft",
+      "crime_documentary",
+      "crime_news",
+      "crime_historical",
+      "crime_educational",
+      "crime_police_investigation",
+      "crime_court_case",
+      "crime_false_accusation",
+      "crime_confession",
+      "crime_scene_description",
+      "crime_dialogue",
+      "crime_observation",
+      "crime_reported_event"
+    ],
+    "purpose": "Teach reviewers to reason about crime as a semantic universe: reference, planning, execution, concealment, reporting, false accusations, and contextual exceptions.",
+    "protected_interests": [
+      "public safety",
+      "reviewer consistency",
+      "due process awareness",
+      "context-sensitive reasoning",
+      "narrative accuracy"
+    ],
+    "protected_concepts": [
+      "crime_reference",
+      "crime_attempt",
+      "crime_conspiracy",
+      "crime_planning",
+      "crime_execution",
+      "crime_glorification",
+      "crime_encouragement",
+      "crime_instruction",
+      "crime_normalization",
+      "crime_reward",
+      "crime_coverup",
+      "crime_escape",
+      "crime_evasion",
+      "crime_theft",
+      "crime_robbery",
+      "crime_burglary",
+      "crime_fraud",
+      "crime_forgery",
+      "crime_blackmail",
+      "crime_extortion",
+      "crime_bribery",
+      "crime_corruption",
+      "crime_money_laundering",
+      "crime_kidnapping",
+      "crime_hostage",
+      "crime_murder",
+      "crime_attempted_murder",
+      "crime_assault",
+      "crime_property_damage",
+      "crime_vandalism",
+      "crime_arson",
+      "crime_human_trafficking",
+      "crime_smuggling",
+      "crime_organized_crime",
+      "crime_cybercrime",
+      "crime_identity_theft",
+      "crime_documentary",
+      "crime_news",
+      "crime_historical",
+      "crime_educational",
+      "crime_police_investigation",
+      "crime_court_case",
+      "crime_false_accusation",
+      "crime_confession",
+      "crime_scene_description",
+      "crime_dialogue",
+      "crime_observation",
+      "crime_reported_event"
+    ],
+    "required_evidence": [
+      "Speaker identity or reporting source.",
+      "Target or victim identity where relevant.",
+      "Scene or narrative context.",
+      "Literal wording, implied wording, or reported event linkage."
+    ],
+    "insufficient_evidence": [
+      "A single suspicious word without context.",
+      "A neutral news or documentary reference.",
+      "A false accusation or denial without supporting evidence."
+    ],
+    "reviewer_heuristics": [
+      "Read the whole scene before deciding whether the content is crime or just crime-adjacent.",
+      "Separate planning, execution, reporting, and false accusation into different reasoning outcomes.",
+      "Use cross-sentence and cross-scene evidence to distinguish suspicion from proof.",
+      "Treat police, court, and documentary material as context, not automatic violations.",
+      "Prefer the narrowest concept that the evidence actually supports."
+    ],
+    "legal_exceptions": [
+      "Educational",
+      "Historical",
+      "Documentary",
+      "News",
+      "Police investigation",
+      "Court case",
+      "Confession",
+      "Witness testimony",
+      "False accusation",
+      "Condemnation",
+      "Dream",
+      "Flashback",
+      "Observation"
+    ],
+    "positive_examples": [
+      "A character openly plans a robbery.",
+      "A character confesses to fraud.",
+      "A scene shows organized crime coordinating money laundering."
+    ],
+    "negative_examples": [
+      "A news report describing an arrest.",
+      "A documentary discussing past criminal activity.",
+      "A police interview repeating a suspect's words as evidence."
+    ],
+    "common_false_positives": [
+      "Neutral reporting mistaken for endorsement.",
+      "Historical narration mistaken for present criminal conduct.",
+      "Police or court language mistaken for the speaker's own criminal intent.",
+      "False accusation mistaken for proved crime."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "جريمة",
+        "concept_id": "crime_reference",
+        "relation": "Direct crime anchor",
+        "note": "Baseline anchor for crime reasoning."
+      },
+      {
+        "term": "سرقة",
+        "concept_id": "crime_theft",
+        "relation": "Property crime anchor",
+        "note": "Strong property-crime indicator."
+      },
+      {
+        "term": "احتيال",
+        "concept_id": "crime_fraud",
+        "relation": "Financial crime anchor",
+        "note": "Strong financial-crime indicator."
+      },
+      {
+        "term": "عصابة",
+        "concept_id": "crime_organized_crime",
+        "relation": "Organized crime anchor",
+        "note": "Strong group-crime indicator."
+      },
+      {
+        "term": "رشوة",
+        "concept_id": "crime_bribery",
+        "relation": "Corruption anchor",
+        "note": "Strong corruption indicator."
+      },
+      {
+        "term": "قتل",
+        "concept_id": "crime_murder",
+        "relation": "Violent crime anchor",
+        "note": "Strong homicide indicator."
+      },
+      {
+        "term": "اتحاد",
+        "concept_id": "crime_conspiracy",
+        "relation": "Coordination anchor",
+        "note": "Can indicate plot or conspiracy."
+      },
+      {
+        "term": "تحقيق",
+        "concept_id": "crime_police_investigation",
+        "relation": "Investigative anchor",
+        "note": "Police-investigation context."
+      },
+      {
+        "term": "محكمة",
+        "concept_id": "crime_court_case",
+        "relation": "Court anchor",
+        "note": "Court and testimony context."
+      },
+      {
+        "term": "اعتراف",
+        "concept_id": "crime_confession",
+        "relation": "Confession anchor",
+        "note": "Admission of wrongdoing."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 4,
+        "atom_ids": [
+          "4-2",
+          "4-5"
+        ],
+        "role": "Context and narrative guard",
+        "note": "Secondary umbrella mapping for crime context."
+      },
+      {
+        "article_id": 9,
+        "atom_ids": [
+          "9-1",
+          "9-2",
+          "9-3",
+          "9-4",
+          "9-5"
+        ],
+        "role": "Violent crime escalation",
+        "note": "Use for violent or coercive criminal framing."
+      },
+      {
+        "article_id": 12,
+        "atom_ids": [
+          "12-1",
+          "12-2",
+          "12-3",
+          "12-4",
+          "12-5"
+        ],
+        "role": "Property and public disorder",
+        "note": "Use for theft, burglary, vandalism, arson, and public disorder."
+      },
+      {
+        "article_id": 13,
+        "atom_ids": [
+          "13-1",
+          "13-2",
+          "13-3",
+          "13-4",
+          "13-5"
+        ],
+        "role": "Financial and white-collar crime",
+        "note": "Use for fraud, bribery, corruption, laundering, forgery, and cybercrime."
+      },
+      {
+        "article_id": 14,
+        "atom_ids": [
+          "14-1",
+          "14-2",
+          "14-3",
+          "14-4",
+          "14-5"
+        ],
+        "role": "Organized crime and operational escalation",
+        "note": "Use for planning, conspiracy, execution, concealment, and escape."
+      }
+    ],
+    "reporting_guidance": [
+      "Report the shortest exact phrase that shows the criminal meaning.",
+      "Prefer the narrowest crime concept that the evidence supports.",
+      "Explain whether the scene is direct crime, implied crime, reporting, or an exception.",
+      "If the scene is documentary, educational, police, court, or historical, say so explicitly.",
+      "Mention review-only outcomes when the scene is crime-related but still ambiguous."
+    ]
+  }
+}

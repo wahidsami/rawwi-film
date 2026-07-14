@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_methodology_contexts",
+  "title": "Reviewer Methodology Contexts",
+  "description": "Context states that affect reviewer judgment.",
+  "entries": [
+    {
+      "id": "methodology_context_observation",
+      "title": "Observation",
+      "description": "A neutral observation before judgment."
+    },
+    {
+      "id": "methodology_context_reviewer_comment",
+      "title": "Reviewer Comment",
+      "description": "A commentary note that does not become a finding."
+    },
+    {
+      "id": "methodology_context_possible_finding",
+      "title": "Possible Finding",
+      "description": "A candidate that might become a finding."
+    },
+    {
+      "id": "methodology_context_confirmed_finding",
+      "title": "Confirmed Finding",
+      "description": "A supported finding with enough evidence."
+    },
+    {
+      "id": "methodology_context_insufficient_evidence",
+      "title": "Insufficient Evidence",
+      "description": "The current context does not support a conclusion."
+    },
+    {
+      "id": "methodology_context_need_more_context",
+      "title": "Need More Context",
+      "description": "Additional local or cross-scene context is needed."
+    },
+    {
+      "id": "methodology_context_false_positive",
+      "title": "False Positive",
+      "description": "A tempting but unsupported interpretation."
+    },
+    {
+      "id": "methodology_context_false_negative",
+      "title": "False Negative",
+      "description": "A missed or undercounted interpretation."
+    },
+    {
+      "id": "methodology_context_cross_sentence",
+      "title": "Cross Sentence",
+      "description": "Meaning that emerges across sentences."
+    },
+    {
+      "id": "methodology_context_cross_scene",
+      "title": "Cross Scene",
+      "description": "Meaning that emerges across scenes."
+    }
+  ]
+}

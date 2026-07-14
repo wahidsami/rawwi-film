@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_judgment_targets",
+  "title": "Reviewer Judgment Targets",
+  "description": "Targets considered by the reviewer judgment framework.",
+  "entries": [
+    {
+      "id": "interpretation",
+      "title": "Interpretation",
+      "description": "The reading that is being compared."
+    },
+    {
+      "id": "evidence",
+      "title": "Evidence",
+      "description": "The support that may justify a conclusion."
+    },
+    {
+      "id": "confidence",
+      "title": "Confidence",
+      "description": "The level of certainty attached to the reviewer judgment."
+    },
+    {
+      "id": "disagreement",
+      "title": "Disagreement",
+      "description": "The place where reviewer opinions differ."
+    },
+    {
+      "id": "narrative",
+      "title": "Narrative",
+      "description": "The story context that may justify the outcome."
+    },
+    {
+      "id": "decision",
+      "title": "Decision",
+      "description": "The final reviewer output."
+    }
+  ]
+}

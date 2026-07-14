@@ -1,0 +1,55 @@
+{
+  "id": "violence_029_violence_historical_direct",
+  "version": "1.0.0",
+  "title": "Violence Historical (direct)",
+  "summary": "Violence Historical in direct framing.",
+  "originalScenario": "كان ذلك اعتداءً قديمًا في الحرب.",
+  "reviewQuestion": "Is this violence historical?",
+  "initialSuspicion": "Possible violence historical.",
+  "possibleConcepts": [
+    "violence_historical"
+  ],
+  "supportingEvidence": [
+    "كان ذلك اعتداءً قديمًا في الحرب."
+  ],
+  "contradictingEvidence": [
+    "Clear condemnation or factual reporting."
+  ],
+  "requiredMissingEvidence": [
+    "Violent endorsement."
+  ],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "exception",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_historical",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_historical"
+  ]
+}

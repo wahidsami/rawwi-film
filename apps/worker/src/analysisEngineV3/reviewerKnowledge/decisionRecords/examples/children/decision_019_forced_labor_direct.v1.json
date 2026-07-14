@@ -1,0 +1,54 @@
+{
+  "id": "decision_019_forced_labor_direct",
+  "version": "1.0.0",
+  "title": "Forced labor (direct)",
+  "summary": "Forced labor in direct framing.",
+  "originalScenario": "أجبر القاصر على العمل ليلًا",
+  "reviewQuestion": "Is this forced labor?",
+  "initialSuspicion": "Compelled labor.",
+  "possibleConcepts": [
+    "children_minor",
+    "children_forced_labor"
+  ],
+  "supportingEvidence": [
+    "أجبر القاصر على العمل ليلًا"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-5"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "forced_labor",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_minor",
+    "children_forced_labor"
+  ]
+}

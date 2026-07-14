@@ -1,0 +1,1081 @@
+{
+  "schema_version": 1,
+  "lesson_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "lesson": {
+    "id": "lesson_001_crime_framework",
+    "title": "Crime Reviewer Framework",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "language": "en",
+    "summary": "Teach the reviewer to distinguish crime reference, planning, execution, reporting, exceptions, and false accusations across dialogue, narration, scene description, and cross-scene context.",
+    "learningObjectives": [
+      "Distinguish a crime reference from a crime finding.",
+      "Distinguish planning, attempt, execution, concealment, and reporting.",
+      "Recognize documentary, historical, police, and court exceptions.",
+      "Use speaker identity, target identity, and context to calibrate confidence.",
+      "Avoid collapsing all crime-related material into one concept."
+    ],
+    "concepts": [
+      {
+        "id": "crime_reference",
+        "title": "Crime Reference",
+        "summary": "Teach reviewers how to reason about crime reference within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "reference"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_attempt",
+        "title": "Attempt",
+        "summary": "Teach reviewers how to reason about attempt within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "attempt"
+        ],
+        "target": null,
+        "articleIds": [
+          4,
+          9,
+          12,
+          13,
+          14
+        ]
+      },
+      {
+        "id": "crime_conspiracy",
+        "title": "Conspiracy",
+        "summary": "Teach reviewers how to reason about conspiracy within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "conspiracy"
+        ],
+        "target": null,
+        "articleIds": [
+          14
+        ]
+      },
+      {
+        "id": "crime_planning",
+        "title": "Planning",
+        "summary": "Teach reviewers how to reason about planning within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "planning"
+        ],
+        "target": null,
+        "articleIds": [
+          14
+        ]
+      },
+      {
+        "id": "crime_execution",
+        "title": "Execution",
+        "summary": "Teach reviewers how to reason about execution within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "execution"
+        ],
+        "target": null,
+        "articleIds": [
+          14
+        ]
+      },
+      {
+        "id": "crime_glorification",
+        "title": "Glorification",
+        "summary": "Teach reviewers how to reason about glorification within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "glorification"
+        ],
+        "target": null,
+        "articleIds": [
+          14
+        ]
+      },
+      {
+        "id": "crime_encouragement",
+        "title": "Encouragement",
+        "summary": "Teach reviewers how to reason about encouragement within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "encouragement"
+        ],
+        "target": null,
+        "articleIds": [
+          14
+        ]
+      },
+      {
+        "id": "crime_instruction",
+        "title": "Instruction",
+        "summary": "Teach reviewers how to reason about instruction within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "instruction"
+        ],
+        "target": null,
+        "articleIds": [
+          14
+        ]
+      },
+      {
+        "id": "crime_normalization",
+        "title": "Normalization",
+        "summary": "Teach reviewers how to reason about normalization within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "normalization"
+        ],
+        "target": null,
+        "articleIds": [
+          14
+        ]
+      },
+      {
+        "id": "crime_reward",
+        "title": "Reward",
+        "summary": "Teach reviewers how to reason about reward within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "reward"
+        ],
+        "target": null,
+        "articleIds": [
+          14
+        ]
+      },
+      {
+        "id": "crime_coverup",
+        "title": "Cover-up",
+        "summary": "Teach reviewers how to reason about cover-up within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "coverup"
+        ],
+        "target": null,
+        "articleIds": [
+          14
+        ]
+      },
+      {
+        "id": "crime_escape",
+        "title": "Escape",
+        "summary": "Teach reviewers how to reason about escape within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "escape"
+        ],
+        "target": null,
+        "articleIds": [
+          14
+        ]
+      },
+      {
+        "id": "crime_evasion",
+        "title": "Evasion",
+        "summary": "Teach reviewers how to reason about evasion within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "evasion"
+        ],
+        "target": null,
+        "articleIds": [
+          14
+        ]
+      },
+      {
+        "id": "crime_theft",
+        "title": "Theft",
+        "summary": "Teach reviewers how to reason about theft within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "theft"
+        ],
+        "target": null,
+        "articleIds": [
+          12
+        ]
+      },
+      {
+        "id": "crime_robbery",
+        "title": "Robbery",
+        "summary": "Teach reviewers how to reason about robbery within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "robbery"
+        ],
+        "target": null,
+        "articleIds": [
+          12
+        ]
+      },
+      {
+        "id": "crime_burglary",
+        "title": "Burglary",
+        "summary": "Teach reviewers how to reason about burglary within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "burglary"
+        ],
+        "target": null,
+        "articleIds": [
+          12
+        ]
+      },
+      {
+        "id": "crime_fraud",
+        "title": "Fraud",
+        "summary": "Teach reviewers how to reason about fraud within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "fraud"
+        ],
+        "target": null,
+        "articleIds": [
+          13
+        ]
+      },
+      {
+        "id": "crime_forgery",
+        "title": "Forgery",
+        "summary": "Teach reviewers how to reason about forgery within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "forgery"
+        ],
+        "target": null,
+        "articleIds": [
+          13
+        ]
+      },
+      {
+        "id": "crime_blackmail",
+        "title": "Blackmail",
+        "summary": "Teach reviewers how to reason about blackmail within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "blackmail"
+        ],
+        "target": null,
+        "articleIds": [
+          13
+        ]
+      },
+      {
+        "id": "crime_extortion",
+        "title": "Extortion",
+        "summary": "Teach reviewers how to reason about extortion within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "extortion"
+        ],
+        "target": null,
+        "articleIds": [
+          13
+        ]
+      },
+      {
+        "id": "crime_bribery",
+        "title": "Bribery",
+        "summary": "Teach reviewers how to reason about bribery within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "bribery"
+        ],
+        "target": null,
+        "articleIds": [
+          13
+        ]
+      },
+      {
+        "id": "crime_corruption",
+        "title": "Corruption",
+        "summary": "Teach reviewers how to reason about corruption within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "corruption"
+        ],
+        "target": null,
+        "articleIds": [
+          13
+        ]
+      },
+      {
+        "id": "crime_money_laundering",
+        "title": "Money Laundering",
+        "summary": "Teach reviewers how to reason about money laundering within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "money_laundering"
+        ],
+        "target": null,
+        "articleIds": [
+          13
+        ]
+      },
+      {
+        "id": "crime_kidnapping",
+        "title": "Kidnapping",
+        "summary": "Teach reviewers how to reason about kidnapping within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "kidnapping"
+        ],
+        "target": null,
+        "articleIds": [
+          9,
+          14
+        ]
+      },
+      {
+        "id": "crime_hostage",
+        "title": "Hostage",
+        "summary": "Teach reviewers how to reason about hostage within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "hostage"
+        ],
+        "target": null,
+        "articleIds": [
+          9,
+          14
+        ]
+      },
+      {
+        "id": "crime_murder",
+        "title": "Murder",
+        "summary": "Teach reviewers how to reason about murder within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "murder"
+        ],
+        "target": null,
+        "articleIds": [
+          9,
+          14
+        ]
+      },
+      {
+        "id": "crime_attempted_murder",
+        "title": "Attempted Murder",
+        "summary": "Teach reviewers how to reason about attempted murder within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "attempted_murder"
+        ],
+        "target": null,
+        "articleIds": [
+          9,
+          14
+        ]
+      },
+      {
+        "id": "crime_assault",
+        "title": "Assault",
+        "summary": "Teach reviewers how to reason about assault within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "assault"
+        ],
+        "target": null,
+        "articleIds": [
+          9,
+          14
+        ]
+      },
+      {
+        "id": "crime_property_damage",
+        "title": "Property Damage",
+        "summary": "Teach reviewers how to reason about property damage within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "property_damage"
+        ],
+        "target": null,
+        "articleIds": [
+          12
+        ]
+      },
+      {
+        "id": "crime_vandalism",
+        "title": "Vandalism",
+        "summary": "Teach reviewers how to reason about vandalism within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "vandalism"
+        ],
+        "target": null,
+        "articleIds": [
+          12
+        ]
+      },
+      {
+        "id": "crime_arson",
+        "title": "Arson",
+        "summary": "Teach reviewers how to reason about arson within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "arson"
+        ],
+        "target": null,
+        "articleIds": [
+          12
+        ]
+      },
+      {
+        "id": "crime_human_trafficking",
+        "title": "Human Trafficking",
+        "summary": "Teach reviewers how to reason about human trafficking within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "human_trafficking"
+        ],
+        "target": null,
+        "articleIds": [
+          9,
+          14
+        ]
+      },
+      {
+        "id": "crime_smuggling",
+        "title": "Smuggling",
+        "summary": "Teach reviewers how to reason about smuggling within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "smuggling"
+        ],
+        "target": null,
+        "articleIds": [
+          9,
+          14
+        ]
+      },
+      {
+        "id": "crime_organized_crime",
+        "title": "Organized Crime",
+        "summary": "Teach reviewers how to reason about organized crime within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "organized_crime"
+        ],
+        "target": null,
+        "articleIds": [
+          9,
+          14
+        ]
+      },
+      {
+        "id": "crime_cybercrime",
+        "title": "Cybercrime",
+        "summary": "Teach reviewers how to reason about cybercrime within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "cybercrime"
+        ],
+        "target": null,
+        "articleIds": [
+          9,
+          14
+        ]
+      },
+      {
+        "id": "crime_identity_theft",
+        "title": "Identity Theft",
+        "summary": "Teach reviewers how to reason about identity theft within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "identity_theft"
+        ],
+        "target": null,
+        "articleIds": [
+          13
+        ]
+      },
+      {
+        "id": "crime_documentary",
+        "title": "Documentary Context",
+        "summary": "Teach reviewers how to reason about documentary context within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "documentary"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_news",
+        "title": "News Context",
+        "summary": "Teach reviewers how to reason about news context within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "news"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_historical",
+        "title": "Historical Context",
+        "summary": "Teach reviewers how to reason about historical context within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "historical"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_educational",
+        "title": "Educational Context",
+        "summary": "Teach reviewers how to reason about educational context within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "educational"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_police_investigation",
+        "title": "Police Investigation",
+        "summary": "Teach reviewers how to reason about police investigation within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "police_investigation"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_court_case",
+        "title": "Court Case",
+        "summary": "Teach reviewers how to reason about court case within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "court_case"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_false_accusation",
+        "title": "False Accusation",
+        "summary": "Teach reviewers how to reason about false accusation within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "false_accusation"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_confession",
+        "title": "Confession",
+        "summary": "Teach reviewers how to reason about confession within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "confession"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_scene_description",
+        "title": "Scene Description",
+        "summary": "Teach reviewers how to reason about scene description within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "scene_description"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_dialogue",
+        "title": "Dialogue",
+        "summary": "Teach reviewers how to reason about dialogue within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "dialogue"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_observation",
+        "title": "Observation",
+        "summary": "Teach reviewers how to reason about observation within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "observation"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "crime_reported_event",
+        "title": "Reported Event",
+        "summary": "Teach reviewers how to reason about reported event within a crime scene.",
+        "tags": [
+          "crime",
+          "academy",
+          "reported_event"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      }
+    ],
+    "reviewerQuestions": [
+      {
+        "id": "crime_question_narrative",
+        "purpose": "Narrative question",
+        "expectedAnswerFormat": "What is happening in the scene?",
+        "reasoningGuidance": "Describe the scene first.",
+        "evidenceRequirements": [
+          "Scene text",
+          "Story memory"
+        ]
+      },
+      {
+        "id": "crime_question_speaker",
+        "purpose": "Speaker question",
+        "expectedAnswerFormat": "Who is speaking?",
+        "reasoningGuidance": "Determine the source of the statement.",
+        "evidenceRequirements": [
+          "Dialogue or narration"
+        ]
+      },
+      {
+        "id": "crime_question_target",
+        "purpose": "Target question",
+        "expectedAnswerFormat": "Who or what is targeted?",
+        "reasoningGuidance": "Identify the target before judging.",
+        "evidenceRequirements": [
+          "Literal target evidence"
+        ]
+      },
+      {
+        "id": "crime_question_intent",
+        "purpose": "Intent question",
+        "expectedAnswerFormat": "What is the speaker trying to do?",
+        "reasoningGuidance": "Assess intent from context.",
+        "evidenceRequirements": [
+          "Intent cues"
+        ]
+      },
+      {
+        "id": "crime_question_context",
+        "purpose": "Context question",
+        "expectedAnswerFormat": "Does the surrounding context change the meaning?",
+        "reasoningGuidance": "Check later dialogue and scene framing.",
+        "evidenceRequirements": [
+          "Neighbouring sentences",
+          "Scene memory"
+        ]
+      },
+      {
+        "id": "crime_question_evidence",
+        "purpose": "Evidence question",
+        "expectedAnswerFormat": "What exact evidence supports the conclusion?",
+        "reasoningGuidance": "Use the narrowest reliable span.",
+        "evidenceRequirements": [
+          "Literal evidence"
+        ]
+      },
+      {
+        "id": "crime_question_confidence",
+        "purpose": "Confidence question",
+        "expectedAnswerFormat": "How certain is the conclusion?",
+        "reasoningGuidance": "Calibrate confidence to evidence strength.",
+        "evidenceRequirements": [
+          "Supporting and contradicting evidence"
+        ]
+      },
+      {
+        "id": "crime_question_exception",
+        "purpose": "Exception question",
+        "expectedAnswerFormat": "Is there a documentary, educational, police, or court exception?",
+        "reasoningGuidance": "Check exclusions before finalizing.",
+        "evidenceRequirements": [
+          "Exception signals"
+        ]
+      },
+      {
+        "id": "crime_question_cross",
+        "purpose": "Cross-scene question",
+        "expectedAnswerFormat": "Do later scenes confirm or reverse the meaning?",
+        "reasoningGuidance": "Use the full story if available.",
+        "evidenceRequirements": [
+          "Later dialogue",
+          "Later narration"
+        ]
+      },
+      {
+        "id": "crime_question_false_positive",
+        "purpose": "False positive question",
+        "expectedAnswerFormat": "Could this be a harmless mention or a false accusation?",
+        "reasoningGuidance": "Do not overclassify ambiguous material.",
+        "evidenceRequirements": [
+          "Denials",
+          "Corrections"
+        ]
+      }
+    ],
+    "examples": [
+      "خطة السرقة الليلة واضحة.",
+      "الجريدة ذكرت الجريمة في تقريرها.",
+      "المشهد يشرح كيف يهرب الجاني من الشرطة."
+    ],
+    "counterExamples": [
+      "الوثائقي يشرح جريمة قديمة بوصفها حدثًا تاريخيًا.",
+      "الشرطي يقرأ أقوال المتهم داخل المحضر.",
+      "المشهد يذكر كلمة جريمة دون أي فعل أو نية."
+    ],
+    "exceptions": [
+      "Educational discussion.",
+      "Documentary narration.",
+      "Historical narration.",
+      "Police investigation.",
+      "Court case.",
+      "Confession.",
+      "Witness testimony.",
+      "False accusation.",
+      "Dream sequence.",
+      "Flashback."
+    ],
+    "evidenceRules": {
+      "minimum": [
+        "An exact crime-related span inside the screenplay.",
+        "A speaker, narrator, or reporting source."
+      ],
+      "strong": [
+        "Explicit criminal act plus clear target or victim.",
+        "Dialogue plus scene action plus later confirmation.",
+        "Planning language plus execution or concealment language."
+      ],
+      "weak": [
+        "A single suspicious word without context.",
+        "An implied crime without corroboration.",
+        "A report or quotation that might not be endorsed."
+      ],
+      "insufficient": [
+        "Assumption without scene evidence.",
+        "A neutral historical or documentary reference.",
+        "A false accusation without independent proof."
+      ],
+      "confidenceGuidance": [
+        "100: Explicit crime with strong corroboration.",
+        "85: Strong evidence and stable context.",
+        "65: Evidence exists but needs caution.",
+        "40: Weak or partial support.",
+        "0: No reliable crime finding."
+      ]
+    },
+    "conceptRelationships": [
+      {
+        "fromConceptId": "crime_planning",
+        "toConceptId": "crime_conspiracy",
+        "relation": "supports",
+        "note": "Planning often feeds conspiracy."
+      },
+      {
+        "fromConceptId": "crime_attempt",
+        "toConceptId": "crime_execution",
+        "relation": "supports",
+        "note": "An attempt is a partial execution."
+      },
+      {
+        "fromConceptId": "crime_fraud",
+        "toConceptId": "crime_forgery",
+        "relation": "related",
+        "note": "Forgery often supports fraud."
+      },
+      {
+        "fromConceptId": "crime_bribery",
+        "toConceptId": "crime_corruption",
+        "relation": "supports",
+        "note": "Bribery frequently signals corruption."
+      },
+      {
+        "fromConceptId": "crime_organized_crime",
+        "toConceptId": "crime_money_laundering",
+        "relation": "supports",
+        "note": "Organized crime often uses laundering."
+      },
+      {
+        "fromConceptId": "crime_documentary",
+        "toConceptId": "crime_news",
+        "relation": "related",
+        "note": "Documentary and news are both reporting contexts."
+      },
+      {
+        "fromConceptId": "crime_false_accusation",
+        "toConceptId": "crime_confession",
+        "relation": "contrasts",
+        "note": "False accusation and confession are opposing outcomes."
+      },
+      {
+        "fromConceptId": "crime_scene_description",
+        "toConceptId": "crime_observation",
+        "relation": "supports",
+        "note": "Description and observation often co-occur."
+      },
+      {
+        "fromConceptId": "crime_police_investigation",
+        "toConceptId": "crime_court_case",
+        "relation": "related",
+        "note": "Police and court contexts often follow one another."
+      },
+      {
+        "fromConceptId": "crime_historical",
+        "toConceptId": "crime_documentary",
+        "relation": "supports",
+        "note": "Historical framing often appears in documentary narration."
+      }
+    ],
+    "glossaryReferences": [
+      {
+        "term": "جريمة",
+        "conceptId": "crime_reference",
+        "relation": "maps-to",
+        "note": "General crime anchor."
+      },
+      {
+        "term": "سرقة",
+        "conceptId": "crime_theft",
+        "relation": "maps-to",
+        "note": "Property crime anchor."
+      },
+      {
+        "term": "احتيال",
+        "conceptId": "crime_fraud",
+        "relation": "maps-to",
+        "note": "Financial crime anchor."
+      },
+      {
+        "term": "رشوة",
+        "conceptId": "crime_bribery",
+        "relation": "maps-to",
+        "note": "Corruption anchor."
+      },
+      {
+        "term": "عصابة",
+        "conceptId": "crime_organized_crime",
+        "relation": "maps-to",
+        "note": "Organized crime anchor."
+      },
+      {
+        "term": "قتل",
+        "conceptId": "crime_murder",
+        "relation": "maps-to",
+        "note": "Violent crime anchor."
+      },
+      {
+        "term": "تحقيق",
+        "conceptId": "crime_police_investigation",
+        "relation": "maps-to",
+        "note": "Investigation anchor."
+      },
+      {
+        "term": "محكمة",
+        "conceptId": "crime_court_case",
+        "relation": "maps-to",
+        "note": "Court anchor."
+      },
+      {
+        "term": "اعتراف",
+        "conceptId": "crime_confession",
+        "relation": "maps-to",
+        "note": "Confession anchor."
+      },
+      {
+        "term": "تقرير",
+        "conceptId": "crime_reported_event",
+        "relation": "maps-to",
+        "note": "Reported event anchor."
+      }
+    ],
+    "gcamMappings": [
+      {
+        "articleId": 4,
+        "articleTitle": "Content Context and Narrative Safety",
+        "articleNumber": "4",
+        "atomNumber": "4-2",
+        "reportTitle": "Crime Context Review",
+        "note": "Umbrella crime context."
+      },
+      {
+        "articleId": 9,
+        "articleTitle": "Violent Crime and Coercion",
+        "articleNumber": "9",
+        "atomNumber": "9-1",
+        "reportTitle": "Violent Crime Review",
+        "note": "Violent crime concept."
+      },
+      {
+        "articleId": 12,
+        "articleTitle": "Property and Public Disorder",
+        "articleNumber": "12",
+        "atomNumber": "12-1",
+        "reportTitle": "Property Crime Review",
+        "note": "Property crime concept."
+      },
+      {
+        "articleId": 13,
+        "articleTitle": "Financial and White-Collar Crime",
+        "articleNumber": "13",
+        "atomNumber": "13-1",
+        "reportTitle": "Financial Crime Review",
+        "note": "Financial crime concept."
+      },
+      {
+        "articleId": 14,
+        "articleTitle": "Organized Crime and Escalation",
+        "articleNumber": "14",
+        "atomNumber": "14-1",
+        "reportTitle": "Organized Crime Review",
+        "note": "Organized crime concept."
+      }
+    ],
+    "reportTemplates": [
+      {
+        "findingTitle": "Crime-related content",
+        "reasonTemplate": "The evidence supports a crime-related concept, but context must be checked before final classification.",
+        "recommendationTemplate": "Review the scene, speaker, and narrative intent before finalizing the finding.",
+        "severity": "medium",
+        "priority": 9,
+        "reportCategory": "crime"
+      }
+    ],
+    "benchmarkReferences": [
+      "crime_direct",
+      "crime_planned",
+      "crime_attempted",
+      "crime_cross_sentence",
+      "crime_cross_scene",
+      "crime_false_positive",
+      "crime_false_negative",
+      "crime_documentary",
+      "crime_court",
+      "crime_police"
+    ],
+    "prerequisites": [
+      "lesson_001_what_is_a_finding",
+      "lesson_002_what_is_evidence",
+      "lesson_003_understanding_context",
+      "lesson_004_speaker_identification",
+      "lesson_005_target_identification",
+      "lesson_006_intent_recognition",
+      "lesson_007_confidence_assessment",
+      "lesson_008_narrative_structure",
+      "lesson_009_concept_relationships",
+      "lesson_010_exception_recognition",
+      "lesson_011_multiple_findings",
+      "lesson_012_evidence_prioritization"
+    ],
+    "relatedLessons": [
+      "lesson_001_what_is_a_finding",
+      "lesson_002_what_is_evidence",
+      "lesson_003_understanding_context",
+      "lesson_004_speaker_identification",
+      "lesson_005_target_identification",
+      "lesson_006_intent_recognition",
+      "lesson_007_confidence_assessment",
+      "lesson_008_narrative_structure",
+      "lesson_009_concept_relationships",
+      "lesson_010_exception_recognition",
+      "lesson_011_multiple_findings",
+      "lesson_012_evidence_prioritization"
+    ],
+    "metadata": {
+      "author": "Raawi Academy",
+      "reviewLevel": "Production",
+      "priority": 9,
+      "domain": "crime"
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "version": "1.0.0",
+  "id": "sexuality_contexts",
+  "title": "Sexuality Contexts",
+  "description": "Canonical sexual-content contexts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "sexual_context_dialogue",
+      "title": "Sexual Context Dialogue",
+      "description": "Context marker for dialogue."
+    },
+    {
+      "id": "sexual_context_narration",
+      "title": "Sexual Context Narration",
+      "description": "Context marker for narration."
+    },
+    {
+      "id": "sexual_context_scene_description",
+      "title": "Sexual Context Scene Description",
+      "description": "Context marker for scene description."
+    },
+    {
+      "id": "sexual_context_documentary",
+      "title": "Sexual Context Documentary",
+      "description": "Context marker for documentary."
+    },
+    {
+      "id": "sexual_context_educational",
+      "title": "Sexual Context Educational",
+      "description": "Context marker for educational."
+    },
+    {
+      "id": "sexual_context_medical",
+      "title": "Sexual Context Medical",
+      "description": "Context marker for medical."
+    },
+    {
+      "id": "sexual_context_historical",
+      "title": "Sexual Context Historical",
+      "description": "Context marker for historical."
+    },
+    {
+      "id": "sexual_context_court",
+      "title": "Sexual Context Court",
+      "description": "Context marker for court."
+    },
+    {
+      "id": "sexual_context_police",
+      "title": "Sexual Context Police",
+      "description": "Context marker for police."
+    },
+    {
+      "id": "sexual_context_news",
+      "title": "Sexual Context News",
+      "description": "Context marker for news."
+    },
+    {
+      "id": "sexual_context_dream",
+      "title": "Sexual Context Dream",
+      "description": "Context marker for dream."
+    },
+    {
+      "id": "sexual_context_flashback",
+      "title": "Sexual Context Flashback",
+      "description": "Context marker for flashback."
+    },
+    {
+      "id": "sexual_context_comedy",
+      "title": "Sexual Context Comedy",
+      "description": "Context marker for comedy."
+    },
+    {
+      "id": "sexual_context_fiction",
+      "title": "Sexual Context Fiction",
+      "description": "Context marker for fiction."
+    },
+    {
+      "id": "sexual_context_role_play",
+      "title": "Sexual Context Role Play",
+      "description": "Context marker for role play."
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "security_security_forces_patterns",
+    "title": "Security Force Targeting Patterns",
+    "description": "Patterns for targeting police, military, and state institutions.",
+    "concepts": [
+      {
+        "id": "police",
+        "title": "Police",
+        "description": "Police officers, police institutions, or police targets."
+      },
+      {
+        "id": "military",
+        "title": "Military",
+        "description": "Armed forces, military institutions, or military targets."
+      },
+      {
+        "id": "state_institutions",
+        "title": "State Institutions",
+        "description": "Government institutions, state authority, and public order bodies."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "security_pattern_security_force_targeting",
+      "title": "Security Force Targeting",
+      "description": "Insults, threats, or incitement aimed at police, military, or state institutions.",
+      "primary_concept_id": "police",
+      "related_concept_ids": [
+        "military",
+        "state_institutions"
+      ],
+      "direct_expressions": [
+        "الشرطة كلهم فاسدون",
+        "الجيش عدو",
+        "هاجموا الوزارة"
+      ],
+      "indirect_expressions": [
+        "لا تثقوا بهم",
+        "أبعدوا الحماية",
+        "سلبوا هيبتهم"
+      ],
+      "semantic_intent": [
+        "targeting security forces",
+        "institutional hostility"
+      ],
+      "supporting_evidence": [
+        "A class-wide hostile statement targets a state body.",
+        "The sentence encourages opposition or harm."
+      ],
+      "contradictory_evidence": [
+        "The line is a neutral report.",
+        "The speaker is quoting an officer in testimony."
+      ],
+      "false_positives": [
+        "A complaint about one officer.",
+        "An audit report about institutional weakness."
+      ],
+      "counter_examples": [
+        "A news segment on police reform.",
+        "A documentary about military history."
+      ],
+      "cross_sentence_indicators": [
+        "A mild complaint becomes a hostile class-wide attack."
+      ],
+      "scene_indicators": [
+        "street confrontation",
+        "protest scene",
+        "briefing room"
+      ],
+      "reviewer_guidance": [
+        "Distinguish one-off criticism from class-based hostility.",
+        "Look for direct hostility toward institutions."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "modifier_collective_attack",
+          "title": "Collective Attack",
+          "description": "Hostility aimed at the institution as a class.",
+          "confidence": 94
+        },
+        {
+          "id": "modifier_individual_complaint",
+          "title": "Individual Complaint",
+          "description": "A complaint about a single officer only.",
+          "confidence": 40
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rel_police_state",
+          "from_concept_id": "police",
+          "to_concept_id": "state_institutions",
+          "relation": "supports",
+          "note": "Police are part of state institutions."
+        },
+        {
+          "id": "rel_military_state",
+          "from_concept_id": "military",
+          "to_concept_id": "state_institutions",
+          "relation": "supports",
+          "note": "Military is a state institution."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "gcam_security_13_4",
+          "article_id": 13,
+          "atom_ids": [
+            "13-4",
+            "13-5"
+          ],
+          "role": "Institutional hostility",
+          "note": "Use when state institutions are attacked or discredited."
+        },
+        {
+          "id": "gcam_security_12_4",
+          "article_id": 12,
+          "atom_ids": [
+            "12-4"
+          ],
+          "role": "Public order destabilization",
+          "note": "Use when hostility undermines social peace."
+        }
+      ],
+      "examples": [
+        {
+          "id": "example_security_force_001",
+          "title": "Collective insult",
+          "text": "الشرطة كلهم فاسدون",
+          "expected_outcome": "Institutional hostility.",
+          "note": null
+        },
+        {
+          "id": "example_security_force_002",
+          "title": "Attack on ministry",
+          "text": "هاجموا الوزارة",
+          "expected_outcome": "Direct incitement against a state institution.",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

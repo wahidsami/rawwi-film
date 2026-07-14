@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "children_targets",
+  "title": "Children Targets",
+  "description": "Canonical targets for child-safety reasoning.",
+  "entries": [
+    {
+      "id": "children_target_child",
+      "title": "Child",
+      "description": "A child receiving or exposed to the action."
+    },
+    {
+      "id": "children_target_infant",
+      "title": "Infant",
+      "description": "An infant receiving or exposed to the action."
+    },
+    {
+      "id": "children_target_teenager",
+      "title": "Teenager",
+      "description": "A teenager receiving or exposed to the action."
+    },
+    {
+      "id": "children_target_minor",
+      "title": "Minor",
+      "description": "A minor receiving or exposed to the action."
+    },
+    {
+      "id": "children_target_disabled_child",
+      "title": "Disabled Child",
+      "description": "A disabled child receiving or exposed to the action."
+    },
+    {
+      "id": "children_target_disabled_adult",
+      "title": "Disabled Adult",
+      "description": "A disabled adult receiving or exposed to the action."
+    },
+    {
+      "id": "children_target_elderly_person",
+      "title": "Elderly Person",
+      "description": "An elderly person receiving or exposed to the action."
+    },
+    {
+      "id": "children_target_vulnerable_person",
+      "title": "Vulnerable Person",
+      "description": "A vulnerable person receiving or exposed to the action."
+    },
+    {
+      "id": "children_target_parent",
+      "title": "Parent",
+      "description": "A parent targeted in the scene or dialogue."
+    },
+    {
+      "id": "children_target_guardian",
+      "title": "Guardian",
+      "description": "A guardian targeted in the scene or dialogue."
+    }
+  ]
+}

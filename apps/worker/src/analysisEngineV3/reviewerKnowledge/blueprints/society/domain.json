@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "society_domain",
+  "title": "Society Domain Blueprint",
+  "description": "Top-level society knowledge blueprint used by Academy lessons and reviewer packs.",
+  "entries": [
+    {
+      "id": "society_domain",
+      "title": "Society",
+      "description": "Society reasoning across family, civility, identity, community, public behavior, and social cohesion."
+    }
+  ]
+}

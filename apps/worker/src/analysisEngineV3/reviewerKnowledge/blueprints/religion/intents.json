@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "id": "religion_intents",
+  "title": "Religion Intents",
+  "description": "Intent categories used in religion reasoning.",
+  "entries": [
+    {
+      "id": "religion_intent_educate",
+      "title": "Educate",
+      "description": "Explain religious matters for learning."
+    },
+    {
+      "id": "religion_intent_explain",
+      "title": "Explain",
+      "description": "Clarify meaning or context."
+    },
+    {
+      "id": "religion_intent_condemn",
+      "title": "Condemn",
+      "description": "Reject or denounce harmful content."
+    },
+    {
+      "id": "religion_intent_mock",
+      "title": "Mock",
+      "description": "Ridicule or belittle sacred matters."
+    },
+    {
+      "id": "religion_intent_attack",
+      "title": "Attack",
+      "description": "Directly attack religion or sanctities."
+    },
+    {
+      "id": "religion_intent_debate",
+      "title": "Debate",
+      "description": "Discuss or compare positions."
+    },
+    {
+      "id": "religion_intent_neutral",
+      "title": "Neutral",
+      "description": "Describe without endorsement or attack."
+    },
+    {
+      "id": "religion_intent_historical_narration",
+      "title": "Historical Narration",
+      "description": "Narrate a past event historically."
+    },
+    {
+      "id": "religion_intent_satire",
+      "title": "Satire",
+      "description": "Use irony, exaggeration, or parody."
+    }
+  ]
+}

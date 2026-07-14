@@ -1,0 +1,142 @@
+{
+  "id": "lesson_009_concept_relationships",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 9,
+  "title": "Concept Relationship Reasoning",
+  "summary": "Teach the reviewer to understand how concepts interact with each other rather than evaluating each concept independently.",
+  "dependsOn": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure"
+  ],
+  "learningObjectives": [
+    "Recognize relationships between concepts.",
+    "Understand that concepts influence one another.",
+    "Avoid isolated concept evaluation.",
+    "Build a coherent concept graph before legal reasoning."
+  ],
+  "definitions": {
+    "concept": "A meaningful narrative element extracted from the screenplay.",
+    "relationship": "A logical connection between two or more concepts.",
+    "conceptGraph": "A network describing how concepts influence one another.",
+    "primaryConcept": "The central concept driving the scene.",
+    "secondaryConcept": "A supporting concept."
+  },
+  "reviewerPrinciples": [
+    "Concepts rarely exist in isolation.",
+    "The relationship is often more important than the concept itself.",
+    "Multiple weak concepts together may form strong evidence.",
+    "One dominant concept may explain several secondary concepts.",
+    "Relationships should be evidence-based."
+  ],
+  "reviewerQuestions": [
+    "Which concept is primary?",
+    "Which concepts support it?",
+    "Do concepts reinforce each other?",
+    "Do concepts contradict each other?",
+    "Can one concept explain another?",
+    "Does removing one concept change the scene?"
+  ],
+  "relationshipTypes": [
+    "Cause",
+    "Effect",
+    "Support",
+    "Contradiction",
+    "Escalation",
+    "Mitigation",
+    "Sequence",
+    "Dependency",
+    "Association"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Have all concepts been identified?",
+      "yes": 2,
+      "no": "Needs Review"
+    },
+    {
+      "step": 2,
+      "question": "Have concept relationships been established?",
+      "yes": 3,
+      "no": "Needs Review"
+    },
+    {
+      "step": 3,
+      "question": "Do relationships change interpretation?",
+      "yes": "Re-evaluate",
+      "no": "Proceed"
+    }
+  ],
+  "examples": [
+    {
+      "text": "A child is threatened with a weapon.",
+      "conceptGraph": [
+        "Child",
+        "Weapon",
+        "Threat"
+      ]
+    },
+    {
+      "text": "Police arrest the terrorist.",
+      "conceptGraph": [
+        "Police",
+        "Terrorism",
+        "Justice"
+      ]
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Evaluate 'weapon' without considering who carries it.",
+      "reason": "Relationship ignored."
+    }
+  ],
+  "commonMistakes": [
+    "Reviewing concepts independently.",
+    "Ignoring relationships.",
+    "Promoting secondary concepts over primary ones.",
+    "Ignoring causal chains."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Can multiple concepts influence one another?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Should concepts always be reviewed independently?",
+        "answer": "No"
+      },
+      {
+        "question": "Can relationships change legal interpretation?",
+        "answer": "Yes"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Build concept graphs.",
+    "Improve reasoning consistency.",
+    "Reduce fragmented analysis."
+  ],
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "concept_graph_child_weapon",
+    "concept_graph_police_terrorism",
+    "concept_graph_multiple"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 9
+  }
+}

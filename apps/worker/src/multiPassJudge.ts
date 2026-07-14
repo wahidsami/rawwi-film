@@ -36,6 +36,7 @@ import {
   V4_SUBJECT_DEFINITIONS,
   type V4SubjectDefinition,
 } from "./v4PromptPack.js";
+import { buildV3PromptPrelude } from "./analysisEngineV3/engine/index.js";
 import type { AnalysisExecutionSignatureInput } from "./executionSignature.js";
 
 export interface LexiconTerm {
@@ -1611,6 +1612,8 @@ interface PassResult {
   error?: string;
 }
 
+type AnalysisEngineMode = "v2" | "v3" | "hybrid" | "policy_v1";
+
 function hasGovernanceAnchor(text: string): boolean {
   return /(نظام\s+الحكم|القيادة\s+السياسية|الحكومة|الدولة|الملك|ولي\s+العهد|انقلاب|انتفاض|إسقاط|تمرد|الأمن\s+الوطني|مؤسسات\s+الحكم)/u.test(
     text,
@@ -1807,7 +1810,7 @@ async function runSinglePass(
   pass: PassDefinition,
   allArticles: GCAMArticle[],
   lexiconTerms: LexiconTerm[],
-  jobConfig: { temperature: number; seed: number; analysis_signature_context?: AnalysisExecutionSignatureInput | null },
+  jobConfig: { temperature: number; seed: number; analysis_engine?: AnalysisEngineMode; analysis_signature_context?: AnalysisExecutionSignatureInput | null },
   promptContext?: string,
   signal?: AbortSignal,
   diagnosticContext?: JudgeDiagnosticContext
@@ -1839,9 +1842,29 @@ async function runSinglePass(
     // Build specialized prompt
     const promptBase = pass.buildPrompt(articles, lexiconTerms);
     const promptVersioned = applyViolationSystemOverlay(promptBase, pass.name);
-    const prompt = promptContext && promptContext.trim().length > 0
-      ? `${promptVersioned}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nسياق إضافي للمراجعة (Pipeline V2)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${promptContext.trim()}`
-      : promptVersioned;
+    const engineMode = jobConfig.analysis_engine ?? "v2";
+    const prompt = engineMode === "v3"
+      ? (() => {
+          const chunkSummary = [
+            `Chunk offsets: ${chunkStart}..${chunkEnd}`,
+            `Chunk length: ${chunkText.length}`,
+            `Chunk preview: ${chunkText.slice(0, 1600)}`,
+          ].join("\n");
+          const v3Prelude = buildV3PromptPrelude({
+            activeRoute: pass.name,
+            storyMemory: promptContext ?? "",
+            glossaryEntries: lexiconTerms.map((term) => ({
+              term: term.term,
+              articleId: term.gcam_article_id,
+              variants: term.term_variants ?? null,
+            })),
+            chunkSummary,
+          });
+          return `${promptVersioned}\n\n${v3Prelude}`;
+        })()
+      : promptContext && promptContext.trim().length > 0
+        ? `${promptVersioned}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nسياق إضافي للمراجعة (Pipeline V2)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${promptContext.trim()}`
+        : promptVersioned;
     const userPromptAddition =
       pass.name === "insults"
         ? buildInsultsUserPromptAddition()
@@ -2127,7 +2150,7 @@ export async function runMultiPassDetection(
   chunkEnd: number,
   allArticles: GCAMArticle[],
   lexiconTerms: LexiconTerm[],
-  jobConfig: { temperature: number; seed: number; analysis_signature_context?: AnalysisExecutionSignatureInput | null },
+  jobConfig: { temperature: number; seed: number; analysis_engine?: AnalysisEngineMode; analysis_signature_context?: AnalysisExecutionSignatureInput | null },
   progressOpts?: { chunkId: string },
   executionPlan?: DetectionPassExecutionPlan,
   promptContext?: string,

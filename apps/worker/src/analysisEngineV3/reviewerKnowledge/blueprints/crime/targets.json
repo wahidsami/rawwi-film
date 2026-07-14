@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "crime_targets",
+  "title": "Crime Targets",
+  "description": "Target taxonomy for crime reasoning.",
+  "entries": [
+    {
+      "id": "crime_target_person",
+      "title": "Person",
+      "description": "An individual targeted by crime."
+    },
+    {
+      "id": "crime_target_property",
+      "title": "Property",
+      "description": "Property or assets targeted by crime."
+    },
+    {
+      "id": "crime_target_bank",
+      "title": "Bank",
+      "description": "Financial institution targeted by fraud or laundering."
+    },
+    {
+      "id": "crime_target_state",
+      "title": "State",
+      "description": "State institutions or public order target."
+    },
+    {
+      "id": "crime_target_child",
+      "title": "Child",
+      "description": "Minor or child target."
+    },
+    {
+      "id": "crime_target_witness",
+      "title": "Witness",
+      "description": "Witness or informant target."
+    },
+    {
+      "id": "crime_target_victim",
+      "title": "Victim",
+      "description": "Victim of the criminal act."
+    },
+    {
+      "id": "crime_target_system",
+      "title": "System",
+      "description": "Digital or operational system target."
+    },
+    {
+      "id": "crime_target_document",
+      "title": "Document",
+      "description": "Documents targeted by forgery or fraud."
+    },
+    {
+      "id": "crime_target_money",
+      "title": "Money",
+      "description": "Money targeted by theft or laundering."
+    }
+  ]
+}

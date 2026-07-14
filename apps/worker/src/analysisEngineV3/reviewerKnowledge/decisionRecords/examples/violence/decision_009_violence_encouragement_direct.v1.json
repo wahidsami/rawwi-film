@@ -1,0 +1,51 @@
+{
+  "id": "violence_009_violence_encouragement_direct",
+  "version": "1.0.0",
+  "title": "Violence Encouragement (direct)",
+  "summary": "Violence Encouragement in direct framing.",
+  "originalScenario": "اضربه الآن ولا تتراجع.",
+  "reviewQuestion": "Is this violence encouragement?",
+  "initialSuspicion": "Possible violence encouragement.",
+  "possibleConcepts": [
+    "violence_encouragement"
+  ],
+  "supportingEvidence": [
+    "اضربه الآن ولا تتراجع."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "promotive",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 14,
+      "atom_ids": [
+        "14-3"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_encouragement",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_encouragement"
+  ]
+}

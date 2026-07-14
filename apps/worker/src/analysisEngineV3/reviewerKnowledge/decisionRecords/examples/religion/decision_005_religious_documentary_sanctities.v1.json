@@ -1,0 +1,71 @@
+{
+  "id": "decision_005_religious_documentary_sanctities",
+  "version": "1.0.0",
+  "title": "Religious documentary about sanctities",
+  "summary": "Documentary reference to sanctities.",
+  "originalScenario": "The documentary shows sacred places and explains their importance.",
+  "reviewQuestion": "Is this documentary reporting rather than attack?",
+  "initialSuspicion": "Documentary mention.",
+  "possibleConcepts": [
+    "religious_sanctities",
+    "holy_places",
+    "religious_symbols"
+  ],
+  "supportingEvidence": [
+    "documentary shows sacred places"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Documentary narration.",
+  "speakerAnalysis": "Narrator is informational.",
+  "targetAnalysis": "Sacred places as topic.",
+  "intentAnalysis": "Documentary explanation.",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check context",
+    "Apply religion pack heuristics",
+    "Map to GCAM article"
+  ],
+  "reviewerDecision": "No finding",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 1,
+      "atom_ids": [],
+      "note": "Sanctity reference."
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Pure report style should not trigger.",
+  "benchmarkTags": [
+    "religion",
+    "documentary",
+    "sanctity"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "religion_pattern_historical"
+  ],
+  "relatedBlueprintConcepts": [
+    "religion_religious_sanctities",
+    "religion_holy_places",
+    "religion_religious_symbols"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "id": "children_review_questions",
+  "title": "Children Review Questions",
+  "description": "Deterministic reviewer questions for the children domain.",
+  "entries": [
+    {
+      "id": "children_question_who_is_vulnerable",
+      "title": "Who is vulnerable?",
+      "description": "Identify the child or vulnerable person before judging the scene."
+    },
+    {
+      "id": "children_question_who_speaks",
+      "title": "Who speaks?",
+      "description": "Identify the speaker, narrator, or quoted voice."
+    },
+    {
+      "id": "children_question_who_targets",
+      "title": "Who is targeted?",
+      "description": "Separate direct targets from implied targets."
+    },
+    {
+      "id": "children_question_what_happened",
+      "title": "What happened?",
+      "description": "Decide whether the scene shows abuse, neglect, protection, or neutral observation."
+    },
+    {
+      "id": "children_question_what_intent",
+      "title": "What is the intent?",
+      "description": "Check whether the line encourages harm, condemns it, or remains neutral."
+    },
+    {
+      "id": "children_question_what_context",
+      "title": "What is the context?",
+      "description": "Check for educational, medical, documentary, court, or fictional framing."
+    },
+    {
+      "id": "children_question_what_evidence",
+      "title": "What is the evidence?",
+      "description": "Locate the exact literal phrase or action that matters."
+    },
+    {
+      "id": "children_question_is_it_safe",
+      "title": "Is it safe?",
+      "description": "Decide whether the scene is protective, harmful, or ambiguous."
+    }
+  ]
+}

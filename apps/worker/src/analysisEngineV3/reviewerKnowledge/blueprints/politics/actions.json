@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "politics_actions",
+  "title": "Politics Actions",
+  "description": "Canonical politics actions for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "politics_action_reference",
+      "title": "Action Reference",
+      "description": "Action Reference as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_criticism",
+      "title": "Action Criticism",
+      "description": "Action Criticism as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_support",
+      "title": "Action Support",
+      "description": "Action Support as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_glorification",
+      "title": "Action Glorification",
+      "description": "Action Glorification as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_encouragement",
+      "title": "Action Encouragement",
+      "description": "Action Encouragement as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_propaganda",
+      "title": "Action Propaganda",
+      "description": "Action Propaganda as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_instruction",
+      "title": "Action Instruction",
+      "description": "Action Instruction as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_documentary",
+      "title": "Action Documentary",
+      "description": "Action Documentary as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_news",
+      "title": "Action News",
+      "description": "Action News as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_historical_narration",
+      "title": "Action Historical Narration",
+      "description": "Action Historical Narration as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_education",
+      "title": "Action Education",
+      "description": "Action Education as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_debate",
+      "title": "Action Debate",
+      "description": "Action Debate as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_rally",
+      "title": "Action Rally",
+      "description": "Action Rally as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_unrest",
+      "title": "Action Unrest",
+      "description": "Action Unrest as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_symbol_display",
+      "title": "Action Symbol Display",
+      "description": "Action Symbol Display as a reviewer-relevant political action."
+    },
+    {
+      "id": "politics_action_vote",
+      "title": "Action Vote",
+      "description": "Action Vote as a reviewer-relevant political action."
+    }
+  ]
+}

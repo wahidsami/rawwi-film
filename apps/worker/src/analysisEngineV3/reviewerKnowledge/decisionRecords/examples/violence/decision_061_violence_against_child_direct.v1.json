@@ -1,0 +1,51 @@
+{
+  "id": "violence_061_violence_against_child_direct",
+  "version": "1.0.0",
+  "title": "Violence Against Child (direct)",
+  "summary": "Violence Against Child in direct framing.",
+  "originalScenario": "يضرب الطفل بقسوة.",
+  "reviewQuestion": "Is this violence against child?",
+  "initialSuspicion": "Possible violence against child.",
+  "possibleConcepts": [
+    "violence_against_child"
+  ],
+  "supportingEvidence": [
+    "يضرب الطفل بقسوة."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "event",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_against_child",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_against_child"
+  ]
+}

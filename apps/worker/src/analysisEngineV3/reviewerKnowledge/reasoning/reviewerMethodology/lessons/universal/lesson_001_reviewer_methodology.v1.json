@@ -1,0 +1,1069 @@
+{
+  "schema_version": 1,
+  "lesson_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "lesson": {
+    "id": "lesson_001_reviewer_methodology",
+    "title": "Reviewer Methodology Framework",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "language": "en",
+    "summary": "Teach reviewers how to think before any domain-specific reasoning begins.",
+    "learningObjectives": [
+      "Separate observation from finding.",
+      "Prioritize strong evidence over weak evidence.",
+      "Use context, exceptions, and confidence correctly.",
+      "Avoid false positives and false negatives.",
+      "Recognize when more context is required."
+    ],
+    "concepts": [
+      {
+        "id": "finding_identification",
+        "title": "Finding Identification",
+        "summary": "Methodology skill for finding identification across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "evidence_collection",
+        "title": "Evidence Collection",
+        "summary": "Methodology skill for evidence collection across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "evidence_prioritization",
+        "title": "Evidence Prioritization",
+        "summary": "Methodology skill for evidence prioritization across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "context_analysis",
+        "title": "Context Analysis",
+        "summary": "Methodology skill for context analysis across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "cross_sentence_reasoning",
+        "title": "Cross Sentence Reasoning",
+        "summary": "Methodology skill for cross sentence reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "cross_scene_reasoning",
+        "title": "Cross Scene Reasoning",
+        "summary": "Methodology skill for cross scene reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "story_reasoning",
+        "title": "Story Reasoning",
+        "summary": "Methodology skill for story reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "intent_reasoning",
+        "title": "Intent Reasoning",
+        "summary": "Methodology skill for intent reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "relationship_reasoning",
+        "title": "Relationship Reasoning",
+        "summary": "Methodology skill for relationship reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "target_identification",
+        "title": "Target Identification",
+        "summary": "Methodology skill for target identification across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "speaker_identification",
+        "title": "Speaker Identification",
+        "summary": "Methodology skill for speaker identification across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "victim_identification",
+        "title": "Victim Identification",
+        "summary": "Methodology skill for victim identification across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "actor_identification",
+        "title": "Actor Identification",
+        "summary": "Methodology skill for actor identification across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "implicit_meaning",
+        "title": "Implicit Meaning",
+        "summary": "Methodology skill for implicit meaning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "hidden_meaning",
+        "title": "Hidden Meaning",
+        "summary": "Methodology skill for hidden meaning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "symbolic_reasoning",
+        "title": "Symbolic Reasoning",
+        "summary": "Methodology skill for symbolic reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "metaphor_reasoning",
+        "title": "Metaphor Reasoning",
+        "summary": "Methodology skill for metaphor reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "sarcasm_reasoning",
+        "title": "Sarcasm Reasoning",
+        "summary": "Methodology skill for sarcasm reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "comedy_reasoning",
+        "title": "Comedy Reasoning",
+        "summary": "Methodology skill for comedy reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "satire_reasoning",
+        "title": "Satire Reasoning",
+        "summary": "Methodology skill for satire reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "quotation_reasoning",
+        "title": "Quotation Reasoning",
+        "summary": "Methodology skill for quotation reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "historical_reasoning",
+        "title": "Historical Reasoning",
+        "summary": "Methodology skill for historical reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "documentary_reasoning",
+        "title": "Documentary Reasoning",
+        "summary": "Methodology skill for documentary reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "educational_reasoning",
+        "title": "Educational Reasoning",
+        "summary": "Methodology skill for educational reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "dream_reasoning",
+        "title": "Dream Reasoning",
+        "summary": "Methodology skill for dream reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "flashback_reasoning",
+        "title": "Flashback Reasoning",
+        "summary": "Methodology skill for flashback reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "scene_description_reasoning",
+        "title": "Scene Description Reasoning",
+        "summary": "Methodology skill for scene description reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "observation_reasoning",
+        "title": "Observation Reasoning",
+        "summary": "Methodology skill for observation reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "dialogue_reasoning",
+        "title": "Dialogue Reasoning",
+        "summary": "Methodology skill for dialogue reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "visual_reasoning",
+        "title": "Visual Reasoning",
+        "summary": "Methodology skill for visual reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "audio_reasoning",
+        "title": "Audio Reasoning",
+        "summary": "Methodology skill for audio reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "confidence_assessment",
+        "title": "Confidence Assessment",
+        "summary": "Methodology skill for confidence assessment across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "contradiction_resolution",
+        "title": "Contradiction Resolution",
+        "summary": "Methodology skill for contradiction resolution across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "multi_evidence_reasoning",
+        "title": "Multi Evidence Reasoning",
+        "summary": "Methodology skill for multi evidence reasoning across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "exception_recognition",
+        "title": "Exception Recognition",
+        "summary": "Methodology skill for exception recognition across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "false_positive_detection",
+        "title": "False Positive Detection",
+        "summary": "Methodology skill for false positive detection across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "false_negative_detection",
+        "title": "False Negative Detection",
+        "summary": "Methodology skill for false negative detection across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "reviewer_comment_generation",
+        "title": "Reviewer Comment Generation",
+        "summary": "Methodology skill for reviewer comment generation across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "finding_generation",
+        "title": "Finding Generation",
+        "summary": "Methodology skill for finding generation across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "report_priority",
+        "title": "Report Priority",
+        "summary": "Methodology skill for report priority across all reviewer domains.",
+        "tags": [
+          "methodology",
+          "review",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          4
+        ]
+      }
+    ],
+    "reviewerQuestions": [
+      {
+        "id": "methodology_question_observation",
+        "purpose": "What is the first observation?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Start with a neutral observation before any finding.",
+        "evidenceRequirements": [
+          "The answer must cite literal evidence."
+        ]
+      },
+      {
+        "id": "methodology_question_evidence",
+        "purpose": "What is the primary evidence?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Name the strongest evidence, not every clue.",
+        "evidenceRequirements": [
+          "The answer must identify the strongest local support."
+        ]
+      },
+      {
+        "id": "methodology_question_context",
+        "purpose": "What context changes the reading?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Track nearby sentences and cross-scene context.",
+        "evidenceRequirements": [
+          "The answer must use scene or story context."
+        ]
+      },
+      {
+        "id": "methodology_question_sentence",
+        "purpose": "Does another sentence change the meaning?",
+        "expectedAnswerFormat": "Yes/No with note.",
+        "reasoningGuidance": "Never stop at one sentence when more context exists.",
+        "evidenceRequirements": [
+          "The answer must mention the relevant sentence pair."
+        ]
+      },
+      {
+        "id": "methodology_question_scene",
+        "purpose": "Does another scene change the meaning?",
+        "expectedAnswerFormat": "Yes/No with note.",
+        "reasoningGuidance": "Use cross-scene memory when needed.",
+        "evidenceRequirements": [
+          "The answer must cite the scene link."
+        ]
+      },
+      {
+        "id": "methodology_question_intent",
+        "purpose": "What is the reviewer intent?",
+        "expectedAnswerFormat": "One label.",
+        "reasoningGuidance": "Separate review comment, possible finding, and confirmed finding.",
+        "evidenceRequirements": [
+          "The answer must not overstate certainty."
+        ]
+      },
+      {
+        "id": "methodology_question_confidence",
+        "purpose": "How confident is the reading?",
+        "expectedAnswerFormat": "A confidence label.",
+        "reasoningGuidance": "Calibrate confidence to the quality of the evidence.",
+        "evidenceRequirements": [
+          "The answer must reflect evidence strength."
+        ]
+      },
+      {
+        "id": "methodology_question_exception",
+        "purpose": "Does an exception apply?",
+        "expectedAnswerFormat": "One label.",
+        "reasoningGuidance": "Check quotation, fiction, history, education, and other exceptions.",
+        "evidenceRequirements": [
+          "The answer must reference the exception cue."
+        ]
+      },
+      {
+        "id": "methodology_question_false_positive",
+        "purpose": "Could this be a false positive?",
+        "expectedAnswerFormat": "Yes/No with note.",
+        "reasoningGuidance": "Identify tempting but unsupported interpretations.",
+        "evidenceRequirements": [
+          "The answer must explain the false positive risk."
+        ]
+      },
+      {
+        "id": "methodology_question_false_negative",
+        "purpose": "Could something be missed?",
+        "expectedAnswerFormat": "Yes/No with note.",
+        "reasoningGuidance": "Look for undercalled evidence or hidden context.",
+        "evidenceRequirements": [
+          "The answer must explain the false negative risk."
+        ]
+      }
+    ],
+    "examples": [
+      "A reviewer first notes an observation, then decides whether the evidence is enough for a finding.",
+      "A later scene can lower or raise confidence.",
+      "An exception like quotation or fiction can prevent an overread conclusion."
+    ],
+    "counterExamples": [
+      "Turning every observation into a confirmed finding.",
+      "Ignoring contradiction from later context.",
+      "Treating ambiguity as certainty."
+    ],
+    "exceptions": [
+      "quotation",
+      "historical narration",
+      "documentary framing",
+      "educational framing",
+      "fiction",
+      "dream",
+      "flashback",
+      "role play",
+      "satire"
+    ],
+    "evidenceRules": {
+      "minimum": [
+        "At least one literal clue must be present in the local chunk.",
+        "The reviewer must identify the relevant speaker, target, or context cue when available."
+      ],
+      "strong": [
+        "Multiple independent cues point to the same interpretation.",
+        "The local chunk and surrounding context reinforce each other.",
+        "A later sentence or scene confirms the initial reading."
+      ],
+      "weak": [
+        "Only one sentence supports the interpretation.",
+        "The scene is ambiguous or partially hidden."
+      ],
+      "insufficient": [
+        "Speculation without evidence.",
+        "Inventing a relationship or intent not supported by the text."
+      ],
+      "confidenceGuidance": [
+        "High confidence when evidence is direct and corroborated.",
+        "Medium confidence when evidence is plausible but incomplete.",
+        "Low confidence when evidence is weak or contradictory.",
+        "Review required when the scene is ambiguous or exception-prone."
+      ]
+    },
+    "conceptRelationships": [
+      {
+        "fromConceptId": "finding_identification",
+        "toConceptId": "evidence_collection",
+        "relation": "supports",
+        "note": "The methodology skill finding_identification leads into evidence_collection."
+      },
+      {
+        "fromConceptId": "evidence_collection",
+        "toConceptId": "evidence_prioritization",
+        "relation": "supports",
+        "note": "The methodology skill evidence_collection leads into evidence_prioritization."
+      },
+      {
+        "fromConceptId": "evidence_prioritization",
+        "toConceptId": "context_analysis",
+        "relation": "supports",
+        "note": "The methodology skill evidence_prioritization leads into context_analysis."
+      },
+      {
+        "fromConceptId": "context_analysis",
+        "toConceptId": "cross_sentence_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill context_analysis leads into cross_sentence_reasoning."
+      },
+      {
+        "fromConceptId": "cross_sentence_reasoning",
+        "toConceptId": "cross_scene_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill cross_sentence_reasoning leads into cross_scene_reasoning."
+      },
+      {
+        "fromConceptId": "cross_scene_reasoning",
+        "toConceptId": "story_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill cross_scene_reasoning leads into story_reasoning."
+      },
+      {
+        "fromConceptId": "story_reasoning",
+        "toConceptId": "intent_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill story_reasoning leads into intent_reasoning."
+      },
+      {
+        "fromConceptId": "intent_reasoning",
+        "toConceptId": "relationship_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill intent_reasoning leads into relationship_reasoning."
+      },
+      {
+        "fromConceptId": "relationship_reasoning",
+        "toConceptId": "target_identification",
+        "relation": "supports",
+        "note": "The methodology skill relationship_reasoning leads into target_identification."
+      },
+      {
+        "fromConceptId": "target_identification",
+        "toConceptId": "speaker_identification",
+        "relation": "supports",
+        "note": "The methodology skill target_identification leads into speaker_identification."
+      },
+      {
+        "fromConceptId": "speaker_identification",
+        "toConceptId": "victim_identification",
+        "relation": "supports",
+        "note": "The methodology skill speaker_identification leads into victim_identification."
+      },
+      {
+        "fromConceptId": "victim_identification",
+        "toConceptId": "actor_identification",
+        "relation": "supports",
+        "note": "The methodology skill victim_identification leads into actor_identification."
+      },
+      {
+        "fromConceptId": "actor_identification",
+        "toConceptId": "implicit_meaning",
+        "relation": "supports",
+        "note": "The methodology skill actor_identification leads into implicit_meaning."
+      },
+      {
+        "fromConceptId": "implicit_meaning",
+        "toConceptId": "hidden_meaning",
+        "relation": "supports",
+        "note": "The methodology skill implicit_meaning leads into hidden_meaning."
+      },
+      {
+        "fromConceptId": "hidden_meaning",
+        "toConceptId": "symbolic_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill hidden_meaning leads into symbolic_reasoning."
+      },
+      {
+        "fromConceptId": "symbolic_reasoning",
+        "toConceptId": "metaphor_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill symbolic_reasoning leads into metaphor_reasoning."
+      },
+      {
+        "fromConceptId": "metaphor_reasoning",
+        "toConceptId": "sarcasm_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill metaphor_reasoning leads into sarcasm_reasoning."
+      },
+      {
+        "fromConceptId": "sarcasm_reasoning",
+        "toConceptId": "comedy_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill sarcasm_reasoning leads into comedy_reasoning."
+      },
+      {
+        "fromConceptId": "comedy_reasoning",
+        "toConceptId": "satire_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill comedy_reasoning leads into satire_reasoning."
+      },
+      {
+        "fromConceptId": "satire_reasoning",
+        "toConceptId": "quotation_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill satire_reasoning leads into quotation_reasoning."
+      },
+      {
+        "fromConceptId": "quotation_reasoning",
+        "toConceptId": "historical_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill quotation_reasoning leads into historical_reasoning."
+      },
+      {
+        "fromConceptId": "historical_reasoning",
+        "toConceptId": "documentary_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill historical_reasoning leads into documentary_reasoning."
+      },
+      {
+        "fromConceptId": "documentary_reasoning",
+        "toConceptId": "educational_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill documentary_reasoning leads into educational_reasoning."
+      },
+      {
+        "fromConceptId": "educational_reasoning",
+        "toConceptId": "dream_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill educational_reasoning leads into dream_reasoning."
+      },
+      {
+        "fromConceptId": "dream_reasoning",
+        "toConceptId": "flashback_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill dream_reasoning leads into flashback_reasoning."
+      },
+      {
+        "fromConceptId": "flashback_reasoning",
+        "toConceptId": "scene_description_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill flashback_reasoning leads into scene_description_reasoning."
+      },
+      {
+        "fromConceptId": "scene_description_reasoning",
+        "toConceptId": "observation_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill scene_description_reasoning leads into observation_reasoning."
+      },
+      {
+        "fromConceptId": "observation_reasoning",
+        "toConceptId": "dialogue_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill observation_reasoning leads into dialogue_reasoning."
+      },
+      {
+        "fromConceptId": "dialogue_reasoning",
+        "toConceptId": "visual_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill dialogue_reasoning leads into visual_reasoning."
+      },
+      {
+        "fromConceptId": "visual_reasoning",
+        "toConceptId": "audio_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill visual_reasoning leads into audio_reasoning."
+      },
+      {
+        "fromConceptId": "audio_reasoning",
+        "toConceptId": "confidence_assessment",
+        "relation": "supports",
+        "note": "The methodology skill audio_reasoning leads into confidence_assessment."
+      },
+      {
+        "fromConceptId": "confidence_assessment",
+        "toConceptId": "contradiction_resolution",
+        "relation": "supports",
+        "note": "The methodology skill confidence_assessment leads into contradiction_resolution."
+      },
+      {
+        "fromConceptId": "contradiction_resolution",
+        "toConceptId": "multi_evidence_reasoning",
+        "relation": "supports",
+        "note": "The methodology skill contradiction_resolution leads into multi_evidence_reasoning."
+      },
+      {
+        "fromConceptId": "multi_evidence_reasoning",
+        "toConceptId": "exception_recognition",
+        "relation": "supports",
+        "note": "The methodology skill multi_evidence_reasoning leads into exception_recognition."
+      },
+      {
+        "fromConceptId": "exception_recognition",
+        "toConceptId": "false_positive_detection",
+        "relation": "supports",
+        "note": "The methodology skill exception_recognition leads into false_positive_detection."
+      },
+      {
+        "fromConceptId": "false_positive_detection",
+        "toConceptId": "false_negative_detection",
+        "relation": "supports",
+        "note": "The methodology skill false_positive_detection leads into false_negative_detection."
+      },
+      {
+        "fromConceptId": "false_negative_detection",
+        "toConceptId": "reviewer_comment_generation",
+        "relation": "supports",
+        "note": "The methodology skill false_negative_detection leads into reviewer_comment_generation."
+      },
+      {
+        "fromConceptId": "reviewer_comment_generation",
+        "toConceptId": "finding_generation",
+        "relation": "supports",
+        "note": "The methodology skill reviewer_comment_generation leads into finding_generation."
+      },
+      {
+        "fromConceptId": "finding_generation",
+        "toConceptId": "report_priority",
+        "relation": "supports",
+        "note": "The methodology skill finding_generation leads into report_priority."
+      }
+    ],
+    "glossaryReferences": [
+      {
+        "term": "reviewer comment",
+        "conceptId": "reviewer_comment_generation",
+        "relation": "supports",
+        "note": "A comment is not yet a finding."
+      },
+      {
+        "term": "finding",
+        "conceptId": "finding_generation",
+        "relation": "supports",
+        "note": "A finding requires enough evidence."
+      },
+      {
+        "term": "report priority",
+        "conceptId": "report_priority",
+        "relation": "supports",
+        "note": "The report should prioritize final outcomes."
+      }
+    ],
+    "gcamMappings": [
+      {
+        "articleId": 4,
+        "articleTitle": "Reviewer Methodology",
+        "articleNumber": "4",
+        "atomNumber": "4-1",
+        "reportTitle": "Observation and comment",
+        "note": "Methodology basics."
+      },
+      {
+        "articleId": 11,
+        "articleTitle": "Reviewer Methodology",
+        "articleNumber": "11",
+        "atomNumber": "11-1",
+        "reportTitle": "Evidence and context",
+        "note": "Reasoning across sentences and scenes."
+      },
+      {
+        "articleId": 17,
+        "articleTitle": "Reviewer Methodology",
+        "articleNumber": "17",
+        "atomNumber": "17-1",
+        "reportTitle": "Exceptions and uncertainty",
+        "note": "Exception handling and confidence."
+      }
+    ],
+    "reportTemplates": [
+      {
+        "findingTitle": "Reviewer Methodology Assessment",
+        "reasonTemplate": "Observation: {{observation}}. Comment: {{comment}}. Finding: {{finding}}.",
+        "recommendationTemplate": "If evidence is insufficient, request more context and avoid escalation.",
+        "severity": "medium",
+        "priority": 1,
+        "reportCategory": "methodology"
+      }
+    ],
+    "benchmarkReferences": [
+      "methodology-finding_identification",
+      "methodology-evidence_collection",
+      "methodology-evidence_prioritization",
+      "methodology-context_analysis",
+      "methodology-cross_sentence_reasoning",
+      "methodology-cross_scene_reasoning",
+      "methodology-story_reasoning",
+      "methodology-intent_reasoning",
+      "methodology-relationship_reasoning",
+      "methodology-target_identification",
+      "methodology-speaker_identification",
+      "methodology-victim_identification",
+      "methodology-actor_identification",
+      "methodology-implicit_meaning",
+      "methodology-hidden_meaning",
+      "methodology-symbolic_reasoning",
+      "methodology-metaphor_reasoning",
+      "methodology-sarcasm_reasoning",
+      "methodology-comedy_reasoning",
+      "methodology-satire_reasoning",
+      "methodology-quotation_reasoning",
+      "methodology-historical_reasoning",
+      "methodology-documentary_reasoning",
+      "methodology-educational_reasoning",
+      "methodology-dream_reasoning",
+      "methodology-flashback_reasoning",
+      "methodology-scene_description_reasoning",
+      "methodology-observation_reasoning",
+      "methodology-dialogue_reasoning",
+      "methodology-visual_reasoning",
+      "methodology-audio_reasoning",
+      "methodology-confidence_assessment",
+      "methodology-contradiction_resolution",
+      "methodology-multi_evidence_reasoning",
+      "methodology-exception_recognition",
+      "methodology-false_positive_detection",
+      "methodology-false_negative_detection",
+      "methodology-reviewer_comment_generation",
+      "methodology-finding_generation",
+      "methodology-report_priority"
+    ],
+    "prerequisites": [],
+    "relatedLessons": [],
+    "metadata": {
+      "author": "Raawi Academy",
+      "reviewLevel": "Methodology Foundation",
+      "priority": 15,
+      "category": "methodology",
+      "subject": "reviewer_methodology"
+    }
+  }
+}

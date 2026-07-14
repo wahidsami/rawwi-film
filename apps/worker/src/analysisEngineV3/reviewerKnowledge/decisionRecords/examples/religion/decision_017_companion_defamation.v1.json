@@ -1,0 +1,69 @@
+{
+  "id": "decision_017_companion_defamation",
+  "version": "1.0.0",
+  "title": "Defamation of companions",
+  "summary": "Defamation toward revered companions.",
+  "originalScenario": "A character falsely accuses the companions of dishonesty.",
+  "reviewQuestion": "Is this defamation toward companions?",
+  "initialSuspicion": "Defamation.",
+  "possibleConcepts": [
+    "companions",
+    "religious_hate_speech"
+  ],
+  "supportingEvidence": [
+    "falsely accuses the companions"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Dialogue accusation.",
+  "speakerAnalysis": "Speaker attacks a revered group.",
+  "targetAnalysis": "Companions.",
+  "intentAnalysis": "Defamation.",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check context",
+    "Apply religion pack heuristics",
+    "Map to GCAM article"
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "medium",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 2,
+      "atom_ids": [],
+      "note": "Companion disrespect."
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Use article 2 when companions are targeted.",
+  "benchmarkTags": [
+    "religion",
+    "companions",
+    "defamation"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "religion_pattern_direct_insult"
+  ],
+  "relatedBlueprintConcepts": [
+    "religion_companions",
+    "religion_religious_hate_speech"
+  ]
+}

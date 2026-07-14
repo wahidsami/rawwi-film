@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_methodology_domain",
+  "title": "Reviewer Methodology Domain",
+  "description": "Shared reviewer methodology blueprint for how reviewers think before domain classification.",
+  "entries": [
+    {
+      "id": "reviewer_methodology_domain",
+      "title": "Reviewer Methodology Domain",
+      "description": "Global methodology for observation, confidence, and decision separation."
+    }
+  ]
+}

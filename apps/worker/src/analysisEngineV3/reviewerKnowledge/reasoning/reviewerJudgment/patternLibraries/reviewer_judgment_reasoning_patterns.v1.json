@@ -1,0 +1,624 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "reviewer_judgment_reasoning_patterns",
+    "title": "Reviewer Judgment Reasoning Patterns",
+    "description": "Reusable semantic reasoning patterns for reviewer judgment and knowledge acquisition.",
+    "concepts": [
+      {
+        "id": "competing_interpretations",
+        "title": "Competing Interpretations",
+        "description": "More than one valid reading exists."
+      },
+      {
+        "id": "evidence_sufficiency",
+        "title": "Evidence Sufficiency",
+        "description": "The reviewer decides whether the evidence is enough."
+      },
+      {
+        "id": "confidence_calibration",
+        "title": "Confidence Calibration",
+        "description": "Confidence must follow the strength of support."
+      },
+      {
+        "id": "reviewer_disagreement",
+        "title": "Reviewer Disagreement",
+        "description": "Two trained reviewers can reasonably disagree."
+      },
+      {
+        "id": "narrative_justification",
+        "title": "Narrative Justification",
+        "description": "The story context may justify the final outcome."
+      },
+      {
+        "id": "final_reviewer_decision",
+        "title": "Final Reviewer Decision",
+        "description": "The combined final judgment after reasoning is complete."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "judgment_pattern_competing_interpretations",
+      "title": "Competing Interpretations",
+      "description": "Compare two plausible readings before choosing one.",
+      "primary_concept_id": "competing_interpretations",
+      "related_concept_ids": [
+        "evidence_sufficiency",
+        "confidence_calibration"
+      ],
+      "direct_expressions": [
+        "Two readings are plausible.",
+        "The scene can mean more than one thing."
+      ],
+      "indirect_expressions": [
+        "The next sentence resolves the ambiguity.",
+        "Later context favors one reading."
+      ],
+      "semantic_intent": [
+        "compare",
+        "weigh",
+        "resolve",
+        "calibrate"
+      ],
+      "supporting_evidence": [
+        "multiple plausible cues",
+        "contextual reversal",
+        "speaker and target alignment"
+      ],
+      "contradictory_evidence": [
+        "a clue points to another meaning",
+        "the exception changes the reading"
+      ],
+      "false_positives": [
+        "choosing the first plausible reading",
+        "treating uncertainty as certainty"
+      ],
+      "counter_examples": [
+        "A reviewer keeps two interpretations open until later context resolves them."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "the next line",
+        "the following line"
+      ],
+      "scene_indicators": [
+        "later scene",
+        "scene change",
+        "story reversal"
+      ],
+      "reviewer_guidance": [
+        "List each plausible interpretation.",
+        "Do not settle before checking the next line.",
+        "Choose the reading with the strongest support."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "judgment_pattern_competing_interpretations_modifier_low",
+          "title": "Ambiguous",
+          "description": "A competing reading remains open.",
+          "confidence": 55
+        },
+        {
+          "id": "judgment_pattern_competing_interpretations_modifier_high",
+          "title": "Resolved",
+          "description": "The context clearly picks one reading.",
+          "confidence": 90
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "judgment_pattern_competing_interpretations_glossary",
+          "from_concept_id": "competing_interpretations",
+          "to_concept_id": "evidence_sufficiency",
+          "relation": "supports",
+          "note": "Competing readings require evidence sufficiency analysis."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "judgment_pattern_competing_interpretations_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "comparison",
+          "note": "Comparison and review."
+        }
+      ],
+      "examples": [
+        {
+          "id": "judgment_pattern_competing_interpretations_example_1",
+          "title": "Competing interpretations example",
+          "text": "The reviewer compares two readings before choosing the better supported one.",
+          "expected_outcome": "The reviewer does not finalize too early.",
+          "note": "Methodological comparison."
+        }
+      ]
+    },
+    {
+      "id": "judgment_pattern_evidence_sufficiency",
+      "title": "Evidence Sufficiency",
+      "description": "Judge whether the current evidence is enough for a conclusion.",
+      "primary_concept_id": "evidence_sufficiency",
+      "related_concept_ids": [
+        "confidence_calibration",
+        "reviewer_disagreement"
+      ],
+      "direct_expressions": [
+        "The evidence is enough.",
+        "The evidence is not enough."
+      ],
+      "indirect_expressions": [
+        "More context is needed.",
+        "The scene still leaves room for doubt."
+      ],
+      "semantic_intent": [
+        "sufficiency",
+        "review",
+        "threshold"
+      ],
+      "supporting_evidence": [
+        "corroborated clues",
+        "scene context",
+        "later confirmation"
+      ],
+      "contradictory_evidence": [
+        "missing target cue",
+        "one clue only"
+      ],
+      "false_positives": [
+        "calling weak evidence sufficient",
+        "treating one clue as decisive"
+      ],
+      "counter_examples": [
+        "A reviewer keeps the case open because the evidence is incomplete."
+      ],
+      "cross_sentence_indicators": [
+        "later sentence",
+        "another line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene continuation",
+        "later scene",
+        "scene reversal"
+      ],
+      "reviewer_guidance": [
+        "Count quality, not just quantity.",
+        "Stop when the evidence is insufficient.",
+        "Do not overstate certainty."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "judgment_pattern_evidence_sufficiency_modifier_low",
+          "title": "Weak",
+          "description": "The support is incomplete.",
+          "confidence": 40
+        },
+        {
+          "id": "judgment_pattern_evidence_sufficiency_modifier_high",
+          "title": "Sufficient",
+          "description": "The support is strong enough to decide.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "judgment_pattern_evidence_sufficiency_glossary",
+          "from_concept_id": "evidence_sufficiency",
+          "to_concept_id": "confidence_calibration",
+          "relation": "supports",
+          "note": "Evidence sufficiency determines confidence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "judgment_pattern_evidence_sufficiency_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "evidence",
+          "note": "Evidence sufficiency."
+        }
+      ],
+      "examples": [
+        {
+          "id": "judgment_pattern_evidence_sufficiency_example_1",
+          "title": "Evidence sufficiency example",
+          "text": "The reviewer rejects a guess because the evidence is not enough.",
+          "expected_outcome": "The case stays open.",
+          "note": "Insufficient support."
+        }
+      ]
+    },
+    {
+      "id": "judgment_pattern_confidence_calibration",
+      "title": "Confidence Calibration",
+      "description": "Adjust confidence to the actual quality of support.",
+      "primary_concept_id": "confidence_calibration",
+      "related_concept_ids": [
+        "reviewer_disagreement",
+        "final_reviewer_decision"
+      ],
+      "direct_expressions": [
+        "Confidence is high.",
+        "Confidence is low."
+      ],
+      "indirect_expressions": [
+        "The scene is still ambiguous.",
+        "The later context raises certainty."
+      ],
+      "semantic_intent": [
+        "calibrate",
+        "measure",
+        "adjust"
+      ],
+      "supporting_evidence": [
+        "corroborated support",
+        "contradiction resolution",
+        "scene clarification"
+      ],
+      "contradictory_evidence": [
+        "mixed signals",
+        "unresolved ambiguity"
+      ],
+      "false_positives": [
+        "inflating confidence",
+        "treating uncertainty as certainty"
+      ],
+      "counter_examples": [
+        "A reviewer lowers confidence after a later line weakens the first reading."
+      ],
+      "cross_sentence_indicators": [
+        "later line",
+        "another sentence",
+        "the following line"
+      ],
+      "scene_indicators": [
+        "later scene",
+        "scene resolution",
+        "story shift"
+      ],
+      "reviewer_guidance": [
+        "Confidence must move with evidence quality.",
+        "A high-confidence answer requires strong support.",
+        "Do not overstate certainty in a borderline case."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "judgment_pattern_confidence_calibration_modifier_low",
+          "title": "Low",
+          "description": "Support is weak or contradictory.",
+          "confidence": 35
+        },
+        {
+          "id": "judgment_pattern_confidence_calibration_modifier_high",
+          "title": "High",
+          "description": "Support is strong and coherent.",
+          "confidence": 92
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "judgment_pattern_confidence_calibration_glossary",
+          "from_concept_id": "confidence_calibration",
+          "to_concept_id": "final_reviewer_decision",
+          "relation": "supports",
+          "note": "Confidence informs the final reviewer decision."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "judgment_pattern_confidence_calibration_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "confidence",
+          "note": "Confidence calibration."
+        }
+      ],
+      "examples": [
+        {
+          "id": "judgment_pattern_confidence_calibration_example_1",
+          "title": "Confidence calibration example",
+          "text": "The reviewer lowers confidence after contradictory context appears.",
+          "expected_outcome": "Confidence matches the evidence.",
+          "note": "Calibration is visible."
+        }
+      ]
+    },
+    {
+      "id": "judgment_pattern_reviewer_disagreement",
+      "title": "Reviewer Disagreement",
+      "description": "Record legitimate disagreement between reviewers.",
+      "primary_concept_id": "reviewer_disagreement",
+      "related_concept_ids": [
+        "narrative_justification",
+        "final_reviewer_decision"
+      ],
+      "direct_expressions": [
+        "Reviewers disagree.",
+        "Different reviewers can reach different outcomes."
+      ],
+      "indirect_expressions": [
+        "One reading is stronger for one reviewer than another.",
+        "The disagreement remains after the first pass."
+      ],
+      "semantic_intent": [
+        "disagreement",
+        "comparison",
+        "resolution"
+      ],
+      "supporting_evidence": [
+        "competing evidence chains",
+        "different confidence scores",
+        "different narrative priorities"
+      ],
+      "contradictory_evidence": [
+        "shared context that resolves the difference",
+        "later scene clarification"
+      ],
+      "false_positives": [
+        "pretending reviewers always agree",
+        "erasing disagreement from the record"
+      ],
+      "counter_examples": [
+        "Two reviewers reach different outcomes and both can justify them."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "follow-up",
+        "second pass"
+      ],
+      "scene_indicators": [
+        "scene shift",
+        "story update",
+        "later resolution"
+      ],
+      "reviewer_guidance": [
+        "Document both sides of the disagreement.",
+        "Prefer the stronger reading but keep the weaker one visible.",
+        "Use the record to explain why the disagreement exists."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "judgment_pattern_reviewer_disagreement_modifier_low",
+          "title": "Disputed",
+          "description": "Two readings remain in tension.",
+          "confidence": 50
+        },
+        {
+          "id": "judgment_pattern_reviewer_disagreement_modifier_high",
+          "title": "Resolved",
+          "description": "The disagreement is resolved by context.",
+          "confidence": 88
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "judgment_pattern_reviewer_disagreement_glossary",
+          "from_concept_id": "reviewer_disagreement",
+          "to_concept_id": "narrative_justification",
+          "relation": "supports",
+          "note": "Disagreement is often resolved through narrative justification."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "judgment_pattern_reviewer_disagreement_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "disagreement",
+          "note": "Reviewer disagreement."
+        }
+      ],
+      "examples": [
+        {
+          "id": "judgment_pattern_reviewer_disagreement_example_1",
+          "title": "Reviewer disagreement example",
+          "text": "One reviewer sees review, another sees reject, and both explain why.",
+          "expected_outcome": "The disagreement is recorded honestly.",
+          "note": "Legitimate difference."
+        }
+      ]
+    },
+    {
+      "id": "judgment_pattern_narrative_justification",
+      "title": "Narrative Justification",
+      "description": "Use the story to explain why the final outcome changes.",
+      "primary_concept_id": "narrative_justification",
+      "related_concept_ids": [
+        "competing_interpretations",
+        "final_reviewer_decision"
+      ],
+      "direct_expressions": [
+        "The story explains the outcome.",
+        "The narrative changes the reading."
+      ],
+      "indirect_expressions": [
+        "A later scene makes the harmful-looking line safe.",
+        "The ending reframes the earlier exchange."
+      ],
+      "semantic_intent": [
+        "justify",
+        "reframe",
+        "explain"
+      ],
+      "supporting_evidence": [
+        "historical framing",
+        "educational framing",
+        "documentary framing",
+        "medical framing"
+      ],
+      "contradictory_evidence": [
+        "a direct harmful instruction",
+        "no story signal at all"
+      ],
+      "false_positives": [
+        "ignoring narrative justification",
+        "calling every harmful-looking line a finding"
+      ],
+      "counter_examples": [
+        "A history lesson mentions harm without endorsing it."
+      ],
+      "cross_sentence_indicators": [
+        "later scene",
+        "the ending",
+        "the next exchange"
+      ],
+      "scene_indicators": [
+        "documentary",
+        "history",
+        "education",
+        "medical discussion"
+      ],
+      "reviewer_guidance": [
+        "Check whether the narrative changes the judgment.",
+        "Do not skip evidence just because the line looks harmful.",
+        "Explain why the story supports the final answer."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "judgment_pattern_narrative_justification_modifier_low",
+          "title": "Unclear",
+          "description": "The story does not yet justify the outcome.",
+          "confidence": 45
+        },
+        {
+          "id": "judgment_pattern_narrative_justification_modifier_high",
+          "title": "Justified",
+          "description": "The story clearly changes the outcome.",
+          "confidence": 90
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "judgment_pattern_narrative_justification_glossary",
+          "from_concept_id": "narrative_justification",
+          "to_concept_id": "final_reviewer_decision",
+          "relation": "supports",
+          "note": "Narrative justification leads to the final decision."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "judgment_pattern_narrative_justification_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative",
+          "note": "Narrative justification."
+        }
+      ],
+      "examples": [
+        {
+          "id": "judgment_pattern_narrative_justification_example_1",
+          "title": "Narrative justification example",
+          "text": "The reviewer explains why the scene is historical and not a present endorsement.",
+          "expected_outcome": "Narrative context justifies the outcome.",
+          "note": "Story changes the meaning."
+        }
+      ]
+    },
+    {
+      "id": "judgment_pattern_final_reviewer_decision",
+      "title": "Final Reviewer Decision",
+      "description": "Combine evidence, context, disagreement, and confidence into one final decision.",
+      "primary_concept_id": "final_reviewer_decision",
+      "related_concept_ids": [
+        "competing_interpretations",
+        "evidence_sufficiency"
+      ],
+      "direct_expressions": [
+        "The final decision is review.",
+        "The final decision is match."
+      ],
+      "indirect_expressions": [
+        "The reviewer closes the case after weighing context.",
+        "All evidence now points to one outcome."
+      ],
+      "semantic_intent": [
+        "finalize",
+        "resolve",
+        "report"
+      ],
+      "supporting_evidence": [
+        "evidence sufficiency",
+        "narrative justification",
+        "resolved disagreement"
+      ],
+      "contradictory_evidence": [
+        "unresolved ambiguity",
+        "missing support"
+      ],
+      "false_positives": [
+        "finalizing too early",
+        "reporting a decision without reasoning"
+      ],
+      "counter_examples": [
+        "The reviewer keeps the case open because the evidence is still insufficient."
+      ],
+      "cross_sentence_indicators": [
+        "after all",
+        "finally",
+        "in the next line"
+      ],
+      "scene_indicators": [
+        "scene closure",
+        "story resolution",
+        "final pass"
+      ],
+      "reviewer_guidance": [
+        "Wait until the evidence and narrative are settled.",
+        "Use the final label only after confidence is calibrated.",
+        "Write the decision clearly in the report."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "judgment_pattern_final_reviewer_decision_modifier_low",
+          "title": "Open",
+          "description": "The case should remain in review.",
+          "confidence": 55
+        },
+        {
+          "id": "judgment_pattern_final_reviewer_decision_modifier_high",
+          "title": "Finalized",
+          "description": "The evidence is strong enough for a final decision.",
+          "confidence": 95
+        }
+      ],
+      "glossary_relationships": [],
+      "gcam_mappings": [
+        {
+          "id": "judgment_pattern_final_reviewer_decision_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "final decision",
+          "note": "Final reviewer decision."
+        }
+      ],
+      "examples": [
+        {
+          "id": "judgment_pattern_final_reviewer_decision_example_1",
+          "title": "Final reviewer decision example",
+          "text": "The reviewer writes the final judgment after the story context is settled.",
+          "expected_outcome": "One stable final decision.",
+          "note": "Finalization is appropriate."
+        }
+      ]
+    }
+  ]
+}

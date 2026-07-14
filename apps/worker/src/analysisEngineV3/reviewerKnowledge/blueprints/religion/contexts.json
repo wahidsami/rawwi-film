@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "religion_contexts",
+  "title": "Religion Contexts",
+  "description": "Contextual situations that change religion interpretation.",
+  "entries": [
+    {
+      "id": "religion_context_documentary",
+      "title": "Documentary",
+      "description": "Documentary or documentary-like narration."
+    },
+    {
+      "id": "religion_context_historical",
+      "title": "Historical",
+      "description": "Historical narration or reference."
+    },
+    {
+      "id": "religion_context_educational",
+      "title": "Educational",
+      "description": "Teaching or instructional context."
+    },
+    {
+      "id": "religion_context_academic",
+      "title": "Academic",
+      "description": "Scholarly or academic discussion."
+    },
+    {
+      "id": "religion_context_fiction",
+      "title": "Fiction",
+      "description": "Fictional narrative or story context."
+    },
+    {
+      "id": "religion_context_dream",
+      "title": "Dream",
+      "description": "Dream or dreamlike sequence."
+    },
+    {
+      "id": "religion_context_flashback",
+      "title": "Flashback",
+      "description": "A recollected or past scene."
+    },
+    {
+      "id": "religion_context_debate",
+      "title": "Debate",
+      "description": "A discussion or debate setting."
+    },
+    {
+      "id": "religion_context_news",
+      "title": "News",
+      "description": "News reporting or journalistic language."
+    },
+    {
+      "id": "religion_context_court",
+      "title": "Court",
+      "description": "Court proceeding or testimony."
+    }
+  ]
+}

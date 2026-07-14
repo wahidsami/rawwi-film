@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_01_religion",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Religion Reviewer Knowledge Pack",
+    "description": "Full academy knowledge pack for GCAM religion, sanctities, prophets, holy books, rituals, symbols, and sectarian harm.",
+    "supported_concepts": [
+      "religion_islamic_religion",
+      "religion_religious_sanctities",
+      "religion_holy_places",
+      "religion_holy_books",
+      "religion_prophets",
+      "religion_companions",
+      "religion_religious_scholars",
+      "religion_religious_rituals",
+      "religion_religious_symbols",
+      "religion_religious_unity",
+      "religion_sectarian_division",
+      "religion_religious_hate_speech"
+    ]
+  },
+  "pack": {
+    "id": "v3_01_religion",
+    "module_id": "v3_01_religion",
+    "title": "Religion Reviewer Knowledge Pack",
+    "default_question_set_id": "religion_default_questions",
+    "trigger_concept_ids": [
+      "religion_islamic_religion",
+      "religion_religious_sanctities",
+      "religion_holy_places",
+      "religion_holy_books",
+      "religion_prophets",
+      "religion_companions",
+      "religion_religious_scholars",
+      "religion_religious_rituals",
+      "religion_religious_symbols",
+      "religion_religious_unity",
+      "religion_sectarian_division",
+      "religion_religious_hate_speech"
+    ],
+    "purpose": "Provide reviewer knowledge for GCAM religion, sanctities, holy places, holy books, prophets, companions, scholars, rituals, symbols, unity, and sectarian harm using the existing article structure.",
+    "protected_interests": [
+      "Islamic religion",
+      "religious sanctities",
+      "holy places",
+      "holy books",
+      "prophets",
+      "companions",
+      "religious scholars",
+      "religious rituals",
+      "religious symbols",
+      "religious unity"
+    ],
+    "protected_concepts": [
+      "Islamic religion",
+      "religious sanctities",
+      "holy places",
+      "holy books",
+      "prophets",
+      "companions",
+      "religious scholars",
+      "religious rituals",
+      "religious symbols",
+      "religious unity",
+      "sectarian division",
+      "religious hate speech"
+    ],
+    "required_evidence": [
+      "religious insult / mockery | minimum: A literal insult, slur, or degrading phrase targeting the religion, its sanctities, prophets, or sacred texts. | strong: A direct attack, repeated mockery, or hostile framing that unmistakably targets the protected religious concept. | weak: A coded slight, indirect jab, or short hostile phrase that still clearly points to the protected concept. | insufficient: A neutral mention, condemnation, historical discussion, or academic explanation with no attack or endorsement.",
+      "desecration / disrespect | minimum: A literal act, line, or description showing desecration of a holy place, holy book, or sacred symbol. | strong: A direct statement that treats the sacred object or place as worthless, dirty, or expendable. | weak: A brief harmful reference that implies desecration but leaves the details to context. | insufficient: A neutral description of the place or object, or a warning about desecration rather than endorsement.",
+      "incitement / sectarian division | minimum: A literal call to divide believers, attack religious communities, or spread sectarian hostility. | strong: Language that normalises exclusion, hatred, or communal fracture as desirable or necessary. | weak: A short hostile phrase that still clearly seeks division even if the wording is coded. | insufficient: Debate, criticism, historical analysis, or description of existing disagreement without urging hostility.",
+      "misrepresentation / distortion | minimum: A literal false claim about prophets, scholars, rituals, holy books, or religious beliefs used as a harmful assertion. | strong: A repeated or emphatic distortion that is presented as if it were true. | weak: A short misleading statement that clearly bends the religious meaning. | insufficient: A scholarly correction, a question, or a documentary reference that does not adopt the false claim.",
+      "glorification / hate speech | minimum: A literal praise of abusive conduct toward religion or its adherents. | strong: A slogan, chant, or support statement that clearly celebrates harm. | weak: A coded or abbreviated endorsement that still clearly points toward hostility. | insufficient: A quote, condemnation, or warning that does not endorse the abuse."
+    ],
+    "insufficient_evidence": [
+      "A neutral historical reference to a religious event.",
+      "A documentary or academic explanation that does not endorse the harmful meaning.",
+      "A quoted line that is clearly framed as evidence or criticism rather than endorsement.",
+      "A classroom or lecture context that explains the concept without attacking it."
+    ],
+    "reviewer_heuristics": [
+      "Anchor the finding to the exact literal phrase that carries the religious meaning.",
+      "Treat direct insult, mockery, and desecration as the strongest signals.",
+      "Separate condemnation or scholarship from endorsement.",
+      "Use narrative framing to distinguish quotation, documentary, court, and historical mention from actual attack.",
+      "Prefer the most specific article: article 1 for sanctities and holy places, article 2 for prophets and companions, article 3 for religion and unity.",
+      "If the text is academic, historical, or documentary, do not force a violation unless the line clearly attacks religion.",
+      "Treat sectarian division as a religion-domain concern when the line turns communities against one another."
+    ],
+    "legal_exceptions": [
+      "Educational",
+      "Historical",
+      "Documentary",
+      "Satire",
+      "Court proceedings",
+      "News reporting",
+      "Condemnation",
+      "Fiction",
+      "Role-play",
+      "Dream sequence",
+      "Flashback",
+      "Academic discussion"
+    ],
+    "positive_examples": [
+      "Direct insult: إساءة صريحة إلى النبي أو القرآن داخل الحوار.",
+      "Direct desecration: تمزيق المصحف أمام الناس مع تمجيد الفعل.",
+      "Sectarian incitement: تحريض صريح على تقسيم المؤمنين وإثارة العداوة بينهم.",
+      "Mockery of sanctities: السخرية من المقدسات الدينية بوصفها بلا قيمة.",
+      "Prophet defamation: اتهام الرسول بالكذب كحقيقة مباشرة داخل النص.",
+      "Holy place abuse: وصف المسجد بالدنس مع دعوة إلى إهانته.",
+      "Symbol humiliation: إهانة الرموز الدينية لتشجيع الازدراء.",
+      "Religious hate speech: خطاب يضعف احترام الدين ويشجع على الكراهية."
+    ],
+    "negative_examples": [
+      "Neutral historical mention: يتحدث الوثائقي عن واقعة قديمة دون دعم أو سخرية.",
+      "Educational lecture: المعلم يشرح معنى المقدسات الدينية لتجنب الإساءة إليها.",
+      "Academic comparison: يناقش الباحث أوجه الاختلاف بين المدارس الفقهية.",
+      "Court testimony: يكرر الشاهد عبارة الإهانة داخل جلسة قانونية بوصفها دليلًا.",
+      "Quoted speech: يقتبس الراوي إساءة شخصية أخرى دون تبنيها.",
+      "Condemnation: الشخصية تدين الإساءة الدينية وتصفها بأنها خطأ.",
+      "News report: يذكر الخبر الحادثة بوصفها خبرًا لا دعوة.",
+      "Fictional rejection: يطرح الشرير عبارة مسيئة ثم ترفضها القصة بوضوح."
+    ],
+    "common_false_positives": [
+      "A documentary or news report about a religious controversy that is purely informational.",
+      "A court transcript that repeats harmful wording as evidence.",
+      "A teacher or scholar explaining why a phrase is wrong.",
+      "A fictional villain line that the story later condemns.",
+      "A historical reference to an old sectarian conflict.",
+      "A respectful debate between scholars about doctrine.",
+      "A phrase about order or discipline that is not aimed at religion itself."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "الإسلام",
+        "concept_id": "religion_islamic_religion",
+        "relation": "Direct religious anchor",
+        "note": "Strong anchor for the core religion concept."
+      },
+      {
+        "term": "المقدسات",
+        "concept_id": "religion_religious_sanctities",
+        "relation": "Sanctity anchor",
+        "note": "Relevant when sacred matters are insulted or defended."
+      },
+      {
+        "term": "الأنبياء",
+        "concept_id": "religion_prophets",
+        "relation": "Prophet anchor",
+        "note": "Strong when the text targets prophets or messengers."
+      },
+      {
+        "term": "الكتب المقدسة",
+        "concept_id": "religion_holy_books",
+        "relation": "Scripture anchor",
+        "note": "Relevant for Quran or other sacred text references."
+      },
+      {
+        "term": "المساجد",
+        "concept_id": "religion_holy_places",
+        "relation": "Holy place anchor",
+        "note": "Relevant for mosques and sacred spaces."
+      },
+      {
+        "term": "الصحابة",
+        "concept_id": "religion_companions",
+        "relation": "Revered-followers anchor",
+        "note": "Relevant when the text targets revered companions."
+      },
+      {
+        "term": "العلماء",
+        "concept_id": "religion_religious_scholars",
+        "relation": "Scholar anchor",
+        "note": "Relevant when the text attacks or praises religious authorities."
+      },
+      {
+        "term": "الشعائر",
+        "concept_id": "religion_religious_rituals",
+        "relation": "Ritual anchor",
+        "note": "Relevant when rites or worship practices are discussed."
+      },
+      {
+        "term": "الرموز الدينية",
+        "concept_id": "religion_religious_symbols",
+        "relation": "Symbol anchor",
+        "note": "Relevant for hijab, emblems, icons, or sacred markers."
+      },
+      {
+        "term": "الوحدة الدينية",
+        "concept_id": "religion_religious_unity",
+        "relation": "Unity anchor",
+        "note": "Relevant when the text encourages cohesion or respect."
+      },
+      {
+        "term": "الفتنة الطائفية",
+        "concept_id": "religion_sectarian_division",
+        "relation": "Division anchor",
+        "note": "Relevant when the text encourages sectarian conflict."
+      },
+      {
+        "term": "خطاب الكراهية الديني",
+        "concept_id": "religion_religious_hate_speech",
+        "relation": "Hostility anchor",
+        "note": "Relevant for hostile or degrading religious speech."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 1,
+        "atom_ids": [],
+        "role": "Religious sanctities and sacred spaces",
+        "note": "Use for holy places, holy books, symbols, or sanctity abuse."
+      },
+      {
+        "article_id": 2,
+        "atom_ids": [],
+        "role": "Prophets, messengers, and companions",
+        "note": "Use for insult, defamation, or disrespect toward prophets and companions."
+      },
+      {
+        "article_id": 3,
+        "atom_ids": [],
+        "role": "Islamic religion and religious unity",
+        "note": "Use for attacks on the religion itself, sectarian harm, or public religious hostility."
+      }
+    ],
+    "reporting_guidance": [
+      "Report the shortest exact phrase that carries the insult, desecration, misrepresentation, or incitement.",
+      "Prefer the most specific article and keep article 3 secondary when article 1 or 2 is stronger.",
+      "Explain why the text is religion-relevant in narrative terms: what is being attacked, defended, quoted, or described.",
+      "If the context is documentary, educational, courtroom, news, or explicit condemnation, say so clearly and do not overstate the finding.",
+      "Use a review-only outcome when the text is religion-related but still ambiguous after context analysis."
+    ]
+  }
+}

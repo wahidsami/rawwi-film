@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "lesson_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "lesson": {
+    "id": "lesson_001_drugs_framework",
+    "title": "Drugs Reviewer Framework",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "language": "en",
+    "summary": "Teach the reviewer how to reason about drugs across reference, use, possession, distribution, promotion, context and exceptions without collapsing all drug-related material into one concept.",
+    "learningObjectives": [
+      "Distinguish drug reference from actual drug use.",
+      "Distinguish medical, educational and historical discussion from promotional or instructive content.",
+      "Recognize the difference between possession, sale, trafficking, manufacture and cultivation.",
+      "Recognize how context changes the meaning of drug-related evidence.",
+      "Assign confidence based on evidence strength and context stability."
+    ],
+    "concepts": [
+      { "id": "drug_reference", "title": "Drug Reference", "summary": "Any explicit mention of drugs or narcotics.", "tags": ["drugs", "reference", "universal"], "target": null, "articleIds": [10] },
+      { "id": "drug_consumption", "title": "Drug Consumption", "summary": "Use or intake of a drug by a person.", "tags": ["drugs", "use", "consumption"], "target": null, "articleIds": [10] },
+      { "id": "drug_possession", "title": "Drug Possession", "summary": "Having drugs on one’s person, in a vehicle or under control.", "tags": ["drugs", "possession"], "target": null, "articleIds": [10] },
+      { "id": "drug_distribution", "title": "Drug Distribution", "summary": "Passing drugs from one person to another.", "tags": ["drugs", "distribution"], "target": null, "articleIds": [10] },
+      { "id": "drug_sale", "title": "Drug Sale", "summary": "Commercial exchange of drugs.", "tags": ["drugs", "sale"], "target": null, "articleIds": [10] },
+      { "id": "drug_purchase", "title": "Drug Purchase", "summary": "Buying drugs or arranging a buy.", "tags": ["drugs", "purchase"], "target": null, "articleIds": [10] },
+      { "id": "drug_smuggling", "title": "Drug Smuggling", "summary": "Moving drugs illegally across borders or checkpoints.", "tags": ["drugs", "smuggling"], "target": null, "articleIds": [10] },
+      { "id": "drug_trafficking", "title": "Drug Trafficking", "summary": "Organized transport, trade or distribution of drugs.", "tags": ["drugs", "trafficking"], "target": null, "articleIds": [10] },
+      { "id": "drug_manufacturing", "title": "Drug Manufacturing", "summary": "Producing, mixing or preparing drugs.", "tags": ["drugs", "manufacturing"], "target": null, "articleIds": [10] },
+      { "id": "drug_cultivation", "title": "Drug Cultivation", "summary": "Growing or harvesting drug-producing plants.", "tags": ["drugs", "cultivation"], "target": null, "articleIds": [10] },
+      { "id": "drug_storage", "title": "Drug Storage", "summary": "Keeping drugs hidden, stored or cached.", "tags": ["drugs", "storage"], "target": null, "articleIds": [10] },
+      { "id": "drug_transportation", "title": "Drug Transportation", "summary": "Moving drugs from one place to another.", "tags": ["drugs", "transport"], "target": null, "articleIds": [10] },
+      { "id": "drug_glorification", "title": "Drug Glorification", "summary": "Treating drug activity as admirable or aspirational.", "tags": ["drugs", "glorification"], "target": null, "articleIds": [10] },
+      { "id": "drug_encouragement", "title": "Drug Encouragement", "summary": "Urging another person to use or obtain drugs.", "tags": ["drugs", "encouragement"], "target": null, "articleIds": [10] },
+      { "id": "drug_instruction", "title": "Drug Instruction", "summary": "Explaining how to use, make, hide or distribute drugs.", "tags": ["drugs", "instruction"], "target": null, "articleIds": [10] },
+      { "id": "drug_normalization", "title": "Drug Normalization", "summary": "Presenting drug activity as routine or harmless without clear context.", "tags": ["drugs", "normalization"], "target": null, "articleIds": [10] },
+      { "id": "drug_dependency", "title": "Drug Dependency", "summary": "Dependence or compulsion connected to drugs.", "tags": ["drugs", "dependency"], "target": null, "articleIds": [10] },
+      { "id": "drug_addiction", "title": "Drug Addiction", "summary": "Compulsive drug use with dependency or harm.", "tags": ["drugs", "addiction"], "target": null, "articleIds": [10] },
+      { "id": "drug_overdose", "title": "Drug Overdose", "summary": "Excessive ingestion or toxic drug reaction.", "tags": ["drugs", "overdose"], "target": null, "articleIds": [10] },
+      { "id": "drug_rehabilitation", "title": "Drug Rehabilitation", "summary": "Treatment or recovery from drug dependency or misuse.", "tags": ["drugs", "rehab"], "target": null, "articleIds": [10] },
+      { "id": "medical_drug_use", "title": "Medical Drug Use", "summary": "Approved or clinical drug use for treatment.", "tags": ["drugs", "medical"], "target": null, "articleIds": [10] },
+      { "id": "prescription_drug_use", "title": "Prescription Drug Use", "summary": "Use of prescribed drugs according to medical direction.", "tags": ["drugs", "prescription"], "target": null, "articleIds": [10] },
+      { "id": "illegal_prescription_use", "title": "Illegal Prescription Use", "summary": "Misuse, diversion or abuse of prescription drugs.", "tags": ["drugs", "illegal", "prescription"], "target": null, "articleIds": [10] },
+      { "id": "drug_documentary", "title": "Drug Documentary", "summary": "Documentary narration or reporting about drugs.", "tags": ["drugs", "documentary"], "target": null, "articleIds": [10] },
+      { "id": "drug_educational", "title": "Drug Educational", "summary": "Teaching or explaining drugs for education.", "tags": ["drugs", "educational"], "target": null, "articleIds": [10] },
+      { "id": "drug_historical", "title": "Drug Historical", "summary": "Historical reference to drugs or drug trade.", "tags": ["drugs", "historical"], "target": null, "articleIds": [10] },
+      { "id": "drug_news", "title": "Drug News", "summary": "News reporting about drugs, raids or drug events.", "tags": ["drugs", "news"], "target": null, "articleIds": [10] },
+      { "id": "drug_comedy", "title": "Drug Comedy", "summary": "Humor or comic treatment of drug-related material.", "tags": ["drugs", "comedy"], "target": null, "articleIds": [10] },
+      { "id": "drug_satire", "title": "Drug Satire", "summary": "Satirical treatment of drug activity.", "tags": ["drugs", "satire"], "target": null, "articleIds": [10] },
+      { "id": "drug_dream", "title": "Drug Dream", "summary": "Drug-related material occurring in a dream or dreamlike scene.", "tags": ["drugs", "dream"], "target": null, "articleIds": [10] },
+      { "id": "drug_flashback", "title": "Drug Flashback", "summary": "Drug-related material in a flashback or memory.", "tags": ["drugs", "flashback"], "target": null, "articleIds": [10] },
+      { "id": "drug_hallucination", "title": "Drug Hallucination", "summary": "Hallucinated or imagined drug-related material.", "tags": ["drugs", "hallucination"], "target": null, "articleIds": [10] },
+      { "id": "drug_false_accusation", "title": "Drug False Accusation", "summary": "An accusation of drugs that is not supported by evidence.", "tags": ["drugs", "false accusation"], "target": null, "articleIds": [10] },
+      { "id": "drug_symbolism", "title": "Drug Symbolism", "summary": "Symbolic or metaphorical drug references.", "tags": ["drugs", "symbolism"], "target": null, "articleIds": [10] },
+      { "id": "drug_scene_description", "title": "Drug Scene Description", "summary": "Narrative scene description involving drug-related evidence.", "tags": ["drugs", "scene description"], "target": null, "articleIds": [10] },
+      { "id": "drug_dialogue", "title": "Drug Dialogue", "summary": "Drug-related evidence delivered in dialogue.", "tags": ["drugs", "dialogue"], "target": null, "articleIds": [10] },
+      { "id": "drug_implied_use", "title": "Drug Implied Use", "summary": "Drug use implied by surrounding context rather than directly stated.", "tags": ["drugs", "implied"], "target": null, "articleIds": [10] }
+    ],
+    "reviewerQuestions": [
+      {
+        "id": "rq_01",
+        "purpose": "Identify whether the mention is a drug reference or a stronger drug concept.",
+        "expectedAnswerFormat": "short explanation",
+        "reasoningGuidance": "Start with the exact words and then classify the surrounding meaning.",
+        "evidenceRequirements": [
+          "Exact words from the screenplay.",
+          "Speaker or narration context."
+        ]
+      },
+      {
+        "id": "rq_02",
+        "purpose": "Check whether the scene is medical, educational, historical, documentary or promotional.",
+        "expectedAnswerFormat": "category label",
+        "reasoningGuidance": "Do not assume a violation if the content is clearly contextual or instructional.",
+        "evidenceRequirements": [
+          "Scene context.",
+          "Speaker intent.",
+          "Surrounding dialogue or narration."
+        ]
+      },
+      {
+        "id": "rq_03",
+        "purpose": "Check whether the evidence shows possession, use, sale, trafficking or manufacture.",
+        "expectedAnswerFormat": "concept label",
+        "reasoningGuidance": "Choose the narrowest concept that the evidence actually supports.",
+        "evidenceRequirements": [
+          "Explicit actions or implied actions supported by context.",
+          "Target and speaker identity where relevant."
+        ]
+      },
+      {
+        "id": "rq_04",
+        "purpose": "Evaluate whether context changes the meaning of the drug-related statement.",
+        "expectedAnswerFormat": "context assessment",
+        "reasoningGuidance": "Context can reduce or increase reviewer confidence.",
+        "evidenceRequirements": [
+          "Neighbouring sentences.",
+          "Scene description.",
+          "Earlier or later dialogue."
+        ]
+      },
+      {
+        "id": "rq_05",
+        "purpose": "Determine whether the material is instructional or promotional.",
+        "expectedAnswerFormat": "intent label",
+        "reasoningGuidance": "Promotion and instruction must not be inferred unless the scene supports them.",
+        "evidenceRequirements": [
+          "Speaker intent.",
+          "Language of encouragement or explanation."
+        ]
+      }
+    ],
+    "examples": [
+      "The character says he is taking medication prescribed by a doctor.",
+      "The dialogue mentions drugs in a police report.",
+      "The scene shows a dealer handing a packet to another character."
+    ],
+    "counterExamples": [
+      "A historical lecture mentioning narcotics is automatically a violation.",
+      "A medical discussion about prescription drugs is treated as glorification.",
+      "A joke about drugs is always treated as drug use."
+    ],
+    "exceptions": [
+      "Medical discussion.",
+      "Educational explanation.",
+      "Rehabilitation context.",
+      "Documentary narration.",
+      "Historical narration.",
+      "News reporting.",
+      "Comedy or satire when the meaning is clearly non-literal.",
+      "Dream, flashback or hallucination when the scene is not literal."
+    ],
+    "evidenceRules": {
+      "minimum": [
+        "Exact drug-related words in the screenplay.",
+        "A speaker or narration signal."
+      ],
+      "strong": [
+        "Exact words plus clear context.",
+        "Multiple consistent sentences.",
+        "Dialogue plus action or object evidence."
+      ],
+      "weak": [
+        "Single ambiguous reference.",
+        "Indirect implication without corroboration.",
+        "Unclear speaker or scene purpose."
+      ],
+      "insufficient": [
+        "Guessing drug intent from a single word.",
+        "Treating medical discussion as misconduct.",
+        "Treating symbolic language as literal use without context."
+      ],
+      "confidenceGuidance": [
+        "100: Explicit drug evidence with strong context.",
+        "85: Clear evidence and stable context.",
+        "65: Evidence is present but interpretation needs caution.",
+        "40: Weak or partial support.",
+        "0: No reliable drug finding."
+      ]
+    },
+    "conceptRelationships": [
+      {
+        "fromConceptId": "drug_reference",
+        "toConceptId": "drug_consumption",
+        "relation": "supports",
+        "note": "A reference may support consumption if context shows use."
+      },
+      {
+        "fromConceptId": "drug_consumption",
+        "toConceptId": "drug_addiction",
+        "relation": "supports",
+        "note": "Repeated use may support addiction when the story confirms dependence."
+      },
+      {
+        "fromConceptId": "drug_sale",
+        "toConceptId": "drug_trafficking",
+        "relation": "related",
+        "note": "Sale can be part of trafficking but not every sale is trafficking."
+      },
+      {
+        "fromConceptId": "medical_drug_use",
+        "toConceptId": "prescription_drug_use",
+        "relation": "supports",
+        "note": "Medical guidance may clarify lawful prescription use."
+      }
+    ],
+    "glossaryReferences": [
+      { "term": "drugs", "conceptId": "drug_reference", "relation": "maps-to", "note": "General lexical anchor." },
+      { "term": "prescription", "conceptId": "prescription_drug_use", "relation": "maps-to", "note": "Often indicates lawful medical use." },
+      { "term": "rehab", "conceptId": "drug_rehabilitation", "relation": "maps-to", "note": "Often indicates recovery context." },
+      { "term": "dealer", "conceptId": "drug_sale", "relation": "maps-to", "note": "May indicate sale or trafficking." }
+    ],
+    "gcamMappings": [
+      {
+        "articleId": 10,
+        "articleTitle": "Drugs, Tobacco and Alcohol",
+        "articleNumber": "10",
+        "atomNumber": "10-1",
+        "reportTitle": "Drug Related Content",
+        "note": "Primary GCAM mapping for drugs domain."
+      }
+    ],
+    "reportTemplates": [
+      {
+        "findingTitle": "Drug-related content",
+        "reasonTemplate": "The evidence supports a drug-related concept, but context must be checked before final classification.",
+        "recommendationTemplate": "Review the scene, speaker and intent before finalizing the finding.",
+        "severity": "medium",
+        "priority": 10,
+        "reportCategory": "drugs"
+      }
+    ],
+    "benchmarkReferences": [
+      "drug_positive_medical",
+      "drug_positive_trafficking",
+      "drug_positive_instruction",
+      "drug_negative_medical_context",
+      "drug_negative_historical_context",
+      "drug_negative_comedy_context"
+    ],
+    "prerequisites": [
+      "lesson_001_what_is_a_finding",
+      "lesson_002_what_is_evidence",
+      "lesson_003_understanding_context",
+      "lesson_004_speaker_identification",
+      "lesson_005_target_identification",
+      "lesson_006_intent_recognition",
+      "lesson_007_confidence_assessment"
+    ],
+    "relatedLessons": [
+      "lesson_008_narrative_structure",
+      "lesson_009_concept_relationships",
+      "lesson_010_exception_recognition",
+      "lesson_011_multiple_findings",
+      "lesson_012_evidence_prioritization"
+    ],
+    "metadata": {
+      "author": "Raawi Academy",
+      "reviewLevel": "Production",
+      "priority": 12,
+      "domain": "drugs"
+    }
+  }
+}

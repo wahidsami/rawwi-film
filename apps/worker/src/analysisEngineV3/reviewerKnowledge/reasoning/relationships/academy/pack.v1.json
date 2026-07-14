@@ -1,0 +1,262 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_11_relationships",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Relationship Reasoning Framework",
+    "description": "A cross-domain reviewer knowledge pack for relationship-driven reasoning.",
+    "supported_concepts": [
+      "relationship_family_parent_child",
+      "relationship_family_siblings",
+      "relationship_family_spouses",
+      "relationship_family_extended",
+      "relationship_father_child",
+      "relationship_mother_child",
+      "relationship_guardian_child",
+      "relationship_child_child",
+      "relationship_adult_child",
+      "relationship_adult_adult",
+      "relationship_teacher_student",
+      "relationship_doctor_patient",
+      "relationship_therapist_patient",
+      "relationship_imam_follower",
+      "relationship_leader_follower",
+      "relationship_commander_soldier",
+      "relationship_police_suspect",
+      "relationship_police_commander",
+      "relationship_police_officer_public",
+      "relationship_judge_accused",
+      "relationship_judge_public",
+      "relationship_lawyer_client",
+      "relationship_employer_employee",
+      "relationship_coworkers",
+      "relationship_friend_friend",
+      "relationship_neighbor_neighbor",
+      "relationship_stranger_stranger",
+      "relationship_government_citizen",
+      "relationship_government_employee_public",
+      "relationship_journalist_source",
+      "relationship_actor_audience",
+      "relationship_story_narrator",
+      "relationship_narrator_character",
+      "relationship_customer_vendor",
+      "relationship_officer_public",
+      "relationship_criminal_victim",
+      "relationship_criminal_accomplice",
+      "relationship_gang_member",
+      "relationship_gang_leader",
+      "relationship_terrorist_recruit",
+      "relationship_disabled_caregiver",
+      "relationship_elderly_caregiver"
+    ]
+  },
+  "pack": {
+    "id": "v3_11_relationships",
+    "module_id": "v3_11_relationships",
+    "title": "Relationship Reasoning Framework",
+    "default_question_set_id": "default_relationship_question_set",
+    "trigger_concept_ids": [
+      "relationship_family_parent_child",
+      "relationship_family_siblings",
+      "relationship_family_spouses",
+      "relationship_family_extended",
+      "relationship_father_child",
+      "relationship_mother_child",
+      "relationship_guardian_child",
+      "relationship_child_child",
+      "relationship_adult_child",
+      "relationship_adult_adult",
+      "relationship_teacher_student",
+      "relationship_doctor_patient",
+      "relationship_therapist_patient",
+      "relationship_imam_follower",
+      "relationship_leader_follower",
+      "relationship_commander_soldier",
+      "relationship_police_suspect",
+      "relationship_police_commander",
+      "relationship_police_officer_public",
+      "relationship_judge_accused",
+      "relationship_judge_public",
+      "relationship_lawyer_client",
+      "relationship_employer_employee",
+      "relationship_coworkers",
+      "relationship_friend_friend",
+      "relationship_neighbor_neighbor",
+      "relationship_stranger_stranger",
+      "relationship_government_citizen",
+      "relationship_government_employee_public",
+      "relationship_journalist_source",
+      "relationship_actor_audience",
+      "relationship_story_narrator",
+      "relationship_narrator_character",
+      "relationship_customer_vendor",
+      "relationship_officer_public",
+      "relationship_criminal_victim",
+      "relationship_criminal_accomplice",
+      "relationship_gang_member",
+      "relationship_gang_leader",
+      "relationship_terrorist_recruit",
+      "relationship_disabled_caregiver",
+      "relationship_elderly_caregiver"
+    ],
+    "purpose": "Teach reviewers how relationship context changes meaning without turning relationships into violations by themselves.",
+    "protected_interests": [
+      "Reviewer consistency",
+      "Role-sensitive reasoning",
+      "Cross-domain context interpretation"
+    ],
+    "protected_concepts": [
+      "relationship_family_parent_child",
+      "relationship_family_siblings",
+      "relationship_family_spouses",
+      "relationship_family_extended",
+      "relationship_father_child",
+      "relationship_mother_child",
+      "relationship_guardian_child",
+      "relationship_child_child",
+      "relationship_adult_child",
+      "relationship_adult_adult",
+      "relationship_teacher_student",
+      "relationship_doctor_patient",
+      "relationship_therapist_patient",
+      "relationship_imam_follower",
+      "relationship_leader_follower",
+      "relationship_commander_soldier",
+      "relationship_police_suspect",
+      "relationship_police_commander",
+      "relationship_police_officer_public",
+      "relationship_judge_accused",
+      "relationship_judge_public",
+      "relationship_lawyer_client",
+      "relationship_employer_employee",
+      "relationship_coworkers",
+      "relationship_friend_friend",
+      "relationship_neighbor_neighbor",
+      "relationship_stranger_stranger",
+      "relationship_government_citizen",
+      "relationship_government_employee_public",
+      "relationship_journalist_source",
+      "relationship_actor_audience",
+      "relationship_story_narrator",
+      "relationship_narrator_character",
+      "relationship_customer_vendor",
+      "relationship_officer_public",
+      "relationship_criminal_victim",
+      "relationship_criminal_accomplice",
+      "relationship_gang_member",
+      "relationship_gang_leader",
+      "relationship_terrorist_recruit",
+      "relationship_disabled_caregiver",
+      "relationship_elderly_caregiver"
+    ],
+    "required_evidence": [
+      "Speaker identity",
+      "Target identity",
+      "Relationship role",
+      "Scene or dialogue context"
+    ],
+    "insufficient_evidence": [
+      "A single isolated command without role context.",
+      "Guessing corruption from a release phrase alone.",
+      "Assuming violence without evidence."
+    ],
+    "reviewer_heuristics": [
+      "Read the relationship before judging the sentence.",
+      "The same sentence can mean command, care, sarcasm, or discretion depending on the speaker.",
+      "Do not classify relationships themselves as violations.",
+      "Lower confidence when the role frame is missing."
+    ],
+    "legal_exceptions": [
+      "Procedural release",
+      "Lawful discretion",
+      "Family discipline",
+      "Casual peer dismissal",
+      "Quotation",
+      "Narration",
+      "Documentary",
+      "Educational",
+      "Historical"
+    ],
+    "positive_examples": [
+      "A police commander telling a suspect to leave.",
+      "A judge using lawful discretion to release someone.",
+      "A father protecting a child with a short command."
+    ],
+    "negative_examples": [
+      "Treating a quoted command as the speaker’s own intent without support.",
+      "Assuming bribery from a release phrase without context.",
+      "Treating every sentence as a violation regardless of relationship."
+    ],
+    "common_false_positives": [
+      "Lawful discretion mistaken for corruption.",
+      "Family protection mistaken for abuse.",
+      "Peer dismissal mistaken for criminal intent."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "relationship",
+        "concept_id": "relationship_leader_follower",
+        "relation": "framework",
+        "note": "Core reasoning frame."
+      },
+      {
+        "term": "power imbalance",
+        "concept_id": "relationship_police_commander",
+        "relation": "stance",
+        "note": "Authority changes meaning."
+      },
+      {
+        "term": "quotation",
+        "concept_id": "relationship_story_narrator",
+        "relation": "exception",
+        "note": "Quoted speech is not automatic endorsement."
+      },
+      {
+        "term": "procedure",
+        "concept_id": "relationship_judge_public",
+        "relation": "context",
+        "note": "Procedural context can neutralize suspicion."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 4,
+        "atom_ids": [
+          "REL_AUTHORITY"
+        ],
+        "role": "authority reasoning",
+        "note": "Roles and power imbalance."
+      },
+      {
+        "article_id": 11,
+        "atom_ids": [
+          "REL_CONTEXT"
+        ],
+        "role": "context reasoning",
+        "note": "Quotation and narration."
+      },
+      {
+        "article_id": 17,
+        "atom_ids": [
+          "REL_EXCEPTIONS"
+        ],
+        "role": "exception reasoning",
+        "note": "Procedure, care, and lawful discretion."
+      }
+    ],
+    "reporting_guidance": [
+      "State the relationship first, then explain why the same sentence changes meaning.",
+      "Mention lawful discretion, family discipline, peer dismissal, and quotation when they apply.",
+      "Do not let relationship reasoning become the violation itself."
+    ]
+  }
+}

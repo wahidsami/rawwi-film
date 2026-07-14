@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "id": "drugs_evidence",
+  "title": "Drugs Evidence",
+  "description": "Drug evidence.",
+  "entries": [
+    {
+      "id": "drug_evidence_speaker",
+      "title": "Speaker",
+      "description": "Identify the speaker."
+    },
+    {
+      "id": "drug_evidence_target",
+      "title": "Target",
+      "description": "Identify who is affected."
+    },
+    {
+      "id": "drug_evidence_context",
+      "title": "Context",
+      "description": "Assess the scene and neighboring lines."
+    },
+    {
+      "id": "drug_evidence_visual",
+      "title": "Visual",
+      "description": "Check the visual or scene description."
+    },
+    {
+      "id": "drug_evidence_followup",
+      "title": "Follow-up",
+      "description": "Use later dialogue if available."
+    },
+    {
+      "id": "drug_evidence_medical",
+      "title": "Medical",
+      "description": "Use clinical framing carefully."
+    },
+    {
+      "id": "drug_evidence_educational",
+      "title": "Educational",
+      "description": "Use teaching or warning framing."
+    },
+    {
+      "id": "drug_evidence_rehab",
+      "title": "Rehab",
+      "description": "Use rehabilitation or recovery framing."
+    }
+  ]
+}

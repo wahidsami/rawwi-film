@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "narrative_contexts",
+  "title": "Narrative Contexts",
+  "description": "Contextual frames that alter narrative meaning.",
+  "entries": [
+    {
+      "id": "narrative_context_dialogue",
+      "title": "Dialogue",
+      "description": "Spoken exchange between characters."
+    },
+    {
+      "id": "narrative_context_narration",
+      "title": "Narration",
+      "description": "Narrated story text rather than speech."
+    },
+    {
+      "id": "narrative_context_scene_description",
+      "title": "Scene Description",
+      "description": "Visual description of the scene."
+    },
+    {
+      "id": "narrative_context_historical_narration",
+      "title": "Historical Narration",
+      "description": "Narration that reports a past event as history."
+    },
+    {
+      "id": "narrative_context_fiction",
+      "title": "Fiction",
+      "description": "Storytelling that is explicitly fictional."
+    },
+    {
+      "id": "narrative_context_fantasy",
+      "title": "Fantasy",
+      "description": "Unreal or fantastical framing."
+    },
+    {
+      "id": "narrative_context_dream",
+      "title": "Dream",
+      "description": "Dream sequence framing."
+    },
+    {
+      "id": "narrative_context_flashback",
+      "title": "Flashback",
+      "description": "A recollection of an earlier time."
+    },
+    {
+      "id": "narrative_context_flashforward",
+      "title": "Flashforward",
+      "description": "A preview of a later event."
+    },
+    {
+      "id": "narrative_context_voice_over",
+      "title": "Voice Over",
+      "description": "Narration layered on top of the scene."
+    },
+    {
+      "id": "narrative_context_unreliable_narrator",
+      "title": "Unreliable Narrator",
+      "description": "A narrator whose account may be incomplete or false."
+    },
+    {
+      "id": "narrative_context_cross_scene_memory",
+      "title": "Cross Scene Memory",
+      "description": "Meaning inherited from an earlier or later scene."
+    },
+    {
+      "id": "narrative_context_story_endorsement",
+      "title": "Story Endorsement",
+      "description": "The story appears to endorse an idea."
+    },
+    {
+      "id": "narrative_context_character_endorsement",
+      "title": "Character Endorsement",
+      "description": "A character endorses an idea."
+    },
+    {
+      "id": "narrative_context_author_endorsement",
+      "title": "Author Endorsement",
+      "description": "A story-level cue that the author endorses something."
+    },
+    {
+      "id": "narrative_context_viewer_interpretation",
+      "title": "Viewer Interpretation",
+      "description": "How a reviewer or viewer reads the scene."
+    }
+  ]
+}

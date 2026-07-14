@@ -1,0 +1,558 @@
+{
+  "domainId": "reviewermethodology",
+  "domainTitle": "Reviewer Methodology Domain",
+  "domainVersion": "1.0.0",
+  "blueprint": {
+    "title": "Blueprint",
+    "present": 9,
+    "expected": 9,
+    "coveragePercent": 100,
+    "missing": [
+      "actions.json",
+      "concepts.json",
+      "contexts.json",
+      "domain.json",
+      "evidence.json",
+      "intents.json",
+      "relationships.json",
+      "reviewquestions.json",
+      "targets.json"
+    ],
+    "warnings": [],
+    "notes": [
+      "2c3ffa612f310f29a16d9461f8e8c50b3cf26a9517e3f351bd20d29205d4bb6c"
+    ],
+    "hash": "44a9236eeeffe3dbf5c0a1022cd5ed4677103ba3ac38e128bac36a57733b9b9a"
+  },
+  "knowledgePack": {
+    "title": "Knowledge Pack",
+    "present": 40,
+    "expected": 40,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "pack=d:\\waheed\\mypprojects\\raawifilm fix\\apps\\worker\\src\\analysisenginev3\\reviewerknowledge\\reasoning\\reviewermethodology\\academy\\pack.v1.json",
+      "reviewer methodology framework"
+    ],
+    "hash": "8a801ed1fca8a93560341a60c8af7dc1ca6898c7ae33391d95b901e0a4cbfe95"
+  },
+  "lessons": {
+    "title": "Lessons",
+    "present": 14,
+    "expected": 14,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [],
+    "hash": "e76f9e3c84e022aeacb5e6fca83cc350654bceedbaa715282f7ca2a60d14bbe1"
+  },
+  "patterns": {
+    "title": "Patterns",
+    "present": 40,
+    "expected": 40,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "1 pattern library documents loaded"
+    ],
+    "hash": "f6b3b2e35f544165ebdebdbd3e99d2f6c43e595b137d406092edff9ab903a5dc"
+  },
+  "decisionRecords": {
+    "title": "Decision Records",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "160 decision records loaded"
+    ],
+    "hash": "33144ba49142427ef10f3ed67c447db23aed84779c5545d8f4433d0570f20f90"
+  },
+  "benchmarks": {
+    "title": "Benchmarks",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "400 benchmark cases loaded"
+    ],
+    "hash": "cbe264e93f07070d0c22c326f8a65dd7d2ca4361cb861a9c24a90f2e6be865b4"
+  },
+  "metrics": {
+    "conceptCount": 40,
+    "duplicateConceptCount": 0,
+    "missingConceptCount": 0,
+    "missingPatternCoverage": 0,
+    "missingDecisionCoverage": 0,
+    "missingBenchmarkCoverage": 0,
+    "glossaryCoverage": 100,
+    "crossSentenceCoverage": 100,
+    "crossSceneCoverage": 100,
+    "descriptionCoverage": 100,
+    "dialogueCoverage": 100,
+    "observationCoverage": 100,
+    "contextsCoverage": 100,
+    "targetsCoverage": 100,
+    "actionsCoverage": 100,
+    "intentsCoverage": 100,
+    "relationshipsCoverage": 100,
+    "evidenceRulesCoverage": 100,
+    "exceptionsCoverage": 100,
+    "falsePositivesCoverage": 100,
+    "falseNegativesCoverage": 100,
+    "reviewerQuestionsCoverage": 100,
+    "methodologyCoverage": 0,
+    "gcamMappingCoverage": 100,
+    "topics": [
+      {
+        "id": "actions",
+        "title": "Actions Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "methodology_action_calibrate",
+          "methodology_action_classify",
+          "methodology_action_collect",
+          "methodology_action_compare",
+          "methodology_action_escalate",
+          "methodology_action_generate",
+          "methodology_action_identify",
+          "methodology_action_prioritize",
+          "methodology_action_report",
+          "methodology_action_resolve"
+        ],
+        "missing": []
+      },
+      {
+        "id": "concepts",
+        "title": "Concept Coverage",
+        "present": 40,
+        "expected": 40,
+        "coveragePercent": 100,
+        "evidence": [
+          "actor_identification",
+          "audio_reasoning",
+          "comedy_reasoning",
+          "confidence_assessment",
+          "context_analysis",
+          "contradiction_resolution",
+          "cross_scene_reasoning",
+          "cross_sentence_reasoning",
+          "dialogue_reasoning",
+          "documentary_reasoning",
+          "dream_reasoning",
+          "educational_reasoning",
+          "evidence_collection",
+          "evidence_prioritization",
+          "exception_recognition",
+          "false_negative_detection",
+          "false_positive_detection",
+          "finding_generation",
+          "finding_identification",
+          "flashback_reasoning",
+          "hidden_meaning",
+          "historical_reasoning",
+          "implicit_meaning",
+          "intent_reasoning",
+          "metaphor_reasoning",
+          "multi_evidence_reasoning",
+          "observation_reasoning",
+          "quotation_reasoning",
+          "relationship_reasoning",
+          "report_priority",
+          "reviewer_comment_generation",
+          "sarcasm_reasoning",
+          "satire_reasoning",
+          "scene_description_reasoning",
+          "speaker_identification",
+          "story_reasoning",
+          "symbolic_reasoning",
+          "target_identification",
+          "victim_identification",
+          "visual_reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "contexts",
+        "title": "Contexts Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "methodology_context_confirmed_finding",
+          "methodology_context_cross_scene",
+          "methodology_context_cross_sentence",
+          "methodology_context_false_negative",
+          "methodology_context_false_positive",
+          "methodology_context_insufficient_evidence",
+          "methodology_context_need_more_context",
+          "methodology_context_observation",
+          "methodology_context_possible_finding",
+          "methodology_context_reviewer_comment"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_scene",
+        "title": "Cross Scene Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross scene reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_sentence",
+        "title": "Cross Sentence Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross sentence reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "description",
+        "title": "Description Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "description coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "dialogue",
+        "title": "Dialogue Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "dialogue coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "duplicate_concepts",
+        "title": "Duplicate Concepts",
+        "present": 0,
+        "expected": 0,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "evidence_rules",
+        "title": "Evidence Rules Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "methodology_evidence_contradiction",
+          "methodology_evidence_corroboration",
+          "methodology_evidence_exception",
+          "methodology_evidence_local_chunk",
+          "methodology_evidence_neighboring_sentence",
+          "methodology_evidence_relationship_cue",
+          "methodology_evidence_scene_memory",
+          "methodology_evidence_speaker_cue",
+          "methodology_evidence_story_memory",
+          "methodology_evidence_target_cue"
+        ],
+        "missing": []
+      },
+      {
+        "id": "exceptions",
+        "title": "Exceptions Coverage",
+        "present": 9,
+        "expected": 9,
+        "coveragePercent": 100,
+        "evidence": [
+          "documentary framing",
+          "dream",
+          "educational framing",
+          "fiction",
+          "flashback",
+          "historical narration",
+          "quotation",
+          "role play",
+          "satire"
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_negatives",
+        "title": "False Negatives Coverage",
+        "present": 4,
+        "expected": 4,
+        "coveragePercent": 100,
+        "evidence": [
+          "a reviewer converts one line into a confirmed finding.",
+          "a reviewer forces indirect speech into a literal claim with no support.",
+          "a reviewer ignores an obvious exception signal.",
+          "a reviewer treats speculation as evidence."
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_positives",
+        "title": "False Positives Coverage",
+        "present": 6,
+        "expected": 6,
+        "coveragePercent": 100,
+        "evidence": [
+          "assuming one sentence is the whole story.",
+          "confusing uncertainty with a confirmed violation.",
+          "ignoring contradictions from later context.",
+          "treating indirect speech as a direct assertion.",
+          "treating reviewer comment as a finding.",
+          "turning symbolic language into literal fact without recovery from context."
+        ],
+        "missing": []
+      },
+      {
+        "id": "gcam_mapping",
+        "title": "GCAM Mapping Coverage",
+        "present": 3,
+        "expected": 3,
+        "coveragePercent": 100,
+        "evidence": [
+          "11",
+          "17",
+          "4"
+        ],
+        "missing": []
+      },
+      {
+        "id": "glossary",
+        "title": "Glossary Coverage",
+        "present": 9,
+        "expected": 9,
+        "coveragePercent": 100,
+        "evidence": [
+          "confidence",
+          "context",
+          "evidence",
+          "exception",
+          "finding",
+          "implicit meaning",
+          "indirect speech",
+          "metaphor",
+          "symbolism"
+        ],
+        "missing": []
+      },
+      {
+        "id": "intents",
+        "title": "Intents Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "methodology_intent_comment",
+          "methodology_intent_confirmed_finding",
+          "methodology_intent_escalate",
+          "methodology_intent_false_negative",
+          "methodology_intent_false_positive",
+          "methodology_intent_insufficient_evidence",
+          "methodology_intent_need_more_context",
+          "methodology_intent_observation",
+          "methodology_intent_possible_finding",
+          "methodology_intent_resolve"
+        ],
+        "missing": []
+      },
+      {
+        "id": "missing_benchmark_coverage",
+        "title": "Missing Benchmark Coverage",
+        "present": 0,
+        "expected": 40,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_concepts",
+        "title": "Missing Concepts",
+        "present": 0,
+        "expected": 40,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_decision_coverage",
+        "title": "Missing Decision Coverage",
+        "present": 0,
+        "expected": 40,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_pattern_coverage",
+        "title": "Missing Pattern Coverage",
+        "present": 0,
+        "expected": 40,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "observation",
+        "title": "Observation Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "observation coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "relationships",
+        "title": "Relationships Coverage",
+        "present": 40,
+        "expected": 40,
+        "coveragePercent": 100,
+        "evidence": [
+          "actor_identification",
+          "audio_reasoning",
+          "comedy_reasoning",
+          "confidence_assessment",
+          "context_analysis",
+          "contradiction_resolution",
+          "cross_scene_reasoning",
+          "cross_sentence_reasoning",
+          "dialogue_reasoning",
+          "documentary_reasoning",
+          "dream_reasoning",
+          "educational_reasoning",
+          "evidence_collection",
+          "evidence_prioritization",
+          "exception_recognition",
+          "false_negative_detection",
+          "false_positive_detection",
+          "finding_generation",
+          "finding_identification",
+          "flashback_reasoning",
+          "hidden_meaning",
+          "historical_reasoning",
+          "implicit_meaning",
+          "intent_reasoning",
+          "metaphor_reasoning",
+          "multi_evidence_reasoning",
+          "observation_reasoning",
+          "quotation_reasoning",
+          "relationship_reasoning",
+          "reviewer_comment_generation",
+          "reviewer_methodology_domain",
+          "sarcasm_reasoning",
+          "satire_reasoning",
+          "scene_description_reasoning",
+          "speaker_identification",
+          "story_reasoning",
+          "symbolic_reasoning",
+          "target_identification",
+          "victim_identification",
+          "visual_reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "reviewer_questions",
+        "title": "Reviewer Questions Coverage",
+        "present": 113,
+        "expected": 113,
+        "coveragePercent": 100,
+        "evidence": [
+          "methodology_question_confidence",
+          "methodology_question_context",
+          "methodology_question_evidence",
+          "methodology_question_exception",
+          "methodology_question_false_negative",
+          "methodology_question_false_positive",
+          "methodology_question_intent",
+          "methodology_question_observation",
+          "methodology_question_scene",
+          "methodology_question_sentence",
+          "q01",
+          "q02",
+          "q03",
+          "q04",
+          "q05",
+          "q06",
+          "q07",
+          "q08",
+          "q09",
+          "q10",
+          "q11",
+          "q12",
+          "q13",
+          "q14",
+          "q15"
+        ],
+        "missing": []
+      },
+      {
+        "id": "targets",
+        "title": "Targets Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "methodology_target_context",
+          "methodology_target_evidence",
+          "methodology_target_finding",
+          "methodology_target_question",
+          "methodology_target_report",
+          "methodology_target_scene",
+          "methodology_target_speaker",
+          "methodology_target_story",
+          "methodology_target_target",
+          "methodology_target_victim"
+        ],
+        "missing": []
+      },
+      {
+        "id": "universal_reviewer_methodology_v1",
+        "title": "Universal Reviewer Methodology",
+        "present": 11,
+        "expected": 11,
+        "coveragePercent": 100,
+        "evidence": [
+          "applicable concept validation",
+          "confidence assessment",
+          "context classification",
+          "evidence strength",
+          "exception detection",
+          "literal vs implied meaning",
+          "narrative intent",
+          "narrative understanding",
+          "speaker identification",
+          "target identification",
+          "victim identification"
+        ],
+        "missing": []
+      }
+    ],
+    "hash": "319c135a30e81cd947df1e5cbca00edff0410c1aa19045458d177873fd9d7253"
+  },
+  "productionReadiness": 100,
+  "recommendation": "READY",
+  "coverageGaps": [],
+  "criticalGaps": [],
+  "warnings": [],
+  "hash": "5f5c070b5c77bcb9e344a7bca2069eb8d0ee5b60680968cf6b53458314c0c5cf"
+}

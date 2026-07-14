@@ -1,0 +1,1863 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "children_vulnerable_persons_patterns",
+    "title": "Children and Vulnerable Persons Patterns",
+    "description": "Semantic patterns for child-safety and vulnerable-person reasoning.",
+    "concepts": [
+      {
+        "id": "children_child",
+        "title": "Child",
+        "description": "A child as a protected minor."
+      },
+      {
+        "id": "children_infant",
+        "title": "Infant",
+        "description": "A very young child requiring special protection."
+      },
+      {
+        "id": "children_teenager",
+        "title": "Teenager",
+        "description": "An adolescent child or young person."
+      },
+      {
+        "id": "children_minor",
+        "title": "Minor",
+        "description": "A person below the legal age of adulthood."
+      },
+      {
+        "id": "children_disabled_child",
+        "title": "Disabled Child",
+        "description": "A child with a disability or additional support need."
+      },
+      {
+        "id": "children_disabled_adult",
+        "title": "Disabled Adult",
+        "description": "An adult with a disability requiring dignity and protection."
+      },
+      {
+        "id": "children_elderly_person",
+        "title": "Elderly Person",
+        "description": "An older person who may be vulnerable to abuse or neglect."
+      },
+      {
+        "id": "children_vulnerable_person",
+        "title": "Vulnerable Person",
+        "description": "A person whose age, disability, or circumstances increase vulnerability."
+      },
+      {
+        "id": "children_parent",
+        "title": "Parent",
+        "description": "A parent responsible for care and protection."
+      },
+      {
+        "id": "children_guardian",
+        "title": "Guardian",
+        "description": "A legal guardian or custodian responsible for safety."
+      },
+      {
+        "id": "children_physical_abuse",
+        "title": "Physical Abuse",
+        "description": "Physical harm or violent treatment of a child or vulnerable person."
+      },
+      {
+        "id": "children_psychological_abuse",
+        "title": "Psychological Abuse",
+        "description": "Emotional cruelty, coercion, or mental harm."
+      },
+      {
+        "id": "children_humiliation",
+        "title": "Humiliation",
+        "description": "Degrading treatment or deliberate shaming."
+      },
+      {
+        "id": "children_bullying",
+        "title": "Bullying",
+        "description": "Repeated intimidation or harassment."
+      },
+      {
+        "id": "children_threatening",
+        "title": "Threatening",
+        "description": "Threats of harm, punishment, or retaliation."
+      },
+      {
+        "id": "children_fear_induction",
+        "title": "Fear Induction",
+        "description": "Deliberate creation of fear or terror."
+      },
+      {
+        "id": "children_neglect",
+        "title": "Neglect",
+        "description": "Failure to provide basic care or safety."
+      },
+      {
+        "id": "children_abandonment",
+        "title": "Abandonment",
+        "description": "Leaving a dependent person without care or support."
+      },
+      {
+        "id": "children_exploitation",
+        "title": "Exploitation",
+        "description": "Using a vulnerable person for unfair gain."
+      },
+      {
+        "id": "children_sexual_exploitation",
+        "title": "Sexual Exploitation",
+        "description": "Sexual abuse or exploitation of a child or vulnerable person."
+      },
+      {
+        "id": "children_grooming",
+        "title": "Grooming",
+        "description": "Manipulative preparation of a child for exploitation."
+      },
+      {
+        "id": "children_human_trafficking",
+        "title": "Human Trafficking",
+        "description": "Recruitment, transport, or control of a person for exploitation."
+      },
+      {
+        "id": "children_child_recruitment",
+        "title": "Child Recruitment",
+        "description": "Recruiting a child into harmful or criminal activity."
+      },
+      {
+        "id": "children_forced_labor",
+        "title": "Forced Labor",
+        "description": "Compelling a person to work against their will."
+      },
+      {
+        "id": "children_criminal_exploitation",
+        "title": "Criminal Exploitation",
+        "description": "Using a vulnerable person to facilitate crime."
+      },
+      {
+        "id": "children_mocking_disability",
+        "title": "Mocking Disability",
+        "description": "Ridicule targeting disability or impairment."
+      },
+      {
+        "id": "children_discrimination",
+        "title": "Discrimination",
+        "description": "Unequal or hostile treatment based on protected status."
+      },
+      {
+        "id": "children_isolation",
+        "title": "Isolation",
+        "description": "Deliberate social exclusion or separation."
+      },
+      {
+        "id": "children_endangerment",
+        "title": "Endangerment",
+        "description": "Putting a vulnerable person in danger."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "children_pattern_physical_abuse",
+      "title": "Physical Abuse",
+      "description": "Direct bodily harm or violent treatment of a child or vulnerable person.",
+      "primary_concept_id": "children_physical_abuse",
+      "related_concept_ids": [
+        "children_child",
+        "children_minor"
+      ],
+      "direct_expressions": [
+        "يضرب الطفل",
+        "يضربها بعنف",
+        "hit the child"
+      ],
+      "indirect_expressions": [
+        "the child returns bruised",
+        "يظهر عليه أثر الضرب"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "harm"
+      ],
+      "supporting_evidence": [
+        "Direct violent contact or injury.",
+        "Immediate bodily damage or threat."
+      ],
+      "contradictory_evidence": [
+        "protective restraint",
+        "medical care"
+      ],
+      "false_positives": [
+        "a medical exam after injury",
+        "a news report about abuse"
+      ],
+      "counter_examples": [
+        "the parent protects the child",
+        "the story condemns the violence"
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence explains the injury."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "action"
+      ],
+      "reviewer_guidance": [
+        "Anchor to explicit violence and separate protection from discipline."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_physical_abuse_high",
+          "title": "Direct injury",
+          "description": "Explicit bodily harm",
+          "confidence": 97
+        },
+        {
+          "id": "children_pattern_physical_abuse_medium",
+          "title": "Implied injury",
+          "description": "Clear but indirect harm",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_physical_abuse_ضرب",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_physical_abuse",
+          "relation": "supports",
+          "note": "ضرب cue"
+        },
+        {
+          "id": "children_pattern_physical_abuse_عنف",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_physical_abuse",
+          "relation": "supports",
+          "note": "عنف cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_physical_abuse_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-1"
+          ],
+          "role": "Physical abuse",
+          "note": "Use for explicit physical harm."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_physical_abuse_ex_1",
+          "title": "Direct hit",
+          "text": "يضرب الطفل بقسوة",
+          "expected_outcome": "Physical abuse finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_psychological_abuse",
+      "title": "Psychological Abuse",
+      "description": "Emotional cruelty, coercion, or mental pressure directed at a vulnerable person.",
+      "primary_concept_id": "children_psychological_abuse",
+      "related_concept_ids": [
+        "children_child",
+        "children_vulnerable_person"
+      ],
+      "direct_expressions": [
+        "يجعله خائفًا",
+        "يبكيه عمدًا",
+        "emotional abuse"
+      ],
+      "indirect_expressions": [
+        "because he is afraid",
+        "يهدده حتى يصمت"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "threat"
+      ],
+      "supporting_evidence": [
+        "Psychological pressure or fear.",
+        "Emotional domination or coercion."
+      ],
+      "contradictory_evidence": [
+        "supportive counseling",
+        "comforting reassurance"
+      ],
+      "false_positives": [
+        "a therapist session",
+        "protective discipline"
+      ],
+      "counter_examples": [
+        "the story shows support",
+        "the child is comforted"
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the fear."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration"
+      ],
+      "reviewer_guidance": [
+        "Check whether fear is induced to control the target."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_psychological_abuse_high",
+          "title": "Sustained control",
+          "description": "Clear emotional harm",
+          "confidence": 95
+        },
+        {
+          "id": "children_pattern_psychological_abuse_medium",
+          "title": "Isolated intimidation",
+          "description": "Possible emotional harm",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_psychological_abuse_خوف",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_psychological_abuse",
+          "relation": "supports",
+          "note": "خوف cue"
+        },
+        {
+          "id": "children_pattern_psychological_abuse_تهديد",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_psychological_abuse",
+          "relation": "supports",
+          "note": "تهديد cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_psychological_abuse_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-2"
+          ],
+          "role": "Psychological abuse",
+          "note": "Use for fear, coercion, and emotional cruelty."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_psychological_abuse_ex_1",
+          "title": "Fear tactic",
+          "text": "إذا تكلمت سأجعلك تبكي",
+          "expected_outcome": "Psychological abuse finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_bullying",
+      "title": "Bullying",
+      "description": "Repeated intimidation, ridicule, or harassment of a child or vulnerable person.",
+      "primary_concept_id": "children_bullying",
+      "related_concept_ids": [
+        "children_child",
+        "children_teenager",
+        "children_isolation"
+      ],
+      "direct_expressions": [
+        "يسخر منه أمام الجميع",
+        "bullies the child"
+      ],
+      "indirect_expressions": [
+        "everyone laughs at her",
+        "لا أحد يريد الجلوس معه"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "humiliation"
+      ],
+      "supporting_evidence": [
+        "Repeated ridicule or social pressure.",
+        "Group harassment or exclusion."
+      ],
+      "contradictory_evidence": [
+        "friendly teasing with consent",
+        "protective intervention"
+      ],
+      "false_positives": [
+        "a joke among friends",
+        "a teacher correcting behavior"
+      ],
+      "counter_examples": [
+        "the story shows mutual respect",
+        "the target is protected"
+      ],
+      "cross_sentence_indicators": [
+        "The following line repeats the mockery."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd"
+      ],
+      "reviewer_guidance": [
+        "Distinguish bullying from one-off conflict or playful banter."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_bullying_high",
+          "title": "Repeated abuse",
+          "description": "Multiple hostile cues",
+          "confidence": 92
+        },
+        {
+          "id": "children_pattern_bullying_medium",
+          "title": "Single hostile cue",
+          "description": "Possible bullying",
+          "confidence": 66
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_bullying_سخرية",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_bullying",
+          "relation": "supports",
+          "note": "سخرية cue"
+        },
+        {
+          "id": "children_pattern_bullying_عزل",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_bullying",
+          "relation": "supports",
+          "note": "عزل cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_bullying_gcam_1",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1",
+            "17-2"
+          ],
+          "role": "Humiliation and bullying",
+          "note": "Use for degrading or repeated hostile treatment."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_bullying_ex_1",
+          "title": "School bullying",
+          "text": "يسخرون من الطفل كل يوم",
+          "expected_outcome": "Bullying finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_threatening",
+      "title": "Threatening",
+      "description": "Threats, intimidation, or coercive warnings against a vulnerable person.",
+      "primary_concept_id": "children_threatening",
+      "related_concept_ids": [
+        "children_child",
+        "children_guardian"
+      ],
+      "direct_expressions": [
+        "سأؤذيك",
+        "I'll hurt the child"
+      ],
+      "indirect_expressions": [
+        "better stay quiet",
+        "if you tell anyone"
+      ],
+      "semantic_intent": [
+        "threat",
+        "abuse"
+      ],
+      "supporting_evidence": [
+        "Explicit threat language.",
+        "Coercive warning or intimidation."
+      ],
+      "contradictory_evidence": [
+        "protective warning",
+        "safety advice"
+      ],
+      "false_positives": [
+        "a parent warning about danger",
+        "security advice"
+      ],
+      "counter_examples": [
+        "the line warns for protection",
+        "the threat is quoted in court"
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the warning is coercive."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "court"
+      ],
+      "reviewer_guidance": [
+        "Check whether the threat is aimed at control or protection."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_threatening_high",
+          "title": "Direct threat",
+          "description": "Explicit harm threat",
+          "confidence": 96
+        },
+        {
+          "id": "children_pattern_threatening_medium",
+          "title": "Implied threat",
+          "description": "Coercive warning",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_threatening_تهديد",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_threatening",
+          "relation": "supports",
+          "note": "تهديد cue"
+        },
+        {
+          "id": "children_pattern_threatening_وعيد",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_threatening",
+          "relation": "supports",
+          "note": "وعيد cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_threatening_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-2"
+          ],
+          "role": "Threatening a vulnerable person",
+          "note": "Use for coercive or violent threats."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_threatening_ex_1",
+          "title": "Direct threat",
+          "text": "سأكسر يدك إذا تكلمت",
+          "expected_outcome": "Threat finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_neglect",
+      "title": "Neglect",
+      "description": "Failure to provide care, food, safety, or supervision.",
+      "primary_concept_id": "children_neglect",
+      "related_concept_ids": [
+        "children_child",
+        "children_infant",
+        "children_elderly_person"
+      ],
+      "direct_expressions": [
+        "تركه بلا طعام",
+        "left alone all night"
+      ],
+      "indirect_expressions": [
+        "no one checks on her",
+        "blocked from care"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "neglect"
+      ],
+      "supporting_evidence": [
+        "Omission of basic care.",
+        "Absence of supervision or support."
+      ],
+      "contradictory_evidence": [
+        "protective caregiving",
+        "medical supervision"
+      ],
+      "false_positives": [
+        "brief absence with safe supervision",
+        "a documented care plan"
+      ],
+      "counter_examples": [
+        "a caregiver returns immediately",
+        "the scene shows active support"
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence confirms no food or water."
+      ],
+      "scene_indicators": [
+        "narration",
+        "action"
+      ],
+      "reviewer_guidance": [
+        "Neglect is often shown by omission rather than explicit harm."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_neglect_high",
+          "title": "Severe omission",
+          "description": "Clear neglect",
+          "confidence": 95
+        },
+        {
+          "id": "children_pattern_neglect_medium",
+          "title": "Possible omission",
+          "description": "Incomplete care",
+          "confidence": 67
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_neglect_إهمال",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_neglect",
+          "relation": "supports",
+          "note": "إهمال cue"
+        },
+        {
+          "id": "children_pattern_neglect_ترك",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_neglect",
+          "relation": "supports",
+          "note": "ترك cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_neglect_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-3"
+          ],
+          "role": "Neglect",
+          "note": "Use for failure to provide care or safety."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_neglect_ex_1",
+          "title": "Neglect scene",
+          "text": "ترك الطفل بلا طعام أو ماء",
+          "expected_outcome": "Neglect finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_abandonment",
+      "title": "Abandonment",
+      "description": "Leaving a dependent person without care, shelter, or protection.",
+      "primary_concept_id": "children_abandonment",
+      "related_concept_ids": [
+        "children_child",
+        "children_vulnerable_person"
+      ],
+      "direct_expressions": [
+        "تركه في الشارع",
+        "left the infant alone"
+      ],
+      "indirect_expressions": [
+        "walked away without returning",
+        "لم يعد أحد لرعايته"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "neglect"
+      ],
+      "supporting_evidence": [
+        "Explicit leaving or desertion.",
+        "No care or protection is provided."
+      ],
+      "contradictory_evidence": [
+        "temporary handoff to guardian",
+        "brief supervised absence"
+      ],
+      "false_positives": [
+        "a safe custody transfer",
+        "a narrated rescue"
+      ],
+      "counter_examples": [
+        "the guardian is present",
+        "the child is immediately rescued"
+      ],
+      "cross_sentence_indicators": [
+        "Later action shows no one came back."
+      ],
+      "scene_indicators": [
+        "scene",
+        "narration"
+      ],
+      "reviewer_guidance": [
+        "Separate abandonment from a normal temporary absence."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_abandonment_high",
+          "title": "Clear desertion",
+          "description": "Explicit abandonment",
+          "confidence": 96
+        },
+        {
+          "id": "children_pattern_abandonment_medium",
+          "title": "Possible abandonment",
+          "description": "Ambiguous leaving",
+          "confidence": 66
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_abandonment_ترك",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_abandonment",
+          "relation": "supports",
+          "note": "ترك cue"
+        },
+        {
+          "id": "children_pattern_abandonment_وحده",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_abandonment",
+          "relation": "supports",
+          "note": "وحده cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_abandonment_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-3"
+          ],
+          "role": "Abandonment",
+          "note": "Use when a dependent person is deserted."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_abandonment_ex_1",
+          "title": "Abandoned child",
+          "text": "ترك الطفل وحده في الليل",
+          "expected_outcome": "Abandonment finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_exploitation",
+      "title": "Exploitation",
+      "description": "Using a child or vulnerable person for unfair gain.",
+      "primary_concept_id": "children_exploitation",
+      "related_concept_ids": [
+        "children_child",
+        "children_vulnerable_person",
+        "children_forced_labor"
+      ],
+      "direct_expressions": [
+        "يستغل الطفل",
+        "exploit the vulnerable person"
+      ],
+      "indirect_expressions": [
+        "makes her work for free",
+        "يدفعه للعمل دون أجر"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "gain"
+      ],
+      "supporting_evidence": [
+        "Unfair use for gain.",
+        "Control or pressure for benefit."
+      ],
+      "contradictory_evidence": [
+        "voluntary helping",
+        "lawful employment with adult consent"
+      ],
+      "false_positives": [
+        "a family chore with supervision",
+        "voluntary work by an adult"
+      ],
+      "counter_examples": [
+        "the target is protected",
+        "the story condemns the gain-seeking"
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue reveals the profit motive."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "action"
+      ],
+      "reviewer_guidance": [
+        "Look for gain, pressure, and unequal power."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_exploitation_high",
+          "title": "Clear gain",
+          "description": "Direct exploitation",
+          "confidence": 95
+        },
+        {
+          "id": "children_pattern_exploitation_medium",
+          "title": "Suggestive gain",
+          "description": "Possible exploitation",
+          "confidence": 69
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_exploitation_استغلال",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_exploitation",
+          "relation": "supports",
+          "note": "استغلال cue"
+        },
+        {
+          "id": "children_pattern_exploitation_منفعة",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_exploitation",
+          "relation": "supports",
+          "note": "منفعة cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_exploitation_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-4"
+          ],
+          "role": "Exploitation",
+          "note": "Use for unfair use of a child or vulnerable person."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_exploitation_ex_1",
+          "title": "Exploitative work",
+          "text": "يجعل القاصر يعمل ليلًا من دون أجر",
+          "expected_outcome": "Exploitation finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_grooming",
+      "title": "Grooming",
+      "description": "Manipulative preparation of a child for future exploitation.",
+      "primary_concept_id": "children_grooming",
+      "related_concept_ids": [
+        "children_child",
+        "children_sexual_exploitation"
+      ],
+      "direct_expressions": [
+        "أرسل له الهدايا سرًا",
+        "secret gifts for the child"
+      ],
+      "indirect_expressions": [
+        "asks the child to keep secrets",
+        "يعزله عن أهله"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "manipulation"
+      ],
+      "supporting_evidence": [
+        "Secrecy, gifts, isolation, or trust-building for abuse.",
+        "Preparatory manipulation aimed at later exploitation."
+      ],
+      "contradictory_evidence": [
+        "parental gift with transparency",
+        "school-approved mentoring"
+      ],
+      "false_positives": [
+        "a birthday gift in public",
+        "a normal teacher-student activity"
+      ],
+      "counter_examples": [
+        "the guardian is informed",
+        "the story frames it as protection"
+      ],
+      "cross_sentence_indicators": [
+        "Later sentence reveals the abuse plan."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "cross sentence"
+      ],
+      "reviewer_guidance": [
+        "Grooming often looks harmless until context is added."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_grooming_high",
+          "title": "Secret prep",
+          "description": "Clear grooming",
+          "confidence": 94
+        },
+        {
+          "id": "children_pattern_grooming_medium",
+          "title": "Possible grooming",
+          "description": "Some grooming cues",
+          "confidence": 66
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_grooming_سر",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_grooming",
+          "relation": "supports",
+          "note": "سر cue"
+        },
+        {
+          "id": "children_pattern_grooming_هدية",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_grooming",
+          "relation": "supports",
+          "note": "هدية cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_grooming_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-4"
+          ],
+          "role": "Grooming",
+          "note": "Use for manipulative preparation of a child."
+        },
+        {
+          "id": "children_pattern_grooming_gcam_2",
+          "article_id": 17,
+          "atom_ids": [
+            "17-5"
+          ],
+          "role": "Isolation",
+          "note": "Use when isolation supports grooming."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_grooming_ex_1",
+          "title": "Secret gifts",
+          "text": "يعطي الطفل هدايا ويطلب منه السرية",
+          "expected_outcome": "Grooming finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_trafficking",
+      "title": "Human Trafficking",
+      "description": "Recruitment or movement of a person for exploitation.",
+      "primary_concept_id": "children_human_trafficking",
+      "related_concept_ids": [
+        "children_child",
+        "children_criminal_exploitation"
+      ],
+      "direct_expressions": [
+        "نقلوه لاستغلاله",
+        "child trafficking"
+      ],
+      "indirect_expressions": [
+        "moved between cities for work",
+        "يأخذه من البيت إلى مكان مجهول"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "gain"
+      ],
+      "supporting_evidence": [
+        "Movement, recruitment, or control for exploitation.",
+        "Profit-driven transport or coercion."
+      ],
+      "contradictory_evidence": [
+        "family travel with consent",
+        "safe relocation by guardians"
+      ],
+      "false_positives": [
+        "a lawful move with guardians",
+        "a documentary mention"
+      ],
+      "counter_examples": [
+        "the story explicitly condemns trafficking",
+        "the move is protective"
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence explains the exploitation purpose."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration"
+      ],
+      "reviewer_guidance": [
+        "Distinguish trafficking from ordinary travel or rescue."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_trafficking_high",
+          "title": "Direct trafficking",
+          "description": "Clear transport for exploitation",
+          "confidence": 96
+        },
+        {
+          "id": "children_pattern_trafficking_medium",
+          "title": "Possible trafficking",
+          "description": "Implied trafficking",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_trafficking_اتجار",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_human_trafficking",
+          "relation": "supports",
+          "note": "اتجار cue"
+        },
+        {
+          "id": "children_pattern_trafficking_نقل",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_human_trafficking",
+          "relation": "supports",
+          "note": "نقل cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_trafficking_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-4"
+          ],
+          "role": "Trafficking",
+          "note": "Use for recruitment or transport for exploitation."
+        },
+        {
+          "id": "children_pattern_trafficking_gcam_2",
+          "article_id": 17,
+          "atom_ids": [
+            "17-4"
+          ],
+          "role": "Exploitation-related discrimination",
+          "note": "Use if coercive grouping also targets protected status."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_trafficking_ex_1",
+          "title": "Trafficking",
+          "text": "يأخذه من البيت ليبيعه للعمل القسري",
+          "expected_outcome": "Trafficking finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_forced_labor",
+      "title": "Forced Labor",
+      "description": "Compelling a child or vulnerable person to work against their will.",
+      "primary_concept_id": "children_forced_labor",
+      "related_concept_ids": [
+        "children_child",
+        "children_exploitation"
+      ],
+      "direct_expressions": [
+        "أجبره على العمل",
+        "forced labor"
+      ],
+      "indirect_expressions": [
+        "must work until midnight",
+        "لا يسمح له بالراحة"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "control"
+      ],
+      "supporting_evidence": [
+        "Work imposed by force, pressure, or control.",
+        "No real consent or rest is allowed."
+      ],
+      "contradictory_evidence": [
+        "voluntary work",
+        "age-appropriate chores"
+      ],
+      "false_positives": [
+        "normal schooling",
+        "supervised chores"
+      ],
+      "counter_examples": [
+        "the work is clearly voluntary",
+        "the scene shows relief and support"
+      ],
+      "cross_sentence_indicators": [
+        "The later sentence confirms no payment or rest."
+      ],
+      "scene_indicators": [
+        "action",
+        "dialogue"
+      ],
+      "reviewer_guidance": [
+        "Check for compulsion, unpaid labour, and exhaustion."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_forced_labor_high",
+          "title": "Direct coercion",
+          "description": "Clear forced labor",
+          "confidence": 95
+        },
+        {
+          "id": "children_pattern_forced_labor_medium",
+          "title": "Possible coercion",
+          "description": "Unclear compulsion",
+          "confidence": 67
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_forced_labor_عمل",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_forced_labor",
+          "relation": "supports",
+          "note": "عمل cue"
+        },
+        {
+          "id": "children_pattern_forced_labor_أجبر",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_forced_labor",
+          "relation": "supports",
+          "note": "أجبر cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_forced_labor_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-5"
+          ],
+          "role": "Forced labor",
+          "note": "Use for work imposed by coercion on a child or vulnerable person."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_forced_labor_ex_1",
+          "title": "Forced labor",
+          "text": "أجبر القاصر على العمل طوال الليل",
+          "expected_outcome": "Forced labor finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_mocking_disability",
+      "title": "Mocking Disability",
+      "description": "Ridicule or mockery targeting disability or impairment.",
+      "primary_concept_id": "children_mocking_disability",
+      "related_concept_ids": [
+        "children_disabled_child",
+        "children_disabled_adult"
+      ],
+      "direct_expressions": [
+        "يسخر من إعاقته",
+        "mocking disability"
+      ],
+      "indirect_expressions": [
+        "imitates the limp",
+        "يقلد حركته للإهانة"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "humiliation"
+      ],
+      "supporting_evidence": [
+        "Ridicule aimed at disability.",
+        "Deliberate mockery of impairment or assistive need."
+      ],
+      "contradictory_evidence": [
+        "supportive adaptation",
+        "medical assistance"
+      ],
+      "false_positives": [
+        "neutral description of disability",
+        "healthcare discussion"
+      ],
+      "counter_examples": [
+        "the story condemns the mockery",
+        "the target is defended"
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue repeats the insult."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "action"
+      ],
+      "reviewer_guidance": [
+        "Treat disability mockery as separate from generic teasing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_mocking_disability_high",
+          "title": "Direct ridicule",
+          "description": "Clear disability mockery",
+          "confidence": 96
+        },
+        {
+          "id": "children_pattern_mocking_disability_medium",
+          "title": "Implied ridicule",
+          "description": "Possible mockery",
+          "confidence": 67
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_mocking_disability_إعاقة",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_mocking_disability",
+          "relation": "supports",
+          "note": "إعاقة cue"
+        },
+        {
+          "id": "children_pattern_mocking_disability_سخرية",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_mocking_disability",
+          "relation": "supports",
+          "note": "سخرية cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_mocking_disability_gcam_1",
+          "article_id": 17,
+          "atom_ids": [
+            "17-3"
+          ],
+          "role": "Mocking disability",
+          "note": "Use for ridicule targeting disability."
+        },
+        {
+          "id": "children_pattern_mocking_disability_gcam_2",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1",
+            "17-2"
+          ],
+          "role": "Humiliation",
+          "note": "Use when mockery becomes humiliation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_mocking_disability_ex_1",
+          "title": "Disability mockery",
+          "text": "يسخر من إعاقة الطفل أمام زملائه",
+          "expected_outcome": "Mocking disability finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_discrimination",
+      "title": "Discrimination",
+      "description": "Unequal or hostile treatment of a child or vulnerable person.",
+      "primary_concept_id": "children_discrimination",
+      "related_concept_ids": [
+        "children_vulnerable_person",
+        "children_disabled_adult"
+      ],
+      "direct_expressions": [
+        "لا نريدهم هنا",
+        "discriminates against the child"
+      ],
+      "indirect_expressions": [
+        "they are not welcome",
+        "لا تسمح لهم بالدخول"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "exclusion"
+      ],
+      "supporting_evidence": [
+        "Unequal or hostile treatment.",
+        "Exclusion based on protected status."
+      ],
+      "contradictory_evidence": [
+        "equal access",
+        "protective inclusion"
+      ],
+      "false_positives": [
+        "access restriction for safety",
+        "neutral policy discussion"
+      ],
+      "counter_examples": [
+        "the story frames the exclusion as unjust",
+        "the person is later welcomed"
+      ],
+      "cross_sentence_indicators": [
+        "The next line confirms the protected status."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration"
+      ],
+      "reviewer_guidance": [
+        "Distinguish harmful discrimination from lawful safety rules."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_discrimination_high",
+          "title": "Open exclusion",
+          "description": "Clear discrimination",
+          "confidence": 94
+        },
+        {
+          "id": "children_pattern_discrimination_medium",
+          "title": "Possible exclusion",
+          "description": "Ambiguous discrimination",
+          "confidence": 65
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_discrimination_تمييز",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_discrimination",
+          "relation": "supports",
+          "note": "تمييز cue"
+        },
+        {
+          "id": "children_pattern_discrimination_مرفوض",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_discrimination",
+          "relation": "supports",
+          "note": "مرفوض cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_discrimination_gcam_1",
+          "article_id": 17,
+          "atom_ids": [
+            "17-4"
+          ],
+          "role": "Discrimination",
+          "note": "Use for unequal or hostile treatment."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_discrimination_ex_1",
+          "title": "Discrimination",
+          "text": "يمنع الطفل المعاق من الجلوس معهم",
+          "expected_outcome": "Discrimination finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_isolation",
+      "title": "Isolation",
+      "description": "Deliberate social exclusion or confinement of a vulnerable person.",
+      "primary_concept_id": "children_isolation",
+      "related_concept_ids": [
+        "children_vulnerable_person",
+        "children_child"
+      ],
+      "direct_expressions": [
+        "يعزله عن الجميع",
+        "isolates the child"
+      ],
+      "indirect_expressions": [
+        "kept away from friends",
+        "لم يعد يراه أحد"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "control"
+      ],
+      "supporting_evidence": [
+        "Deliberate exclusion or confinement.",
+        "Social or physical isolation as control."
+      ],
+      "contradictory_evidence": [
+        "protective supervision",
+        "temporary quiet time"
+      ],
+      "false_positives": [
+        "privacy, rest, or study time",
+        "medical isolation for safety"
+      ],
+      "counter_examples": [
+        "the child is connected to support",
+        "the story shows protective care"
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms no contact is allowed."
+      ],
+      "scene_indicators": [
+        "scene",
+        "dialogue"
+      ],
+      "reviewer_guidance": [
+        "Isolation often appears with grooming or coercion."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_isolation_high",
+          "title": "Strong isolation",
+          "description": "Clear exclusion",
+          "confidence": 92
+        },
+        {
+          "id": "children_pattern_isolation_medium",
+          "title": "Possible isolation",
+          "description": "Limited contact",
+          "confidence": 66
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_isolation_عزل",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_isolation",
+          "relation": "supports",
+          "note": "عزل cue"
+        },
+        {
+          "id": "children_pattern_isolation_وحدة",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_isolation",
+          "relation": "supports",
+          "note": "وحدة cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_isolation_gcam_1",
+          "article_id": 17,
+          "atom_ids": [
+            "17-5"
+          ],
+          "role": "Isolation",
+          "note": "Use for deliberate exclusion or confinement."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_isolation_ex_1",
+          "title": "Isolation",
+          "text": "يعزل الطفل عن أصدقائه وأهله",
+          "expected_outcome": "Isolation finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_endangerment",
+      "title": "Endangerment",
+      "description": "Putting a child or vulnerable person in danger.",
+      "primary_concept_id": "children_endangerment",
+      "related_concept_ids": [
+        "children_child",
+        "children_vulnerable_person"
+      ],
+      "direct_expressions": [
+        "يتركه في الخطر",
+        "endangers the child"
+      ],
+      "indirect_expressions": [
+        "drives him into traffic",
+        "يضعها قرب النار"
+      ],
+      "semantic_intent": [
+        "abuse",
+        "risk"
+      ],
+      "supporting_evidence": [
+        "Exposure to obvious danger.",
+        "Unsafe placement or reckless behavior."
+      ],
+      "contradictory_evidence": [
+        "rescue",
+        "safety supervision"
+      ],
+      "false_positives": [
+        "staged rescue scene",
+        "safe training environment"
+      ],
+      "counter_examples": [
+        "the danger is prevented",
+        "the story condemns the risk"
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence explains the dangerous object."
+      ],
+      "scene_indicators": [
+        "action",
+        "narration"
+      ],
+      "reviewer_guidance": [
+        "Look for foreseeable danger, not just dramatic tension."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_endangerment_high",
+          "title": "Immediate danger",
+          "description": "Clear endangerment",
+          "confidence": 94
+        },
+        {
+          "id": "children_pattern_endangerment_medium",
+          "title": "Possible danger",
+          "description": "Risky situation",
+          "confidence": 65
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_endangerment_خطر",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_endangerment",
+          "relation": "supports",
+          "note": "خطر cue"
+        },
+        {
+          "id": "children_pattern_endangerment_خطر على الطفل",
+          "from_concept_id": "children_vulnerable_person",
+          "to_concept_id": "children_endangerment",
+          "relation": "supports",
+          "note": "خطر على الطفل cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_endangerment_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-5"
+          ],
+          "role": "Endangerment",
+          "note": "Use when the child or vulnerable person is placed in danger."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_endangerment_ex_1",
+          "title": "Endangerment",
+          "text": "يترك الطفل قرب النار المشتعلة",
+          "expected_outcome": "Endangerment finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_protection",
+      "title": "Protection",
+      "description": "Protective intervention that prevents harm to a child or vulnerable person.",
+      "primary_concept_id": "children_vulnerable_person",
+      "related_concept_ids": [
+        "children_parent",
+        "children_guardian"
+      ],
+      "direct_expressions": [
+        "ينقذه من الأذى",
+        "protects the child"
+      ],
+      "indirect_expressions": [
+        "keeps her safe",
+        "يراقبه حتى يعود"
+      ],
+      "semantic_intent": [
+        "protection",
+        "rescue"
+      ],
+      "supporting_evidence": [
+        "Protective action or supervision.",
+        "Explicit safeguarding behavior."
+      ],
+      "contradictory_evidence": [
+        "abuse",
+        "neglect"
+      ],
+      "false_positives": [
+        "control without safety",
+        "restrictive harm"
+      ],
+      "counter_examples": [
+        "the story frames it as rescue",
+        "the guardian is acting responsibly"
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence confirms the safety plan."
+      ],
+      "scene_indicators": [
+        "action",
+        "dialogue"
+      ],
+      "reviewer_guidance": [
+        "Use this pattern as a false-positive shield when the scene is protective."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_protection_high",
+          "title": "Clear rescue",
+          "description": "Strong protective framing",
+          "confidence": 97
+        },
+        {
+          "id": "children_pattern_protection_medium",
+          "title": "Possible protection",
+          "description": "Limited protective cues",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_protection_حماية",
+          "from_concept_id": "children_parent",
+          "to_concept_id": "children_vulnerable_person",
+          "relation": "supports",
+          "note": "حماية cue"
+        },
+        {
+          "id": "children_pattern_protection_إنقاذ",
+          "from_concept_id": "children_parent",
+          "to_concept_id": "children_vulnerable_person",
+          "relation": "supports",
+          "note": "إنقاذ cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_protection_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-1",
+            "6-3"
+          ],
+          "role": "Protection",
+          "note": "Use for safeguarding rather than harm."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_protection_ex_1",
+          "title": "Protective rescue",
+          "text": "ينقذ الطفل من الخطر",
+          "expected_outcome": "Protection / no finding",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_medical_context",
+      "title": "Medical Context",
+      "description": "Medical or clinical handling of a child or vulnerable person.",
+      "primary_concept_id": "children_vulnerable_person",
+      "related_concept_ids": [
+        "children_disabled_child",
+        "children_disabled_adult"
+      ],
+      "direct_expressions": [
+        "يفحصه الطبيب",
+        "medical examination"
+      ],
+      "indirect_expressions": [
+        "the clinic reviews the injury",
+        "الفحص الطبي يشرح الحالة"
+      ],
+      "semantic_intent": [
+        "education",
+        "protection"
+      ],
+      "supporting_evidence": [
+        "Clinical framing or examination.",
+        "No endorsement of harm, only care or diagnosis."
+      ],
+      "contradictory_evidence": [
+        "harmful treatment",
+        "mockery"
+      ],
+      "false_positives": [
+        "abuse disguised as examination",
+        "fake medical framing"
+      ],
+      "counter_examples": [
+        "the doctor is helping",
+        "the story protects the patient"
+      ],
+      "cross_sentence_indicators": [
+        "Later sentence explains the treatment plan."
+      ],
+      "scene_indicators": [
+        "medical",
+        "narration"
+      ],
+      "reviewer_guidance": [
+        "Medical context should reduce false positives unless harm is explicit."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_medical_context_high",
+          "title": "Clear medical care",
+          "description": "Strong protective frame",
+          "confidence": 96
+        },
+        {
+          "id": "children_pattern_medical_context_medium",
+          "title": "Possible clinical frame",
+          "description": "Ambiguous medical context",
+          "confidence": 71
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_medical_context_طبيب",
+          "from_concept_id": "children_parent",
+          "to_concept_id": "children_vulnerable_person",
+          "relation": "supports",
+          "note": "طبيب cue"
+        },
+        {
+          "id": "children_pattern_medical_context_فحص",
+          "from_concept_id": "children_parent",
+          "to_concept_id": "children_vulnerable_person",
+          "relation": "supports",
+          "note": "فحص cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_medical_context_gcam_1",
+          "article_id": 6,
+          "atom_ids": [
+            "6-1"
+          ],
+          "role": "Medical care",
+          "note": "Use for clinical, protective, or treatment contexts."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_medical_context_ex_1",
+          "title": "Medical exam",
+          "text": "يفحص الطبيب الطفل بعد الإصابة",
+          "expected_outcome": "No finding / medical context",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "children_pattern_education_context",
+      "title": "Educational Context",
+      "description": "Teaching or classroom explanation about child safety or vulnerable-person protection.",
+      "primary_concept_id": "children_vulnerable_person",
+      "related_concept_ids": [
+        "children_child",
+        "children_parent"
+      ],
+      "direct_expressions": [
+        "يشرح المعلم حماية الطفل",
+        "educational discussion"
+      ],
+      "indirect_expressions": [
+        "the lesson explains abuse",
+        "الدرس عن الإهمال"
+      ],
+      "semantic_intent": [
+        "education",
+        "protection"
+      ],
+      "supporting_evidence": [
+        "Teaching or explanation context.",
+        "Explicitly instructional framing."
+      ],
+      "contradictory_evidence": [
+        "promotion of harm",
+        "mockery"
+      ],
+      "false_positives": [
+        "a lesson quoting harmful words",
+        "a classroom policy discussion"
+      ],
+      "counter_examples": [
+        "the lesson clearly protects children",
+        "the teacher condemns abuse"
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence names the safety rule."
+      ],
+      "scene_indicators": [
+        "classroom",
+        "narration"
+      ],
+      "reviewer_guidance": [
+        "Educational framing should usually suppress findings unless the text endorses harm."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "children_pattern_education_context_high",
+          "title": "Teaching frame",
+          "description": "Clear educational intent",
+          "confidence": 96
+        },
+        {
+          "id": "children_pattern_education_context_medium",
+          "title": "Partly instructional",
+          "description": "Some ambiguity remains",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "children_pattern_education_context_تعليم",
+          "from_concept_id": "children_parent",
+          "to_concept_id": "children_vulnerable_person",
+          "relation": "supports",
+          "note": "تعليم cue"
+        },
+        {
+          "id": "children_pattern_education_context_حماية",
+          "from_concept_id": "children_parent",
+          "to_concept_id": "children_vulnerable_person",
+          "relation": "supports",
+          "note": "حماية cue"
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "children_pattern_education_context_gcam_1",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1"
+          ],
+          "role": "Age-appropriate education",
+          "note": "Use when the content is purely instructional."
+        }
+      ],
+      "examples": [
+        {
+          "id": "children_pattern_education_context_ex_1",
+          "title": "Educational discussion",
+          "text": "في الدرس نشرح كيف نحمي الطفل من الإهمال",
+          "expected_outcome": "No finding / educational context",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

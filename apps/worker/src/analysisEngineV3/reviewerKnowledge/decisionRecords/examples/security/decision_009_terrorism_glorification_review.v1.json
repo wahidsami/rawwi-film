@@ -1,0 +1,73 @@
+{
+  "id": "decision_009_terrorism_glorification_review",
+  "version": "1.0.0",
+  "title": "Terrorism glorification (review)",
+  "summary": "A line praises terrorism as a solution.",
+  "originalScenario": "A character says: \"الإرهاب هو الحل\".",
+  "reviewQuestion": "Is terrorism being glorified?",
+  "initialSuspicion": "Positive framing of terrorism.",
+  "possibleConcepts": [
+    "terrorism",
+    "extremism"
+  ],
+  "supportingEvidence": [
+    "الإرهاب هو الحل"
+  ],
+  "contradictingEvidence": [
+    "Ambiguous context."
+  ],
+  "requiredMissingEvidence": [
+    "No explicit endorsement or additional evidence."
+  ],
+  "sceneContext": "Dialogue in a hostile scene.",
+  "speakerAnalysis": "The speaker is direct and explicit.",
+  "targetAnalysis": "The target is society and state order.",
+  "intentAnalysis": "Promotion of terrorism.",
+  "reasoningSteps": [
+    "Identify praise language",
+    "Identify security concept",
+    "Map to article 9"
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "medium",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "id": "gcam_security_9_2",
+      "article_id": 9,
+      "atom_ids": [
+        "9-2",
+        "9-3"
+      ],
+      "role": "Terrorism escalation",
+      "note": "Use when terrorism is glorified."
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Keep the quoted phrase exact. Variant: review.",
+  "benchmarkTags": [
+    "terrorism",
+    "extremism",
+    "promotion",
+    "review"
+  ],
+  "relatedLessons": [
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "security_pattern_terrorism_glorification"
+  ],
+  "relatedBlueprintConcepts": [
+    "security_terrorism",
+    "security_extremism"
+  ]
+}

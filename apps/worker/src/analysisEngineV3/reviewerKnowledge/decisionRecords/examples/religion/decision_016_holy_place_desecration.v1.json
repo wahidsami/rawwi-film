@@ -1,0 +1,69 @@
+{
+  "id": "decision_016_holy_place_desecration",
+  "version": "1.0.0",
+  "title": "Desecration of holy place",
+  "summary": "Dishonoring a sacred location.",
+  "originalScenario": "A line describes someone defiling the holy place.",
+  "reviewQuestion": "Is holy place desecration shown?",
+  "initialSuspicion": "Sacred location abuse.",
+  "possibleConcepts": [
+    "holy_places",
+    "religious_sanctities"
+  ],
+  "supportingEvidence": [
+    "defiling the holy place"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Scene action.",
+  "speakerAnalysis": "Explicit action.",
+  "targetAnalysis": "Holy place.",
+  "intentAnalysis": "Attack.",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check context",
+    "Apply religion pack heuristics",
+    "Map to GCAM article"
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 1,
+      "atom_ids": [],
+      "note": "Holy place desecration."
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct desecration of a sacred place.",
+  "benchmarkTags": [
+    "religion",
+    "holy_place",
+    "desecration"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "religion_pattern_desecration"
+  ],
+  "relatedBlueprintConcepts": [
+    "religion_holy_places",
+    "religion_religious_sanctities"
+  ]
+}

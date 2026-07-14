@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "id": "religion_concepts",
+  "title": "Religion Concepts",
+  "description": "Canonical religion concepts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "religion_islamic_religion",
+      "title": "Islamic Religion",
+      "description": "The Islamic religion as a protected belief system and identity."
+    },
+    {
+      "id": "religion_religious_sanctities",
+      "title": "Religious Sanctities",
+      "description": "Sacred matters, inviolable symbols, and revered religious matters."
+    },
+    {
+      "id": "religion_holy_places",
+      "title": "Holy Places",
+      "description": "Mosques, shrines, and other sacred places."
+    },
+    {
+      "id": "religion_holy_books",
+      "title": "Holy Books",
+      "description": "Revealed scriptures and sacred texts."
+    },
+    {
+      "id": "religion_prophets",
+      "title": "Prophets",
+      "description": "Prophets and messengers held in reverence."
+    },
+    {
+      "id": "religion_companions",
+      "title": "Companions",
+      "description": "Companions and revered early followers."
+    },
+    {
+      "id": "religion_religious_scholars",
+      "title": "Religious Scholars",
+      "description": "Scholars, jurists, and recognized religious authorities."
+    },
+    {
+      "id": "religion_religious_rituals",
+      "title": "Religious Rituals",
+      "description": "Acts of worship, rites, and ritual practice."
+    },
+    {
+      "id": "religion_religious_symbols",
+      "title": "Religious Symbols",
+      "description": "Signs, emblems, and visible markers of the religion."
+    },
+    {
+      "id": "religion_religious_unity",
+      "title": "Religious Unity",
+      "description": "Community cohesion and avoidance of sectarian division."
+    },
+    {
+      "id": "religion_sectarian_division",
+      "title": "Sectarian Division",
+      "description": "Division, conflict, or hostility between religious groups."
+    },
+    {
+      "id": "religion_religious_hate_speech",
+      "title": "Religious Hate Speech",
+      "description": "Hostile, abusive, or degrading religious speech."
+    }
+  ]
+}

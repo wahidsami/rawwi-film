@@ -1,0 +1,51 @@
+{
+  "id": "violence_019_violence_law_enforcement_direct",
+  "version": "1.0.0",
+  "title": "Violence Law Enforcement (direct)",
+  "summary": "Violence Law Enforcement in direct framing.",
+  "originalScenario": "الشرطة تسيطر على المشاجرة.",
+  "reviewQuestion": "Is this violence law enforcement?",
+  "initialSuspicion": "Possible violence law enforcement.",
+  "possibleConcepts": [
+    "violence_law_enforcement"
+  ],
+  "supportingEvidence": [
+    "الشرطة تسيطر على المشاجرة."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "justified",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_law_enforcement",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_law_enforcement"
+  ]
+}

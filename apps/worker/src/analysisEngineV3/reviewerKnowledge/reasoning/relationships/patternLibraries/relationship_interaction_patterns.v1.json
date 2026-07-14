@@ -1,0 +1,764 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "relationship_interaction_patterns",
+    "title": "Relationship Interaction Patterns",
+    "description": "Patterns that teach reviewers how the same sentence changes with relationship.",
+    "concepts": [
+      {
+        "id": "relationship_family_parent_child",
+        "title": "Family Parent Child",
+        "description": "The reviewer treats family parent child as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_family_siblings",
+        "title": "Family Siblings",
+        "description": "The reviewer treats family siblings as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_family_spouses",
+        "title": "Family Spouses",
+        "description": "The reviewer treats family spouses as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_family_extended",
+        "title": "Family Extended",
+        "description": "The reviewer treats family extended as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_father_child",
+        "title": "Father Child",
+        "description": "The reviewer treats father child as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_mother_child",
+        "title": "Mother Child",
+        "description": "The reviewer treats mother child as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_guardian_child",
+        "title": "Guardian Child",
+        "description": "The reviewer treats guardian child as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_child_child",
+        "title": "Child Child",
+        "description": "The reviewer treats child child as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_adult_child",
+        "title": "Adult Child",
+        "description": "The reviewer treats adult child as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_adult_adult",
+        "title": "Adult Adult",
+        "description": "The reviewer treats adult adult as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_teacher_student",
+        "title": "Teacher Student",
+        "description": "The reviewer treats teacher student as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_doctor_patient",
+        "title": "Doctor Patient",
+        "description": "The reviewer treats doctor patient as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_therapist_patient",
+        "title": "Therapist Patient",
+        "description": "The reviewer treats therapist patient as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_imam_follower",
+        "title": "Imam Follower",
+        "description": "The reviewer treats imam follower as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_leader_follower",
+        "title": "Leader Follower",
+        "description": "The reviewer treats leader follower as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_commander_soldier",
+        "title": "Commander Soldier",
+        "description": "The reviewer treats commander soldier as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_police_suspect",
+        "title": "Police Suspect",
+        "description": "The reviewer treats police suspect as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_police_commander",
+        "title": "Police Commander",
+        "description": "The reviewer treats police commander as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_police_officer_public",
+        "title": "Police Officer Public",
+        "description": "The reviewer treats police officer public as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_judge_accused",
+        "title": "Judge Accused",
+        "description": "The reviewer treats judge accused as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_judge_public",
+        "title": "Judge Public",
+        "description": "The reviewer treats judge public as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_lawyer_client",
+        "title": "Lawyer Client",
+        "description": "The reviewer treats lawyer client as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_employer_employee",
+        "title": "Employer Employee",
+        "description": "The reviewer treats employer employee as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_coworkers",
+        "title": "Coworkers",
+        "description": "The reviewer treats coworkers as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_friend_friend",
+        "title": "Friend Friend",
+        "description": "The reviewer treats friend friend as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_neighbor_neighbor",
+        "title": "Neighbor Neighbor",
+        "description": "The reviewer treats neighbor neighbor as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_stranger_stranger",
+        "title": "Stranger Stranger",
+        "description": "The reviewer treats stranger stranger as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_government_citizen",
+        "title": "Government Citizen",
+        "description": "The reviewer treats government citizen as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_government_employee_public",
+        "title": "Government Employee Public",
+        "description": "The reviewer treats government employee public as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_journalist_source",
+        "title": "Journalist Source",
+        "description": "The reviewer treats journalist source as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_actor_audience",
+        "title": "Actor Audience",
+        "description": "The reviewer treats actor audience as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_story_narrator",
+        "title": "Story Narrator",
+        "description": "The reviewer treats story narrator as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_narrator_character",
+        "title": "Narrator Character",
+        "description": "The reviewer treats narrator character as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_customer_vendor",
+        "title": "Customer Vendor",
+        "description": "The reviewer treats customer vendor as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_officer_public",
+        "title": "Officer Public",
+        "description": "The reviewer treats officer public as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_criminal_victim",
+        "title": "Criminal Victim",
+        "description": "The reviewer treats criminal victim as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_criminal_accomplice",
+        "title": "Criminal Accomplice",
+        "description": "The reviewer treats criminal accomplice as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_gang_member",
+        "title": "Gang Member",
+        "description": "The reviewer treats gang member as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_gang_leader",
+        "title": "Gang Leader",
+        "description": "The reviewer treats gang leader as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_terrorist_recruit",
+        "title": "Terrorist Recruit",
+        "description": "The reviewer treats terrorist recruit as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_disabled_caregiver",
+        "title": "Disabled Caregiver",
+        "description": "The reviewer treats disabled caregiver as a separate reasoning concept."
+      },
+      {
+        "id": "relationship_elderly_caregiver",
+        "title": "Elderly Caregiver",
+        "description": "The reviewer treats elderly caregiver as a separate reasoning concept."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "pattern_authority_command",
+      "title": "Authority Command",
+      "description": "Commands mean different things when issued by authority figures.",
+      "primary_concept_id": "relationship_leader_follower",
+      "related_concept_ids": [
+        "relationship_police_commander",
+        "relationship_commander_soldier",
+        "relationship_teacher_student",
+        "relationship_father_child"
+      ],
+      "direct_expressions": [
+        "اقتله",
+        "افعلها الآن"
+      ],
+      "indirect_expressions": [
+        "we should take care of him",
+        "handle this now"
+      ],
+      "semantic_intent": [
+        "authority",
+        "command",
+        "control"
+      ],
+      "supporting_evidence": [
+        "speaker has power",
+        "listener is subordinate"
+      ],
+      "contradictory_evidence": [
+        "the line is quoted",
+        "later lines show lawful procedure"
+      ],
+      "false_positives": [
+        "treating every command as violence",
+        "treating discipline as crime"
+      ],
+      "counter_examples": [
+        "a commander issuing a lawful order",
+        "a teacher correcting a class"
+      ],
+      "cross_sentence_indicators": [
+        "later line clarifies the order",
+        "the target responds with hesitation"
+      ],
+      "scene_indicators": [
+        "interrogation room",
+        "classroom",
+        "command center"
+      ],
+      "reviewer_guidance": [
+        "Check the speaker's role before judging.",
+        "Power imbalance changes meaning."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "cmd_direct",
+          "title": "Direct command",
+          "description": "The speaker issues a direct imperative.",
+          "confidence": 80
+        },
+        {
+          "id": "cmd_quote",
+          "title": "Quoted command",
+          "description": "The command is reported speech.",
+          "confidence": 45
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "cmd_rel_1",
+          "from_concept_id": "relationship_police_commander",
+          "to_concept_id": "relationship_commander_soldier",
+          "relation": "supports",
+          "note": "Hierarchy reinforces command reading."
+        },
+        {
+          "id": "cmd_rel_2",
+          "from_concept_id": "relationship_teacher_student",
+          "to_concept_id": "relationship_adult_child",
+          "relation": "supports",
+          "note": "Authority in teaching is not automatically criminal."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "cmd_map_1",
+          "article_id": 4,
+          "atom_ids": [
+            "REL_COMMAND"
+          ],
+          "role": "authority reasoning",
+          "note": "Authority and coercion can change meaning."
+        }
+      ],
+      "examples": [
+        {
+          "id": "cmd_ex_1",
+          "title": "Police commander",
+          "text": "اقتله",
+          "expected_outcome": "Command may be operational or abusive depending on scene.",
+          "note": null
+        },
+        {
+          "id": "cmd_ex_2",
+          "title": "Gang leader",
+          "text": "اقتله",
+          "expected_outcome": "Likely coercive or criminal command.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_procedural_release",
+      "title": "Procedural Release",
+      "description": "A release request may be lawful discretion or improper influence.",
+      "primary_concept_id": "relationship_police_officer_public",
+      "related_concept_ids": [
+        "relationship_judge_public",
+        "relationship_government_employee_public",
+        "relationship_government_citizen"
+      ],
+      "direct_expressions": [
+        "خلها تمشي",
+        "اطلق سراحه"
+      ],
+      "indirect_expressions": [
+        "let him go",
+        "set her free"
+      ],
+      "semantic_intent": [
+        "procedural",
+        "discretion",
+        "release"
+      ],
+      "supporting_evidence": [
+        "lawful authority",
+        "documented release"
+      ],
+      "contradictory_evidence": [
+        "request for payment",
+        "hidden exchange of favors"
+      ],
+      "false_positives": [
+        "calling every release bribery",
+        "treating discretion as corruption"
+      ],
+      "counter_examples": [
+        "judge using discretion",
+        "officer releasing after procedure"
+      ],
+      "cross_sentence_indicators": [
+        "later line mentions paperwork",
+        "another line shows payment"
+      ],
+      "scene_indicators": [
+        "court room",
+        "check point",
+        "office"
+      ],
+      "reviewer_guidance": [
+        "Look for lawful procedure first.",
+        "Do not infer corruption without evidence."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "rel_procedure",
+          "title": "Procedure",
+          "description": "Paperwork or lawful process appears.",
+          "confidence": 82
+        },
+        {
+          "id": "rel_payoff",
+          "title": "Payoff",
+          "description": "Payment or favor is implied.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rel_proc_1",
+          "from_concept_id": "relationship_judge_public",
+          "to_concept_id": "relationship_judge_accused",
+          "relation": "supports",
+          "note": "Judicial discretion is distinct from bribery."
+        },
+        {
+          "id": "rel_proc_2",
+          "from_concept_id": "relationship_government_employee_public",
+          "to_concept_id": "relationship_government_citizen",
+          "relation": "supports",
+          "note": "Administrative release may be procedural."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "rel_map_1",
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE"
+          ],
+          "role": "procedural reasoning",
+          "note": "Lawful release and reported speech."
+        }
+      ],
+      "examples": [
+        {
+          "id": "rel_ex_1",
+          "title": "Police officer",
+          "text": "خلها تمشي",
+          "expected_outcome": "Could be procedural release.",
+          "note": null
+        },
+        {
+          "id": "rel_ex_2",
+          "title": "Judge",
+          "text": "خلها تمشي",
+          "expected_outcome": "Could be legal discretion.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_family_discipline",
+      "title": "Family Discipline",
+      "description": "Family authority can sound severe without being criminal.",
+      "primary_concept_id": "relationship_father_child",
+      "related_concept_ids": [
+        "relationship_mother_child",
+        "relationship_guardian_child",
+        "relationship_family_parent_child"
+      ],
+      "direct_expressions": [
+        "لا تتحرك",
+        "تعال هنا"
+      ],
+      "indirect_expressions": [
+        "wait here",
+        "stay inside"
+      ],
+      "semantic_intent": [
+        "discipline",
+        "care",
+        "protection"
+      ],
+      "supporting_evidence": [
+        "family setting",
+        "protective language"
+      ],
+      "contradictory_evidence": [
+        "threat of harm",
+        "criminal motive"
+      ],
+      "false_positives": [
+        "treating discipline as violence",
+        "ignoring care context"
+      ],
+      "counter_examples": [
+        "parent protecting a child",
+        "guardian giving a safe instruction"
+      ],
+      "cross_sentence_indicators": [
+        "later line explains protection",
+        "the child responds calmly"
+      ],
+      "scene_indicators": [
+        "home",
+        "school pickup",
+        "safe room"
+      ],
+      "reviewer_guidance": [
+        "Differentiate care from harm.",
+        "Do not flatten family context into abuse."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "fam_care",
+          "title": "Care",
+          "description": "The instruction appears protective.",
+          "confidence": 76
+        },
+        {
+          "id": "fam_harm",
+          "title": "Harm",
+          "description": "Evidence of harm appears.",
+          "confidence": 48
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "fam_rel_1",
+          "from_concept_id": "relationship_family_parent_child",
+          "to_concept_id": "relationship_father_child",
+          "relation": "supports",
+          "note": "Parent-child authority may be protective."
+        },
+        {
+          "id": "fam_rel_2",
+          "from_concept_id": "relationship_mother_child",
+          "to_concept_id": "relationship_guardian_child",
+          "relation": "supports",
+          "note": "Guardian language can be care-oriented."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "fam_map_1",
+          "article_id": 17,
+          "atom_ids": [
+            "REL_FAMILY"
+          ],
+          "role": "family reasoning",
+          "note": "Family discipline and protection."
+        }
+      ],
+      "examples": [
+        {
+          "id": "fam_ex_1",
+          "title": "Father",
+          "text": "لا تتحرك",
+          "expected_outcome": "May be protective or disciplinary.",
+          "note": null
+        },
+        {
+          "id": "fam_ex_2",
+          "title": "Mother",
+          "text": "تعال هنا",
+          "expected_outcome": "May be care or discipline.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_peer_dismissal",
+      "title": "Peer Dismissal",
+      "description": "Peers can dismiss each other without illegal intent.",
+      "primary_concept_id": "relationship_friend_friend",
+      "related_concept_ids": [
+        "relationship_coworkers",
+        "relationship_neighbor_neighbor",
+        "relationship_stranger_stranger"
+      ],
+      "direct_expressions": [
+        "لا تهتم",
+        "اتركه"
+      ],
+      "indirect_expressions": [
+        "leave it",
+        "never mind"
+      ],
+      "semantic_intent": [
+        "dismissal",
+        "neutral",
+        "peer"
+      ],
+      "supporting_evidence": [
+        "equal relationship",
+        "casual tone"
+      ],
+      "contradictory_evidence": [
+        "payment request",
+        "authority abuse"
+      ],
+      "false_positives": [
+        "reading every dismissal as corruption",
+        "assuming threats without evidence"
+      ],
+      "counter_examples": [
+        "friends talking casually",
+        "coworkers defusing conflict"
+      ],
+      "cross_sentence_indicators": [
+        "later sentence clarifies it is a joke",
+        "another speaker disagrees"
+      ],
+      "scene_indicators": [
+        "street conversation",
+        "office chat",
+        "group message"
+      ],
+      "reviewer_guidance": [
+        "Peers often speak casually.",
+        "Judge the whole exchange, not one line."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "peer_casual",
+          "title": "Casual",
+          "description": "Casual peer language lowers risk.",
+          "confidence": 70
+        },
+        {
+          "id": "peer_hostile",
+          "title": "Hostile",
+          "description": "Hostile follow-up raises concern.",
+          "confidence": 52
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "peer_rel_1",
+          "from_concept_id": "relationship_friend_friend",
+          "to_concept_id": "relationship_coworkers",
+          "relation": "supports",
+          "note": "Peer language can be casual."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "peer_map_1",
+          "article_id": 11,
+          "atom_ids": [
+            "REL_PEER"
+          ],
+          "role": "peer reasoning",
+          "note": "Casual dismissal between peers."
+        }
+      ],
+      "examples": [
+        {
+          "id": "peer_ex_1",
+          "title": "Friend",
+          "text": "اتركه",
+          "expected_outcome": "Likely ignore it.",
+          "note": null
+        },
+        {
+          "id": "peer_ex_2",
+          "title": "Coworker",
+          "text": "لا تهتم",
+          "expected_outcome": "Likely casual dismissal.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_reversal_correction",
+      "title": "Reversal Correction",
+      "description": "Later context can reverse the meaning of an earlier line.",
+      "primary_concept_id": "relationship_story_narrator",
+      "related_concept_ids": [
+        "relationship_narrator_character",
+        "relationship_actor_audience",
+        "relationship_journalist_source"
+      ],
+      "direct_expressions": [
+        "خلها تمشي",
+        "اقتله"
+      ],
+      "indirect_expressions": [
+        "the next line corrects it",
+        "later context explains it"
+      ],
+      "semantic_intent": [
+        "reversal",
+        "correction",
+        "context"
+      ],
+      "supporting_evidence": [
+        "later line",
+        "scene shift"
+      ],
+      "contradictory_evidence": [
+        "no follow-up",
+        "isolated sentence only"
+      ],
+      "false_positives": [
+        "fixing meaning too early",
+        "ignoring later correction"
+      ],
+      "counter_examples": [
+        "story narration that changes interpretation",
+        "reported speech clarified later"
+      ],
+      "cross_sentence_indicators": [
+        "later sentence reverses the first impression",
+        "the final line resolves ambiguity"
+      ],
+      "scene_indicators": [
+        "flashback",
+        "documentary",
+        "narration"
+      ],
+      "reviewer_guidance": [
+        "Always wait for the reversal if one exists.",
+        "Confidence should move with context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "rev_later",
+          "title": "Later clarification",
+          "description": "A later line clarifies the sentence.",
+          "confidence": 88
+        },
+        {
+          "id": "rev_missing",
+          "title": "No clarification",
+          "description": "No later clarification exists.",
+          "confidence": 50
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rev_rel_1",
+          "from_concept_id": "relationship_story_narrator",
+          "to_concept_id": "relationship_narrator_character",
+          "relation": "supports",
+          "note": "Narration can override first impressions."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "rev_map_1",
+          "article_id": 4,
+          "atom_ids": [
+            "REL_CONTEXT"
+          ],
+          "role": "context reasoning",
+          "note": "Later context can change meaning."
+        }
+      ],
+      "examples": [
+        {
+          "id": "rev_ex_1",
+          "title": "Narrator",
+          "text": "خلها تمشي",
+          "expected_outcome": "May become lawful discretion after later context.",
+          "note": null
+        },
+        {
+          "id": "rev_ex_2",
+          "title": "Reporter",
+          "text": "اقتله",
+          "expected_outcome": "Could be quoted speech later clarified.",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

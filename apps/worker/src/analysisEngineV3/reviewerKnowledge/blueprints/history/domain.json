@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "historical_domain",
+  "title": "History Domain Blueprint",
+  "description": "Top-level history knowledge blueprint used by Academy lessons and reviewer packs.",
+  "entries": [
+    {
+      "id": "historical_domain",
+      "title": "History",
+      "description": "History reasoning across facts, interpretations, fiction, symbols, archives, and memory."
+    }
+  ]
+}

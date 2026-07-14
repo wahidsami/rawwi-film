@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "id": "security_intents",
+  "title": "Security Intents",
+  "description": "Intent categories used in security reasoning.",
+  "entries": [
+    { "id": "security_intent_promotion", "title": "Promotion", "description": "Presenting harmful security content positively." },
+    { "id": "security_intent_encouragement", "title": "Encouragement", "description": "Urging others to take harmful security action." },
+    { "id": "security_intent_instruction", "title": "Instruction", "description": "Explaining how to perform harmful security action." },
+    { "id": "security_intent_condemnation", "title": "Condemnation", "description": "Rejecting or criticizing the harmful content." },
+    { "id": "security_intent_warning", "title": "Warning", "description": "Alerting about a harmful security risk." },
+    { "id": "security_intent_neutral", "title": "Neutral", "description": "Descriptive mention without support or endorsement." }
+  ]
+}

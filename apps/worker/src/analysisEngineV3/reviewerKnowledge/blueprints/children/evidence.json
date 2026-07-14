@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "children_evidence",
+  "title": "Children Evidence",
+  "description": "Evidence rules for child-safety reasoning.",
+  "entries": [
+    {
+      "id": "children_evidence_direct",
+      "title": "Direct Evidence",
+      "description": "A literal phrase or action showing the harm directly."
+    },
+    {
+      "id": "children_evidence_strong",
+      "title": "Strong Evidence",
+      "description": "Clear supporting evidence that strongly indicates the harm."
+    },
+    {
+      "id": "children_evidence_weak",
+      "title": "Weak Evidence",
+      "description": "Limited or indirect evidence that needs corroboration."
+    },
+    {
+      "id": "children_evidence_insufficient",
+      "title": "Insufficient Evidence",
+      "description": "A mention that is too vague or contextual to prove harm."
+    },
+    {
+      "id": "children_evidence_dialogue",
+      "title": "Dialogue Evidence",
+      "description": "Quoted speech or direct conversation containing the clue."
+    },
+    {
+      "id": "children_evidence_scene",
+      "title": "Scene Evidence",
+      "description": "Scene description that confirms the event or dynamic."
+    },
+    {
+      "id": "children_evidence_cross_sentence",
+      "title": "Cross-Sentence Evidence",
+      "description": "Evidence that only becomes clear across multiple sentences."
+    },
+    {
+      "id": "children_evidence_relationship",
+      "title": "Relationship Evidence",
+      "description": "Evidence from family or guardian relationships."
+    },
+    {
+      "id": "children_evidence_context",
+      "title": "Context Evidence",
+      "description": "Framing that changes how the literal words should be read."
+    },
+    {
+      "id": "children_evidence_protection",
+      "title": "Protection Evidence",
+      "description": "Evidence of safeguarding or rescue instead of harm."
+    }
+  ]
+}

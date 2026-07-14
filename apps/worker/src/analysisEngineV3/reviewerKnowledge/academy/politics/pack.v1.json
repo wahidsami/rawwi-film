@@ -1,0 +1,362 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_04_politics",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Politics and State Reviewer Knowledge Pack",
+    "description": "Full academy knowledge pack for politics, state, symbols, diplomacy, security, and public order reasoning.",
+    "supported_concepts": [
+      "state_reference",
+      "government_reference",
+      "head_of_state",
+      "royal_family",
+      "government_institution",
+      "public_official",
+      "constitutional_reference",
+      "state_scene_description",
+      "state_observation",
+      "national_flag",
+      "national_anthem",
+      "national_symbol",
+      "national_identity",
+      "national_unity",
+      "patriotism",
+      "foreign_government",
+      "foreign_leader",
+      "international_organization",
+      "diplomatic_relations",
+      "international_conflict",
+      "state_security",
+      "national_security",
+      "treason",
+      "espionage",
+      "military_reference",
+      "armed_forces",
+      "intelligence_services",
+      "police_institution",
+      "political_dialogue",
+      "political_debate",
+      "political_satire",
+      "political_criticism",
+      "political_support",
+      "political_glorification",
+      "political_encouragement",
+      "political_propaganda",
+      "political_instruction",
+      "political_documentary",
+      "political_news",
+      "political_historical",
+      "political_educational",
+      "political_rally",
+      "public_demonstration",
+      "civil_unrest",
+      "riot",
+      "revolution_reference",
+      "coup_reference",
+      "election_reference",
+      "voting_reference"
+    ]
+  },
+  "pack": {
+    "id": "v3_04_politics",
+    "module_id": "v3_04_politics",
+    "title": "Politics and State Reviewer Knowledge Pack",
+    "default_question_set_id": "default_politics_question_set",
+    "trigger_concept_ids": [
+      "state_reference",
+      "government_reference",
+      "head_of_state",
+      "royal_family",
+      "government_institution",
+      "public_official",
+      "constitutional_reference",
+      "state_scene_description",
+      "state_observation",
+      "national_flag",
+      "national_anthem",
+      "national_symbol",
+      "national_identity",
+      "national_unity",
+      "patriotism",
+      "foreign_government",
+      "foreign_leader",
+      "international_organization",
+      "diplomatic_relations",
+      "international_conflict",
+      "state_security",
+      "national_security",
+      "treason",
+      "espionage",
+      "military_reference",
+      "armed_forces",
+      "intelligence_services",
+      "police_institution",
+      "political_dialogue",
+      "political_debate",
+      "political_satire",
+      "political_criticism",
+      "political_support",
+      "political_glorification",
+      "political_encouragement",
+      "political_propaganda",
+      "political_instruction",
+      "political_documentary",
+      "political_news",
+      "political_historical",
+      "political_educational",
+      "political_rally",
+      "public_demonstration",
+      "civil_unrest",
+      "riot",
+      "revolution_reference",
+      "coup_reference",
+      "election_reference",
+      "voting_reference"
+    ],
+    "purpose": "Provide reviewer knowledge for state, government, symbols, diplomacy, national identity, and political unrest reasoning.",
+    "protected_interests": [
+      "state legitimacy",
+      "national unity",
+      "public order",
+      "diplomatic stability",
+      "institutional continuity",
+      "civic dialogue",
+      "democratic process",
+      "respect for national symbols",
+      "security institution integrity"
+    ],
+    "protected_concepts": [
+      "state_reference",
+      "government_reference",
+      "head_of_state",
+      "royal_family",
+      "government_institution",
+      "public_official",
+      "constitutional_reference",
+      "state_scene_description",
+      "state_observation",
+      "national_flag",
+      "national_anthem",
+      "national_symbol",
+      "national_identity",
+      "national_unity",
+      "patriotism",
+      "foreign_government",
+      "foreign_leader",
+      "international_organization",
+      "diplomatic_relations",
+      "international_conflict",
+      "state_security",
+      "national_security",
+      "treason",
+      "espionage",
+      "military_reference",
+      "armed_forces",
+      "intelligence_services",
+      "police_institution",
+      "political_dialogue",
+      "political_debate",
+      "political_satire",
+      "political_criticism",
+      "political_support",
+      "political_glorification",
+      "political_encouragement",
+      "political_propaganda",
+      "political_instruction",
+      "political_documentary",
+      "political_news",
+      "political_historical",
+      "political_educational",
+      "political_rally",
+      "public_demonstration",
+      "civil_unrest",
+      "riot",
+      "revolution_reference",
+      "coup_reference",
+      "election_reference",
+      "voting_reference"
+    ],
+    "required_evidence": [
+      "A literal phrase showing endorsement, incitement, glorification, or operational support for a political or state-related meaning inside the chunk.",
+      "Speaker identity, target identity, and relationship cues that explain whether the sentence is about state authority, public order, nationalism, or dissent.",
+      "Context clues that distinguish discussion, criticism, satire, education, or news from endorsement or incitement.",
+      "Cross-sentence or cross-scene support when the political meaning becomes clear only after the local text is read together."
+    ],
+    "insufficient_evidence": [
+      "A neutral mention of government, elections, symbols, or state institutions with no political stance.",
+      "A documentary, court, or news report that records the political topic without endorsing it.",
+      "A quotation, flashback, dream, or fictional scene that is clearly framed as non-endorsing.",
+      "A single ambiguous word without speaker, target, or relationship support."
+    ],
+    "reviewer_heuristics": [
+      "Anchor the finding to the exact literal phrase that shows the political meaning.",
+      "Separate criticism and debate from incitement, glorification, propaganda, or operational support.",
+      "Use narrative framing to distinguish villain speech, quotations, investigations, and condemnations from endorsement.",
+      "Treat national symbols, leadership, institutions, and unrest as different political signals, not one collapsed category.",
+      "Use the strongest literal span that supports the reviewer conclusion.",
+      "If the text only mentions politics in an educational, documentary, news, or court setting, do not force a violation."
+    ],
+    "legal_exceptions": [
+      "Educational",
+      "Historical",
+      "Documentary",
+      "Satire",
+      "News reporting",
+      "Condemnation",
+      "Court proceedings",
+      "Fiction",
+      "Role-play",
+      "Dream sequence",
+      "Flashback",
+      "Quotation"
+    ],
+    "positive_examples": [
+      "A direct call to overthrow the state order.",
+      "Praise for a coup or violent political escalation.",
+      "A chant that glorifies state collapse or civil unrest.",
+      "Explicit incitement against government institutions.",
+      "A slogan that promotes political violence.",
+      "A threat against a public official or national symbol."
+    ],
+    "negative_examples": [
+      "A teacher calmly explaining how elections work.",
+      "A documentary about state symbols without endorsement.",
+      "A court transcript repeating a threat as evidence.",
+      "A news report describing unrest without celebrating it.",
+      "A fictional villain line that the story clearly condemns.",
+      "A neutral discussion of constitutional principles in class."
+    ],
+    "common_false_positives": [
+      "Criticism mistaken for incitement or propaganda.",
+      "A quotation or documentary mention mistaken for endorsement.",
+      "A neutral election or voting mention mistaken for political praise.",
+      "A courtroom or news report mistaken for actual incitement.",
+      "A scene of national symbolism mistaken for glorification.",
+      "A public demonstration mistaken for riot without evidence of violence or disorder."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "الدولة",
+        "concept_id": "state_reference",
+        "relation": "framework",
+        "note": "State anchor."
+      },
+      {
+        "term": "الحكومة",
+        "concept_id": "government_reference",
+        "relation": "framework",
+        "note": "Government anchor."
+      },
+      {
+        "term": "الملك",
+        "concept_id": "royal_family",
+        "relation": "identity",
+        "note": "Royal family anchor."
+      },
+      {
+        "term": "العلم",
+        "concept_id": "national_flag",
+        "relation": "symbol",
+        "note": "National symbol anchor."
+      },
+      {
+        "term": "الجيش",
+        "concept_id": "armed_forces",
+        "relation": "security",
+        "note": "Military anchor."
+      },
+      {
+        "term": "الشرطة",
+        "concept_id": "police_institution",
+        "relation": "security",
+        "note": "Police anchor."
+      },
+      {
+        "term": "الانتخابات",
+        "concept_id": "election_reference",
+        "relation": "process",
+        "note": "Election anchor."
+      },
+      {
+        "term": "الوحدة الوطنية",
+        "concept_id": "national_unity",
+        "relation": "identity",
+        "note": "Unity anchor."
+      },
+      {
+        "term": "الانقلاب",
+        "concept_id": "coup_reference",
+        "relation": "threat",
+        "note": "Coup anchor."
+      },
+      {
+        "term": "الاحتجاج",
+        "concept_id": "public_demonstration",
+        "relation": "public_order",
+        "note": "Demonstration anchor."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 4,
+        "atom_ids": [
+          "4-1",
+          "4-2"
+        ],
+        "role": "State and political discourse",
+        "note": "General politics and governance references."
+      },
+      {
+        "article_id": 8,
+        "atom_ids": [
+          "8-1",
+          "8-2"
+        ],
+        "role": "Institutional continuity",
+        "note": "State continuity and legitimacy references."
+      },
+      {
+        "article_id": 12,
+        "atom_ids": [
+          "12-1",
+          "12-2"
+        ],
+        "role": "Public order and unrest",
+        "note": "Protests, riots, coups, treason, and security threats."
+      },
+      {
+        "article_id": 17,
+        "atom_ids": [
+          "17-1",
+          "17-2"
+        ],
+        "role": "Dignity and abuse of authority",
+        "note": "Abuse of power, humiliation, and coercion."
+      },
+      {
+        "article_id": 18,
+        "atom_ids": [
+          "18-1",
+          "18-2"
+        ],
+        "role": "National identity and unity",
+        "note": "Symbols, identity, unity, and legitimacy."
+      }
+    ],
+    "reporting_guidance": [
+      "State the exact political concept first, then explain the relationship, target, and context.",
+      "Use article 4 for governance and discourse, article 12 for unrest and security threats, article 17 for abuse of authority, and article 18 for identity and unity.",
+      "If the text is discussion, criticism, satire, educational, documentary, news, fictional, dreamlike, flashback, or quotation, say so explicitly and downgrade or reject the finding as appropriate.",
+      "When the scene involves multiple speakers, multiple targets, or cross-sentence meaning, explain that in the report instead of flattening it."
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "version": "1.0.0",
+  "id": "relationships_reviewQuestions",
+  "title": "Relationship Review Questions",
+  "description": "Deterministic review questions for relationship reasoning.",
+  "entries": [
+    {
+      "id": "relationship_question_speaker",
+      "title": "Speaker",
+      "description": "Identify the speaker before interpretation.",
+      "note": "Speaker: Who is speaking?; evidence=Speaker identity | Quotation context"
+    },
+    {
+      "id": "relationship_question_target",
+      "title": "Target",
+      "description": "Check whether the target is explicit or implied.",
+      "note": "Target: Who is the target?; evidence=Target identity | Power imbalance"
+    },
+    {
+      "id": "relationship_question_relationship",
+      "title": "Relationship",
+      "description": "A relationship can change the same sentence.",
+      "note": "Relationship: What is the relationship?; evidence=Role hierarchy | Trust level"
+    },
+    {
+      "id": "relationship_question_intent",
+      "title": "Intent",
+      "description": "Intent can turn the same words into different outcomes.",
+      "note": "Intent: What is the intent?; evidence=Observed action | Scene context"
+    },
+    {
+      "id": "relationship_question_context",
+      "title": "Context",
+      "description": "Dialogue, narration, and documentary framing matter.",
+      "note": "Context: What is the scene context?; evidence=Neighboring sentences | Scene memory"
+    },
+    {
+      "id": "relationship_question_evidence",
+      "title": "Evidence",
+      "description": "Use only supported evidence.",
+      "note": "Evidence: What evidence supports the reading?; evidence=Literal words | Follow-up dialogue"
+    },
+    {
+      "id": "relationship_question_confidence",
+      "title": "Confidence",
+      "description": "Lower confidence when relationship context is ambiguous.",
+      "note": "Confidence: How confident are we?; evidence=Corroboration | Contradiction"
+    }
+  ]
+}

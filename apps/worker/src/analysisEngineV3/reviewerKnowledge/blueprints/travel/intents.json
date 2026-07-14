@@ -1,0 +1,78 @@
+{
+  "version": "1.0.0",
+  "id": "travel_intents",
+  "title": "Travel Intents",
+  "description": "Intent categories used in travel and country reasoning.",
+  "entries": [
+    {
+      "id": "travel_intent_informative",
+      "title": "Informative",
+      "description": "Neutral informative reporting or description."
+    },
+    {
+      "id": "travel_intent_educational",
+      "title": "Educational",
+      "description": "Teaching or explaining travel or country concepts."
+    },
+    {
+      "id": "travel_intent_historical",
+      "title": "Historical",
+      "description": "Historical narration or recall."
+    },
+    {
+      "id": "travel_intent_documentary",
+      "title": "Documentary",
+      "description": "Documentary-style explanation."
+    },
+    {
+      "id": "travel_intent_news",
+      "title": "News Reporting",
+      "description": "Journalistic reporting of travel or country facts."
+    },
+    {
+      "id": "travel_intent_comparison",
+      "title": "Comparison",
+      "description": "Comparing countries, places, or travel options."
+    },
+    {
+      "id": "travel_intent_criticism",
+      "title": "Criticism",
+      "description": "Critical but non-abusive commentary."
+    },
+    {
+      "id": "travel_intent_praise",
+      "title": "Praise",
+      "description": "Positive evaluative commentary."
+    },
+    {
+      "id": "travel_intent_mockery",
+      "title": "Mockery",
+      "description": "Ridicule or disparagement."
+    },
+    {
+      "id": "travel_intent_neutral",
+      "title": "Neutral",
+      "description": "Neutral mention without evaluation."
+    },
+    {
+      "id": "travel_intent_fictional",
+      "title": "Fictional",
+      "description": "Invented or fictional travel framing."
+    },
+    {
+      "id": "travel_intent_dream",
+      "title": "Dream",
+      "description": "Dreamlike travel framing."
+    },
+    {
+      "id": "travel_intent_quote",
+      "title": "Quotation",
+      "description": "A quoted travel or country statement."
+    },
+    {
+      "id": "travel_intent_observation",
+      "title": "Observation",
+      "description": "A direct observation without evaluation."
+    }
+  ]
+}

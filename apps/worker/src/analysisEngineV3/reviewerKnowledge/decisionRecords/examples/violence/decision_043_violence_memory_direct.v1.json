@@ -1,0 +1,51 @@
+{
+  "id": "violence_043_violence_memory_direct",
+  "version": "1.0.0",
+  "title": "Violence Memory (direct)",
+  "summary": "Violence Memory in direct framing.",
+  "originalScenario": "يتذكر العنف من الماضي.",
+  "reviewQuestion": "Is this violence memory?",
+  "initialSuspicion": "Possible violence memory.",
+  "possibleConcepts": [
+    "violence_memory"
+  ],
+  "supportingEvidence": [
+    "يتذكر العنف من الماضي."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "contextual",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_memory",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_memory"
+  ]
+}

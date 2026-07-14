@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "crime_evidence",
+  "title": "Crime Evidence",
+  "description": "Evidence taxonomy for crime reasoning.",
+  "entries": [
+    {
+      "id": "crime_evidence_speaker",
+      "title": "Speaker",
+      "description": "Identity of the speaker."
+    },
+    {
+      "id": "crime_evidence_target",
+      "title": "Target",
+      "description": "Identity of the target or victim."
+    },
+    {
+      "id": "crime_evidence_action",
+      "title": "Action",
+      "description": "Literal action or event."
+    },
+    {
+      "id": "crime_evidence_context",
+      "title": "Context",
+      "description": "Scene or narrative context."
+    },
+    {
+      "id": "crime_evidence_report",
+      "title": "Report",
+      "description": "Reported or observed event."
+    },
+    {
+      "id": "crime_evidence_dialogue",
+      "title": "Dialogue",
+      "description": "Dialogue evidence."
+    },
+    {
+      "id": "crime_evidence_scene",
+      "title": "Scene",
+      "description": "Scene description evidence."
+    },
+    {
+      "id": "crime_evidence_cross",
+      "title": "Cross Sentence",
+      "description": "Cross-sentence evidence linkage."
+    },
+    {
+      "id": "crime_evidence_cross_scene",
+      "title": "Cross Scene",
+      "description": "Cross-scene evidence linkage."
+    },
+    {
+      "id": "crime_evidence_exception",
+      "title": "Exception",
+      "description": "Exception or exclusion evidence."
+    }
+  ]
+}

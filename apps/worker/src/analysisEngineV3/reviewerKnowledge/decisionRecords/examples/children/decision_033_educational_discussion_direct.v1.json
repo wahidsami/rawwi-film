@@ -1,0 +1,52 @@
+{
+  "id": "decision_033_educational_discussion_direct",
+  "version": "1.0.0",
+  "title": "Educational discussion (direct)",
+  "summary": "Educational discussion in direct framing.",
+  "originalScenario": "في الدرس نشرح حماية الطفل من الأذى",
+  "reviewQuestion": "Is this educational discussion?",
+  "initialSuspicion": "Instructional framing.",
+  "possibleConcepts": [
+    "children_child"
+  ],
+  "supportingEvidence": [
+    "في الدرس نشرح حماية الطفل من الأذى"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 5,
+      "atom_ids": [
+        "5-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "educational_discussion",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "id": "decision_039_court_testimony_direct",
+  "version": "1.0.0",
+  "title": "Court testimony (direct)",
+  "summary": "Court testimony in direct framing.",
+  "originalScenario": "أعاد الشاهد العبارة داخل المحكمة",
+  "reviewQuestion": "Is this quoted legal testimony?",
+  "initialSuspicion": "Quoted evidence.",
+  "possibleConcepts": [
+    "children_child"
+  ],
+  "supportingEvidence": [
+    "أعاد الشاهد العبارة داخل المحكمة"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-2"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "court_testimony",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child"
+  ]
+}

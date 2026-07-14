@@ -1,0 +1,44 @@
+{
+  "id": "decision_001_bribery_phrase",
+  "version": "1.0.0",
+  "title": "Bribery Phrase Review",
+  "summary": "A phrase that may look suspicious but does not yet prove bribery without later corroboration.",
+  "originalScenario": "Two characters discuss a permit while one says: خلها تمشي.",
+  "reviewQuestion": "Does this phrase alone justify a bribery finding?",
+  "initialSuspicion": "The phrase could imply an improper favor or special handling.",
+  "possibleConcepts": ["bribery", "corruption", "influence_peddling"],
+  "supportingEvidence": [
+    "The phrase is vague and often used to hint at a favor.",
+    "The surrounding dialogue may suggest a hidden arrangement."
+  ],
+  "contradictingEvidence": [
+    "The phrase could also mean simply to let something proceed.",
+    "No money, gift, or official action is present in the isolated phrase."
+  ],
+  "requiredMissingEvidence": [
+    "A later sentence tying the phrase to a permit, approval, or official act.",
+    "Any explicit mention of payment, gift, or reciprocal benefit."
+  ],
+  "sceneContext": "A narrow exchange in a bureaucratic setting where the meaning is ambiguous without the rest of the scene.",
+  "speakerAnalysis": "The speaker is not enough to determine intent from the isolated phrase.",
+  "targetAnalysis": "The target may be an official decision, but that is not yet proven.",
+  "intentAnalysis": "Intent is unclear and may be benign or corrupt depending on later context.",
+  "reasoningSteps": [
+    "Identify the phrase as ambiguous rather than conclusive.",
+    "Check for later dialogue that connects the phrase to a benefit.",
+    "Require evidence of official action or reciprocal value before concluding bribery.",
+    "Keep confidence below a finding threshold until corroboration appears."
+  ],
+  "reviewerDecision": "Do not conclude bribery immediately; wait for later corroboration.",
+  "confidence": "medium",
+  "findingType": "needs_review",
+  "gcamMappings": [
+    { "article_id": 4, "atom_ids": ["4-2"], "note": "Potential public-interest or integrity concern." }
+  ],
+  "falsePositiveRisk": "High if the reviewer treats the phrase as a fixed idiom for bribery without context.",
+  "reviewerNotes": "This is a classic case where the phrase is suspicious but not enough by itself. The reviewer should inspect the next lines and the outcome of the request before making a finding.",
+  "benchmarkTags": ["bribery", "ambiguity", "context_required"],
+  "relatedLessons": ["lesson_006_intent_recognition", "lesson_007_confidence_assessment", "lesson_014_cross_sentence_reasoning"],
+  "relatedPatterns": ["pattern_bribery_exchange"],
+  "relatedBlueprintConcepts": []
+}

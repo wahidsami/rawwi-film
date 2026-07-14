@@ -1,0 +1,507 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_04_history",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "History Reviewer Knowledge Pack",
+    "description": "Full academy knowledge pack for historical fact, interpretation, fiction, alternate history, archives, and narrative reasoning.",
+    "supported_concepts": [
+      "historical_person",
+      "historical_leader",
+      "historical_event",
+      "historical_battle",
+      "historical_conflict",
+      "historical_religious_event",
+      "historical_state",
+      "historical_empire",
+      "historical_dynasty",
+      "historical_reenactment",
+      "historical_documentary",
+      "historical_education",
+      "historical_news",
+      "historical_reference",
+      "historical_quote",
+      "historical_narration",
+      "historical_fiction",
+      "alternate_history",
+      "mythological_history",
+      "historical_symbol",
+      "historical_monument",
+      "historical_site",
+      "historical_map",
+      "historical_archive",
+      "historical_flashback",
+      "historical_memory",
+      "historical_scene_description",
+      "historical_dialogue",
+      "historical_observation",
+      "historical_criticism",
+      "historical_praise",
+      "historical_mockery",
+      "historical_distortion",
+      "historical_revisionism",
+      "historical_context",
+      "historical_timeline",
+      "historical_character",
+      "historical_government",
+      "historical_society",
+      "historical_tradition",
+      "historical_custom",
+      "historical_culture",
+      "historical_identity"
+    ]
+  },
+  "pack": {
+    "id": "v3_04_history",
+    "module_id": "v3_04_history",
+    "title": "History Reviewer Knowledge Pack",
+    "default_question_set_id": "default_history_question_set",
+    "trigger_concept_ids": [
+      "historical_person",
+      "historical_leader",
+      "historical_event",
+      "historical_battle",
+      "historical_conflict",
+      "historical_religious_event",
+      "historical_state",
+      "historical_empire",
+      "historical_dynasty",
+      "historical_reenactment",
+      "historical_documentary",
+      "historical_education",
+      "historical_news",
+      "historical_reference",
+      "historical_quote",
+      "historical_narration",
+      "historical_fiction",
+      "alternate_history",
+      "mythological_history",
+      "historical_symbol",
+      "historical_monument",
+      "historical_site",
+      "historical_map",
+      "historical_archive",
+      "historical_flashback",
+      "historical_memory",
+      "historical_scene_description",
+      "historical_dialogue",
+      "historical_observation",
+      "historical_criticism",
+      "historical_praise",
+      "historical_mockery",
+      "historical_distortion",
+      "historical_revisionism",
+      "historical_context",
+      "historical_timeline",
+      "historical_character",
+      "historical_government",
+      "historical_society",
+      "historical_tradition",
+      "historical_custom",
+      "historical_culture",
+      "historical_identity"
+    ],
+    "purpose": "Provide reviewer knowledge for historical fact, interpretation, fiction, alternative history, documentary, archive, and symbol reasoning.",
+    "protected_interests": [
+      "historical accuracy",
+      "archival integrity",
+      "cultural memory",
+      "historical context",
+      "educational clarity",
+      "documentary reliability",
+      "symbolic preservation",
+      "fact versus fiction clarity"
+    ],
+    "protected_concepts": [
+      "historical_person",
+      "historical_leader",
+      "historical_event",
+      "historical_battle",
+      "historical_conflict",
+      "historical_religious_event",
+      "historical_state",
+      "historical_empire",
+      "historical_dynasty",
+      "historical_reenactment",
+      "historical_documentary",
+      "historical_education",
+      "historical_news",
+      "historical_reference",
+      "historical_quote",
+      "historical_narration",
+      "historical_fiction",
+      "alternate_history",
+      "mythological_history",
+      "historical_symbol",
+      "historical_monument",
+      "historical_site",
+      "historical_map",
+      "historical_archive",
+      "historical_flashback",
+      "historical_memory",
+      "historical_scene_description",
+      "historical_dialogue",
+      "historical_observation",
+      "historical_criticism",
+      "historical_praise",
+      "historical_mockery",
+      "historical_distortion",
+      "historical_revisionism",
+      "historical_context",
+      "historical_timeline",
+      "historical_character",
+      "historical_government",
+      "historical_society",
+      "historical_tradition",
+      "historical_custom",
+      "historical_culture",
+      "historical_identity"
+    ],
+    "required_evidence": [
+      "A literal span showing the historical person, event, place, or reference inside the chunk.",
+      "Context clues that distinguish fact, interpretation, fiction, alternate history, or satire.",
+      "Speaker identity, target identity, and narrative framing that explain why the historical meaning matters.",
+      "Cross-sentence or cross-scene evidence when the historical meaning emerges only later."
+    ],
+    "insufficient_evidence": [
+      "A neutral mention of a historical term with no factual or interpretive relevance.",
+      "A documentary, academic, or news frame that records history without endorsing distortions.",
+      "A quotation, flashback, dream, or fictional scene that is clearly framed as non-factual.",
+      "A single ambiguous historical word without speaker, target, or narrative support."
+    ],
+    "reviewer_heuristics": [
+      "Anchor the finding to the literal span that best shows the historical meaning.",
+      "Separate historical fact from historical interpretation, fiction, alternate history, and satire.",
+      "Use framing to distinguish documentary narration, educational discussion, and archive references from fictional history.",
+      "Treat symbols, monuments, sites, maps, and archives as evidence of historical framing, not automatic factual proof.",
+      "Use the strongest literal span that supports the reviewer conclusion."
+    ],
+    "legal_exceptions": [
+      "Educational",
+      "Historical narration",
+      "Documentary",
+      "News reporting",
+      "Quotation",
+      "Academic discussion",
+      "Dramatic reenactment",
+      "Fiction",
+      "Alternate history",
+      "Satire",
+      "Dream",
+      "Flashback",
+      "Political narration",
+      "Religious narration",
+      "Symbolic representation"
+    ],
+    "positive_examples": [
+      "A direct historical reference to a battle or leader.",
+      "A documentary that reconstructs a past event.",
+      "An archive citation naming a historical figure.",
+      "A reenactment scene that clearly depicts a known event.",
+      "A timeline that places the event in the correct sequence.",
+      "A map, monument, or symbol clearly tied to a historical era."
+    ],
+    "negative_examples": [
+      "A teacher calmly explaining why a historical event matters.",
+      "A documentary about history without distortion.",
+      "A court transcript repeating a historical claim as evidence.",
+      "A news report describing a monument without endorsing myth.",
+      "A fictional line that the story clearly labels as alternate history.",
+      "A neutral discussion of tradition and culture in class."
+    ],
+    "common_false_positives": [
+      "Academic discussion mistaken for historical distortion.",
+      "A quotation or documentary mention mistaken for endorsement of fiction.",
+      "A symbolic reference mistaken for factual historical claim.",
+      "A reenactment mistaken for a live factual event.",
+      "Alternate history mistaken for actual history.",
+      "A criticism or mockery of a historical claim mistaken for factual distortion."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "Person",
+        "concept_id": "historical_person",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Person anchors to the history frame."
+      },
+      {
+        "term": "Leader",
+        "concept_id": "historical_leader",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Leader anchors to the history frame."
+      },
+      {
+        "term": "Event",
+        "concept_id": "historical_event",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Event anchors to the history frame."
+      },
+      {
+        "term": "Battle",
+        "concept_id": "historical_battle",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Battle anchors to the history frame."
+      },
+      {
+        "term": "Conflict",
+        "concept_id": "historical_conflict",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Conflict anchors to the history frame."
+      },
+      {
+        "term": "Religious Event",
+        "concept_id": "historical_religious_event",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Religious Event anchors to the history frame."
+      },
+      {
+        "term": "State",
+        "concept_id": "historical_state",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for State anchors to the history frame."
+      },
+      {
+        "term": "Empire",
+        "concept_id": "historical_empire",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Empire anchors to the history frame."
+      },
+      {
+        "term": "Dynasty",
+        "concept_id": "historical_dynasty",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Dynasty anchors to the history frame."
+      },
+      {
+        "term": "Reenactment",
+        "concept_id": "historical_reenactment",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Reenactment anchors to the history frame."
+      },
+      {
+        "term": "Documentary",
+        "concept_id": "historical_documentary",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Documentary anchors to the history frame."
+      },
+      {
+        "term": "Education",
+        "concept_id": "historical_education",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Education anchors to the history frame."
+      },
+      {
+        "term": "News",
+        "concept_id": "historical_news",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for News anchors to the history frame."
+      },
+      {
+        "term": "Reference",
+        "concept_id": "historical_reference",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Reference anchors to the history frame."
+      },
+      {
+        "term": "Quote",
+        "concept_id": "historical_quote",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Quote anchors to the history frame."
+      },
+      {
+        "term": "Narration",
+        "concept_id": "historical_narration",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Narration anchors to the history frame."
+      },
+      {
+        "term": "Fiction",
+        "concept_id": "historical_fiction",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Fiction anchors to the history frame."
+      },
+      {
+        "term": "Alternate History",
+        "concept_id": "alternate_history",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Alternate History anchors to the history frame."
+      },
+      {
+        "term": "Mythological History",
+        "concept_id": "mythological_history",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Mythological History anchors to the history frame."
+      },
+      {
+        "term": "Symbol",
+        "concept_id": "historical_symbol",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Symbol anchors to the history frame."
+      },
+      {
+        "term": "Monument",
+        "concept_id": "historical_monument",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Monument anchors to the history frame."
+      },
+      {
+        "term": "Site",
+        "concept_id": "historical_site",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Site anchors to the history frame."
+      },
+      {
+        "term": "Map",
+        "concept_id": "historical_map",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Map anchors to the history frame."
+      },
+      {
+        "term": "Archive",
+        "concept_id": "historical_archive",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Archive anchors to the history frame."
+      },
+      {
+        "term": "Flashback",
+        "concept_id": "historical_flashback",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Flashback anchors to the history frame."
+      },
+      {
+        "term": "Memory",
+        "concept_id": "historical_memory",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Memory anchors to the history frame."
+      },
+      {
+        "term": "Scene Description",
+        "concept_id": "historical_scene_description",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Scene Description anchors to the history frame."
+      },
+      {
+        "term": "Dialogue",
+        "concept_id": "historical_dialogue",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Dialogue anchors to the history frame."
+      },
+      {
+        "term": "Observation",
+        "concept_id": "historical_observation",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Observation anchors to the history frame."
+      },
+      {
+        "term": "Criticism",
+        "concept_id": "historical_criticism",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Criticism anchors to the history frame."
+      },
+      {
+        "term": "Praise",
+        "concept_id": "historical_praise",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Praise anchors to the history frame."
+      },
+      {
+        "term": "Mockery",
+        "concept_id": "historical_mockery",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Mockery anchors to the history frame."
+      },
+      {
+        "term": "Distortion",
+        "concept_id": "historical_distortion",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Distortion anchors to the history frame."
+      },
+      {
+        "term": "Revisionism",
+        "concept_id": "historical_revisionism",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Revisionism anchors to the history frame."
+      },
+      {
+        "term": "Context",
+        "concept_id": "historical_context",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Context anchors to the history frame."
+      },
+      {
+        "term": "Timeline",
+        "concept_id": "historical_timeline",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Timeline anchors to the history frame."
+      },
+      {
+        "term": "Character",
+        "concept_id": "historical_character",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Character anchors to the history frame."
+      },
+      {
+        "term": "Government",
+        "concept_id": "historical_government",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Government anchors to the history frame."
+      },
+      {
+        "term": "Society",
+        "concept_id": "historical_society",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Society anchors to the history frame."
+      },
+      {
+        "term": "Tradition",
+        "concept_id": "historical_tradition",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Tradition anchors to the history frame."
+      },
+      {
+        "term": "Custom",
+        "concept_id": "historical_custom",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Custom anchors to the history frame."
+      },
+      {
+        "term": "Culture",
+        "concept_id": "historical_culture",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Culture anchors to the history frame."
+      },
+      {
+        "term": "Identity",
+        "concept_id": "historical_identity",
+        "relation": "Historical anchor",
+        "note": "Historical reasoning for Identity anchors to the history frame."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 16,
+        "atom_ids": [
+          "16-1",
+          "16-2"
+        ],
+        "role": "Historical reliability",
+        "note": "Fact, interpretation, fiction, archive, and narration reasoning."
+      }
+    ],
+    "reporting_guidance": [
+      "State the exact historical concept first, then explain the relationship, target, and context.",
+      "Use article 16 for history reliability, archive, and factual framing.",
+      "If the text is discussion, criticism, satire, educational, documentary, news, fictional, dreamlike, flashback, or quotation, say so explicitly and downgrade or reject the finding as appropriate.",
+      "When the scene involves multiple speakers, multiple targets, or cross-sentence meaning, explain that in the report instead of flattening it."
+    ]
+  }
+}

@@ -1,0 +1,258 @@
+{
+  "version": "1.0.0",
+  "id": "travel_concepts",
+  "title": "Travel Concepts",
+  "description": "Travel, countries, migration, fiction, and evaluative country concepts.",
+  "entries": [
+    {
+      "id": "travel_reference",
+      "title": "Travel Reference",
+      "description": "Literal mention of travel, trips, or movement between places."
+    },
+    {
+      "id": "travel_destination",
+      "title": "Travel Destination",
+      "description": "The destination, arrival point, or intended place of travel."
+    },
+    {
+      "id": "travel_origin",
+      "title": "Travel Origin",
+      "description": "The starting point or place of departure in a travel scene."
+    },
+    {
+      "id": "travel_abroad",
+      "title": "Travel Abroad",
+      "description": "Travel outside the local country or region."
+    },
+    {
+      "id": "international_travel",
+      "title": "International Travel",
+      "description": "Explicitly international movement, transit, or journeying."
+    },
+    {
+      "id": "domestic_travel",
+      "title": "Domestic Travel",
+      "description": "Travel that stays inside the local country or region."
+    },
+    {
+      "id": "border_crossing",
+      "title": "Border Crossing",
+      "description": "Crossing a border, checkpoint, or immigration control point."
+    },
+    {
+      "id": "airport",
+      "title": "Airport",
+      "description": "An airport, terminal, flight departure, or arrival setting."
+    },
+    {
+      "id": "passport",
+      "title": "Passport",
+      "description": "Passport, identity travel document, or travel authorization mention."
+    },
+    {
+      "id": "visa",
+      "title": "Visa",
+      "description": "Visa, entry permit, or travel authorization mention."
+    },
+    {
+      "id": "foreign_country",
+      "title": "Foreign Country",
+      "description": "Mention of a country outside the speaker's current home context."
+    },
+    {
+      "id": "foreign_city",
+      "title": "Foreign City",
+      "description": "Mention of a city outside the speaker's current home context."
+    },
+    {
+      "id": "foreign_government_reference",
+      "title": "Foreign Government Reference",
+      "description": "A reference to a foreign government, ministry, or state authority."
+    },
+    {
+      "id": "foreign_people",
+      "title": "Foreign People",
+      "description": "References to people from another country or region."
+    },
+    {
+      "id": "foreign_culture",
+      "title": "Foreign Culture",
+      "description": "References to another country's culture, customs, or social life."
+    },
+    {
+      "id": "foreign_religion",
+      "title": "Foreign Religion",
+      "description": "References to religious life in another country or region."
+    },
+    {
+      "id": "foreign_customs",
+      "title": "Foreign Customs",
+      "description": "References to another country's customs, traditions, or habits."
+    },
+    {
+      "id": "foreign_landmarks",
+      "title": "Foreign Landmarks",
+      "description": "References to landmarks, monuments, or notable places abroad."
+    },
+    {
+      "id": "foreign_language",
+      "title": "Foreign Language",
+      "description": "References to another language or language learning abroad."
+    },
+    {
+      "id": "foreign_food",
+      "title": "Foreign Food",
+      "description": "References to cuisine, food, or dining in another country."
+    },
+    {
+      "id": "foreign_event",
+      "title": "Foreign Event",
+      "description": "References to events, festivals, or occasions abroad."
+    },
+    {
+      "id": "foreign_media",
+      "title": "Foreign Media",
+      "description": "References to foreign press, television, or media coverage."
+    },
+    {
+      "id": "foreign_law",
+      "title": "Foreign Law",
+      "description": "References to legal rules, law, or regulation in another country."
+    },
+    {
+      "id": "foreign_police",
+      "title": "Foreign Police",
+      "description": "References to police, law enforcement, or public order abroad."
+    },
+    {
+      "id": "foreign_military",
+      "title": "Foreign Military",
+      "description": "References to the military or armed forces of another country."
+    },
+    {
+      "id": "tourism",
+      "title": "Tourism",
+      "description": "Tourism, travel services, sightseeing, or visitor activity."
+    },
+    {
+      "id": "immigration",
+      "title": "Immigration",
+      "description": "Movement into a country for residence or settlement."
+    },
+    {
+      "id": "emigration",
+      "title": "Emigration",
+      "description": "Movement out of a country or region."
+    },
+    {
+      "id": "refugee",
+      "title": "Refugee",
+      "description": "A person displaced by conflict, persecution, or forced movement."
+    },
+    {
+      "id": "exile",
+      "title": "Exile",
+      "description": "Forced or self-imposed removal from one's home country."
+    },
+    {
+      "id": "deportation",
+      "title": "Deportation",
+      "description": "Formal removal from a country or enforced expulsion."
+    },
+    {
+      "id": "international_business",
+      "title": "International Business",
+      "description": "Business, trade, or commerce across borders."
+    },
+    {
+      "id": "international_study",
+      "title": "International Study",
+      "description": "Study, training, or education abroad."
+    },
+    {
+      "id": "medical_travel",
+      "title": "Medical Travel",
+      "description": "Travel for treatment, recovery, or healthcare."
+    },
+    {
+      "id": "religious_travel",
+      "title": "Religious Travel",
+      "description": "Travel for pilgrimage, worship, or religious duties."
+    },
+    {
+      "id": "historical_travel",
+      "title": "Historical Travel",
+      "description": "Historical journeys, migration history, or travel in a historical frame."
+    },
+    {
+      "id": "fictional_travel",
+      "title": "Fictional Travel",
+      "description": "Travel presented within fiction, fantasy, or invented narrative."
+    },
+    {
+      "id": "dream_travel",
+      "title": "Dream Travel",
+      "description": "Travel occurring inside a dream or dreamlike frame."
+    },
+    {
+      "id": "flashback_travel",
+      "title": "Flashback Travel",
+      "description": "Travel recalled in flashback or remembered past sequence."
+    },
+    {
+      "id": "imaginary_country",
+      "title": "Imaginary Country",
+      "description": "A country invented by fiction, fantasy, or imagination."
+    },
+    {
+      "id": "travel_scene_description",
+      "title": "Travel Scene Description",
+      "description": "Visual or textual description of a travel scene, location, or movement."
+    },
+    {
+      "id": "travel_dialogue",
+      "title": "Travel Dialogue",
+      "description": "Dialogue in which travel, movement, or destination is discussed."
+    },
+    {
+      "id": "travel_observation",
+      "title": "Travel Observation",
+      "description": "Neutral observation of travel details without evaluation or allegation."
+    },
+    {
+      "id": "country_comparison",
+      "title": "Country Comparison",
+      "description": "Comparative commentary between countries, places, or travel destinations."
+    },
+    {
+      "id": "country_insult",
+      "title": "Country Insult",
+      "description": "Derogatory language aimed at a country, nation, or its people."
+    },
+    {
+      "id": "country_praise",
+      "title": "Country Praise",
+      "description": "Positive evaluative language about a country, nation, or its people."
+    },
+    {
+      "id": "country_mockery",
+      "title": "Country Mockery",
+      "description": "Mocking or ridiculing a country, nation, or its people."
+    },
+    {
+      "id": "country_stereotype",
+      "title": "Country Stereotype",
+      "description": "Stereotyping language about a country or its population."
+    },
+    {
+      "id": "country_security_reference",
+      "title": "Country Security Reference",
+      "description": "Security, safety, or control references tied to a country or nation."
+    },
+    {
+      "id": "country_political_reference",
+      "title": "Country Political Reference",
+      "description": "Political references, governance talk, or state critique about a country."
+    }
+  ]
+}

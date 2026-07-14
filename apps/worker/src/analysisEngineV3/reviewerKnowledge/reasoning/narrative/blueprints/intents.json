@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "id": "narrative_intents",
+  "title": "Narrative Intents",
+  "description": "Intent categories used by the narrative reasoning layer.",
+  "entries": [
+    {
+      "id": "narrative_intent_neutral",
+      "title": "Neutral",
+      "description": "No strong stance is expressed."
+    },
+    {
+      "id": "narrative_intent_informative",
+      "title": "Informative",
+      "description": "The text informs rather than persuades."
+    },
+    {
+      "id": "narrative_intent_educational",
+      "title": "Educational",
+      "description": "The text teaches or explains."
+    },
+    {
+      "id": "narrative_intent_historical",
+      "title": "Historical",
+      "description": "The text frames material as history."
+    },
+    {
+      "id": "narrative_intent_documentary",
+      "title": "Documentary",
+      "description": "The text reports or documents events."
+    },
+    {
+      "id": "narrative_intent_fictional",
+      "title": "Fictional",
+      "description": "The text is framed as invented storytelling."
+    },
+    {
+      "id": "narrative_intent_symbolic",
+      "title": "Symbolic",
+      "description": "The text uses symbols to carry meaning."
+    },
+    {
+      "id": "narrative_intent_character_opinion",
+      "title": "Character Opinion",
+      "description": "A character's own opinion."
+    },
+    {
+      "id": "narrative_intent_narrator_opinion",
+      "title": "Narrator Opinion",
+      "description": "The narrator's own opinion."
+    },
+    {
+      "id": "narrative_intent_story_endorsement",
+      "title": "Story Endorsement",
+      "description": "The story appears to endorse a meaning."
+    },
+    {
+      "id": "narrative_intent_story_reversal",
+      "title": "Story Reversal",
+      "description": "A later scene reverses an earlier impression."
+    },
+    {
+      "id": "narrative_intent_interpretive_uncertainty",
+      "title": "Interpretive Uncertainty",
+      "description": "The intended meaning remains unclear."
+    }
+  ]
+}

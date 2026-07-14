@@ -1,0 +1,56 @@
+{
+  "id": "decision_032_parental_discipline_quoted",
+  "version": "1.0.0",
+  "title": "Parental discipline (quoted)",
+  "summary": "Parental discipline in quoted framing.",
+  "originalScenario": "قال الراوي: \"الأب يشرح القواعد بهدوء\"",
+  "reviewQuestion": "Is this abusive discipline?",
+  "initialSuspicion": "Possibly protective discipline.",
+  "possibleConcepts": [
+    "children_parent"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: الأب يشرح القواعد بهدوء"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 5,
+      "atom_ids": [
+        "5-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "parental_discipline",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_parent"
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "version": "1.0.0",
+  "id": "drugs_relationships",
+  "title": "Drugs Relationships",
+  "description": "Drug reasoning relationships.",
+  "entries": [
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_reference",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_consumption",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_possession",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_distribution",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_sale",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_purchase",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_smuggling",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_trafficking",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_manufacturing",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_cultivation",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_storage",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_transportation",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_glorification",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_encouragement",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_instruction",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_normalization",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_dependency",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_addiction",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_overdose",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_rehabilitation",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "medical_drug_use",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "prescription_drug_use",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "illegal_prescription_use",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_documentary",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_educational",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_historical",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_news",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_comedy",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_satire",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_dream",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_flashback",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_hallucination",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_false_accusation",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_symbolism",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_scene_description",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_dialogue",
+      "type": "supports"
+    },
+    {
+      "from": "drug_domain_framework",
+      "to": "drug_implied_use",
+      "type": "supports"
+    }
+  ]
+}

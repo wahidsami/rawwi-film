@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_judgment_intents",
+  "title": "Reviewer Judgment Intents",
+  "description": "Intent labels used by the reviewer judgment framework.",
+  "entries": [
+    {
+      "id": "tentative_comment",
+      "title": "Tentative Comment",
+      "description": "A cautious reviewer comment that does not yet become a finding."
+    },
+    {
+      "id": "request_more_context",
+      "title": "Request More Context",
+      "description": "The reviewer asks for more context before deciding."
+    },
+    {
+      "id": "confirmed_finding",
+      "title": "Confirmed Finding",
+      "description": "The reviewer can support a final finding."
+    },
+    {
+      "id": "disagreement_resolution",
+      "title": "Disagreement Resolution",
+      "description": "The reviewer resolves legitimate disagreement."
+    },
+    {
+      "id": "narrative_justification_intent",
+      "title": "Narrative Justification",
+      "description": "The story context explains the outcome."
+    },
+    {
+      "id": "final_decision",
+      "title": "Final Decision",
+      "description": "The reviewer concludes after weighing all support."
+    }
+  ]
+}

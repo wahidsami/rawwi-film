@@ -1,0 +1,53 @@
+{
+  "id": "ka_reviewer_interpretation_universal_2bd3f9707831002a",
+  "version": "1.0.0",
+  "source": "official_gcam_canonical_atom_framework_v1",
+  "date": "2026-07-14",
+  "reviewerConfidence": 0.96,
+  "knowledgeType": "reviewer_interpretation",
+  "domain": "universal",
+  "concepts": [
+    "finding_identification",
+    "canonical_atom",
+    "primary_atom_selection"
+  ],
+  "storyContext": "GCAM canonical atom guidance explains how reviewers should retain the full finding while choosing a deterministic primary atom.",
+  "evidence": [
+    "A single finding may map to multiple canonical atoms.",
+    "Primary atom selection should use strongest semantic match, highest severity, and clearest violation type.",
+    "Article-based clustering should give way to canonical atom clustering."
+  ],
+  "reasoning": [
+    "Finding identification is not one-to-one with atom labels.",
+    "The reviewer should preserve all supported atom mappings so the finding remains complete.",
+    "The primary atom must be chosen deterministically rather than by article order."
+  ],
+  "decision": "Store the finding-identification note as a universal reviewer interpretation that keeps all supported canonical atoms while selecting a deterministic primary atom.",
+  "alternativeDecisions": [
+    "Treat each finding as if it can map to only one canonical atom.",
+    "Choose the primary atom by article order instead of semantic evidence."
+  ],
+  "rejectedInterpretations": [
+    "One finding always equals one atom.",
+    "Article count should determine finding identity."
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding"
+  ],
+  "relatedPatterns": [],
+  "relatedDecisionRecords": [],
+  "relatedBenchmarks": [
+    "finding-identification-bench-001"
+  ],
+  "knowledgeDebtReference": "KD-GCAM-FINDING-IDENTIFICATION-001",
+  "futureReviewNotes": [
+    "If a dedicated GCAM finding-identification article or slide appears later, add it as a source-backed follow-up record."
+  ],
+  "reviewerId": null,
+  "reviewerName": null,
+  "agreementState": "consensus",
+  "disagreementGroupId": null,
+  "supersedesId": null,
+  "supersededById": null,
+  "relatedRecordIds": []
+}

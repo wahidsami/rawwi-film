@@ -1,0 +1,257 @@
+{
+  "id": "lesson_003_understanding_context",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 3,
+  "title": "Understanding Context",
+  "summary": "Teach the reviewer that the same sentence may have different meanings depending on its narrative context.",
+  "dependsOn": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence"
+  ],
+  "learningObjectives": [
+    "Understand narrative context.",
+    "Separate literal meaning from intended meaning.",
+    "Recognize context that changes legal interpretation.",
+    "Recognize historical, educational, documentary, comedic, satirical, dream, flashback, quotation, narration, and scene-description framing.",
+    "Avoid false positives caused by isolated sentences."
+  ],
+  "definitions": {
+    "context": "Information surrounding a statement that determines its true meaning.",
+    "localContext": "Nearby sentences.",
+    "sceneContext": "Events occurring in the same scene.",
+    "storyContext": "Events occurring across the screenplay.",
+    "speakerContext": "Who is speaking and why.",
+    "temporalContext": "Past, present or future events affecting meaning.",
+    "historicalContext": "A past-event frame that may still be relevant to GCAM review.",
+    "educationalContext": "A teaching frame that can change how a line should be read.",
+    "documentaryContext": "A factual reporting frame that still requires context evaluation.",
+    "comedyContext": "A humorous frame that does not automatically cancel a harmful meaning.",
+    "satireContext": "An ironic or critical frame that must still be tested against the words and scene.",
+    "dreamContext": "A dream or fantasy-like frame that changes how literal the content should be read.",
+    "flashbackContext": "A remembered past event that may be explanatory rather than current.",
+    "quotationContext": "Quoted speech or quoted text that may not reflect the quoting speaker's own view.",
+    "narrationContext": "Narrator-driven delivery that may explain, frame, or distance the content.",
+    "sceneDescriptionContext": "Descriptive action or visual framing that may carry meaning without dialogue."
+  },
+  "reviewerPrinciples": [
+    "Never judge a sentence in isolation.",
+    "Meaning depends on surrounding events.",
+    "Context may completely reverse interpretation.",
+    "Historical narration is not endorsement.",
+    "Educational discussion is not promotion.",
+    "Documentary framing still requires evidence review.",
+    "Condemnation is not encouragement.",
+    "Comedy does not erase harmful content when the words remain insulting.",
+    "Quotation is not endorsement.",
+    "Narration is not automatically the speaker's own opinion.",
+    "Dreams and fantasies require contextual review.",
+    "Satire and parody require contextual review.",
+    "Flashbacks can explain earlier behavior without creating a new present-tense claim.",
+    "Scene description can strengthen or weaken the scene reading."
+  ],
+  "reviewerQuestions": [
+    "What happened before this sentence?",
+    "What happened after it?",
+    "Who is speaking?",
+    "Why is it being said?",
+    "Is this dialogue or narration?",
+    "Is this historical?",
+    "Is this educational?",
+    "Is this documentary framing?",
+    "Is this fictional?",
+    "Is this satire?",
+    "Is this comedy?",
+    "Is this a dream or flashback?",
+    "Is this a quotation or narration?",
+    "Is this scene description carrying the meaning?",
+    "Would removing the surrounding scene change the meaning?"
+  ],
+  "contextCategories": [
+    "Dialogue",
+    "Narration",
+    "Historical",
+    "Educational",
+    "Documentary",
+    "Courtroom",
+    "Police Investigation",
+    "Medical",
+    "Dream",
+    "Flashback",
+    "Fantasy",
+    "Comedy",
+    "Satire",
+    "News Broadcast",
+    "Quotation",
+    "Roleplay",
+    "Poetry",
+    "Song Lyrics"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Has surrounding context been evaluated?",
+      "yes": 2,
+      "no": "Needs Review"
+    },
+    {
+      "step": 2,
+      "question": "Does context change literal meaning?",
+      "yes": 3,
+      "no": 4
+    },
+    {
+      "step": 3,
+      "question": "Should legal interpretation change?",
+      "yes": "Update Interpretation",
+      "no": 4
+    },
+    {
+      "step": 4,
+      "question": "Can another reviewer reach the same interpretation?",
+      "yes": "Accept",
+      "no": "Needs Review"
+    }
+  ],
+  "examples": [
+    {
+      "text": "سأقتلك.",
+      "context": "Villain threatening victim.",
+      "classification": "Literal Threat"
+    },
+    {
+      "text": "قال الراوي: سأقتلك.",
+      "context": "Narrator quoting historical dialogue.",
+      "classification": "Quotation"
+    },
+    {
+      "text": "كان المدرس يشرح معنى الإرهاب.",
+      "context": "Classroom.",
+      "classification": "Educational"
+    },
+    {
+      "text": "في فيلم وثائقي، يشرح الراوي حدثًا تاريخيًا.",
+      "context": "Documentary framing.",
+      "classification": "Documentary"
+    },
+    {
+      "text": "قالها على سبيل المزاح، لكن اللفظ ما زال مهينًا.",
+      "context": "Comedy framing with insulting words.",
+      "classification": "Comedy still requires review"
+    },
+    {
+      "text": "هذا من الماضي.",
+      "context": "Historical narration.",
+      "classification": "Historical"
+    },
+    {
+      "text": "اقتبس كلامه حرفيًا.",
+      "context": "Quoted speech.",
+      "classification": "Quotation"
+    },
+    {
+      "text": "كان المشهد يصف المكان والحركة فقط.",
+      "context": "Scene description.",
+      "classification": "Scene Description"
+    },
+    {
+      "text": "في حلمه أصبح قاتلاً.",
+      "context": "Dream sequence.",
+      "classification": "Dream"
+    },
+    {
+      "text": "عاد إلى ذكرى قديمة في طفولته.",
+      "context": "Flashback.",
+      "classification": "Flashback"
+    },
+    {
+      "text": "قال الراوي إن الشخصية تنكر ما فعله.",
+      "context": "Narration frame.",
+      "classification": "Narration"
+    },
+    {
+      "text": "قالها بسخرية واضحة.",
+      "context": "Satire or ironic delivery.",
+      "classification": "Satire"
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Flagging every violent sentence without checking surrounding events.",
+      "reason": "Context ignored."
+    },
+    {
+      "text": "Treating quotation as endorsement.",
+      "reason": "Incorrect interpretation."
+    },
+    {
+      "text": "Treating comedy as an automatic exemption.",
+      "reason": "Humor does not erase the underlying meaning."
+    },
+    {
+      "text": "Treating a flashback as the current scene.",
+      "reason": "Temporal context is ignored."
+    }
+  ],
+  "commonMistakes": [
+    "Ignoring scene context.",
+    "Ignoring story context.",
+    "Ignoring speaker motivation.",
+    "Confusing narration with endorsement.",
+    "Ignoring educational purpose.",
+    "Ignoring historical framing.",
+    "Assuming documentary framing is always neutral.",
+    "Ignoring quotation boundaries.",
+    "Ignoring dream or flashback status."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Can identical words have different meanings depending on context?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Should educational material always be flagged?",
+        "answer": "No"
+      },
+      {
+        "question": "Should quotations always be interpreted literally?",
+        "answer": "No"
+      },
+      {
+        "question": "Must context be evaluated before legal judgement?",
+        "answer": "Yes"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Evaluate context before interpretation.",
+    "Reduce false positives.",
+    "Recognize contextual exceptions.",
+    "Understand narrative framing."
+  ],
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "historical_context",
+    "educational_context",
+    "quotation_context",
+    "dream_context",
+    "satire_context",
+    "context-analysis-bench-001",
+    "context-analysis-bench-002",
+    "context-analysis-bench-003",
+    "context-analysis-bench-004",
+    "context-analysis-bench-005",
+    "context-analysis-bench-006",
+    "context-analysis-bench-007",
+    "context-analysis-bench-008"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 3
+  }
+}

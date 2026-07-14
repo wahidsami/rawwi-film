@@ -1,0 +1,51 @@
+{
+  "id": "violence_033_violence_game_direct",
+  "version": "1.0.0",
+  "title": "Violence Game (direct)",
+  "summary": "Violence Game in direct framing.",
+  "originalScenario": "اللعبة تعرض قتالًا خياليًا.",
+  "reviewQuestion": "Is this violence game?",
+  "initialSuspicion": "Possible violence game.",
+  "possibleConcepts": [
+    "violence_game"
+  ],
+  "supportingEvidence": [
+    "اللعبة تعرض قتالًا خياليًا."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "contextual",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_game",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_game"
+  ]
+}

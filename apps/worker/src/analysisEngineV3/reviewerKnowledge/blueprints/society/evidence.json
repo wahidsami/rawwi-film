@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "society_evidence",
+  "title": "Society Evidence",
+  "description": "Canonical society evidence types for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "society_evidence_direct_statement",
+      "title": "Evidence Direct Statement",
+      "description": "Evidence Direct Statement for society reasoning."
+    },
+    {
+      "id": "society_evidence_group_language",
+      "title": "Evidence Group Language",
+      "description": "Evidence Group Language for society reasoning."
+    },
+    {
+      "id": "society_evidence_power_imbalance",
+      "title": "Evidence Power Imbalance",
+      "description": "Evidence Power Imbalance for society reasoning."
+    },
+    {
+      "id": "society_evidence_repeated_behavior",
+      "title": "Evidence Repeated Behavior",
+      "description": "Evidence Repeated Behavior for society reasoning."
+    },
+    {
+      "id": "society_evidence_public_setting",
+      "title": "Evidence Public Setting",
+      "description": "Evidence Public Setting for society reasoning."
+    },
+    {
+      "id": "society_evidence_family_setting",
+      "title": "Evidence Family Setting",
+      "description": "Evidence Family Setting for society reasoning."
+    },
+    {
+      "id": "society_evidence_school_setting",
+      "title": "Evidence School Setting",
+      "description": "Evidence School Setting for society reasoning."
+    },
+    {
+      "id": "society_evidence_workplace_setting",
+      "title": "Evidence Workplace Setting",
+      "description": "Evidence Workplace Setting for society reasoning."
+    },
+    {
+      "id": "society_evidence_social_media_post",
+      "title": "Evidence Social Media Post",
+      "description": "Evidence Social Media Post for society reasoning."
+    },
+    {
+      "id": "society_evidence_cross_sentence",
+      "title": "Evidence Cross Sentence",
+      "description": "Evidence Cross Sentence for society reasoning."
+    },
+    {
+      "id": "society_evidence_cross_scene",
+      "title": "Evidence Cross Scene",
+      "description": "Evidence Cross Scene for society reasoning."
+    },
+    {
+      "id": "society_evidence_body_language",
+      "title": "Evidence Body Language",
+      "description": "Evidence Body Language for society reasoning."
+    },
+    {
+      "id": "society_evidence_scene_description",
+      "title": "Evidence Scene Description",
+      "description": "Evidence Scene Description for society reasoning."
+    },
+    {
+      "id": "society_evidence_dialogue",
+      "title": "Evidence Dialogue",
+      "description": "Evidence Dialogue for society reasoning."
+    },
+    {
+      "id": "society_evidence_condemnation_frame",
+      "title": "Evidence Condemnation Frame",
+      "description": "Evidence Condemnation Frame for society reasoning."
+    },
+    {
+      "id": "society_evidence_quoted_speech",
+      "title": "Evidence Quoted Speech",
+      "description": "Evidence Quoted Speech for society reasoning."
+    }
+  ]
+}

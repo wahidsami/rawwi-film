@@ -1,0 +1,4479 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "history_semantic_patterns",
+    "title": "History Semantic Patterns",
+    "description": "Semantic patterns for history reasoning.",
+    "concepts": [
+      {
+        "id": "historical_person",
+        "title": "Person",
+        "description": "Person reasoning concept."
+      },
+      {
+        "id": "historical_leader",
+        "title": "Leader",
+        "description": "Leader reasoning concept."
+      },
+      {
+        "id": "historical_event",
+        "title": "Event",
+        "description": "Event reasoning concept."
+      },
+      {
+        "id": "historical_battle",
+        "title": "Battle",
+        "description": "Battle reasoning concept."
+      },
+      {
+        "id": "historical_conflict",
+        "title": "Conflict",
+        "description": "Conflict reasoning concept."
+      },
+      {
+        "id": "historical_religious_event",
+        "title": "Religious Event",
+        "description": "Religious Event reasoning concept."
+      },
+      {
+        "id": "historical_state",
+        "title": "State",
+        "description": "State reasoning concept."
+      },
+      {
+        "id": "historical_empire",
+        "title": "Empire",
+        "description": "Empire reasoning concept."
+      },
+      {
+        "id": "historical_dynasty",
+        "title": "Dynasty",
+        "description": "Dynasty reasoning concept."
+      },
+      {
+        "id": "historical_reenactment",
+        "title": "Reenactment",
+        "description": "Reenactment reasoning concept."
+      },
+      {
+        "id": "historical_documentary",
+        "title": "Documentary",
+        "description": "Documentary reasoning concept."
+      },
+      {
+        "id": "historical_education",
+        "title": "Education",
+        "description": "Education reasoning concept."
+      },
+      {
+        "id": "historical_news",
+        "title": "News",
+        "description": "News reasoning concept."
+      },
+      {
+        "id": "historical_reference",
+        "title": "Reference",
+        "description": "Reference reasoning concept."
+      },
+      {
+        "id": "historical_quote",
+        "title": "Quote",
+        "description": "Quote reasoning concept."
+      },
+      {
+        "id": "historical_narration",
+        "title": "Narration",
+        "description": "Narration reasoning concept."
+      },
+      {
+        "id": "historical_fiction",
+        "title": "Fiction",
+        "description": "Fiction reasoning concept."
+      },
+      {
+        "id": "alternate_history",
+        "title": "Alternate History",
+        "description": "Alternate History reasoning concept."
+      },
+      {
+        "id": "mythological_history",
+        "title": "Mythological History",
+        "description": "Mythological History reasoning concept."
+      },
+      {
+        "id": "historical_symbol",
+        "title": "Symbol",
+        "description": "Symbol reasoning concept."
+      },
+      {
+        "id": "historical_monument",
+        "title": "Monument",
+        "description": "Monument reasoning concept."
+      },
+      {
+        "id": "historical_site",
+        "title": "Site",
+        "description": "Site reasoning concept."
+      },
+      {
+        "id": "historical_map",
+        "title": "Map",
+        "description": "Map reasoning concept."
+      },
+      {
+        "id": "historical_archive",
+        "title": "Archive",
+        "description": "Archive reasoning concept."
+      },
+      {
+        "id": "historical_flashback",
+        "title": "Flashback",
+        "description": "Flashback reasoning concept."
+      },
+      {
+        "id": "historical_memory",
+        "title": "Memory",
+        "description": "Memory reasoning concept."
+      },
+      {
+        "id": "historical_scene_description",
+        "title": "Scene Description",
+        "description": "Scene Description reasoning concept."
+      },
+      {
+        "id": "historical_dialogue",
+        "title": "Dialogue",
+        "description": "Dialogue reasoning concept."
+      },
+      {
+        "id": "historical_observation",
+        "title": "Observation",
+        "description": "Observation reasoning concept."
+      },
+      {
+        "id": "historical_criticism",
+        "title": "Criticism",
+        "description": "Criticism reasoning concept."
+      },
+      {
+        "id": "historical_praise",
+        "title": "Praise",
+        "description": "Praise reasoning concept."
+      },
+      {
+        "id": "historical_mockery",
+        "title": "Mockery",
+        "description": "Mockery reasoning concept."
+      },
+      {
+        "id": "historical_distortion",
+        "title": "Distortion",
+        "description": "Distortion reasoning concept."
+      },
+      {
+        "id": "historical_revisionism",
+        "title": "Revisionism",
+        "description": "Revisionism reasoning concept."
+      },
+      {
+        "id": "historical_context",
+        "title": "Context",
+        "description": "Context reasoning concept."
+      },
+      {
+        "id": "historical_timeline",
+        "title": "Timeline",
+        "description": "Timeline reasoning concept."
+      },
+      {
+        "id": "historical_character",
+        "title": "Character",
+        "description": "Character reasoning concept."
+      },
+      {
+        "id": "historical_government",
+        "title": "Government",
+        "description": "Government reasoning concept."
+      },
+      {
+        "id": "historical_society",
+        "title": "Society",
+        "description": "Society reasoning concept."
+      },
+      {
+        "id": "historical_tradition",
+        "title": "Tradition",
+        "description": "Tradition reasoning concept."
+      },
+      {
+        "id": "historical_custom",
+        "title": "Custom",
+        "description": "Custom reasoning concept."
+      },
+      {
+        "id": "historical_culture",
+        "title": "Culture",
+        "description": "Culture reasoning concept."
+      },
+      {
+        "id": "historical_identity",
+        "title": "Identity",
+        "description": "Identity reasoning concept."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "history_pattern_historical_person",
+      "title": "Person",
+      "description": "Person semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_person",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Person direct",
+        "Person صريح"
+      ],
+      "indirect_expressions": [
+        "Person implied",
+        "Person بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Person interpretation"
+      ],
+      "supporting_evidence": [
+        "Person supported by the local scene.",
+        "Context and speaker identity reinforce Person."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Person in a report.",
+        "A quoted line about Person that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Person as fact.",
+        "A reenactment that only references Person without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Person."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Person.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_person_direct",
+          "title": "Direct support",
+          "description": "Direct support for Person.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_person_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Person.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_person_glossary_history",
+          "from_concept_id": "historical_person",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Person can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_person_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Person reasoning",
+          "note": "Use when Person is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_person_example_1",
+          "title": "Person example 1",
+          "text": "Person appears in a clear historical scene.",
+          "expected_outcome": "Person recognized in literal context."
+        },
+        {
+          "id": "historical_person_example_2",
+          "title": "Person example 2",
+          "text": "Person appears with surrounding context.",
+          "expected_outcome": "Person recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_leader",
+      "title": "Leader",
+      "description": "Leader semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_leader",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Leader direct",
+        "Leader صريح"
+      ],
+      "indirect_expressions": [
+        "Leader implied",
+        "Leader بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Leader interpretation"
+      ],
+      "supporting_evidence": [
+        "Leader supported by the local scene.",
+        "Context and speaker identity reinforce Leader."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Leader in a report.",
+        "A quoted line about Leader that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Leader as fact.",
+        "A reenactment that only references Leader without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Leader."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Leader.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_leader_direct",
+          "title": "Direct support",
+          "description": "Direct support for Leader.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_leader_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Leader.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_leader_glossary_history",
+          "from_concept_id": "historical_leader",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Leader can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_leader_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Leader reasoning",
+          "note": "Use when Leader is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_leader_example_1",
+          "title": "Leader example 1",
+          "text": "Leader appears in a clear historical scene.",
+          "expected_outcome": "Leader recognized in literal context."
+        },
+        {
+          "id": "historical_leader_example_2",
+          "title": "Leader example 2",
+          "text": "Leader appears with surrounding context.",
+          "expected_outcome": "Leader recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_event",
+      "title": "Event",
+      "description": "Event semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_event",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Event direct",
+        "Event صريح"
+      ],
+      "indirect_expressions": [
+        "Event implied",
+        "Event بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Event interpretation"
+      ],
+      "supporting_evidence": [
+        "Event supported by the local scene.",
+        "Context and speaker identity reinforce Event."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Event in a report.",
+        "A quoted line about Event that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Event as fact.",
+        "A reenactment that only references Event without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Event."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Event.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_event_direct",
+          "title": "Direct support",
+          "description": "Direct support for Event.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_event_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Event.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_event_glossary_history",
+          "from_concept_id": "historical_event",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Event can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_event_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Event reasoning",
+          "note": "Use when Event is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_event_example_1",
+          "title": "Event example 1",
+          "text": "Event appears in a clear historical scene.",
+          "expected_outcome": "Event recognized in literal context."
+        },
+        {
+          "id": "historical_event_example_2",
+          "title": "Event example 2",
+          "text": "Event appears with surrounding context.",
+          "expected_outcome": "Event recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_battle",
+      "title": "Battle",
+      "description": "Battle semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_battle",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Battle direct",
+        "Battle صريح"
+      ],
+      "indirect_expressions": [
+        "Battle implied",
+        "Battle بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Battle interpretation"
+      ],
+      "supporting_evidence": [
+        "Battle supported by the local scene.",
+        "Context and speaker identity reinforce Battle."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Battle in a report.",
+        "A quoted line about Battle that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Battle as fact.",
+        "A reenactment that only references Battle without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Battle."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Battle.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_battle_direct",
+          "title": "Direct support",
+          "description": "Direct support for Battle.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_battle_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Battle.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_battle_glossary_history",
+          "from_concept_id": "historical_battle",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Battle can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_battle_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Battle reasoning",
+          "note": "Use when Battle is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_battle_example_1",
+          "title": "Battle example 1",
+          "text": "Battle appears in a clear historical scene.",
+          "expected_outcome": "Battle recognized in literal context."
+        },
+        {
+          "id": "historical_battle_example_2",
+          "title": "Battle example 2",
+          "text": "Battle appears with surrounding context.",
+          "expected_outcome": "Battle recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_conflict",
+      "title": "Conflict",
+      "description": "Conflict semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_conflict",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Conflict direct",
+        "Conflict صريح"
+      ],
+      "indirect_expressions": [
+        "Conflict implied",
+        "Conflict بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Conflict interpretation"
+      ],
+      "supporting_evidence": [
+        "Conflict supported by the local scene.",
+        "Context and speaker identity reinforce Conflict."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Conflict in a report.",
+        "A quoted line about Conflict that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Conflict as fact.",
+        "A reenactment that only references Conflict without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Conflict."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Conflict.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_conflict_direct",
+          "title": "Direct support",
+          "description": "Direct support for Conflict.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_conflict_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Conflict.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_conflict_glossary_history",
+          "from_concept_id": "historical_conflict",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Conflict can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_conflict_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Conflict reasoning",
+          "note": "Use when Conflict is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_conflict_example_1",
+          "title": "Conflict example 1",
+          "text": "Conflict appears in a clear historical scene.",
+          "expected_outcome": "Conflict recognized in literal context."
+        },
+        {
+          "id": "historical_conflict_example_2",
+          "title": "Conflict example 2",
+          "text": "Conflict appears with surrounding context.",
+          "expected_outcome": "Conflict recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_religious_event",
+      "title": "Religious Event",
+      "description": "Religious Event semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_religious_event",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Religious Event direct",
+        "Religious Event صريح"
+      ],
+      "indirect_expressions": [
+        "Religious Event implied",
+        "Religious Event بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Religious Event interpretation"
+      ],
+      "supporting_evidence": [
+        "Religious Event supported by the local scene.",
+        "Context and speaker identity reinforce Religious Event."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Religious Event in a report.",
+        "A quoted line about Religious Event that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Religious Event as fact.",
+        "A reenactment that only references Religious Event without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Religious Event."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Religious Event.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_religious_event_direct",
+          "title": "Direct support",
+          "description": "Direct support for Religious Event.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_religious_event_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Religious Event.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_religious_event_glossary_history",
+          "from_concept_id": "historical_religious_event",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Religious Event can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_religious_event_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Religious Event reasoning",
+          "note": "Use when Religious Event is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_religious_event_example_1",
+          "title": "Religious Event example 1",
+          "text": "Religious Event appears in a clear historical scene.",
+          "expected_outcome": "Religious Event recognized in literal context."
+        },
+        {
+          "id": "historical_religious_event_example_2",
+          "title": "Religious Event example 2",
+          "text": "Religious Event appears with surrounding context.",
+          "expected_outcome": "Religious Event recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_state",
+      "title": "State",
+      "description": "State semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_state",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "State direct",
+        "State صريح"
+      ],
+      "indirect_expressions": [
+        "State implied",
+        "State بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "State interpretation"
+      ],
+      "supporting_evidence": [
+        "State supported by the local scene.",
+        "Context and speaker identity reinforce State."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of State in a report.",
+        "A quoted line about State that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert State as fact.",
+        "A reenactment that only references State without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for State."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows State.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_state_direct",
+          "title": "Direct support",
+          "description": "Direct support for State.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_state_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for State.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_state_glossary_history",
+          "from_concept_id": "historical_state",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for State can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_state_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "State reasoning",
+          "note": "Use when State is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_state_example_1",
+          "title": "State example 1",
+          "text": "State appears in a clear historical scene.",
+          "expected_outcome": "State recognized in literal context."
+        },
+        {
+          "id": "historical_state_example_2",
+          "title": "State example 2",
+          "text": "State appears with surrounding context.",
+          "expected_outcome": "State recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_empire",
+      "title": "Empire",
+      "description": "Empire semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_empire",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Empire direct",
+        "Empire صريح"
+      ],
+      "indirect_expressions": [
+        "Empire implied",
+        "Empire بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Empire interpretation"
+      ],
+      "supporting_evidence": [
+        "Empire supported by the local scene.",
+        "Context and speaker identity reinforce Empire."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Empire in a report.",
+        "A quoted line about Empire that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Empire as fact.",
+        "A reenactment that only references Empire without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Empire."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Empire.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_empire_direct",
+          "title": "Direct support",
+          "description": "Direct support for Empire.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_empire_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Empire.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_empire_glossary_history",
+          "from_concept_id": "historical_empire",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Empire can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_empire_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Empire reasoning",
+          "note": "Use when Empire is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_empire_example_1",
+          "title": "Empire example 1",
+          "text": "Empire appears in a clear historical scene.",
+          "expected_outcome": "Empire recognized in literal context."
+        },
+        {
+          "id": "historical_empire_example_2",
+          "title": "Empire example 2",
+          "text": "Empire appears with surrounding context.",
+          "expected_outcome": "Empire recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_dynasty",
+      "title": "Dynasty",
+      "description": "Dynasty semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_dynasty",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Dynasty direct",
+        "Dynasty صريح"
+      ],
+      "indirect_expressions": [
+        "Dynasty implied",
+        "Dynasty بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Dynasty interpretation"
+      ],
+      "supporting_evidence": [
+        "Dynasty supported by the local scene.",
+        "Context and speaker identity reinforce Dynasty."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Dynasty in a report.",
+        "A quoted line about Dynasty that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Dynasty as fact.",
+        "A reenactment that only references Dynasty without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Dynasty."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Dynasty.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_dynasty_direct",
+          "title": "Direct support",
+          "description": "Direct support for Dynasty.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_dynasty_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Dynasty.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_dynasty_glossary_history",
+          "from_concept_id": "historical_dynasty",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Dynasty can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_dynasty_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Dynasty reasoning",
+          "note": "Use when Dynasty is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_dynasty_example_1",
+          "title": "Dynasty example 1",
+          "text": "Dynasty appears in a clear historical scene.",
+          "expected_outcome": "Dynasty recognized in literal context."
+        },
+        {
+          "id": "historical_dynasty_example_2",
+          "title": "Dynasty example 2",
+          "text": "Dynasty appears with surrounding context.",
+          "expected_outcome": "Dynasty recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_reenactment",
+      "title": "Reenactment",
+      "description": "Reenactment semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_reenactment",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Reenactment direct",
+        "Reenactment صريح"
+      ],
+      "indirect_expressions": [
+        "Reenactment implied",
+        "Reenactment بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Reenactment interpretation"
+      ],
+      "supporting_evidence": [
+        "Reenactment supported by the local scene.",
+        "Context and speaker identity reinforce Reenactment."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Reenactment in a report.",
+        "A quoted line about Reenactment that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Reenactment as fact.",
+        "A reenactment that only references Reenactment without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Reenactment."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Reenactment.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_reenactment_direct",
+          "title": "Direct support",
+          "description": "Direct support for Reenactment.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_reenactment_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Reenactment.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_reenactment_glossary_history",
+          "from_concept_id": "historical_reenactment",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Reenactment can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_reenactment_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Reenactment reasoning",
+          "note": "Use when Reenactment is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_reenactment_example_1",
+          "title": "Reenactment example 1",
+          "text": "Reenactment appears in a clear historical scene.",
+          "expected_outcome": "Reenactment recognized in literal context."
+        },
+        {
+          "id": "historical_reenactment_example_2",
+          "title": "Reenactment example 2",
+          "text": "Reenactment appears with surrounding context.",
+          "expected_outcome": "Reenactment recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_documentary",
+      "title": "Documentary",
+      "description": "Documentary semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_documentary",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Documentary direct",
+        "Documentary صريح"
+      ],
+      "indirect_expressions": [
+        "Documentary implied",
+        "Documentary بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Documentary interpretation"
+      ],
+      "supporting_evidence": [
+        "Documentary supported by the local scene.",
+        "Context and speaker identity reinforce Documentary."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Documentary in a report.",
+        "A quoted line about Documentary that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Documentary as fact.",
+        "A reenactment that only references Documentary without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Documentary."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Documentary.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_documentary_direct",
+          "title": "Direct support",
+          "description": "Direct support for Documentary.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_documentary_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Documentary.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_documentary_glossary_history",
+          "from_concept_id": "historical_documentary",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Documentary can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_documentary_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Documentary reasoning",
+          "note": "Use when Documentary is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_documentary_example_1",
+          "title": "Documentary example 1",
+          "text": "Documentary appears in a clear historical scene.",
+          "expected_outcome": "Documentary recognized in literal context."
+        },
+        {
+          "id": "historical_documentary_example_2",
+          "title": "Documentary example 2",
+          "text": "Documentary appears with surrounding context.",
+          "expected_outcome": "Documentary recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_education",
+      "title": "Education",
+      "description": "Education semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_education",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Education direct",
+        "Education صريح"
+      ],
+      "indirect_expressions": [
+        "Education implied",
+        "Education بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Education interpretation"
+      ],
+      "supporting_evidence": [
+        "Education supported by the local scene.",
+        "Context and speaker identity reinforce Education."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Education in a report.",
+        "A quoted line about Education that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Education as fact.",
+        "A reenactment that only references Education without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Education."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Education.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_education_direct",
+          "title": "Direct support",
+          "description": "Direct support for Education.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_education_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Education.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_education_glossary_history",
+          "from_concept_id": "historical_education",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Education can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_education_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Education reasoning",
+          "note": "Use when Education is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_education_example_1",
+          "title": "Education example 1",
+          "text": "Education appears in a clear historical scene.",
+          "expected_outcome": "Education recognized in literal context."
+        },
+        {
+          "id": "historical_education_example_2",
+          "title": "Education example 2",
+          "text": "Education appears with surrounding context.",
+          "expected_outcome": "Education recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_news",
+      "title": "News",
+      "description": "News semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_news",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "News direct",
+        "News صريح"
+      ],
+      "indirect_expressions": [
+        "News implied",
+        "News بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "News interpretation"
+      ],
+      "supporting_evidence": [
+        "News supported by the local scene.",
+        "Context and speaker identity reinforce News."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of News in a report.",
+        "A quoted line about News that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert News as fact.",
+        "A reenactment that only references News without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for News."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows News.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_news_direct",
+          "title": "Direct support",
+          "description": "Direct support for News.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_news_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for News.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_news_glossary_history",
+          "from_concept_id": "historical_news",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for News can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_news_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "News reasoning",
+          "note": "Use when News is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_news_example_1",
+          "title": "News example 1",
+          "text": "News appears in a clear historical scene.",
+          "expected_outcome": "News recognized in literal context."
+        },
+        {
+          "id": "historical_news_example_2",
+          "title": "News example 2",
+          "text": "News appears with surrounding context.",
+          "expected_outcome": "News recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_reference",
+      "title": "Reference",
+      "description": "Reference semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_reference",
+      "related_concept_ids": [],
+      "direct_expressions": [
+        "Reference direct",
+        "Reference صريح"
+      ],
+      "indirect_expressions": [
+        "Reference implied",
+        "Reference بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Reference interpretation"
+      ],
+      "supporting_evidence": [
+        "Reference supported by the local scene.",
+        "Context and speaker identity reinforce Reference."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Reference in a report.",
+        "A quoted line about Reference that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Reference as fact.",
+        "A reenactment that only references Reference without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Reference."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Reference.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_reference_direct",
+          "title": "Direct support",
+          "description": "Direct support for Reference.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_reference_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Reference.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [],
+      "gcam_mappings": [
+        {
+          "id": "historical_reference_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Reference reasoning",
+          "note": "Use when Reference is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_reference_example_1",
+          "title": "Reference example 1",
+          "text": "Reference appears in a clear historical scene.",
+          "expected_outcome": "Reference recognized in literal context."
+        },
+        {
+          "id": "historical_reference_example_2",
+          "title": "Reference example 2",
+          "text": "Reference appears with surrounding context.",
+          "expected_outcome": "Reference recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_quote",
+      "title": "Quote",
+      "description": "Quote semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_quote",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Quote direct",
+        "Quote صريح"
+      ],
+      "indirect_expressions": [
+        "Quote implied",
+        "Quote بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Quote interpretation"
+      ],
+      "supporting_evidence": [
+        "Quote supported by the local scene.",
+        "Context and speaker identity reinforce Quote."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Quote in a report.",
+        "A quoted line about Quote that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Quote as fact.",
+        "A reenactment that only references Quote without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Quote."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Quote.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_quote_direct",
+          "title": "Direct support",
+          "description": "Direct support for Quote.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_quote_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Quote.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_quote_glossary_history",
+          "from_concept_id": "historical_quote",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Quote can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_quote_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Quote reasoning",
+          "note": "Use when Quote is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_quote_example_1",
+          "title": "Quote example 1",
+          "text": "Quote appears in a clear historical scene.",
+          "expected_outcome": "Quote recognized in literal context."
+        },
+        {
+          "id": "historical_quote_example_2",
+          "title": "Quote example 2",
+          "text": "Quote appears with surrounding context.",
+          "expected_outcome": "Quote recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_narration",
+      "title": "Narration",
+      "description": "Narration semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_narration",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Narration direct",
+        "Narration صريح"
+      ],
+      "indirect_expressions": [
+        "Narration implied",
+        "Narration بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Narration interpretation"
+      ],
+      "supporting_evidence": [
+        "Narration supported by the local scene.",
+        "Context and speaker identity reinforce Narration."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Narration in a report.",
+        "A quoted line about Narration that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Narration as fact.",
+        "A reenactment that only references Narration without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Narration."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Narration.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_narration_direct",
+          "title": "Direct support",
+          "description": "Direct support for Narration.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_narration_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Narration.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_narration_glossary_history",
+          "from_concept_id": "historical_narration",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Narration can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_narration_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Narration reasoning",
+          "note": "Use when Narration is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_narration_example_1",
+          "title": "Narration example 1",
+          "text": "Narration appears in a clear historical scene.",
+          "expected_outcome": "Narration recognized in literal context."
+        },
+        {
+          "id": "historical_narration_example_2",
+          "title": "Narration example 2",
+          "text": "Narration appears with surrounding context.",
+          "expected_outcome": "Narration recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_fiction",
+      "title": "Fiction",
+      "description": "Fiction semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_fiction",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Fiction direct",
+        "Fiction صريح"
+      ],
+      "indirect_expressions": [
+        "Fiction implied",
+        "Fiction بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "risk history reasoning",
+        "Fiction interpretation"
+      ],
+      "supporting_evidence": [
+        "Fiction supported by the local scene.",
+        "Context and speaker identity reinforce Fiction."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Fiction in a report.",
+        "A quoted line about Fiction that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Fiction as fact.",
+        "A reenactment that only references Fiction without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Fiction."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Fiction.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_fiction_direct",
+          "title": "Direct support",
+          "description": "Direct support for Fiction.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_fiction_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Fiction.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_fiction_glossary_history",
+          "from_concept_id": "historical_fiction",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Fiction can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_fiction_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Fiction reasoning",
+          "note": "Use when Fiction is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_fiction_example_1",
+          "title": "Fiction example 1",
+          "text": "Fiction appears in a clear historical scene.",
+          "expected_outcome": "Fiction recognized in literal context."
+        },
+        {
+          "id": "historical_fiction_example_2",
+          "title": "Fiction example 2",
+          "text": "Fiction appears with surrounding context.",
+          "expected_outcome": "Fiction recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_alternate_history",
+      "title": "Alternate History",
+      "description": "Alternate History semantic reasoning pattern for history content.",
+      "primary_concept_id": "alternate_history",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Alternate History direct",
+        "Alternate History صريح"
+      ],
+      "indirect_expressions": [
+        "Alternate History implied",
+        "Alternate History بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "risk history reasoning",
+        "Alternate History interpretation"
+      ],
+      "supporting_evidence": [
+        "Alternate History supported by the local scene.",
+        "Context and speaker identity reinforce Alternate History."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Alternate History in a report.",
+        "A quoted line about Alternate History that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Alternate History as fact.",
+        "A reenactment that only references Alternate History without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Alternate History."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Alternate History.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "alternate_history_direct",
+          "title": "Direct support",
+          "description": "Direct support for Alternate History.",
+          "confidence": 94
+        },
+        {
+          "id": "alternate_history_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Alternate History.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "alternate_history_glossary_history",
+          "from_concept_id": "alternate_history",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Alternate History can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "alternate_history_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Alternate History reasoning",
+          "note": "Use when Alternate History is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "alternate_history_example_1",
+          "title": "Alternate History example 1",
+          "text": "Alternate History appears in a clear historical scene.",
+          "expected_outcome": "Alternate History recognized in literal context."
+        },
+        {
+          "id": "alternate_history_example_2",
+          "title": "Alternate History example 2",
+          "text": "Alternate History appears with surrounding context.",
+          "expected_outcome": "Alternate History recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_mythological_history",
+      "title": "Mythological History",
+      "description": "Mythological History semantic reasoning pattern for history content.",
+      "primary_concept_id": "mythological_history",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Mythological History direct",
+        "Mythological History صريح"
+      ],
+      "indirect_expressions": [
+        "Mythological History implied",
+        "Mythological History بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "risk history reasoning",
+        "Mythological History interpretation"
+      ],
+      "supporting_evidence": [
+        "Mythological History supported by the local scene.",
+        "Context and speaker identity reinforce Mythological History."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Mythological History in a report.",
+        "A quoted line about Mythological History that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Mythological History as fact.",
+        "A reenactment that only references Mythological History without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Mythological History."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Mythological History.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "mythological_history_direct",
+          "title": "Direct support",
+          "description": "Direct support for Mythological History.",
+          "confidence": 94
+        },
+        {
+          "id": "mythological_history_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Mythological History.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "mythological_history_glossary_history",
+          "from_concept_id": "mythological_history",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Mythological History can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "mythological_history_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Mythological History reasoning",
+          "note": "Use when Mythological History is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "mythological_history_example_1",
+          "title": "Mythological History example 1",
+          "text": "Mythological History appears in a clear historical scene.",
+          "expected_outcome": "Mythological History recognized in literal context."
+        },
+        {
+          "id": "mythological_history_example_2",
+          "title": "Mythological History example 2",
+          "text": "Mythological History appears with surrounding context.",
+          "expected_outcome": "Mythological History recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_symbol",
+      "title": "Symbol",
+      "description": "Symbol semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_symbol",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Symbol direct",
+        "Symbol صريح"
+      ],
+      "indirect_expressions": [
+        "Symbol implied",
+        "Symbol بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Symbol interpretation"
+      ],
+      "supporting_evidence": [
+        "Symbol supported by the local scene.",
+        "Context and speaker identity reinforce Symbol."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Symbol in a report.",
+        "A quoted line about Symbol that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Symbol as fact.",
+        "A reenactment that only references Symbol without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Symbol."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Symbol.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_symbol_direct",
+          "title": "Direct support",
+          "description": "Direct support for Symbol.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_symbol_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Symbol.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_symbol_glossary_history",
+          "from_concept_id": "historical_symbol",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Symbol can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_symbol_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Symbol reasoning",
+          "note": "Use when Symbol is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_symbol_example_1",
+          "title": "Symbol example 1",
+          "text": "Symbol appears in a clear historical scene.",
+          "expected_outcome": "Symbol recognized in literal context."
+        },
+        {
+          "id": "historical_symbol_example_2",
+          "title": "Symbol example 2",
+          "text": "Symbol appears with surrounding context.",
+          "expected_outcome": "Symbol recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_monument",
+      "title": "Monument",
+      "description": "Monument semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_monument",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Monument direct",
+        "Monument صريح"
+      ],
+      "indirect_expressions": [
+        "Monument implied",
+        "Monument بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Monument interpretation"
+      ],
+      "supporting_evidence": [
+        "Monument supported by the local scene.",
+        "Context and speaker identity reinforce Monument."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Monument in a report.",
+        "A quoted line about Monument that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Monument as fact.",
+        "A reenactment that only references Monument without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Monument."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Monument.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_monument_direct",
+          "title": "Direct support",
+          "description": "Direct support for Monument.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_monument_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Monument.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_monument_glossary_history",
+          "from_concept_id": "historical_monument",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Monument can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_monument_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Monument reasoning",
+          "note": "Use when Monument is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_monument_example_1",
+          "title": "Monument example 1",
+          "text": "Monument appears in a clear historical scene.",
+          "expected_outcome": "Monument recognized in literal context."
+        },
+        {
+          "id": "historical_monument_example_2",
+          "title": "Monument example 2",
+          "text": "Monument appears with surrounding context.",
+          "expected_outcome": "Monument recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_site",
+      "title": "Site",
+      "description": "Site semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_site",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Site direct",
+        "Site صريح"
+      ],
+      "indirect_expressions": [
+        "Site implied",
+        "Site بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Site interpretation"
+      ],
+      "supporting_evidence": [
+        "Site supported by the local scene.",
+        "Context and speaker identity reinforce Site."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Site in a report.",
+        "A quoted line about Site that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Site as fact.",
+        "A reenactment that only references Site without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Site."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Site.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_site_direct",
+          "title": "Direct support",
+          "description": "Direct support for Site.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_site_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Site.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_site_glossary_history",
+          "from_concept_id": "historical_site",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Site can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_site_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Site reasoning",
+          "note": "Use when Site is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_site_example_1",
+          "title": "Site example 1",
+          "text": "Site appears in a clear historical scene.",
+          "expected_outcome": "Site recognized in literal context."
+        },
+        {
+          "id": "historical_site_example_2",
+          "title": "Site example 2",
+          "text": "Site appears with surrounding context.",
+          "expected_outcome": "Site recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_map",
+      "title": "Map",
+      "description": "Map semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_map",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Map direct",
+        "Map صريح"
+      ],
+      "indirect_expressions": [
+        "Map implied",
+        "Map بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Map interpretation"
+      ],
+      "supporting_evidence": [
+        "Map supported by the local scene.",
+        "Context and speaker identity reinforce Map."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Map in a report.",
+        "A quoted line about Map that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Map as fact.",
+        "A reenactment that only references Map without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Map."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Map.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_map_direct",
+          "title": "Direct support",
+          "description": "Direct support for Map.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_map_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Map.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_map_glossary_history",
+          "from_concept_id": "historical_map",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Map can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_map_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Map reasoning",
+          "note": "Use when Map is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_map_example_1",
+          "title": "Map example 1",
+          "text": "Map appears in a clear historical scene.",
+          "expected_outcome": "Map recognized in literal context."
+        },
+        {
+          "id": "historical_map_example_2",
+          "title": "Map example 2",
+          "text": "Map appears with surrounding context.",
+          "expected_outcome": "Map recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_archive",
+      "title": "Archive",
+      "description": "Archive semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_archive",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Archive direct",
+        "Archive صريح"
+      ],
+      "indirect_expressions": [
+        "Archive implied",
+        "Archive بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Archive interpretation"
+      ],
+      "supporting_evidence": [
+        "Archive supported by the local scene.",
+        "Context and speaker identity reinforce Archive."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Archive in a report.",
+        "A quoted line about Archive that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Archive as fact.",
+        "A reenactment that only references Archive without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Archive."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Archive.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_archive_direct",
+          "title": "Direct support",
+          "description": "Direct support for Archive.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_archive_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Archive.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_archive_glossary_history",
+          "from_concept_id": "historical_archive",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Archive can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_archive_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Archive reasoning",
+          "note": "Use when Archive is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_archive_example_1",
+          "title": "Archive example 1",
+          "text": "Archive appears in a clear historical scene.",
+          "expected_outcome": "Archive recognized in literal context."
+        },
+        {
+          "id": "historical_archive_example_2",
+          "title": "Archive example 2",
+          "text": "Archive appears with surrounding context.",
+          "expected_outcome": "Archive recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_flashback",
+      "title": "Flashback",
+      "description": "Flashback semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_flashback",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Flashback direct",
+        "Flashback صريح"
+      ],
+      "indirect_expressions": [
+        "Flashback implied",
+        "Flashback بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Flashback interpretation"
+      ],
+      "supporting_evidence": [
+        "Flashback supported by the local scene.",
+        "Context and speaker identity reinforce Flashback."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Flashback in a report.",
+        "A quoted line about Flashback that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Flashback as fact.",
+        "A reenactment that only references Flashback without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Flashback."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Flashback.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_flashback_direct",
+          "title": "Direct support",
+          "description": "Direct support for Flashback.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_flashback_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Flashback.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_flashback_glossary_history",
+          "from_concept_id": "historical_flashback",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Flashback can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_flashback_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Flashback reasoning",
+          "note": "Use when Flashback is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_flashback_example_1",
+          "title": "Flashback example 1",
+          "text": "Flashback appears in a clear historical scene.",
+          "expected_outcome": "Flashback recognized in literal context."
+        },
+        {
+          "id": "historical_flashback_example_2",
+          "title": "Flashback example 2",
+          "text": "Flashback appears with surrounding context.",
+          "expected_outcome": "Flashback recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_memory",
+      "title": "Memory",
+      "description": "Memory semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_memory",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Memory direct",
+        "Memory صريح"
+      ],
+      "indirect_expressions": [
+        "Memory implied",
+        "Memory بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Memory interpretation"
+      ],
+      "supporting_evidence": [
+        "Memory supported by the local scene.",
+        "Context and speaker identity reinforce Memory."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Memory in a report.",
+        "A quoted line about Memory that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Memory as fact.",
+        "A reenactment that only references Memory without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Memory."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Memory.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_memory_direct",
+          "title": "Direct support",
+          "description": "Direct support for Memory.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_memory_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Memory.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_memory_glossary_history",
+          "from_concept_id": "historical_memory",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Memory can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_memory_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Memory reasoning",
+          "note": "Use when Memory is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_memory_example_1",
+          "title": "Memory example 1",
+          "text": "Memory appears in a clear historical scene.",
+          "expected_outcome": "Memory recognized in literal context."
+        },
+        {
+          "id": "historical_memory_example_2",
+          "title": "Memory example 2",
+          "text": "Memory appears with surrounding context.",
+          "expected_outcome": "Memory recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_scene_description",
+      "title": "Scene Description",
+      "description": "Scene Description semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_scene_description",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Scene Description direct",
+        "Scene Description صريح"
+      ],
+      "indirect_expressions": [
+        "Scene Description implied",
+        "Scene Description بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Scene Description interpretation"
+      ],
+      "supporting_evidence": [
+        "Scene Description supported by the local scene.",
+        "Context and speaker identity reinforce Scene Description."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Scene Description in a report.",
+        "A quoted line about Scene Description that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Scene Description as fact.",
+        "A reenactment that only references Scene Description without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Scene Description."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Scene Description.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_scene_description_direct",
+          "title": "Direct support",
+          "description": "Direct support for Scene Description.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_scene_description_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Scene Description.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_scene_description_glossary_history",
+          "from_concept_id": "historical_scene_description",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Scene Description can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_scene_description_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Scene Description reasoning",
+          "note": "Use when Scene Description is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_scene_description_example_1",
+          "title": "Scene Description example 1",
+          "text": "Scene Description appears in a clear historical scene.",
+          "expected_outcome": "Scene Description recognized in literal context."
+        },
+        {
+          "id": "historical_scene_description_example_2",
+          "title": "Scene Description example 2",
+          "text": "Scene Description appears with surrounding context.",
+          "expected_outcome": "Scene Description recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_dialogue",
+      "title": "Dialogue",
+      "description": "Dialogue semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_dialogue",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Dialogue direct",
+        "Dialogue صريح"
+      ],
+      "indirect_expressions": [
+        "Dialogue implied",
+        "Dialogue بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Dialogue interpretation"
+      ],
+      "supporting_evidence": [
+        "Dialogue supported by the local scene.",
+        "Context and speaker identity reinforce Dialogue."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Dialogue in a report.",
+        "A quoted line about Dialogue that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Dialogue as fact.",
+        "A reenactment that only references Dialogue without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Dialogue."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Dialogue.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_dialogue_direct",
+          "title": "Direct support",
+          "description": "Direct support for Dialogue.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_dialogue_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Dialogue.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_dialogue_glossary_history",
+          "from_concept_id": "historical_dialogue",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Dialogue can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_dialogue_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Dialogue reasoning",
+          "note": "Use when Dialogue is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_dialogue_example_1",
+          "title": "Dialogue example 1",
+          "text": "Dialogue appears in a clear historical scene.",
+          "expected_outcome": "Dialogue recognized in literal context."
+        },
+        {
+          "id": "historical_dialogue_example_2",
+          "title": "Dialogue example 2",
+          "text": "Dialogue appears with surrounding context.",
+          "expected_outcome": "Dialogue recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_observation",
+      "title": "Observation",
+      "description": "Observation semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_observation",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Observation direct",
+        "Observation صريح"
+      ],
+      "indirect_expressions": [
+        "Observation implied",
+        "Observation بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Observation interpretation"
+      ],
+      "supporting_evidence": [
+        "Observation supported by the local scene.",
+        "Context and speaker identity reinforce Observation."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Observation in a report.",
+        "A quoted line about Observation that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Observation as fact.",
+        "A reenactment that only references Observation without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Observation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Observation.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_observation_direct",
+          "title": "Direct support",
+          "description": "Direct support for Observation.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_observation_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Observation.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_observation_glossary_history",
+          "from_concept_id": "historical_observation",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Observation can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_observation_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Observation reasoning",
+          "note": "Use when Observation is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_observation_example_1",
+          "title": "Observation example 1",
+          "text": "Observation appears in a clear historical scene.",
+          "expected_outcome": "Observation recognized in literal context."
+        },
+        {
+          "id": "historical_observation_example_2",
+          "title": "Observation example 2",
+          "text": "Observation appears with surrounding context.",
+          "expected_outcome": "Observation recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_criticism",
+      "title": "Criticism",
+      "description": "Criticism semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_criticism",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Criticism direct",
+        "Criticism صريح"
+      ],
+      "indirect_expressions": [
+        "Criticism implied",
+        "Criticism بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "critical history reasoning",
+        "Criticism interpretation"
+      ],
+      "supporting_evidence": [
+        "Criticism supported by the local scene.",
+        "Context and speaker identity reinforce Criticism."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Criticism in a report.",
+        "A quoted line about Criticism that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Criticism as fact.",
+        "A reenactment that only references Criticism without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Criticism."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Criticism.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_criticism_direct",
+          "title": "Direct support",
+          "description": "Direct support for Criticism.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_criticism_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Criticism.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_criticism_glossary_history",
+          "from_concept_id": "historical_criticism",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Criticism can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_criticism_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Criticism reasoning",
+          "note": "Use when Criticism is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_criticism_example_1",
+          "title": "Criticism example 1",
+          "text": "Criticism appears in a clear historical scene.",
+          "expected_outcome": "Criticism recognized in literal context."
+        },
+        {
+          "id": "historical_criticism_example_2",
+          "title": "Criticism example 2",
+          "text": "Criticism appears with surrounding context.",
+          "expected_outcome": "Criticism recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_praise",
+      "title": "Praise",
+      "description": "Praise semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_praise",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Praise direct",
+        "Praise صريح"
+      ],
+      "indirect_expressions": [
+        "Praise implied",
+        "Praise بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive history reasoning",
+        "Praise interpretation"
+      ],
+      "supporting_evidence": [
+        "Praise supported by the local scene.",
+        "Context and speaker identity reinforce Praise."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Praise in a report.",
+        "A quoted line about Praise that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Praise as fact.",
+        "A reenactment that only references Praise without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Praise."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Praise.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_praise_direct",
+          "title": "Direct support",
+          "description": "Direct support for Praise.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_praise_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Praise.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_praise_glossary_history",
+          "from_concept_id": "historical_praise",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Praise can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_praise_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Praise reasoning",
+          "note": "Use when Praise is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_praise_example_1",
+          "title": "Praise example 1",
+          "text": "Praise appears in a clear historical scene.",
+          "expected_outcome": "Praise recognized in literal context."
+        },
+        {
+          "id": "historical_praise_example_2",
+          "title": "Praise example 2",
+          "text": "Praise appears with surrounding context.",
+          "expected_outcome": "Praise recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_mockery",
+      "title": "Mockery",
+      "description": "Mockery semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_mockery",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Mockery direct",
+        "Mockery صريح"
+      ],
+      "indirect_expressions": [
+        "Mockery implied",
+        "Mockery بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "critical history reasoning",
+        "Mockery interpretation"
+      ],
+      "supporting_evidence": [
+        "Mockery supported by the local scene.",
+        "Context and speaker identity reinforce Mockery."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Mockery in a report.",
+        "A quoted line about Mockery that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Mockery as fact.",
+        "A reenactment that only references Mockery without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Mockery."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Mockery.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_mockery_direct",
+          "title": "Direct support",
+          "description": "Direct support for Mockery.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_mockery_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Mockery.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_mockery_glossary_history",
+          "from_concept_id": "historical_mockery",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Mockery can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_mockery_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Mockery reasoning",
+          "note": "Use when Mockery is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_mockery_example_1",
+          "title": "Mockery example 1",
+          "text": "Mockery appears in a clear historical scene.",
+          "expected_outcome": "Mockery recognized in literal context."
+        },
+        {
+          "id": "historical_mockery_example_2",
+          "title": "Mockery example 2",
+          "text": "Mockery appears with surrounding context.",
+          "expected_outcome": "Mockery recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_distortion",
+      "title": "Distortion",
+      "description": "Distortion semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_distortion",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Distortion direct",
+        "Distortion صريح"
+      ],
+      "indirect_expressions": [
+        "Distortion implied",
+        "Distortion بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "risk history reasoning",
+        "Distortion interpretation"
+      ],
+      "supporting_evidence": [
+        "Distortion supported by the local scene.",
+        "Context and speaker identity reinforce Distortion."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Distortion in a report.",
+        "A quoted line about Distortion that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Distortion as fact.",
+        "A reenactment that only references Distortion without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Distortion."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Distortion.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_distortion_direct",
+          "title": "Direct support",
+          "description": "Direct support for Distortion.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_distortion_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Distortion.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_distortion_glossary_history",
+          "from_concept_id": "historical_distortion",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Distortion can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_distortion_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Distortion reasoning",
+          "note": "Use when Distortion is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_distortion_example_1",
+          "title": "Distortion example 1",
+          "text": "Distortion appears in a clear historical scene.",
+          "expected_outcome": "Distortion recognized in literal context."
+        },
+        {
+          "id": "historical_distortion_example_2",
+          "title": "Distortion example 2",
+          "text": "Distortion appears with surrounding context.",
+          "expected_outcome": "Distortion recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_revisionism",
+      "title": "Revisionism",
+      "description": "Revisionism semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_revisionism",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Revisionism direct",
+        "Revisionism صريح"
+      ],
+      "indirect_expressions": [
+        "Revisionism implied",
+        "Revisionism بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "risk history reasoning",
+        "Revisionism interpretation"
+      ],
+      "supporting_evidence": [
+        "Revisionism supported by the local scene.",
+        "Context and speaker identity reinforce Revisionism."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Revisionism in a report.",
+        "A quoted line about Revisionism that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Revisionism as fact.",
+        "A reenactment that only references Revisionism without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Revisionism."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Revisionism.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_revisionism_direct",
+          "title": "Direct support",
+          "description": "Direct support for Revisionism.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_revisionism_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Revisionism.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_revisionism_glossary_history",
+          "from_concept_id": "historical_revisionism",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Revisionism can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_revisionism_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Revisionism reasoning",
+          "note": "Use when Revisionism is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_revisionism_example_1",
+          "title": "Revisionism example 1",
+          "text": "Revisionism appears in a clear historical scene.",
+          "expected_outcome": "Revisionism recognized in literal context."
+        },
+        {
+          "id": "historical_revisionism_example_2",
+          "title": "Revisionism example 2",
+          "text": "Revisionism appears with surrounding context.",
+          "expected_outcome": "Revisionism recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_context",
+      "title": "Context",
+      "description": "Context semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_context",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Context direct",
+        "Context صريح"
+      ],
+      "indirect_expressions": [
+        "Context implied",
+        "Context بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Context interpretation"
+      ],
+      "supporting_evidence": [
+        "Context supported by the local scene.",
+        "Context and speaker identity reinforce Context."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Context in a report.",
+        "A quoted line about Context that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Context as fact.",
+        "A reenactment that only references Context without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Context."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Context.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_context_direct",
+          "title": "Direct support",
+          "description": "Direct support for Context.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_context_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Context.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_context_glossary_history",
+          "from_concept_id": "historical_context",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Context can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_context_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Context reasoning",
+          "note": "Use when Context is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_context_example_1",
+          "title": "Context example 1",
+          "text": "Context appears in a clear historical scene.",
+          "expected_outcome": "Context recognized in literal context."
+        },
+        {
+          "id": "historical_context_example_2",
+          "title": "Context example 2",
+          "text": "Context appears with surrounding context.",
+          "expected_outcome": "Context recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_timeline",
+      "title": "Timeline",
+      "description": "Timeline semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_timeline",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Timeline direct",
+        "Timeline صريح"
+      ],
+      "indirect_expressions": [
+        "Timeline implied",
+        "Timeline بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Timeline interpretation"
+      ],
+      "supporting_evidence": [
+        "Timeline supported by the local scene.",
+        "Context and speaker identity reinforce Timeline."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Timeline in a report.",
+        "A quoted line about Timeline that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Timeline as fact.",
+        "A reenactment that only references Timeline without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Timeline."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Timeline.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_timeline_direct",
+          "title": "Direct support",
+          "description": "Direct support for Timeline.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_timeline_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Timeline.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_timeline_glossary_history",
+          "from_concept_id": "historical_timeline",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Timeline can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_timeline_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Timeline reasoning",
+          "note": "Use when Timeline is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_timeline_example_1",
+          "title": "Timeline example 1",
+          "text": "Timeline appears in a clear historical scene.",
+          "expected_outcome": "Timeline recognized in literal context."
+        },
+        {
+          "id": "historical_timeline_example_2",
+          "title": "Timeline example 2",
+          "text": "Timeline appears with surrounding context.",
+          "expected_outcome": "Timeline recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_character",
+      "title": "Character",
+      "description": "Character semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_character",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Character direct",
+        "Character صريح"
+      ],
+      "indirect_expressions": [
+        "Character implied",
+        "Character بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Character interpretation"
+      ],
+      "supporting_evidence": [
+        "Character supported by the local scene.",
+        "Context and speaker identity reinforce Character."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Character in a report.",
+        "A quoted line about Character that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Character as fact.",
+        "A reenactment that only references Character without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Character."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Character.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_character_direct",
+          "title": "Direct support",
+          "description": "Direct support for Character.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_character_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Character.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_character_glossary_history",
+          "from_concept_id": "historical_character",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Character can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_character_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Character reasoning",
+          "note": "Use when Character is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_character_example_1",
+          "title": "Character example 1",
+          "text": "Character appears in a clear historical scene.",
+          "expected_outcome": "Character recognized in literal context."
+        },
+        {
+          "id": "historical_character_example_2",
+          "title": "Character example 2",
+          "text": "Character appears with surrounding context.",
+          "expected_outcome": "Character recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_government",
+      "title": "Government",
+      "description": "Government semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_government",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Government direct",
+        "Government صريح"
+      ],
+      "indirect_expressions": [
+        "Government implied",
+        "Government بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Government interpretation"
+      ],
+      "supporting_evidence": [
+        "Government supported by the local scene.",
+        "Context and speaker identity reinforce Government."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Government in a report.",
+        "A quoted line about Government that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Government as fact.",
+        "A reenactment that only references Government without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Government."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Government.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_government_direct",
+          "title": "Direct support",
+          "description": "Direct support for Government.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_government_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Government.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_government_glossary_history",
+          "from_concept_id": "historical_government",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Government can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_government_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Government reasoning",
+          "note": "Use when Government is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_government_example_1",
+          "title": "Government example 1",
+          "text": "Government appears in a clear historical scene.",
+          "expected_outcome": "Government recognized in literal context."
+        },
+        {
+          "id": "historical_government_example_2",
+          "title": "Government example 2",
+          "text": "Government appears with surrounding context.",
+          "expected_outcome": "Government recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_society",
+      "title": "Society",
+      "description": "Society semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_society",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Society direct",
+        "Society صريح"
+      ],
+      "indirect_expressions": [
+        "Society implied",
+        "Society بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Society interpretation"
+      ],
+      "supporting_evidence": [
+        "Society supported by the local scene.",
+        "Context and speaker identity reinforce Society."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Society in a report.",
+        "A quoted line about Society that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Society as fact.",
+        "A reenactment that only references Society without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Society."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Society.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_society_direct",
+          "title": "Direct support",
+          "description": "Direct support for Society.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_society_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Society.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_society_glossary_history",
+          "from_concept_id": "historical_society",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Society can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_society_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Society reasoning",
+          "note": "Use when Society is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_society_example_1",
+          "title": "Society example 1",
+          "text": "Society appears in a clear historical scene.",
+          "expected_outcome": "Society recognized in literal context."
+        },
+        {
+          "id": "historical_society_example_2",
+          "title": "Society example 2",
+          "text": "Society appears with surrounding context.",
+          "expected_outcome": "Society recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_tradition",
+      "title": "Tradition",
+      "description": "Tradition semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_tradition",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Tradition direct",
+        "Tradition صريح"
+      ],
+      "indirect_expressions": [
+        "Tradition implied",
+        "Tradition بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Tradition interpretation"
+      ],
+      "supporting_evidence": [
+        "Tradition supported by the local scene.",
+        "Context and speaker identity reinforce Tradition."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Tradition in a report.",
+        "A quoted line about Tradition that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Tradition as fact.",
+        "A reenactment that only references Tradition without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Tradition."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Tradition.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_tradition_direct",
+          "title": "Direct support",
+          "description": "Direct support for Tradition.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_tradition_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Tradition.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_tradition_glossary_history",
+          "from_concept_id": "historical_tradition",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Tradition can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_tradition_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Tradition reasoning",
+          "note": "Use when Tradition is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_tradition_example_1",
+          "title": "Tradition example 1",
+          "text": "Tradition appears in a clear historical scene.",
+          "expected_outcome": "Tradition recognized in literal context."
+        },
+        {
+          "id": "historical_tradition_example_2",
+          "title": "Tradition example 2",
+          "text": "Tradition appears with surrounding context.",
+          "expected_outcome": "Tradition recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_custom",
+      "title": "Custom",
+      "description": "Custom semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_custom",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Custom direct",
+        "Custom صريح"
+      ],
+      "indirect_expressions": [
+        "Custom implied",
+        "Custom بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Custom interpretation"
+      ],
+      "supporting_evidence": [
+        "Custom supported by the local scene.",
+        "Context and speaker identity reinforce Custom."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Custom in a report.",
+        "A quoted line about Custom that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Custom as fact.",
+        "A reenactment that only references Custom without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Custom."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Custom.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_custom_direct",
+          "title": "Direct support",
+          "description": "Direct support for Custom.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_custom_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Custom.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_custom_glossary_history",
+          "from_concept_id": "historical_custom",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Custom can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_custom_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Custom reasoning",
+          "note": "Use when Custom is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_custom_example_1",
+          "title": "Custom example 1",
+          "text": "Custom appears in a clear historical scene.",
+          "expected_outcome": "Custom recognized in literal context."
+        },
+        {
+          "id": "historical_custom_example_2",
+          "title": "Custom example 2",
+          "text": "Custom appears with surrounding context.",
+          "expected_outcome": "Custom recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_culture",
+      "title": "Culture",
+      "description": "Culture semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_culture",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Culture direct",
+        "Culture صريح"
+      ],
+      "indirect_expressions": [
+        "Culture implied",
+        "Culture بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Culture interpretation"
+      ],
+      "supporting_evidence": [
+        "Culture supported by the local scene.",
+        "Context and speaker identity reinforce Culture."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Culture in a report.",
+        "A quoted line about Culture that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Culture as fact.",
+        "A reenactment that only references Culture without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Culture."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Culture.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_culture_direct",
+          "title": "Direct support",
+          "description": "Direct support for Culture.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_culture_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Culture.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_culture_glossary_history",
+          "from_concept_id": "historical_culture",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Culture can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_culture_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Culture reasoning",
+          "note": "Use when Culture is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_culture_example_1",
+          "title": "Culture example 1",
+          "text": "Culture appears in a clear historical scene.",
+          "expected_outcome": "Culture recognized in literal context."
+        },
+        {
+          "id": "historical_culture_example_2",
+          "title": "Culture example 2",
+          "text": "Culture appears with surrounding context.",
+          "expected_outcome": "Culture recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "history_pattern_historical_identity",
+      "title": "Identity",
+      "description": "Identity semantic reasoning pattern for history content.",
+      "primary_concept_id": "historical_identity",
+      "related_concept_ids": [
+        "historical_reference"
+      ],
+      "direct_expressions": [
+        "Identity direct",
+        "Identity صريح"
+      ],
+      "indirect_expressions": [
+        "Identity implied",
+        "Identity بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral history reasoning",
+        "Identity interpretation"
+      ],
+      "supporting_evidence": [
+        "Identity supported by the local scene.",
+        "Context and speaker identity reinforce Identity."
+      ],
+      "contradictory_evidence": [
+        "Explicit fiction frame or clear alternate history frame.",
+        "A documentary, news, or educational frame that removes factual endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Identity in a report.",
+        "A quoted line about Identity that the story rejects."
+      ],
+      "counter_examples": [
+        "A historical discussion that does not assert Identity as fact.",
+        "A reenactment that only references Identity without claiming certainty."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Identity."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "documentary",
+        "archive scene",
+        "reenactment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Identity.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "historical_identity_direct",
+          "title": "Direct support",
+          "description": "Direct support for Identity.",
+          "confidence": 94
+        },
+        {
+          "id": "historical_identity_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Identity.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "historical_identity_glossary_history",
+          "from_concept_id": "historical_identity",
+          "to_concept_id": "historical_reference",
+          "relation": "supports",
+          "note": "Reasoning for Identity can be anchored by the history reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "historical_identity_gcam_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Identity reasoning",
+          "note": "Use when Identity is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_identity_example_1",
+          "title": "Identity example 1",
+          "text": "Identity appears in a clear historical scene.",
+          "expected_outcome": "Identity recognized in literal context."
+        },
+        {
+          "id": "historical_identity_example_2",
+          "title": "Identity example 2",
+          "text": "Identity appears with surrounding context.",
+          "expected_outcome": "Identity recognized with context."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_judgment_relationships",
+  "title": "Reviewer Judgment Relationships",
+  "description": "Relationships between reviewer judgment concepts.",
+  "entries": [
+    {
+      "from": "reviewer_judgment_domain",
+      "to": "competing_interpretations",
+      "type": "supports",
+      "description": "The domain begins by comparing plausible readings."
+    },
+    {
+      "from": "competing_interpretations",
+      "to": "evidence_sufficiency",
+      "type": "requires",
+      "description": "Competing readings require evidence sufficiency analysis."
+    },
+    {
+      "from": "evidence_sufficiency",
+      "to": "confidence_calibration",
+      "type": "supports",
+      "description": "Evidence sufficiency determines confidence calibration."
+    },
+    {
+      "from": "confidence_calibration",
+      "to": "reviewer_disagreement",
+      "type": "supports",
+      "description": "Confidence calibration helps explain reviewer disagreement."
+    },
+    {
+      "from": "reviewer_disagreement",
+      "to": "narrative_justification",
+      "type": "requires",
+      "description": "Disagreement is resolved using narrative justification."
+    },
+    {
+      "from": "narrative_justification",
+      "to": "final_reviewer_decision",
+      "type": "supports",
+      "description": "Narrative justification informs the final reviewer decision."
+    }
+  ]
+}

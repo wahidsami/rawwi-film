@@ -1,0 +1,500 @@
+{
+  "domainId": "drugs",
+  "domainTitle": "Drug Domain Framework",
+  "domainVersion": "1.0.0",
+  "blueprint": {
+    "title": "Blueprint",
+    "present": 9,
+    "expected": 9,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "8cb66bac6b24dd6f4d2b53a97a1030e304b9f1ae361eae3c2d8779552942f3cf"
+    ],
+    "hash": "52fe085bff6352159f72e86fb880d6feaeb736389334116b217acc0e0f1ea14e"
+  },
+  "knowledgePack": {
+    "title": "Knowledge Pack",
+    "present": 37,
+    "expected": 37,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "drugs reasoning framework",
+      "pack=d:\\waheed\\mypprojects\\raawifilm fix\\apps\\worker\\src\\analysisenginev3\\reviewerknowledge\\academy\\drugs\\pack.v1.json"
+    ],
+    "hash": "c05b903e2d577cdc2ca850c016ca7d57fc2852132cfccf0320786b543922ae33"
+  },
+  "lessons": {
+    "title": "Lessons",
+    "present": 14,
+    "expected": 14,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [],
+    "hash": "e76f9e3c84e022aeacb5e6fca83cc350654bceedbaa715282f7ca2a60d14bbe1"
+  },
+  "patterns": {
+    "title": "Patterns",
+    "present": 37,
+    "expected": 37,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "1 pattern library documents loaded"
+    ],
+    "hash": "1812b11cd058534570ee62b49726d9af9d77165af36f054c7377f7bf0a8bf045"
+  },
+  "decisionRecords": {
+    "title": "Decision Records",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [
+      "invalid lesson reference: lesson_001_drugs_framework.",
+      "invalid pattern reference: pattern_direct_consumption.",
+      "invalid pattern reference: pattern_documentary_context.",
+      "invalid pattern reference: pattern_educational_context.",
+      "invalid pattern reference: pattern_medical_context.",
+      "invalid pattern reference: pattern_reversal_and_false_positive.",
+      "invalid pattern reference: pattern_visual_implication."
+    ],
+    "notes": [
+      "150 decision records loaded"
+    ],
+    "hash": "f14013ef935272545907d4374d461a2742e8053f0881929b5de19c7b2fe40a1e"
+  },
+  "benchmarks": {
+    "title": "Benchmarks",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "150 benchmark cases loaded"
+    ],
+    "hash": "ac0f7261897f8ed380216f1ee83284a5ee4ef8accf1ef585da36b9ccaa2e553f"
+  },
+  "metrics": {
+    "conceptCount": 37,
+    "duplicateConceptCount": 0,
+    "missingConceptCount": 0,
+    "missingPatternCoverage": 0,
+    "missingDecisionCoverage": 0,
+    "missingBenchmarkCoverage": 0,
+    "glossaryCoverage": 100,
+    "crossSentenceCoverage": 100,
+    "crossSceneCoverage": 100,
+    "descriptionCoverage": 100,
+    "dialogueCoverage": 100,
+    "observationCoverage": 100,
+    "contextsCoverage": 100,
+    "targetsCoverage": 100,
+    "actionsCoverage": 100,
+    "intentsCoverage": 100,
+    "relationshipsCoverage": 100,
+    "evidenceRulesCoverage": 100,
+    "exceptionsCoverage": 100,
+    "falsePositivesCoverage": 100,
+    "falseNegativesCoverage": 100,
+    "reviewerQuestionsCoverage": 100,
+    "methodologyCoverage": 0,
+    "gcamMappingCoverage": 100,
+    "topics": [
+      {
+        "id": "actions",
+        "title": "Actions Coverage",
+        "present": 8,
+        "expected": 8,
+        "coveragePercent": 100,
+        "evidence": [
+          "drug_action_consumption",
+          "drug_action_distribution",
+          "drug_action_instruction",
+          "drug_action_manufacturing",
+          "drug_action_possession",
+          "drug_action_reference",
+          "drug_action_rehabilitation",
+          "drug_action_smuggling"
+        ],
+        "missing": []
+      },
+      {
+        "id": "concepts",
+        "title": "Concept Coverage",
+        "present": 37,
+        "expected": 37,
+        "coveragePercent": 100,
+        "evidence": [
+          "drug_addiction",
+          "drug_comedy",
+          "drug_consumption",
+          "drug_cultivation",
+          "drug_dependency",
+          "drug_dialogue",
+          "drug_distribution",
+          "drug_documentary",
+          "drug_dream",
+          "drug_educational",
+          "drug_encouragement",
+          "drug_false_accusation",
+          "drug_flashback",
+          "drug_glorification",
+          "drug_hallucination",
+          "drug_historical",
+          "drug_implied_use",
+          "drug_instruction",
+          "drug_manufacturing",
+          "drug_news",
+          "drug_normalization",
+          "drug_overdose",
+          "drug_possession",
+          "drug_purchase",
+          "drug_reference",
+          "drug_rehabilitation",
+          "drug_sale",
+          "drug_satire",
+          "drug_scene_description",
+          "drug_smuggling",
+          "drug_storage",
+          "drug_symbolism",
+          "drug_trafficking",
+          "drug_transportation",
+          "illegal_prescription_use",
+          "medical_drug_use",
+          "prescription_drug_use"
+        ],
+        "missing": []
+      },
+      {
+        "id": "contexts",
+        "title": "Contexts Coverage",
+        "present": 11,
+        "expected": 11,
+        "coveragePercent": 100,
+        "evidence": [
+          "drug_context_comedy",
+          "drug_context_dialogue",
+          "drug_context_dream",
+          "drug_context_educational",
+          "drug_context_flashback",
+          "drug_context_historical",
+          "drug_context_medical",
+          "drug_context_narration",
+          "drug_context_news",
+          "drug_context_rehabilitation",
+          "drug_context_scene_description"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_scene",
+        "title": "Cross Scene Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross scene reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_sentence",
+        "title": "Cross Sentence Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross sentence reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "description",
+        "title": "Description Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "description coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "dialogue",
+        "title": "Dialogue Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "dialogue coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "duplicate_concepts",
+        "title": "Duplicate Concepts",
+        "present": 0,
+        "expected": 0,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "evidence_rules",
+        "title": "Evidence Rules Coverage",
+        "present": 8,
+        "expected": 8,
+        "coveragePercent": 100,
+        "evidence": [
+          "drug_evidence_context",
+          "drug_evidence_educational",
+          "drug_evidence_followup",
+          "drug_evidence_medical",
+          "drug_evidence_rehab",
+          "drug_evidence_speaker",
+          "drug_evidence_target",
+          "drug_evidence_visual"
+        ],
+        "missing": []
+      },
+      {
+        "id": "exceptions",
+        "title": "Exceptions Coverage",
+        "present": 13,
+        "expected": 13,
+        "coveragePercent": 100,
+        "evidence": [
+          "comedy",
+          "documentary",
+          "dream",
+          "educational",
+          "false accusation",
+          "flashback",
+          "hallucination",
+          "historical",
+          "medical",
+          "news",
+          "prescription use",
+          "rehabilitation",
+          "satire"
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_negatives",
+        "title": "False Negatives Coverage",
+        "present": 3,
+        "expected": 3,
+        "coveragePercent": 100,
+        "evidence": [
+          "a doctor prescribing medication in a medical setting.",
+          "a news report describing a drug case.",
+          "a teacher warning about overdose in class."
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_positives",
+        "title": "False Positives Coverage",
+        "present": 3,
+        "expected": 3,
+        "coveragePercent": 100,
+        "evidence": [
+          "education mistaken for instruction.",
+          "historical reporting mistaken for glorification.",
+          "medical use mistaken for abuse."
+        ],
+        "missing": []
+      },
+      {
+        "id": "gcam_mapping",
+        "title": "GCAM Mapping Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "10"
+        ],
+        "missing": []
+      },
+      {
+        "id": "glossary",
+        "title": "Glossary Coverage",
+        "present": 4,
+        "expected": 4,
+        "coveragePercent": 100,
+        "evidence": [
+          "drug",
+          "instruction",
+          "medical",
+          "rehabilitation"
+        ],
+        "missing": []
+      },
+      {
+        "id": "intents",
+        "title": "Intents Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "drug_intent_condemnation",
+          "drug_intent_educational",
+          "drug_intent_encouragement",
+          "drug_intent_fiction",
+          "drug_intent_glorification",
+          "drug_intent_instruction",
+          "drug_intent_medical",
+          "drug_intent_news",
+          "drug_intent_normalization",
+          "drug_intent_reference"
+        ],
+        "missing": []
+      },
+      {
+        "id": "missing_benchmark_coverage",
+        "title": "Missing Benchmark Coverage",
+        "present": 0,
+        "expected": 37,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_concepts",
+        "title": "Missing Concepts",
+        "present": 0,
+        "expected": 37,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_decision_coverage",
+        "title": "Missing Decision Coverage",
+        "present": 0,
+        "expected": 37,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_pattern_coverage",
+        "title": "Missing Pattern Coverage",
+        "present": 0,
+        "expected": 37,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "observation",
+        "title": "Observation Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "observation coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "relationships",
+        "title": "Relationships Coverage",
+        "present": 37,
+        "expected": 37,
+        "coveragePercent": 100,
+        "evidence": [
+          "drug_domain_framework"
+        ],
+        "missing": []
+      },
+      {
+        "id": "reviewer_questions",
+        "title": "Reviewer Questions Coverage",
+        "present": 96,
+        "expected": 96,
+        "coveragePercent": 100,
+        "evidence": [
+          "q01",
+          "q02",
+          "q03",
+          "q04",
+          "q05",
+          "q06",
+          "q07",
+          "q08",
+          "q09",
+          "q10",
+          "rq_01",
+          "rq_02",
+          "rq_03",
+          "rq_04",
+          "rq_05"
+        ],
+        "missing": []
+      },
+      {
+        "id": "targets",
+        "title": "Targets Coverage",
+        "present": 8,
+        "expected": 8,
+        "coveragePercent": 100,
+        "evidence": [
+          "drug_target_child",
+          "drug_target_dealer",
+          "drug_target_family",
+          "drug_target_patient",
+          "drug_target_public",
+          "drug_target_self",
+          "drug_target_state",
+          "drug_target_user"
+        ],
+        "missing": []
+      },
+      {
+        "id": "universal_reviewer_methodology_v1",
+        "title": "Universal Reviewer Methodology",
+        "present": 11,
+        "expected": 11,
+        "coveragePercent": 100,
+        "evidence": [
+          "applicable concept validation",
+          "confidence assessment",
+          "context classification",
+          "evidence strength",
+          "exception detection",
+          "literal vs implied meaning",
+          "narrative intent",
+          "narrative understanding",
+          "speaker identification",
+          "target identification",
+          "victim identification"
+        ],
+        "missing": []
+      }
+    ],
+    "hash": "e17d83f08f1c65a608ce545bdbf11d5d8c1f9cfbb87fc18feb79886c67e4b7b4"
+  },
+  "productionReadiness": 100,
+  "recommendation": "READY",
+  "coverageGaps": [],
+  "criticalGaps": [],
+  "warnings": [
+    "invalid lesson reference: lesson_001_drugs_framework.",
+    "invalid pattern reference: pattern_direct_consumption.",
+    "invalid pattern reference: pattern_documentary_context.",
+    "invalid pattern reference: pattern_educational_context.",
+    "invalid pattern reference: pattern_medical_context.",
+    "invalid pattern reference: pattern_reversal_and_false_positive.",
+    "invalid pattern reference: pattern_visual_implication."
+  ],
+  "hash": "4bed3ad2e0a9f075d5a6fd1522567cb97b1914667eb063ff27d4b198e6df0f02"
+}

@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "narrative_domain",
+  "title": "Narrative Intelligence Framework",
+  "description": "Shared reasoning blueprint for story-level understanding across all domains.",
+  "entries": [
+    {
+      "id": "narrative_domain",
+      "title": "Narrative Intelligence Framework",
+      "description": "Global reasoning for story, scene, and cross-scene interpretation."
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "society_contexts",
+  "title": "Society Contexts",
+  "description": "Canonical society contexts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "society_context_dialogue",
+      "title": "Context Dialogue",
+      "description": "Context Dialogue for society reasoning."
+    },
+    {
+      "id": "society_context_narration",
+      "title": "Context Narration",
+      "description": "Context Narration for society reasoning."
+    },
+    {
+      "id": "society_context_scene_description",
+      "title": "Context Scene Description",
+      "description": "Context Scene Description for society reasoning."
+    },
+    {
+      "id": "society_context_observation",
+      "title": "Context Observation",
+      "description": "Context Observation for society reasoning."
+    },
+    {
+      "id": "society_context_social_media",
+      "title": "Context Social Media",
+      "description": "Context Social Media for society reasoning."
+    },
+    {
+      "id": "society_context_school",
+      "title": "Context School",
+      "description": "Context School for society reasoning."
+    },
+    {
+      "id": "society_context_workplace",
+      "title": "Context Workplace",
+      "description": "Context Workplace for society reasoning."
+    },
+    {
+      "id": "society_context_family",
+      "title": "Context Family",
+      "description": "Context Family for society reasoning."
+    },
+    {
+      "id": "society_context_documentary",
+      "title": "Context Documentary",
+      "description": "Context Documentary for society reasoning."
+    },
+    {
+      "id": "society_context_news",
+      "title": "Context News",
+      "description": "Context News for society reasoning."
+    },
+    {
+      "id": "society_context_court",
+      "title": "Context Court",
+      "description": "Context Court for society reasoning."
+    },
+    {
+      "id": "society_context_history",
+      "title": "Context History",
+      "description": "Context History for society reasoning."
+    },
+    {
+      "id": "society_context_fiction",
+      "title": "Context Fiction",
+      "description": "Context Fiction for society reasoning."
+    },
+    {
+      "id": "society_context_dream",
+      "title": "Context Dream",
+      "description": "Context Dream for society reasoning."
+    },
+    {
+      "id": "society_context_flashback",
+      "title": "Context Flashback",
+      "description": "Context Flashback for society reasoning."
+    },
+    {
+      "id": "society_context_quotation",
+      "title": "Context Quotation",
+      "description": "Context Quotation for society reasoning."
+    }
+  ]
+}

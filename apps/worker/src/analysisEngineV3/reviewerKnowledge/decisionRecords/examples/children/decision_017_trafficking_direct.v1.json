@@ -1,0 +1,54 @@
+{
+  "id": "decision_017_trafficking_direct",
+  "version": "1.0.0",
+  "title": "Human trafficking (direct)",
+  "summary": "Human trafficking in direct framing.",
+  "originalScenario": "نقله بين المدن لاستغلاله",
+  "reviewQuestion": "Is this trafficking?",
+  "initialSuspicion": "Movement for exploitation.",
+  "possibleConcepts": [
+    "children_child",
+    "children_human_trafficking"
+  ],
+  "supportingEvidence": [
+    "نقله بين المدن لاستغلاله"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-4"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "trafficking",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child",
+    "children_human_trafficking"
+  ]
+}

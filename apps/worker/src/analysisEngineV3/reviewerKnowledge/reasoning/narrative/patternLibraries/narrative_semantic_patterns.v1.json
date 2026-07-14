@@ -1,0 +1,3749 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "narrative_semantic_patterns",
+    "title": "Narrative Semantic Patterns",
+    "description": "Reusable semantic patterns for story-first reasoning.",
+    "concepts": [
+      {
+        "id": "story_arc",
+        "title": "Story Arc",
+        "description": "Overall story progression from setup to resolution."
+      },
+      {
+        "id": "story_goal",
+        "title": "Story Goal",
+        "description": "The objective driving the story forward."
+      },
+      {
+        "id": "story_conflict",
+        "title": "Story Conflict",
+        "description": "The central pressure or opposition in the story."
+      },
+      {
+        "id": "story_resolution",
+        "title": "Story Resolution",
+        "description": "The ending phase that resolves or transforms the conflict."
+      },
+      {
+        "id": "story_progression",
+        "title": "Story Progression",
+        "description": "The ordered movement of events across the narrative."
+      },
+      {
+        "id": "scene_goal",
+        "title": "Scene Goal",
+        "description": "The purpose of a scene at the local level."
+      },
+      {
+        "id": "scene_transition",
+        "title": "Scene Transition",
+        "description": "A shift between scenes, beats, or locations."
+      },
+      {
+        "id": "character_arc",
+        "title": "Character Arc",
+        "description": "A character's evolution across the story."
+      },
+      {
+        "id": "relationship_arc",
+        "title": "Relationship Arc",
+        "description": "The changing bond between characters over time."
+      },
+      {
+        "id": "motivation_change",
+        "title": "Motivation Change",
+        "description": "A shift in what a character wants or why they act."
+      },
+      {
+        "id": "belief_change",
+        "title": "Belief Change",
+        "description": "A shift in what a character believes to be true."
+      },
+      {
+        "id": "moral_change",
+        "title": "Moral Change",
+        "description": "A shift in a character's ethical stance."
+      },
+      {
+        "id": "tone_shift",
+        "title": "Tone Shift",
+        "description": "A noticeable change in emotional or stylistic tone."
+      },
+      {
+        "id": "theme",
+        "title": "Theme",
+        "description": "The central idea or message of the story."
+      },
+      {
+        "id": "subtext",
+        "title": "Subtext",
+        "description": "Meaning implied beneath the literal wording."
+      },
+      {
+        "id": "hidden_meaning",
+        "title": "Hidden Meaning",
+        "description": "Meaning revealed by context rather than explicit wording."
+      },
+      {
+        "id": "symbolism",
+        "title": "Symbolism",
+        "description": "Objects or actions that stand for deeper meaning."
+      },
+      {
+        "id": "foreshadowing",
+        "title": "Foreshadowing",
+        "description": "An earlier clue that points toward a later event."
+      },
+      {
+        "id": "callback",
+        "title": "Callback",
+        "description": "A later reference to an earlier detail."
+      },
+      {
+        "id": "plot_twist",
+        "title": "Plot Twist",
+        "description": "A surprising change that reinterprets previous events."
+      },
+      {
+        "id": "red_herring",
+        "title": "Red Herring",
+        "description": "A misleading clue that pulls attention away from the real meaning."
+      },
+      {
+        "id": "flashback",
+        "title": "Flashback",
+        "description": "A return to an earlier event in time."
+      },
+      {
+        "id": "flashforward",
+        "title": "Flashforward",
+        "description": "A preview of a later event or outcome."
+      },
+      {
+        "id": "dream",
+        "title": "Dream",
+        "description": "A scene framed as a dream or dreamlike experience."
+      },
+      {
+        "id": "hallucination",
+        "title": "Hallucination",
+        "description": "A scene framed as perception that may not be real."
+      },
+      {
+        "id": "imaginary_sequence",
+        "title": "Imaginary Sequence",
+        "description": "A sequence that exists only in a character's mind."
+      },
+      {
+        "id": "voice_over",
+        "title": "Voice Over",
+        "description": "Narration spoken over the visual scene."
+      },
+      {
+        "id": "unreliable_narrator",
+        "title": "Unreliable Narrator",
+        "description": "A narrator whose account may not be trustworthy."
+      },
+      {
+        "id": "parallel_story",
+        "title": "Parallel Story",
+        "description": "A second story line that mirrors or contrasts the first."
+      },
+      {
+        "id": "background_story",
+        "title": "Background Story",
+        "description": "Events that happened before the current scene."
+      },
+      {
+        "id": "scene_description",
+        "title": "Scene Description",
+        "description": "Visual or written description of what is happening."
+      },
+      {
+        "id": "environmental_storytelling",
+        "title": "Environmental Storytelling",
+        "description": "Meaning conveyed through objects, space, or setting."
+      },
+      {
+        "id": "off_screen_event",
+        "title": "Off Screen Event",
+        "description": "An event that happens outside the visible scene."
+      },
+      {
+        "id": "implicit_event",
+        "title": "Implicit Event",
+        "description": "An event inferred from context rather than directly shown."
+      },
+      {
+        "id": "missing_information",
+        "title": "Missing Information",
+        "description": "A gap that prevents a full conclusion."
+      },
+      {
+        "id": "time_skip",
+        "title": "Time Skip",
+        "description": "A jump forward or backward in time."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "narrative_pattern_story_arc",
+      "title": "Story Arc",
+      "description": "Narrative reasoning pattern for overall story progression from setup to resolution.",
+      "primary_concept_id": "story_arc",
+      "related_concept_ids": [
+        "story_goal",
+        "story_conflict"
+      ],
+      "direct_expressions": [
+        "Story Arc appears explicitly",
+        "Story Arc is named directly",
+        "story_arc is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals story_arc",
+        "the next scene reframes story_arc",
+        "the scene implies story_arc"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_story_arc_modifier_1",
+          "title": "Story Arc corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_story_arc_glossary",
+          "from_concept_id": "story_arc",
+          "to_concept_id": "story_goal",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_story_arc_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_story_arc_example_1",
+          "title": "Story Arc example",
+          "text": "A scene demonstrates story arc as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes story arc and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_story_goal",
+      "title": "Story Goal",
+      "description": "Narrative reasoning pattern for the objective driving the story forward.",
+      "primary_concept_id": "story_goal",
+      "related_concept_ids": [
+        "story_conflict",
+        "story_resolution"
+      ],
+      "direct_expressions": [
+        "Story Goal appears explicitly",
+        "Story Goal is named directly",
+        "story_goal is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals story_goal",
+        "the next scene reframes story_goal",
+        "the scene implies story_goal"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_story_goal_modifier_2",
+          "title": "Story Goal corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_story_goal_glossary",
+          "from_concept_id": "story_goal",
+          "to_concept_id": "story_conflict",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_story_goal_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_story_goal_example_1",
+          "title": "Story Goal example",
+          "text": "A scene demonstrates story goal as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes story goal and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_story_conflict",
+      "title": "Story Conflict",
+      "description": "Narrative reasoning pattern for the central pressure or opposition in the story.",
+      "primary_concept_id": "story_conflict",
+      "related_concept_ids": [
+        "story_resolution",
+        "story_progression"
+      ],
+      "direct_expressions": [
+        "Story Conflict appears explicitly",
+        "Story Conflict is named directly",
+        "story_conflict is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals story_conflict",
+        "the next scene reframes story_conflict",
+        "the scene implies story_conflict"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_story_conflict_modifier_3",
+          "title": "Story Conflict corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_story_conflict_glossary",
+          "from_concept_id": "story_conflict",
+          "to_concept_id": "story_resolution",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_story_conflict_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_story_conflict_example_1",
+          "title": "Story Conflict example",
+          "text": "A scene demonstrates story conflict as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes story conflict and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_story_resolution",
+      "title": "Story Resolution",
+      "description": "Narrative reasoning pattern for the ending phase that resolves or transforms the conflict.",
+      "primary_concept_id": "story_resolution",
+      "related_concept_ids": [
+        "story_progression",
+        "scene_goal"
+      ],
+      "direct_expressions": [
+        "Story Resolution appears explicitly",
+        "Story Resolution is named directly",
+        "story_resolution is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals story_resolution",
+        "the next scene reframes story_resolution",
+        "the scene implies story_resolution"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_story_resolution_modifier_4",
+          "title": "Story Resolution corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_story_resolution_glossary",
+          "from_concept_id": "story_resolution",
+          "to_concept_id": "story_progression",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_story_resolution_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_story_resolution_example_1",
+          "title": "Story Resolution example",
+          "text": "A scene demonstrates story resolution as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes story resolution and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_story_progression",
+      "title": "Story Progression",
+      "description": "Narrative reasoning pattern for the ordered movement of events across the narrative.",
+      "primary_concept_id": "story_progression",
+      "related_concept_ids": [
+        "scene_goal",
+        "scene_transition"
+      ],
+      "direct_expressions": [
+        "Story Progression appears explicitly",
+        "Story Progression is named directly",
+        "story_progression is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals story_progression",
+        "the next scene reframes story_progression",
+        "the scene implies story_progression"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_story_progression_modifier_5",
+          "title": "Story Progression corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_story_progression_glossary",
+          "from_concept_id": "story_progression",
+          "to_concept_id": "scene_goal",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_story_progression_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_story_progression_example_1",
+          "title": "Story Progression example",
+          "text": "A scene demonstrates story progression as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes story progression and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_scene_goal",
+      "title": "Scene Goal",
+      "description": "Narrative reasoning pattern for the purpose of a scene at the local level.",
+      "primary_concept_id": "scene_goal",
+      "related_concept_ids": [
+        "scene_transition",
+        "character_arc"
+      ],
+      "direct_expressions": [
+        "Scene Goal appears explicitly",
+        "Scene Goal is named directly",
+        "scene_goal is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals scene_goal",
+        "the next scene reframes scene_goal",
+        "the scene implies scene_goal"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_scene_goal_modifier_6",
+          "title": "Scene Goal corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_scene_goal_glossary",
+          "from_concept_id": "scene_goal",
+          "to_concept_id": "scene_transition",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_scene_goal_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_scene_goal_example_1",
+          "title": "Scene Goal example",
+          "text": "A scene demonstrates scene goal as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes scene goal and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_scene_transition",
+      "title": "Scene Transition",
+      "description": "Narrative reasoning pattern for a shift between scenes, beats, or locations.",
+      "primary_concept_id": "scene_transition",
+      "related_concept_ids": [
+        "character_arc",
+        "relationship_arc"
+      ],
+      "direct_expressions": [
+        "Scene Transition appears explicitly",
+        "Scene Transition is named directly",
+        "scene_transition is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals scene_transition",
+        "the next scene reframes scene_transition",
+        "the scene implies scene_transition"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_scene_transition_modifier_7",
+          "title": "Scene Transition corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_scene_transition_glossary",
+          "from_concept_id": "scene_transition",
+          "to_concept_id": "character_arc",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_scene_transition_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_scene_transition_example_1",
+          "title": "Scene Transition example",
+          "text": "A scene demonstrates scene transition as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes scene transition and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_character_arc",
+      "title": "Character Arc",
+      "description": "Narrative reasoning pattern for a character's evolution across the story.",
+      "primary_concept_id": "character_arc",
+      "related_concept_ids": [
+        "relationship_arc",
+        "motivation_change"
+      ],
+      "direct_expressions": [
+        "Character Arc appears explicitly",
+        "Character Arc is named directly",
+        "character_arc is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals character_arc",
+        "the next scene reframes character_arc",
+        "the scene implies character_arc"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_character_arc_modifier_8",
+          "title": "Character Arc corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_character_arc_glossary",
+          "from_concept_id": "character_arc",
+          "to_concept_id": "relationship_arc",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_character_arc_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_character_arc_example_1",
+          "title": "Character Arc example",
+          "text": "A scene demonstrates character arc as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes character arc and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_relationship_arc",
+      "title": "Relationship Arc",
+      "description": "Narrative reasoning pattern for the changing bond between characters over time.",
+      "primary_concept_id": "relationship_arc",
+      "related_concept_ids": [
+        "motivation_change",
+        "belief_change"
+      ],
+      "direct_expressions": [
+        "Relationship Arc appears explicitly",
+        "Relationship Arc is named directly",
+        "relationship_arc is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals relationship_arc",
+        "the next scene reframes relationship_arc",
+        "the scene implies relationship_arc"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_relationship_arc_modifier_9",
+          "title": "Relationship Arc corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_relationship_arc_glossary",
+          "from_concept_id": "relationship_arc",
+          "to_concept_id": "motivation_change",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_relationship_arc_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_relationship_arc_example_1",
+          "title": "Relationship Arc example",
+          "text": "A scene demonstrates relationship arc as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes relationship arc and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_motivation_change",
+      "title": "Motivation Change",
+      "description": "Narrative reasoning pattern for a shift in what a character wants or why they act.",
+      "primary_concept_id": "motivation_change",
+      "related_concept_ids": [
+        "belief_change",
+        "moral_change"
+      ],
+      "direct_expressions": [
+        "Motivation Change appears explicitly",
+        "Motivation Change is named directly",
+        "motivation_change is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals motivation_change",
+        "the next scene reframes motivation_change",
+        "the scene implies motivation_change"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_motivation_change_modifier_10",
+          "title": "Motivation Change corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_motivation_change_glossary",
+          "from_concept_id": "motivation_change",
+          "to_concept_id": "belief_change",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_motivation_change_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_motivation_change_example_1",
+          "title": "Motivation Change example",
+          "text": "A scene demonstrates motivation change as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes motivation change and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_belief_change",
+      "title": "Belief Change",
+      "description": "Narrative reasoning pattern for a shift in what a character believes to be true.",
+      "primary_concept_id": "belief_change",
+      "related_concept_ids": [
+        "moral_change",
+        "tone_shift"
+      ],
+      "direct_expressions": [
+        "Belief Change appears explicitly",
+        "Belief Change is named directly",
+        "belief_change is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals belief_change",
+        "the next scene reframes belief_change",
+        "the scene implies belief_change"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_belief_change_modifier_11",
+          "title": "Belief Change corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_belief_change_glossary",
+          "from_concept_id": "belief_change",
+          "to_concept_id": "moral_change",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_belief_change_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_belief_change_example_1",
+          "title": "Belief Change example",
+          "text": "A scene demonstrates belief change as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes belief change and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_moral_change",
+      "title": "Moral Change",
+      "description": "Narrative reasoning pattern for a shift in a character's ethical stance.",
+      "primary_concept_id": "moral_change",
+      "related_concept_ids": [
+        "tone_shift",
+        "theme"
+      ],
+      "direct_expressions": [
+        "Moral Change appears explicitly",
+        "Moral Change is named directly",
+        "moral_change is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals moral_change",
+        "the next scene reframes moral_change",
+        "the scene implies moral_change"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_moral_change_modifier_12",
+          "title": "Moral Change corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_moral_change_glossary",
+          "from_concept_id": "moral_change",
+          "to_concept_id": "tone_shift",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_moral_change_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_moral_change_example_1",
+          "title": "Moral Change example",
+          "text": "A scene demonstrates moral change as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes moral change and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_tone_shift",
+      "title": "Tone Shift",
+      "description": "Narrative reasoning pattern for a noticeable change in emotional or stylistic tone.",
+      "primary_concept_id": "tone_shift",
+      "related_concept_ids": [
+        "theme",
+        "subtext"
+      ],
+      "direct_expressions": [
+        "Tone Shift appears explicitly",
+        "Tone Shift is named directly",
+        "tone_shift is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals tone_shift",
+        "the next scene reframes tone_shift",
+        "the scene implies tone_shift"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_tone_shift_modifier_13",
+          "title": "Tone Shift corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_tone_shift_glossary",
+          "from_concept_id": "tone_shift",
+          "to_concept_id": "theme",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_tone_shift_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_tone_shift_example_1",
+          "title": "Tone Shift example",
+          "text": "A scene demonstrates tone shift as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes tone shift and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_theme",
+      "title": "Theme",
+      "description": "Narrative reasoning pattern for the central idea or message of the story.",
+      "primary_concept_id": "theme",
+      "related_concept_ids": [
+        "subtext",
+        "hidden_meaning"
+      ],
+      "direct_expressions": [
+        "Theme appears explicitly",
+        "Theme is named directly",
+        "theme is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals theme",
+        "the next scene reframes theme",
+        "the scene implies theme"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_theme_modifier_14",
+          "title": "Theme corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_theme_glossary",
+          "from_concept_id": "theme",
+          "to_concept_id": "subtext",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_theme_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_theme_example_1",
+          "title": "Theme example",
+          "text": "A scene demonstrates theme as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes theme and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_subtext",
+      "title": "Subtext",
+      "description": "Narrative reasoning pattern for meaning implied beneath the literal wording.",
+      "primary_concept_id": "subtext",
+      "related_concept_ids": [
+        "hidden_meaning",
+        "symbolism"
+      ],
+      "direct_expressions": [
+        "Subtext appears explicitly",
+        "Subtext is named directly",
+        "subtext is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals subtext",
+        "the next scene reframes subtext",
+        "the scene implies subtext"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_subtext_modifier_15",
+          "title": "Subtext corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_subtext_glossary",
+          "from_concept_id": "subtext",
+          "to_concept_id": "hidden_meaning",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_subtext_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_subtext_example_1",
+          "title": "Subtext example",
+          "text": "A scene demonstrates subtext as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes subtext and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_hidden_meaning",
+      "title": "Hidden Meaning",
+      "description": "Narrative reasoning pattern for meaning revealed by context rather than explicit wording.",
+      "primary_concept_id": "hidden_meaning",
+      "related_concept_ids": [
+        "symbolism",
+        "foreshadowing"
+      ],
+      "direct_expressions": [
+        "Hidden Meaning appears explicitly",
+        "Hidden Meaning is named directly",
+        "hidden_meaning is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals hidden_meaning",
+        "the next scene reframes hidden_meaning",
+        "the scene implies hidden_meaning"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_hidden_meaning_modifier_16",
+          "title": "Hidden Meaning corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_hidden_meaning_glossary",
+          "from_concept_id": "hidden_meaning",
+          "to_concept_id": "symbolism",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_hidden_meaning_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_hidden_meaning_example_1",
+          "title": "Hidden Meaning example",
+          "text": "A scene demonstrates hidden meaning as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes hidden meaning and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_symbolism",
+      "title": "Symbolism",
+      "description": "Narrative reasoning pattern for objects or actions that stand for deeper meaning.",
+      "primary_concept_id": "symbolism",
+      "related_concept_ids": [
+        "foreshadowing",
+        "callback"
+      ],
+      "direct_expressions": [
+        "Symbolism appears explicitly",
+        "Symbolism is named directly",
+        "symbolism is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals symbolism",
+        "the next scene reframes symbolism",
+        "the scene implies symbolism"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_symbolism_modifier_17",
+          "title": "Symbolism corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_symbolism_glossary",
+          "from_concept_id": "symbolism",
+          "to_concept_id": "foreshadowing",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_symbolism_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_symbolism_example_1",
+          "title": "Symbolism example",
+          "text": "A scene demonstrates symbolism as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes symbolism and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_foreshadowing",
+      "title": "Foreshadowing",
+      "description": "Narrative reasoning pattern for an earlier clue that points toward a later event.",
+      "primary_concept_id": "foreshadowing",
+      "related_concept_ids": [
+        "callback",
+        "plot_twist"
+      ],
+      "direct_expressions": [
+        "Foreshadowing appears explicitly",
+        "Foreshadowing is named directly",
+        "foreshadowing is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals foreshadowing",
+        "the next scene reframes foreshadowing",
+        "the scene implies foreshadowing"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_foreshadowing_modifier_18",
+          "title": "Foreshadowing corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_foreshadowing_glossary",
+          "from_concept_id": "foreshadowing",
+          "to_concept_id": "callback",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_foreshadowing_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_foreshadowing_example_1",
+          "title": "Foreshadowing example",
+          "text": "A scene demonstrates foreshadowing as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes foreshadowing and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_callback",
+      "title": "Callback",
+      "description": "Narrative reasoning pattern for a later reference to an earlier detail.",
+      "primary_concept_id": "callback",
+      "related_concept_ids": [
+        "plot_twist",
+        "red_herring"
+      ],
+      "direct_expressions": [
+        "Callback appears explicitly",
+        "Callback is named directly",
+        "callback is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals callback",
+        "the next scene reframes callback",
+        "the scene implies callback"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_callback_modifier_19",
+          "title": "Callback corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_callback_glossary",
+          "from_concept_id": "callback",
+          "to_concept_id": "plot_twist",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_callback_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_callback_example_1",
+          "title": "Callback example",
+          "text": "A scene demonstrates callback as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes callback and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_plot_twist",
+      "title": "Plot Twist",
+      "description": "Narrative reasoning pattern for a surprising change that reinterprets previous events.",
+      "primary_concept_id": "plot_twist",
+      "related_concept_ids": [
+        "red_herring",
+        "flashback"
+      ],
+      "direct_expressions": [
+        "Plot Twist appears explicitly",
+        "Plot Twist is named directly",
+        "plot_twist is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals plot_twist",
+        "the next scene reframes plot_twist",
+        "the scene implies plot_twist"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_plot_twist_modifier_20",
+          "title": "Plot Twist corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_plot_twist_glossary",
+          "from_concept_id": "plot_twist",
+          "to_concept_id": "red_herring",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_plot_twist_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_plot_twist_example_1",
+          "title": "Plot Twist example",
+          "text": "A scene demonstrates plot twist as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes plot twist and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_red_herring",
+      "title": "Red Herring",
+      "description": "Narrative reasoning pattern for a misleading clue that pulls attention away from the real meaning.",
+      "primary_concept_id": "red_herring",
+      "related_concept_ids": [
+        "flashback",
+        "flashforward"
+      ],
+      "direct_expressions": [
+        "Red Herring appears explicitly",
+        "Red Herring is named directly",
+        "red_herring is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals red_herring",
+        "the next scene reframes red_herring",
+        "the scene implies red_herring"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_red_herring_modifier_21",
+          "title": "Red Herring corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_red_herring_glossary",
+          "from_concept_id": "red_herring",
+          "to_concept_id": "flashback",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_red_herring_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_red_herring_example_1",
+          "title": "Red Herring example",
+          "text": "A scene demonstrates red herring as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes red herring and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_flashback",
+      "title": "Flashback",
+      "description": "Narrative reasoning pattern for a return to an earlier event in time.",
+      "primary_concept_id": "flashback",
+      "related_concept_ids": [
+        "flashforward",
+        "dream"
+      ],
+      "direct_expressions": [
+        "Flashback appears explicitly",
+        "Flashback is named directly",
+        "flashback is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals flashback",
+        "the next scene reframes flashback",
+        "the scene implies flashback"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_flashback_modifier_22",
+          "title": "Flashback corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_flashback_glossary",
+          "from_concept_id": "flashback",
+          "to_concept_id": "flashforward",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_flashback_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_flashback_example_1",
+          "title": "Flashback example",
+          "text": "A scene demonstrates flashback as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes flashback and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_flashforward",
+      "title": "Flashforward",
+      "description": "Narrative reasoning pattern for a preview of a later event or outcome.",
+      "primary_concept_id": "flashforward",
+      "related_concept_ids": [
+        "dream",
+        "hallucination"
+      ],
+      "direct_expressions": [
+        "Flashforward appears explicitly",
+        "Flashforward is named directly",
+        "flashforward is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals flashforward",
+        "the next scene reframes flashforward",
+        "the scene implies flashforward"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_flashforward_modifier_23",
+          "title": "Flashforward corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_flashforward_glossary",
+          "from_concept_id": "flashforward",
+          "to_concept_id": "dream",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_flashforward_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_flashforward_example_1",
+          "title": "Flashforward example",
+          "text": "A scene demonstrates flashforward as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes flashforward and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_dream",
+      "title": "Dream",
+      "description": "Narrative reasoning pattern for a scene framed as a dream or dreamlike experience.",
+      "primary_concept_id": "dream",
+      "related_concept_ids": [
+        "hallucination",
+        "imaginary_sequence"
+      ],
+      "direct_expressions": [
+        "Dream appears explicitly",
+        "Dream is named directly",
+        "dream is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals dream",
+        "the next scene reframes dream",
+        "the scene implies dream"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_dream_modifier_24",
+          "title": "Dream corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_dream_glossary",
+          "from_concept_id": "dream",
+          "to_concept_id": "hallucination",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_dream_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_dream_example_1",
+          "title": "Dream example",
+          "text": "A scene demonstrates dream as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes dream and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_hallucination",
+      "title": "Hallucination",
+      "description": "Narrative reasoning pattern for a scene framed as perception that may not be real.",
+      "primary_concept_id": "hallucination",
+      "related_concept_ids": [
+        "imaginary_sequence",
+        "voice_over"
+      ],
+      "direct_expressions": [
+        "Hallucination appears explicitly",
+        "Hallucination is named directly",
+        "hallucination is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals hallucination",
+        "the next scene reframes hallucination",
+        "the scene implies hallucination"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_hallucination_modifier_25",
+          "title": "Hallucination corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_hallucination_glossary",
+          "from_concept_id": "hallucination",
+          "to_concept_id": "imaginary_sequence",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_hallucination_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_hallucination_example_1",
+          "title": "Hallucination example",
+          "text": "A scene demonstrates hallucination as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes hallucination and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_imaginary_sequence",
+      "title": "Imaginary Sequence",
+      "description": "Narrative reasoning pattern for a sequence that exists only in a character's mind.",
+      "primary_concept_id": "imaginary_sequence",
+      "related_concept_ids": [
+        "voice_over",
+        "unreliable_narrator"
+      ],
+      "direct_expressions": [
+        "Imaginary Sequence appears explicitly",
+        "Imaginary Sequence is named directly",
+        "imaginary_sequence is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals imaginary_sequence",
+        "the next scene reframes imaginary_sequence",
+        "the scene implies imaginary_sequence"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_imaginary_sequence_modifier_26",
+          "title": "Imaginary Sequence corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_imaginary_sequence_glossary",
+          "from_concept_id": "imaginary_sequence",
+          "to_concept_id": "voice_over",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_imaginary_sequence_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_imaginary_sequence_example_1",
+          "title": "Imaginary Sequence example",
+          "text": "A scene demonstrates imaginary sequence as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes imaginary sequence and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_voice_over",
+      "title": "Voice Over",
+      "description": "Narrative reasoning pattern for narration spoken over the visual scene.",
+      "primary_concept_id": "voice_over",
+      "related_concept_ids": [
+        "unreliable_narrator",
+        "parallel_story"
+      ],
+      "direct_expressions": [
+        "Voice Over appears explicitly",
+        "Voice Over is named directly",
+        "voice_over is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals voice_over",
+        "the next scene reframes voice_over",
+        "the scene implies voice_over"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_voice_over_modifier_27",
+          "title": "Voice Over corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_voice_over_glossary",
+          "from_concept_id": "voice_over",
+          "to_concept_id": "unreliable_narrator",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_voice_over_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_voice_over_example_1",
+          "title": "Voice Over example",
+          "text": "A scene demonstrates voice over as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes voice over and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_unreliable_narrator",
+      "title": "Unreliable Narrator",
+      "description": "Narrative reasoning pattern for a narrator whose account may not be trustworthy.",
+      "primary_concept_id": "unreliable_narrator",
+      "related_concept_ids": [
+        "parallel_story",
+        "background_story"
+      ],
+      "direct_expressions": [
+        "Unreliable Narrator appears explicitly",
+        "Unreliable Narrator is named directly",
+        "unreliable_narrator is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals unreliable_narrator",
+        "the next scene reframes unreliable_narrator",
+        "the scene implies unreliable_narrator"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_unreliable_narrator_modifier_28",
+          "title": "Unreliable Narrator corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_unreliable_narrator_glossary",
+          "from_concept_id": "unreliable_narrator",
+          "to_concept_id": "parallel_story",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_unreliable_narrator_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_unreliable_narrator_example_1",
+          "title": "Unreliable Narrator example",
+          "text": "A scene demonstrates unreliable narrator as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes unreliable narrator and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_parallel_story",
+      "title": "Parallel Story",
+      "description": "Narrative reasoning pattern for a second story line that mirrors or contrasts the first.",
+      "primary_concept_id": "parallel_story",
+      "related_concept_ids": [
+        "background_story",
+        "scene_description"
+      ],
+      "direct_expressions": [
+        "Parallel Story appears explicitly",
+        "Parallel Story is named directly",
+        "parallel_story is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals parallel_story",
+        "the next scene reframes parallel_story",
+        "the scene implies parallel_story"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_parallel_story_modifier_29",
+          "title": "Parallel Story corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_parallel_story_glossary",
+          "from_concept_id": "parallel_story",
+          "to_concept_id": "background_story",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_parallel_story_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_parallel_story_example_1",
+          "title": "Parallel Story example",
+          "text": "A scene demonstrates parallel story as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes parallel story and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_background_story",
+      "title": "Background Story",
+      "description": "Narrative reasoning pattern for events that happened before the current scene.",
+      "primary_concept_id": "background_story",
+      "related_concept_ids": [
+        "scene_description",
+        "environmental_storytelling"
+      ],
+      "direct_expressions": [
+        "Background Story appears explicitly",
+        "Background Story is named directly",
+        "background_story is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals background_story",
+        "the next scene reframes background_story",
+        "the scene implies background_story"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_background_story_modifier_30",
+          "title": "Background Story corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_background_story_glossary",
+          "from_concept_id": "background_story",
+          "to_concept_id": "scene_description",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_background_story_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_background_story_example_1",
+          "title": "Background Story example",
+          "text": "A scene demonstrates background story as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes background story and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_scene_description",
+      "title": "Scene Description",
+      "description": "Narrative reasoning pattern for visual or written description of what is happening.",
+      "primary_concept_id": "scene_description",
+      "related_concept_ids": [
+        "environmental_storytelling",
+        "off_screen_event"
+      ],
+      "direct_expressions": [
+        "Scene Description appears explicitly",
+        "Scene Description is named directly",
+        "scene_description is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals scene_description",
+        "the next scene reframes scene_description",
+        "the scene implies scene_description"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_scene_description_modifier_31",
+          "title": "Scene Description corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_scene_description_glossary",
+          "from_concept_id": "scene_description",
+          "to_concept_id": "environmental_storytelling",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_scene_description_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_scene_description_example_1",
+          "title": "Scene Description example",
+          "text": "A scene demonstrates scene description as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes scene description and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_environmental_storytelling",
+      "title": "Environmental Storytelling",
+      "description": "Narrative reasoning pattern for meaning conveyed through objects, space, or setting.",
+      "primary_concept_id": "environmental_storytelling",
+      "related_concept_ids": [
+        "off_screen_event",
+        "implicit_event"
+      ],
+      "direct_expressions": [
+        "Environmental Storytelling appears explicitly",
+        "Environmental Storytelling is named directly",
+        "environmental_storytelling is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals environmental_storytelling",
+        "the next scene reframes environmental_storytelling",
+        "the scene implies environmental_storytelling"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_environmental_storytelling_modifier_32",
+          "title": "Environmental Storytelling corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_environmental_storytelling_glossary",
+          "from_concept_id": "environmental_storytelling",
+          "to_concept_id": "off_screen_event",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_environmental_storytelling_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_environmental_storytelling_example_1",
+          "title": "Environmental Storytelling example",
+          "text": "A scene demonstrates environmental storytelling as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes environmental storytelling and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_off_screen_event",
+      "title": "Off Screen Event",
+      "description": "Narrative reasoning pattern for an event that happens outside the visible scene.",
+      "primary_concept_id": "off_screen_event",
+      "related_concept_ids": [
+        "implicit_event",
+        "missing_information"
+      ],
+      "direct_expressions": [
+        "Off Screen Event appears explicitly",
+        "Off Screen Event is named directly",
+        "off_screen_event is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals off_screen_event",
+        "the next scene reframes off_screen_event",
+        "the scene implies off_screen_event"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_off_screen_event_modifier_33",
+          "title": "Off Screen Event corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_off_screen_event_glossary",
+          "from_concept_id": "off_screen_event",
+          "to_concept_id": "implicit_event",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_off_screen_event_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_off_screen_event_example_1",
+          "title": "Off Screen Event example",
+          "text": "A scene demonstrates off screen event as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes off screen event and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_implicit_event",
+      "title": "Implicit Event",
+      "description": "Narrative reasoning pattern for an event inferred from context rather than directly shown.",
+      "primary_concept_id": "implicit_event",
+      "related_concept_ids": [
+        "missing_information",
+        "time_skip"
+      ],
+      "direct_expressions": [
+        "Implicit Event appears explicitly",
+        "Implicit Event is named directly",
+        "implicit_event is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals implicit_event",
+        "the next scene reframes implicit_event",
+        "the scene implies implicit_event"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_implicit_event_modifier_34",
+          "title": "Implicit Event corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_implicit_event_glossary",
+          "from_concept_id": "implicit_event",
+          "to_concept_id": "missing_information",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_implicit_event_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_implicit_event_example_1",
+          "title": "Implicit Event example",
+          "text": "A scene demonstrates implicit event as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes implicit event and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_missing_information",
+      "title": "Missing Information",
+      "description": "Narrative reasoning pattern for a gap that prevents a full conclusion.",
+      "primary_concept_id": "missing_information",
+      "related_concept_ids": [
+        "time_skip"
+      ],
+      "direct_expressions": [
+        "Missing Information appears explicitly",
+        "Missing Information is named directly",
+        "missing_information is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals missing_information",
+        "the next scene reframes missing_information",
+        "the scene implies missing_information"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_missing_information_modifier_35",
+          "title": "Missing Information corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "narrative_pattern_missing_information_glossary",
+          "from_concept_id": "missing_information",
+          "to_concept_id": "time_skip",
+          "relation": "supports",
+          "note": "Narrative concepts usually reinforce each other."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_missing_information_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_missing_information_example_1",
+          "title": "Missing Information example",
+          "text": "A scene demonstrates missing information as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes missing information and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    },
+    {
+      "id": "narrative_pattern_time_skip",
+      "title": "Time Skip",
+      "description": "Narrative reasoning pattern for a jump forward or backward in time.",
+      "primary_concept_id": "time_skip",
+      "related_concept_ids": [],
+      "direct_expressions": [
+        "Time Skip appears explicitly",
+        "Time Skip is named directly",
+        "time_skip is stated in the scene"
+      ],
+      "indirect_expressions": [
+        "later context reveals time_skip",
+        "the next scene reframes time_skip",
+        "the scene implies time_skip"
+      ],
+      "semantic_intent": [
+        "story flow",
+        "scene flow",
+        "context inheritance",
+        "cross-scene memory"
+      ],
+      "supporting_evidence": [
+        "previous dialogue",
+        "following dialogue",
+        "narration",
+        "scene description"
+      ],
+      "contradictory_evidence": [
+        "later reversal",
+        "explicit contradiction",
+        "unreliable narrator"
+      ],
+      "false_positives": [
+        "single sentence treated as full story meaning",
+        "character opinion treated as author opinion"
+      ],
+      "counter_examples": [
+        "A one-line comment with no story consequence.",
+        "A neutral description that is not part of a larger arc."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterward",
+        "subsequently",
+        "meanwhile"
+      ],
+      "scene_indicators": [
+        "cut to",
+        "later that night",
+        "in the next scene",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Read the whole scene before deciding what the line means.",
+        "Ask whether later context changes the first impression.",
+        "Treat narrator, character, and viewer perspective separately."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "narrative_pattern_time_skip_modifier_36",
+          "title": "Time Skip corroborated",
+          "description": "Later scenes confirm the same narrative reading.",
+          "confidence": 85
+        }
+      ],
+      "glossary_relationships": [],
+      "gcam_mappings": [
+        {
+          "id": "narrative_pattern_time_skip_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "narrative interpretation",
+          "note": "Used for story-level reading and framing."
+        }
+      ],
+      "examples": [
+        {
+          "id": "narrative_pattern_time_skip_example_1",
+          "title": "Time Skip example",
+          "text": "A scene demonstrates time skip as part of the narrative flow.",
+          "expected_outcome": "Reviewer recognizes time skip and keeps the reading story-level.",
+          "note": "Story and scene should be read together."
+        }
+      ]
+    }
+  ]
+}

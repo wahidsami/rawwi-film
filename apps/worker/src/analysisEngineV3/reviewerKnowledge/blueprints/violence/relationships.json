@@ -1,0 +1,178 @@
+{
+  "version": "1.0.0",
+  "id": "violence_relationships",
+  "title": "Violence Relationships",
+  "description": "Graph relationships among violence concepts.",
+  "entries": [
+    {
+      "from": "violence_event",
+      "to": "violence_threat",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_attempt",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_glorification",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_encouragement",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_instruction",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_reward",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_revenge",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_self_defense",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_law_enforcement",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_accident",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_negligence",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_condemnation",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_documentary",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_historical",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_training",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_game",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_fantasy",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_comedy",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_dream",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_flashback",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_memory",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_imagination",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_failed_attempt",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_offscreen",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_scene_description",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_dialogue",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_reported_by_character",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_observed",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_implied",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_against_child",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_against_woman",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_against_disabled",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_against_public",
+      "type": "supports"
+    },
+    {
+      "from": "violence_event",
+      "to": "violence_against_state",
+      "type": "supports"
+    }
+  ]
+}

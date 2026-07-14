@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_judgment_actions",
+  "title": "Reviewer Judgment Actions",
+  "description": "Actions used by the reviewer judgment framework.",
+  "entries": [
+    {
+      "id": "compare_interpretations",
+      "title": "Compare Interpretations",
+      "description": "Compare each plausible reading before choosing one."
+    },
+    {
+      "id": "judge_sufficiency",
+      "title": "Judge Sufficiency",
+      "description": "Decide whether the evidence is enough."
+    },
+    {
+      "id": "calibrate_confidence",
+      "title": "Calibrate Confidence",
+      "description": "Set confidence according to the strength of support."
+    },
+    {
+      "id": "record_disagreement",
+      "title": "Record Disagreement",
+      "description": "Record when experienced reviewers can reasonably disagree."
+    },
+    {
+      "id": "justify_narrative_outcome",
+      "title": "Justify Narrative Outcome",
+      "description": "Explain when the story changes the reviewer outcome."
+    },
+    {
+      "id": "finalize_decision",
+      "title": "Finalize Decision",
+      "description": "Produce the final reviewer judgment."
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "version": "1.0.0",
+  "id": "drugs_concepts",
+  "title": "Drugs Concepts",
+  "description": "Canonical drugs concepts.",
+  "entries": [
+    {
+      "id": "drug_reference",
+      "title": "Drug Reference",
+      "description": "Shared reviewer concept for drug reference."
+    },
+    {
+      "id": "drug_consumption",
+      "title": "Drug Consumption",
+      "description": "Shared reviewer concept for drug consumption."
+    },
+    {
+      "id": "drug_possession",
+      "title": "Drug Possession",
+      "description": "Shared reviewer concept for drug possession."
+    },
+    {
+      "id": "drug_distribution",
+      "title": "Drug Distribution",
+      "description": "Shared reviewer concept for drug distribution."
+    },
+    {
+      "id": "drug_sale",
+      "title": "Drug Sale",
+      "description": "Shared reviewer concept for drug sale."
+    },
+    {
+      "id": "drug_purchase",
+      "title": "Drug Purchase",
+      "description": "Shared reviewer concept for drug purchase."
+    },
+    {
+      "id": "drug_smuggling",
+      "title": "Drug Smuggling",
+      "description": "Shared reviewer concept for drug smuggling."
+    },
+    {
+      "id": "drug_trafficking",
+      "title": "Drug Trafficking",
+      "description": "Shared reviewer concept for drug trafficking."
+    },
+    {
+      "id": "drug_manufacturing",
+      "title": "Drug Manufacturing",
+      "description": "Shared reviewer concept for drug manufacturing."
+    },
+    {
+      "id": "drug_cultivation",
+      "title": "Drug Cultivation",
+      "description": "Shared reviewer concept for drug cultivation."
+    },
+    {
+      "id": "drug_storage",
+      "title": "Drug Storage",
+      "description": "Shared reviewer concept for drug storage."
+    },
+    {
+      "id": "drug_transportation",
+      "title": "Drug Transportation",
+      "description": "Shared reviewer concept for drug transportation."
+    },
+    {
+      "id": "drug_glorification",
+      "title": "Drug Glorification",
+      "description": "Shared reviewer concept for drug glorification."
+    },
+    {
+      "id": "drug_encouragement",
+      "title": "Drug Encouragement",
+      "description": "Shared reviewer concept for drug encouragement."
+    },
+    {
+      "id": "drug_instruction",
+      "title": "Drug Instruction",
+      "description": "Shared reviewer concept for drug instruction."
+    },
+    {
+      "id": "drug_normalization",
+      "title": "Drug Normalization",
+      "description": "Shared reviewer concept for drug normalization."
+    },
+    {
+      "id": "drug_dependency",
+      "title": "Drug Dependency",
+      "description": "Shared reviewer concept for drug dependency."
+    },
+    {
+      "id": "drug_addiction",
+      "title": "Drug Addiction",
+      "description": "Shared reviewer concept for drug addiction."
+    },
+    {
+      "id": "drug_overdose",
+      "title": "Drug Overdose",
+      "description": "Shared reviewer concept for drug overdose."
+    },
+    {
+      "id": "drug_rehabilitation",
+      "title": "Drug Rehabilitation",
+      "description": "Shared reviewer concept for drug rehabilitation."
+    },
+    {
+      "id": "medical_drug_use",
+      "title": "Medical Drug Use",
+      "description": "Shared reviewer concept for medical drug use."
+    },
+    {
+      "id": "prescription_drug_use",
+      "title": "Prescription Drug Use",
+      "description": "Shared reviewer concept for prescription drug use."
+    },
+    {
+      "id": "illegal_prescription_use",
+      "title": "Illegal Prescription Use",
+      "description": "Shared reviewer concept for illegal prescription use."
+    },
+    {
+      "id": "drug_documentary",
+      "title": "Drug Documentary",
+      "description": "Shared reviewer concept for drug documentary."
+    },
+    {
+      "id": "drug_educational",
+      "title": "Drug Educational",
+      "description": "Shared reviewer concept for drug educational."
+    },
+    {
+      "id": "drug_historical",
+      "title": "Drug Historical",
+      "description": "Shared reviewer concept for drug historical."
+    },
+    {
+      "id": "drug_news",
+      "title": "Drug News",
+      "description": "Shared reviewer concept for drug news."
+    },
+    {
+      "id": "drug_comedy",
+      "title": "Drug Comedy",
+      "description": "Shared reviewer concept for drug comedy."
+    },
+    {
+      "id": "drug_satire",
+      "title": "Drug Satire",
+      "description": "Shared reviewer concept for drug satire."
+    },
+    {
+      "id": "drug_dream",
+      "title": "Drug Dream",
+      "description": "Shared reviewer concept for drug dream."
+    },
+    {
+      "id": "drug_flashback",
+      "title": "Drug Flashback",
+      "description": "Shared reviewer concept for drug flashback."
+    },
+    {
+      "id": "drug_hallucination",
+      "title": "Drug Hallucination",
+      "description": "Shared reviewer concept for drug hallucination."
+    },
+    {
+      "id": "drug_false_accusation",
+      "title": "Drug False Accusation",
+      "description": "Shared reviewer concept for drug false accusation."
+    },
+    {
+      "id": "drug_symbolism",
+      "title": "Drug Symbolism",
+      "description": "Shared reviewer concept for drug symbolism."
+    },
+    {
+      "id": "drug_scene_description",
+      "title": "Drug Scene Description",
+      "description": "Shared reviewer concept for drug scene description."
+    },
+    {
+      "id": "drug_dialogue",
+      "title": "Drug Dialogue",
+      "description": "Shared reviewer concept for drug dialogue."
+    },
+    {
+      "id": "drug_implied_use",
+      "title": "Drug Implied Use",
+      "description": "Shared reviewer concept for drug implied use."
+    }
+  ]
+}

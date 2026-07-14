@@ -1,0 +1,634 @@
+{
+  "cases": [
+    {
+      "id": "intent-01-neutral",
+      "title": "Neutral intent benchmark",
+      "scriptSnippet": "The character reports a fact without stance.",
+      "storyMemory": "The story is explanatory and report-like.",
+      "sceneMemory": "The scene remains coherent across the exchange.",
+      "neighboringSentences": ["The next line clarifies the statement is informational."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "neutral", "articleId": 11, "variants": ["neutral"], "definition": "Neutral or uncommitted intent." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [11],
+        "notes": []
+      },
+      "expectedConcepts": ["neutral", "informative", "educational", "historical"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "factual",
+        "speaker": "speaker",
+        "target": "audience",
+        "victim": null,
+        "narrativeIntent": "informative",
+        "evidenceStrength": 0.88,
+        "contextClassification": "factual",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": ["quotation"]
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [11],
+      "expectedFinding": { "disposition": "reject", "summary": "module=v3_00_intent_framework | disposition=reject | articles=11 | concepts=neutral,informative,educational,historical" },
+      "expectedExplanation": "Factual intent is read as informative content in factual context with literal meaning.",
+      "expectedConfidenceRange": { "min": 0.72, "max": 1 }
+    },
+    {
+      "id": "intent-02-reporting",
+      "title": "Reporting and testimony benchmark",
+      "scriptSnippet": "The reporter, witness, or doctor explains the facts.",
+      "storyMemory": "The story is institutional and explanatory.",
+      "sceneMemory": "The scene stays grounded in documentary framing.",
+      "neighboringSentences": ["The follow-up line confirms the speaker is reporting, not promoting."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "documentary", "articleId": 11, "variants": ["documentary"], "definition": "Documentary or institutional framing." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [11],
+        "notes": []
+      },
+      "expectedConcepts": ["documentary", "news_reporting", "court_testimony", "police_investigation", "medical", "scientific", "religious_teaching", "quotation"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "factual",
+        "speaker": "character",
+        "target": "audience",
+        "victim": null,
+        "narrativeIntent": "informative",
+        "evidenceStrength": 0.88,
+        "contextClassification": "factual",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": ["quotation"]
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [11],
+      "expectedFinding": { "disposition": "reject", "summary": "module=v3_00_intent_framework | disposition=reject | articles=11 | concepts=documentary,news_reporting,court_testimony,police_investigation,medical,scientific,religious_teaching,quotation" },
+      "expectedExplanation": "Reporting and testimony are read as factual content in an institutional context with literal meaning.",
+      "expectedConfidenceRange": { "min": 0.72, "max": 1 }
+    },
+    {
+      "id": "intent-03-evaluative",
+      "title": "Evaluative stance benchmark",
+      "scriptSnippet": "The speaker approves, condemns, or promotes the idea.",
+      "storyMemory": "The story carries a strong stance.",
+      "sceneMemory": "The scene shows an explicit value judgment.",
+      "neighboringSentences": ["The follow-up line intensifies the stance."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "approval", "articleId": 4, "variants": ["approval"], "definition": "Evaluative endorsement." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [4],
+        "notes": []
+      },
+      "expectedConcepts": ["condemnation", "approval", "encouragement", "promotion", "glorification"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "evaluative",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "stance",
+        "evidenceStrength": 0.84,
+        "contextClassification": "evaluative",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [4],
+      "expectedFinding": { "disposition": "review", "summary": "module=v3_00_intent_framework | disposition=review | articles=4 | concepts=condemnation,approval,encouragement,promotion,glorification" },
+      "expectedExplanation": "Evaluative stance is read as mixed content in a pressure-and-praise context.",
+      "expectedConfidenceRange": { "min": 0.66, "max": 0.96 }
+    },
+    {
+      "id": "intent-04-coercive",
+      "title": "Coercive and defensive benchmark",
+      "scriptSnippet": "The line commands, threatens, or defends.",
+      "storyMemory": "The story contains pressure and protection language.",
+      "sceneMemory": "The scene includes direct pressure or defensive posture.",
+      "neighboringSentences": ["The next line clarifies the pressure or defense."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "threat", "articleId": 4, "variants": ["threat"], "definition": "Coercive intent." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [4],
+        "notes": []
+      },
+      "expectedConcepts": ["instruction", "threat", "coercion", "manipulation", "revenge", "self_defense", "protection"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "evaluative",
+        "speaker": "character",
+        "target": "listener",
+        "victim": "listener",
+        "narrativeIntent": "coercive",
+        "evidenceStrength": 0.84,
+        "contextClassification": "evaluative",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [4],
+      "expectedFinding": { "disposition": "review", "summary": "module=v3_00_intent_framework | disposition=review | articles=4 | concepts=instruction,threat,coercion,manipulation,revenge,self_defense,protection" },
+      "expectedExplanation": "Coercive language is read through the pressure and defense frame.",
+      "expectedConfidenceRange": { "min": 0.66, "max": 0.96 }
+    },
+    {
+      "id": "intent-05-expressive",
+      "title": "Humor and irony benchmark",
+      "scriptSnippet": "The line is funny, ironic, or sarcastic.",
+      "storyMemory": "The story uses a playful or mocking tone.",
+      "sceneMemory": "The scene clearly signals comedy.",
+      "neighboringSentences": ["The next line confirms the joke or mockery."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "humor", "articleId": 17, "variants": ["humor"], "definition": "Expressive or comedic intent." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [17],
+        "notes": []
+      },
+      "expectedConcepts": ["humor", "satire", "irony", "sarcasm"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "fictional",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "expressive",
+        "evidenceStrength": 0.76,
+        "contextClassification": "fictional",
+        "literalVsImpliedMeaning": "implied",
+        "exceptionSignals": ["fiction"]
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [17],
+      "expectedFinding": { "disposition": "reject", "summary": "module=v3_00_intent_framework | disposition=reject | articles=17 | concepts=humor,satire,irony,sarcasm" },
+      "expectedExplanation": "Expressive humor is read as non-literal comedic intent in a fictional context.",
+      "expectedConfidenceRange": { "min": 0.58, "max": 0.9 }
+    },
+    {
+      "id": "intent-06-fictional",
+      "title": "Fictional dream benchmark",
+      "scriptSnippet": "The scene is a dream or fantasy with symbolic action.",
+      "storyMemory": "The story is staged, symbolic, or imagined.",
+      "sceneMemory": "The scene is dreamlike and non-literal.",
+      "neighboringSentences": ["A later line confirms the scene is only imagined."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "fiction", "articleId": 17, "variants": ["fiction"], "definition": "Non-literal fictional framing." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [17],
+        "notes": []
+      },
+      "expectedConcepts": ["fiction", "fantasy", "dream", "flashback", "hallucination", "imagination"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "fictional",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "fiction",
+        "evidenceStrength": 0.76,
+        "contextClassification": "fictional",
+        "literalVsImpliedMeaning": "implied",
+        "exceptionSignals": ["fiction"]
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [17],
+      "expectedFinding": { "disposition": "reject", "summary": "module=v3_00_intent_framework | disposition=reject | articles=17 | concepts=fiction,fantasy,dream,flashback,hallucination,imagination" },
+      "expectedExplanation": "Dream and fantasy framing makes the intent non-literal.",
+      "expectedConfidenceRange": { "min": 0.58, "max": 0.9 }
+    },
+    {
+      "id": "intent-07-performance",
+      "title": "Quotation and performance benchmark",
+      "scriptSnippet": "The line is quoted or acted on stage.",
+      "storyMemory": "The story contains a performance or quoted speech.",
+      "sceneMemory": "The scene is explicit about quotation and acting.",
+      "neighboringSentences": ["The next line clarifies the speech is part of a performance."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "quotation", "articleId": 11, "variants": ["quotation"], "definition": "Quoted speech context." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [11],
+        "notes": []
+      },
+      "expectedConcepts": ["quotation", "role_play", "acting", "storytelling"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "fictional",
+        "speaker": "character",
+        "target": "audience",
+        "victim": null,
+        "narrativeIntent": "fiction",
+        "evidenceStrength": 0.76,
+        "contextClassification": "fictional",
+        "literalVsImpliedMeaning": "implied",
+        "exceptionSignals": ["quotation"]
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [11],
+      "expectedFinding": { "disposition": "reject", "summary": "module=v3_00_intent_framework | disposition=reject | articles=11 | concepts=quotation,role_play,acting,storytelling" },
+      "expectedExplanation": "Quoted or performed speech is not the same as literal endorsement.",
+      "expectedConfidenceRange": { "min": 0.58, "max": 0.9 }
+    },
+    {
+      "id": "intent-08-confession",
+      "title": "Confession and correction benchmark",
+      "scriptSnippet": "The character admits or corrects earlier confusion.",
+      "storyMemory": "The story contains a correction or misunderstanding.",
+      "sceneMemory": "The scene shifts from accusation to clarification.",
+      "neighboringSentences": ["A later line proves the first accusation was wrong."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "confession", "articleId": 11, "variants": ["confession"], "definition": "An admission or correction." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [11],
+        "notes": []
+      },
+      "expectedConcepts": ["confession", "false_accusation", "misunderstanding"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "factual",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "corrective",
+        "evidenceStrength": 0.76,
+        "contextClassification": "factual",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [11],
+      "expectedFinding": { "disposition": "reject", "summary": "module=v3_00_intent_framework | disposition=reject | articles=11 | concepts=confession,false_accusation,misunderstanding" },
+      "expectedExplanation": "Confession and correction should be read as factual clarification, not automatic guilt.",
+      "expectedConfidenceRange": { "min": 0.58, "max": 0.9 }
+    },
+    {
+      "id": "intent-09-mixed",
+      "title": "Mixed intent benchmark",
+      "scriptSnippet": "The first line is factual and the second line becomes joking.",
+      "storyMemory": "The story shifts from report to humor.",
+      "sceneMemory": "The scene contains both factual and comedic cues.",
+      "neighboringSentences": ["The later line changes the first impression."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "mixed", "articleId": 11, "variants": ["mixed"], "definition": "Multiple intent classes appear in one scene." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [11, 17],
+        "notes": []
+      },
+      "expectedConcepts": ["neutral", "humor", "quotation", "storytelling"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "mixed",
+        "speaker": "character",
+        "target": "audience",
+        "victim": null,
+        "narrativeIntent": "mixed",
+        "evidenceStrength": 0.68,
+        "contextClassification": "mixed",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": ["quotation"]
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [11, 17],
+      "expectedFinding": { "disposition": "review", "summary": "module=v3_00_intent_framework | disposition=review | articles=11,17 | concepts=neutral,humor,quotation,storytelling" },
+      "expectedExplanation": "Mixed intent must be resolved using later context rather than a single line.",
+      "expectedConfidenceRange": { "min": 0.5, "max": 0.85 }
+    },
+    {
+      "id": "intent-10-ambiguous",
+      "title": "Ambiguous boundary benchmark",
+      "scriptSnippet": "The line could be instruction, condemnation, approval, or imagination.",
+      "storyMemory": "The story is unclear and borderline.",
+      "sceneMemory": "The scene is ambiguous and shifts tone.",
+      "neighboringSentences": ["The next line may resolve the meaning, but not yet."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "ambiguous", "articleId": 4, "variants": ["ambiguous"], "definition": "A boundary case requiring more context." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [4, 17],
+        "notes": []
+      },
+      "expectedConcepts": ["instruction", "condemnation", "approval", "role_play", "imagination", "misunderstanding"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "ambiguous",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "uncertain",
+        "evidenceStrength": 0.56,
+        "contextClassification": "ambiguous",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": ["misunderstanding"]
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [4, 17],
+      "expectedFinding": { "disposition": "review", "summary": "module=v3_00_intent_framework | disposition=review | articles=4,17 | concepts=instruction,condemnation,approval,role_play,imagination,misunderstanding" },
+      "expectedExplanation": "Ambiguous boundary scenes should remain review-level until context resolves them.",
+      "expectedConfidenceRange": { "min": 0.4, "max": 0.8 }
+    },
+    {
+      "id": "intent-11-documentary",
+      "title": "Documentary and documentation benchmark",
+      "scriptSnippet": "The documentary explains the topic in a neutral way.",
+      "storyMemory": "The scene is explicitly documentary.",
+      "sceneMemory": "The narration is explanatory rather than evaluative.",
+      "neighboringSentences": ["The next line adds background facts without praise."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "documentation", "articleId": 11, "variants": ["documentation", "documentary"], "definition": "Informational or documentary framing." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [11],
+        "notes": []
+      },
+      "expectedConcepts": ["documentary", "documentation", "informative", "neutral"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "factual",
+        "speaker": "character",
+        "target": "audience",
+        "victim": null,
+        "narrativeIntent": "informative",
+        "evidenceStrength": 0.86,
+        "contextClassification": "documentary",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": ["documentary"]
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [11],
+      "expectedFinding": { "disposition": "reject", "summary": "module=v3_00_intent_framework | disposition=reject | articles=11 | concepts=documentary,documentation,informative,neutral" },
+      "expectedExplanation": "Documentary framing keeps the intent informational rather than promotional.",
+      "expectedConfidenceRange": { "min": 0.72, "max": 1 }
+    },
+    {
+      "id": "intent-12-educational",
+      "title": "Educational framing benchmark",
+      "scriptSnippet": "The teacher explains why the idea is harmful.",
+      "storyMemory": "The scene is instructional.",
+      "sceneMemory": "The classroom tone is explanatory.",
+      "neighboringSentences": ["The next line adds a warning rather than approval."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "educational", "articleId": 11, "variants": ["educational", "teaching"], "definition": "Teaching or explanatory framing." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [11],
+        "notes": []
+      },
+      "expectedConcepts": ["educational", "informative", "neutral"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "factual",
+        "speaker": "character",
+        "target": "audience",
+        "victim": null,
+        "narrativeIntent": "informative",
+        "evidenceStrength": 0.86,
+        "contextClassification": "educational",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": ["educational"]
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [11],
+      "expectedFinding": { "disposition": "reject", "summary": "module=v3_00_intent_framework | disposition=reject | articles=11 | concepts=educational,informative,neutral" },
+      "expectedExplanation": "Educational framing keeps the line informational rather than promotional.",
+      "expectedConfidenceRange": { "min": 0.72, "max": 1 }
+    },
+    {
+      "id": "intent-13-mockery",
+      "title": "Mockery and satire benchmark",
+      "scriptSnippet": "He mocks the symbol with sarcasm.",
+      "storyMemory": "The scene is mocking and ironic.",
+      "sceneMemory": "The exchange is openly satirical.",
+      "neighboringSentences": ["The next line confirms the mockery."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "mockery", "articleId": 4, "variants": ["mockery", "ridicule"], "definition": "Ridiculing or deriding speech." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [4],
+        "notes": []
+      },
+      "expectedConcepts": ["mockery", "humor", "satire", "irony", "sarcasm"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "evaluative",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "expressive",
+        "evidenceStrength": 0.8,
+        "contextClassification": "satirical",
+        "literalVsImpliedMeaning": "implied",
+        "exceptionSignals": ["satire"]
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [4],
+      "expectedFinding": { "disposition": "reject", "summary": "module=v3_00_intent_framework | disposition=reject | articles=4 | concepts=mockery,humor,satire,irony,sarcasm" },
+      "expectedExplanation": "Mockery is expressive and satirical, not literal endorsement.",
+      "expectedConfidenceRange": { "min": 0.55, "max": 0.85 }
+    },
+    {
+      "id": "intent-14-praise-normalization",
+      "title": "Praise and normalization benchmark",
+      "scriptSnippet": "The speaker praises the act and says it's normal now.",
+      "storyMemory": "The story frames harmful conduct as admirable.",
+      "sceneMemory": "No condemnation appears in the scene.",
+      "neighboringSentences": ["A later line repeats the approval."],
+      "glossary": {
+        "title": "Intent Glossary",
+        "entries": [
+          { "term": "normalization", "articleId": 10, "variants": ["normalization", "normalising"], "definition": "Presenting something as ordinary or acceptable." }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_00_intent_framework",
+        "titleAr": "إطار النية والدافع",
+        "scope": "Cross-domain intent reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [4, 10],
+        "notes": []
+      },
+      "expectedConcepts": ["approval", "praise", "promotion", "glorification", "normalization"],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "evaluative",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "promotive",
+        "evidenceStrength": 0.68,
+        "contextClassification": "evaluative",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_00_intent_framework",
+      "expectedArticleMapping": [4, 10],
+      "expectedFinding": { "disposition": "review", "summary": "module=v3_00_intent_framework | disposition=review | articles=4,10 | concepts=approval,praise,promotion,glorification,normalization" },
+      "expectedExplanation": "Praise and normalization strengthen the evaluative reading, but the scene remains review-level without stronger corroboration.",
+      "expectedConfidenceRange": { "min": 0.62, "max": 0.74 }
+    }
+  ]
+}

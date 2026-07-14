@@ -1,0 +1,4439 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "reviewer_methodology_pattern_library",
+    "title": "Reviewer Methodology Pattern Library",
+    "description": "Reusable reviewer methodology patterns for universal reasoning.",
+    "concepts": [
+      {
+        "id": "finding_identification",
+        "title": "Finding Identification",
+        "description": "Methodology skill for finding identification across all reviewer domains."
+      },
+      {
+        "id": "evidence_collection",
+        "title": "Evidence Collection",
+        "description": "Methodology skill for evidence collection across all reviewer domains."
+      },
+      {
+        "id": "evidence_prioritization",
+        "title": "Evidence Prioritization",
+        "description": "Methodology skill for evidence prioritization across all reviewer domains."
+      },
+      {
+        "id": "context_analysis",
+        "title": "Context Analysis",
+        "description": "Methodology skill for context analysis across all reviewer domains."
+      },
+      {
+        "id": "cross_sentence_reasoning",
+        "title": "Cross Sentence Reasoning",
+        "description": "Methodology skill for cross sentence reasoning across all reviewer domains."
+      },
+      {
+        "id": "cross_scene_reasoning",
+        "title": "Cross Scene Reasoning",
+        "description": "Methodology skill for cross scene reasoning across all reviewer domains."
+      },
+      {
+        "id": "story_reasoning",
+        "title": "Story Reasoning",
+        "description": "Methodology skill for story reasoning across all reviewer domains."
+      },
+      {
+        "id": "intent_reasoning",
+        "title": "Intent Reasoning",
+        "description": "Methodology skill for intent reasoning across all reviewer domains."
+      },
+      {
+        "id": "relationship_reasoning",
+        "title": "Relationship Reasoning",
+        "description": "Methodology skill for relationship reasoning across all reviewer domains."
+      },
+      {
+        "id": "target_identification",
+        "title": "Target Identification",
+        "description": "Methodology skill for target identification across all reviewer domains."
+      },
+      {
+        "id": "speaker_identification",
+        "title": "Speaker Identification",
+        "description": "Methodology skill for speaker identification across all reviewer domains."
+      },
+      {
+        "id": "victim_identification",
+        "title": "Victim Identification",
+        "description": "Methodology skill for victim identification across all reviewer domains."
+      },
+      {
+        "id": "actor_identification",
+        "title": "Actor Identification",
+        "description": "Methodology skill for actor identification across all reviewer domains."
+      },
+      {
+        "id": "implicit_meaning",
+        "title": "Implicit Meaning",
+        "description": "Methodology skill for implicit meaning across all reviewer domains."
+      },
+      {
+        "id": "hidden_meaning",
+        "title": "Hidden Meaning",
+        "description": "Methodology skill for hidden meaning across all reviewer domains."
+      },
+      {
+        "id": "symbolic_reasoning",
+        "title": "Symbolic Reasoning",
+        "description": "Methodology skill for symbolic reasoning across all reviewer domains."
+      },
+      {
+        "id": "metaphor_reasoning",
+        "title": "Metaphor Reasoning",
+        "description": "Methodology skill for metaphor reasoning across all reviewer domains."
+      },
+      {
+        "id": "sarcasm_reasoning",
+        "title": "Sarcasm Reasoning",
+        "description": "Methodology skill for sarcasm reasoning across all reviewer domains."
+      },
+      {
+        "id": "comedy_reasoning",
+        "title": "Comedy Reasoning",
+        "description": "Methodology skill for comedy reasoning across all reviewer domains."
+      },
+      {
+        "id": "satire_reasoning",
+        "title": "Satire Reasoning",
+        "description": "Methodology skill for satire reasoning across all reviewer domains."
+      },
+      {
+        "id": "quotation_reasoning",
+        "title": "Quotation Reasoning",
+        "description": "Methodology skill for quotation reasoning across all reviewer domains."
+      },
+      {
+        "id": "historical_reasoning",
+        "title": "Historical Reasoning",
+        "description": "Methodology skill for historical reasoning across all reviewer domains."
+      },
+      {
+        "id": "documentary_reasoning",
+        "title": "Documentary Reasoning",
+        "description": "Methodology skill for documentary reasoning across all reviewer domains."
+      },
+      {
+        "id": "educational_reasoning",
+        "title": "Educational Reasoning",
+        "description": "Methodology skill for educational reasoning across all reviewer domains."
+      },
+      {
+        "id": "dream_reasoning",
+        "title": "Dream Reasoning",
+        "description": "Methodology skill for dream reasoning across all reviewer domains."
+      },
+      {
+        "id": "flashback_reasoning",
+        "title": "Flashback Reasoning",
+        "description": "Methodology skill for flashback reasoning across all reviewer domains."
+      },
+      {
+        "id": "scene_description_reasoning",
+        "title": "Scene Description Reasoning",
+        "description": "Methodology skill for scene description reasoning across all reviewer domains."
+      },
+      {
+        "id": "observation_reasoning",
+        "title": "Observation Reasoning",
+        "description": "Methodology skill for observation reasoning across all reviewer domains."
+      },
+      {
+        "id": "dialogue_reasoning",
+        "title": "Dialogue Reasoning",
+        "description": "Methodology skill for dialogue reasoning across all reviewer domains."
+      },
+      {
+        "id": "visual_reasoning",
+        "title": "Visual Reasoning",
+        "description": "Methodology skill for visual reasoning across all reviewer domains."
+      },
+      {
+        "id": "audio_reasoning",
+        "title": "Audio Reasoning",
+        "description": "Methodology skill for audio reasoning across all reviewer domains."
+      },
+      {
+        "id": "confidence_assessment",
+        "title": "Confidence Assessment",
+        "description": "Methodology skill for confidence assessment across all reviewer domains."
+      },
+      {
+        "id": "contradiction_resolution",
+        "title": "Contradiction Resolution",
+        "description": "Methodology skill for contradiction resolution across all reviewer domains."
+      },
+      {
+        "id": "multi_evidence_reasoning",
+        "title": "Multi Evidence Reasoning",
+        "description": "Methodology skill for multi evidence reasoning across all reviewer domains."
+      },
+      {
+        "id": "exception_recognition",
+        "title": "Exception Recognition",
+        "description": "Methodology skill for exception recognition across all reviewer domains."
+      },
+      {
+        "id": "false_positive_detection",
+        "title": "False Positive Detection",
+        "description": "Methodology skill for false positive detection across all reviewer domains."
+      },
+      {
+        "id": "false_negative_detection",
+        "title": "False Negative Detection",
+        "description": "Methodology skill for false negative detection across all reviewer domains."
+      },
+      {
+        "id": "reviewer_comment_generation",
+        "title": "Reviewer Comment Generation",
+        "description": "Methodology skill for reviewer comment generation across all reviewer domains."
+      },
+      {
+        "id": "finding_generation",
+        "title": "Finding Generation",
+        "description": "Methodology skill for finding generation across all reviewer domains."
+      },
+      {
+        "id": "report_priority",
+        "title": "Report Priority",
+        "description": "Methodology skill for report priority across all reviewer domains."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "methodology_pattern_finding_identification",
+      "title": "Finding Identification",
+      "description": "Methodology pattern for finding identification",
+      "primary_concept_id": "finding_identification",
+      "related_concept_ids": [
+        "evidence_collection",
+        "evidence_prioritization"
+      ],
+      "direct_expressions": [
+        "Finding Identification is stated directly",
+        "finding_identification is explicitly referenced",
+        "the reviewer names finding_identification"
+      ],
+      "indirect_expressions": [
+        "later context supports finding_identification",
+        "the next scene reframes finding_identification",
+        "the reviewer infers finding_identification from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Collect every available evidence source before discarding a reading.",
+        "Treat the strongest traceable evidence as primary, not the first clue encountered.",
+        "Downgrade confidence when evidence is weak, conflicting, or incomplete.",
+        "When one finding supports multiple canonical atoms, keep every supported atom and choose the primary atom deterministically by semantic match, severity, and clarity.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_finding_identification_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_finding_identification_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_finding_identification_glossary",
+          "from_concept_id": "finding_identification",
+          "to_concept_id": "evidence_collection",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_finding_identification_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_finding_identification_example_1",
+          "title": "Finding Identification example",
+          "text": "A reviewer applies finding identification before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses finding identification as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_evidence_collection",
+      "title": "Evidence Collection",
+      "description": "Methodology pattern for evidence collection",
+      "primary_concept_id": "evidence_collection",
+      "related_concept_ids": [
+        "evidence_prioritization",
+        "context_analysis"
+      ],
+      "direct_expressions": [
+        "Evidence Collection is stated directly",
+        "evidence_collection is explicitly referenced",
+        "the reviewer names evidence_collection"
+      ],
+      "indirect_expressions": [
+        "later context supports evidence_collection",
+        "the next scene reframes evidence_collection",
+        "the reviewer infers evidence_collection from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support",
+        "making the primary atom depend on article order instead of canonical atom evidence",
+        "treating weak context as if it were independent support",
+        "ignoring unresolved conflict between sources"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line.",
+        "A reviewer waits for a second source before escalating a borderline cue."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Prefer corroborated evidence over a lone weak cue.",
+        "Weigh conflicting sources instead of counting them blindly.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_evidence_collection_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_evidence_collection_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_evidence_collection_glossary",
+          "from_concept_id": "evidence_collection",
+          "to_concept_id": "evidence_prioritization",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_evidence_collection_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_evidence_collection_example_1",
+          "title": "Evidence Collection example",
+          "text": "A reviewer applies evidence collection before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses evidence collection as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_evidence_prioritization",
+      "title": "Evidence Prioritization",
+      "description": "Methodology pattern for evidence prioritization",
+      "primary_concept_id": "evidence_prioritization",
+      "related_concept_ids": [
+        "context_analysis",
+        "cross_sentence_reasoning"
+      ],
+      "direct_expressions": [
+        "Evidence Prioritization is stated directly",
+        "evidence_prioritization is explicitly referenced",
+        "the reviewer names evidence_prioritization"
+      ],
+      "indirect_expressions": [
+        "later context supports evidence_prioritization",
+        "the next scene reframes evidence_prioritization",
+        "the reviewer infers evidence_prioritization from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support",
+        "treating multiple weak clues as stronger than one explicit source",
+        "ignoring unresolved conflict between sources"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line.",
+        "A reviewer downgrades a finding when corroboration disappears."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Collect both supporting and contradicting sources before finalizing a claim.",
+        "Treat missing support as insufficiency, not as proof of the opposite.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_evidence_prioritization_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_evidence_prioritization_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_evidence_prioritization_glossary",
+          "from_concept_id": "evidence_prioritization",
+          "to_concept_id": "context_analysis",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_evidence_prioritization_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_evidence_prioritization_example_1",
+          "title": "Evidence Prioritization example",
+          "text": "A reviewer applies evidence prioritization before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses evidence prioritization as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_context_analysis",
+      "title": "Context Analysis",
+      "description": "Methodology pattern for context analysis",
+      "primary_concept_id": "context_analysis",
+      "related_concept_ids": [
+        "cross_sentence_reasoning",
+        "cross_scene_reasoning",
+        "historical_reasoning",
+        "educational_reasoning",
+        "documentary_reasoning",
+        "comedy_reasoning",
+        "satire_reasoning",
+        "dream_reasoning",
+        "flashback_reasoning",
+        "quotation_reasoning",
+        "scene_description_reasoning",
+        "dialogue_reasoning"
+      ],
+      "direct_expressions": [
+        "Context Analysis is stated directly",
+        "context_analysis is explicitly referenced",
+        "the reviewer names context_analysis"
+      ],
+      "indirect_expressions": [
+        "later context supports context_analysis",
+        "the next scene reframes context_analysis",
+        "the reviewer infers context_analysis from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support",
+        "calling insufficient evidence a contradiction",
+        "ignoring the strongest source because a weaker one appears earlier",
+        "treating quotation as endorsement",
+        "treating narration as the speaker's own statement",
+        "treating comedy or satire as automatic exemptions"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line.",
+        "A reviewer waits for corroboration before committing to a conclusion.",
+        "A reviewer distinguishes narration from dialogue and scene description from direct speech."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Treat historical, educational, documentary, comedy, satire, dream, flashback, quotation, narration, and scene-description cues as framing signals, not automatic verdicts.",
+        "Historical context can still carry a flaggable meaning, while educational or protective framing may change the interpretation of the same words.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_context_analysis_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_context_analysis_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_context_analysis_glossary",
+          "from_concept_id": "context_analysis",
+          "to_concept_id": "cross_sentence_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_context_analysis_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_context_analysis_example_1",
+          "title": "Context Analysis example",
+          "text": "A reviewer applies context analysis before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses context analysis as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_cross_sentence_reasoning",
+      "title": "Cross Sentence Reasoning",
+      "description": "Methodology pattern for cross sentence reasoning",
+      "primary_concept_id": "cross_sentence_reasoning",
+      "related_concept_ids": [
+        "cross_scene_reasoning",
+        "story_reasoning"
+      ],
+      "direct_expressions": [
+        "Cross Sentence Reasoning is stated directly",
+        "cross_sentence_reasoning is explicitly referenced",
+        "the reviewer names cross_sentence_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports cross_sentence_reasoning",
+        "the next scene reframes cross_sentence_reasoning",
+        "the reviewer infers cross_sentence_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_cross_sentence_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_cross_sentence_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_cross_sentence_reasoning_glossary",
+          "from_concept_id": "cross_sentence_reasoning",
+          "to_concept_id": "cross_scene_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_cross_sentence_reasoning_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_cross_sentence_reasoning_example_1",
+          "title": "Cross Sentence Reasoning example",
+          "text": "A reviewer applies cross sentence reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses cross sentence reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_cross_scene_reasoning",
+      "title": "Cross Scene Reasoning",
+      "description": "Methodology pattern for cross scene reasoning",
+      "primary_concept_id": "cross_scene_reasoning",
+      "related_concept_ids": [
+        "story_reasoning",
+        "intent_reasoning"
+      ],
+      "direct_expressions": [
+        "Cross Scene Reasoning is stated directly",
+        "cross_scene_reasoning is explicitly referenced",
+        "the reviewer names cross_scene_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports cross_scene_reasoning",
+        "the next scene reframes cross_scene_reasoning",
+        "the reviewer infers cross_scene_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_cross_scene_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_cross_scene_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_cross_scene_reasoning_glossary",
+          "from_concept_id": "cross_scene_reasoning",
+          "to_concept_id": "story_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_cross_scene_reasoning_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_cross_scene_reasoning_example_1",
+          "title": "Cross Scene Reasoning example",
+          "text": "A reviewer applies cross scene reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses cross scene reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_story_reasoning",
+      "title": "Story Reasoning",
+      "description": "Methodology pattern for story reasoning",
+      "primary_concept_id": "story_reasoning",
+      "related_concept_ids": [
+        "intent_reasoning",
+        "relationship_reasoning"
+      ],
+      "direct_expressions": [
+        "Story Reasoning is stated directly",
+        "story_reasoning is explicitly referenced",
+        "the reviewer names story_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports story_reasoning",
+        "the next scene reframes story_reasoning",
+        "the reviewer infers story_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_story_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_story_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_story_reasoning_glossary",
+          "from_concept_id": "story_reasoning",
+          "to_concept_id": "intent_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_story_reasoning_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_story_reasoning_example_1",
+          "title": "Story Reasoning example",
+          "text": "A reviewer applies story reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses story reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_intent_reasoning",
+      "title": "Intent Reasoning",
+      "description": "Methodology pattern for intent reasoning",
+      "primary_concept_id": "intent_reasoning",
+      "related_concept_ids": [
+        "relationship_reasoning",
+        "target_identification"
+      ],
+      "direct_expressions": [
+        "Intent Reasoning is stated directly",
+        "intent_reasoning is explicitly referenced",
+        "the reviewer names intent_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports intent_reasoning",
+        "the next scene reframes intent_reasoning",
+        "the reviewer infers intent_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_intent_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_intent_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_intent_reasoning_glossary",
+          "from_concept_id": "intent_reasoning",
+          "to_concept_id": "relationship_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_intent_reasoning_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_intent_reasoning_example_1",
+          "title": "Intent Reasoning example",
+          "text": "A reviewer applies intent reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses intent reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_relationship_reasoning",
+      "title": "Relationship Reasoning",
+      "description": "Methodology pattern for relationship reasoning",
+      "primary_concept_id": "relationship_reasoning",
+      "related_concept_ids": [
+        "target_identification",
+        "speaker_identification"
+      ],
+      "direct_expressions": [
+        "Relationship Reasoning is stated directly",
+        "relationship_reasoning is explicitly referenced",
+        "the reviewer names relationship_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports relationship_reasoning",
+        "the next scene reframes relationship_reasoning",
+        "the reviewer infers relationship_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_relationship_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_relationship_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_relationship_reasoning_glossary",
+          "from_concept_id": "relationship_reasoning",
+          "to_concept_id": "target_identification",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_relationship_reasoning_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_relationship_reasoning_example_1",
+          "title": "Relationship Reasoning example",
+          "text": "A reviewer applies relationship reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses relationship reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_target_identification",
+      "title": "Target Identification",
+      "description": "Methodology pattern for target identification",
+      "primary_concept_id": "target_identification",
+      "related_concept_ids": [
+        "speaker_identification",
+        "victim_identification"
+      ],
+      "direct_expressions": [
+        "Target Identification is stated directly",
+        "target_identification is explicitly referenced",
+        "the reviewer names target_identification"
+      ],
+      "indirect_expressions": [
+        "later context supports target_identification",
+        "the next scene reframes target_identification",
+        "the reviewer infers target_identification from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_target_identification_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_target_identification_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_target_identification_glossary",
+          "from_concept_id": "target_identification",
+          "to_concept_id": "speaker_identification",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_target_identification_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_target_identification_example_1",
+          "title": "Target Identification example",
+          "text": "A reviewer applies target identification before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses target identification as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_speaker_identification",
+      "title": "Speaker Identification",
+      "description": "Methodology pattern for speaker identification",
+      "primary_concept_id": "speaker_identification",
+      "related_concept_ids": [
+        "victim_identification",
+        "actor_identification"
+      ],
+      "direct_expressions": [
+        "Speaker Identification is stated directly",
+        "speaker_identification is explicitly referenced",
+        "the reviewer names speaker_identification"
+      ],
+      "indirect_expressions": [
+        "later context supports speaker_identification",
+        "the next scene reframes speaker_identification",
+        "the reviewer infers speaker_identification from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_speaker_identification_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_speaker_identification_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_speaker_identification_glossary",
+          "from_concept_id": "speaker_identification",
+          "to_concept_id": "victim_identification",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_speaker_identification_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_speaker_identification_example_1",
+          "title": "Speaker Identification example",
+          "text": "A reviewer applies speaker identification before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses speaker identification as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_victim_identification",
+      "title": "Victim Identification",
+      "description": "Methodology pattern for victim identification",
+      "primary_concept_id": "victim_identification",
+      "related_concept_ids": [
+        "actor_identification",
+        "implicit_meaning"
+      ],
+      "direct_expressions": [
+        "Victim Identification is stated directly",
+        "victim_identification is explicitly referenced",
+        "the reviewer names victim_identification"
+      ],
+      "indirect_expressions": [
+        "later context supports victim_identification",
+        "the next scene reframes victim_identification",
+        "the reviewer infers victim_identification from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_victim_identification_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_victim_identification_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_victim_identification_glossary",
+          "from_concept_id": "victim_identification",
+          "to_concept_id": "actor_identification",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_victim_identification_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_victim_identification_example_1",
+          "title": "Victim Identification example",
+          "text": "A reviewer applies victim identification before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses victim identification as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_actor_identification",
+      "title": "Actor Identification",
+      "description": "Methodology pattern for actor identification",
+      "primary_concept_id": "actor_identification",
+      "related_concept_ids": [
+        "implicit_meaning",
+        "hidden_meaning"
+      ],
+      "direct_expressions": [
+        "Actor Identification is stated directly",
+        "actor_identification is explicitly referenced",
+        "the reviewer names actor_identification"
+      ],
+      "indirect_expressions": [
+        "later context supports actor_identification",
+        "the next scene reframes actor_identification",
+        "the reviewer infers actor_identification from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_actor_identification_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_actor_identification_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_actor_identification_glossary",
+          "from_concept_id": "actor_identification",
+          "to_concept_id": "implicit_meaning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_actor_identification_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_actor_identification_example_1",
+          "title": "Actor Identification example",
+          "text": "A reviewer applies actor identification before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses actor identification as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_implicit_meaning",
+      "title": "Implicit Meaning",
+      "description": "Methodology pattern for implicit meaning",
+      "primary_concept_id": "implicit_meaning",
+      "related_concept_ids": [
+        "hidden_meaning",
+        "symbolic_reasoning"
+      ],
+      "direct_expressions": [
+        "Implicit Meaning is stated directly",
+        "implicit_meaning is explicitly referenced",
+        "the reviewer names implicit_meaning"
+      ],
+      "indirect_expressions": [
+        "later context supports implicit_meaning",
+        "the next scene reframes implicit_meaning",
+        "the reviewer infers implicit_meaning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_implicit_meaning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_implicit_meaning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_implicit_meaning_glossary",
+          "from_concept_id": "implicit_meaning",
+          "to_concept_id": "hidden_meaning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_implicit_meaning_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_implicit_meaning_example_1",
+          "title": "Implicit Meaning example",
+          "text": "A reviewer applies implicit meaning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses implicit meaning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_hidden_meaning",
+      "title": "Hidden Meaning",
+      "description": "Methodology pattern for hidden meaning",
+      "primary_concept_id": "hidden_meaning",
+      "related_concept_ids": [
+        "symbolic_reasoning",
+        "metaphor_reasoning"
+      ],
+      "direct_expressions": [
+        "Hidden Meaning is stated directly",
+        "hidden_meaning is explicitly referenced",
+        "the reviewer names hidden_meaning"
+      ],
+      "indirect_expressions": [
+        "later context supports hidden_meaning",
+        "the next scene reframes hidden_meaning",
+        "the reviewer infers hidden_meaning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_hidden_meaning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_hidden_meaning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_hidden_meaning_glossary",
+          "from_concept_id": "hidden_meaning",
+          "to_concept_id": "symbolic_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_hidden_meaning_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_hidden_meaning_example_1",
+          "title": "Hidden Meaning example",
+          "text": "A reviewer applies hidden meaning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses hidden meaning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_symbolic_reasoning",
+      "title": "Symbolic Reasoning",
+      "description": "Methodology pattern for symbolic reasoning",
+      "primary_concept_id": "symbolic_reasoning",
+      "related_concept_ids": [
+        "metaphor_reasoning",
+        "sarcasm_reasoning"
+      ],
+      "direct_expressions": [
+        "Symbolic Reasoning is stated directly",
+        "symbolic_reasoning is explicitly referenced",
+        "the reviewer names symbolic_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports symbolic_reasoning",
+        "the next scene reframes symbolic_reasoning",
+        "the reviewer infers symbolic_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_symbolic_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_symbolic_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_symbolic_reasoning_glossary",
+          "from_concept_id": "symbolic_reasoning",
+          "to_concept_id": "metaphor_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_symbolic_reasoning_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_symbolic_reasoning_example_1",
+          "title": "Symbolic Reasoning example",
+          "text": "A reviewer applies symbolic reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses symbolic reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_metaphor_reasoning",
+      "title": "Metaphor Reasoning",
+      "description": "Methodology pattern for metaphor reasoning",
+      "primary_concept_id": "metaphor_reasoning",
+      "related_concept_ids": [
+        "sarcasm_reasoning",
+        "comedy_reasoning"
+      ],
+      "direct_expressions": [
+        "Metaphor Reasoning is stated directly",
+        "metaphor_reasoning is explicitly referenced",
+        "the reviewer names metaphor_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports metaphor_reasoning",
+        "the next scene reframes metaphor_reasoning",
+        "the reviewer infers metaphor_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_metaphor_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_metaphor_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_metaphor_reasoning_glossary",
+          "from_concept_id": "metaphor_reasoning",
+          "to_concept_id": "sarcasm_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_metaphor_reasoning_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_metaphor_reasoning_example_1",
+          "title": "Metaphor Reasoning example",
+          "text": "A reviewer applies metaphor reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses metaphor reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_sarcasm_reasoning",
+      "title": "Sarcasm Reasoning",
+      "description": "Methodology pattern for sarcasm reasoning",
+      "primary_concept_id": "sarcasm_reasoning",
+      "related_concept_ids": [
+        "comedy_reasoning",
+        "satire_reasoning"
+      ],
+      "direct_expressions": [
+        "Sarcasm Reasoning is stated directly",
+        "sarcasm_reasoning is explicitly referenced",
+        "the reviewer names sarcasm_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports sarcasm_reasoning",
+        "the next scene reframes sarcasm_reasoning",
+        "the reviewer infers sarcasm_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_sarcasm_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_sarcasm_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_sarcasm_reasoning_glossary",
+          "from_concept_id": "sarcasm_reasoning",
+          "to_concept_id": "comedy_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_sarcasm_reasoning_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_sarcasm_reasoning_example_1",
+          "title": "Sarcasm Reasoning example",
+          "text": "A reviewer applies sarcasm reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses sarcasm reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_comedy_reasoning",
+      "title": "Comedy Reasoning",
+      "description": "Methodology pattern for comedy reasoning",
+      "primary_concept_id": "comedy_reasoning",
+      "related_concept_ids": [
+        "satire_reasoning",
+        "quotation_reasoning"
+      ],
+      "direct_expressions": [
+        "Comedy Reasoning is stated directly",
+        "comedy_reasoning is explicitly referenced",
+        "the reviewer names comedy_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports comedy_reasoning",
+        "the next scene reframes comedy_reasoning",
+        "the reviewer infers comedy_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_comedy_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_comedy_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_comedy_reasoning_glossary",
+          "from_concept_id": "comedy_reasoning",
+          "to_concept_id": "satire_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_comedy_reasoning_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_comedy_reasoning_example_1",
+          "title": "Comedy Reasoning example",
+          "text": "A reviewer applies comedy reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses comedy reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_satire_reasoning",
+      "title": "Satire Reasoning",
+      "description": "Methodology pattern for satire reasoning",
+      "primary_concept_id": "satire_reasoning",
+      "related_concept_ids": [
+        "quotation_reasoning",
+        "historical_reasoning"
+      ],
+      "direct_expressions": [
+        "Satire Reasoning is stated directly",
+        "satire_reasoning is explicitly referenced",
+        "the reviewer names satire_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports satire_reasoning",
+        "the next scene reframes satire_reasoning",
+        "the reviewer infers satire_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_satire_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_satire_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_satire_reasoning_glossary",
+          "from_concept_id": "satire_reasoning",
+          "to_concept_id": "quotation_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_satire_reasoning_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_satire_reasoning_example_1",
+          "title": "Satire Reasoning example",
+          "text": "A reviewer applies satire reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses satire reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_quotation_reasoning",
+      "title": "Quotation Reasoning",
+      "description": "Methodology pattern for quotation reasoning",
+      "primary_concept_id": "quotation_reasoning",
+      "related_concept_ids": [
+        "historical_reasoning",
+        "documentary_reasoning"
+      ],
+      "direct_expressions": [
+        "Quotation Reasoning is stated directly",
+        "quotation_reasoning is explicitly referenced",
+        "the reviewer names quotation_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports quotation_reasoning",
+        "the next scene reframes quotation_reasoning",
+        "the reviewer infers quotation_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_quotation_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_quotation_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_quotation_reasoning_glossary",
+          "from_concept_id": "quotation_reasoning",
+          "to_concept_id": "historical_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_quotation_reasoning_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_quotation_reasoning_example_1",
+          "title": "Quotation Reasoning example",
+          "text": "A reviewer applies quotation reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses quotation reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_historical_reasoning",
+      "title": "Historical Reasoning",
+      "description": "Methodology pattern for historical reasoning",
+      "primary_concept_id": "historical_reasoning",
+      "related_concept_ids": [
+        "documentary_reasoning",
+        "educational_reasoning"
+      ],
+      "direct_expressions": [
+        "Historical Reasoning is stated directly",
+        "historical_reasoning is explicitly referenced",
+        "the reviewer names historical_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports historical_reasoning",
+        "the next scene reframes historical_reasoning",
+        "the reviewer infers historical_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_historical_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_historical_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_historical_reasoning_glossary",
+          "from_concept_id": "historical_reasoning",
+          "to_concept_id": "documentary_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_historical_reasoning_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_historical_reasoning_example_1",
+          "title": "Historical Reasoning example",
+          "text": "A reviewer applies historical reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses historical reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_documentary_reasoning",
+      "title": "Documentary Reasoning",
+      "description": "Methodology pattern for documentary reasoning",
+      "primary_concept_id": "documentary_reasoning",
+      "related_concept_ids": [
+        "educational_reasoning",
+        "dream_reasoning"
+      ],
+      "direct_expressions": [
+        "Documentary Reasoning is stated directly",
+        "documentary_reasoning is explicitly referenced",
+        "the reviewer names documentary_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports documentary_reasoning",
+        "the next scene reframes documentary_reasoning",
+        "the reviewer infers documentary_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_documentary_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_documentary_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_documentary_reasoning_glossary",
+          "from_concept_id": "documentary_reasoning",
+          "to_concept_id": "educational_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_documentary_reasoning_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_documentary_reasoning_example_1",
+          "title": "Documentary Reasoning example",
+          "text": "A reviewer applies documentary reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses documentary reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_educational_reasoning",
+      "title": "Educational Reasoning",
+      "description": "Methodology pattern for educational reasoning",
+      "primary_concept_id": "educational_reasoning",
+      "related_concept_ids": [
+        "dream_reasoning",
+        "flashback_reasoning"
+      ],
+      "direct_expressions": [
+        "Educational Reasoning is stated directly",
+        "educational_reasoning is explicitly referenced",
+        "the reviewer names educational_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports educational_reasoning",
+        "the next scene reframes educational_reasoning",
+        "the reviewer infers educational_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_educational_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_educational_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_educational_reasoning_glossary",
+          "from_concept_id": "educational_reasoning",
+          "to_concept_id": "dream_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_educational_reasoning_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_educational_reasoning_example_1",
+          "title": "Educational Reasoning example",
+          "text": "A reviewer applies educational reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses educational reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_dream_reasoning",
+      "title": "Dream Reasoning",
+      "description": "Methodology pattern for dream reasoning",
+      "primary_concept_id": "dream_reasoning",
+      "related_concept_ids": [
+        "flashback_reasoning",
+        "scene_description_reasoning"
+      ],
+      "direct_expressions": [
+        "Dream Reasoning is stated directly",
+        "dream_reasoning is explicitly referenced",
+        "the reviewer names dream_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports dream_reasoning",
+        "the next scene reframes dream_reasoning",
+        "the reviewer infers dream_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_dream_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_dream_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_dream_reasoning_glossary",
+          "from_concept_id": "dream_reasoning",
+          "to_concept_id": "flashback_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_dream_reasoning_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_dream_reasoning_example_1",
+          "title": "Dream Reasoning example",
+          "text": "A reviewer applies dream reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses dream reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_flashback_reasoning",
+      "title": "Flashback Reasoning",
+      "description": "Methodology pattern for flashback reasoning",
+      "primary_concept_id": "flashback_reasoning",
+      "related_concept_ids": [
+        "scene_description_reasoning",
+        "observation_reasoning"
+      ],
+      "direct_expressions": [
+        "Flashback Reasoning is stated directly",
+        "flashback_reasoning is explicitly referenced",
+        "the reviewer names flashback_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports flashback_reasoning",
+        "the next scene reframes flashback_reasoning",
+        "the reviewer infers flashback_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_flashback_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_flashback_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_flashback_reasoning_glossary",
+          "from_concept_id": "flashback_reasoning",
+          "to_concept_id": "scene_description_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_flashback_reasoning_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_flashback_reasoning_example_1",
+          "title": "Flashback Reasoning example",
+          "text": "A reviewer applies flashback reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses flashback reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_scene_description_reasoning",
+      "title": "Scene Description Reasoning",
+      "description": "Methodology pattern for scene description reasoning",
+      "primary_concept_id": "scene_description_reasoning",
+      "related_concept_ids": [
+        "observation_reasoning",
+        "dialogue_reasoning"
+      ],
+      "direct_expressions": [
+        "Scene Description Reasoning is stated directly",
+        "scene_description_reasoning is explicitly referenced",
+        "the reviewer names scene_description_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports scene_description_reasoning",
+        "the next scene reframes scene_description_reasoning",
+        "the reviewer infers scene_description_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_scene_description_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_scene_description_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_scene_description_reasoning_glossary",
+          "from_concept_id": "scene_description_reasoning",
+          "to_concept_id": "observation_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_scene_description_reasoning_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_scene_description_reasoning_example_1",
+          "title": "Scene Description Reasoning example",
+          "text": "A reviewer applies scene description reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses scene description reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_observation_reasoning",
+      "title": "Observation Reasoning",
+      "description": "Methodology pattern for observation reasoning",
+      "primary_concept_id": "observation_reasoning",
+      "related_concept_ids": [
+        "dialogue_reasoning",
+        "visual_reasoning"
+      ],
+      "direct_expressions": [
+        "Observation Reasoning is stated directly",
+        "observation_reasoning is explicitly referenced",
+        "the reviewer names observation_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports observation_reasoning",
+        "the next scene reframes observation_reasoning",
+        "the reviewer infers observation_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_observation_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_observation_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_observation_reasoning_glossary",
+          "from_concept_id": "observation_reasoning",
+          "to_concept_id": "dialogue_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_observation_reasoning_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_observation_reasoning_example_1",
+          "title": "Observation Reasoning example",
+          "text": "A reviewer applies observation reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses observation reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_dialogue_reasoning",
+      "title": "Dialogue Reasoning",
+      "description": "Methodology pattern for dialogue reasoning",
+      "primary_concept_id": "dialogue_reasoning",
+      "related_concept_ids": [
+        "visual_reasoning",
+        "audio_reasoning"
+      ],
+      "direct_expressions": [
+        "Dialogue Reasoning is stated directly",
+        "dialogue_reasoning is explicitly referenced",
+        "the reviewer names dialogue_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports dialogue_reasoning",
+        "the next scene reframes dialogue_reasoning",
+        "the reviewer infers dialogue_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_dialogue_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_dialogue_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_dialogue_reasoning_glossary",
+          "from_concept_id": "dialogue_reasoning",
+          "to_concept_id": "visual_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_dialogue_reasoning_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_dialogue_reasoning_example_1",
+          "title": "Dialogue Reasoning example",
+          "text": "A reviewer applies dialogue reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses dialogue reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_visual_reasoning",
+      "title": "Visual Reasoning",
+      "description": "Methodology pattern for visual reasoning",
+      "primary_concept_id": "visual_reasoning",
+      "related_concept_ids": [
+        "audio_reasoning",
+        "confidence_assessment"
+      ],
+      "direct_expressions": [
+        "Visual Reasoning is stated directly",
+        "visual_reasoning is explicitly referenced",
+        "the reviewer names visual_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports visual_reasoning",
+        "the next scene reframes visual_reasoning",
+        "the reviewer infers visual_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_visual_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_visual_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_visual_reasoning_glossary",
+          "from_concept_id": "visual_reasoning",
+          "to_concept_id": "audio_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_visual_reasoning_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_visual_reasoning_example_1",
+          "title": "Visual Reasoning example",
+          "text": "A reviewer applies visual reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses visual reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_audio_reasoning",
+      "title": "Audio Reasoning",
+      "description": "Methodology pattern for audio reasoning",
+      "primary_concept_id": "audio_reasoning",
+      "related_concept_ids": [
+        "confidence_assessment",
+        "contradiction_resolution"
+      ],
+      "direct_expressions": [
+        "Audio Reasoning is stated directly",
+        "audio_reasoning is explicitly referenced",
+        "the reviewer names audio_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports audio_reasoning",
+        "the next scene reframes audio_reasoning",
+        "the reviewer infers audio_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_audio_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_audio_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_audio_reasoning_glossary",
+          "from_concept_id": "audio_reasoning",
+          "to_concept_id": "confidence_assessment",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_audio_reasoning_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_audio_reasoning_example_1",
+          "title": "Audio Reasoning example",
+          "text": "A reviewer applies audio reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses audio reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_confidence_assessment",
+      "title": "Confidence Assessment",
+      "description": "Methodology pattern for confidence assessment",
+      "primary_concept_id": "confidence_assessment",
+      "related_concept_ids": [
+        "contradiction_resolution",
+        "multi_evidence_reasoning"
+      ],
+      "direct_expressions": [
+        "Confidence Assessment is stated directly",
+        "confidence_assessment is explicitly referenced",
+        "the reviewer names confidence_assessment"
+      ],
+      "indirect_expressions": [
+        "later context supports confidence_assessment",
+        "the next scene reframes confidence_assessment",
+        "the reviewer infers confidence_assessment from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_confidence_assessment_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_confidence_assessment_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_confidence_assessment_glossary",
+          "from_concept_id": "confidence_assessment",
+          "to_concept_id": "contradiction_resolution",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_confidence_assessment_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_confidence_assessment_example_1",
+          "title": "Confidence Assessment example",
+          "text": "A reviewer applies confidence assessment before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses confidence assessment as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_contradiction_resolution",
+      "title": "Contradiction Resolution",
+      "description": "Methodology pattern for contradiction resolution",
+      "primary_concept_id": "contradiction_resolution",
+      "related_concept_ids": [
+        "multi_evidence_reasoning",
+        "exception_recognition"
+      ],
+      "direct_expressions": [
+        "Contradiction Resolution is stated directly",
+        "contradiction_resolution is explicitly referenced",
+        "the reviewer names contradiction_resolution"
+      ],
+      "indirect_expressions": [
+        "later context supports contradiction_resolution",
+        "the next scene reframes contradiction_resolution",
+        "the reviewer infers contradiction_resolution from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_contradiction_resolution_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_contradiction_resolution_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_contradiction_resolution_glossary",
+          "from_concept_id": "contradiction_resolution",
+          "to_concept_id": "multi_evidence_reasoning",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_contradiction_resolution_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_contradiction_resolution_example_1",
+          "title": "Contradiction Resolution example",
+          "text": "A reviewer applies contradiction resolution before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses contradiction resolution as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_multi_evidence_reasoning",
+      "title": "Multi Evidence Reasoning",
+      "description": "Methodology pattern for multi evidence reasoning",
+      "primary_concept_id": "multi_evidence_reasoning",
+      "related_concept_ids": [
+        "exception_recognition",
+        "false_positive_detection"
+      ],
+      "direct_expressions": [
+        "Multi Evidence Reasoning is stated directly",
+        "multi_evidence_reasoning is explicitly referenced",
+        "the reviewer names multi_evidence_reasoning"
+      ],
+      "indirect_expressions": [
+        "later context supports multi_evidence_reasoning",
+        "the next scene reframes multi_evidence_reasoning",
+        "the reviewer infers multi_evidence_reasoning from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_multi_evidence_reasoning_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_multi_evidence_reasoning_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_multi_evidence_reasoning_glossary",
+          "from_concept_id": "multi_evidence_reasoning",
+          "to_concept_id": "exception_recognition",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_multi_evidence_reasoning_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_multi_evidence_reasoning_example_1",
+          "title": "Multi Evidence Reasoning example",
+          "text": "A reviewer applies multi evidence reasoning before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses multi evidence reasoning as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_exception_recognition",
+      "title": "Exception Recognition",
+      "description": "Methodology pattern for exception recognition",
+      "primary_concept_id": "exception_recognition",
+      "related_concept_ids": [
+        "false_positive_detection",
+        "false_negative_detection"
+      ],
+      "direct_expressions": [
+        "Exception Recognition is stated directly",
+        "exception_recognition is explicitly referenced",
+        "the reviewer names exception_recognition"
+      ],
+      "indirect_expressions": [
+        "later context supports exception_recognition",
+        "the next scene reframes exception_recognition",
+        "the reviewer infers exception_recognition from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_exception_recognition_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_exception_recognition_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_exception_recognition_glossary",
+          "from_concept_id": "exception_recognition",
+          "to_concept_id": "false_positive_detection",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_exception_recognition_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_exception_recognition_example_1",
+          "title": "Exception Recognition example",
+          "text": "A reviewer applies exception recognition before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses exception recognition as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_false_positive_detection",
+      "title": "False Positive Detection",
+      "description": "Methodology pattern for false positive detection",
+      "primary_concept_id": "false_positive_detection",
+      "related_concept_ids": [
+        "false_negative_detection",
+        "reviewer_comment_generation"
+      ],
+      "direct_expressions": [
+        "False Positive Detection is stated directly",
+        "false_positive_detection is explicitly referenced",
+        "the reviewer names false_positive_detection"
+      ],
+      "indirect_expressions": [
+        "later context supports false_positive_detection",
+        "the next scene reframes false_positive_detection",
+        "the reviewer infers false_positive_detection from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_false_positive_detection_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_false_positive_detection_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_false_positive_detection_glossary",
+          "from_concept_id": "false_positive_detection",
+          "to_concept_id": "false_negative_detection",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_false_positive_detection_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_false_positive_detection_example_1",
+          "title": "False Positive Detection example",
+          "text": "A reviewer applies false positive detection before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses false positive detection as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_false_negative_detection",
+      "title": "False Negative Detection",
+      "description": "Methodology pattern for false negative detection",
+      "primary_concept_id": "false_negative_detection",
+      "related_concept_ids": [
+        "reviewer_comment_generation",
+        "finding_generation"
+      ],
+      "direct_expressions": [
+        "False Negative Detection is stated directly",
+        "false_negative_detection is explicitly referenced",
+        "the reviewer names false_negative_detection"
+      ],
+      "indirect_expressions": [
+        "later context supports false_negative_detection",
+        "the next scene reframes false_negative_detection",
+        "the reviewer infers false_negative_detection from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_false_negative_detection_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_false_negative_detection_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_false_negative_detection_glossary",
+          "from_concept_id": "false_negative_detection",
+          "to_concept_id": "reviewer_comment_generation",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_false_negative_detection_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_false_negative_detection_example_1",
+          "title": "False Negative Detection example",
+          "text": "A reviewer applies false negative detection before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses false negative detection as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_reviewer_comment_generation",
+      "title": "Reviewer Comment Generation",
+      "description": "Methodology pattern for reviewer comment generation",
+      "primary_concept_id": "reviewer_comment_generation",
+      "related_concept_ids": [
+        "finding_generation",
+        "report_priority"
+      ],
+      "direct_expressions": [
+        "Reviewer Comment Generation is stated directly",
+        "reviewer_comment_generation is explicitly referenced",
+        "the reviewer names reviewer_comment_generation"
+      ],
+      "indirect_expressions": [
+        "later context supports reviewer_comment_generation",
+        "the next scene reframes reviewer_comment_generation",
+        "the reviewer infers reviewer_comment_generation from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_reviewer_comment_generation_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_reviewer_comment_generation_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_reviewer_comment_generation_glossary",
+          "from_concept_id": "reviewer_comment_generation",
+          "to_concept_id": "finding_generation",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_reviewer_comment_generation_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_reviewer_comment_generation_example_1",
+          "title": "Reviewer Comment Generation example",
+          "text": "A reviewer applies reviewer comment generation before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses reviewer comment generation as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_finding_generation",
+      "title": "Finding Generation",
+      "description": "Methodology pattern for finding generation",
+      "primary_concept_id": "finding_generation",
+      "related_concept_ids": [
+        "report_priority"
+      ],
+      "direct_expressions": [
+        "Finding Generation is stated directly",
+        "finding_generation is explicitly referenced",
+        "the reviewer names finding_generation"
+      ],
+      "indirect_expressions": [
+        "later context supports finding_generation",
+        "the next scene reframes finding_generation",
+        "the reviewer infers finding_generation from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_finding_generation_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_finding_generation_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "methodology_pattern_finding_generation_glossary",
+          "from_concept_id": "finding_generation",
+          "to_concept_id": "report_priority",
+          "relation": "supports",
+          "note": "Methodology skills reinforce each other in sequence."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_finding_generation_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_finding_generation_example_1",
+          "title": "Finding Generation example",
+          "text": "A reviewer applies finding generation before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses finding generation as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    },
+    {
+      "id": "methodology_pattern_report_priority",
+      "title": "Report Priority",
+      "description": "Methodology pattern for report priority",
+      "primary_concept_id": "report_priority",
+      "related_concept_ids": [],
+      "direct_expressions": [
+        "Report Priority is stated directly",
+        "report_priority is explicitly referenced",
+        "the reviewer names report_priority"
+      ],
+      "indirect_expressions": [
+        "later context supports report_priority",
+        "the next scene reframes report_priority",
+        "the reviewer infers report_priority from context"
+      ],
+      "semantic_intent": [
+        "review flow",
+        "methodology",
+        "reasoning discipline",
+        "confidence calibration"
+      ],
+      "supporting_evidence": [
+        "literal evidence",
+        "neighboring sentences",
+        "story memory",
+        "scene memory"
+      ],
+      "contradictory_evidence": [
+        "contradictory context",
+        "exception signal",
+        "later reversal"
+      ],
+      "false_positives": [
+        "treating a comment as a finding",
+        "inflating confidence without support"
+      ],
+      "counter_examples": [
+        "A reviewer stays at observation when evidence is weak.",
+        "A reviewer requests context rather than overreading the line."
+      ],
+      "cross_sentence_indicators": [
+        "later",
+        "afterwards",
+        "next line",
+        "follow-up"
+      ],
+      "scene_indicators": [
+        "scene change",
+        "later scene",
+        "flashback",
+        "cross-scene memory"
+      ],
+      "reviewer_guidance": [
+        "Read the full scene before deciding.",
+        "Separate observation, comment, possible finding, and confirmed finding.",
+        "Escalate only when confidence supports it."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "methodology_pattern_report_priority_modifier_1",
+          "title": "Corroborated",
+          "description": "More than one clue agrees.",
+          "confidence": 90
+        },
+        {
+          "id": "methodology_pattern_report_priority_modifier_2",
+          "title": "Ambiguous",
+          "description": "Only one clue or a contradiction remains.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [],
+      "gcam_mappings": [
+        {
+          "id": "methodology_pattern_report_priority_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "methodology reasoning",
+          "note": "Shared methodology interpretation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "methodology_pattern_report_priority_example_1",
+          "title": "Report Priority example",
+          "text": "A reviewer applies report priority before making a final decision.",
+          "expected_outcome": "Reviewer correctly uses report priority as a methodology step.",
+          "note": "Methodology must precede domain classification."
+        }
+      ]
+    }
+  ]
+}

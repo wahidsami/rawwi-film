@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "id": "intents_contexts",
+  "title": "Intent Contexts",
+  "description": "Contexts that affect interpretation.",
+  "entries": [
+    { "id": "context_news", "title": "News", "description": "News reporting context." },
+    { "id": "context_court", "title": "Court", "description": "Court testimony or legal proceeding." },
+    { "id": "context_police", "title": "Police", "description": "Police investigation context." },
+    { "id": "context_medical", "title": "Medical", "description": "Medical explanation or discussion." },
+    { "id": "context_documentary", "title": "Documentary", "description": "Documentary framing." },
+    { "id": "context_educational", "title": "Educational", "description": "Teaching or instructional context." },
+    { "id": "context_fiction", "title": "Fiction", "description": "Fictional or staged context." },
+    { "id": "context_dream", "title": "Dream", "description": "Dreamlike or hallucinated context." }
+  ]
+}

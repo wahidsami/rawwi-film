@@ -1,0 +1,370 @@
+{
+  "schema_version": 1,
+  "version": "1.0.0",
+  "id": "gcam_mapper_mapping_rules",
+  "title": "GCAM Mapping Rules",
+  "description": "Deterministic matching rules used to map reviewer judgment to GCAM reporting artifacts.",
+  "entries": [
+    {
+      "id": "rule.security.overthrow",
+      "version": "1.0.0",
+      "title": "Security overthrow rule",
+      "description": "Match direct or indirect security overthrow signals.",
+      "priority": 100,
+      "match": {
+        "concepts": ["security", "state_security", "national_security", "terrorism", "extremism", "overthrow", "coup"],
+        "domains": ["security", "politics"],
+        "targets": ["state", "government", "military", "public_official"],
+        "actions": ["incitement", "threat", "glorification", "instruction"],
+        "intents": ["promotion", "encouragement", "glorification", "instruction"],
+        "contexts": ["dialogue", "narration", "news", "historical", "documentary", "educational"]
+      },
+      "articleMappingId": "article.security.overthrow",
+      "atomMappingId": "atom.security.overthrow.explicit",
+      "relatedRuleIds": ["rule.security.public_order"],
+      "debtNote": "If the source is not official GCAM material, record mapping debt rather than guessing."
+    },
+    {
+      "id": "rule.security.public_order",
+      "version": "1.0.0",
+      "title": "Security public order rule",
+      "description": "Match public disorder and riot escalation.",
+      "priority": 90,
+      "match": {
+        "concepts": ["public_order", "riot", "civil_unrest", "mass_panic"],
+        "domains": ["security", "society"],
+        "targets": ["public", "state"],
+        "actions": ["incitement", "escalation", "normalization"],
+        "intents": ["promotion", "encouragement", "instruction"],
+        "contexts": ["dialogue", "narration", "news", "historical"]
+      },
+      "articleMappingId": "article.security.public_order",
+      "atomMappingId": "atom.society.dignity",
+      "relatedRuleIds": [],
+      "debtNote": "Use the public order article only when a more specific security rule is not a better fit."
+    },
+    {
+      "id": "rule.religion.mockery",
+      "version": "1.0.0",
+      "title": "Religion mockery rule",
+      "description": "Match explicit or indirect religious insult and mockery.",
+      "priority": 95,
+      "match": {
+        "concepts": ["religion", "prophet", "holy_book", "sanctity", "religious_symbol", "religious_unity", "religious_ritual"],
+        "domains": ["religion"],
+        "targets": ["religion", "religious_group", "prophet", "holy_book", "mosque"],
+        "actions": ["insult", "mockery", "distortion", "desecration", "hate_speech"],
+        "intents": ["mock", "attack", "satire"],
+        "contexts": ["dialogue", "narration", "fiction", "documentary", "historical", "educational"]
+      },
+      "articleMappingId": "article.religion.hate",
+      "atomMappingId": "atom.religion.mockery.direct",
+      "relatedRuleIds": [],
+      "debtNote": "Record debt if the available official material does not support a confident religious mapping."
+    },
+    {
+      "id": "rule.children.abuse",
+      "version": "1.0.0",
+      "title": "Children abuse rule",
+      "description": "Match child abuse, exploitation, grooming, neglect, and endangerment.",
+      "priority": 96,
+      "match": {
+        "concepts": ["child", "infant", "teenager", "minor", "disabled_child", "vulnerable_person", "grooming", "exploitation"],
+        "domains": ["children"],
+        "targets": ["child", "minor", "vulnerable_person", "guardian"],
+        "actions": ["abuse", "bullying", "neglect", "endangerment", "exploitation", "grooming"],
+        "intents": ["abuse", "encouragement", "protection", "rescue"],
+        "contexts": ["dialogue", "narration", "scene_description", "court", "police_investigation", "news", "documentary"]
+      },
+      "articleMappingId": "article.children.protection",
+      "atomMappingId": "atom.children.abuse",
+      "relatedRuleIds": ["rule.children.bullying"],
+      "debtNote": "Use the child protection article when the harmful meaning is clearly child-directed."
+    },
+    {
+      "id": "rule.children.bullying",
+      "version": "1.0.0",
+      "title": "Children bullying rule",
+      "description": "Match humiliation, bullying, and fear induction against children.",
+      "priority": 88,
+      "match": {
+        "concepts": ["bullying", "humiliation", "fear_induction", "isolation"],
+        "domains": ["children", "society"],
+        "targets": ["child", "minor"],
+        "actions": ["bullying", "humiliation", "threatening", "isolation"],
+        "intents": ["abuse", "encouragement"],
+        "contexts": ["dialogue", "scene_description", "fiction", "dream", "flashback"]
+      },
+      "articleMappingId": "article.children.bullying",
+      "atomMappingId": "atom.children.bullying",
+      "relatedRuleIds": [],
+      "debtNote": "Use the bullying atom when the central harm is humiliation rather than physical abuse."
+    },
+    {
+      "id": "rule.society.dignity",
+      "version": "1.0.0",
+      "title": "Society dignity rule",
+      "description": "Match insult, mockery, defamation, humiliation, and social exclusion.",
+      "priority": 92,
+      "match": {
+        "concepts": ["insult", "mockery", "defamation", "humiliation", "hate", "social_exclusion", "cyber_bullying"],
+        "domains": ["society"],
+        "targets": ["person", "family", "community", "public_official", "child", "woman"],
+        "actions": ["insult", "mockery", "defamation", "humiliation"],
+        "intents": ["mock", "attack", "promotion", "encouragement"],
+        "contexts": ["dialogue", "narration", "news", "historical", "documentary", "educational", "fiction"]
+      },
+      "articleMappingId": "article.society.dignity",
+      "atomMappingId": "atom.security.public_order.riot",
+      "relatedRuleIds": ["rule.society.defamation"],
+      "debtNote": "If the insult is specifically legal defamation or privacy harm, choose the refined rule instead."
+    },
+    {
+      "id": "rule.society.defamation",
+      "version": "1.0.0",
+      "title": "Society defamation rule",
+      "description": "Match defamation, rumor spreading, false accusation, and privacy attack.",
+      "priority": 94,
+      "match": {
+        "concepts": ["defamation", "privacy", "rumor_spreading", "false_accusation", "public_panic"],
+        "domains": ["society", "history", "politics"],
+        "targets": ["person", "family", "public_official", "community"],
+        "actions": ["defamation", "rumor_spreading", "false_accusation"],
+        "intents": ["attack", "promotion", "encouragement"],
+        "contexts": ["dialogue", "news", "documentary", "court", "historical"]
+      },
+      "articleMappingId": "article.society.defamation",
+      "atomMappingId": "atom.society.defamation",
+      "relatedRuleIds": [],
+      "debtNote": "Prefer this rule when the issue is reputational harm or false accusation."
+    },
+    {
+      "id": "rule.violence.harm",
+      "version": "1.0.0",
+      "title": "Violence harm rule",
+      "description": "Match violence events, glorification, encouragement, instruction, reward, and failed attempts.",
+      "priority": 98,
+      "match": {
+        "concepts": ["violence_event", "violence_threat", "violence_attempt", "violence_glorification", "violence_encouragement", "violence_instruction", "violence_reward"],
+        "domains": ["violence"],
+        "targets": ["person", "child", "woman", "disabled_person", "public", "state"],
+        "actions": ["threat", "attempt", "glorification", "encouragement", "instruction", "reward"],
+        "intents": ["promotion", "encouragement", "glorification", "instruction"],
+        "contexts": ["dialogue", "narration", "scene_description", "game", "fantasy", "comedy", "documentary", "historical"]
+      },
+      "articleMappingId": "article.violence.harm",
+      "atomMappingId": "atom.violence.glorification",
+      "relatedRuleIds": ["rule.violence.threat"],
+      "debtNote": "Use the violence article when the reviewer judgment is about harm or its glorification."
+    },
+    {
+      "id": "rule.violence.threat",
+      "version": "1.0.0",
+      "title": "Violence threat rule",
+      "description": "Match direct or indirect violent threats and intimidation.",
+      "priority": 99,
+      "match": {
+        "concepts": ["violence_threat", "indirect_threat", "fear_induction"],
+        "domains": ["violence", "security"],
+        "targets": ["person", "child", "woman", "public", "state"],
+        "actions": ["threat", "intimidation"],
+        "intents": ["threat", "coercion"],
+        "contexts": ["dialogue", "narration", "scene_description"]
+      },
+      "articleMappingId": "article.violence.threat",
+      "atomMappingId": "atom.violence.threat",
+      "relatedRuleIds": [],
+      "debtNote": "Threats should map here before generic violence when the language is coercive."
+    },
+    {
+      "id": "rule.sexual.decency",
+      "version": "1.0.0",
+      "title": "Sexual decency rule",
+      "description": "Match overt sexual descriptions and public decency concerns.",
+      "priority": 94,
+      "match": {
+        "concepts": ["sexual_reference", "sexual_description", "sexual_scene", "sexual_clothing", "sexual_camera_focus", "sexual_body_focus", "sexual_normalization"],
+        "domains": ["sexuality"],
+        "targets": ["person", "body", "clothing", "scene", "camera"],
+        "actions": ["description", "focus", "normalization", "display"],
+        "intents": ["promotion", "normalization", "encouragement", "comedy"],
+        "contexts": ["dialogue", "scene_description", "film_direction", "fiction", "dream", "flashback", "documentary", "medical", "educational", "historical"]
+      },
+      "articleMappingId": "article.sexual.decency",
+      "atomMappingId": "atom.sexual.decency",
+      "relatedRuleIds": ["rule.sexual.modesty"],
+      "debtNote": "Use when the concern is the visual or narrative appearance of sexual content."
+    },
+    {
+      "id": "rule.sexual.modesty",
+      "version": "1.0.0",
+      "title": "Sexual modesty rule",
+      "description": "Match clothing and modesty related sexual concerns.",
+      "priority": 96,
+      "match": {
+        "concepts": ["sexual_clothing", "sexual_symbolism", "sexual_normalization", "sexual_fetish"],
+        "domains": ["sexuality"],
+        "targets": ["clothing", "appearance", "body"],
+        "actions": ["display", "normalization", "focus"],
+        "intents": ["promotion", "normalization", "glorification"],
+        "contexts": ["scene_description", "dialogue", "fiction", "documentary", "historical"]
+      },
+      "articleMappingId": "article.sexual.modesty",
+      "atomMappingId": "atom.sexual.modesty",
+      "relatedRuleIds": [],
+      "debtNote": "Use when clothing or modest presentation is the dominant signal."
+    },
+    {
+      "id": "rule.drugs.use",
+      "version": "1.0.0",
+      "title": "Drugs use rule",
+      "description": "Match substance use, distribution, promotion, and normalization.",
+      "priority": 95,
+      "match": {
+        "concepts": ["drug_reference", "drug_consumption", "drug_possession", "drug_distribution", "drug_sale", "drug_manufacturing", "drug_transportation", "drug_dependency", "drug_addiction"],
+        "domains": ["drugs"],
+        "targets": ["drugs", "alcohol", "smoking", "person"],
+        "actions": ["use", "promotion", "normalization", "instruction"],
+        "intents": ["promotion", "encouragement", "instruction", "glorification"],
+        "contexts": ["dialogue", "narration", "news", "documentary", "historical", "fiction"]
+      },
+      "articleMappingId": "article.drugs.use",
+      "atomMappingId": "atom.drugs.use",
+      "relatedRuleIds": ["rule.drugs.medical"],
+      "debtNote": "Use the substance article when use or promotion is the main signal."
+    },
+    {
+      "id": "rule.drugs.medical",
+      "version": "1.0.0",
+      "title": "Drugs medical rule",
+      "description": "Match medicinal, prescription, and rehabilitative drug use.",
+      "priority": 89,
+      "match": {
+        "concepts": ["medical_drug_use", "prescription_drug_use", "drug_rehabilitation"],
+        "domains": ["drugs"],
+        "targets": ["drug", "medicine", "patient"],
+        "actions": ["use", "treatment", "rehabilitation"],
+        "intents": ["medical", "educational", "neutral"],
+        "contexts": ["medical", "educational", "documentary", "news", "court"]
+      },
+      "articleMappingId": "article.drugs.medical",
+      "atomMappingId": "atom.drugs.medical",
+      "relatedRuleIds": [],
+      "debtNote": "Use this rule when the drug signal is clinically framed and not celebratory."
+    },
+    {
+      "id": "rule.crime.order",
+      "version": "1.0.0",
+      "title": "Crime public order rule",
+      "description": "Match generic criminal conduct that affects public order or safety.",
+      "priority": 90,
+      "match": {
+        "concepts": ["crime_reference", "crime_attempt", "crime_conspiracy", "crime_planning", "crime_execution", "crime_coverup", "crime_escape", "crime_evasion", "crime_theft", "crime_robbery", "crime_burglary", "crime_assault", "crime_property_damage", "crime_vandalism", "crime_arson", "crime_smuggling", "crime_organized_crime", "crime_cybercrime", "crime_identity_theft"],
+        "domains": ["crime", "security"],
+        "targets": ["public", "state", "person", "property", "community"],
+        "actions": ["planning", "execution", "coverup", "escape", "evasion", "theft", "robbery", "burglary", "assault", "damage", "vandalism", "arson", "smuggling"],
+        "intents": ["promotion", "encouragement", "instruction", "glorification"],
+        "contexts": ["dialogue", "narration", "police_investigation", "court", "news", "historical", "documentary"]
+      },
+      "articleMappingId": "article.crime.public_order",
+      "atomMappingId": "atom.crime.order",
+      "relatedRuleIds": [],
+      "debtNote": "Use when the conduct is criminal but not specifically bribery or corruption."
+    },
+    {
+      "id": "rule.crime.state",
+      "version": "1.0.0",
+      "title": "Crime state integrity rule",
+      "description": "Match bribery, corruption, money laundering, and state-facing criminality.",
+      "priority": 91,
+      "match": {
+        "concepts": ["crime_bribery", "crime_corruption", "crime_money_laundering", "crime_blackmail", "crime_extortion", "crime_hostage", "crime_kidnapping", "crime_forgery"],
+        "domains": ["crime", "politics"],
+        "targets": ["state", "official", "public_official", "institution"],
+        "actions": ["bribery", "corruption", "forgery", "blackmail", "extortion"],
+        "intents": ["promotion", "encouragement", "instruction", "glorification"],
+        "contexts": ["dialogue", "court", "news", "documentary", "historical", "police_investigation"]
+      },
+      "articleMappingId": "article.crime.state",
+      "atomMappingId": "atom.crime.state",
+      "relatedRuleIds": [],
+      "debtNote": "Use when the criminal conduct targets institutions or state integrity."
+    },
+    {
+      "id": "rule.politics.overthrow",
+      "version": "1.0.0",
+      "title": "Politics overthrow rule",
+      "description": "Match political incitement, coup language, treason, and state-security pressure.",
+      "priority": 98,
+      "match": {
+        "concepts": ["state_reference", "government_reference", "head_of_state", "government_institution", "public_official", "patriotism", "treason", "espionage", "state_security", "national_security", "political_propaganda"],
+        "domains": ["politics", "security"],
+        "targets": ["state", "government", "head_of_state", "public_official", "military"],
+        "actions": ["incitement", "propaganda", "support", "glorification"],
+        "intents": ["promotion", "encouragement", "glorification", "instruction"],
+        "contexts": ["dialogue", "news", "historical", "documentary", "educational", "fiction"]
+      },
+      "articleMappingId": "article.politics.overthrow",
+      "atomMappingId": "atom.politics.overthrow",
+      "relatedRuleIds": ["rule.politics.international"],
+      "debtNote": "Use when the political harm is direct or clearly security adjacent."
+    },
+    {
+      "id": "rule.politics.international",
+      "version": "1.0.0",
+      "title": "Politics international rule",
+      "description": "Match foreign policy, diplomacy, and international conflict references.",
+      "priority": 87,
+      "match": {
+        "concepts": ["foreign_government", "foreign_leader", "international_organization", "diplomatic_relations", "international_conflict", "foreign_policy", "national_symbol"],
+        "domains": ["politics", "history"],
+        "targets": ["foreign_government", "foreign_leader", "international_organization", "nation"],
+        "actions": ["attack", "support", "glorification", "criticism"],
+        "intents": ["promotion", "encouragement", "criticism", "neutral"],
+        "contexts": ["news", "documentary", "historical", "educational", "dialogue", "narration"]
+      },
+      "articleMappingId": "article.politics.international_relations",
+      "atomMappingId": "atom.politics.diplomacy",
+      "relatedRuleIds": [],
+      "debtNote": "Use when the review concerns diplomacy rather than internal governance."
+    },
+    {
+      "id": "rule.history.misinformation",
+      "version": "1.0.0",
+      "title": "History misinformation rule",
+      "description": "Match false historical claims, revisionism, and distorted narration.",
+      "priority": 86,
+      "match": {
+        "concepts": ["historical_person", "historical_event", "historical_reference", "historical_quote", "historical_context", "historical_distortion", "historical_revisionism"],
+        "domains": ["history"],
+        "targets": ["history", "historical_person", "historical_event", "narrator"],
+        "actions": ["distortion", "misinformation", "revisionism"],
+        "intents": ["educational", "documentary", "historical", "neutral"],
+        "contexts": ["historical", "news", "documentary", "educational", "dialogue", "narration"]
+      },
+      "articleMappingId": "article.history.misinformation",
+      "atomMappingId": "atom.history.credibility",
+      "relatedRuleIds": ["rule.history.revisionism"],
+      "debtNote": "Use when the core issue is credibility or historical accuracy."
+    },
+    {
+      "id": "rule.history.revisionism",
+      "version": "1.0.0",
+      "title": "History revisionism rule",
+      "description": "Match deliberate historical revisionism, alternate history, and coded distortion.",
+      "priority": 85,
+      "match": {
+        "concepts": ["alternate_history", "historical_fiction", "historical_revisionism", "historical_distortion"],
+        "domains": ["history"],
+        "targets": ["history", "narrative", "audience"],
+        "actions": ["revisionism", "misrepresentation", "distortion"],
+        "intents": ["promotion", "encouragement", "neutral"],
+        "contexts": ["historical", "fiction", "dream", "flashback", "documentary"]
+      },
+      "articleMappingId": "article.history.revisionism",
+      "atomMappingId": "atom.history.revisionism",
+      "relatedRuleIds": [],
+      "debtNote": "Use when the text intentionally recasts history rather than merely being inaccurate."
+    }
+  ]
+}

@@ -107,13 +107,13 @@ DECLARE
   v_manage_perm_id UUID;
 BEGIN
   -- Find role IDs
-  SELECT id INTO v_regulator_role_id FROM roles WHERE key = 'regulator' LIMIT 1;
-  SELECT id INTO v_admin_role_id FROM roles WHERE key = 'admin' OR key = 'super_admin' LIMIT 1;
+  SELECT id INTO v_regulator_role_id FROM roles WHERE key = 'regulator' ORDER BY id ASC LIMIT 1;
+  SELECT id INTO v_admin_role_id FROM roles WHERE key = 'admin' OR key = 'super_admin' ORDER BY id ASC LIMIT 1;
   
   -- Find permission IDs
-  SELECT id INTO v_approve_perm_id FROM permissions WHERE key = 'approve_scripts' LIMIT 1;
-  SELECT id INTO v_reject_perm_id FROM permissions WHERE key = 'reject_scripts' LIMIT 1;
-  SELECT id INTO v_manage_perm_id FROM permissions WHERE key = 'manage_script_status' LIMIT 1;
+  SELECT id INTO v_approve_perm_id FROM permissions WHERE key = 'approve_scripts' ORDER BY id ASC LIMIT 1;
+  SELECT id INTO v_reject_perm_id FROM permissions WHERE key = 'reject_scripts' ORDER BY id ASC LIMIT 1;
+  SELECT id INTO v_manage_perm_id FROM permissions WHERE key = 'manage_script_status' ORDER BY id ASC LIMIT 1;
 
   -- Assign approve & reject to Regulator role
   IF v_regulator_role_id IS NOT NULL AND v_approve_perm_id IS NOT NULL THEN

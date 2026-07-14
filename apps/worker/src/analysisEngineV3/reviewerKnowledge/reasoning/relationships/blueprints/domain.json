@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "relationships_domain",
+  "title": "Relationship Framework Domain",
+  "description": "Shared reasoning framework for relationship-sensitive reviewer analysis.",
+  "entries": [
+    {
+      "id": "relationship_domain_framework",
+      "title": "Relationship Framework",
+      "description": "A shared framework for reasoning about relationships across domains."
+    }
+  ]
+}

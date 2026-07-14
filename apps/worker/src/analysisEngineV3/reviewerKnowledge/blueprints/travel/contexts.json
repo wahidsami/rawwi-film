@@ -1,0 +1,78 @@
+{
+  "version": "1.0.0",
+  "id": "travel_contexts",
+  "title": "Travel Contexts",
+  "description": "Contexts used in travel and country reasoning.",
+  "entries": [
+    {
+      "id": "travel_context_dialogue",
+      "title": "Dialogue",
+      "description": "Conversation between characters about travel."
+    },
+    {
+      "id": "travel_context_narration",
+      "title": "Narration",
+      "description": "Narrated description of travel or place."
+    },
+    {
+      "id": "travel_context_scene_description",
+      "title": "Scene Description",
+      "description": "A scene description featuring travel details."
+    },
+    {
+      "id": "travel_context_documentary",
+      "title": "Documentary",
+      "description": "Documentary-style travel or country description."
+    },
+    {
+      "id": "travel_context_news",
+      "title": "News",
+      "description": "News-style reporting about travel or countries."
+    },
+    {
+      "id": "travel_context_historical",
+      "title": "Historical",
+      "description": "Historical travel, migration, or country references."
+    },
+    {
+      "id": "travel_context_educational",
+      "title": "Educational",
+      "description": "Educational, classroom, or instructional context."
+    },
+    {
+      "id": "travel_context_academic",
+      "title": "Academic",
+      "description": "Academic discussion of travel or countries."
+    },
+    {
+      "id": "travel_context_fiction",
+      "title": "Fiction",
+      "description": "Story or invented-world travel context."
+    },
+    {
+      "id": "travel_context_dream",
+      "title": "Dream",
+      "description": "Dreamlike or dream sequence travel context."
+    },
+    {
+      "id": "travel_context_flashback",
+      "title": "Flashback",
+      "description": "Recovered memory or flashback travel context."
+    },
+    {
+      "id": "travel_context_court",
+      "title": "Court",
+      "description": "Courtroom or testimony about travel or country references."
+    },
+    {
+      "id": "travel_context_police",
+      "title": "Police Investigation",
+      "description": "Police or investigative travel/country reference."
+    },
+    {
+      "id": "travel_context_travel_diary",
+      "title": "Travel Diary",
+      "description": "Diary-like personal travel account."
+    }
+  ]
+}

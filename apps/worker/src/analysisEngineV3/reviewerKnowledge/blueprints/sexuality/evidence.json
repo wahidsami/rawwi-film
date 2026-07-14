@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "sexuality_evidence",
+  "title": "Sexuality Evidence",
+  "description": "Canonical sexual-content evidence requirements for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "sexual_evidence_direct_speech",
+      "title": "Sexual Evidence Direct Speech",
+      "description": "Evidence pattern for direct speech."
+    },
+    {
+      "id": "sexual_evidence_implied_speech",
+      "title": "Sexual Evidence Implied Speech",
+      "description": "Evidence pattern for implied speech."
+    },
+    {
+      "id": "sexual_evidence_scene_direction",
+      "title": "Sexual Evidence Scene Direction",
+      "description": "Evidence pattern for scene direction."
+    },
+    {
+      "id": "sexual_evidence_visual_focus",
+      "title": "Sexual Evidence Visual Focus",
+      "description": "Evidence pattern for visual focus."
+    },
+    {
+      "id": "sexual_evidence_sound_cue",
+      "title": "Sexual Evidence Sound Cue",
+      "description": "Evidence pattern for sound cue."
+    },
+    {
+      "id": "sexual_evidence_body_language",
+      "title": "Sexual Evidence Body Language",
+      "description": "Evidence pattern for body language."
+    },
+    {
+      "id": "sexual_evidence_touch",
+      "title": "Sexual Evidence Touch",
+      "description": "Evidence pattern for touch."
+    },
+    {
+      "id": "sexual_evidence_kiss",
+      "title": "Sexual Evidence Kiss",
+      "description": "Evidence pattern for kiss."
+    },
+    {
+      "id": "sexual_evidence_clothing",
+      "title": "Sexual Evidence Clothing",
+      "description": "Evidence pattern for clothing."
+    },
+    {
+      "id": "sexual_evidence_cross_sentence",
+      "title": "Sexual Evidence Cross Sentence",
+      "description": "Evidence pattern for cross sentence."
+    },
+    {
+      "id": "sexual_evidence_consent_marker",
+      "title": "Sexual Evidence Consent Marker",
+      "description": "Evidence pattern for consent marker."
+    },
+    {
+      "id": "sexual_evidence_pressure_marker",
+      "title": "Sexual Evidence Pressure Marker",
+      "description": "Evidence pattern for pressure marker."
+    },
+    {
+      "id": "sexual_evidence_medical_term",
+      "title": "Sexual Evidence Medical Term",
+      "description": "Evidence pattern for medical term."
+    },
+    {
+      "id": "sexual_evidence_educational_term",
+      "title": "Sexual Evidence Educational Term",
+      "description": "Evidence pattern for educational term."
+    },
+    {
+      "id": "sexual_evidence_historical_marker",
+      "title": "Sexual Evidence Historical Marker",
+      "description": "Evidence pattern for historical marker."
+    },
+    {
+      "id": "sexual_evidence_false_accusation",
+      "title": "Sexual Evidence False Accusation",
+      "description": "Evidence pattern for false accusation."
+    }
+  ]
+}

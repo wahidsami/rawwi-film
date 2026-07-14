@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "security_domain",
+  "title": "Security Domain Blueprint",
+  "description": "Top-level security knowledge blueprint used by Academy lessons and future reviewer packs.",
+  "entries": [
+    {
+      "id": "security_domain",
+      "title": "Security",
+      "description": "Security-related reasoning across public order, threats, violence, military, police, terrorism, and state institutions."
+    }
+  ]
+}

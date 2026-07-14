@@ -1,0 +1,539 @@
+{
+  "domainId": "intents",
+  "domainTitle": "Intent Framework Domain",
+  "domainVersion": "1.0.0",
+  "blueprint": {
+    "title": "Blueprint",
+    "present": 9,
+    "expected": 9,
+    "coveragePercent": 100,
+    "missing": [
+      "actions.json",
+      "concepts.json",
+      "contexts.json",
+      "domain.json",
+      "evidence.json",
+      "intents.json",
+      "relationships.json",
+      "reviewquestions.json",
+      "targets.json"
+    ],
+    "warnings": [],
+    "notes": [
+      "4e977b3f427c80b9aa12c40da221f1c57049a65cd30b4c5c83fc3698c1cb32e6"
+    ],
+    "hash": "4aa1b906aba76c652c071171992440c8ead6ca09905d4cf77ce70801e12358a0"
+  },
+  "knowledgePack": {
+    "title": "Knowledge Pack",
+    "present": 44,
+    "expected": 44,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "intent and motivation framework",
+      "pack=d:\\waheed\\mypprojects\\raawifilm fix\\apps\\worker\\src\\analysisenginev3\\reviewerknowledge\\reasoning\\intents\\academy\\pack.v1.json"
+    ],
+    "hash": "92aa0f97c204a3a53f73d819e1ea844cccca4179147f28fb3bfd1ce7aedcd8bd"
+  },
+  "lessons": {
+    "title": "Lessons",
+    "present": 14,
+    "expected": 14,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [],
+    "hash": "e76f9e3c84e022aeacb5e6fca83cc350654bceedbaa715282f7ca2a60d14bbe1"
+  },
+  "patterns": {
+    "title": "Patterns",
+    "present": 44,
+    "expected": 44,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "1 pattern library documents loaded"
+    ],
+    "hash": "33ce8065cc1a032e962b5f5685215f28eab0bae12ad3d2fe7252125245a1a453"
+  },
+  "decisionRecords": {
+    "title": "Decision Records",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "11 decision records loaded"
+    ],
+    "hash": "4f898563f6724d509bb5442e0fcef33aeea3e8e33fc5f75834a9fe41424727c8"
+  },
+  "benchmarks": {
+    "title": "Benchmarks",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "14 benchmark cases loaded"
+    ],
+    "hash": "06d288bb0e09c871c2ba52251008827816c53dfe4701567c6413c038959273a2"
+  },
+  "metrics": {
+    "conceptCount": 44,
+    "duplicateConceptCount": 0,
+    "missingConceptCount": 0,
+    "missingPatternCoverage": 0,
+    "missingDecisionCoverage": 0,
+    "missingBenchmarkCoverage": 0,
+    "glossaryCoverage": 100,
+    "crossSentenceCoverage": 100,
+    "crossSceneCoverage": 100,
+    "descriptionCoverage": 100,
+    "dialogueCoverage": 100,
+    "observationCoverage": 100,
+    "contextsCoverage": 100,
+    "targetsCoverage": 100,
+    "actionsCoverage": 100,
+    "intentsCoverage": 100,
+    "relationshipsCoverage": 100,
+    "evidenceRulesCoverage": 100,
+    "exceptionsCoverage": 100,
+    "falsePositivesCoverage": 100,
+    "falseNegativesCoverage": 100,
+    "reviewerQuestionsCoverage": 100,
+    "methodologyCoverage": 0,
+    "gcamMappingCoverage": 100,
+    "topics": [
+      {
+        "id": "actions",
+        "title": "Actions Coverage",
+        "present": 8,
+        "expected": 8,
+        "coveragePercent": 100,
+        "evidence": [
+          "action_confessing",
+          "action_imagining",
+          "action_mocking",
+          "action_observation",
+          "action_reporting",
+          "action_teaching",
+          "action_threatening",
+          "action_warning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "concepts",
+        "title": "Concept Coverage",
+        "present": 44,
+        "expected": 44,
+        "coveragePercent": 100,
+        "evidence": [
+          "acting",
+          "approval",
+          "coercion",
+          "condemnation",
+          "confession",
+          "court_testimony",
+          "documentary",
+          "documentation",
+          "dream",
+          "educational",
+          "encouragement",
+          "false_accusation",
+          "fantasy",
+          "fiction",
+          "flashback",
+          "glorification",
+          "hallucination",
+          "historical",
+          "humor",
+          "imagination",
+          "informative",
+          "instruction",
+          "irony",
+          "manipulation",
+          "medical",
+          "misunderstanding",
+          "mockery",
+          "neutral",
+          "news_reporting",
+          "normalization",
+          "police_investigation",
+          "praise",
+          "promotion",
+          "protection",
+          "quotation",
+          "religious_teaching",
+          "revenge",
+          "role_play",
+          "sarcasm",
+          "satire",
+          "scientific",
+          "self_defense",
+          "storytelling",
+          "threat"
+        ],
+        "missing": []
+      },
+      {
+        "id": "contexts",
+        "title": "Contexts Coverage",
+        "present": 8,
+        "expected": 8,
+        "coveragePercent": 100,
+        "evidence": [
+          "context_court",
+          "context_documentary",
+          "context_dream",
+          "context_educational",
+          "context_fiction",
+          "context_medical",
+          "context_news",
+          "context_police"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_scene",
+        "title": "Cross Scene Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross scene reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_sentence",
+        "title": "Cross Sentence Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross sentence reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "description",
+        "title": "Description Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "description coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "dialogue",
+        "title": "Dialogue Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "dialogue coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "duplicate_concepts",
+        "title": "Duplicate Concepts",
+        "present": 0,
+        "expected": 0,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "evidence_rules",
+        "title": "Evidence Rules Coverage",
+        "present": 8,
+        "expected": 8,
+        "coveragePercent": 100,
+        "evidence": [
+          "evidence_contextual",
+          "evidence_contradicting",
+          "evidence_cross_sentence",
+          "evidence_direct",
+          "evidence_neutrality",
+          "evidence_performance",
+          "evidence_quotation",
+          "evidence_scene"
+        ],
+        "missing": []
+      },
+      {
+        "id": "exceptions",
+        "title": "Exceptions Coverage",
+        "present": 26,
+        "expected": 26,
+        "coveragePercent": 100,
+        "evidence": [
+          "acting",
+          "condemnation",
+          "court_testimony",
+          "documentary",
+          "documentation",
+          "dream",
+          "educational",
+          "fantasy",
+          "fiction",
+          "flashback",
+          "glorification",
+          "hallucination",
+          "historical",
+          "imagination",
+          "medical",
+          "misunderstanding",
+          "mockery",
+          "news_reporting",
+          "normalization",
+          "police_investigation",
+          "praise",
+          "quotation",
+          "religious_teaching",
+          "role_play",
+          "scientific",
+          "storytelling"
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_negatives",
+        "title": "False Negatives Coverage",
+        "present": 7,
+        "expected": 7,
+        "coveragePercent": 100,
+        "evidence": [
+          "a documentary explanation treated as promotion.",
+          "a dream sequence treated as literal real-world intent.",
+          "a harmless factual sentence treated as a threat.",
+          "a quoted line treated as the speaker’s own opinion without support.",
+          "indirect speech treated as a direct statement without support.",
+          "mockery treated as direct endorsement.",
+          "praise or normalization treated as neutral description."
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_positives",
+        "title": "False Positives Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "comedy mistaken for literal hostility.",
+          "documentation mistaken for endorsement.",
+          "fiction mistaken for real intent.",
+          "indirect encouragement or indirect threat flattened into neutral speech.",
+          "later correction ignored.",
+          "mockery mistaken for sincere hostility.",
+          "normalization mistaken for mere presence.",
+          "praise mistaken for neutral description.",
+          "quotation mistaken for endorsement.",
+          "teaching mistaken for promotion."
+        ],
+        "missing": []
+      },
+      {
+        "id": "gcam_mapping",
+        "title": "GCAM Mapping Coverage",
+        "present": 5,
+        "expected": 5,
+        "coveragePercent": 100,
+        "evidence": [
+          "10",
+          "11",
+          "15",
+          "17",
+          "4"
+        ],
+        "missing": []
+      },
+      {
+        "id": "glossary",
+        "title": "Glossary Coverage",
+        "present": 11,
+        "expected": 11,
+        "coveragePercent": 100,
+        "evidence": [
+          "condemnation",
+          "documentation",
+          "fiction",
+          "indirect encouragement",
+          "indirect threat",
+          "intent",
+          "mockery",
+          "motivation",
+          "normalization",
+          "praise",
+          "quotation"
+        ],
+        "missing": []
+      },
+      {
+        "id": "intents",
+        "title": "Intents Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "intent_framework_domain"
+        ],
+        "missing": []
+      },
+      {
+        "id": "missing_benchmark_coverage",
+        "title": "Missing Benchmark Coverage",
+        "present": 0,
+        "expected": 44,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_concepts",
+        "title": "Missing Concepts",
+        "present": 0,
+        "expected": 44,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_decision_coverage",
+        "title": "Missing Decision Coverage",
+        "present": 0,
+        "expected": 44,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_pattern_coverage",
+        "title": "Missing Pattern Coverage",
+        "present": 0,
+        "expected": 44,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "observation",
+        "title": "Observation Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "observation coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "relationships",
+        "title": "Relationships Coverage",
+        "present": 16,
+        "expected": 16,
+        "coveragePercent": 100,
+        "evidence": [
+          "rel_001",
+          "rel_002",
+          "rel_002b",
+          "rel_003",
+          "rel_004",
+          "rel_005",
+          "rel_006",
+          "rel_007",
+          "rel_007b",
+          "rel_007c",
+          "rel_008",
+          "rel_009",
+          "rel_009b",
+          "rel_010",
+          "rel_011",
+          "rel_012"
+        ],
+        "missing": []
+      },
+      {
+        "id": "reviewer_questions",
+        "title": "Reviewer Questions Coverage",
+        "present": 109,
+        "expected": 109,
+        "coveragePercent": 100,
+        "evidence": [
+          "q01",
+          "q02",
+          "q03",
+          "q04",
+          "q05",
+          "q06",
+          "q07",
+          "q08",
+          "q09",
+          "q10",
+          "q11",
+          "q12",
+          "q13",
+          "q14",
+          "q15"
+        ],
+        "missing": []
+      },
+      {
+        "id": "targets",
+        "title": "Targets Coverage",
+        "present": 8,
+        "expected": 8,
+        "coveragePercent": 100,
+        "evidence": [
+          "target_audience",
+          "target_authority",
+          "target_child",
+          "target_group",
+          "target_listener",
+          "target_self",
+          "target_subject",
+          "target_unknown"
+        ],
+        "missing": []
+      },
+      {
+        "id": "universal_reviewer_methodology_v1",
+        "title": "Universal Reviewer Methodology",
+        "present": 11,
+        "expected": 11,
+        "coveragePercent": 100,
+        "evidence": [
+          "applicable concept validation",
+          "confidence assessment",
+          "context classification",
+          "evidence strength",
+          "exception detection",
+          "literal vs implied meaning",
+          "narrative intent",
+          "narrative understanding",
+          "speaker identification",
+          "target identification",
+          "victim identification"
+        ],
+        "missing": []
+      }
+    ],
+    "hash": "8b5c951343043da44cf00545a8fbba9fa7c890dd3ae825bf6589da8807d6a40a"
+  },
+  "productionReadiness": 100,
+  "recommendation": "READY",
+  "coverageGaps": [],
+  "criticalGaps": [],
+  "warnings": [],
+  "hash": "5194206e250ab4b4e7f43feb5a5f79d93bc45dcfce99e7264c1857c2a86be3a7"
+}

@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "id": "politics_review_questions",
+  "title": "Politics Review Questions",
+  "description": "Canonical politics reviewer questions for reasoning.",
+  "entries": [
+    {
+      "id": "politics_question_speaker",
+      "title": "Question Speaker",
+      "description": "Question Speaker for politics reasoning."
+    },
+    {
+      "id": "politics_question_target",
+      "title": "Question Target",
+      "description": "Question Target for politics reasoning."
+    },
+    {
+      "id": "politics_question_context",
+      "title": "Question Context",
+      "description": "Question Context for politics reasoning."
+    },
+    {
+      "id": "politics_question_intent",
+      "title": "Question Intent",
+      "description": "Question Intent for politics reasoning."
+    },
+    {
+      "id": "politics_question_relationship",
+      "title": "Question Relationship",
+      "description": "Question Relationship for politics reasoning."
+    },
+    {
+      "id": "politics_question_evidence",
+      "title": "Question Evidence",
+      "description": "Question Evidence for politics reasoning."
+    },
+    {
+      "id": "politics_question_exception",
+      "title": "Question Exception",
+      "description": "Question Exception for politics reasoning."
+    },
+    {
+      "id": "politics_question_confidence",
+      "title": "Question Confidence",
+      "description": "Question Confidence for politics reasoning."
+    },
+    {
+      "id": "politics_question_cross_sentence",
+      "title": "Question Cross Sentence",
+      "description": "Question Cross Sentence for politics reasoning."
+    },
+    {
+      "id": "politics_question_cross_scene",
+      "title": "Question Cross Scene",
+      "description": "Question Cross Scene for politics reasoning."
+    },
+    {
+      "id": "politics_question_discussion_vs_criticism",
+      "title": "Question Discussion Vs Criticism",
+      "description": "Question Discussion Vs Criticism for politics reasoning."
+    },
+    {
+      "id": "politics_question_dialogue_vs_narration",
+      "title": "Question Dialogue Vs Narration",
+      "description": "Question Dialogue Vs Narration for politics reasoning."
+    }
+  ]
+}

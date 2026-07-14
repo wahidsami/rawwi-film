@@ -1,0 +1,63 @@
+{
+  "version": "1.0.0",
+  "id": "drugs_contexts",
+  "title": "Drugs Contexts",
+  "description": "Drug contexts.",
+  "entries": [
+    {
+      "id": "drug_context_dialogue",
+      "title": "Dialogue",
+      "description": "Spoken exchange between characters."
+    },
+    {
+      "id": "drug_context_narration",
+      "title": "Narration",
+      "description": "Narrative description rather than speech."
+    },
+    {
+      "id": "drug_context_scene_description",
+      "title": "Scene Description",
+      "description": "Visual or staging description."
+    },
+    {
+      "id": "drug_context_medical",
+      "title": "Medical",
+      "description": "Clinical or treatment context."
+    },
+    {
+      "id": "drug_context_educational",
+      "title": "Educational",
+      "description": "Teaching or explanation context."
+    },
+    {
+      "id": "drug_context_rehabilitation",
+      "title": "Rehabilitation",
+      "description": "Recovery or treatment setting."
+    },
+    {
+      "id": "drug_context_historical",
+      "title": "Historical",
+      "description": "Past event or historical reporting."
+    },
+    {
+      "id": "drug_context_news",
+      "title": "News",
+      "description": "News or reporting context."
+    },
+    {
+      "id": "drug_context_comedy",
+      "title": "Comedy",
+      "description": "Humor or comedic framing."
+    },
+    {
+      "id": "drug_context_dream",
+      "title": "Dream",
+      "description": "Dream or imagined frame."
+    },
+    {
+      "id": "drug_context_flashback",
+      "title": "Flashback",
+      "description": "Past memory or flashback."
+    }
+  ]
+}

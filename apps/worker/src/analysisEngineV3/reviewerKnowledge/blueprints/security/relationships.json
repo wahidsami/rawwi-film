@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "id": "security_relationships",
+  "title": "Security Relationships",
+  "description": "Graph relationships between security blueprint entities.",
+  "entries": [
+    { "from": "security_terrorism", "to": "security_extremism", "type": "supports" },
+    { "from": "security_terrorism", "to": "security_violence", "type": "parent" },
+    { "from": "security_target_police", "to": "security_target_government", "type": "child" },
+    { "from": "security_military", "to": "security_state_institutions", "type": "supports" },
+    { "from": "security_riots", "to": "security_national_unity", "type": "opposite" },
+    { "from": "security_context_education", "to": "security_intent_instruction", "type": "requires" },
+    { "from": "security_intent_condemnation", "to": "security_intent_promotion", "type": "opposite" },
+    { "from": "security_riots", "to": "security_public_order", "type": "related" },
+    { "from": "security_weapons", "to": "security_violence", "type": "supports" },
+    { "from": "security_evidence_coded_reference", "to": "security_terrorism", "type": "related" }
+  ]
+}

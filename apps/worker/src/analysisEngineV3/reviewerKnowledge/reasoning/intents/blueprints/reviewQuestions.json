@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "id": "intents_review_questions",
+  "title": "Intent Review Questions",
+  "description": "Deterministic reviewer questions for intent analysis.",
+  "entries": [
+    { "id": "rq_narrative", "title": "Narrative Question", "description": "What does the scene mean as a whole?" },
+    { "id": "rq_speaker", "title": "Speaker Question", "description": "Who is speaking or narrating this intent?" },
+    { "id": "rq_target", "title": "Target Question", "description": "Who or what is being addressed?" },
+    { "id": "rq_intent", "title": "Intent Question", "description": "What intent is the speaker actually expressing?" },
+    { "id": "rq_context", "title": "Context Question", "description": "Does the surrounding scene change the reading?" },
+    { "id": "rq_evidence", "title": "Evidence Question", "description": "Which literal text supports the conclusion?" },
+    { "id": "rq_concept", "title": "Concept Question", "description": "Which intent concept is most plausible?" },
+    { "id": "rq_confidence", "title": "Confidence Question", "description": "How confident should the reviewer be?" }
+  ]
+}

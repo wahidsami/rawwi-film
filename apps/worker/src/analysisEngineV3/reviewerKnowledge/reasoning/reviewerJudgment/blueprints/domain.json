@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_judgment_domain",
+  "title": "Reviewer Judgment Domain",
+  "description": "Shared reviewer judgment reasoning and knowledge acquisition.",
+  "entries": [
+    {
+      "id": "reviewer_judgment_domain",
+      "title": "Reviewer Judgment Domain",
+      "description": "A shared reviewer judgment domain for knowledge acquisition and final reviewer decisions."
+    }
+  ]
+}

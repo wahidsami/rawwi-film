@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_judgment_review_questions",
+  "title": "Reviewer Judgment Questions",
+  "description": "Questions that guide reviewer judgment.",
+  "entries": [
+    {
+      "id": "q_competing_interpretations",
+      "title": "Competing interpretations",
+      "description": "Which interpretations are still plausible?"
+    },
+    {
+      "id": "q_evidence_sufficiency",
+      "title": "Evidence sufficiency",
+      "description": "Is the evidence enough for a conclusion?"
+    },
+    {
+      "id": "q_confidence_calibration",
+      "title": "Confidence calibration",
+      "description": "How should confidence change after weighing the evidence?"
+    },
+    {
+      "id": "q_reviewer_disagreement",
+      "title": "Reviewer disagreement",
+      "description": "Could trained reviewers legitimately disagree here?"
+    },
+    {
+      "id": "q_narrative_justification",
+      "title": "Narrative justification",
+      "description": "Does the story context change the reviewer outcome?"
+    },
+    {
+      "id": "q_final_reviewer_decision",
+      "title": "Final reviewer decision",
+      "description": "What is the final reviewer judgment after all reasoning is complete?"
+    }
+  ]
+}

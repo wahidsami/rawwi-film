@@ -1,0 +1,52 @@
+{
+  "id": "decision_045_guardian_protection_direct",
+  "version": "1.0.0",
+  "title": "Guardian protection (direct)",
+  "summary": "Guardian protection in direct framing.",
+  "originalScenario": "الوصي يحميه من الخطر",
+  "reviewQuestion": "Is this protective guardian action?",
+  "initialSuspicion": "Protective supervision.",
+  "possibleConcepts": [
+    "children_guardian"
+  ],
+  "supportingEvidence": [
+    "الوصي يحميه من الخطر"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "guardian_protection",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_guardian"
+  ]
+}

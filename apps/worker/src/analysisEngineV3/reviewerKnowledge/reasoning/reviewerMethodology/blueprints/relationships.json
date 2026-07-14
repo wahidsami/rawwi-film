@@ -1,0 +1,248 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_methodology_relationships",
+  "title": "Reviewer Methodology Relationships",
+  "description": "Graph relationships across reviewer methodology concepts.",
+  "entries": [
+    {
+      "from": "reviewer_methodology_domain",
+      "to": "finding_identification",
+      "type": "parent",
+      "description": "Shared reviewer methodology domain."
+    },
+    {
+      "from": "finding_identification",
+      "to": "evidence_collection",
+      "type": "supports",
+      "description": "Methodology skill finding_identification flows into evidence_collection."
+    },
+    {
+      "from": "evidence_collection",
+      "to": "evidence_prioritization",
+      "type": "supports",
+      "description": "Methodology skill evidence_collection flows into evidence_prioritization."
+    },
+    {
+      "from": "evidence_prioritization",
+      "to": "context_analysis",
+      "type": "supports",
+      "description": "Methodology skill evidence_prioritization flows into context_analysis."
+    },
+    {
+      "from": "context_analysis",
+      "to": "cross_sentence_reasoning",
+      "type": "supports",
+      "description": "Methodology skill context_analysis flows into cross_sentence_reasoning."
+    },
+    {
+      "from": "cross_sentence_reasoning",
+      "to": "cross_scene_reasoning",
+      "type": "supports",
+      "description": "Methodology skill cross_sentence_reasoning flows into cross_scene_reasoning."
+    },
+    {
+      "from": "cross_scene_reasoning",
+      "to": "story_reasoning",
+      "type": "supports",
+      "description": "Methodology skill cross_scene_reasoning flows into story_reasoning."
+    },
+    {
+      "from": "story_reasoning",
+      "to": "intent_reasoning",
+      "type": "supports",
+      "description": "Methodology skill story_reasoning flows into intent_reasoning."
+    },
+    {
+      "from": "intent_reasoning",
+      "to": "relationship_reasoning",
+      "type": "supports",
+      "description": "Methodology skill intent_reasoning flows into relationship_reasoning."
+    },
+    {
+      "from": "relationship_reasoning",
+      "to": "target_identification",
+      "type": "supports",
+      "description": "Methodology skill relationship_reasoning flows into target_identification."
+    },
+    {
+      "from": "target_identification",
+      "to": "speaker_identification",
+      "type": "supports",
+      "description": "Methodology skill target_identification flows into speaker_identification."
+    },
+    {
+      "from": "speaker_identification",
+      "to": "victim_identification",
+      "type": "supports",
+      "description": "Methodology skill speaker_identification flows into victim_identification."
+    },
+    {
+      "from": "victim_identification",
+      "to": "actor_identification",
+      "type": "supports",
+      "description": "Methodology skill victim_identification flows into actor_identification."
+    },
+    {
+      "from": "actor_identification",
+      "to": "implicit_meaning",
+      "type": "supports",
+      "description": "Methodology skill actor_identification flows into implicit_meaning."
+    },
+    {
+      "from": "implicit_meaning",
+      "to": "hidden_meaning",
+      "type": "supports",
+      "description": "Methodology skill implicit_meaning flows into hidden_meaning."
+    },
+    {
+      "from": "hidden_meaning",
+      "to": "symbolic_reasoning",
+      "type": "supports",
+      "description": "Methodology skill hidden_meaning flows into symbolic_reasoning."
+    },
+    {
+      "from": "symbolic_reasoning",
+      "to": "metaphor_reasoning",
+      "type": "supports",
+      "description": "Methodology skill symbolic_reasoning flows into metaphor_reasoning."
+    },
+    {
+      "from": "metaphor_reasoning",
+      "to": "sarcasm_reasoning",
+      "type": "supports",
+      "description": "Methodology skill metaphor_reasoning flows into sarcasm_reasoning."
+    },
+    {
+      "from": "sarcasm_reasoning",
+      "to": "comedy_reasoning",
+      "type": "supports",
+      "description": "Methodology skill sarcasm_reasoning flows into comedy_reasoning."
+    },
+    {
+      "from": "comedy_reasoning",
+      "to": "satire_reasoning",
+      "type": "supports",
+      "description": "Methodology skill comedy_reasoning flows into satire_reasoning."
+    },
+    {
+      "from": "satire_reasoning",
+      "to": "quotation_reasoning",
+      "type": "supports",
+      "description": "Methodology skill satire_reasoning flows into quotation_reasoning."
+    },
+    {
+      "from": "quotation_reasoning",
+      "to": "historical_reasoning",
+      "type": "supports",
+      "description": "Methodology skill quotation_reasoning flows into historical_reasoning."
+    },
+    {
+      "from": "historical_reasoning",
+      "to": "documentary_reasoning",
+      "type": "supports",
+      "description": "Methodology skill historical_reasoning flows into documentary_reasoning."
+    },
+    {
+      "from": "documentary_reasoning",
+      "to": "educational_reasoning",
+      "type": "supports",
+      "description": "Methodology skill documentary_reasoning flows into educational_reasoning."
+    },
+    {
+      "from": "educational_reasoning",
+      "to": "dream_reasoning",
+      "type": "supports",
+      "description": "Methodology skill educational_reasoning flows into dream_reasoning."
+    },
+    {
+      "from": "dream_reasoning",
+      "to": "flashback_reasoning",
+      "type": "supports",
+      "description": "Methodology skill dream_reasoning flows into flashback_reasoning."
+    },
+    {
+      "from": "flashback_reasoning",
+      "to": "scene_description_reasoning",
+      "type": "supports",
+      "description": "Methodology skill flashback_reasoning flows into scene_description_reasoning."
+    },
+    {
+      "from": "scene_description_reasoning",
+      "to": "observation_reasoning",
+      "type": "supports",
+      "description": "Methodology skill scene_description_reasoning flows into observation_reasoning."
+    },
+    {
+      "from": "observation_reasoning",
+      "to": "dialogue_reasoning",
+      "type": "supports",
+      "description": "Methodology skill observation_reasoning flows into dialogue_reasoning."
+    },
+    {
+      "from": "dialogue_reasoning",
+      "to": "visual_reasoning",
+      "type": "supports",
+      "description": "Methodology skill dialogue_reasoning flows into visual_reasoning."
+    },
+    {
+      "from": "visual_reasoning",
+      "to": "audio_reasoning",
+      "type": "supports",
+      "description": "Methodology skill visual_reasoning flows into audio_reasoning."
+    },
+    {
+      "from": "audio_reasoning",
+      "to": "confidence_assessment",
+      "type": "supports",
+      "description": "Methodology skill audio_reasoning flows into confidence_assessment."
+    },
+    {
+      "from": "confidence_assessment",
+      "to": "contradiction_resolution",
+      "type": "supports",
+      "description": "Methodology skill confidence_assessment flows into contradiction_resolution."
+    },
+    {
+      "from": "contradiction_resolution",
+      "to": "multi_evidence_reasoning",
+      "type": "supports",
+      "description": "Methodology skill contradiction_resolution flows into multi_evidence_reasoning."
+    },
+    {
+      "from": "multi_evidence_reasoning",
+      "to": "exception_recognition",
+      "type": "supports",
+      "description": "Methodology skill multi_evidence_reasoning flows into exception_recognition."
+    },
+    {
+      "from": "exception_recognition",
+      "to": "false_positive_detection",
+      "type": "supports",
+      "description": "Methodology skill exception_recognition flows into false_positive_detection."
+    },
+    {
+      "from": "false_positive_detection",
+      "to": "false_negative_detection",
+      "type": "supports",
+      "description": "Methodology skill false_positive_detection flows into false_negative_detection."
+    },
+    {
+      "from": "false_negative_detection",
+      "to": "reviewer_comment_generation",
+      "type": "supports",
+      "description": "Methodology skill false_negative_detection flows into reviewer_comment_generation."
+    },
+    {
+      "from": "reviewer_comment_generation",
+      "to": "finding_generation",
+      "type": "supports",
+      "description": "Methodology skill reviewer_comment_generation flows into finding_generation."
+    },
+    {
+      "from": "finding_generation",
+      "to": "report_priority",
+      "type": "supports",
+      "description": "Methodology skill finding_generation flows into report_priority."
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "sexuality_targets",
+  "title": "Sexuality Targets",
+  "description": "Canonical sexual-content targets for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "sexual_target_speaker",
+      "title": "Sexual Target Speaker",
+      "description": "Target or focus element associated with speaker."
+    },
+    {
+      "id": "sexual_target_listener",
+      "title": "Sexual Target Listener",
+      "description": "Target or focus element associated with listener."
+    },
+    {
+      "id": "sexual_target_woman",
+      "title": "Sexual Target Woman",
+      "description": "Target or focus element associated with woman."
+    },
+    {
+      "id": "sexual_target_man",
+      "title": "Sexual Target Man",
+      "description": "Target or focus element associated with man."
+    },
+    {
+      "id": "sexual_target_child",
+      "title": "Sexual Target Child",
+      "description": "Target or focus element associated with child."
+    },
+    {
+      "id": "sexual_target_teenager",
+      "title": "Sexual Target Teenager",
+      "description": "Target or focus element associated with teenager."
+    },
+    {
+      "id": "sexual_target_adult",
+      "title": "Sexual Target Adult",
+      "description": "Target or focus element associated with adult."
+    },
+    {
+      "id": "sexual_target_couple",
+      "title": "Sexual Target Couple",
+      "description": "Target or focus element associated with couple."
+    },
+    {
+      "id": "sexual_target_character",
+      "title": "Sexual Target Character",
+      "description": "Target or focus element associated with character."
+    },
+    {
+      "id": "sexual_target_audience",
+      "title": "Sexual Target Audience",
+      "description": "Target or focus element associated with audience."
+    },
+    {
+      "id": "sexual_target_viewer",
+      "title": "Sexual Target Viewer",
+      "description": "Target or focus element associated with viewer."
+    },
+    {
+      "id": "sexual_target_body",
+      "title": "Sexual Target Body",
+      "description": "Target or focus element associated with body."
+    },
+    {
+      "id": "sexual_target_clothing",
+      "title": "Sexual Target Clothing",
+      "description": "Target or focus element associated with clothing."
+    },
+    {
+      "id": "sexual_target_camera",
+      "title": "Sexual Target Camera",
+      "description": "Target or focus element associated with camera."
+    },
+    {
+      "id": "sexual_target_scene",
+      "title": "Sexual Target Scene",
+      "description": "Target or focus element associated with scene."
+    },
+    {
+      "id": "sexual_target_family",
+      "title": "Sexual Target Family",
+      "description": "Target or focus element associated with family."
+    }
+  ]
+}

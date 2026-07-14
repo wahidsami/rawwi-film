@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "security_terrorism_extremism_patterns",
+    "title": "Security Terrorism and Extremism Patterns",
+    "description": "Semantic patterns for terrorism and extremism reasoning.",
+    "concepts": [
+      {
+        "id": "terrorism",
+        "title": "Terrorism",
+        "description": "Promotion, support, glorification, or operational discussion of terrorism."
+      },
+      {
+        "id": "extremism",
+        "title": "Extremism",
+        "description": "Support for extremist ideology or extremist violence."
+      },
+      {
+        "id": "violence",
+        "title": "Violence",
+        "description": "Physical harm, violent action, or violent escalation."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "security_pattern_terrorism_glorification",
+      "title": "Terrorism Glorification",
+      "description": "Praise, support, or normalization of terrorism and extremist violence.",
+      "primary_concept_id": "terrorism",
+      "related_concept_ids": [
+        "extremism",
+        "violence"
+      ],
+      "direct_expressions": [
+        "الإرهاب هو الحل",
+        "عاش الإرهاب",
+        "تحيا الجماعة الإرهابية"
+      ],
+      "indirect_expressions": [
+        "العمل البطولي",
+        "الرد القوي",
+        "هذا طريق الشرف"
+      ],
+      "semantic_intent": [
+        "promotion of terrorism",
+        "extremist glorification"
+      ],
+      "supporting_evidence": [
+        "Positive framing of extremist violence.",
+        "Explicit approval language."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation.",
+        "Documentary or news reporting frame."
+      ],
+      "false_positives": [
+        "A news report repeating the phrase as evidence.",
+        "A fictional villain line that the story rejects."
+      ],
+      "counter_examples": [
+        "A journalist describing terrorism as a crime.",
+        "A classroom discussion of extremist rhetoric."
+      ],
+      "cross_sentence_indicators": [
+        "A neutral sentence is followed by praise for violent action."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "recruitment scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal praise phrase.",
+        "Check whether the text frames the act as admirable or justified."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "modifier_direct_praise",
+          "title": "Direct Praise",
+          "description": "Explicit praise for terrorism or extremism.",
+          "confidence": 96
+        },
+        {
+          "id": "modifier_coded_sympathy",
+          "title": "Coded Sympathy",
+          "description": "Indirect sympathy or coded praise.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rel_terrorism_extremism",
+          "from_concept_id": "terrorism",
+          "to_concept_id": "extremism",
+          "relation": "supports",
+          "note": "Extremism strengthens the terrorism reading."
+        },
+        {
+          "id": "rel_terrorism_violence",
+          "from_concept_id": "terrorism",
+          "to_concept_id": "violence",
+          "relation": "supports",
+          "note": "Violence is often the operational component."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "gcam_security_9_2",
+          "article_id": 9,
+          "atom_ids": [
+            "9-2"
+          ],
+          "role": "Terrorism and extremism escalation",
+          "note": "Use when terrorism is glorified."
+        },
+        {
+          "id": "gcam_security_14_3",
+          "article_id": 14,
+          "atom_ids": [
+            "14-3"
+          ],
+          "role": "Violent incitement",
+          "note": "Use when the content calls for violent action."
+        }
+      ],
+      "examples": [
+        {
+          "id": "example_terror_001",
+          "title": "Praise of terror",
+          "text": "الإرهاب هو الحل",
+          "expected_outcome": "Direct glorification of terrorism.",
+          "note": null
+        },
+        {
+          "id": "example_terror_002",
+          "title": "Recruitment slogan",
+          "text": "عاش المجاهدون",
+          "expected_outcome": "Supportive extremist framing.",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

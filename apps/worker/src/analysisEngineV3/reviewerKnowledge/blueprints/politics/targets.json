@@ -1,0 +1,93 @@
+{
+  "version": "1.0.0",
+  "id": "politics_targets",
+  "title": "Politics Targets",
+  "description": "Canonical politics targets for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "politics_target_state",
+      "title": "Target State",
+      "description": "Target State as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_government",
+      "title": "Target Government",
+      "description": "Target Government as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_head_of_state",
+      "title": "Target Head Of State",
+      "description": "Target Head Of State as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_royal_family",
+      "title": "Target Royal Family",
+      "description": "Target Royal Family as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_institution",
+      "title": "Target Institution",
+      "description": "Target Institution as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_public_official",
+      "title": "Target Public Official",
+      "description": "Target Public Official as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_foreign_government",
+      "title": "Target Foreign Government",
+      "description": "Target Foreign Government as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_foreign_leader",
+      "title": "Target Foreign Leader",
+      "description": "Target Foreign Leader as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_organization",
+      "title": "Target Organization",
+      "description": "Target Organization as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_symbol",
+      "title": "Target Symbol",
+      "description": "Target Symbol as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_citizen",
+      "title": "Target Citizen",
+      "description": "Target Citizen as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_voter",
+      "title": "Target Voter",
+      "description": "Target Voter as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_protester",
+      "title": "Target Protester",
+      "description": "Target Protester as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_security_force",
+      "title": "Target Security Force",
+      "description": "Target Security Force as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_public",
+      "title": "Target Public",
+      "description": "Target Public as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_opposition",
+      "title": "Target Opposition",
+      "description": "Target Opposition as a reviewer-relevant political target."
+    },
+    {
+      "id": "politics_target_demonstration",
+      "title": "Target Demonstration",
+      "description": "Target Demonstration as a reviewer-relevant political target."
+    }
+  ]
+}

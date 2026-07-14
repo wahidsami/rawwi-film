@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "security_context_exception_patterns",
+    "title": "Security Context Exception Patterns",
+    "description": "Patterns that help separate real security violations from exceptions.",
+    "concepts": [
+      {
+        "id": "government",
+        "title": "Government",
+        "description": "Government authority, ministries, or the governing order."
+      },
+      {
+        "id": "terrorism",
+        "title": "Terrorism",
+        "description": "Promotion, support, glorification, or operational discussion of terrorism."
+      },
+      {
+        "id": "public_order",
+        "title": "Public Order",
+        "description": "Order, stability, compliance, and societal calm."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "security_pattern_documentary_exception",
+      "title": "Documentary Exception",
+      "description": "Security language that appears in documentary, educational, police, or court contexts.",
+      "primary_concept_id": "government",
+      "related_concept_ids": [
+        "terrorism",
+        "public_order"
+      ],
+      "direct_expressions": [
+        "في الوثائقي",
+        "في المحكمة",
+        "في التحقيق"
+      ],
+      "indirect_expressions": [
+        "يوضح الفيلم",
+        "يسجل التقرير",
+        "يشرح الشاهد"
+      ],
+      "semantic_intent": [
+        "informational context",
+        "exception handling"
+      ],
+      "supporting_evidence": [
+        "The scene is explicitly framed as reporting or explanation.",
+        "The speaker is repeating another person or recording evidence."
+      ],
+      "contradictory_evidence": [
+        "The narrator endorses the harmful content.",
+        "The story clearly converts the quote into praise."
+      ],
+      "false_positives": [
+        "Any mention of terrorism in a documentary report.",
+        "A court transcript reproducing a threat as evidence."
+      ],
+      "counter_examples": [
+        "A news report on a security incident.",
+        "A classroom explanation of security law."
+      ],
+      "cross_sentence_indicators": [
+        "The harmful term is introduced in one sentence and explained as evidence in the next."
+      ],
+      "scene_indicators": [
+        "documentary segment",
+        "courtroom",
+        "police interview"
+      ],
+      "reviewer_guidance": [
+        "Use context to avoid overclassification.",
+        "Do not ignore explicit documentary or court framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "modifier_documentary_frame",
+          "title": "Documentary Frame",
+          "description": "Documentary context strongly reduces certainty.",
+          "confidence": 28
+        },
+        {
+          "id": "modifier_testimony_frame",
+          "title": "Testimony Frame",
+          "description": "Court or police testimony frame.",
+          "confidence": 35
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rel_context_government",
+          "from_concept_id": "government",
+          "to_concept_id": "public_order",
+          "relation": "supports",
+          "note": "Context can explain why the mention is not a violation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "gcam_security_9_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-1",
+            "9-2"
+          ],
+          "role": "Exception and framing",
+          "note": "Use when content is documented rather than endorsed."
+        }
+      ],
+      "examples": [
+        {
+          "id": "example_exception_001",
+          "title": "Court quotation",
+          "text": "في المحكمة قال الشاهد: لنُسقط الدولة",
+          "expected_outcome": "Quoted evidence, not endorsement.",
+          "note": null
+        },
+        {
+          "id": "example_exception_002",
+          "title": "Documentary mention",
+          "text": "الوثائقي يشرح تمردًا قديمًا",
+          "expected_outcome": "Historical explanation.",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "id": "historical_review_questions",
+  "title": "History Review Questions",
+  "description": "Canonical history reviewer questions for reasoning.",
+  "entries": [
+    {
+      "id": "historical_question_speaker",
+      "title": "Question Speaker",
+      "description": "Question Speaker for history reasoning."
+    },
+    {
+      "id": "historical_question_target",
+      "title": "Question Target",
+      "description": "Question Target for history reasoning."
+    },
+    {
+      "id": "historical_question_context",
+      "title": "Question Context",
+      "description": "Question Context for history reasoning."
+    },
+    {
+      "id": "historical_question_intent",
+      "title": "Question Intent",
+      "description": "Question Intent for history reasoning."
+    },
+    {
+      "id": "historical_question_relationship",
+      "title": "Question Relationship",
+      "description": "Question Relationship for history reasoning."
+    },
+    {
+      "id": "historical_question_evidence",
+      "title": "Question Evidence",
+      "description": "Question Evidence for history reasoning."
+    },
+    {
+      "id": "historical_question_exception",
+      "title": "Question Exception",
+      "description": "Question Exception for history reasoning."
+    },
+    {
+      "id": "historical_question_confidence",
+      "title": "Question Confidence",
+      "description": "Question Confidence for history reasoning."
+    },
+    {
+      "id": "historical_question_cross_sentence",
+      "title": "Question Cross Sentence",
+      "description": "Question Cross Sentence for history reasoning."
+    },
+    {
+      "id": "historical_question_cross_scene",
+      "title": "Question Cross Scene",
+      "description": "Question Cross Scene for history reasoning."
+    },
+    {
+      "id": "historical_question_fact_vs_interpretation",
+      "title": "Question Fact Vs Interpretation",
+      "description": "Question Fact Vs Interpretation for history reasoning."
+    },
+    {
+      "id": "historical_question_fiction_vs_history",
+      "title": "Question Fiction Vs History",
+      "description": "Question Fiction Vs History for history reasoning."
+    }
+  ]
+}

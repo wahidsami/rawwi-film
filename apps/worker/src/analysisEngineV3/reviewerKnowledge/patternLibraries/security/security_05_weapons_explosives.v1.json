@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "security_weapons_explosives_patterns",
+    "title": "Security Weapons and Explosives Patterns",
+    "description": "Patterns for weapon acquisition, use, and explosives instruction.",
+    "concepts": [
+      {
+        "id": "weapons",
+        "title": "Weapons",
+        "description": "Weapons, explosives, or operational weapon use."
+      },
+      {
+        "id": "violence",
+        "title": "Violence",
+        "description": "Physical harm, violent action, or violent escalation."
+      },
+      {
+        "id": "military",
+        "title": "Military",
+        "description": "Armed forces, military institutions, or military targets."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "security_pattern_weapons_instruction",
+      "title": "Weapons Instruction",
+      "description": "Operational guidance for making, obtaining, hiding, or using weapons or explosives.",
+      "primary_concept_id": "weapons",
+      "related_concept_ids": [
+        "violence",
+        "military"
+      ],
+      "direct_expressions": [
+        "كيف تصنع قنبلة",
+        "خذ السلاح",
+        "أخفِ المتفجرات"
+      ],
+      "indirect_expressions": [
+        "المواد سهلة الحصول",
+        "الطريقة بسيطة",
+        "لا أحد سيلاحظ"
+      ],
+      "semantic_intent": [
+        "operational instruction",
+        "weapon preparation"
+      ],
+      "supporting_evidence": [
+        "The text explains methods, materials, or concealment steps.",
+        "The sentence makes harmful action practical and achievable."
+      ],
+      "contradictory_evidence": [
+        "The line is clearly a safety warning.",
+        "The content is a prop description without operational guidance."
+      ],
+      "false_positives": [
+        "A film prop mention with no method.",
+        "An educational warning about explosives."
+      ],
+      "counter_examples": [
+        "A safety class on danger awareness.",
+        "A fictional scene that condemns the plan."
+      ],
+      "cross_sentence_indicators": [
+        "A harmless sentence is followed by a method."
+      ],
+      "scene_indicators": [
+        "workshop",
+        "garage",
+        "hideout"
+      ],
+      "reviewer_guidance": [
+        "Treat actionable instructions as the strongest evidence.",
+        "Down-rank purely fictional props or warnings."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "modifier_step_by_step",
+          "title": "Step-by-step",
+          "description": "Concrete instructions are present.",
+          "confidence": 99
+        },
+        {
+          "id": "modifier_hint_only",
+          "title": "Hint Only",
+          "description": "Only a vague technical hint exists.",
+          "confidence": 64
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rel_weapons_violence",
+          "from_concept_id": "weapons",
+          "to_concept_id": "violence",
+          "relation": "supports",
+          "note": "Weapons language usually escalates to violence."
+        },
+        {
+          "id": "rel_weapons_military",
+          "from_concept_id": "weapons",
+          "to_concept_id": "military",
+          "relation": "related",
+          "note": "Military targets may be relevant when weapon use is discussed."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "gcam_security_9_3",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence and intimidation",
+          "note": "Use when weapons content creates fear or harm."
+        },
+        {
+          "id": "gcam_security_14_3",
+          "article_id": 14,
+          "atom_ids": [
+            "14-3",
+            "14-4"
+          ],
+          "role": "Violent incitement",
+          "note": "Use when weapons are framed as a means to violent goals."
+        }
+      ],
+      "examples": [
+        {
+          "id": "example_weapons_001",
+          "title": "Explosive method",
+          "text": "كيف تصنع قنبلة في البيت",
+          "expected_outcome": "Operational explosives guidance.",
+          "note": null
+        },
+        {
+          "id": "example_weapons_002",
+          "title": "Weapon concealment",
+          "text": "أخفِ السلاح هنا",
+          "expected_outcome": "Concealment instruction.",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

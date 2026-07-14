@@ -1,0 +1,58 @@
+{
+  "id": "decision_002_direct_physical_abuse_quoted",
+  "version": "1.0.0",
+  "title": "Direct physical abuse (quoted)",
+  "summary": "Direct physical abuse in quoted framing.",
+  "originalScenario": "قال الراوي: \"الطفل يحتاج ضربة الآن\"",
+  "reviewQuestion": "Is this direct physical abuse?",
+  "initialSuspicion": "Direct abuse.",
+  "possibleConcepts": [
+    "children_child",
+    "children_physical_abuse"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: الطفل يحتاج ضربة الآن"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "direct_physical_abuse",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child",
+    "children_physical_abuse"
+  ]
+}

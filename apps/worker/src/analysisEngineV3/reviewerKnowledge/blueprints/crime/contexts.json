@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "crime_contexts",
+  "title": "Crime Contexts",
+  "description": "Context taxonomy for crime reasoning.",
+  "entries": [
+    {
+      "id": "crime_context_dialogue",
+      "title": "Dialogue",
+      "description": "Crime discussed in conversation."
+    },
+    {
+      "id": "crime_context_narration",
+      "title": "Narration",
+      "description": "Crime narrated by a storyteller."
+    },
+    {
+      "id": "crime_context_scene",
+      "title": "Scene Description",
+      "description": "Crime shown through scene description."
+    },
+    {
+      "id": "crime_context_observation",
+      "title": "Observation",
+      "description": "Neutral observation of crime-related material."
+    },
+    {
+      "id": "crime_context_news",
+      "title": "News",
+      "description": "News reporting about a crime."
+    },
+    {
+      "id": "crime_context_documentary",
+      "title": "Documentary",
+      "description": "Documentary framing of crime."
+    },
+    {
+      "id": "crime_context_historical",
+      "title": "Historical",
+      "description": "Historical discussion of past crime."
+    },
+    {
+      "id": "crime_context_educational",
+      "title": "Educational",
+      "description": "Educational explanation about crime."
+    },
+    {
+      "id": "crime_context_police",
+      "title": "Police Investigation",
+      "description": "Police investigation context."
+    },
+    {
+      "id": "crime_context_court",
+      "title": "Court Case",
+      "description": "Court or testimony context."
+    }
+  ]
+}

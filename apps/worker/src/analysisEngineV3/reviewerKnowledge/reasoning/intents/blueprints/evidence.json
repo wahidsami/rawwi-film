@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "id": "intents_evidence",
+  "title": "Intent Evidence",
+  "description": "Evidence categories used to reason about intent.",
+  "entries": [
+    { "id": "evidence_direct", "title": "Direct Evidence", "description": "The sentence states the intent plainly." },
+    { "id": "evidence_contextual", "title": "Contextual Evidence", "description": "The surrounding scene clarifies the meaning." },
+    { "id": "evidence_cross_sentence", "title": "Cross-Sentence Evidence", "description": "Later lines confirm or change the meaning." },
+    { "id": "evidence_scene", "title": "Scene Evidence", "description": "The whole scene changes how the line should be read." },
+    { "id": "evidence_contradicting", "title": "Contradicting Evidence", "description": "Later dialogue or action weakens the initial guess." },
+    { "id": "evidence_quotation", "title": "Quotation Evidence", "description": "The phrase is quoted rather than asserted." },
+    { "id": "evidence_performance", "title": "Performance Evidence", "description": "The line is part of acting, role play, or narration." },
+    { "id": "evidence_neutrality", "title": "Neutrality Evidence", "description": "The text stays descriptive and uncommitted." }
+  ]
+}

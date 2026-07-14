@@ -1,0 +1,153 @@
+{
+  "version": "1.0.0",
+  "id": "children_concepts",
+  "title": "Children Concepts",
+  "description": "Canonical children concepts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "children_child",
+      "title": "Child",
+      "description": "A child as a protected minor."
+    },
+    {
+      "id": "children_infant",
+      "title": "Infant",
+      "description": "A very young child requiring special protection."
+    },
+    {
+      "id": "children_teenager",
+      "title": "Teenager",
+      "description": "An adolescent child or young person."
+    },
+    {
+      "id": "children_minor",
+      "title": "Minor",
+      "description": "A person below the legal age of adulthood."
+    },
+    {
+      "id": "children_disabled_child",
+      "title": "Disabled Child",
+      "description": "A child with a disability or additional support need."
+    },
+    {
+      "id": "children_disabled_adult",
+      "title": "Disabled Adult",
+      "description": "An adult with a disability requiring dignity and protection."
+    },
+    {
+      "id": "children_elderly_person",
+      "title": "Elderly Person",
+      "description": "An older person who may be vulnerable to abuse or neglect."
+    },
+    {
+      "id": "children_vulnerable_person",
+      "title": "Vulnerable Person",
+      "description": "A person whose age, disability, or circumstances increase vulnerability."
+    },
+    {
+      "id": "children_parent",
+      "title": "Parent",
+      "description": "A parent responsible for care and protection."
+    },
+    {
+      "id": "children_guardian",
+      "title": "Guardian",
+      "description": "A legal guardian or custodian responsible for safety."
+    },
+    {
+      "id": "children_physical_abuse",
+      "title": "Physical Abuse",
+      "description": "Physical harm or violent treatment of a child or vulnerable person."
+    },
+    {
+      "id": "children_psychological_abuse",
+      "title": "Psychological Abuse",
+      "description": "Emotional cruelty, coercion, or mental harm."
+    },
+    {
+      "id": "children_humiliation",
+      "title": "Humiliation",
+      "description": "Degrading treatment or deliberate shaming."
+    },
+    {
+      "id": "children_bullying",
+      "title": "Bullying",
+      "description": "Repeated intimidation or harassment."
+    },
+    {
+      "id": "children_threatening",
+      "title": "Threatening",
+      "description": "Threats of harm, punishment, or retaliation."
+    },
+    {
+      "id": "children_fear_induction",
+      "title": "Fear Induction",
+      "description": "Deliberate creation of fear or terror."
+    },
+    {
+      "id": "children_neglect",
+      "title": "Neglect",
+      "description": "Failure to provide basic care or safety."
+    },
+    {
+      "id": "children_abandonment",
+      "title": "Abandonment",
+      "description": "Leaving a dependent person without care or support."
+    },
+    {
+      "id": "children_exploitation",
+      "title": "Exploitation",
+      "description": "Using a vulnerable person for unfair gain."
+    },
+    {
+      "id": "children_sexual_exploitation",
+      "title": "Sexual Exploitation",
+      "description": "Sexual abuse or exploitation of a child or vulnerable person."
+    },
+    {
+      "id": "children_grooming",
+      "title": "Grooming",
+      "description": "Manipulative preparation of a child for exploitation."
+    },
+    {
+      "id": "children_human_trafficking",
+      "title": "Human Trafficking",
+      "description": "Recruitment, transport, or control of a person for exploitation."
+    },
+    {
+      "id": "children_child_recruitment",
+      "title": "Child Recruitment",
+      "description": "Recruiting a child into harmful or criminal activity."
+    },
+    {
+      "id": "children_forced_labor",
+      "title": "Forced Labor",
+      "description": "Compelling a person to work against their will."
+    },
+    {
+      "id": "children_criminal_exploitation",
+      "title": "Criminal Exploitation",
+      "description": "Using a vulnerable person to facilitate crime."
+    },
+    {
+      "id": "children_mocking_disability",
+      "title": "Mocking Disability",
+      "description": "Ridicule targeting disability or impairment."
+    },
+    {
+      "id": "children_discrimination",
+      "title": "Discrimination",
+      "description": "Unequal or hostile treatment based on protected status."
+    },
+    {
+      "id": "children_isolation",
+      "title": "Isolation",
+      "description": "Deliberate social exclusion or separation."
+    },
+    {
+      "id": "children_endangerment",
+      "title": "Endangerment",
+      "description": "Putting a vulnerable person in danger."
+    }
+  ]
+}

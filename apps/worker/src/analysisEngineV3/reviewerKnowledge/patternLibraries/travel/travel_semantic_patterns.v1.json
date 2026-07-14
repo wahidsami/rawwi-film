@@ -1,0 +1,5257 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "travel_semantic_patterns",
+    "title": "Travel and Countries Semantic Patterns",
+    "description": "Semantic patterns for travel, countries, migration, and evaluative commentary reasoning.",
+    "concepts": [
+      {
+        "id": "travel_reference",
+        "title": "Travel Reference",
+        "description": "Literal mention of travel, trips, or movement between places."
+      },
+      {
+        "id": "travel_destination",
+        "title": "Travel Destination",
+        "description": "The destination, arrival point, or intended place of travel."
+      },
+      {
+        "id": "travel_origin",
+        "title": "Travel Origin",
+        "description": "The starting point or place of departure in a travel scene."
+      },
+      {
+        "id": "travel_abroad",
+        "title": "Travel Abroad",
+        "description": "Travel outside the local country or region."
+      },
+      {
+        "id": "international_travel",
+        "title": "International Travel",
+        "description": "Explicitly international movement, transit, or journeying."
+      },
+      {
+        "id": "domestic_travel",
+        "title": "Domestic Travel",
+        "description": "Travel that stays inside the local country or region."
+      },
+      {
+        "id": "border_crossing",
+        "title": "Border Crossing",
+        "description": "Crossing a border, checkpoint, or immigration control point."
+      },
+      {
+        "id": "airport",
+        "title": "Airport",
+        "description": "An airport, terminal, flight departure, or arrival setting."
+      },
+      {
+        "id": "passport",
+        "title": "Passport",
+        "description": "Passport, identity travel document, or travel authorization mention."
+      },
+      {
+        "id": "visa",
+        "title": "Visa",
+        "description": "Visa, entry permit, or travel authorization mention."
+      },
+      {
+        "id": "foreign_country",
+        "title": "Foreign Country",
+        "description": "Mention of a country outside the speaker's current home context."
+      },
+      {
+        "id": "foreign_city",
+        "title": "Foreign City",
+        "description": "Mention of a city outside the speaker's current home context."
+      },
+      {
+        "id": "foreign_government_reference",
+        "title": "Foreign Government Reference",
+        "description": "A reference to a foreign government, ministry, or state authority."
+      },
+      {
+        "id": "foreign_people",
+        "title": "Foreign People",
+        "description": "References to people from another country or region."
+      },
+      {
+        "id": "foreign_culture",
+        "title": "Foreign Culture",
+        "description": "References to another country's culture, customs, or social life."
+      },
+      {
+        "id": "foreign_religion",
+        "title": "Foreign Religion",
+        "description": "References to religious life in another country or region."
+      },
+      {
+        "id": "foreign_customs",
+        "title": "Foreign Customs",
+        "description": "References to another country's customs, traditions, or habits."
+      },
+      {
+        "id": "foreign_landmarks",
+        "title": "Foreign Landmarks",
+        "description": "References to landmarks, monuments, or notable places abroad."
+      },
+      {
+        "id": "foreign_language",
+        "title": "Foreign Language",
+        "description": "References to another language or language learning abroad."
+      },
+      {
+        "id": "foreign_food",
+        "title": "Foreign Food",
+        "description": "References to cuisine, food, or dining in another country."
+      },
+      {
+        "id": "foreign_event",
+        "title": "Foreign Event",
+        "description": "References to events, festivals, or occasions abroad."
+      },
+      {
+        "id": "foreign_media",
+        "title": "Foreign Media",
+        "description": "References to foreign press, television, or media coverage."
+      },
+      {
+        "id": "foreign_law",
+        "title": "Foreign Law",
+        "description": "References to legal rules, law, or regulation in another country."
+      },
+      {
+        "id": "foreign_police",
+        "title": "Foreign Police",
+        "description": "References to police, law enforcement, or public order abroad."
+      },
+      {
+        "id": "foreign_military",
+        "title": "Foreign Military",
+        "description": "References to the military or armed forces of another country."
+      },
+      {
+        "id": "tourism",
+        "title": "Tourism",
+        "description": "Tourism, travel services, sightseeing, or visitor activity."
+      },
+      {
+        "id": "immigration",
+        "title": "Immigration",
+        "description": "Movement into a country for residence or settlement."
+      },
+      {
+        "id": "emigration",
+        "title": "Emigration",
+        "description": "Movement out of a country or region."
+      },
+      {
+        "id": "refugee",
+        "title": "Refugee",
+        "description": "A person displaced by conflict, persecution, or forced movement."
+      },
+      {
+        "id": "exile",
+        "title": "Exile",
+        "description": "Forced or self-imposed removal from one's home country."
+      },
+      {
+        "id": "deportation",
+        "title": "Deportation",
+        "description": "Formal removal from a country or enforced expulsion."
+      },
+      {
+        "id": "international_business",
+        "title": "International Business",
+        "description": "Business, trade, or commerce across borders."
+      },
+      {
+        "id": "international_study",
+        "title": "International Study",
+        "description": "Study, training, or education abroad."
+      },
+      {
+        "id": "medical_travel",
+        "title": "Medical Travel",
+        "description": "Travel for treatment, recovery, or healthcare."
+      },
+      {
+        "id": "religious_travel",
+        "title": "Religious Travel",
+        "description": "Travel for pilgrimage, worship, or religious duties."
+      },
+      {
+        "id": "historical_travel",
+        "title": "Historical Travel",
+        "description": "Historical journeys, migration history, or travel in a historical frame."
+      },
+      {
+        "id": "fictional_travel",
+        "title": "Fictional Travel",
+        "description": "Travel presented within fiction, fantasy, or invented narrative."
+      },
+      {
+        "id": "dream_travel",
+        "title": "Dream Travel",
+        "description": "Travel occurring inside a dream or dreamlike frame."
+      },
+      {
+        "id": "flashback_travel",
+        "title": "Flashback Travel",
+        "description": "Travel recalled in flashback or remembered past sequence."
+      },
+      {
+        "id": "imaginary_country",
+        "title": "Imaginary Country",
+        "description": "A country invented by fiction, fantasy, or imagination."
+      },
+      {
+        "id": "travel_scene_description",
+        "title": "Travel Scene Description",
+        "description": "Visual or textual description of a travel scene, location, or movement."
+      },
+      {
+        "id": "travel_dialogue",
+        "title": "Travel Dialogue",
+        "description": "Dialogue in which travel, movement, or destination is discussed."
+      },
+      {
+        "id": "travel_observation",
+        "title": "Travel Observation",
+        "description": "Neutral observation of travel details without evaluation or allegation."
+      },
+      {
+        "id": "country_comparison",
+        "title": "Country Comparison",
+        "description": "Comparative commentary between countries, places, or travel destinations."
+      },
+      {
+        "id": "country_insult",
+        "title": "Country Insult",
+        "description": "Derogatory language aimed at a country, nation, or its people."
+      },
+      {
+        "id": "country_praise",
+        "title": "Country Praise",
+        "description": "Positive evaluative language about a country, nation, or its people."
+      },
+      {
+        "id": "country_mockery",
+        "title": "Country Mockery",
+        "description": "Mocking or ridiculing a country, nation, or its people."
+      },
+      {
+        "id": "country_stereotype",
+        "title": "Country Stereotype",
+        "description": "Stereotyping language about a country or its population."
+      },
+      {
+        "id": "country_security_reference",
+        "title": "Country Security Reference",
+        "description": "Security, safety, or control references tied to a country or nation."
+      },
+      {
+        "id": "country_political_reference",
+        "title": "Country Political Reference",
+        "description": "Political references, governance talk, or state critique about a country."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "travel_pattern_travel_reference",
+      "title": "Travel Reference",
+      "description": "Reviewer pattern for travel reference.",
+      "primary_concept_id": "travel_reference",
+      "related_concept_ids": [
+        "travel_abroad",
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "سأذهب في رحلة"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_travel_reference_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_travel_reference_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_travel_reference_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "travel_destination",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_travel_reference_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "travel_reference_example_1",
+          "title": "Direct travel mention",
+          "text": "سأذهب في رحلة",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "travel_reference_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"سأذهب في رحلة\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_travel_destination",
+      "title": "Travel Destination",
+      "description": "Reviewer pattern for travel destination.",
+      "primary_concept_id": "travel_destination",
+      "related_concept_ids": [
+        "travel_abroad",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "الوجهة هي إسطنبول"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_travel_destination_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_travel_destination_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_travel_destination_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "travel_destination",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_travel_destination_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "travel_destination_example_1",
+          "title": "Direct travel mention",
+          "text": "الوجهة هي إسطنبول",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "travel_destination_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"الوجهة هي إسطنبول\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_travel_origin",
+      "title": "Travel Origin",
+      "description": "Reviewer pattern for travel origin.",
+      "primary_concept_id": "travel_origin",
+      "related_concept_ids": [
+        "travel_abroad",
+        "travel_destination",
+        "travel_observation",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "انطلقنا من القاهرة"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_travel_origin_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_travel_origin_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_travel_origin_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "travel_origin",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_travel_origin_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "travel_origin_example_1",
+          "title": "Direct travel mention",
+          "text": "انطلقنا من القاهرة",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "travel_origin_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"انطلقنا من القاهرة\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_travel_abroad",
+      "title": "Travel Abroad",
+      "description": "Reviewer pattern for travel abroad.",
+      "primary_concept_id": "travel_abroad",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "نحن في الخارج الآن"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_travel_abroad_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_travel_abroad_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_travel_abroad_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "travel_abroad",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_travel_abroad_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "travel_abroad_example_1",
+          "title": "Direct travel mention",
+          "text": "نحن في الخارج الآن",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "travel_abroad_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"نحن في الخارج الآن\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_international_travel",
+      "title": "International Travel",
+      "description": "Reviewer pattern for international travel.",
+      "primary_concept_id": "international_travel",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "هذه رحلة دولية"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_international_travel_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_international_travel_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_international_travel_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "international_travel",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_international_travel_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "international_travel_example_1",
+          "title": "Direct travel mention",
+          "text": "هذه رحلة دولية",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "international_travel_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"هذه رحلة دولية\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_domestic_travel",
+      "title": "Domestic Travel",
+      "description": "Reviewer pattern for domestic travel.",
+      "primary_concept_id": "domestic_travel",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "الرحلة داخل البلد"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_domestic_travel_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_domestic_travel_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_domestic_travel_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "domestic_travel",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_domestic_travel_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "domestic_travel_example_1",
+          "title": "Direct travel mention",
+          "text": "الرحلة داخل البلد",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "domestic_travel_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"الرحلة داخل البلد\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_border_crossing",
+      "title": "Border Crossing",
+      "description": "Reviewer pattern for border crossing.",
+      "primary_concept_id": "border_crossing",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "عبرنا الحدود بعد الفجر"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_border_crossing_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_border_crossing_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_border_crossing_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "border_crossing",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_border_crossing_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "border_crossing_example_1",
+          "title": "Direct travel mention",
+          "text": "عبرنا الحدود بعد الفجر",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "border_crossing_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"عبرنا الحدود بعد الفجر\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_airport",
+      "title": "Airport",
+      "description": "Reviewer pattern for airport.",
+      "primary_concept_id": "airport",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "نلتقي في المطار"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_airport_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_airport_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_airport_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "airport",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_airport_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "airport_example_1",
+          "title": "Direct travel mention",
+          "text": "نلتقي في المطار",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "airport_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"نلتقي في المطار\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_passport",
+      "title": "Passport",
+      "description": "Reviewer pattern for passport.",
+      "primary_concept_id": "passport",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "لا تنسَ الجواز"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_passport_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_passport_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_passport_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "passport",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_passport_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "passport_example_1",
+          "title": "Direct travel mention",
+          "text": "لا تنسَ الجواز",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "passport_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"لا تنسَ الجواز\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_visa",
+      "title": "Visa",
+      "description": "Reviewer pattern for visa.",
+      "primary_concept_id": "visa",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "الفيزا جاهزة"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_visa_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_visa_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_visa_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "visa",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_visa_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "visa_example_1",
+          "title": "Direct travel mention",
+          "text": "الفيزا جاهزة",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "visa_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"الفيزا جاهزة\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_country",
+      "title": "Foreign Country",
+      "description": "Reviewer pattern for foreign country.",
+      "primary_concept_id": "foreign_country",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "هذا بلد أجنبي"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_country_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_country_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_country_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_country",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_country_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_country_example_1",
+          "title": "Direct travel mention",
+          "text": "هذا بلد أجنبي",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_country_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"هذا بلد أجنبي\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_city",
+      "title": "Foreign City",
+      "description": "Reviewer pattern for foreign city.",
+      "primary_concept_id": "foreign_city",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "تلك مدينة أجنبية"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_city_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_city_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_city_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_city",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_city_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_city_example_1",
+          "title": "Direct travel mention",
+          "text": "تلك مدينة أجنبية",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_city_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"تلك مدينة أجنبية\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_government_reference",
+      "title": "Foreign Government Reference",
+      "description": "Reviewer pattern for foreign government reference.",
+      "primary_concept_id": "foreign_government_reference",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "حكومة البلد الأجنبي"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_government_reference_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_government_reference_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_government_reference_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_government_reference",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_government_reference_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_government_reference_example_1",
+          "title": "Direct travel mention",
+          "text": "حكومة البلد الأجنبي",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_government_reference_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"حكومة البلد الأجنبي\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_people",
+      "title": "Foreign People",
+      "description": "Reviewer pattern for foreign people.",
+      "primary_concept_id": "foreign_people",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "الناس هناك مختلفون"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_people_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_people_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_people_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_people",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_people_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_people_example_1",
+          "title": "Direct travel mention",
+          "text": "الناس هناك مختلفون",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_people_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"الناس هناك مختلفون\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_culture",
+      "title": "Foreign Culture",
+      "description": "Reviewer pattern for foreign culture.",
+      "primary_concept_id": "foreign_culture",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "الثقافة هناك مختلفة"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_culture_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_culture_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_culture_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_culture",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_culture_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_culture_example_1",
+          "title": "Direct travel mention",
+          "text": "الثقافة هناك مختلفة",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_culture_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"الثقافة هناك مختلفة\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_religion",
+      "title": "Foreign Religion",
+      "description": "Reviewer pattern for foreign religion.",
+      "primary_concept_id": "foreign_religion",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "الديانة هناك مميزة"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_religion_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_religion_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_religion_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_religion",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_religion_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_religion_example_1",
+          "title": "Direct travel mention",
+          "text": "الديانة هناك مميزة",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_religion_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"الديانة هناك مميزة\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_customs",
+      "title": "Foreign Customs",
+      "description": "Reviewer pattern for foreign customs.",
+      "primary_concept_id": "foreign_customs",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "العادات هناك قديمة"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_customs_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_customs_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_customs_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_customs",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_customs_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_customs_example_1",
+          "title": "Direct travel mention",
+          "text": "العادات هناك قديمة",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_customs_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"العادات هناك قديمة\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_landmarks",
+      "title": "Foreign Landmarks",
+      "description": "Reviewer pattern for foreign landmarks.",
+      "primary_concept_id": "foreign_landmarks",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "الآثار الشهيرة هناك"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_landmarks_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_landmarks_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_landmarks_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_landmarks",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_landmarks_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_landmarks_example_1",
+          "title": "Direct travel mention",
+          "text": "الآثار الشهيرة هناك",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_landmarks_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"الآثار الشهيرة هناك\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_language",
+      "title": "Foreign Language",
+      "description": "Reviewer pattern for foreign language.",
+      "primary_concept_id": "foreign_language",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "أتعلم اللغة الأجنبية"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_language_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_language_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_language_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_language",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_language_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_language_example_1",
+          "title": "Direct travel mention",
+          "text": "أتعلم اللغة الأجنبية",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_language_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"أتعلم اللغة الأجنبية\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_food",
+      "title": "Foreign Food",
+      "description": "Reviewer pattern for foreign food.",
+      "primary_concept_id": "foreign_food",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "الطعام هناك لذيذ"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_food_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_food_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_food_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_food",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_food_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_food_example_1",
+          "title": "Direct travel mention",
+          "text": "الطعام هناك لذيذ",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_food_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"الطعام هناك لذيذ\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_event",
+      "title": "Foreign Event",
+      "description": "Reviewer pattern for foreign event.",
+      "primary_concept_id": "foreign_event",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "الحدث الدولي بدأ"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_event_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_event_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_event_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_event",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_event_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_event_example_1",
+          "title": "Direct travel mention",
+          "text": "الحدث الدولي بدأ",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_event_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"الحدث الدولي بدأ\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_media",
+      "title": "Foreign Media",
+      "description": "Reviewer pattern for foreign media.",
+      "primary_concept_id": "foreign_media",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "التغطية الأجنبية واسعة"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_media_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_media_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_media_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_media",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_media_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_media_example_1",
+          "title": "Direct travel mention",
+          "text": "التغطية الأجنبية واسعة",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_media_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"التغطية الأجنبية واسعة\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_law",
+      "title": "Foreign Law",
+      "description": "Reviewer pattern for foreign law.",
+      "primary_concept_id": "foreign_law",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "القانون هناك صارم"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_law_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_law_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_law_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_law",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_law_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_law_example_1",
+          "title": "Direct travel mention",
+          "text": "القانون هناك صارم",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_law_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"القانون هناك صارم\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_police",
+      "title": "Foreign Police",
+      "description": "Reviewer pattern for foreign police.",
+      "primary_concept_id": "foreign_police",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "شرطة البلد هناك"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_police_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_police_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_police_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_police",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_police_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_police_example_1",
+          "title": "Direct travel mention",
+          "text": "شرطة البلد هناك",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_police_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"شرطة البلد هناك\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_foreign_military",
+      "title": "Foreign Military",
+      "description": "Reviewer pattern for foreign military.",
+      "primary_concept_id": "foreign_military",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "جيش البلد هناك"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_foreign_military_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_foreign_military_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_foreign_military_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "foreign_military",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_foreign_military_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_military_example_1",
+          "title": "Direct travel mention",
+          "text": "جيش البلد هناك",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "foreign_military_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"جيش البلد هناك\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_tourism",
+      "title": "Tourism",
+      "description": "Reviewer pattern for tourism.",
+      "primary_concept_id": "tourism",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "السياحة تزدهر هنا"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_tourism_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_tourism_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_tourism_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "tourism",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_tourism_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "tourism_example_1",
+          "title": "Direct travel mention",
+          "text": "السياحة تزدهر هنا",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "tourism_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"السياحة تزدهر هنا\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_immigration",
+      "title": "Immigration",
+      "description": "Reviewer pattern for immigration.",
+      "primary_concept_id": "immigration",
+      "related_concept_ids": [
+        "emigration",
+        "exile",
+        "historical_travel",
+        "refugee",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "تحدثوا عن الهجرة إلى البلد"
+      ],
+      "indirect_expressions": [
+        "Movement across borders is being described."
+      ],
+      "semantic_intent": [
+        "historical narration",
+        "documentary",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "movement",
+        "displacement",
+        "historical context"
+      ],
+      "contradictory_evidence": [
+        "Neutral travel diary",
+        "Documentary framing without evaluation"
+      ],
+      "false_positives": [
+        "Treating an old migration story as a present-day assertion."
+      ],
+      "counter_examples": [
+        "A neutral reference to immigration paperwork or a historical exile without current harm."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies that the movement was historical or forced."
+      ],
+      "scene_indicators": [
+        "border scene",
+        "immigration scene"
+      ],
+      "reviewer_guidance": [
+        "Use migration and displacement reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_immigration_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_immigration_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_immigration_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "immigration",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_immigration_gcam",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Historical or migration framing",
+          "note": "Use for historical travel, exile, migration, or remembered journeys."
+        }
+      ],
+      "examples": [
+        {
+          "id": "immigration_example_1",
+          "title": "Direct travel mention",
+          "text": "تحدثوا عن الهجرة إلى البلد",
+          "expected_outcome": "migration and displacement reasoning",
+          "note": null
+        },
+        {
+          "id": "immigration_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"تحدثوا عن الهجرة إلى البلد\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_emigration",
+      "title": "Emigration",
+      "description": "Reviewer pattern for emigration.",
+      "primary_concept_id": "emigration",
+      "related_concept_ids": [
+        "exile",
+        "historical_travel",
+        "immigration",
+        "refugee",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "هاجروا من البلد"
+      ],
+      "indirect_expressions": [
+        "Movement across borders is being described."
+      ],
+      "semantic_intent": [
+        "historical narration",
+        "documentary",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "movement",
+        "displacement",
+        "historical context"
+      ],
+      "contradictory_evidence": [
+        "Neutral travel diary",
+        "Documentary framing without evaluation"
+      ],
+      "false_positives": [
+        "Treating an old migration story as a present-day assertion."
+      ],
+      "counter_examples": [
+        "A neutral reference to immigration paperwork or a historical exile without current harm."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies that the movement was historical or forced."
+      ],
+      "scene_indicators": [
+        "border scene",
+        "immigration scene"
+      ],
+      "reviewer_guidance": [
+        "Use migration and displacement reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_emigration_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_emigration_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_emigration_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "emigration",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_emigration_gcam",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Historical or migration framing",
+          "note": "Use for historical travel, exile, migration, or remembered journeys."
+        }
+      ],
+      "examples": [
+        {
+          "id": "emigration_example_1",
+          "title": "Direct travel mention",
+          "text": "هاجروا من البلد",
+          "expected_outcome": "migration and displacement reasoning",
+          "note": null
+        },
+        {
+          "id": "emigration_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"هاجروا من البلد\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_refugee",
+      "title": "Refugee",
+      "description": "Reviewer pattern for refugee.",
+      "primary_concept_id": "refugee",
+      "related_concept_ids": [
+        "emigration",
+        "exile",
+        "historical_travel",
+        "immigration",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "أصبح لاجئاً"
+      ],
+      "indirect_expressions": [
+        "Movement across borders is being described."
+      ],
+      "semantic_intent": [
+        "historical narration",
+        "documentary",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "movement",
+        "displacement",
+        "historical context"
+      ],
+      "contradictory_evidence": [
+        "Neutral travel diary",
+        "Documentary framing without evaluation"
+      ],
+      "false_positives": [
+        "Treating an old migration story as a present-day assertion."
+      ],
+      "counter_examples": [
+        "A neutral reference to immigration paperwork or a historical exile without current harm."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies that the movement was historical or forced."
+      ],
+      "scene_indicators": [
+        "border scene",
+        "immigration scene"
+      ],
+      "reviewer_guidance": [
+        "Use migration and displacement reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_refugee_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_refugee_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_refugee_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "refugee",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_refugee_gcam",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Historical or migration framing",
+          "note": "Use for historical travel, exile, migration, or remembered journeys."
+        }
+      ],
+      "examples": [
+        {
+          "id": "refugee_example_1",
+          "title": "Direct travel mention",
+          "text": "أصبح لاجئاً",
+          "expected_outcome": "migration and displacement reasoning",
+          "note": null
+        },
+        {
+          "id": "refugee_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"أصبح لاجئاً\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_exile",
+      "title": "Exile",
+      "description": "Reviewer pattern for exile.",
+      "primary_concept_id": "exile",
+      "related_concept_ids": [
+        "emigration",
+        "historical_travel",
+        "immigration",
+        "refugee",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "نُفي خارج البلاد"
+      ],
+      "indirect_expressions": [
+        "Movement across borders is being described."
+      ],
+      "semantic_intent": [
+        "historical narration",
+        "documentary",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "movement",
+        "displacement",
+        "historical context"
+      ],
+      "contradictory_evidence": [
+        "Neutral travel diary",
+        "Documentary framing without evaluation"
+      ],
+      "false_positives": [
+        "Treating an old migration story as a present-day assertion."
+      ],
+      "counter_examples": [
+        "A neutral reference to immigration paperwork or a historical exile without current harm."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies that the movement was historical or forced."
+      ],
+      "scene_indicators": [
+        "border scene",
+        "immigration scene"
+      ],
+      "reviewer_guidance": [
+        "Use migration and displacement reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_exile_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_exile_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_exile_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "exile",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_exile_gcam",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Historical or migration framing",
+          "note": "Use for historical travel, exile, migration, or remembered journeys."
+        }
+      ],
+      "examples": [
+        {
+          "id": "exile_example_1",
+          "title": "Direct travel mention",
+          "text": "نُفي خارج البلاد",
+          "expected_outcome": "migration and displacement reasoning",
+          "note": null
+        },
+        {
+          "id": "exile_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"نُفي خارج البلاد\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_deportation",
+      "title": "Deportation",
+      "description": "Reviewer pattern for deportation.",
+      "primary_concept_id": "deportation",
+      "related_concept_ids": [
+        "emigration",
+        "historical_travel",
+        "immigration",
+        "refugee",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "تم ترحيله"
+      ],
+      "indirect_expressions": [
+        "Movement across borders is being described."
+      ],
+      "semantic_intent": [
+        "historical narration",
+        "documentary",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "movement",
+        "displacement",
+        "historical context"
+      ],
+      "contradictory_evidence": [
+        "Neutral travel diary",
+        "Documentary framing without evaluation"
+      ],
+      "false_positives": [
+        "Treating an old migration story as a present-day assertion."
+      ],
+      "counter_examples": [
+        "A neutral reference to immigration paperwork or a historical exile without current harm."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies that the movement was historical or forced."
+      ],
+      "scene_indicators": [
+        "border scene",
+        "immigration scene"
+      ],
+      "reviewer_guidance": [
+        "Use migration and displacement reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_deportation_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_deportation_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_deportation_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "deportation",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_deportation_gcam",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Historical or migration framing",
+          "note": "Use for historical travel, exile, migration, or remembered journeys."
+        }
+      ],
+      "examples": [
+        {
+          "id": "deportation_example_1",
+          "title": "Direct travel mention",
+          "text": "تم ترحيله",
+          "expected_outcome": "migration and displacement reasoning",
+          "note": null
+        },
+        {
+          "id": "deportation_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"تم ترحيله\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_international_business",
+      "title": "International Business",
+      "description": "Reviewer pattern for international business.",
+      "primary_concept_id": "international_business",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "الصفقة الدولية تمت"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_international_business_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_international_business_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_international_business_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "international_business",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_international_business_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "international_business_example_1",
+          "title": "Direct travel mention",
+          "text": "الصفقة الدولية تمت",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "international_business_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"الصفقة الدولية تمت\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_international_study",
+      "title": "International Study",
+      "description": "Reviewer pattern for international study.",
+      "primary_concept_id": "international_study",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "سيسافر للدراسة في الخارج"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_international_study_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_international_study_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_international_study_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "international_study",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_international_study_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "international_study_example_1",
+          "title": "Direct travel mention",
+          "text": "سيسافر للدراسة في الخارج",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "international_study_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"سيسافر للدراسة في الخارج\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_medical_travel",
+      "title": "Medical Travel",
+      "description": "Reviewer pattern for medical travel.",
+      "primary_concept_id": "medical_travel",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "سافر للعلاج"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_medical_travel_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_medical_travel_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_medical_travel_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "medical_travel",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_medical_travel_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "medical_travel_example_1",
+          "title": "Direct travel mention",
+          "text": "سافر للعلاج",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "medical_travel_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"سافر للعلاج\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_religious_travel",
+      "title": "Religious Travel",
+      "description": "Reviewer pattern for religious travel.",
+      "primary_concept_id": "religious_travel",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "سافر للحج"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_religious_travel_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_religious_travel_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_religious_travel_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "religious_travel",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_religious_travel_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "religious_travel_example_1",
+          "title": "Direct travel mention",
+          "text": "سافر للحج",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "religious_travel_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"سافر للحج\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_historical_travel",
+      "title": "Historical Travel",
+      "description": "Reviewer pattern for historical travel.",
+      "primary_concept_id": "historical_travel",
+      "related_concept_ids": [
+        "flashback_travel",
+        "travel_observation",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "في التاريخ القديم سافروا"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_historical_travel_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_historical_travel_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_historical_travel_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "historical_travel",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_historical_travel_gcam",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Historical or migration framing",
+          "note": "Use for historical travel, exile, migration, or remembered journeys."
+        }
+      ],
+      "examples": [
+        {
+          "id": "historical_travel_example_1",
+          "title": "Direct travel mention",
+          "text": "في التاريخ القديم سافروا",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "historical_travel_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"في التاريخ القديم سافروا\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_fictional_travel",
+      "title": "Fictional Travel",
+      "description": "Reviewer pattern for fictional travel.",
+      "primary_concept_id": "fictional_travel",
+      "related_concept_ids": [
+        "dream_travel",
+        "imaginary_country",
+        "travel_reference",
+        "travel_scene_description"
+      ],
+      "direct_expressions": [
+        "في القصة سافر إلى بلد خيالي"
+      ],
+      "indirect_expressions": [
+        "The story is imagining another place."
+      ],
+      "semantic_intent": [
+        "fiction",
+        "dream",
+        "imagination"
+      ],
+      "supporting_evidence": [
+        "story frame",
+        "dream frame",
+        "imagination"
+      ],
+      "contradictory_evidence": [
+        "Explicit travel diary or factual report",
+        "Historical discussion without fantasy"
+      ],
+      "false_positives": [
+        "Treating a dream or fictional voyage as a real travel event."
+      ],
+      "counter_examples": [
+        "A storybook journey that is clearly fictional or dreamlike."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence reveals the setting is a dream or fiction."
+      ],
+      "scene_indicators": [
+        "dream scene",
+        "fantasy scene"
+      ],
+      "reviewer_guidance": [
+        "Use fictional and dream travel reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_fictional_travel_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_fictional_travel_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_fictional_travel_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "fictional_travel",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_fictional_travel_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "Fictional or dream framing",
+          "note": "Use for fictional, dreamlike, or imaginary travel contexts."
+        }
+      ],
+      "examples": [
+        {
+          "id": "fictional_travel_example_1",
+          "title": "Direct travel mention",
+          "text": "في القصة سافر إلى بلد خيالي",
+          "expected_outcome": "fictional and dream travel reasoning",
+          "note": null
+        },
+        {
+          "id": "fictional_travel_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"في القصة سافر إلى بلد خيالي\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_dream_travel",
+      "title": "Dream Travel",
+      "description": "Reviewer pattern for dream travel.",
+      "primary_concept_id": "dream_travel",
+      "related_concept_ids": [
+        "fictional_travel",
+        "imaginary_country",
+        "travel_reference",
+        "travel_scene_description"
+      ],
+      "direct_expressions": [
+        "في الحلم كان يسافر"
+      ],
+      "indirect_expressions": [
+        "The story is imagining another place."
+      ],
+      "semantic_intent": [
+        "fiction",
+        "dream",
+        "imagination"
+      ],
+      "supporting_evidence": [
+        "story frame",
+        "dream frame",
+        "imagination"
+      ],
+      "contradictory_evidence": [
+        "Explicit travel diary or factual report",
+        "Historical discussion without fantasy"
+      ],
+      "false_positives": [
+        "Treating a dream or fictional voyage as a real travel event."
+      ],
+      "counter_examples": [
+        "A storybook journey that is clearly fictional or dreamlike."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence reveals the setting is a dream or fiction."
+      ],
+      "scene_indicators": [
+        "dream scene",
+        "fantasy scene"
+      ],
+      "reviewer_guidance": [
+        "Use fictional and dream travel reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_dream_travel_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_dream_travel_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_dream_travel_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "dream_travel",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_dream_travel_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "Fictional or dream framing",
+          "note": "Use for fictional, dreamlike, or imaginary travel contexts."
+        }
+      ],
+      "examples": [
+        {
+          "id": "dream_travel_example_1",
+          "title": "Direct travel mention",
+          "text": "في الحلم كان يسافر",
+          "expected_outcome": "fictional and dream travel reasoning",
+          "note": null
+        },
+        {
+          "id": "dream_travel_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"في الحلم كان يسافر\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_flashback_travel",
+      "title": "Flashback Travel",
+      "description": "Reviewer pattern for flashback travel.",
+      "primary_concept_id": "flashback_travel",
+      "related_concept_ids": [
+        "historical_travel",
+        "travel_observation",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "في الفلاشباك تذكر الرحلة"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_flashback_travel_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_flashback_travel_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_flashback_travel_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "flashback_travel",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_flashback_travel_gcam",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1"
+          ],
+          "role": "Historical or migration framing",
+          "note": "Use for historical travel, exile, migration, or remembered journeys."
+        }
+      ],
+      "examples": [
+        {
+          "id": "flashback_travel_example_1",
+          "title": "Direct travel mention",
+          "text": "في الفلاشباك تذكر الرحلة",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "flashback_travel_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"في الفلاشباك تذكر الرحلة\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_imaginary_country",
+      "title": "Imaginary Country",
+      "description": "Reviewer pattern for imaginary country.",
+      "primary_concept_id": "imaginary_country",
+      "related_concept_ids": [
+        "dream_travel",
+        "fictional_travel",
+        "travel_reference",
+        "travel_scene_description"
+      ],
+      "direct_expressions": [
+        "بلد متخيل بالكامل"
+      ],
+      "indirect_expressions": [
+        "The story is imagining another place."
+      ],
+      "semantic_intent": [
+        "fiction",
+        "dream",
+        "imagination"
+      ],
+      "supporting_evidence": [
+        "story frame",
+        "dream frame",
+        "imagination"
+      ],
+      "contradictory_evidence": [
+        "Explicit travel diary or factual report",
+        "Historical discussion without fantasy"
+      ],
+      "false_positives": [
+        "Treating a dream or fictional voyage as a real travel event."
+      ],
+      "counter_examples": [
+        "A storybook journey that is clearly fictional or dreamlike."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence reveals the setting is a dream or fiction."
+      ],
+      "scene_indicators": [
+        "dream scene",
+        "fantasy scene"
+      ],
+      "reviewer_guidance": [
+        "Use fictional and dream travel reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_imaginary_country_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_imaginary_country_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_imaginary_country_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "imaginary_country",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_imaginary_country_gcam",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "Fictional or dream framing",
+          "note": "Use for fictional, dreamlike, or imaginary travel contexts."
+        }
+      ],
+      "examples": [
+        {
+          "id": "imaginary_country_example_1",
+          "title": "Direct travel mention",
+          "text": "بلد متخيل بالكامل",
+          "expected_outcome": "fictional and dream travel reasoning",
+          "note": null
+        },
+        {
+          "id": "imaginary_country_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"بلد متخيل بالكامل\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_travel_scene_description",
+      "title": "Travel Scene Description",
+      "description": "Reviewer pattern for travel scene description.",
+      "primary_concept_id": "travel_scene_description",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "المشهد يظهر حقيبة ومطاراً"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_travel_scene_description_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_travel_scene_description_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_travel_scene_description_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "travel_scene_description",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_travel_scene_description_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "travel_scene_description_example_1",
+          "title": "Direct travel mention",
+          "text": "المشهد يظهر حقيبة ومطاراً",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "travel_scene_description_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"المشهد يظهر حقيبة ومطاراً\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_travel_dialogue",
+      "title": "Travel Dialogue",
+      "description": "Reviewer pattern for travel dialogue.",
+      "primary_concept_id": "travel_dialogue",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "قال: سنسافر غداً"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_travel_dialogue_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_travel_dialogue_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_travel_dialogue_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "travel_dialogue",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_travel_dialogue_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "travel_dialogue_example_1",
+          "title": "Direct travel mention",
+          "text": "قال: سنسافر غداً",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "travel_dialogue_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"قال: سنسافر غداً\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_travel_observation",
+      "title": "Travel Observation",
+      "description": "Reviewer pattern for travel observation.",
+      "primary_concept_id": "travel_observation",
+      "related_concept_ids": [
+        "travel_destination",
+        "travel_observation",
+        "travel_origin",
+        "travel_reference"
+      ],
+      "direct_expressions": [
+        "هذا مجرد وصف للسفر"
+      ],
+      "indirect_expressions": [
+        "The line is about travel rather than violation."
+      ],
+      "semantic_intent": [
+        "informative",
+        "educational",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "literal travel mention",
+        "destination context",
+        "speaker context"
+      ],
+      "contradictory_evidence": [
+        "Quoted speech",
+        "Documentary or educational framing",
+        "Historical narration"
+      ],
+      "false_positives": [
+        "Treating a destination mention as criticism or political speech."
+      ],
+      "counter_examples": [
+        "A simple travel note that describes movement without judgement."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence clarifies the destination or travel intent."
+      ],
+      "scene_indicators": [
+        "travel scene",
+        "airport scene"
+      ],
+      "reviewer_guidance": [
+        "Use travel observation and country reference reasoning before deciding whether this is a finding.",
+        "Do not over-trigger on a neutral travel note or a place name without context."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_travel_observation_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 92
+        },
+        {
+          "id": "travel_pattern_travel_observation_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_travel_observation_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "travel_observation",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_travel_observation_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "travel_observation_example_1",
+          "title": "Direct travel mention",
+          "text": "هذا مجرد وصف للسفر",
+          "expected_outcome": "travel observation and country reference reasoning",
+          "note": null
+        },
+        {
+          "id": "travel_observation_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"هذا مجرد وصف للسفر\".",
+          "expected_outcome": "Travel context remains factual or fictional depending on frame.",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_country_comparison",
+      "title": "Country Comparison",
+      "description": "Reviewer pattern for country comparison.",
+      "primary_concept_id": "country_comparison",
+      "related_concept_ids": [
+        "country_comparison",
+        "country_insult",
+        "country_mockery",
+        "country_praise",
+        "travel_observation"
+      ],
+      "direct_expressions": [
+        "هذا البلد أفضل من الآخر"
+      ],
+      "indirect_expressions": [
+        "This place is being judged."
+      ],
+      "semantic_intent": [
+        "criticism",
+        "praise",
+        "mockery"
+      ],
+      "supporting_evidence": [
+        "evaluative language",
+        "country comparison",
+        "social stance"
+      ],
+      "contradictory_evidence": [
+        "Documentary or news framing",
+        "Neutral comparison without abuse"
+      ],
+      "false_positives": [
+        "Treating any comparison as an insult or endorsement."
+      ],
+      "counter_examples": [
+        "A documentary comparing countries without ridicule or praise."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence reveals the line was satire, quote, or criticism."
+      ],
+      "scene_indicators": [
+        "argument scene",
+        "commentary scene"
+      ],
+      "reviewer_guidance": [
+        "Use evaluative country commentary reasoning before deciding whether this is a finding.",
+        "Do not treat comparison, satire, or documentary repetition as abuse unless the wording itself is abusive."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_country_comparison_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_country_comparison_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 82
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_country_comparison_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "country_comparison",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_country_comparison_gcam",
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "role": "Factual travel and country observation",
+          "note": "Use for factual travel mention, observation, or neutral country reference."
+        }
+      ],
+      "examples": [
+        {
+          "id": "country_comparison_example_1",
+          "title": "Direct travel mention",
+          "text": "هذا البلد أفضل من الآخر",
+          "expected_outcome": "evaluative country commentary reasoning",
+          "note": null
+        },
+        {
+          "id": "country_comparison_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"هذا البلد أفضل من الآخر\".",
+          "expected_outcome": "Needs reviewer caution",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_country_insult",
+      "title": "Country Insult",
+      "description": "Reviewer pattern for country insult.",
+      "primary_concept_id": "country_insult",
+      "related_concept_ids": [
+        "country_comparison",
+        "country_mockery",
+        "country_praise",
+        "travel_observation"
+      ],
+      "direct_expressions": [
+        "هذا البلد متخلف"
+      ],
+      "indirect_expressions": [
+        "This place is being judged."
+      ],
+      "semantic_intent": [
+        "criticism",
+        "praise",
+        "mockery"
+      ],
+      "supporting_evidence": [
+        "evaluative language",
+        "country comparison",
+        "social stance"
+      ],
+      "contradictory_evidence": [
+        "Documentary or news framing",
+        "Neutral comparison without abuse"
+      ],
+      "false_positives": [
+        "Treating any comparison as an insult or endorsement."
+      ],
+      "counter_examples": [
+        "A documentary comparing countries without ridicule or praise."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence reveals the line was satire, quote, or criticism."
+      ],
+      "scene_indicators": [
+        "argument scene",
+        "commentary scene"
+      ],
+      "reviewer_guidance": [
+        "Use evaluative country commentary reasoning before deciding whether this is a finding.",
+        "Do not treat comparison, satire, or documentary repetition as abuse unless the wording itself is abusive."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_country_insult_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_country_insult_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 82
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_country_insult_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "country_insult",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_country_insult_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Evaluative country commentary",
+          "note": "Use when the text clearly insults, praises, mocks, or stereotypes a country or its people."
+        }
+      ],
+      "examples": [
+        {
+          "id": "country_insult_example_1",
+          "title": "Direct travel mention",
+          "text": "هذا البلد متخلف",
+          "expected_outcome": "evaluative country commentary reasoning",
+          "note": null
+        },
+        {
+          "id": "country_insult_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"هذا البلد متخلف\".",
+          "expected_outcome": "Needs reviewer caution",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_country_praise",
+      "title": "Country Praise",
+      "description": "Reviewer pattern for country praise.",
+      "primary_concept_id": "country_praise",
+      "related_concept_ids": [
+        "country_comparison",
+        "country_insult",
+        "country_mockery",
+        "travel_observation"
+      ],
+      "direct_expressions": [
+        "هذا البلد رائع"
+      ],
+      "indirect_expressions": [
+        "This place is being judged."
+      ],
+      "semantic_intent": [
+        "criticism",
+        "praise",
+        "mockery"
+      ],
+      "supporting_evidence": [
+        "evaluative language",
+        "country comparison",
+        "social stance"
+      ],
+      "contradictory_evidence": [
+        "Documentary or news framing",
+        "Neutral comparison without abuse"
+      ],
+      "false_positives": [
+        "Treating any comparison as an insult or endorsement."
+      ],
+      "counter_examples": [
+        "A documentary comparing countries without ridicule or praise."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence reveals the line was satire, quote, or criticism."
+      ],
+      "scene_indicators": [
+        "argument scene",
+        "commentary scene"
+      ],
+      "reviewer_guidance": [
+        "Use evaluative country commentary reasoning before deciding whether this is a finding.",
+        "Do not treat comparison, satire, or documentary repetition as abuse unless the wording itself is abusive."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_country_praise_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_country_praise_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 82
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_country_praise_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "country_praise",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_country_praise_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Evaluative country commentary",
+          "note": "Use when the text clearly insults, praises, mocks, or stereotypes a country or its people."
+        }
+      ],
+      "examples": [
+        {
+          "id": "country_praise_example_1",
+          "title": "Direct travel mention",
+          "text": "هذا البلد رائع",
+          "expected_outcome": "evaluative country commentary reasoning",
+          "note": null
+        },
+        {
+          "id": "country_praise_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"هذا البلد رائع\".",
+          "expected_outcome": "Needs reviewer caution",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_country_mockery",
+      "title": "Country Mockery",
+      "description": "Reviewer pattern for country mockery.",
+      "primary_concept_id": "country_mockery",
+      "related_concept_ids": [
+        "country_comparison",
+        "country_insult",
+        "country_praise",
+        "travel_observation"
+      ],
+      "direct_expressions": [
+        "يا له من بلد مضحك"
+      ],
+      "indirect_expressions": [
+        "This place is being judged."
+      ],
+      "semantic_intent": [
+        "criticism",
+        "praise",
+        "mockery"
+      ],
+      "supporting_evidence": [
+        "evaluative language",
+        "country comparison",
+        "social stance"
+      ],
+      "contradictory_evidence": [
+        "Documentary or news framing",
+        "Neutral comparison without abuse"
+      ],
+      "false_positives": [
+        "Treating any comparison as an insult or endorsement."
+      ],
+      "counter_examples": [
+        "A documentary comparing countries without ridicule or praise."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence reveals the line was satire, quote, or criticism."
+      ],
+      "scene_indicators": [
+        "argument scene",
+        "commentary scene"
+      ],
+      "reviewer_guidance": [
+        "Use evaluative country commentary reasoning before deciding whether this is a finding.",
+        "Do not treat comparison, satire, or documentary repetition as abuse unless the wording itself is abusive."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_country_mockery_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_country_mockery_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 82
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_country_mockery_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "country_mockery",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_country_mockery_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Evaluative country commentary",
+          "note": "Use when the text clearly insults, praises, mocks, or stereotypes a country or its people."
+        }
+      ],
+      "examples": [
+        {
+          "id": "country_mockery_example_1",
+          "title": "Direct travel mention",
+          "text": "يا له من بلد مضحك",
+          "expected_outcome": "evaluative country commentary reasoning",
+          "note": null
+        },
+        {
+          "id": "country_mockery_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"يا له من بلد مضحك\".",
+          "expected_outcome": "Needs reviewer caution",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_country_stereotype",
+      "title": "Country Stereotype",
+      "description": "Reviewer pattern for country stereotype.",
+      "primary_concept_id": "country_stereotype",
+      "related_concept_ids": [
+        "country_comparison",
+        "country_insult",
+        "country_praise",
+        "travel_observation"
+      ],
+      "direct_expressions": [
+        "كل أهل هذا البلد كذا"
+      ],
+      "indirect_expressions": [
+        "This place is being judged."
+      ],
+      "semantic_intent": [
+        "criticism",
+        "praise",
+        "mockery"
+      ],
+      "supporting_evidence": [
+        "evaluative language",
+        "country comparison",
+        "social stance"
+      ],
+      "contradictory_evidence": [
+        "Documentary or news framing",
+        "Neutral comparison without abuse"
+      ],
+      "false_positives": [
+        "Treating any comparison as an insult or endorsement."
+      ],
+      "counter_examples": [
+        "A documentary comparing countries without ridicule or praise."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence reveals the line was satire, quote, or criticism."
+      ],
+      "scene_indicators": [
+        "argument scene",
+        "commentary scene"
+      ],
+      "reviewer_guidance": [
+        "Use evaluative country commentary reasoning before deciding whether this is a finding.",
+        "Do not treat comparison, satire, or documentary repetition as abuse unless the wording itself is abusive."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_country_stereotype_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_country_stereotype_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 82
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_country_stereotype_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "country_stereotype",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_country_stereotype_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Evaluative country commentary",
+          "note": "Use when the text clearly insults, praises, mocks, or stereotypes a country or its people."
+        }
+      ],
+      "examples": [
+        {
+          "id": "country_stereotype_example_1",
+          "title": "Direct travel mention",
+          "text": "كل أهل هذا البلد كذا",
+          "expected_outcome": "evaluative country commentary reasoning",
+          "note": null
+        },
+        {
+          "id": "country_stereotype_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"كل أهل هذا البلد كذا\".",
+          "expected_outcome": "Needs reviewer caution",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_country_security_reference",
+      "title": "Country Security Reference",
+      "description": "Reviewer pattern for country security reference.",
+      "primary_concept_id": "country_security_reference",
+      "related_concept_ids": [
+        "country_comparison",
+        "country_insult",
+        "country_praise",
+        "travel_observation"
+      ],
+      "direct_expressions": [
+        "حكومة البلد ضعيفة أمنياً"
+      ],
+      "indirect_expressions": [
+        "This place is being judged."
+      ],
+      "semantic_intent": [
+        "criticism",
+        "praise",
+        "mockery"
+      ],
+      "supporting_evidence": [
+        "evaluative language",
+        "country comparison",
+        "social stance"
+      ],
+      "contradictory_evidence": [
+        "Documentary or news framing",
+        "Neutral comparison without abuse"
+      ],
+      "false_positives": [
+        "Treating any comparison as an insult or endorsement."
+      ],
+      "counter_examples": [
+        "A documentary comparing countries without ridicule or praise."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence reveals the line was satire, quote, or criticism."
+      ],
+      "scene_indicators": [
+        "argument scene",
+        "commentary scene"
+      ],
+      "reviewer_guidance": [
+        "Use evaluative country commentary reasoning before deciding whether this is a finding.",
+        "Do not treat comparison, satire, or documentary repetition as abuse unless the wording itself is abusive."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_country_security_reference_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_country_security_reference_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 82
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_country_security_reference_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "country_security_reference",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_country_security_reference_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Evaluative country commentary",
+          "note": "Use when the text clearly insults, praises, mocks, or stereotypes a country or its people."
+        }
+      ],
+      "examples": [
+        {
+          "id": "country_security_reference_example_1",
+          "title": "Direct travel mention",
+          "text": "حكومة البلد ضعيفة أمنياً",
+          "expected_outcome": "evaluative country commentary reasoning",
+          "note": null
+        },
+        {
+          "id": "country_security_reference_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"حكومة البلد ضعيفة أمنياً\".",
+          "expected_outcome": "Needs reviewer caution",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "travel_pattern_country_political_reference",
+      "title": "Country Political Reference",
+      "description": "Reviewer pattern for country political reference.",
+      "primary_concept_id": "country_political_reference",
+      "related_concept_ids": [
+        "country_comparison",
+        "country_insult",
+        "country_praise",
+        "travel_observation"
+      ],
+      "direct_expressions": [
+        "النظام هناك فاسد"
+      ],
+      "indirect_expressions": [
+        "This place is being judged."
+      ],
+      "semantic_intent": [
+        "criticism",
+        "praise",
+        "mockery"
+      ],
+      "supporting_evidence": [
+        "evaluative language",
+        "country comparison",
+        "social stance"
+      ],
+      "contradictory_evidence": [
+        "Documentary or news framing",
+        "Neutral comparison without abuse"
+      ],
+      "false_positives": [
+        "Treating any comparison as an insult or endorsement."
+      ],
+      "counter_examples": [
+        "A documentary comparing countries without ridicule or praise."
+      ],
+      "cross_sentence_indicators": [
+        "A later sentence reveals the line was satire, quote, or criticism."
+      ],
+      "scene_indicators": [
+        "argument scene",
+        "commentary scene"
+      ],
+      "reviewer_guidance": [
+        "Use evaluative country commentary reasoning before deciding whether this is a finding.",
+        "Do not treat comparison, satire, or documentary repetition as abuse unless the wording itself is abusive."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "travel_pattern_country_political_reference_direct",
+          "title": "Direct Signal",
+          "description": "The line explicitly states the travel or country meaning.",
+          "confidence": 96
+        },
+        {
+          "id": "travel_pattern_country_political_reference_context",
+          "title": "Contextual Signal",
+          "description": "The surrounding scene helps confirm the travel or country meaning.",
+          "confidence": 82
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "travel_pattern_country_political_reference_glossary",
+          "from_concept_id": "travel_reference",
+          "to_concept_id": "country_political_reference",
+          "relation": "supports",
+          "note": "Travel reference is the umbrella anchor for this concept."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "travel_pattern_country_political_reference_gcam",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Evaluative country commentary",
+          "note": "Use when the text clearly insults, praises, mocks, or stereotypes a country or its people."
+        }
+      ],
+      "examples": [
+        {
+          "id": "country_political_reference_example_1",
+          "title": "Direct travel mention",
+          "text": "النظام هناك فاسد",
+          "expected_outcome": "evaluative country commentary reasoning",
+          "note": null
+        },
+        {
+          "id": "country_political_reference_example_2",
+          "title": "Quoted or contextual travel mention",
+          "text": "A character repeats: \"النظام هناك فاسد\".",
+          "expected_outcome": "Needs reviewer caution",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

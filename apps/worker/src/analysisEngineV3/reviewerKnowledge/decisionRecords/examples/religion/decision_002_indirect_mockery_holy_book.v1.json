@@ -1,0 +1,72 @@
+{
+  "id": "decision_002_indirect_mockery_holy_book",
+  "version": "1.0.0",
+  "title": "Indirect mockery of holy book",
+  "summary": "Coded mockery that targets a holy book.",
+  "originalScenario": "A character sneers at the holy book without naming it directly.",
+  "reviewQuestion": "Is this indirect mockery of a holy book?",
+  "initialSuspicion": "Indirect religious mockery.",
+  "possibleConcepts": [
+    "religious_hate_speech",
+    "holy_books",
+    "religious_symbols"
+  ],
+  "supportingEvidence": [
+    "sneering reference to sacred text"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Dialogue with sarcastic tone.",
+  "speakerAnalysis": "The speaker is explicit enough through tone.",
+  "targetAnalysis": "The target is the holy book.",
+  "intentAnalysis": "Mockery.",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check context",
+    "Apply religion pack heuristics",
+    "Map to GCAM article"
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "medium",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 1,
+      "atom_ids": [],
+      "note": "Holy book disrespect."
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Tone is indirect but still harmful.",
+  "benchmarkTags": [
+    "religion",
+    "holy_book",
+    "mockery",
+    "indirect"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "religion_pattern_indirect_mockery"
+  ],
+  "relatedBlueprintConcepts": [
+    "religion_religious_hate_speech",
+    "religion_holy_books",
+    "religion_religious_symbols"
+  ]
+}

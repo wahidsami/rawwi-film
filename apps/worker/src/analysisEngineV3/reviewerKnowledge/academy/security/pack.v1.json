@@ -1,0 +1,295 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_03_security",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "National Security Reviewer Knowledge Pack",
+    "description": "Full academy knowledge pack for GCAM national security, public order, overthrow, banned-group, and security-institution content.",
+    "supported_concepts": [
+      "government",
+      "military",
+      "organized_crime",
+      "terrorism",
+      "violence",
+      "extremism",
+      "public_order",
+      "national_unity",
+      "state_institutions",
+      "police",
+      "weapons",
+      "riots"
+    ]
+  },
+  "pack": {
+    "id": "v3_03_security",
+    "module_id": "v3_03_security",
+    "title": "National Security Reviewer Knowledge Pack",
+    "trigger_concept_ids": [
+      "government",
+      "military",
+      "organized_crime",
+      "terrorism",
+      "violence",
+      "extremism",
+      "public_order",
+      "national_unity",
+      "state_institutions",
+      "police",
+      "weapons",
+      "riots"
+    ],
+    "purpose": "Provide reviewer knowledge for GCAM national security, public order, overthrow, banned-group, and security-institution content using the existing atom structure.",
+    "protected_interests": [
+      "public order",
+      "national stability",
+      "national unity",
+      "state institutions",
+      "security forces",
+      "community safety",
+      "prevention of violent extremism",
+      "prevention of banned-group normalisation"
+    ],
+    "protected_concepts": [
+      "national security",
+      "public order",
+      "national unity",
+      "state institutions",
+      "security forces",
+      "terrorism",
+      "extremism",
+      "civil disobedience",
+      "overthrow",
+      "banned groups",
+      "weapons instruction",
+      "riot",
+      "police",
+      "military"
+    ],
+    "required_evidence": [
+      "terrorism / extremism | minimum: A literal statement that endorses, supports, or celebrates terrorism or extremist violence inside the chunk. | strong: A direct slogan, recruitment phrase, symbol reference, or practical guidance that frames terrorism or extremism as acceptable or admirable. | weak: An abbreviated or coded endorsement that still clearly points to terrorism or extremism in the same local text. | insufficient: A neutral mention, condemnation, news reference, or historical discussion with no endorsement or operational support.",
+      "public order / unrest | minimum: A literal call for rioting, civil disobedience, disorder, or deliberate violation of public order. | strong: Language that organizes unrest, celebrates chaos, or asks the audience to break rules, ignore orders, or disturb social stability. | weak: A rhetorical push toward disorder that is short on detail but still plainly encourages unrest in the local sentence. | insufficient: General political criticism, anger, or frustration without a call to disorder or rule breaking.",
+      "overthrow / governance | minimum: An explicit call to topple the system of governance, weaken the state, or attack the defined constants of الحكم. | strong: A statement that legitimizes overthrow, undermines governing institutions, or tells others to act against the system as a collective target. | weak: An implied or coded call that still clearly aims at the governing order rather than a private dispute. | insufficient: Critical commentary, reform discussion, or dramatic tension that does not ask for overthrow or institutional harm.",
+      "security institutions | minimum: A direct collective insult, accusation, or incitement aimed at the police, army, or security forces as a class. | strong: Generalized abuse of state security actors, encouragement to oppose them, or ridicule that frames them as illegitimate or deserving of attack. | weak: A short hostile phrase about security forces that still makes the institutional target clear. | insufficient: One-off criticism of an individual officer or a neutral reference to security personnel in a report or scene.",
+      "weapons / explosives | minimum: A literal instruction, method, or step-by-step guidance for making, obtaining, or using weapons or explosives. | strong: Operational advice that reduces the apparent danger, normalizes the act, or presents the harmful technique as practical and achievable. | weak: A condensed technical hint that still provides usable guidance for violent or destructive action. | insufficient: A fictional prop, a warning, a historical reference, or a condemnation of weapons use without instructions.",
+      "banned groups | minimum: A literal endorsement, praise, or invitation to join a banned group or its ideology. | strong: Use of slogans, symbols, or recruitment language that normalizes sympathy with a banned group. | weak: A brief coded reference that still clearly aligns the speaker with the banned group. | insufficient: A neutral report, investigative mention, or explicit condemnation of the group.",
+      "national unity | minimum: A literal call for sectarian division, regional division, or rejection of social peace as a public aim. | strong: Language that turns communities against one another or presents internal division as desirable, inevitable, or heroic. | weak: A short us-versus-them phrase that still directs hostility at a wider social group or region. | insufficient: Debate, criticism, or dramatic conflict that does not ask the audience to fracture social unity."
+    ],
+    "insufficient_evidence": [
+      "A political opinion, critique, or complaint with no literal call to unrest, overthrow, or violence.",
+      "A news, documentary, court, or police reference that records the security topic without endorsing it.",
+      "A fictional or dramatic line that is explicitly condemned, countered, or reframed by the story.",
+      "A school, discipline, or household use of the word النظام that does not refer to governance."
+    ],
+    "reviewer_heuristics": [
+      "Anchor the finding to the exact literal phrase that shows the harmful security meaning.",
+      "Treat direct incitement, glorification, and operational instruction as the strongest signals.",
+      "Separate political criticism from calls to disorder, overthrow, or violent action.",
+      "Use narrative framing to distinguish villain speech, quotations, investigations, and condemnations from endorsement.",
+      "Prefer the most specific atom: 12-x for public order, 13-x for constants of governance, 14-x for overthrow or violence, 15-x for banned groups, and 9-2 when the text promotes terrorism or extremism.",
+      "If the text only mentions security topics in an educational, documentary, or courtroom setting, do not force a violation.",
+      "General abuse of security personnel counts only when the text clearly targets the institution or class, not when it is a one-off personal dispute."
+    ],
+    "legal_exceptions": [
+      "Educational",
+      "Historical",
+      "Documentary",
+      "Satire",
+      "Police investigation",
+      "News reporting",
+      "Condemnation",
+      "Court proceedings",
+      "Fiction",
+      "Role-play",
+      "Dream sequence",
+      "Flashback"
+    ],
+    "positive_examples": [
+      "Direct overthrow call: لنُسقط نظام الحكم الليلة — Explicit incitement to overthrow the governing order.",
+      "Civil disorder: لازم نتمرد ونكسر الأوامر — Direct call to rebellion and deliberate rule breaking.",
+      "Weapons instruction: هذا هو كيف تصنع قنبلة في البيت — Operational guidance for making an explosive device.",
+      "Terror glorification: الإرهاب له مبررات شريفة — Justification and positive framing of terrorism.",
+      "Banned-group sympathy: عاشت الجماعة المحظورة — Direct praise and normalisation of a banned group.",
+      "Security-force collective abuse: رجال الأمن كلهم فاسدون — Generalised hostile attack on security institutions as a class.",
+      "Public order disruption: التخريب هو الحل — Celebration of destructive unrest as the desired solution.",
+      "National unity harm: خلّو الناس تنقسم مع بعضهم — Encouragement of social division and weakened coexistence."
+    ],
+    "negative_examples": [
+      "Neutral reporting: أفاد التقرير بوجود عصيان مدني في بلد آخر — A factual report without endorsement or incitement.",
+      "Educational warning: الفيلم يشرح خطر تصنيع المتفجرات كي يتجنبها الشباب — Instructional or cautionary content that does not promote the act.",
+      "Condemnation: الشخصية تدين الإرهاب وتصفه بالجريمة — The narrative rejects terrorism instead of supporting it.",
+      "Court testimony: أعاد الشاهد ما قاله المتهم عن التخريب داخل الجلسة — A quoted legal proceeding without adoption by the narrator.",
+      "Fictional villain speech with rejection: الشرير يطالب بالفوضى ثم ترفضه القصة بوضوح — A fictional hostile line that is clearly framed as rejected.",
+      "School-system meaning: النظام في الفصل يحتاج إلى هدوء — The word النظام refers to classroom order, not governance.",
+      "Historical reference: يتحدث الوثائقي عن تمرد قديم بوصفه حدثًا تاريخيًا — A historical account without present-day endorsement.",
+      "Police investigation: يحقق الضابط في عبارة التهديد داخل الملف — Investigative mention of a threat, not promotion of it."
+    ],
+    "common_false_positives": [
+      "Political disagreement or protest language that does not call for unrest, overthrow, or violent action.",
+      "A documentary or news report about terrorism, banned groups, or unrest that is clearly informational.",
+      "A police report, courtroom transcript, or investigation that repeats dangerous wording as evidence.",
+      "A fictional villain line that the story clearly condemns or defeats.",
+      "School or household uses of the word النظام that refer to order or discipline rather than governance.",
+      "A mention of الجيش, الشرطة, or الحكومة in a neutral institutional context without abuse or incitement.",
+      "Historical narration of past unrest that does not celebrate or recommend it."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "إرهاب",
+        "concept_id": "terrorism",
+        "relation": "Direct security anchor",
+        "note": "Strongest anchor when the text supports promotion, justification, or recruitment."
+      },
+      {
+        "term": "تمرد",
+        "concept_id": "government",
+        "relation": "Governance escalation anchor",
+        "note": "Relevant when the text calls for rebellion or disorder against authority."
+      },
+      {
+        "term": "عصيان",
+        "concept_id": "government",
+        "relation": "Governance escalation anchor",
+        "note": "Often indicates civil disobedience or deliberate rejection of lawful order."
+      },
+      {
+        "term": "تخريب",
+        "concept_id": "violence",
+        "relation": "Destructive-action anchor",
+        "note": "Strong when paired with property damage, unrest, or instructions."
+      },
+      {
+        "term": "متفجرات",
+        "concept_id": "violence",
+        "relation": "Operational harm anchor",
+        "note": "Very strong when the text gives methods, components, or concealment steps."
+      },
+      {
+        "term": "أسلحة",
+        "concept_id": "violence",
+        "relation": "Operational harm anchor",
+        "note": "Strong when the text teaches acquisition or use, especially with downplayed risk."
+      },
+      {
+        "term": "الجيش",
+        "concept_id": "military",
+        "relation": "State-security anchor",
+        "note": "Relevant when the text targets, glorifies, or attacks military institutions."
+      },
+      {
+        "term": "الشرطة",
+        "concept_id": "government",
+        "relation": "Security-force anchor",
+        "note": "Relevant when the text targets police as a class or praises attacks on them."
+      },
+      {
+        "term": "الحكومة",
+        "concept_id": "government",
+        "relation": "Authority anchor",
+        "note": "Relevant when the content attacks or undermines the governing order."
+      },
+      {
+        "term": "الجماعات المحظورة",
+        "concept_id": "terrorism",
+        "relation": "Banned-group anchor",
+        "note": "Relevant for promotion, symbolism, or normalisation of banned groups."
+      },
+      {
+        "term": "النظام العام",
+        "concept_id": "government",
+        "relation": "Public-order anchor",
+        "note": "Signals public-order reasoning when used in the context of unrest or compliance."
+      },
+      {
+        "term": "النظام",
+        "concept_id": "government",
+        "relation": "Context-sensitive anchor",
+        "note": "Only relevant when the text clearly refers to governance or authority, not classroom discipline."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 4,
+        "atom_ids": [
+          "4-2",
+          "4-5"
+        ],
+        "role": "Umbrella content-standard protection",
+        "note": "Use for security harm that also affects public order or national unity."
+      },
+      {
+        "article_id": 9,
+        "atom_ids": [
+          "9-1",
+          "9-2",
+          "9-3"
+        ],
+        "role": "Violence and extremism escalation",
+        "note": "Use when the content glorifies violence, terror, or intimidation."
+      },
+      {
+        "article_id": 12,
+        "atom_ids": [
+          "12-1",
+          "12-2",
+          "12-3",
+          "12-4",
+          "12-5"
+        ],
+        "role": "Public order and social peace",
+        "note": "Use for disorder, chaos, property damage, or calls to ignore rules."
+      },
+      {
+        "article_id": 13,
+        "atom_ids": [
+          "13-1",
+          "13-2",
+          "13-3",
+          "13-4",
+          "13-5"
+        ],
+        "role": "Constants of governance",
+        "note": "Use when the text attacks, weakens, or disguises harm to governance principles or institutions."
+      },
+      {
+        "article_id": 14,
+        "atom_ids": [
+          "14-1",
+          "14-2",
+          "14-3",
+          "14-4",
+          "14-5"
+        ],
+        "role": "Overthrow and violent incitement",
+        "note": "Use for calls to overthrow the system or to use violence for political or social aims."
+      },
+      {
+        "article_id": 15,
+        "atom_ids": [
+          "15-1",
+          "15-2",
+          "15-3",
+          "15-4",
+          "15-5"
+        ],
+        "role": "Banned groups and normalisation",
+        "note": "Use when the content promotes, symbolises, sympathises with, or normalises banned groups."
+      }
+    ],
+    "reporting_guidance": [
+      "Report the shortest exact phrase that carries the incitement, glorification, instruction, or banned-group endorsement.",
+      "Prefer the most specific atom and keep broad article 4 as secondary when a stronger article 12, 13, 14, or 15 applies.",
+      "Explain why the text is security-relevant in narrative terms: what is being urged, justified, normalised, or operationalised.",
+      "If the context is documentary, educational, courtroom, police, news, or explicit condemnation, say so clearly and do not overstate the finding.",
+      "Mention a review-only outcome when the text is security-related but still ambiguous after context analysis."
+    ]
+  }
+}

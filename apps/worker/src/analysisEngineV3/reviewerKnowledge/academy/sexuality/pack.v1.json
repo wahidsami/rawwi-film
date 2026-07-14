@@ -1,0 +1,340 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_07_sexuality",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Sexual Content Reviewer Knowledge Pack",
+    "description": "Full academy knowledge pack for sexual content, intimacy, framing, and exception reasoning.",
+    "supported_concepts": [
+      "sexual_reference",
+      "sexual_joke",
+      "sexual_double_meaning",
+      "sexual_metaphor",
+      "sexual_symbolism",
+      "sexual_flirting",
+      "sexual_romance",
+      "sexual_suggestion",
+      "sexual_invitation",
+      "sexual_kiss",
+      "sexual_intimacy",
+      "sexual_touch",
+      "sexual_dancing",
+      "sexual_harassment",
+      "sexual_assault",
+      "sexual_abuse",
+      "sexual_exploitation",
+      "sexual_grooming",
+      "sexual_false_accusation",
+      "sexual_dialogue",
+      "sexual_scene",
+      "sexual_description",
+      "sexual_sound",
+      "sexual_camera_focus",
+      "sexual_body_focus",
+      "sexual_clothing",
+      "sexual_normalization",
+      "sexual_glorification",
+      "sexual_instruction",
+      "sexual_comedy",
+      "sexual_condemnation",
+      "sexual_documentary",
+      "sexual_medical",
+      "sexual_educational",
+      "sexual_historical",
+      "sexual_dream",
+      "sexual_flashback",
+      "sexual_imagination"
+    ]
+  },
+  "pack": {
+    "id": "v3_07_sexuality",
+    "module_id": "v3_07_sexuality",
+    "title": "Sexual Content Reviewer Knowledge Pack",
+    "default_question_set_id": "default_sexuality_question_set_v1",
+    "trigger_concept_ids": [
+      "sexual_reference",
+      "sexual_joke",
+      "sexual_double_meaning",
+      "sexual_metaphor",
+      "sexual_symbolism",
+      "sexual_flirting",
+      "sexual_romance",
+      "sexual_suggestion",
+      "sexual_invitation",
+      "sexual_kiss",
+      "sexual_intimacy",
+      "sexual_touch",
+      "sexual_dancing",
+      "sexual_harassment",
+      "sexual_assault",
+      "sexual_abuse",
+      "sexual_exploitation",
+      "sexual_grooming",
+      "sexual_false_accusation",
+      "sexual_dialogue",
+      "sexual_scene",
+      "sexual_description",
+      "sexual_sound",
+      "sexual_camera_focus",
+      "sexual_body_focus",
+      "sexual_clothing",
+      "sexual_normalization",
+      "sexual_glorification",
+      "sexual_instruction",
+      "sexual_comedy",
+      "sexual_condemnation",
+      "sexual_documentary",
+      "sexual_medical",
+      "sexual_educational",
+      "sexual_historical",
+      "sexual_dream",
+      "sexual_flashback",
+      "sexual_imagination"
+    ],
+    "purpose": "Teach reviewers how to reason about sexual content, intimacy, visual framing, consent, exception handling, and implicit meaning without collapsing distinct concepts into one node.",
+    "protected_interests": [
+      "bodily autonomy",
+      "consent",
+      "privacy",
+      "dignity",
+      "age-appropriate content",
+      "non-exploitation",
+      "narrative accuracy",
+      "context-aware interpretation"
+    ],
+    "protected_concepts": [
+      "sexual_reference",
+      "sexual_joke",
+      "sexual_double_meaning",
+      "sexual_metaphor",
+      "sexual_symbolism",
+      "sexual_flirting",
+      "sexual_romance",
+      "sexual_suggestion",
+      "sexual_invitation",
+      "sexual_kiss",
+      "sexual_intimacy",
+      "sexual_touch",
+      "sexual_dancing",
+      "sexual_harassment",
+      "sexual_assault",
+      "sexual_abuse",
+      "sexual_exploitation",
+      "sexual_grooming",
+      "sexual_false_accusation",
+      "sexual_dialogue",
+      "sexual_scene",
+      "sexual_description",
+      "sexual_sound",
+      "sexual_camera_focus",
+      "sexual_body_focus",
+      "sexual_clothing",
+      "sexual_normalization",
+      "sexual_glorification",
+      "sexual_instruction",
+      "sexual_comedy",
+      "sexual_condemnation",
+      "sexual_documentary",
+      "sexual_medical",
+      "sexual_educational",
+      "sexual_historical",
+      "sexual_dream",
+      "sexual_flashback",
+      "sexual_imagination"
+    ],
+    "required_evidence": [
+      "Direct sexual reference or unmistakable innuendo anchored in the exact literal span.",
+      "Mutual or pressured intimacy clues when the scene is about flirtation, romance, touch, or invitation.",
+      "Scene, camera, sound, or body-language evidence when the sexual meaning is visual rather than spoken.",
+      "Context markers such as medical, educational, historical, documentary, or court settings before treating the text as a violation.",
+      "Separate harm, harassment, exploitation, and grooming from consensual romance or neutral depiction.",
+      "Recover implicit sexuality from double meaning, metaphor, symbolism, or indirect speech only when the scene supports that reading."
+    ],
+    "insufficient_evidence": [
+      "A neutral mention, a wardrobe note, or a non-sexual medical term with no sexual frame.",
+      "A family affection scene that is mistaken for intimacy without corroboration.",
+      "A quoted, reported, or condemned line that the story does not endorse.",
+      "A dream, flashback, or imagination sequence with no recoverable sexual meaning."
+    ],
+    "reviewer_heuristics": [
+      "Do not collapse mention, implication, depiction, and framing into one judgment.",
+      "Always separate flirting from harassment, and suggestion from coercion.",
+      "Check whether the sexual meaning comes from speech, camera language, sound, or body language.",
+      "Treat double meaning, metaphor, symbolism, and indirect speech as sexual meaning only when the context makes the reading recoverable.",
+      "Treat educational, medical, historical, documentary, and court contexts as exception-heavy.",
+      "Give the story time to explain itself before finalizing a finding.",
+      "Use the shortest literal evidence span that still proves the sexual meaning."
+    ],
+    "legal_exceptions": [
+      "Educational",
+      "Historical",
+      "Documentary",
+      "Medical",
+      "Court proceedings",
+      "Police investigation",
+      "News reporting",
+      "Condemnation",
+      "Fiction",
+      "Role-play",
+      "Dream sequence",
+      "Flashback",
+      "Imagination"
+    ],
+    "positive_examples": [
+      "Explicit sexual reference in dialogue that is not framed as a joke or report.",
+      "A scene that clearly sexualizes the body through camera and sound cues.",
+      "An unwanted sexual advance that the target rejects.",
+      "A grooming pattern that unfolds across multiple sentences or scenes.",
+      "A false accusation that is later corrected is still a reviewable false accusation concept.",
+      "A euphemism or symbol whose sexual meaning is only recoverable from context."
+    ],
+    "negative_examples": [
+      "A medical explanation in a clinic.",
+      "A history lesson about marriage customs.",
+      "A police report that repeats a quoted complaint.",
+      "Family affection mistaken for intimacy.",
+      "A documentary description of a relevant scene without endorsement.",
+      "A figurative line with no recoverable sexual meaning."
+    ],
+    "common_false_positives": [
+      "Medical terminology mistaken for erotic language.",
+      "Family warmth or friendship mistaken for intimacy.",
+      "Wardrobe or camera directions that are not sexualized.",
+      "A quotation or report treated as endorsement.",
+      "Dream or flashback content treated as present-time reality.",
+      "A false accusation treated as a real finding without confirmation.",
+      "Indirect speech treated as explicit sexual content when the scene does not support it."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "إشارة",
+        "concept_id": "sexual_reference",
+        "relation": "supports",
+        "note": "Often signals a direct reference or hint."
+      },
+      {
+        "term": "غزل",
+        "concept_id": "sexual_flirting",
+        "relation": "supports",
+        "note": "Often marks flirtation or romantic pressure."
+      },
+      {
+        "term": "تحرش",
+        "concept_id": "sexual_harassment",
+        "relation": "supports",
+        "note": "High-risk coercive sexual conduct."
+      },
+      {
+        "term": "استغلال",
+        "concept_id": "sexual_exploitation",
+        "relation": "supports",
+        "note": "Often appears in coercive or abusive contexts."
+      },
+      {
+        "term": "طبي",
+        "concept_id": "sexual_medical",
+        "relation": "supports",
+        "note": "Medical context may lower false positives."
+      },
+      {
+        "term": "تاريخي",
+        "concept_id": "sexual_historical",
+        "relation": "supports",
+        "note": "Historical framing may be exception-heavy."
+      },
+      {
+        "term": "حلم",
+        "concept_id": "sexual_dream",
+        "relation": "supports",
+        "note": "Dream framing changes interpretation."
+      },
+      {
+        "term": "اتهام",
+        "concept_id": "sexual_false_accusation",
+        "relation": "supports",
+        "note": "May indicate a false accusation concept when later corrected."
+      },
+      {
+        "term": "إيحاء",
+        "concept_id": "sexual_suggestion",
+        "relation": "supports",
+        "note": "Implicit sexual suggestion can be recoverable from context."
+      },
+      {
+        "term": "تلميح",
+        "concept_id": "sexual_double_meaning",
+        "relation": "supports",
+        "note": "Double meaning can carry recoverable sexual intent."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 9,
+        "atom_ids": [
+          "9-4"
+        ],
+        "role": "Sexual content and intimacy framing",
+        "note": "Primary content-standard mapping for sexual content."
+      },
+      {
+        "article_id": 5,
+        "atom_ids": [
+          "5-1",
+          "5-2",
+          "5-5"
+        ],
+        "role": "Age-appropriateness and suitability",
+        "note": "Use when content suitability or rating is implicated."
+      },
+      {
+        "article_id": 7,
+        "atom_ids": [
+          "7-1",
+          "7-3",
+          "7-4",
+          "7-5"
+        ],
+        "role": "Sexual harassment and coercion",
+        "note": "Use when the scene turns sexual language into coercive harm."
+      },
+      {
+        "article_id": 6,
+        "atom_ids": [
+          "6-1",
+          "6-3",
+          "6-4",
+          "6-5"
+        ],
+        "role": "Child vulnerability and grooming",
+        "note": "Use when the sexual content targets a child or minor."
+      },
+      {
+        "article_id": 17,
+        "atom_ids": [
+          "17-1",
+          "17-2",
+          "17-3",
+          "17-5",
+          "17-6"
+        ],
+        "role": "Dignity, privacy, and false accusation",
+        "note": "Use for invasive framing or false sexual allegations."
+      }
+    ],
+    "reporting_guidance": [
+      "Report the shortest exact evidence span that carries the sexual meaning.",
+      "State the framing explicitly: reference, flirtation, harm, documentary, medical, historical, dream, or false accusation.",
+      "If the scene is exception-heavy, say why the confidence is reduced rather than pretending the concept vanished.",
+      "Keep the report aligned with the exact concept rather than collapsing to generic sexual content."
+    ]
+  }
+}

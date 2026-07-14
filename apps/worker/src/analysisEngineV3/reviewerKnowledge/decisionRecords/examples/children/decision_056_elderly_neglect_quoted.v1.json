@@ -1,0 +1,58 @@
+{
+  "id": "decision_056_elderly_neglect_quoted",
+  "version": "1.0.0",
+  "title": "Elderly person neglect (quoted)",
+  "summary": "Elderly person neglect in quoted framing.",
+  "originalScenario": "قال الراوي: \"ترك المسن بلا دواء\"",
+  "reviewQuestion": "Is this neglect of an elderly person?",
+  "initialSuspicion": "Dependent adult ignored.",
+  "possibleConcepts": [
+    "children_elderly_person",
+    "children_neglect"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: ترك المسن بلا دواء"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-3"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "elderly_neglect",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_elderly_person",
+    "children_neglect"
+  ]
+}

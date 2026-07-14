@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "security_evidence",
+  "title": "Security Evidence",
+  "description": "Evidence hierarchy for security reasoning.",
+  "entries": [
+    { "id": "security_evidence_direct_call", "title": "Direct Call", "description": "Explicit call for harm, disorder, overthrow, or violence." },
+    { "id": "security_evidence_operational_instruction", "title": "Operational Instruction", "description": "Concrete steps or methods for harmful action." },
+    { "id": "security_evidence_glorifying_phrase", "title": "Glorifying Phrase", "description": "Phrase that praises harmful security content." },
+    { "id": "security_evidence_coded_reference", "title": "Coded Reference", "description": "Subtle or coded reference that still clearly carries harmful meaning." },
+    { "id": "security_evidence_contextual_support", "title": "Contextual Support", "description": "Surrounding context that supports the security reading." }
+  ]
+}

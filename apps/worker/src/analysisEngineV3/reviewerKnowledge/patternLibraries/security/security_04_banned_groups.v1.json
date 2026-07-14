@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "security_banned_group_patterns",
+    "title": "Security Banned Group Patterns",
+    "description": "Patterns for banned-group support, normalization, and recruitment.",
+    "concepts": [
+      {
+        "id": "terrorism",
+        "title": "Terrorism",
+        "description": "Promotion, support, glorification, or operational discussion of terrorism."
+      },
+      {
+        "id": "extremism",
+        "title": "Extremism",
+        "description": "Support for extremist ideology or extremist violence."
+      },
+      {
+        "id": "state_institutions",
+        "title": "State Institutions",
+        "description": "Government institutions, state authority, and public order bodies."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "security_pattern_banned_group_support",
+      "title": "Banned Group Support",
+      "description": "Language that sympathizes with, normalizes, or recruits for a banned group.",
+      "primary_concept_id": "terrorism",
+      "related_concept_ids": [
+        "extremism",
+        "state_institutions"
+      ],
+      "direct_expressions": [
+        "عاشت الجماعة المحظورة",
+        "انضموا للجماعة",
+        "نؤيد التنظيم الإرهابي"
+      ],
+      "indirect_expressions": [
+        "رجالنا",
+        "إخوتنا هناك",
+        "مشروعهم شريف"
+      ],
+      "semantic_intent": [
+        "normalization of banned group",
+        "recruitment"
+      ],
+      "supporting_evidence": [
+        "A positive label is attached to the banned group.",
+        "The line invites participation or support."
+      ],
+      "contradictory_evidence": [
+        "The sentence is clearly framed as condemnation.",
+        "A report repeats the group name only as evidence."
+      ],
+      "false_positives": [
+        "A journalist identifying the group as banned.",
+        "A fictional antihero quoting the group to mock it."
+      ],
+      "counter_examples": [
+        "Court evidence mentioning the group name.",
+        "News reporting on arrested members."
+      ],
+      "cross_sentence_indicators": [
+        "A neutral sentence is followed by a supportive phrase."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "recruitment scene",
+        "coded exchange"
+      ],
+      "reviewer_guidance": [
+        "Check whether the group is praised, normalized, or invited.",
+        "Use context to separate reporting from support."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "modifier_direct_invite",
+          "title": "Direct Invite",
+          "description": "Explicit invitation to join or support.",
+          "confidence": 97
+        },
+        {
+          "id": "modifier_coded_admiration",
+          "title": "Coded Admiration",
+          "description": "Subtle admiration for a banned group.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rel_banned_terrorism",
+          "from_concept_id": "terrorism",
+          "to_concept_id": "extremism",
+          "relation": "supports",
+          "note": "Support for banned groups often overlaps extremism."
+        },
+        {
+          "id": "rel_banned_state",
+          "from_concept_id": "terrorism",
+          "to_concept_id": "state_institutions",
+          "relation": "supports",
+          "note": "Banned groups commonly target state institutions."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "gcam_security_15_1",
+          "article_id": 15,
+          "atom_ids": [
+            "15-1",
+            "15-2",
+            "15-3",
+            "15-4"
+          ],
+          "role": "Banned groups and normalisation",
+          "note": "Use for recruitment or sympathy language."
+        }
+      ],
+      "examples": [
+        {
+          "id": "example_banned_001",
+          "title": "Support phrase",
+          "text": "عاشت الجماعة المحظورة",
+          "expected_outcome": "Direct praise of a banned group.",
+          "note": null
+        },
+        {
+          "id": "example_banned_002",
+          "title": "Recruitment",
+          "text": "انضموا للجماعة",
+          "expected_outcome": "Recruitment language.",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

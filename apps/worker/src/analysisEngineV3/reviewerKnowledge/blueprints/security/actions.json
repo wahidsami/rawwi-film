@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "id": "security_actions",
+  "title": "Security Actions",
+  "description": "Action blueprints for security-relevant reasoning.",
+  "entries": [
+    { "id": "security_incite", "title": "Incite", "description": "Encourage or provoke harmful action." },
+    { "id": "security_glorify", "title": "Glorify", "description": "Praise or celebrate harmful conduct." },
+    { "id": "security_recruit", "title": "Recruit", "description": "Invite or persuade someone to join a harmful cause." },
+    { "id": "security_arm", "title": "Arm", "description": "Acquire, prepare, or use weapons." },
+    { "id": "security_destroy", "title": "Destroy", "description": "Damage, sabotage, or destroy property or infrastructure." },
+    { "id": "security_overthrow", "title": "Overthrow", "description": "Attempt to topple or weaken governing order." },
+    { "id": "security_riot", "title": "Riot", "description": "Participate in disorder, riot, or public unrest." }
+  ]
+}

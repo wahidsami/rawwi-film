@@ -1,0 +1,103 @@
+{
+  "version": "1.0.0",
+  "id": "violence_intents",
+  "title": "Violence Intents",
+  "description": "Intent categories that determine how violence is interpreted.",
+  "entries": [
+    {
+      "id": "violence_intent_event",
+      "title": "Event",
+      "description": "A violence event without endorsement."
+    },
+    {
+      "id": "violence_intent_threat",
+      "title": "Threat",
+      "description": "Threatening or intimidating intent."
+    },
+    {
+      "id": "violence_intent_attempt",
+      "title": "Attempt",
+      "description": "Attempted harm."
+    },
+    {
+      "id": "violence_intent_glorification",
+      "title": "Glorification",
+      "description": "Violence praised or glorified."
+    },
+    {
+      "id": "violence_intent_encouragement",
+      "title": "Encouragement",
+      "description": "Violence encouraged or promoted."
+    },
+    {
+      "id": "violence_intent_instruction",
+      "title": "Instruction",
+      "description": "Operational violent instruction."
+    },
+    {
+      "id": "violence_intent_reward",
+      "title": "Reward",
+      "description": "Violence framed as rewarded."
+    },
+    {
+      "id": "violence_intent_revenge",
+      "title": "Revenge",
+      "description": "Violence framed as retaliation."
+    },
+    {
+      "id": "violence_intent_self_defense",
+      "title": "Self Defense",
+      "description": "Protective or defensive intent."
+    },
+    {
+      "id": "violence_intent_law_enforcement",
+      "title": "Law Enforcement",
+      "description": "Authorized force or policing intent."
+    },
+    {
+      "id": "violence_intent_condemnation",
+      "title": "Condemnation",
+      "description": "Violence rejected or condemned."
+    },
+    {
+      "id": "violence_intent_documentary",
+      "title": "Documentary",
+      "description": "Documentary or factual reporting intent."
+    },
+    {
+      "id": "violence_intent_historical",
+      "title": "Historical",
+      "description": "Historical narration intent."
+    },
+    {
+      "id": "violence_intent_training",
+      "title": "Training",
+      "description": "Training or safety instruction."
+    },
+    {
+      "id": "violence_intent_fantasy",
+      "title": "Fantasy",
+      "description": "Fantasy-driven intent."
+    },
+    {
+      "id": "violence_intent_comedy",
+      "title": "Comedy",
+      "description": "Humorous framing."
+    },
+    {
+      "id": "violence_intent_dream",
+      "title": "Dream",
+      "description": "Dreamlike or subconscious framing."
+    },
+    {
+      "id": "violence_intent_flashback",
+      "title": "Flashback",
+      "description": "Recollection framing."
+    },
+    {
+      "id": "violence_intent_observation",
+      "title": "Observation",
+      "description": "Observational framing."
+    }
+  ]
+}

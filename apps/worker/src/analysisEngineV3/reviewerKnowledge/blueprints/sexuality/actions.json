@@ -1,0 +1,158 @@
+{
+  "version": "1.0.0",
+  "id": "sexuality_actions",
+  "title": "Sexuality Actions",
+  "description": "Canonical sexual action concepts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "sexual_action_reference",
+      "title": "Sexual Action Reference",
+      "description": "Action or framing mode for reference in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_joke",
+      "title": "Sexual Action Joke",
+      "description": "Action or framing mode for joke in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_double_meaning",
+      "title": "Sexual Action Double Meaning",
+      "description": "Action or framing mode for double meaning in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_metaphor",
+      "title": "Sexual Action Metaphor",
+      "description": "Action or framing mode for metaphor in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_symbolism",
+      "title": "Sexual Action Symbolism",
+      "description": "Action or framing mode for symbolism in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_flirtation",
+      "title": "Sexual Action Flirtation",
+      "description": "Action or framing mode for flirtation in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_romance",
+      "title": "Sexual Action Romance",
+      "description": "Action or framing mode for romance in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_suggestion",
+      "title": "Sexual Action Suggestion",
+      "description": "Action or framing mode for suggestion in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_invitation",
+      "title": "Sexual Action Invitation",
+      "description": "Action or framing mode for invitation in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_touch",
+      "title": "Sexual Action Touch",
+      "description": "Action or framing mode for touch in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_kiss",
+      "title": "Sexual Action Kiss",
+      "description": "Action or framing mode for kiss in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_intimacy",
+      "title": "Sexual Action Intimacy",
+      "description": "Action or framing mode for intimacy in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_harassment",
+      "title": "Sexual Action Harassment",
+      "description": "Action or framing mode for harassment in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_assault",
+      "title": "Sexual Action Assault",
+      "description": "Action or framing mode for assault in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_abuse",
+      "title": "Sexual Action Abuse",
+      "description": "Action or framing mode for abuse in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_exploitation",
+      "title": "Sexual Action Exploitation",
+      "description": "Action or framing mode for exploitation in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_grooming",
+      "title": "Sexual Action Grooming",
+      "description": "Action or framing mode for grooming in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_camera_focus",
+      "title": "Sexual Action Camera Focus",
+      "description": "Action or framing mode for camera focus in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_body_focus",
+      "title": "Sexual Action Body Focus",
+      "description": "Action or framing mode for body focus in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_clothing_focus",
+      "title": "Sexual Action Clothing Focus",
+      "description": "Action or framing mode for clothing focus in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_instruction",
+      "title": "Sexual Action Instruction",
+      "description": "Action or framing mode for instruction in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_condemnation",
+      "title": "Sexual Action Condemnation",
+      "description": "Action or framing mode for condemnation in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_documentary",
+      "title": "Sexual Action Documentary",
+      "description": "Action or framing mode for documentary in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_medical_discussion",
+      "title": "Sexual Action Medical Discussion",
+      "description": "Action or framing mode for medical discussion in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_education",
+      "title": "Sexual Action Education",
+      "description": "Action or framing mode for education in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_historical_narration",
+      "title": "Sexual Action Historical Narration",
+      "description": "Action or framing mode for historical narration in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_dream_frame",
+      "title": "Sexual Action Dream Frame",
+      "description": "Action or framing mode for dream frame in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_flashback_frame",
+      "title": "Sexual Action Flashback Frame",
+      "description": "Action or framing mode for flashback frame in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_imagination_frame",
+      "title": "Sexual Action Imagination Frame",
+      "description": "Action or framing mode for imagination frame in sexual-content reasoning."
+    },
+    {
+      "id": "sexual_action_false_accusation",
+      "title": "Sexual Action False Accusation",
+      "description": "Action or framing mode for false accusation in sexual-content reasoning."
+    }
+  ]
+}

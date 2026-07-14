@@ -1,0 +1,208 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_methodology_concepts",
+  "title": "Reviewer Methodology Concepts",
+  "description": "The shared reviewer methodology skill ontology.",
+  "entries": [
+    {
+      "id": "finding_identification",
+      "title": "Finding Identification",
+      "description": "Methodology skill for finding identification across all reviewer domains."
+    },
+    {
+      "id": "evidence_collection",
+      "title": "Evidence Collection",
+      "description": "Methodology skill for evidence collection across all reviewer domains."
+    },
+    {
+      "id": "evidence_prioritization",
+      "title": "Evidence Prioritization",
+      "description": "Methodology skill for evidence prioritization across all reviewer domains."
+    },
+    {
+      "id": "context_analysis",
+      "title": "Context Analysis",
+      "description": "Methodology skill for context analysis across all reviewer domains."
+    },
+    {
+      "id": "cross_sentence_reasoning",
+      "title": "Cross Sentence Reasoning",
+      "description": "Methodology skill for cross sentence reasoning across all reviewer domains."
+    },
+    {
+      "id": "cross_scene_reasoning",
+      "title": "Cross Scene Reasoning",
+      "description": "Methodology skill for cross scene reasoning across all reviewer domains."
+    },
+    {
+      "id": "story_reasoning",
+      "title": "Story Reasoning",
+      "description": "Methodology skill for story reasoning across all reviewer domains."
+    },
+    {
+      "id": "intent_reasoning",
+      "title": "Intent Reasoning",
+      "description": "Methodology skill for intent reasoning across all reviewer domains."
+    },
+    {
+      "id": "relationship_reasoning",
+      "title": "Relationship Reasoning",
+      "description": "Methodology skill for relationship reasoning across all reviewer domains."
+    },
+    {
+      "id": "target_identification",
+      "title": "Target Identification",
+      "description": "Methodology skill for target identification across all reviewer domains."
+    },
+    {
+      "id": "speaker_identification",
+      "title": "Speaker Identification",
+      "description": "Methodology skill for speaker identification across all reviewer domains."
+    },
+    {
+      "id": "victim_identification",
+      "title": "Victim Identification",
+      "description": "Methodology skill for victim identification across all reviewer domains."
+    },
+    {
+      "id": "actor_identification",
+      "title": "Actor Identification",
+      "description": "Methodology skill for actor identification across all reviewer domains."
+    },
+    {
+      "id": "implicit_meaning",
+      "title": "Implicit Meaning",
+      "description": "Methodology skill for implicit meaning across all reviewer domains."
+    },
+    {
+      "id": "hidden_meaning",
+      "title": "Hidden Meaning",
+      "description": "Methodology skill for hidden meaning across all reviewer domains."
+    },
+    {
+      "id": "symbolic_reasoning",
+      "title": "Symbolic Reasoning",
+      "description": "Methodology skill for symbolic reasoning across all reviewer domains."
+    },
+    {
+      "id": "metaphor_reasoning",
+      "title": "Metaphor Reasoning",
+      "description": "Methodology skill for metaphor reasoning across all reviewer domains."
+    },
+    {
+      "id": "sarcasm_reasoning",
+      "title": "Sarcasm Reasoning",
+      "description": "Methodology skill for sarcasm reasoning across all reviewer domains."
+    },
+    {
+      "id": "comedy_reasoning",
+      "title": "Comedy Reasoning",
+      "description": "Methodology skill for comedy reasoning across all reviewer domains."
+    },
+    {
+      "id": "satire_reasoning",
+      "title": "Satire Reasoning",
+      "description": "Methodology skill for satire reasoning across all reviewer domains."
+    },
+    {
+      "id": "quotation_reasoning",
+      "title": "Quotation Reasoning",
+      "description": "Methodology skill for quotation reasoning across all reviewer domains."
+    },
+    {
+      "id": "historical_reasoning",
+      "title": "Historical Reasoning",
+      "description": "Methodology skill for historical reasoning across all reviewer domains."
+    },
+    {
+      "id": "documentary_reasoning",
+      "title": "Documentary Reasoning",
+      "description": "Methodology skill for documentary reasoning across all reviewer domains."
+    },
+    {
+      "id": "educational_reasoning",
+      "title": "Educational Reasoning",
+      "description": "Methodology skill for educational reasoning across all reviewer domains."
+    },
+    {
+      "id": "dream_reasoning",
+      "title": "Dream Reasoning",
+      "description": "Methodology skill for dream reasoning across all reviewer domains."
+    },
+    {
+      "id": "flashback_reasoning",
+      "title": "Flashback Reasoning",
+      "description": "Methodology skill for flashback reasoning across all reviewer domains."
+    },
+    {
+      "id": "scene_description_reasoning",
+      "title": "Scene Description Reasoning",
+      "description": "Methodology skill for scene description reasoning across all reviewer domains."
+    },
+    {
+      "id": "observation_reasoning",
+      "title": "Observation Reasoning",
+      "description": "Methodology skill for observation reasoning across all reviewer domains."
+    },
+    {
+      "id": "dialogue_reasoning",
+      "title": "Dialogue Reasoning",
+      "description": "Methodology skill for dialogue reasoning across all reviewer domains."
+    },
+    {
+      "id": "visual_reasoning",
+      "title": "Visual Reasoning",
+      "description": "Methodology skill for visual reasoning across all reviewer domains."
+    },
+    {
+      "id": "audio_reasoning",
+      "title": "Audio Reasoning",
+      "description": "Methodology skill for audio reasoning across all reviewer domains."
+    },
+    {
+      "id": "confidence_assessment",
+      "title": "Confidence Assessment",
+      "description": "Methodology skill for confidence assessment across all reviewer domains."
+    },
+    {
+      "id": "contradiction_resolution",
+      "title": "Contradiction Resolution",
+      "description": "Methodology skill for contradiction resolution across all reviewer domains."
+    },
+    {
+      "id": "multi_evidence_reasoning",
+      "title": "Multi Evidence Reasoning",
+      "description": "Methodology skill for multi evidence reasoning across all reviewer domains."
+    },
+    {
+      "id": "exception_recognition",
+      "title": "Exception Recognition",
+      "description": "Methodology skill for exception recognition across all reviewer domains."
+    },
+    {
+      "id": "false_positive_detection",
+      "title": "False Positive Detection",
+      "description": "Methodology skill for false positive detection across all reviewer domains."
+    },
+    {
+      "id": "false_negative_detection",
+      "title": "False Negative Detection",
+      "description": "Methodology skill for false negative detection across all reviewer domains."
+    },
+    {
+      "id": "reviewer_comment_generation",
+      "title": "Reviewer Comment Generation",
+      "description": "Methodology skill for reviewer comment generation across all reviewer domains."
+    },
+    {
+      "id": "finding_generation",
+      "title": "Finding Generation",
+      "description": "Methodology skill for finding generation across all reviewer domains."
+    },
+    {
+      "id": "report_priority",
+      "title": "Report Priority",
+      "description": "Methodology skill for report priority across all reviewer domains."
+    }
+  ]
+}

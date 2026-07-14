@@ -1,0 +1,192 @@
+{
+  "id": "lesson_006_intent_recognition",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 6,
+  "title": "Intent Recognition",
+  "summary": "Teach the reviewer to distinguish what the speaker intended rather than relying only on literal wording, including documentation, mockery, praise, glorification, and normalization.",
+  "dependsOn": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification"
+  ],
+  "learningObjectives": [
+    "Identify speaker intent.",
+    "Separate intention from wording.",
+    "Distinguish documentary/documentation and educational framing from endorsement.",
+    "Distinguish mockery from literal hostility and praise from neutral description.",
+    "Recognize harmful and non-harmful intent.",
+    "Understand how intent changes legal interpretation."
+  ],
+  "definitions": {
+    "intent": "The purpose or objective behind an action or statement.",
+    "explicitIntent": "Intent directly expressed.",
+    "implicitIntent": "Intent inferred from evidence and context.",
+    "documentation": "Intent framed as documentary or explanatory documentation.",
+    "mockery": "Intent to ridicule or deride.",
+    "praise": "Intent to commend or approve.",
+    "normalization": "Intent to present something as ordinary or acceptable.",
+    "unknownIntent": "Intent cannot be determined with confidence."
+  },
+  "reviewerPrinciples": [
+    "Intent must be inferred from evidence, not assumptions.",
+    "Literal wording alone is insufficient.",
+    "Context, speaker and target all influence intent.",
+    "Unknown intent lowers confidence.",
+    "Educational, historical, and documentary/documentation discussion are usually not harmful intent.",
+    "Mockery often behaves like satire or sarcasm rather than sincere hostility.",
+    "Praise, glorification, and normalization can strengthen approval or promotion when the scene supports it."
+  ],
+  "reviewerQuestions": [
+    "Why was this said?",
+    "What outcome was intended?",
+    "Is the speaker encouraging or condemning?",
+    "Is the intent educational or documentary?",
+    "Is the intent humorous or mocking?",
+    "Is the intent praise, glorification, or normalization?",
+    "Is the intent fictional?",
+    "Would another reviewer infer the same intent?"
+  ],
+  "intentCategories": [
+    "Threat",
+    "Promotion",
+    "Encouragement",
+    "Recruitment",
+    "Instruction",
+    "Condemnation",
+    "Documentation",
+    "Education",
+    "Mockery",
+    "Praise",
+    "Historical Description",
+    "Comedy",
+    "Satire",
+    "Glorification",
+    "Normalization",
+    "Roleplay",
+    "Narration",
+    "Warning",
+    "Neutral",
+    "Unknown"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Can intent be identified?",
+      "yes": 2,
+      "no": "Lower Confidence"
+    },
+    {
+      "step": 2,
+      "question": "Is intent supported by evidence?",
+      "yes": 3,
+      "no": "Needs Review"
+    },
+    {
+      "step": 3,
+      "question": "Does context contradict the apparent intent?",
+      "yes": "Re-evaluate",
+      "no": "Accept"
+    }
+  ],
+  "examples": [
+    {
+      "text": "سأقتلك.",
+      "classification": "Threat"
+    },
+    {
+      "text": "كان المعلم يشرح معنى الإرهاب.",
+      "classification": "Education"
+    },
+    {
+      "text": "يشرح الوثائقي الموضوع بشكل محايد.",
+      "classification": "Documentation"
+    },
+    {
+      "text": "أدين هذا العمل الإرهابي.",
+      "classification": "Condemnation"
+    },
+    {
+      "text": "يسخر من الرمز الوطني.",
+      "classification": "Mockery"
+    },
+    {
+      "text": "يمدح الفكرة ويجعلها تبدو عادية.",
+      "classification": "Praise / Normalization"
+    },
+    {
+      "text": "كان يمثل دور المجرم.",
+      "classification": "Roleplay"
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Assume promotion because a dangerous topic appears.",
+      "reason": "Intent not established."
+    },
+    {
+      "text": "Ignore explicit condemnation.",
+      "reason": "Intent misclassified."
+    },
+    {
+      "text": "Treat documentation as promotion.",
+      "reason": "Documentation is informational."
+    },
+    {
+      "text": "Treat mockery as sincere hostility.",
+      "reason": "Mockery is often expressive rather than literal."
+    }
+  ],
+  "commonMistakes": [
+    "Ignoring educational intent.",
+    "Ignoring documentary intent.",
+    "Ignoring condemnation.",
+    "Confusing narration with encouragement.",
+    "Confusing mockery with literal hostility.",
+    "Confusing praise or normalization with neutral description.",
+    "Judging words without intent."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Can identical words express different intentions?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Should intent be supported by evidence?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Does condemnation equal promotion?",
+        "answer": "No"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Correctly identify intent.",
+    "Reduce intent-related false positives.",
+    "Improve reasoning quality."
+  ],
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "intent_threat",
+    "intent_education",
+    "intent_documentation",
+    "intent_condemnation",
+    "intent_mockery",
+    "intent_praise",
+    "intent_glorification",
+    "intent_normalization",
+    "intent_roleplay"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 6
+  }
+}

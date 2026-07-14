@@ -1,0 +1,253 @@
+{
+  "version": "1.0.0",
+  "id": "politics_relationships",
+  "title": "Politics Relationships",
+  "description": "Canonical politics relationships for reviewer reasoning.",
+  "entries": [
+    {
+      "from": "politics_domain",
+      "to": "state_reference",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "government_reference",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "head_of_state",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "royal_family",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "government_institution",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "public_official",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "constitutional_reference",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "state_scene_description",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "state_observation",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "national_flag",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "national_anthem",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "national_symbol",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "national_identity",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "national_unity",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "patriotism",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "foreign_government",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "foreign_leader",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "international_organization",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "diplomatic_relations",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "international_conflict",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "state_security",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "national_security",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "treason",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "espionage",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "military_reference",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "armed_forces",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "intelligence_services",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "police_institution",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_dialogue",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_debate",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_satire",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_criticism",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_support",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_glorification",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_encouragement",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_propaganda",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_instruction",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_documentary",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_news",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_historical",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_educational",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "political_rally",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "public_demonstration",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "civil_unrest",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "riot",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "revolution_reference",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "coup_reference",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "election_reference",
+      "type": "supports"
+    },
+    {
+      "from": "politics_domain",
+      "to": "voting_reference",
+      "type": "supports"
+    }
+  ]
+}

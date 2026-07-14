@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_judgment_contexts",
+  "title": "Reviewer Judgment Contexts",
+  "description": "Contexts that alter reviewer judgment.",
+  "entries": [
+    {
+      "id": "local_context",
+      "title": "Local Context",
+      "description": "The nearby words that may change the reading."
+    },
+    {
+      "id": "cross_sentence_context",
+      "title": "Cross-Sentence Context",
+      "description": "The surrounding sentences that change meaning."
+    },
+    {
+      "id": "cross_scene_context",
+      "title": "Cross-Scene Context",
+      "description": "A later or earlier scene that changes the judgment."
+    },
+    {
+      "id": "narrative_context",
+      "title": "Narrative Context",
+      "description": "The story-level context that explains the line."
+    },
+    {
+      "id": "exception_context",
+      "title": "Exception Context",
+      "description": "The contextual signal that triggers an exception."
+    },
+    {
+      "id": "consensus_context",
+      "title": "Consensus Context",
+      "description": "The context that resolves reviewer disagreement."
+    }
+  ]
+}

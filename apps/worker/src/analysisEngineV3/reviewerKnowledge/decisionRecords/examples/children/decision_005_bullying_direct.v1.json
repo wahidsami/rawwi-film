@@ -1,0 +1,54 @@
+{
+  "id": "decision_005_bullying_direct",
+  "version": "1.0.0",
+  "title": "Bullying (direct)",
+  "summary": "Bullying in direct framing.",
+  "originalScenario": "يسخرون من الطفل أمام الصف",
+  "reviewQuestion": "Is this bullying?",
+  "initialSuspicion": "Repeated ridicule.",
+  "possibleConcepts": [
+    "children_child",
+    "children_bullying"
+  ],
+  "supportingEvidence": [
+    "يسخرون من الطفل أمام الصف"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-2"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "bullying",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child",
+    "children_bullying"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "narrative_actions",
+  "title": "Narrative Actions",
+  "description": "Actions that drive story-level reasoning.",
+  "entries": [
+    {
+      "id": "narrative_action_observe",
+      "title": "Observe",
+      "description": "Notice a scene element without overclaiming."
+    },
+    {
+      "id": "narrative_action_reveal",
+      "title": "Reveal",
+      "description": "Expose information that was previously hidden."
+    },
+    {
+      "id": "narrative_action_foreshadow",
+      "title": "Foreshadow",
+      "description": "Plant a clue for later meaning."
+    },
+    {
+      "id": "narrative_action_transition",
+      "title": "Transition",
+      "description": "Move between scenes or beats."
+    },
+    {
+      "id": "narrative_action_intensify",
+      "title": "Intensify",
+      "description": "Increase tension or stakes."
+    },
+    {
+      "id": "narrative_action_resolve",
+      "title": "Resolve",
+      "description": "Close a conflict or question."
+    },
+    {
+      "id": "narrative_action_mirror",
+      "title": "Mirror",
+      "description": "Reflect another scene or character state."
+    },
+    {
+      "id": "narrative_action_contrast",
+      "title": "Contrast",
+      "description": "Set up an opposing meaning."
+    },
+    {
+      "id": "narrative_action_imply",
+      "title": "Imply",
+      "description": "Suggest meaning indirectly."
+    },
+    {
+      "id": "narrative_action_reinterpret",
+      "title": "Reinterpret",
+      "description": "Change the meaning of an earlier scene."
+    }
+  ]
+}

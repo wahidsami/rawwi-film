@@ -43,24 +43,27 @@ import { PIPELINE_EVIDENCE_GROUNDING_VERSION, groundFindingEvidenceToChunk } fro
 import { V3_SUBJECT_DEFINITIONS } from "./v3PromptPack.js";
 import { buildLineageEvent, ensureFindingLineageId, persistLineageEvents } from "./findingLineage.js";
 import { canonicalStringify } from "./canonicalJson.js";
+import { runV3RuntimeAdapter } from "./analysisEngineV3/runtime/runtimeAdapter.js";
+import { runWithV3AutomaticFallback } from "./analysisEngineV3/runtime/automaticFallback.js";
+import { recordV3FallbackExecution } from "./analysisEngineV3/runtime/runtimeMetrics.js";
 
-export type FindingWithGlobal = JudgeFinding & {
-  source?: "ai" | "lexicon_mandatory" | "manual";
+export type FindingWithGlobal = Omit<JudgeFinding, "source" | "evidence_hash" | "canonical_hash" | "lineage_id" | "parent_lineage_id" | "related_article_ids"> & {
+  source?: string | null;
   start_offset_global: number;
   end_offset_global: number;
   lineage_id?: string | null;
   parent_lineage_id?: string | null;
   canonical_hash?: string | null;
   evidence_hash?: string | null;
-  policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
+  policy_links?: ReadonlyArray<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
   primary_article_id?: number | null;
-  related_article_ids?: number[];
+  related_article_ids?: readonly number[];
   canonical_finding_id?: string | null;
   pillar_id?: string | null;
-  secondary_pillar_ids?: string[];
+  secondary_pillar_ids?: readonly string[];
 };
 
-type AnalysisEngineMode = "v2" | "hybrid" | "policy_v1";
+type AnalysisEngineMode = "v2" | "v3" | "hybrid" | "policy_v1";
 type HybridRunMode = "off" | "shadow" | "enforce";
 type PolicyV1RunMode = "shadow" | "enforce";
 
@@ -440,9 +443,10 @@ function toGlobalFinding(
   const end_offset_global = chunkStartOffset + (f.location?.end_offset ?? 0);
   return {
     ...f,
+    source: f.source ?? null,
     start_offset_global,
     end_offset_global,
-  };
+  } as FindingWithGlobal;
 }
 
 function severityRank(s: string | null | undefined): number {
@@ -488,6 +492,7 @@ function resolveAnalysisEngineForJob(
 ): AnalysisEngineMode {
   if (pipelineVersion === "v2") {
     const requested = jobConfig.analysis_engine;
+    if (requested === "v3") return "v3";
     if (requested === "hybrid") return "hybrid";
     if (requested === "policy_v1") return "policy_v1";
     if (requested === "v2") return "v2";
@@ -1701,6 +1706,11 @@ export async function processChunkJudge(
     pipelineVersion === "v2" && typeof jobConfig.v2_prompt_context === "string" && jobConfig.v2_prompt_context.trim().length > 0
       ? jobConfig.v2_prompt_context.trim()
       : null;
+  const v3PromptContext =
+    analysisEngine === "v3" && typeof jobConfig.analysis_prompt_context === "string" && jobConfig.analysis_prompt_context.trim().length > 0
+      ? jobConfig.analysis_prompt_context.trim()
+      : null;
+  const analysisPromptContext = v3PromptContext ?? v2PromptContext;
   const v2FeatureSignature = pipelineVersion === "v2"
     ? `|v2ChunkMemory:${PIPELINE_V2_MEMORY_VERSION}|v2SceneMemory:${PIPELINE_V2_SCENE_MEMORY_VERSION}|v2ScriptMemory:${PIPELINE_V2_SCRIPT_MEMORY_VERSION}|v2Evidence:${PIPELINE_V2_EVIDENCE_PINNING_VERSION}`
     : "";
@@ -1819,6 +1829,8 @@ export async function processChunkJudge(
   let validatedFindingCount: number | null = null;
   let selectedIds: number[];
   let routerOutputJson: any = null;
+  let chunkTruthLayerMeta: Record<string, unknown> | null = null;
+  let finalDiagnosticPromptHash = "";
 
   const cachedValidated = ((cachedRun?.validated_ai_findings as any[]) || []) as FindingWithGlobal[];
   const cachedLegacy = ((cachedRun?.ai_findings as any[]) || []) as FindingWithGlobal[];
@@ -1853,6 +1865,123 @@ export async function processChunkJudge(
       logger.info("Idempotency MISS: Executing AI pipeline", { chunkId: chunk.id, runKey });
     }
 
+    if (analysisEngine === "v3") {
+      await setChunkPhase(chunk.id, "postprocess");
+      const v3StartedAt = Date.now();
+      const runFallbackToV2 = async (): Promise<void> => {
+        const fallbackJob = {
+          ...job,
+          config_snapshot: {
+            ...jobConfig,
+            analysis_engine: "v2",
+          },
+        } as AnalysisJob;
+        await processChunkJudge(fallbackJob, chunk, normalizedText, signal);
+      };
+
+      await runWithV3AutomaticFallback({
+        enabled: config.V3_ENABLE_AUTOMATIC_FALLBACK,
+        runPrimary: async () => {
+          const runtimeResult = await runV3RuntimeAdapter({
+            jobId,
+            chunkId: chunk.id,
+            scriptId,
+            versionId,
+            chunkText,
+            chunkStart,
+            chunkEnd,
+            chunkIndex: chunk.chunk_index,
+            startLine: chunk.start_line ?? null,
+            endLine: chunk.end_line ?? null,
+            storyMemory: analysisPromptContext ?? null,
+            sceneMemory: null,
+            neighboringSentences: [],
+            analysisPromptContext: analysisPromptContext ?? null,
+            promptLexiconTerms: terms,
+            analysisSignatureContext: analysisSignatureBase,
+            diagnosticsEnabled: config.ENABLE_AI_DIAGNOSTICS,
+          });
+          allFindings = sortFindingsStable(runtimeResult.findings as FindingWithGlobal[]);
+          const runtimeTruthLayer = runtimeResult.truthLayerMeta as Record<string, unknown> | null | undefined;
+          const runtimeGcamMapping = runtimeTruthLayer && typeof runtimeTruthLayer.gcam_mapping === "object"
+            ? (runtimeTruthLayer.gcam_mapping as Record<string, unknown>)
+            : null;
+          routerOutputJson = {
+            architecture: "v3_runtime_adapter",
+            prompt_hash: runtimeResult.diagnostics.promptHash,
+            semantic_hash: runtimeResult.diagnostics.semanticHash,
+            legal_hash: runtimeResult.diagnostics.legalHash,
+            stage_hashes: runtimeResult.diagnostics.stageHashes,
+            stage_timings: runtimeResult.diagnostics.stageTimings,
+            findings_count: runtimeResult.findings.length,
+            gcam_mapping_status: runtimeGcamMapping?.status ?? null,
+            gcam_mapping_hash: runtimeGcamMapping?.hash ?? null,
+          };
+          chunkTruthLayerMeta = runtimeResult.truthLayerMeta;
+          finalDiagnosticPromptHash = runtimeResult.diagnostics.promptHash;
+          logger.info("V3 runtime adapter completed", {
+            jobId,
+            chunkId: chunk.id,
+            runKey,
+            durationMs: Date.now() - v3StartedAt,
+            findingsCount: runtimeResult.findings.length,
+            promptHash: runtimeResult.diagnostics.promptHash,
+            semanticHash: runtimeResult.diagnostics.semanticHash,
+            legalHash: runtimeResult.diagnostics.legalHash,
+          });
+          return;
+        },
+        onFallback: async (failure) => {
+          const fallbackExecutionCount = recordV3FallbackExecution();
+          const fallbackDiagnostics = {
+            engine_attempted: failure.engineAttempted,
+            engine_used: failure.engineUsed,
+            fallback_reason: failure.fallbackReason,
+            exception_stack: failure.exceptionStack,
+            fallback_execution_count: fallbackExecutionCount,
+          };
+
+          logger.warn(`[V3 FALLBACK] ${failure.fallbackReason}`, {
+            jobId,
+            chunkId: chunk.id,
+            runKey,
+            ...fallbackDiagnostics,
+          });
+
+          chunkTruthLayerMeta = {
+            architecture: "v3_runtime_adapter",
+            stage: "fallback",
+            ...fallbackDiagnostics,
+          };
+
+          routerOutputJson = {
+            architecture: "v3_runtime_adapter",
+            stage: "fallback",
+            ...fallbackDiagnostics,
+          };
+
+          try {
+            await persistJudgeDiagnostic({
+              diagnostic_kind: "v3_fallback",
+              job_id: jobId,
+              chunk_id: chunk.id,
+              prompt_hash: "",
+              parsed_judge_response: fallbackDiagnostics,
+              raw_judge_response: "",
+              parsed_finding_count: 0,
+            });
+          } catch (persistError) {
+            logger.warn("Failed to persist V3 fallback diagnostics", {
+              jobId,
+              chunkId: chunk.id,
+              error: persistError instanceof Error ? persistError.message : String(persistError),
+            });
+          }
+        },
+        runFallback: runFallbackToV2,
+      });
+      return;
+    } else {
     // 2) Router (or high-recall bypass / deterministic no-op skip)
     const routerStartedAt = Date.now();
 
@@ -1954,10 +2083,10 @@ export async function processChunkJudge(
         chunkEnd,
         selectedArticles,
         terms,
-        { temperature, seed, analysis_signature_context: analysisSignatureBase },
+        { temperature, seed, analysis_engine: analysisEngine, analysis_signature_context: analysisSignatureBase },
         { chunkId: chunk.id },
         passExecutionPlan,
-        v2PromptContext ?? undefined,
+        analysisPromptContext ?? undefined,
         signal,
         {
           jobId,
@@ -2306,7 +2435,7 @@ export async function processChunkJudge(
           ai_findings: allFindings,
           raw_ai_findings: allFindings,
           validated_ai_findings: null,
-          truth_layer_meta: {
+          truth_layer_meta: chunkTruthLayerMeta ?? {
             architecture: "advisory_model_plus_validator",
             stage: "advisory",
             advisory_count: allFindings.length,
@@ -2331,6 +2460,7 @@ export async function processChunkJudge(
       logger.warn("Failed to persist analysis_chunk_run", { runKey, error: runErr.message });
     } else {
       logger.info("Persisted analysis_chunk_run", { runKey });
+    }
     }
   }
 
@@ -2929,7 +3059,7 @@ export async function processChunkJudge(
       diagnostic_kind: "chunk_final",
       job_id: jobId,
       chunk_id: chunk.id,
-      prompt_hash: "",
+      prompt_hash: finalDiagnosticPromptHash,
       router_candidates: routerOutputJson,
       raw_judge_response: "",
       parsed_judge_response: null,

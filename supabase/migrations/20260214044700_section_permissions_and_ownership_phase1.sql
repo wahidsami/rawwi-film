@@ -23,6 +23,7 @@ SET created_by = (
   SELECT id FROM auth.users
   WHERE raw_user_meta_data->>'role' = 'Super Admin'
   ORDER BY created_at ASC
+  , id ASC
   LIMIT 1
 )
 WHERE created_by IS NULL;

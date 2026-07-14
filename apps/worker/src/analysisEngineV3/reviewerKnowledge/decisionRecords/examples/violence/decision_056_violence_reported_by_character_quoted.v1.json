@@ -1,0 +1,55 @@
+{
+  "id": "violence_056_violence_reported_by_character_quoted",
+  "version": "1.0.0",
+  "title": "Violence Reported by Character (quoted)",
+  "summary": "Violence Reported by Character in quoted framing.",
+  "originalScenario": "قال الراوي: \"قال الشاهد إنهم هاجموه.\"",
+  "reviewQuestion": "Is this violence reported by character?",
+  "initialSuspicion": "Possible violence reported by character.",
+  "possibleConcepts": [
+    "violence_reported_by_character"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: قال الشاهد إنهم هاجموه."
+  ],
+  "contradictingEvidence": [
+    "Quoted or reported framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear endorsement in the narrator's own voice."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "Target remains dependent on the quoted voice.",
+  "intentAnalysis": "quotation",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Quoted speech is not automatically endorsement.",
+  "benchmarkTags": [
+    "violence_reported_by_character",
+    "quoted",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_reported_by_character"
+  ]
+}

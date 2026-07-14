@@ -18,7 +18,12 @@ function compareSpanFindingsStable(a: SpanFinding, b: SpanFinding): number {
     (a.end_offset_global ?? 0) - (b.end_offset_global ?? 0) ||
     String((a as { article_id?: number }).article_id ?? 0).localeCompare(String((b as { article_id?: number }).article_id ?? 0), "ar") ||
     String((a as { atom_id?: string | null }).atom_id ?? "").localeCompare(String((b as { atom_id?: string | null }).atom_id ?? ""), "ar") ||
-    String((a as { evidence_snippet?: string }).evidence_snippet ?? "").localeCompare(String((b as { evidence_snippet?: string }).evidence_snippet ?? ""), "ar")
+    String((a as { evidence_snippet?: string }).evidence_snippet ?? "").localeCompare(String((b as { evidence_snippet?: string }).evidence_snippet ?? ""), "ar") ||
+    String((a as { title_ar?: string | null }).title_ar ?? "").localeCompare(String((b as { title_ar?: string | null }).title_ar ?? ""), "ar") ||
+    String((a as { rationale_ar?: string | null }).rationale_ar ?? "").localeCompare(String((b as { rationale_ar?: string | null }).rationale_ar ?? ""), "ar") ||
+    String((a as { canonical_finding_id?: string | null }).canonical_finding_id ?? "").localeCompare(String((b as { canonical_finding_id?: string | null }).canonical_finding_id ?? ""), "ar") ||
+    String((a as { evidence_hash?: string | null }).evidence_hash ?? "").localeCompare(String((b as { evidence_hash?: string | null }).evidence_hash ?? ""), "ar") ||
+    String((a as { canonical_hash?: string | null }).canonical_hash ?? "").localeCompare(String((b as { canonical_hash?: string | null }).canonical_hash ?? ""), "ar")
   );
 }
 

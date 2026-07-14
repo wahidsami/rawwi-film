@@ -1,0 +1,160 @@
+{
+  "id": "lesson_012_evidence_prioritization",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 12,
+  "title": "Evidence Prioritization",
+  "summary": "Teach the reviewer to evaluate the quality and importance of evidence rather than simply counting pieces of evidence.",
+  "dependsOn": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings"
+  ],
+  "learningObjectives": [
+    "Rank evidence by strength.",
+    "Recognize primary evidence.",
+    "Separate direct from indirect evidence.",
+    "Recognize when multiple sources reinforce the same reading.",
+    "Recognize when conflicting evidence weakens the reading.",
+    "Build findings around the strongest available support."
+  ],
+  "definitions": {
+    "primaryEvidence": "The strongest evidence supporting a finding.",
+    "secondaryEvidence": "Evidence that reinforces but does not independently establish the finding.",
+    "directEvidence": "Evidence explicitly demonstrating the event.",
+    "circumstantialEvidence": "Evidence suggesting the event indirectly.",
+    "multipleEvidenceSources": "Independent clues that point to the same conclusion.",
+    "conflictingEvidence": "Evidence that pushes the reviewer toward a weaker conclusion or review-only outcome."
+  },
+  "reviewerPrinciples": [
+    "Quality outweighs quantity.",
+    "Direct evidence has higher value than inference.",
+    "Evidence must be internally consistent.",
+    "Multiple independent sources can outrank a single weak cue.",
+    "Contradictory evidence lowers confidence.",
+    "Conflicting evidence must be resolved before the finding is finalized.",
+    "Findings should cite the strongest supporting evidence."
+  ],
+  "reviewerQuestions": [
+    "Which evidence is strongest?",
+    "Which evidence is direct?",
+    "Are there multiple independent sources?",
+    "Does weaker evidence merely reinforce the strongest evidence?",
+    "Is contradictory evidence present?",
+    "Does the strongest evidence still hold after conflict is considered?",
+    "Would another reviewer choose the same primary evidence?"
+  ],
+  "evidenceHierarchy": [
+    "Direct Statement",
+    "Direct Action",
+    "Multiple Consistent Sources",
+    "Confirmed Context",
+    "Strong Inference",
+    "Weak Inference",
+    "Speculation"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Is direct evidence available?",
+      "yes": "Use Direct Evidence",
+      "no": 2
+    },
+    {
+      "step": 2,
+      "question": "Are there multiple independent sources?",
+      "yes": "Use the strongest corroborated source",
+      "no": 3
+    },
+    {
+      "step": 3,
+      "question": "Does conflicting evidence remain unresolved?",
+      "yes": "Needs Review",
+      "no": 4
+    },
+    {
+      "step": 4,
+      "question": "Is strong contextual evidence available?",
+      "yes": "Use Contextual Evidence",
+      "no": "Lower Confidence"
+    }
+  ],
+  "examples": [
+    {
+      "text": "The character openly threatens another character.",
+      "primaryEvidence": "Direct dialogue"
+    },
+    {
+      "text": "Several characters imply a threat but none state it.",
+      "primaryEvidence": "Contextual inference"
+    },
+    {
+      "text": "One witness points to bribery and the next scene confirms the exchange.",
+      "primaryEvidence": "Multiple consistent sources"
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Five weak hints outweigh one direct confession.",
+      "reason": "Evidence incorrectly prioritised."
+    },
+    {
+      "text": "Ignore a strong direct cue because a weaker cue appears first.",
+      "reason": "Ordering is not the same as priority."
+    }
+  ],
+  "commonMistakes": [
+    "Counting evidence instead of evaluating it.",
+    "Ignoring stronger evidence.",
+    "Treating multiple weak clues as equivalent to one strong clue.",
+    "Building findings on speculation."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Is one strong piece of evidence usually better than many weak ones?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Should findings cite the strongest evidence available?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Can speculative evidence become primary evidence?",
+        "answer": "No"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Prioritize evidence consistently.",
+    "Recognize corroboration.",
+    "Recognize unresolved conflict.",
+    "Improve report quality.",
+    "Reduce weak findings.",
+    "Support deterministic reviewer reasoning."
+  ],
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "evidence-evaluation-bench-001",
+    "evidence-evaluation-bench-002",
+    "evidence-evaluation-bench-003",
+    "evidence-evaluation-bench-004",
+    "evidence-evaluation-bench-005"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 12
+  }
+}

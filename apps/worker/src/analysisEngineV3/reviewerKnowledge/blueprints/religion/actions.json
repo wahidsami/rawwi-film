@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "religion_actions",
+  "title": "Religion Actions",
+  "description": "Action blueprints for religion-relevant reasoning.",
+  "entries": [
+    {
+      "id": "religion_insult",
+      "title": "Insult",
+      "description": "Direct insulting language toward the religion or its sanctities."
+    },
+    {
+      "id": "religion_mockery",
+      "title": "Mockery",
+      "description": "Ridicule or sneering treatment of sacred matters."
+    },
+    {
+      "id": "religion_distortion",
+      "title": "Distortion",
+      "description": "Misstating or twisting religious meaning."
+    },
+    {
+      "id": "religion_desecration",
+      "title": "Desecration",
+      "description": "Treating holy matters or spaces with disrespect."
+    },
+    {
+      "id": "religion_incitement",
+      "title": "Incitement",
+      "description": "Urging hostility, hatred, or sectarian division."
+    },
+    {
+      "id": "religion_glorification",
+      "title": "Glorification",
+      "description": "Praising harmful or abusive conduct toward religion."
+    },
+    {
+      "id": "religion_misrepresentation",
+      "title": "Misrepresentation",
+      "description": "Presenting religion or its figures inaccurately or unfairly."
+    },
+    {
+      "id": "religion_disrespect",
+      "title": "Disrespect",
+      "description": "General disrespect toward sacred content."
+    },
+    {
+      "id": "religion_defamation",
+      "title": "Defamation",
+      "description": "False or harmful derogatory assertions about religious figures or groups."
+    },
+    {
+      "id": "religion_hate_speech",
+      "title": "Hate Speech",
+      "description": "Speech intended to degrade or attack religion or its adherents."
+    }
+  ]
+}

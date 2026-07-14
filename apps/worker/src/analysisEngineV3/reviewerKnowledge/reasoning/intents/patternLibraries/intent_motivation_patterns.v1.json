@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "intents_pattern_library",
+    "title": "Intent Pattern Library",
+    "description": "Deterministic intent and motivation patterns for reviewer reasoning.",
+    "concepts": [
+      { "id": "neutral", "title": "Neutral", "description": "Neutral or uncommitted intent." },
+      { "id": "informative", "title": "Informative", "description": "Intent to inform or report." },
+      { "id": "educational", "title": "Educational", "description": "Intent to teach or explain." },
+      { "id": "historical", "title": "Historical", "description": "Intent to describe a past event." },
+      { "id": "documentary", "title": "Documentary", "description": "Intent framed as documentary narration." },
+      { "id": "documentation", "title": "Documentation", "description": "Intent framed as documentary or explanatory documentation." },
+      { "id": "news_reporting", "title": "News Reporting", "description": "Intent framed as news reporting." },
+      { "id": "court_testimony", "title": "Court Testimony", "description": "Intent framed as testimony or legal evidence." },
+      { "id": "police_investigation", "title": "Police Investigation", "description": "Intent framed as investigation or questioning." },
+      { "id": "medical", "title": "Medical", "description": "Intent framed as medical explanation." },
+      { "id": "scientific", "title": "Scientific", "description": "Intent framed as scientific explanation." },
+      { "id": "religious_teaching", "title": "Religious Teaching", "description": "Intent framed as religious instruction." },
+      { "id": "condemnation", "title": "Condemnation", "description": "Intent to reject or criticize." },
+      { "id": "approval", "title": "Approval", "description": "Intent to endorse or approve." },
+      { "id": "encouragement", "title": "Encouragement", "description": "Intent to motivate or encourage." },
+      { "id": "promotion", "title": "Promotion", "description": "Intent to promote or recommend." },
+      { "id": "glorification", "title": "Glorification", "description": "Intent to praise or glorify." },
+      { "id": "praise", "title": "Praise", "description": "Intent to praise or commend." },
+      { "id": "normalization", "title": "Normalization", "description": "Intent to present something as ordinary, acceptable, or normal." },
+      { "id": "instruction", "title": "Instruction", "description": "Intent to direct behavior." },
+      { "id": "threat", "title": "Threat", "description": "Intent to threaten or intimidate." },
+      { "id": "coercion", "title": "Coercion", "description": "Intent to pressure or force." },
+      { "id": "manipulation", "title": "Manipulation", "description": "Intent to influence deceptively." },
+      { "id": "revenge", "title": "Revenge", "description": "Intent to retaliate or avenge." },
+      { "id": "self_defense", "title": "Self Defense", "description": "Intent to defend oneself." },
+      { "id": "protection", "title": "Protection", "description": "Intent to protect someone or something." },
+      { "id": "humor", "title": "Humor", "description": "Intent to amuse or joke." },
+      { "id": "mockery", "title": "Mockery", "description": "Intent to mock, ridicule, or deride." },
+      { "id": "satire", "title": "Satire", "description": "Intent to mock through irony or exaggeration." },
+      { "id": "irony", "title": "Irony", "description": "Intent that means the opposite of the literal wording." },
+      { "id": "sarcasm", "title": "Sarcasm", "description": "Intent to mock with cutting irony." },
+      { "id": "fiction", "title": "Fiction", "description": "Intent framed as fictional storytelling." },
+      { "id": "fantasy", "title": "Fantasy", "description": "Intent framed as imaginative fantasy." },
+      { "id": "dream", "title": "Dream", "description": "Intent framed as a dream sequence." },
+      { "id": "flashback", "title": "Flashback", "description": "Intent framed as a memory of the past." },
+      { "id": "hallucination", "title": "Hallucination", "description": "Intent framed as hallucinated perception." },
+      { "id": "imagination", "title": "Imagination", "description": "Intent framed as an imagined scene." },
+      { "id": "quotation", "title": "Quotation", "description": "Intent framed as quoted speech." },
+      { "id": "role_play", "title": "Role Play", "description": "Intent framed as role play." },
+      { "id": "acting", "title": "Acting", "description": "Intent framed as performance or acting." },
+      { "id": "storytelling", "title": "Storytelling", "description": "Intent framed as storytelling or narration." },
+      { "id": "confession", "title": "Confession", "description": "Intent to reveal or admit something." },
+      { "id": "false_accusation", "title": "False Accusation", "description": "Intent or result of accusing without basis." },
+      { "id": "misunderstanding", "title": "Misunderstanding", "description": "Intent obscured by misunderstanding." }
+    ]
+  },
+  "entries": [
+    {
+      "id": "pattern_factual_reporting",
+      "title": "Factual Reporting Pattern",
+      "description": "Recognize neutral, informative, educational, documentary, documentation, and historical speaking frames.",
+      "primary_concept_id": "neutral",
+      "related_concept_ids": ["informative", "educational", "historical", "documentary", "documentation", "news_reporting", "court_testimony", "police_investigation", "medical", "scientific", "religious_teaching", "quotation"],
+      "direct_expressions": ["plain report-like wording", "reporting without stance"],
+      "indirect_expressions": ["later context confirms the statement is informational", "the line is embedded in a factual frame"],
+      "semantic_intent": ["factual", "informative", "documentary"],
+      "supporting_evidence": ["speaker identity and target are clear", "the scene uses reporting or teaching markers"],
+      "contradictory_evidence": ["the line is surrounded by clear approval or condemnation"],
+      "false_positives": ["do not turn factual narration into a hidden threat", "do not turn documentation into promotion", "do not turn educational explanation into endorsement"],
+      "counter_examples": ["a school lesson should not be treated as promotion", "a documentary explanation should not be treated as approval"],
+      "cross_sentence_indicators": ["later clarification", "follow-up explanation"],
+      "scene_indicators": ["news, court, police, medical, or documentary framing"],
+      "reviewer_guidance": ["start with literal report language and only then test for stance", "treat documentary and educational framing as informational before looking for evaluation", "keep mockery and sarcasm out of the factual bucket unless the scene is clearly expressive"],
+      "confidence_modifiers": [
+        { "id": "cf_factual_support", "title": "Support", "description": "Strong context increases confidence.", "confidence": 90 },
+        { "id": "cf_factual_ambiguity", "title": "Ambiguity", "description": "Ambiguous wording lowers confidence.", "confidence": 60 }
+      ],
+      "glossary_relationships": [
+        { "id": "gloss_factual_reporting", "from_concept_id": "informative", "to_concept_id": "neutral", "relation": "supports", "note": "Informative content often rests on the neutral baseline." }
+      ],
+      "gcam_mappings": [
+        { "id": "gcam_factual_reporting", "article_id": 11, "atom_ids": ["INTENT_FACTUAL"], "role": "factual reasoning", "note": "Reporting, education, documentation, documentary, and quotation contexts." }
+      ],
+      "examples": [
+        { "id": "example_factual_reporting", "title": "Informative line", "text": "The character reports a fact without stance.", "expected_outcome": "Neutral or informative intent.", "note": null }
+      ]
+    },
+    {
+      "id": "pattern_evaluative_stance",
+      "title": "Evaluative Stance Pattern",
+      "description": "Recognize approval, praise, encouragement, promotion, normalization, glorification, condemnation, threat, and coercion.",
+      "primary_concept_id": "condemnation",
+      "related_concept_ids": ["approval", "praise", "encouragement", "promotion", "normalization", "glorification", "instruction", "threat", "coercion", "manipulation", "revenge", "self_defense", "protection", "mockery"],
+      "direct_expressions": ["open approval or criticism", "explicit pressure wording"],
+      "indirect_expressions": ["later lines amplify the stance", "the target relationship shows force or praise"],
+      "semantic_intent": ["evaluative", "coercive", "promotive"],
+      "supporting_evidence": ["tone and target align", "the scene shows stance rather than neutral report"],
+      "contradictory_evidence": ["education or quotation neutralizes the force"],
+      "false_positives": ["do not mistake criticism for endorsement", "do not mistake mockery for praise", "do not mistake normalization for neutral description"],
+      "counter_examples": ["condemnation is not promotion", "praise is not neutral description", "normalization is stronger than mere presence"],
+      "cross_sentence_indicators": ["later intensifier", "targeted response"],
+      "scene_indicators": ["confrontation, command, pressure, praise"],
+      "reviewer_guidance": ["check whether the stance is sincere, quoted, or reversed by context", "separate praise, glorification, and normalization from neutral mention", "separate mockery, satire, sarcasm, and irony from literal hostility"],
+      "confidence_modifiers": [
+        { "id": "cf_eval_support", "title": "Support", "description": "Strong stance markers raise confidence.", "confidence": 92 },
+        { "id": "cf_eval_ambiguity", "title": "Ambiguity", "description": "Educational or condemnatory framing lowers confidence.", "confidence": 55 }
+      ],
+      "glossary_relationships": [
+        { "id": "gloss_eval_promotion", "from_concept_id": "approval", "to_concept_id": "promotion", "relation": "supports", "note": "Approval can feed promotion." }
+      ],
+      "gcam_mappings": [
+        { "id": "gcam_evaluative_stance", "article_id": 4, "atom_ids": ["INTENT_EVALUATIVE"], "role": "evaluative reasoning", "note": "Approval, praise, promotion, normalization, threat, coercion, and similar stances." }
+      ],
+      "examples": [
+        { "id": "example_evaluative_stance", "title": "Threat line", "text": "A direct threat in dialogue.", "expected_outcome": "Evaluative or coercive intent.", "note": null }
+      ]
+    },
+    {
+      "id": "pattern_fictional_frame",
+      "title": "Fictional Frame Pattern",
+      "description": "Recognize fiction, fantasy, dream, flashback, hallucination, imagination, role play, and acting.",
+      "primary_concept_id": "fiction",
+      "related_concept_ids": ["fantasy", "dream", "flashback", "hallucination", "imagination", "role_play", "acting", "humor", "mockery", "satire", "irony", "sarcasm"],
+      "direct_expressions": ["story or dream language", "stage or performance cues"],
+      "indirect_expressions": ["later lines reveal the scene is symbolic", "the exchange is clearly non-literal"],
+      "semantic_intent": ["fictional", "expressive"],
+      "supporting_evidence": ["dream or acting context is explicit", "scene direction signals non-literal mode"],
+      "contradictory_evidence": ["a later realistic scene reverses the interpretation"],
+      "false_positives": ["do not treat fantasy as a real-world admission"],
+      "counter_examples": ["a role-play line should not be judged as literal behavior"],
+      "cross_sentence_indicators": ["scene reversal", "later confirmation of staging"],
+      "scene_indicators": ["dream, fantasy, comedy, acting, symbolic direction"],
+      "reviewer_guidance": ["separate the imagined or staged layer from literal scene facts", "treat mockery as expressive rather than literal unless later text proves otherwise"],
+      "confidence_modifiers": [
+        { "id": "cf_fiction_support", "title": "Support", "description": "Strong staging cues raise confidence.", "confidence": 85 },
+        { "id": "cf_fiction_ambiguity", "title": "Ambiguity", "description": "Mixed framing lowers confidence.", "confidence": 50 }
+      ],
+      "glossary_relationships": [
+        { "id": "gloss_fiction_roleplay", "from_concept_id": "role_play", "to_concept_id": "acting", "relation": "supports", "note": "Role play and acting often travel together." }
+      ],
+      "gcam_mappings": [
+        { "id": "gcam_fictional_frame", "article_id": 17, "atom_ids": ["INTENT_FICTIONAL"], "role": "fictional reasoning", "note": "Dreams, acting, role play, humor, and story framing." }
+      ],
+      "examples": [
+        { "id": "example_fictional_frame", "title": "Dream scene", "text": "A dream sequence with symbolic action.", "expected_outcome": "Non-literal fictional intent.", "note": null }
+      ]
+    },
+    {
+      "id": "pattern_confession_correction",
+      "title": "Confession and Correction Pattern",
+      "description": "Recognize confession, false accusation, misunderstanding, and corrective explanation.",
+      "primary_concept_id": "confession",
+      "related_concept_ids": ["false_accusation", "misunderstanding", "storytelling"],
+      "direct_expressions": ["explicit admission", "correction of earlier misunderstanding"],
+      "indirect_expressions": ["later clarification changes the reading", "the speaker admits or retracts"],
+      "semantic_intent": ["confessional", "corrective"],
+      "supporting_evidence": ["speaker admits or clarifies something", "the scene contains a correction"],
+      "contradictory_evidence": ["the accusation is disproved later"],
+      "false_positives": ["do not treat a false accusation as a confession"],
+      "counter_examples": ["misunderstanding is not guilt"],
+      "cross_sentence_indicators": ["retraction", "clarification", "later explanation"],
+      "scene_indicators": ["confession, apology, correction, contradiction"],
+      "reviewer_guidance": ["use later text to decide whether the speaker is confessing or correcting"],
+      "confidence_modifiers": [
+        { "id": "cf_confession_support", "title": "Support", "description": "Explicit admission raises confidence.", "confidence": 90 },
+        { "id": "cf_confession_ambiguity", "title": "Ambiguity", "description": "Correction or contradiction lowers confidence.", "confidence": 55 }
+      ],
+      "glossary_relationships": [
+        { "id": "gloss_confession_misunderstanding", "from_concept_id": "false_accusation", "to_concept_id": "misunderstanding", "relation": "supports", "note": "False accusation often appears with misunderstanding." }
+      ],
+      "gcam_mappings": [
+        { "id": "gcam_confession_correction", "article_id": 11, "atom_ids": ["INTENT_FACTUAL"], "role": "corrective reasoning", "note": "Confession and correction often appear in factual contexts." }
+      ],
+      "examples": [
+        { "id": "example_confession_correction", "title": "Confession", "text": "The character admits the truth after denial.", "expected_outcome": "Confessional intent.", "note": null }
+      ]
+    }
+  ]
+}

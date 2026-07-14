@@ -1,0 +1,50 @@
+{
+  "version": "1.0.0",
+  "id": "drugs_reviewQuestions",
+  "title": "Drugs Review Questions",
+  "description": "Drug review questions.",
+  "entries": [
+    {
+      "id": "drug_q_speaker",
+      "title": "Speaker",
+      "description": "Identify the speaker before interpreting any drug-related language.",
+      "note": "Who is speaking?: Speaker identity | Quotation context"
+    },
+    {
+      "id": "drug_q_target",
+      "title": "Target",
+      "description": "The target may be a user, patient, child, or the public.",
+      "note": "Who is affected?: Target identity | Relationship"
+    },
+    {
+      "id": "drug_q_context",
+      "title": "Context",
+      "description": "Medical, educational, news, and fiction frames change meaning.",
+      "note": "What is the scene context?: Scene context | Neighboring sentences"
+    },
+    {
+      "id": "drug_q_intent",
+      "title": "Intent",
+      "description": "Decide whether the line is reference, instruction, encouragement, or condemnation.",
+      "note": "What is the intent?: Literal wording | Later clarification"
+    },
+    {
+      "id": "drug_q_evidence",
+      "title": "Evidence",
+      "description": "Use only literal and contextual evidence from the scene.",
+      "note": "What evidence supports the reading?: Direct text | Supporting context"
+    },
+    {
+      "id": "drug_q_confidence",
+      "title": "Confidence",
+      "description": "Lower confidence when the scene is ambiguous or highly contextual.",
+      "note": "How confident are we?: Corroboration | Contradiction"
+    },
+    {
+      "id": "drug_q_exceptions",
+      "title": "Exceptions",
+      "description": "Medical, educational, documentary, historical, comedy, or fiction frames may change the outcome.",
+      "note": "Does an exception apply?: Exception frame | Scene purpose"
+    }
+  ]
+}

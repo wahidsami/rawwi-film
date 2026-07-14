@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "version": { "major": 1, "minor": 0, "patch": 0 },
+  "metadata": {
+    "id": "corruption_semantic_patterns",
+    "title": "Corruption Semantic Patterns",
+    "description": "Versioned semantic patterns for corruption, bribery, influence peddling, and related reviewer reasoning.",
+    "concepts": [
+      { "id": "corruption", "title": "Corruption", "description": "Abuse of power for private gain." },
+      { "id": "bribery", "title": "Bribery", "description": "Offering, giving, requesting, or accepting an improper benefit." },
+      { "id": "influence_peddling", "title": "Influence Peddling", "description": "Trading on influence or connections for an improper benefit." },
+      { "id": "favor_exchange", "title": "Favor Exchange", "description": "A benefit or service exchanged for improper advantage." },
+      { "id": "payment", "title": "Payment", "description": "Money or valuable consideration used in the exchange." },
+      { "id": "contract_abuse", "title": "Contract Abuse", "description": "Manipulating a contract or procurement process unfairly." },
+      { "id": "abuse_of_power", "title": "Abuse of Power", "description": "Using authority or position to secure an improper outcome." }
+    ]
+  },
+  "entries": [
+    {
+      "id": "pattern_bribery_exchange",
+      "title": "Bribery Exchange",
+      "description": "Patterns where a payment, gift, or favor is exchanged for a permit, approval, or other official action.",
+      "primary_concept_id": "bribery",
+      "related_concept_ids": ["corruption", "favor_exchange", "payment"],
+      "direct_expressions": [
+        "خذ الظرف",
+        "هذا حقك",
+        "رتبها لي",
+        "أمرني ومشيها"
+      ],
+      "indirect_expressions": [
+        "فهمت قصدي",
+        "احنا نعرف بعض",
+        "خدمة بسيطة",
+        "بدل التعب"
+      ],
+      "semantic_intent": [
+        "improper benefit exchange",
+        "official favor for private gain"
+      ],
+      "supporting_evidence": [
+        "A cash object, envelope, or gift is mentioned near a request for approval.",
+        "A permit, license, or signature appears in the same exchange."
+      ],
+      "contradictory_evidence": [
+        "The speaker explicitly rejects the offer.",
+        "The scene is clearly a warning, investigation, or condemnation."
+      ],
+      "false_positives": [
+        "A genuine gift between family members.",
+        "A lawful payment with no official favor requested."
+      ],
+      "counter_examples": [
+        "A cashier receiving exact change.",
+        "A legal invoice with no hidden request."
+      ],
+      "cross_sentence_indicators": [
+        "A polite sentence is followed by a request for approval.",
+        "A gift is mentioned before an official decision."
+      ],
+      "scene_indicators": [
+        "Handshake in a corridor",
+        "Envelope handed across a desk",
+        "Approval scene"
+      ],
+      "reviewer_guidance": [
+        "Read the exchange across sentences.",
+        "Check whether the payment or favor is tied to an official act.",
+        "Do not classify ordinary payments as bribery without the corrupt link."
+      ],
+      "confidence_modifiers": [
+        { "id": "modifier_direct_request", "title": "Direct Request", "description": "Explicit request for improper benefit.", "confidence": 95 },
+        { "id": "modifier_indirect_hint", "title": "Indirect Hint", "description": "Implied exchange without direct wording.", "confidence": 70 },
+        { "id": "modifier_investigation_context", "title": "Investigation Context", "description": "Context that reduces confidence because the scene is evidentiary.", "confidence": 25 }
+      ],
+      "glossary_relationships": [
+        { "id": "rel_corruption_bribery", "from_concept_id": "corruption", "to_concept_id": "bribery", "relation": "supports", "note": "Bribery is a core corruption signal." },
+        { "id": "rel_bribery_payment", "from_concept_id": "bribery", "to_concept_id": "payment", "relation": "requires", "note": "Payment is often the visible vehicle for bribery." }
+      ],
+      "gcam_mappings": [
+        { "id": "gcam_4_2", "article_id": 4, "atom_ids": ["4-2"], "role": "Content standard and public interest", "note": "Use when corruption harms public interest or official integrity." },
+        { "id": "gcam_11_1", "article_id": 11, "atom_ids": ["11-1"], "role": "Misinformation and deceptive conduct", "note": "Use when corruption is embedded in deceptive factual presentation." },
+        { "id": "gcam_19_4", "article_id": 19, "atom_ids": ["19-4"], "role": "Financial harm", "note": "Use when corruption is tied to financial misconduct." }
+      ],
+      "examples": [
+        { "id": "example_bribe_001", "title": "Envelope exchange", "text": "أخذ الظرف ثم وقّع الترخيص.", "expected_outcome": "Possible bribery because payment and official action appear together.", "note": null },
+        { "id": "example_bribe_002", "title": "Favor phrase", "text": "هذا حقك، رتّبها لي.", "expected_outcome": "Bribery is suggested by an improper favor exchange.", "note": null }
+      ]
+    },
+    {
+      "id": "pattern_influence_peddling",
+      "title": "Influence Peddling",
+      "description": "Patterns where a connection, status, or influence is traded for preferential treatment.",
+      "primary_concept_id": "influence_peddling",
+      "related_concept_ids": ["corruption", "abuse_of_power", "favor_exchange"],
+      "direct_expressions": [
+        "عندي ناس تمشيها",
+        "أنا أعرفه شخصيًا",
+        "الواسطة جاهزة"
+      ],
+      "indirect_expressions": [
+        "اتركها لي",
+        "لن يرفض طلبنا",
+        "له معارف كثيرة"
+      ],
+      "semantic_intent": [
+        "preferential treatment through influence",
+        "abuse of connections"
+      ],
+      "supporting_evidence": [
+        "A character claims access to a decision maker or official.",
+        "A request for special treatment follows the claim of influence."
+      ],
+      "contradictory_evidence": [
+        "The scene shows a normal referral with no improper benefit.",
+        "The speaker is joking and the story clearly treats it as a joke."
+      ],
+      "false_positives": [
+        "A legitimate reference from one professional to another.",
+        "A family member asking for lawful help."
+      ],
+      "counter_examples": [
+        "A doctor recommending a specialist.",
+        "A legal referral to customer support."
+      ],
+      "cross_sentence_indicators": [
+        "Connection mentioned before a favor request.",
+        "A later sentence confirms a special shortcut."
+      ],
+      "scene_indicators": [
+        "Private office conversation",
+        "Phone call with a gatekeeper",
+        "Line about knowing someone inside"
+      ],
+      "reviewer_guidance": [
+        "Look for the link between influence and benefit.",
+        "Separate legitimate help from improper advantage.",
+        "Use scene-level context to judge whether influence is being sold."
+      ],
+      "confidence_modifiers": [
+        { "id": "modifier_named_connection", "title": "Named Connection", "description": "A specific authority or insider is named.", "confidence": 85 },
+        { "id": "modifier_unspecified_hint", "title": "Unspecified Hint", "description": "Only a vague suggestion of influence exists.", "confidence": 55 },
+        { "id": "modifier_explicit_rejection", "title": "Explicit Rejection", "description": "The scene rejects or undermines the improper influence.", "confidence": 15 }
+      ],
+      "glossary_relationships": [
+        { "id": "rel_influence_corruption", "from_concept_id": "influence_peddling", "to_concept_id": "corruption", "relation": "supports", "note": "Influence peddling commonly sits inside corruption reasoning." },
+        { "id": "rel_influence_abuse", "from_concept_id": "influence_peddling", "to_concept_id": "abuse_of_power", "relation": "supports", "note": "Using influence for advantage is a form of power abuse." }
+      ],
+      "gcam_mappings": [
+        { "id": "gcam_4_4", "article_id": 4, "atom_ids": ["4-4"], "role": "Cultural and ethical integrity", "note": "Use when influence peddling undermines public trust or fairness." },
+        { "id": "gcam_20_3", "article_id": 20, "atom_ids": ["20-3"], "role": "Commercial integrity", "note": "Use when influence peddling affects a business or contract outcome." }
+      ],
+      "examples": [
+        { "id": "example_influence_001", "title": "Inside connection", "text": "عندي ناس تمشيها، بس نحتاج نسمع كلمة منك.", "expected_outcome": "Possible influence peddling because a connection is traded for a favor.", "note": null },
+        { "id": "example_influence_002", "title": "Special access", "text": "أنا أعرفه شخصيًا، وراح يسويها لنا.", "expected_outcome": "Potential influence peddling due to implied preferential treatment.", "note": null }
+      ]
+    }
+  ]
+}

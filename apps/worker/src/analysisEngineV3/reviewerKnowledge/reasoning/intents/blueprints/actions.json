@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "id": "intents_actions",
+  "title": "Intent Actions",
+  "description": "Actions that influence reviewer intent.",
+  "entries": [
+    { "id": "action_observation", "title": "Observation", "description": "The reviewer observes without assigning motive." },
+    { "id": "action_teaching", "title": "Teaching", "description": "The reviewer explains a concept for learning." },
+    { "id": "action_reporting", "title": "Reporting", "description": "The reviewer relays facts without endorsement." },
+    { "id": "action_warning", "title": "Warning", "description": "The reviewer cautions about risk." },
+    { "id": "action_mocking", "title": "Mocking", "description": "The reviewer treats the scene as ridicule." },
+    { "id": "action_threatening", "title": "Threatening", "description": "The reviewer sees coercive pressure." },
+    { "id": "action_imagining", "title": "Imagining", "description": "The reviewer identifies imaginative framing." },
+    { "id": "action_confessing", "title": "Confessing", "description": "The reviewer reads a direct admission." }
+  ]
+}

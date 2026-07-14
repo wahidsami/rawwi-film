@@ -1,0 +1,75 @@
+{
+  "id": "decision_004_sexual_metaphor",
+  "version": "1.0.0",
+  "title": "Sexual Metaphor decision record",
+  "summary": "Reviewer reasoning record for sexual metaphor.",
+  "originalScenario": "A joke only becomes sexual after the next sentence clarifies the target.",
+  "reviewQuestion": "Is this a reviewable sexual metaphor case?",
+  "initialSuspicion": "Sexual Metaphor appears in the scene or context.",
+  "possibleConcepts": [
+    "sexual_metaphor",
+    "sexual_reference",
+    "sexual_joke"
+  ],
+  "supportingEvidence": [
+    "A joke only becomes sexual after the next sentence clarifies the target.",
+    "Sexual Metaphor is the active concept."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [
+    "No additional evidence needed"
+  ],
+  "sceneContext": "A joke only becomes sexual after the next sentence clarifies the target.",
+  "speakerAnalysis": "The speaker and target must be checked explicitly.",
+  "targetAnalysis": "The target must be identified from context.",
+  "intentAnalysis": "Context-sensitive sexual reasoning",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check evidence quality",
+    "Apply context and exception rules",
+    "Map to article guidance"
+  ],
+  "reviewerDecision": "The finding is supported by the evidence.",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-4"
+      ],
+      "note": "Primary content-standard mapping for sexual references."
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Use the reference bucket rules and preserve the exact evidence span for sexual_metaphor.",
+  "benchmarkTags": [
+    "reference",
+    "sexual_metaphor",
+    "sexual_reference"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "sexual_pattern_04_sexual_metaphor"
+  ],
+  "relatedBlueprintConcepts": [
+    "sexual_metaphor",
+    "sexual_reference"
+  ]
+}

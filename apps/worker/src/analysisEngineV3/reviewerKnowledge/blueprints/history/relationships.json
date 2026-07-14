@@ -1,0 +1,223 @@
+{
+  "version": "1.0.0",
+  "id": "historical_relationships",
+  "title": "History Relationships",
+  "description": "Canonical history relationships for reviewer reasoning.",
+  "entries": [
+    {
+      "from": "historical_domain",
+      "to": "historical_person",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_leader",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_event",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_battle",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_conflict",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_religious_event",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_state",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_empire",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_dynasty",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_reenactment",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_documentary",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_education",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_news",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_reference",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_quote",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_narration",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_fiction",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "alternate_history",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "mythological_history",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_symbol",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_monument",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_site",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_map",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_archive",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_flashback",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_memory",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_scene_description",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_dialogue",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_observation",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_criticism",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_praise",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_mockery",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_distortion",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_revisionism",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_context",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_timeline",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_character",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_government",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_society",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_tradition",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_custom",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_culture",
+      "type": "supports"
+    },
+    {
+      "from": "historical_domain",
+      "to": "historical_identity",
+      "type": "supports"
+    }
+  ]
+}

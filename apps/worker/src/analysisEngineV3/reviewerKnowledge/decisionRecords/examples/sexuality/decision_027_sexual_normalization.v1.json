@@ -1,0 +1,87 @@
+{
+  "id": "decision_027_sexual_normalization",
+  "version": "1.0.0",
+  "title": "Sexual Normalization decision record",
+  "summary": "Reviewer reasoning record for sexual normalization.",
+  "originalScenario": "The narrator normalizes the conduct, but the next scene condemns it.",
+  "reviewQuestion": "Is this a reviewable sexual normalization case?",
+  "initialSuspicion": "Sexual Normalization appears in the scene or context.",
+  "possibleConcepts": [
+    "sexual_normalization",
+    "sexual_glorification",
+    "sexual_instruction"
+  ],
+  "supportingEvidence": [
+    "The narrator normalizes the conduct, but the next scene condemns it.",
+    "Sexual Normalization is the active concept."
+  ],
+  "contradictingEvidence": [
+    "The context is exception-heavy or corrected later."
+  ],
+  "requiredMissingEvidence": [
+    "No additional evidence needed"
+  ],
+  "sceneContext": "The narrator normalizes the conduct, but the next scene condemns it.",
+  "speakerAnalysis": "The speaker and target must be checked explicitly.",
+  "targetAnalysis": "The target must be identified from context.",
+  "intentAnalysis": "Context-sensitive sexual reasoning",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check evidence quality",
+    "Apply context and exception rules",
+    "Map to article guidance"
+  ],
+  "reviewerDecision": "The concept is present, but the reviewer should treat the case as context-heavy or exception-heavy.",
+  "confidence": "high",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-4"
+      ],
+      "note": "Use when the scene normalizes or glorifies sexual content."
+    },
+    {
+      "article_id": 5,
+      "atom_ids": [
+        "5-1",
+        "5-2",
+        "5-5"
+      ],
+      "note": "Use when framing affects content suitability."
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Use the framing bucket rules and preserve the exact evidence span for sexual_normalization.",
+  "benchmarkTags": [
+    "framing",
+    "sexual_normalization",
+    "sexual_framing"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "sexual_pattern_27_sexual_normalization"
+  ],
+  "relatedBlueprintConcepts": [
+    "sexual_normalization",
+    "sexual_glorification",
+    "sexual_reference"
+  ]
+}

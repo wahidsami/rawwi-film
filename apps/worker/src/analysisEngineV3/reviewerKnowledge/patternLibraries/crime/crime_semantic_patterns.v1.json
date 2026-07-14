@@ -1,0 +1,1382 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "crime_semantic_patterns",
+    "title": "Crime Semantic Patterns",
+    "description": "Semantic reasoning patterns for crime content.",
+    "concepts": [
+      {
+        "id": "crime_reference",
+        "title": "Crime Reference",
+        "description": "Referenced by the crime semantic library for crime reference."
+      },
+      {
+        "id": "crime_attempt",
+        "title": "Attempt",
+        "description": "Referenced by the crime semantic library for attempt."
+      },
+      {
+        "id": "crime_conspiracy",
+        "title": "Conspiracy",
+        "description": "Referenced by the crime semantic library for conspiracy."
+      },
+      {
+        "id": "crime_planning",
+        "title": "Planning",
+        "description": "Referenced by the crime semantic library for planning."
+      },
+      {
+        "id": "crime_execution",
+        "title": "Execution",
+        "description": "Referenced by the crime semantic library for execution."
+      },
+      {
+        "id": "crime_glorification",
+        "title": "Glorification",
+        "description": "Referenced by the crime semantic library for glorification."
+      },
+      {
+        "id": "crime_encouragement",
+        "title": "Encouragement",
+        "description": "Referenced by the crime semantic library for encouragement."
+      },
+      {
+        "id": "crime_instruction",
+        "title": "Instruction",
+        "description": "Referenced by the crime semantic library for instruction."
+      },
+      {
+        "id": "crime_normalization",
+        "title": "Normalization",
+        "description": "Referenced by the crime semantic library for normalization."
+      },
+      {
+        "id": "crime_reward",
+        "title": "Reward",
+        "description": "Referenced by the crime semantic library for reward."
+      },
+      {
+        "id": "crime_coverup",
+        "title": "Cover-up",
+        "description": "Referenced by the crime semantic library for cover-up."
+      },
+      {
+        "id": "crime_escape",
+        "title": "Escape",
+        "description": "Referenced by the crime semantic library for escape."
+      },
+      {
+        "id": "crime_evasion",
+        "title": "Evasion",
+        "description": "Referenced by the crime semantic library for evasion."
+      },
+      {
+        "id": "crime_theft",
+        "title": "Theft",
+        "description": "Referenced by the crime semantic library for theft."
+      },
+      {
+        "id": "crime_robbery",
+        "title": "Robbery",
+        "description": "Referenced by the crime semantic library for robbery."
+      },
+      {
+        "id": "crime_burglary",
+        "title": "Burglary",
+        "description": "Referenced by the crime semantic library for burglary."
+      },
+      {
+        "id": "crime_fraud",
+        "title": "Fraud",
+        "description": "Referenced by the crime semantic library for fraud."
+      },
+      {
+        "id": "crime_forgery",
+        "title": "Forgery",
+        "description": "Referenced by the crime semantic library for forgery."
+      },
+      {
+        "id": "crime_blackmail",
+        "title": "Blackmail",
+        "description": "Referenced by the crime semantic library for blackmail."
+      },
+      {
+        "id": "crime_extortion",
+        "title": "Extortion",
+        "description": "Referenced by the crime semantic library for extortion."
+      },
+      {
+        "id": "crime_bribery",
+        "title": "Bribery",
+        "description": "Referenced by the crime semantic library for bribery."
+      },
+      {
+        "id": "crime_corruption",
+        "title": "Corruption",
+        "description": "Referenced by the crime semantic library for corruption."
+      },
+      {
+        "id": "crime_money_laundering",
+        "title": "Money Laundering",
+        "description": "Referenced by the crime semantic library for money laundering."
+      },
+      {
+        "id": "crime_kidnapping",
+        "title": "Kidnapping",
+        "description": "Referenced by the crime semantic library for kidnapping."
+      },
+      {
+        "id": "crime_hostage",
+        "title": "Hostage",
+        "description": "Referenced by the crime semantic library for hostage."
+      },
+      {
+        "id": "crime_murder",
+        "title": "Murder",
+        "description": "Referenced by the crime semantic library for murder."
+      },
+      {
+        "id": "crime_attempted_murder",
+        "title": "Attempted Murder",
+        "description": "Referenced by the crime semantic library for attempted murder."
+      },
+      {
+        "id": "crime_assault",
+        "title": "Assault",
+        "description": "Referenced by the crime semantic library for assault."
+      },
+      {
+        "id": "crime_property_damage",
+        "title": "Property Damage",
+        "description": "Referenced by the crime semantic library for property damage."
+      },
+      {
+        "id": "crime_vandalism",
+        "title": "Vandalism",
+        "description": "Referenced by the crime semantic library for vandalism."
+      },
+      {
+        "id": "crime_arson",
+        "title": "Arson",
+        "description": "Referenced by the crime semantic library for arson."
+      },
+      {
+        "id": "crime_human_trafficking",
+        "title": "Human Trafficking",
+        "description": "Referenced by the crime semantic library for human trafficking."
+      },
+      {
+        "id": "crime_smuggling",
+        "title": "Smuggling",
+        "description": "Referenced by the crime semantic library for smuggling."
+      },
+      {
+        "id": "crime_organized_crime",
+        "title": "Organized Crime",
+        "description": "Referenced by the crime semantic library for organized crime."
+      },
+      {
+        "id": "crime_cybercrime",
+        "title": "Cybercrime",
+        "description": "Referenced by the crime semantic library for cybercrime."
+      },
+      {
+        "id": "crime_identity_theft",
+        "title": "Identity Theft",
+        "description": "Referenced by the crime semantic library for identity theft."
+      },
+      {
+        "id": "crime_documentary",
+        "title": "Documentary Context",
+        "description": "Referenced by the crime semantic library for documentary context."
+      },
+      {
+        "id": "crime_news",
+        "title": "News Context",
+        "description": "Referenced by the crime semantic library for news context."
+      },
+      {
+        "id": "crime_historical",
+        "title": "Historical Context",
+        "description": "Referenced by the crime semantic library for historical context."
+      },
+      {
+        "id": "crime_educational",
+        "title": "Educational Context",
+        "description": "Referenced by the crime semantic library for educational context."
+      },
+      {
+        "id": "crime_police_investigation",
+        "title": "Police Investigation",
+        "description": "Referenced by the crime semantic library for police investigation."
+      },
+      {
+        "id": "crime_court_case",
+        "title": "Court Case",
+        "description": "Referenced by the crime semantic library for court case."
+      },
+      {
+        "id": "crime_false_accusation",
+        "title": "False Accusation",
+        "description": "Referenced by the crime semantic library for false accusation."
+      },
+      {
+        "id": "crime_confession",
+        "title": "Confession",
+        "description": "Referenced by the crime semantic library for confession."
+      },
+      {
+        "id": "crime_scene_description",
+        "title": "Scene Description",
+        "description": "Referenced by the crime semantic library for scene description."
+      },
+      {
+        "id": "crime_dialogue",
+        "title": "Dialogue",
+        "description": "Referenced by the crime semantic library for dialogue."
+      },
+      {
+        "id": "crime_observation",
+        "title": "Observation",
+        "description": "Referenced by the crime semantic library for observation."
+      },
+      {
+        "id": "crime_reported_event",
+        "title": "Reported Event",
+        "description": "Referenced by the crime semantic library for reported event."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "pattern_implicit_crime",
+      "title": "Implicit Crime",
+      "description": "Indirect wording that still points to crime when the local context clarifies the meaning.",
+      "primary_concept_id": "crime_reference",
+      "related_concept_ids": [
+        "crime_planning",
+        "crime_conspiracy",
+        "crime_reported_event",
+        "crime_scene_description"
+      ],
+      "direct_expressions": [
+        "coded plan",
+        "secret deal"
+      ],
+      "indirect_expressions": [
+        "this job",
+        "same old work"
+      ],
+      "semantic_intent": [
+        "implication",
+        "coded reference",
+        "narrative clue"
+      ],
+      "supporting_evidence": [
+        "speaker secrecy",
+        "later confirmation"
+      ],
+      "contradictory_evidence": [
+        "medical context",
+        "explicit denial"
+      ],
+      "false_positives": [
+        "ordinary business talk mistaken for crime"
+      ],
+      "counter_examples": [
+        "simple work discussion"
+      ],
+      "cross_sentence_indicators": [
+        "later line reveals the plan",
+        "another line confirms the crime"
+      ],
+      "scene_indicators": [
+        "hushed dialogue",
+        "hidden note"
+      ],
+      "reviewer_guidance": [
+        "Read for implication, not keywords."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_implicit_crime_confidence",
+          "title": "Implicit Crime confidence",
+          "description": "Confidence modifier for implicit crime.",
+          "confidence": 78
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "imp_rel_1",
+          "from_concept_id": "crime_reference",
+          "to_concept_id": "crime_planning",
+          "relation": "supports",
+          "note": "Implicit framing can precede planning."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_implicit_crime_map",
+          "article_id": 4,
+          "atom_ids": [
+            "4-2"
+          ],
+          "role": "Implicit Crime",
+          "note": "Crime pattern 1."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_implicit_crime_example",
+          "title": "Implicit Crime example",
+          "text": "هذا الشغل معروف",
+          "expected_outcome": "Implicit Crime",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_planned_crime",
+      "title": "Planned Crime",
+      "description": "Language that sets up, coordinates or agrees on a crime before it happens.",
+      "primary_concept_id": "crime_planning",
+      "related_concept_ids": [
+        "crime_conspiracy",
+        "crime_execution",
+        "crime_escape",
+        "crime_evasion"
+      ],
+      "direct_expressions": [
+        "meet tonight",
+        "let's do it"
+      ],
+      "indirect_expressions": [
+        "the plan is ready",
+        "everything is set"
+      ],
+      "semantic_intent": [
+        "planning",
+        "coordination",
+        "preparation"
+      ],
+      "supporting_evidence": [
+        "timing words",
+        "shared roles"
+      ],
+      "contradictory_evidence": [
+        "cancelled plan",
+        "rejection"
+      ],
+      "false_positives": [
+        "ordinary scheduling mistaken for plotting"
+      ],
+      "counter_examples": [
+        "restaurant reservation"
+      ],
+      "cross_sentence_indicators": [
+        "later line names the target",
+        "follow-up confirms the plan"
+      ],
+      "scene_indicators": [
+        "whispered exchange",
+        "map on table"
+      ],
+      "reviewer_guidance": [
+        "A plan needs coordination evidence, not a single verb."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_planned_crime_confidence",
+          "title": "Planned Crime confidence",
+          "description": "Confidence modifier for planned crime.",
+          "confidence": 82
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "plan_rel_1",
+          "from_concept_id": "crime_planning",
+          "to_concept_id": "crime_conspiracy",
+          "relation": "supports",
+          "note": "Planning and conspiracy often co-occur."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_planned_crime_map",
+          "article_id": 14,
+          "atom_ids": [
+            "14-1"
+          ],
+          "role": "Planned Crime",
+          "note": "Crime pattern 2."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_planned_crime_example",
+          "title": "Planned Crime example",
+          "text": "الهدف جاهز والوقت الليلة",
+          "expected_outcome": "Planned Crime",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_attempted_crime",
+      "title": "Attempted Crime",
+      "description": "A crime is started but interrupted, failed, or only partly completed.",
+      "primary_concept_id": "crime_attempt",
+      "related_concept_ids": [
+        "crime_attempted_murder",
+        "crime_execution",
+        "crime_robbery",
+        "crime_assault"
+      ],
+      "direct_expressions": [
+        "tried to",
+        "attempted"
+      ],
+      "indirect_expressions": [
+        "almost did it",
+        "was stopped"
+      ],
+      "semantic_intent": [
+        "attempt",
+        "failure",
+        "interruption"
+      ],
+      "supporting_evidence": [
+        "intervention",
+        "unfinished action"
+      ],
+      "contradictory_evidence": [
+        "no action at all",
+        "only a threat"
+      ],
+      "false_positives": [
+        "wishful thinking mistaken for attempt"
+      ],
+      "counter_examples": [
+        "I almost left"
+      ],
+      "cross_sentence_indicators": [
+        "later line shows the failure",
+        "scene ends before completion"
+      ],
+      "scene_indicators": [
+        "sudden interruption",
+        "police arrival"
+      ],
+      "reviewer_guidance": [
+        "An attempt needs an actual start plus failure or interruption."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_attempted_crime_confidence",
+          "title": "Attempted Crime confidence",
+          "description": "Confidence modifier for attempted crime.",
+          "confidence": 80
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "attempt_rel_1",
+          "from_concept_id": "crime_attempt",
+          "to_concept_id": "crime_execution",
+          "relation": "supports",
+          "note": "An attempt is a partial execution."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_attempted_crime_map",
+          "article_id": 9,
+          "atom_ids": [
+            "9-2"
+          ],
+          "role": "Attempted Crime",
+          "note": "Crime pattern 3."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_attempted_crime_example",
+          "title": "Attempted Crime example",
+          "text": "حاول سرقة السيارة لكنه هرب",
+          "expected_outcome": "Attempted Crime",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_offscreen_crime",
+      "title": "Off-screen Crime",
+      "description": "A crime is described or reported without being directly shown in the current shot.",
+      "primary_concept_id": "crime_reported_event",
+      "related_concept_ids": [
+        "crime_coverup",
+        "crime_false_accusation",
+        "crime_confession",
+        "crime_observation"
+      ],
+      "direct_expressions": [
+        "it happened",
+        "was reported"
+      ],
+      "indirect_expressions": [
+        "after the scene",
+        "off screen"
+      ],
+      "semantic_intent": [
+        "reporting",
+        "retrospective",
+        "summary"
+      ],
+      "supporting_evidence": [
+        "later confirmation",
+        "investigative context"
+      ],
+      "contradictory_evidence": [
+        "explicit denial",
+        "fictionalized retelling"
+      ],
+      "false_positives": [
+        "a report mistaken for endorsement"
+      ],
+      "counter_examples": [
+        "news recap"
+      ],
+      "cross_sentence_indicators": [
+        "a later sentence confirms the event"
+      ],
+      "scene_indicators": [
+        "cutaway",
+        "voice-over"
+      ],
+      "reviewer_guidance": [
+        "Off-screen events still need a reliable link to the crime."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_offscreen_crime_confidence",
+          "title": "Off-screen Crime confidence",
+          "description": "Confidence modifier for off-screen crime.",
+          "confidence": 74
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "off_rel_1",
+          "from_concept_id": "crime_reported_event",
+          "to_concept_id": "crime_police_investigation",
+          "relation": "supports",
+          "note": "Reported events often appear in investigations."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_offscreen_crime_map",
+          "article_id": 4,
+          "atom_ids": [
+            "4-4"
+          ],
+          "role": "Off-screen Crime",
+          "note": "Crime pattern 4."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_offscreen_crime_example",
+          "title": "Off-screen Crime example",
+          "text": "تمت السرقة خارج الكادر",
+          "expected_outcome": "Off-screen Crime",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_described_crime",
+      "title": "Described Crime",
+      "description": "Crime appears in description, props or scene composition rather than direct dialogue.",
+      "primary_concept_id": "crime_scene_description",
+      "related_concept_ids": [
+        "crime_observation",
+        "crime_property_damage",
+        "crime_arson",
+        "crime_vandalism"
+      ],
+      "direct_expressions": [
+        "blood on the wall",
+        "broken door"
+      ],
+      "indirect_expressions": [
+        "burn marks",
+        "smash damage"
+      ],
+      "semantic_intent": [
+        "description",
+        "scene setting",
+        "visual cue"
+      ],
+      "supporting_evidence": [
+        "physical traces",
+        "shot composition"
+      ],
+      "contradictory_evidence": [
+        "set dressing",
+        "innocent explanation"
+      ],
+      "false_positives": [
+        "ordinary damage mistaken for crime"
+      ],
+      "counter_examples": [
+        "renovation scene"
+      ],
+      "cross_sentence_indicators": [
+        "later dialogue explains the damage"
+      ],
+      "scene_indicators": [
+        "close-up",
+        "aftermath"
+      ],
+      "reviewer_guidance": [
+        "Description is evidence only when it points to criminal conduct."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_described_crime_confidence",
+          "title": "Described Crime confidence",
+          "description": "Confidence modifier for described crime.",
+          "confidence": 76
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "desc_rel_1",
+          "from_concept_id": "crime_scene_description",
+          "to_concept_id": "crime_observation",
+          "relation": "supports",
+          "note": "Descriptions often pair with observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_described_crime_map",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Described Crime",
+          "note": "Crime pattern 5."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_described_crime_example",
+          "title": "Described Crime example",
+          "text": "باب مكسور وآثار اقتحام",
+          "expected_outcome": "Described Crime",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_reported_crime",
+      "title": "Reported Crime",
+      "description": "News or narrative reporting that states a crime as a reported event.",
+      "primary_concept_id": "crime_news",
+      "related_concept_ids": [
+        "crime_documentary",
+        "crime_historical",
+        "crime_police_investigation",
+        "crime_court_case"
+      ],
+      "direct_expressions": [
+        "news report",
+        "reported crime"
+      ],
+      "indirect_expressions": [
+        "breaking story",
+        "press coverage"
+      ],
+      "semantic_intent": [
+        "reporting",
+        "journalism",
+        "summary"
+      ],
+      "supporting_evidence": [
+        "attribution",
+        "factual tone"
+      ],
+      "contradictory_evidence": [
+        "praise",
+        "instruction"
+      ],
+      "false_positives": [
+        "reporting mistaken for endorsement"
+      ],
+      "counter_examples": [
+        "press briefing"
+      ],
+      "cross_sentence_indicators": [
+        "later line cites the source"
+      ],
+      "scene_indicators": [
+        "news anchor",
+        "headline"
+      ],
+      "reviewer_guidance": [
+        "News coverage is context, not endorsement."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_reported_crime_confidence",
+          "title": "Reported Crime confidence",
+          "description": "Confidence modifier for reported crime.",
+          "confidence": 71
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rep_rel_1",
+          "from_concept_id": "crime_news",
+          "to_concept_id": "crime_reported_event",
+          "relation": "supports",
+          "note": "News is often about reported events."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_reported_crime_map",
+          "article_id": 4,
+          "atom_ids": [
+            "4-3"
+          ],
+          "role": "Reported Crime",
+          "note": "Crime pattern 6."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_reported_crime_example",
+          "title": "Reported Crime example",
+          "text": "أفاد التقرير بوقوع الجريمة",
+          "expected_outcome": "Reported Crime",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_criminal_slang",
+      "title": "Criminal Slang",
+      "description": "Slang or coded language used by criminal actors to hide or soften the crime.",
+      "primary_concept_id": "crime_organized_crime",
+      "related_concept_ids": [
+        "crime_smuggling",
+        "crime_cybercrime",
+        "crime_coverup",
+        "crime_escape"
+      ],
+      "direct_expressions": [
+        "the job",
+        "clean it up"
+      ],
+      "indirect_expressions": [
+        "crew",
+        "run the stuff"
+      ],
+      "semantic_intent": [
+        "concealment",
+        "coordination",
+        "slang"
+      ],
+      "supporting_evidence": [
+        "code words",
+        "secretive tone"
+      ],
+      "contradictory_evidence": [
+        "open lawful context",
+        "direct explanation"
+      ],
+      "false_positives": [
+        "informal speech mistaken for gang code"
+      ],
+      "counter_examples": [
+        "project meeting slang"
+      ],
+      "cross_sentence_indicators": [
+        "later line reveals the meaning"
+      ],
+      "scene_indicators": [
+        "backroom talk",
+        "hand signs"
+      ],
+      "reviewer_guidance": [
+        "Do not force slang into crime without contextual support."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_criminal_slang_confidence",
+          "title": "Criminal Slang confidence",
+          "description": "Confidence modifier for criminal slang.",
+          "confidence": 76
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "slang_rel_1",
+          "from_concept_id": "crime_organized_crime",
+          "to_concept_id": "crime_coverup",
+          "relation": "supports",
+          "note": "Criminal groups often use cover-up language."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_criminal_slang_map",
+          "article_id": 14,
+          "atom_ids": [
+            "14-3"
+          ],
+          "role": "Criminal Slang",
+          "note": "Crime pattern 7."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_criminal_slang_example",
+          "title": "Criminal Slang example",
+          "text": "الشغل جاهز والليلة ننظف الساحة",
+          "expected_outcome": "Criminal Slang",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_arabic_dialect",
+      "title": "Arabic Dialect Crime",
+      "description": "Dialect expressions that imply crime, bribery, or collusion without formal wording.",
+      "primary_concept_id": "crime_bribery",
+      "related_concept_ids": [
+        "crime_corruption",
+        "crime_fraud",
+        "crime_blackmail",
+        "crime_extortion"
+      ],
+      "direct_expressions": [
+        "خلها تمشي",
+        "سويها على راحتك"
+      ],
+      "indirect_expressions": [
+        "your problem will vanish",
+        "it will go through"
+      ],
+      "semantic_intent": [
+        "collusion",
+        "pressure",
+        "evasion"
+      ],
+      "supporting_evidence": [
+        "money talk",
+        "favors",
+        "secret delivery"
+      ],
+      "contradictory_evidence": [
+        "strict refusal",
+        "clear lawful process"
+      ],
+      "false_positives": [
+        "harmless idiom mistaken for bribery"
+      ],
+      "counter_examples": [
+        "friendship talk"
+      ],
+      "cross_sentence_indicators": [
+        "later line mentions money or a permit"
+      ],
+      "scene_indicators": [
+        "whispered aside",
+        "cash on table"
+      ],
+      "reviewer_guidance": [
+        "Dialect idioms need surrounding evidence before they become crime findings."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_arabic_dialect_confidence",
+          "title": "Arabic Dialect Crime confidence",
+          "description": "Confidence modifier for arabic dialect crime.",
+          "confidence": 79
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "dialect_rel_1",
+          "from_concept_id": "crime_bribery",
+          "to_concept_id": "crime_corruption",
+          "relation": "supports",
+          "note": "Dialect bribery language often supports corruption reasoning."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_arabic_dialect_map",
+          "article_id": 13,
+          "atom_ids": [
+            "13-1"
+          ],
+          "role": "Arabic Dialect Crime",
+          "note": "Crime pattern 8."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_arabic_dialect_example",
+          "title": "Arabic Dialect Crime example",
+          "text": "خلها تمشي وخذ اللي اتفقنا عليه",
+          "expected_outcome": "Arabic Dialect Crime",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_organized_crime",
+      "title": "Organized Crime",
+      "description": "Structured group activity linking planning, execution, concealment and profit.",
+      "primary_concept_id": "crime_organized_crime",
+      "related_concept_ids": [
+        "crime_smuggling",
+        "crime_human_trafficking",
+        "crime_money_laundering",
+        "crime_coverup"
+      ],
+      "direct_expressions": [
+        "the crew",
+        "the network"
+      ],
+      "indirect_expressions": [
+        "the chain",
+        "the operation"
+      ],
+      "semantic_intent": [
+        "organization",
+        "coordination",
+        "profit"
+      ],
+      "supporting_evidence": [
+        "repeated roles",
+        "shared routes",
+        "money flow"
+      ],
+      "contradictory_evidence": [
+        "isolated event",
+        "one-off mistake"
+      ],
+      "false_positives": [
+        "ordinary business teamwork mistaken for gang structure"
+      ],
+      "counter_examples": [
+        "project team call"
+      ],
+      "cross_sentence_indicators": [
+        "later lines show different roles"
+      ],
+      "scene_indicators": [
+        "handoff",
+        "stash",
+        "rotating members"
+      ],
+      "reviewer_guidance": [
+        "Organization is about structure, not just a single bad act."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_organized_crime_confidence",
+          "title": "Organized Crime confidence",
+          "description": "Confidence modifier for organized crime.",
+          "confidence": 84
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "org_rel_1",
+          "from_concept_id": "crime_organized_crime",
+          "to_concept_id": "crime_money_laundering",
+          "relation": "supports",
+          "note": "Money flow often confirms organized crime."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_organized_crime_map",
+          "article_id": 14,
+          "atom_ids": [
+            "14-4"
+          ],
+          "role": "Organized Crime",
+          "note": "Crime pattern 9."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_organized_crime_example",
+          "title": "Organized Crime example",
+          "text": "العصابة تدير الشبكة من ثلاث مدن",
+          "expected_outcome": "Organized Crime",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_financial_crime",
+      "title": "Financial Crime",
+      "description": "Fraud, forgery, bribery, extortion or laundering framed through money or documents.",
+      "primary_concept_id": "crime_fraud",
+      "related_concept_ids": [
+        "crime_forgery",
+        "crime_blackmail",
+        "crime_extortion",
+        "crime_money_laundering"
+      ],
+      "direct_expressions": [
+        "fake invoice",
+        "bribe"
+      ],
+      "indirect_expressions": [
+        "the numbers changed",
+        "money moved quietly"
+      ],
+      "semantic_intent": [
+        "deception",
+        "financial gain",
+        "concealment"
+      ],
+      "supporting_evidence": [
+        "bank trail",
+        "document inconsistency"
+      ],
+      "contradictory_evidence": [
+        "routine bookkeeping",
+        "lawful payment"
+      ],
+      "false_positives": [
+        "clerical error mistaken for fraud"
+      ],
+      "counter_examples": [
+        "invoice correction"
+      ],
+      "cross_sentence_indicators": [
+        "later line shows the money flow"
+      ],
+      "scene_indicators": [
+        "spreadsheet",
+        "cash envelope"
+      ],
+      "reviewer_guidance": [
+        "Financial crime often hides in paperwork and follow-up money movements."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_financial_crime_confidence",
+          "title": "Financial Crime confidence",
+          "description": "Confidence modifier for financial crime.",
+          "confidence": 81
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "fin_rel_1",
+          "from_concept_id": "crime_fraud",
+          "to_concept_id": "crime_money_laundering",
+          "relation": "supports",
+          "note": "Fraud and laundering often connect."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_financial_crime_map",
+          "article_id": 13,
+          "atom_ids": [
+            "13-2"
+          ],
+          "role": "Financial Crime",
+          "note": "Crime pattern 10."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_financial_crime_example",
+          "title": "Financial Crime example",
+          "text": "الفواتير مزورة والمال يمر عبر شركات وهمية",
+          "expected_outcome": "Financial Crime",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_cyber_crime",
+      "title": "Cyber Crime",
+      "description": "Digital intrusion, theft, manipulation or identity abuse carried out through systems and networks.",
+      "primary_concept_id": "crime_cybercrime",
+      "related_concept_ids": [
+        "crime_identity_theft",
+        "crime_fraud",
+        "crime_coverup",
+        "crime_observation"
+      ],
+      "direct_expressions": [
+        "phishing",
+        "hack"
+      ],
+      "indirect_expressions": [
+        "stolen account",
+        "server access"
+      ],
+      "semantic_intent": [
+        "intrusion",
+        "theft",
+        "manipulation"
+      ],
+      "supporting_evidence": [
+        "login trail",
+        "network trace"
+      ],
+      "contradictory_evidence": [
+        "IT maintenance",
+        "lawful testing"
+      ],
+      "false_positives": [
+        "technical discussion mistaken for hacking"
+      ],
+      "counter_examples": [
+        "security audit"
+      ],
+      "cross_sentence_indicators": [
+        "later line shows stolen credentials"
+      ],
+      "scene_indicators": [
+        "laptop screen",
+        "terminal commands"
+      ],
+      "reviewer_guidance": [
+        "Separate legitimate technical work from illicit access."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_cyber_crime_confidence",
+          "title": "Cyber Crime confidence",
+          "description": "Confidence modifier for cyber crime.",
+          "confidence": 79
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "cyber_rel_1",
+          "from_concept_id": "crime_cybercrime",
+          "to_concept_id": "crime_identity_theft",
+          "relation": "supports",
+          "note": "Identity theft is often part of cybercrime."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_cyber_crime_map",
+          "article_id": 13,
+          "atom_ids": [
+            "13-3"
+          ],
+          "role": "Cyber Crime",
+          "note": "Crime pattern 11."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_cyber_crime_example",
+          "title": "Cyber Crime example",
+          "text": "سحب الحسابات عبر رابط مزيف",
+          "expected_outcome": "Cyber Crime",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_white_collar",
+      "title": "White Collar Crime",
+      "description": "Document-driven or professional crime that looks lawful on the surface.",
+      "primary_concept_id": "crime_forgery",
+      "related_concept_ids": [
+        "crime_fraud",
+        "crime_bribery",
+        "crime_corruption",
+        "crime_money_laundering"
+      ],
+      "direct_expressions": [
+        "fake signature",
+        "inside deal"
+      ],
+      "indirect_expressions": [
+        "policy adjusted",
+        "numbers padded"
+      ],
+      "semantic_intent": [
+        "deception",
+        "professional abuse",
+        "concealment"
+      ],
+      "supporting_evidence": [
+        "formal setting",
+        "paper trail"
+      ],
+      "contradictory_evidence": [
+        "routine audit",
+        "legitimate approval"
+      ],
+      "false_positives": [
+        "business jargon mistaken for fraud"
+      ],
+      "counter_examples": [
+        "standard compliance meeting"
+      ],
+      "cross_sentence_indicators": [
+        "later line exposes the fraud"
+      ],
+      "scene_indicators": [
+        "office",
+        "boardroom",
+        "file cabinet"
+      ],
+      "reviewer_guidance": [
+        "Look for abuse of trust or formal process."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_white_collar_confidence",
+          "title": "White Collar Crime confidence",
+          "description": "Confidence modifier for white collar crime.",
+          "confidence": 80
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "white_rel_1",
+          "from_concept_id": "crime_forgery",
+          "to_concept_id": "crime_fraud",
+          "relation": "supports",
+          "note": "Forgery often supports fraud reasoning."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_white_collar_map",
+          "article_id": 13,
+          "atom_ids": [
+            "13-4"
+          ],
+          "role": "White Collar Crime",
+          "note": "Crime pattern 12."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_white_collar_example",
+          "title": "White Collar Crime example",
+          "text": "وقّع المستندات المزيفة داخل الاجتماع",
+          "expected_outcome": "White Collar Crime",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_false_guard",
+      "title": "False Positive Guard",
+      "description": "A scene that looks criminal at first glance but is later explained, denied, or neutralized.",
+      "primary_concept_id": "crime_false_accusation",
+      "related_concept_ids": [
+        "crime_confession",
+        "crime_documentary",
+        "crime_educational",
+        "crime_historical"
+      ],
+      "direct_expressions": [
+        "not a crime",
+        "just a prop"
+      ],
+      "indirect_expressions": [
+        "later correction",
+        "neutral explanation"
+      ],
+      "semantic_intent": [
+        "correction",
+        "clarification",
+        "denial"
+      ],
+      "supporting_evidence": [
+        "explicit denial",
+        "later clarification"
+      ],
+      "contradictory_evidence": [
+        "direct admission",
+        "clear criminal act"
+      ],
+      "false_positives": [
+        "assuming crime from a harmless cue"
+      ],
+      "counter_examples": [
+        "doctor explaining a prop"
+      ],
+      "cross_sentence_indicators": [
+        "later line corrects the first impression"
+      ],
+      "scene_indicators": [
+        "police interview",
+        "court correction"
+      ],
+      "reviewer_guidance": [
+        "Always check for denial or correction before finalizing a finding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "pattern_false_guard_confidence",
+          "title": "False Positive Guard confidence",
+          "description": "Confidence modifier for false positive guard.",
+          "confidence": 77
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "false_rel_1",
+          "from_concept_id": "crime_false_accusation",
+          "to_concept_id": "crime_observation",
+          "relation": "supports",
+          "note": "False accusation starts from a suspicious observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "pattern_false_guard_map",
+          "article_id": 4,
+          "atom_ids": [
+            "4-5"
+          ],
+          "role": "False Positive Guard",
+          "note": "Crime pattern 13."
+        }
+      ],
+      "examples": [
+        {
+          "id": "pattern_false_guard_example",
+          "title": "False Positive Guard example",
+          "text": "هذا ليس سلاحًا، إنه أداة تصوير",
+          "expected_outcome": "False Positive Guard",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

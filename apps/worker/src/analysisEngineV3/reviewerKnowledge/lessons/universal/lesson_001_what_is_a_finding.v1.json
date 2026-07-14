@@ -1,0 +1,165 @@
+{
+  "id": "lesson_001_what_is_a_finding",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "title": "What Is A Finding?",
+  "summary": "Teach the reviewer how to distinguish an actual finding from assumptions, speculation and unsupported interpretation.",
+  "learningObjectives": [
+    "Understand what qualifies as a finding.",
+    "Understand that findings require evidence.",
+    "Understand the difference between observation and interpretation.",
+    "Understand why every finding must be traceable to the screenplay."
+  ],
+  "definitions": {
+    "finding": "A supported conclusion directly backed by evidence found inside the screenplay.",
+    "evidence": "Specific words, dialogue or narration that support the finding.",
+    "assumption": "A conclusion that is not supported by explicit or contextual evidence.",
+    "context": "Information surrounding the evidence that changes its meaning."
+  },
+  "reviewerPrinciples": [
+    "Never invent evidence.",
+    "Never assume intent without evidence.",
+    "Every finding must point to an exact sentence.",
+    "If evidence disappears, the finding disappears.",
+    "Evidence always comes before confidence.",
+    "Reasoning must be reproducible.",
+    "A single finding may map to multiple canonical atoms, and the primary atom must be chosen deterministically.",
+    "Two reviewers reading the same evidence should reach the same conclusion."
+  ],
+  "reviewerQuestions": [
+    "What exactly happened?",
+    "Which sentence proves it?",
+    "Who performed the action?",
+    "Who received the action?",
+    "Is the evidence direct or indirect?",
+    "Does surrounding context change the meaning?",
+    "Is there another reasonable interpretation?",
+    "Would another reviewer reach the same conclusion?"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Does evidence exist?",
+      "yes": 2,
+      "no": "Reject Finding"
+    },
+    {
+      "step": 2,
+      "question": "Is the evidence inside the screenplay?",
+      "yes": 3,
+      "no": "Reject Finding"
+    },
+    {
+      "step": 3,
+      "question": "Is the evidence traceable to an exact sentence?",
+      "yes": 4,
+      "no": "Needs Review"
+    },
+    {
+      "step": 4,
+      "question": "Has context been evaluated?",
+      "yes": 5,
+      "no": "Needs Review"
+    },
+    {
+      "step": 5,
+      "question": "Can the conclusion be reproduced by another reviewer?",
+      "yes": "Finding Accepted",
+      "no": "Needs Review"
+    }
+  ],
+  "evidenceRules": {
+    "minimum": [
+      "One explicit sentence."
+    ],
+    "strong": [
+      "Multiple consistent sentences.",
+      "Dialogue plus narrative agreement.",
+      "Repeated evidence."
+    ],
+    "weak": [
+      "Single ambiguous statement.",
+      "Unclear speaker.",
+      "Missing surrounding context."
+    ],
+    "insufficient": [
+      "Guessing.",
+      "External knowledge.",
+      "Personal opinion.",
+      "Hallucinated interpretation."
+    ]
+  },
+  "exceptions": [
+    "Dream sequences require context.",
+    "Historical narration requires context.",
+    "Satire requires context.",
+    "Quotation requires context.",
+    "Educational material requires context.",
+    "Documentary narration requires context."
+  ],
+  "examples": [
+    {
+      "text": "سأقتلك.",
+      "result": "Finding supported because explicit threat exists."
+    },
+    {
+      "text": "قام بضرب الطفل.",
+      "result": "Finding supported because explicit action exists."
+    },
+    {
+      "text": "يتحدث الراوي عن حرب تاريخية.",
+      "result": "No finding until context is evaluated."
+    },
+    {
+      "text": "A supported finding matches more than one canonical atom.",
+      "result": "Keep all supported atoms, then choose a primary atom by strongest semantic match, highest severity, and clearest violation type."
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "ربما كان يقصد التهديد.",
+      "reason": "Reviewer is guessing."
+    },
+    {
+      "text": "أعتقد أن الشخصية شريرة.",
+      "reason": "Opinion is not evidence."
+    },
+    {
+      "text": "قد يكون هذا تطرفاً.",
+      "reason": "Insufficient evidence."
+    }
+  ],
+  "commonMistakes": [
+    "Confusing opinion with evidence.",
+    "Ignoring surrounding context.",
+    "Ignoring speaker identity.",
+    "Using world knowledge instead of screenplay evidence.",
+    "Treating one finding as if it can only map to one canonical atom.",
+    "Reporting assumptions as findings."
+  ],
+  "confidenceGuidance": {
+    "95": "Multiple independent evidence sources.",
+    "80": "Clear explicit evidence.",
+    "60": "Evidence exists but context is incomplete.",
+    "40": "Weak evidence.",
+    "0": "No finding."
+  },
+  "reportTemplate": {
+    "findingTitle": "Supported Finding",
+    "reasonTemplate": "The finding is supported by explicit evidence in the screenplay.",
+    "recommendationTemplate": "Reviewer should continue legal evaluation."
+  },
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "finding_evidence_positive",
+    "finding_context_negative",
+    "finding_assumption_negative",
+    "finding-identification-bench-001"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 1
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "version": "1.0.0",
+  "id": "travel_targets",
+  "title": "Travel Targets",
+  "description": "Targets used in travel and country reasoning.",
+  "entries": [
+    {
+      "id": "travel_target_traveler",
+      "title": "Traveler",
+      "description": "The person travelling or planning travel."
+    },
+    {
+      "id": "travel_target_destination",
+      "title": "Destination",
+      "description": "The location being visited or reached."
+    },
+    {
+      "id": "travel_target_origin",
+      "title": "Origin",
+      "description": "The starting point of a journey."
+    },
+    {
+      "id": "travel_target_country",
+      "title": "Country",
+      "description": "A nation or state mentioned in travel reasoning."
+    },
+    {
+      "id": "travel_target_city",
+      "title": "City",
+      "description": "A city, town, or urban place."
+    },
+    {
+      "id": "travel_target_border",
+      "title": "Border",
+      "description": "A border, checkpoint, or entry point."
+    },
+    {
+      "id": "travel_target_airport",
+      "title": "Airport",
+      "description": "An airport, terminal, or flight setting."
+    },
+    {
+      "id": "travel_target_passport",
+      "title": "Passport",
+      "description": "A travel document or identity document."
+    },
+    {
+      "id": "travel_target_visa",
+      "title": "Visa",
+      "description": "A travel permit or entry authorization."
+    },
+    {
+      "id": "travel_target_people",
+      "title": "People",
+      "description": "People from another country or region."
+    },
+    {
+      "id": "travel_target_government",
+      "title": "Government",
+      "description": "A government or authority mentioned in travel commentary."
+    },
+    {
+      "id": "travel_target_culture",
+      "title": "Culture",
+      "description": "Cultural practices, customs, or identity."
+    },
+    {
+      "id": "travel_target_religion",
+      "title": "Religion",
+      "description": "A religious community or tradition in another place."
+    },
+    {
+      "id": "travel_target_landmark",
+      "title": "Landmark",
+      "description": "A monument, site, or notable place."
+    },
+    {
+      "id": "travel_target_language",
+      "title": "Language",
+      "description": "A language mentioned in travel reasoning."
+    },
+    {
+      "id": "travel_target_food",
+      "title": "Food",
+      "description": "Cuisine or food culture."
+    },
+    {
+      "id": "travel_target_media",
+      "title": "Media",
+      "description": "Press, coverage, or reporting."
+    },
+    {
+      "id": "travel_target_military",
+      "title": "Military",
+      "description": "Armed forces or military institutions."
+    },
+    {
+      "id": "travel_target_police",
+      "title": "Police",
+      "description": "Police or law enforcement."
+    },
+    {
+      "id": "travel_target_nation",
+      "title": "Nation",
+      "description": "The nation as a collective concept."
+    }
+  ]
+}

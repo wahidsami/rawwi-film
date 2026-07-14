@@ -1,0 +1,742 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_judgment_benchmark_catalog",
+  "title": "Reviewer Judgment Benchmark Catalog",
+  "description": "Deterministic benchmark cases for reviewer judgment reasoning.",
+  "cases": [
+    {
+      "id": "reviewer_judgment-bench-001",
+      "title": "Competing interpretations",
+      "scriptSnippet": "Dialogue: a line can mean advice or invitation, and the reviewer keeps both readings open.",
+      "storyMemory": "The wider story keeps the meaning unresolved.",
+      "sceneMemory": "The scene supports a comparison of interpretations.",
+      "neighboringSentences": [
+        "The next sentence may settle the meaning.",
+        "Later context may reverse the first impression."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "competing interpretations",
+            "articleId": 4,
+            "variants": [
+              "competing interpretations"
+            ],
+            "definition": "Two plausible readings that still need comparison."
+          }
+        ],
+        "notes": [
+          "knowledge acquisition"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          4
+        ],
+        "notes": [
+          "narrative",
+          "intent",
+          "relationship"
+        ]
+      },
+      "expectedConcepts": [
+        "competing_interpretations"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "comparison",
+        "speaker": "reviewer",
+        "target": "interpretation",
+        "victim": null,
+        "narrativeIntent": "tentative",
+        "evidenceStrength": 0.55,
+        "contextClassification": "cross_sentence",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        4
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_18_reviewer_judgment | disposition=review | articles=4 | concepts=competing_interpretations"
+      },
+      "expectedExplanation": "The reviewer keeps two plausible readings open until the scene resolves the comparison.",
+      "expectedConfidenceRange": {
+        "min": 0.45,
+        "max": 0.7
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-002",
+      "title": "Evidence sufficiency",
+      "scriptSnippet": "Observation: one clue appears, but the reviewer says the evidence is still not enough.",
+      "storyMemory": "The broader story still leaves the line unresolved.",
+      "sceneMemory": "The scene does not yet provide enough support for a final answer.",
+      "neighboringSentences": [
+        "The next line is still ambiguous.",
+        "A later line may add support."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "evidence sufficiency",
+            "articleId": 11,
+            "variants": [
+              "evidence sufficiency"
+            ],
+            "definition": "Whether the evidence is enough for a final decision."
+          }
+        ],
+        "notes": [
+          "knowledge acquisition"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": [
+          "narrative",
+          "intent",
+          "relationship"
+        ]
+      },
+      "expectedConcepts": [
+        "evidence_sufficiency"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "insufficient",
+        "speaker": "reviewer",
+        "target": "evidence",
+        "victim": null,
+        "narrativeIntent": "insufficient",
+        "evidenceStrength": 0.32,
+        "contextClassification": "insufficient",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_18_reviewer_judgment | disposition=reject | articles=11 | concepts=evidence_sufficiency"
+      },
+      "expectedExplanation": "The reviewer rejects a final answer because the evidence is not sufficient yet.",
+      "expectedConfidenceRange": {
+        "min": 0.2,
+        "max": 0.45
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-003",
+      "title": "Confidence calibration",
+      "scriptSnippet": "Dialogue: the first reading looks strong, but later context lowers confidence.",
+      "storyMemory": "The story makes the apparent certainty weaker.",
+      "sceneMemory": "The scene contains a contradiction that the reviewer must absorb.",
+      "neighboringSentences": [
+        "A later sentence weakens the first reading.",
+        "The reviewer should recalibrate."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "confidence calibration",
+            "articleId": 17,
+            "variants": [
+              "confidence calibration"
+            ],
+            "definition": "Matching confidence to the actual strength of evidence."
+          }
+        ],
+        "notes": [
+          "knowledge acquisition"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": [
+          "narrative",
+          "intent",
+          "relationship"
+        ]
+      },
+      "expectedConcepts": [
+        "confidence_calibration"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "calibration",
+        "speaker": "reviewer",
+        "target": "confidence",
+        "victim": null,
+        "narrativeIntent": "tentative",
+        "evidenceStrength": 0.6,
+        "contextClassification": "cross_sentence",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_18_reviewer_judgment | disposition=review | articles=17 | concepts=confidence_calibration"
+      },
+      "expectedExplanation": "The reviewer lowers confidence after later context weakens the first reading.",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.8
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-004",
+      "title": "Reviewer disagreement",
+      "scriptSnippet": "Reviewers disagree: one sees review, another sees reject, and both justify the difference.",
+      "storyMemory": "The team has not yet resolved the difference.",
+      "sceneMemory": "The scene shows two legitimate reasoning paths.",
+      "neighboringSentences": [
+        "The disagreement stays visible.",
+        "A later scene may settle it."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "reviewer disagreement",
+            "articleId": 11,
+            "variants": [
+              "reviewer disagreement"
+            ],
+            "definition": "Legitimate disagreement between trained reviewers."
+          }
+        ],
+        "notes": [
+          "knowledge acquisition"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": [
+          "narrative",
+          "intent",
+          "relationship"
+        ]
+      },
+      "expectedConcepts": [
+        "reviewer_disagreement"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "disagreement",
+        "speaker": "reviewer",
+        "target": "disagreement",
+        "victim": null,
+        "narrativeIntent": "review",
+        "evidenceStrength": 0.58,
+        "contextClassification": "ambiguous",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_18_reviewer_judgment | disposition=review | articles=11 | concepts=reviewer_disagreement"
+      },
+      "expectedExplanation": "The case records legitimate reviewer disagreement instead of hiding the weaker reading.",
+      "expectedConfidenceRange": {
+        "min": 0.4,
+        "max": 0.7
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-005",
+      "title": "Narrative justification",
+      "scriptSnippet": "Scene description: a harmful-looking line is explained by the historical and educational frame.",
+      "storyMemory": "The story makes the line look different from its surface reading.",
+      "sceneMemory": "The scene is framed historically and educationally.",
+      "neighboringSentences": [
+        "The previous line is historical narration.",
+        "The next line continues the educational context."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "narrative justification",
+            "articleId": 4,
+            "variants": [
+              "narrative justification"
+            ],
+            "definition": "The story context that explains the final outcome."
+          }
+        ],
+        "notes": [
+          "knowledge acquisition"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          4
+        ],
+        "notes": [
+          "narrative",
+          "intent",
+          "relationship"
+        ]
+      },
+      "expectedConcepts": [
+        "narrative_justification"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "justification",
+        "speaker": "narrator",
+        "target": "narrative",
+        "victim": null,
+        "narrativeIntent": "educational",
+        "evidenceStrength": 0.82,
+        "contextClassification": "cross_scene",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": [
+          "historical narration"
+        ]
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        4
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_18_reviewer_judgment | disposition=match | articles=4 | concepts=narrative_justification"
+      },
+      "expectedExplanation": "The story context explains why the harmful-looking line should not be treated as an endorsement.",
+      "expectedConfidenceRange": {
+        "min": 0.7,
+        "max": 0.95
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-006",
+      "title": "Final reviewer decision",
+      "scriptSnippet": "Final decision: after weighing everything, the reviewer closes the case with one stable outcome.",
+      "storyMemory": "The case has reached a stable endpoint.",
+      "sceneMemory": "The scene resolves all open questions.",
+      "neighboringSentences": [
+        "Earlier disagreement is now resolved.",
+        "The final line closes the record."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "final reviewer decision",
+            "articleId": 17,
+            "variants": [
+              "final reviewer decision"
+            ],
+            "definition": "The final judgment after all reasoning is complete."
+          }
+        ],
+        "notes": [
+          "knowledge acquisition"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": [
+          "narrative",
+          "intent",
+          "relationship"
+        ]
+      },
+      "expectedConcepts": [
+        "final_reviewer_decision"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "final",
+        "speaker": "reviewer",
+        "target": "decision",
+        "victim": null,
+        "narrativeIntent": "confirmed",
+        "evidenceStrength": 0.95,
+        "contextClassification": "cross_scene",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_18_reviewer_judgment | disposition=match | articles=17 | concepts=final_reviewer_decision"
+      },
+      "expectedExplanation": "The reviewer combines evidence, context, disagreement, and confidence into one final answer.",
+      "expectedConfidenceRange": {
+        "min": 0.85,
+        "max": 1
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-007",
+      "title": "Narrative justification false positive",
+      "scriptSnippet": "Documentary: a harmful-looking line is explained by the historical frame, not by endorsement.",
+      "storyMemory": "The story remains a documentary explanation.",
+      "sceneMemory": "The frame is historical and educational.",
+      "neighboringSentences": [
+        "The earlier line is documentary narration.",
+        "The next line keeps the explanatory frame."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "narrative justification",
+            "articleId": 4,
+            "variants": [
+              "narrative justification"
+            ],
+            "definition": "The story context that explains the final outcome."
+          }
+        ],
+        "notes": [
+          "knowledge acquisition"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          4
+        ],
+        "notes": [
+          "narrative",
+          "intent",
+          "relationship"
+        ]
+      },
+      "expectedConcepts": [
+        "narrative_justification"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "justification",
+        "speaker": "narrator",
+        "target": "narrative",
+        "victim": null,
+        "narrativeIntent": "documentary",
+        "evidenceStrength": 0.8,
+        "contextClassification": "cross_scene",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": [
+          "documentary framing"
+        ]
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        4
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_18_reviewer_judgment | disposition=match | articles=4 | concepts=narrative_justification"
+      },
+      "expectedExplanation": "The documentary frame justifies the line as explanation rather than endorsement.",
+      "expectedConfidenceRange": {
+        "min": 0.72,
+        "max": 0.95
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-008",
+      "title": "Reviewer disagreement resolved",
+      "scriptSnippet": "Reviewers disagree at first, but later context resolves the difference.",
+      "storyMemory": "The disagreement is temporary.",
+      "sceneMemory": "The later scene clarifies the better reading.",
+      "neighboringSentences": [
+        "The first pass disagrees.",
+        "The second pass resolves the issue."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "reviewer disagreement",
+            "articleId": 11,
+            "variants": [
+              "reviewer disagreement"
+            ],
+            "definition": "Legitimate disagreement between trained reviewers."
+          }
+        ],
+        "notes": [
+          "knowledge acquisition"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": [
+          "narrative",
+          "intent",
+          "relationship"
+        ]
+      },
+      "expectedConcepts": [
+        "reviewer_disagreement"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "disagreement",
+        "speaker": "reviewer",
+        "target": "disagreement",
+        "victim": null,
+        "narrativeIntent": "resolved",
+        "evidenceStrength": 0.72,
+        "contextClassification": "cross_sentence",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_18_reviewer_judgment | disposition=match | articles=11 | concepts=reviewer_disagreement"
+      },
+      "expectedExplanation": "The later context resolves the reviewer disagreement into one stable answer.",
+      "expectedConfidenceRange": {
+        "min": 0.65,
+        "max": 0.9
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-009",
+      "title": "Final decision blocked",
+      "scriptSnippet": "Final decision requested, but the scene still lacks a target and the case stays open.",
+      "storyMemory": "The story is not yet ready to close.",
+      "sceneMemory": "The target cue is missing.",
+      "neighboringSentences": [
+        "The next sentence adds no target cue.",
+        "The case remains under review."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "final reviewer decision",
+            "articleId": 17,
+            "variants": [
+              "final reviewer decision"
+            ],
+            "definition": "The final judgment after all reasoning is complete."
+          }
+        ],
+        "notes": [
+          "knowledge acquisition"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": [
+          "narrative",
+          "intent",
+          "relationship"
+        ]
+      },
+      "expectedConcepts": [
+        "final_reviewer_decision"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "blocked",
+        "speaker": "reviewer",
+        "target": "decision",
+        "victim": null,
+        "narrativeIntent": "insufficient",
+        "evidenceStrength": 0.35,
+        "contextClassification": "insufficient",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_18_reviewer_judgment | disposition=reject | articles=17 | concepts=final_reviewer_decision"
+      },
+      "expectedExplanation": "The final decision is blocked because the target cue and supporting context are still missing.",
+      "expectedConfidenceRange": {
+        "min": 0.2,
+        "max": 0.45
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-010",
+      "title": "Confidence calibration low",
+      "scriptSnippet": "Observation only: one clue appears, but no corroboration follows.",
+      "storyMemory": "The story never adds a second support cue.",
+      "sceneMemory": "The scene remains weak and unresolved.",
+      "neighboringSentences": [
+        "No follow-up clue appears.",
+        "The reviewer keeps confidence low."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "confidence calibration",
+            "articleId": 17,
+            "variants": [
+              "confidence calibration"
+            ],
+            "definition": "Matching confidence to the actual strength of evidence."
+          }
+        ],
+        "notes": [
+          "knowledge acquisition"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": [
+          "narrative",
+          "intent",
+          "relationship"
+        ]
+      },
+      "expectedConcepts": [
+        "confidence_calibration"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "low_confidence",
+        "speaker": "reviewer",
+        "target": "confidence",
+        "victim": null,
+        "narrativeIntent": "insufficient",
+        "evidenceStrength": 0.28,
+        "contextClassification": "insufficient",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_18_reviewer_judgment | disposition=reject | articles=17 | concepts=confidence_calibration"
+      },
+      "expectedExplanation": "The reviewer keeps confidence low because there is only one clue and no corroboration.",
+      "expectedConfidenceRange": {
+        "min": 0.1,
+        "max": 0.4
+      }
+    }
+  ]
+}

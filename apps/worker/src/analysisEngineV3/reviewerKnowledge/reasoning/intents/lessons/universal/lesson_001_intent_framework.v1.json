@@ -1,0 +1,257 @@
+{
+  "id": "lesson_001_intent_framework",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 1,
+  "title": "Intent and Motivation Framework",
+  "summary": "Teach the reviewer to identify intent, motivation, documentation, mockery, praise, glorification, normalization, quotation, and context before any legal classification.",
+  "learningObjectives": [
+    "Recognize the intent behind a statement or scene.",
+    "Separate literal wording from implied motivation.",
+    "Distinguish documentary/documentation and educational framing from endorsement.",
+    "Distinguish mockery from sincere hostility and praise from neutral description.",
+    "Treat quotation, acting, and storytelling as possible exceptions.",
+    "Use context and confidence to avoid false positives."
+  ],
+  "definitions": {
+    "intent": "The purpose or direction behind a statement, action, or scene.",
+    "motivation": "The reason a speaker acts or speaks.",
+    "quotation": "Words repeated from another source rather than asserted by the speaker.",
+    "documentation": "A documentary or explanatory frame that reports or teaches rather than endorses.",
+    "mockery": "An intent to ridicule or deride.",
+    "praise": "An intent to commend or approve.",
+    "normalization": "An intent to present something as ordinary or acceptable.",
+    "fiction": "A non-literal scene layer where events are imagined, staged, or symbolic.",
+    "confidence": "How certain the reviewer is about the interpretation."
+  },
+  "reviewerPrinciples": [
+    "Intent must be read from context, not isolated words.",
+    "A factual sentence may still have a hidden evaluative tone.",
+    "Documentation and educational framing usually reduce promotional force.",
+    "Quotation and performance can change the meaning of the line.",
+    "Educational, documentary, and historical frames often reduce harm.",
+    "Mockery often behaves like satire or sarcasm rather than sincere endorsement.",
+    "Praise, glorification, and normalization can strengthen approval or promotion when the scene supports it.",
+    "Confidence should fall when the scene is ambiguous."
+  ],
+  "reviewerMethodology": [
+    "Identify who is speaking and to whom.",
+    "Check whether the line is quoted, acted, narrated, documented, or factual.",
+    "Read the surrounding scene for later clarification.",
+    "Decide whether the intent is informative, evaluative, coercive, expressive, or fictional.",
+    "Only then decide whether a legal rule may apply."
+  ],
+  "reasoningProcess": [
+    "Start with literal wording.",
+    "Expand to the scene and the surrounding exchange.",
+    "Look for quotation, teaching, documentation, condemnation, praise, mockery, or performance frames.",
+    "Resolve contradictions with later text.",
+    "Record the final intent with confidence."
+  ],
+  "evidenceRules": {
+    "minimum": ["A clear line with explicit intent or a strong contextual clue."],
+    "strong": [
+      "Speaker, target, and scene context align.",
+      "Later dialogue confirms the interpretation.",
+      "The scene clearly marks quotation, acting, teaching, documentation, or documentary framing."
+    ],
+    "weak": [
+      "A single ambiguous sentence.",
+      "A line that could be harmless or harmful.",
+      "A scene whose intent is only partly revealed."
+    ],
+    "insufficient": [
+      "Guessing intent without evidence.",
+      "Treating a quote as an endorsement.",
+      "Ignoring later lines that reverse the meaning.",
+      "Treating documentary explanation as promotion.",
+      "Treating mockery as direct endorsement."
+    ],
+    "confidenceGuidance": ["95: clear and corroborated", "80: supported by scene context", "60: plausible but ambiguous", "40: weak and uncertain", "0: unsupported"]
+  },
+  "contextRules": [
+    "Later dialogue can change earlier meaning.",
+    "Narration may explain or contradict a character line.",
+    "Scene direction can reveal performance or imagination.",
+    "Educational or documentary framing should be checked first.",
+    "Mockery may indicate satire or sarcasm rather than sincere hostility.",
+    "Praise or normalization can change a neutral-looking line into evaluative support.",
+    "A final scene can reverse the reading of the opening line."
+  ],
+  "sceneLevelReasoning": [
+    "Judge the scene as a whole when the line is ambiguous.",
+    "Check whether the scene is informative, evaluative, or fictional.",
+    "Use the entire exchange to resolve motivation."
+  ],
+  "characterRelationshipAnalysis": [
+    "Speaker and target relationship can clarify tone.",
+    "Authority, family, teacher, or friend relationships may change the reading.",
+    "A relationship may explain whether the line is sincere or theatrical."
+  ],
+  "crossSentenceReasoning": [
+    "Read the next sentence before finalizing intent.",
+    "A later sentence may prove the first line was innocent or harmful.",
+    "Multiple lines together often reveal the real motive."
+  ],
+  "crossSceneReasoning": [
+    "Earlier scenes can establish a pattern for later meaning.",
+    "Later scenes can prove that an earlier line was fictional or literal."
+  ],
+  "confidenceRules": [
+    "One sentence alone usually gives low confidence.",
+    "Multiple supporting sentences raise confidence.",
+    "Dialogue plus action raises confidence further.",
+    "Quotation, performance, or dream framing lowers certainty."
+  ],
+  "falsePositives": [
+    "Quoting another person and assuming endorsement.",
+    "Teaching or explaining and assuming promotion.",
+    "Documentation and documentary framing treated as endorsement.",
+    "Comedy or irony and assuming literal hostility.",
+    "Mockery treated as sincere hostility instead of expressive framing.",
+    "Praise treated as neutral description.",
+    "Normalization treated as mere presence.",
+    "Fiction or dreaming and assuming real-world intent."
+  ],
+  "exceptions": [
+    "Quotation",
+    "Acting",
+    "Role Play",
+    "Storytelling",
+    "Documentation",
+    "Dream",
+    "Flashback",
+    "Fiction",
+    "Fantasy",
+    "Documentary",
+    "Educational",
+    "Historical",
+    "News Reporting",
+    "Court Testimony",
+    "Police Investigation",
+    "Medical",
+    "Scientific",
+    "Religious Teaching",
+    "Condemnation",
+    "Mockery",
+    "Praise",
+    "Glorification",
+    "Normalization",
+    "Misunderstanding"
+  ],
+  "examples": [
+    { "text": "قال ذلك ليشرح الفكرة فقط.", "result": "Informative intent, not a finding." },
+    { "text": "قالها على سبيل المزاح.", "result": "Humorous intent, not literal hostility." },
+    { "text": "يشرح الفيلم الموضوع بشكل وثائقي.", "result": "Documentation is informational, not endorsement." },
+    { "text": "يسخر من الرمز الوطني.", "result": "Mockery should be read as expressive or satirical framing." },
+    { "text": "يمدح الفكرة ويجعلها تبدو عادية.", "result": "Praise and normalization raise evaluative concern." },
+    { "text": "يمثل دور المحقق في المشهد.", "result": "Performance context, not direct intent." }
+  ],
+  "counterExamples": [
+    { "text": "Treat a quote as endorsement.", "reason": "Quotation can change intent." },
+    { "text": "Treat a dream as real-world motive.", "reason": "Dreams are non-literal." },
+    { "text": "Treat documentation as promotion.", "reason": "Documentation is often informational rather than evaluative." },
+    { "text": "Treat mockery as sincere endorsement.", "reason": "Mockery is often expressive or satirical." },
+    { "text": "Treat praise or normalization as neutral report.", "reason": "Praise and normalization can strengthen approval or promotion." }
+  ],
+  "reviewerQuestions": [
+    "Who is speaking and to whom?",
+    "Is the line quoted, narrated, acted, or documented?",
+    "Does the surrounding scene change the meaning?",
+    "Is the intent informative, evaluative, expressive, or fictional?",
+    "Would another reviewer infer the same intent?",
+    "Should confidence be reduced because of ambiguity?"
+  ],
+  "gcamMapping": [
+    { "article_id": 11, "article_title": "Intent Framework - Factual", "article_number": "11", "atom_number": "INTENT_FACTUAL", "report_title": "Intent Framework", "note": "Factual, documentary, and educational intent." },
+    { "article_id": 4, "article_title": "Intent Framework - Evaluative", "article_number": "4", "atom_number": "INTENT_EVALUATIVE", "report_title": "Intent Framework", "note": "Evaluative, coercive, promotional, glorifying, and mocking intent." },
+    { "article_id": 10, "article_title": "Intent Framework - Normalization", "article_number": "10", "atom_number": "10-1/10-2/10-3/10-5", "report_title": "Intent Framework", "note": "Direct, indirect, and normalized promotion." },
+    { "article_id": 15, "article_title": "Intent Framework - Banned Group Promotion", "article_number": "15", "atom_number": "15-1/15-2", "report_title": "Intent Framework", "note": "Promotion and normalization of banned groups." },
+    { "article_id": 17, "article_title": "Intent Framework - Fictional", "article_number": "17", "atom_number": "INTENT_FICTIONAL", "report_title": "Intent Framework", "note": "Fictional, dreamlike, or performative intent." }
+  ],
+  "exercises": [
+    { "prompt": "Read two lines and explain whether the second line changes the first.", "expectedOutcome": "The reviewer should combine the lines into one intent judgment." },
+    { "prompt": "Identify whether a quoted phrase is the speaker’s own intent.", "expectedOutcome": "The reviewer should separate quotation from endorsement." },
+    { "prompt": "Explain whether a documentary explanation should be treated as promotion.", "expectedOutcome": "The reviewer should treat documentary framing as informational unless explicit endorsement appears." }
+  ],
+  "decisionTree": [
+    { "step": 1, "question": "Is the line literal or quoted?", "yes": 2, "no": "Lower confidence" },
+    { "step": 2, "question": "Does context change the meaning?", "yes": "Re-evaluate", "no": 3 },
+    { "step": 3, "question": "Does the scene show intent clearly?", "yes": "Proceed", "no": "Needs Review" }
+  ],
+  "commonMistakes": [
+    "Ignoring later clarification.",
+    "Confusing quotation with endorsement.",
+    "Confusing teaching with promotion.",
+    "Missing documentation or documentary framing.",
+    "Confusing mockery with sincere hostility.",
+    "Treating praise or normalization as neutral reporting.",
+    "Missing dream or fiction framing."
+  ],
+  "reportTemplate": {
+    "findingTitle": "Intent and Motivation Finding",
+    "reasonTemplate": "The reviewer identified the scene intent after checking context and exceptions.",
+    "recommendationTemplate": "The reviewer should state whether the reading is literal, quoted, fictional, or evaluative."
+  },
+  "benchmarkReferences": [
+    "intent_neutral",
+    "intent_informative",
+    "intent_educational",
+    "intent_historical",
+    "intent_documentary",
+    "intent_news_reporting",
+    "intent_court_testimony",
+    "intent_police_investigation",
+    "intent_medical",
+    "intent_scientific",
+    "intent_religious_teaching",
+    "intent_condemnation",
+    "intent_approval",
+    "intent_encouragement",
+    "intent_promotion",
+    "intent_glorification",
+    "intent_instruction",
+    "intent_threat",
+    "intent_coercion",
+    "intent_manipulation",
+    "intent_revenge",
+    "intent_self_defense",
+    "intent_protection",
+    "intent_humor",
+    "intent_satire",
+    "intent_irony",
+    "intent_sarcasm",
+    "intent_mockery",
+    "intent_fiction",
+    "intent_fantasy",
+    "intent_dream",
+    "intent_flashback",
+    "intent_hallucination",
+    "intent_imagination",
+    "intent_quotation",
+    "intent_role_play",
+    "intent_acting",
+    "intent_storytelling",
+    "intent_confession",
+    "intent_false_accusation",
+    "intent_misunderstanding",
+    "intent_documentation",
+    "intent_praise",
+    "intent_glorification",
+    "intent_normalization"
+  ],
+  "confidenceGuidance": {
+    "95": "Clear intent with strong corroboration.",
+    "80": "Context strongly supports the reading.",
+    "60": "Intent is plausible but still ambiguous.",
+    "40": "Only weak clues support the reading.",
+    "0": "No reliable intent can be derived."
+  },
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 1
+  }
+}

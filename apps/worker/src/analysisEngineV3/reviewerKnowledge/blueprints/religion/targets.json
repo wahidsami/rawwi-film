@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "id": "religion_targets",
+  "title": "Religion Targets",
+  "description": "Protected targets that religion reasoning may involve.",
+  "entries": [
+    {
+      "id": "religion_target_religion",
+      "title": "Religion",
+      "description": "Religion as a protected target."
+    },
+    {
+      "id": "religion_target_prophet",
+      "title": "Prophet",
+      "description": "A prophet or messenger."
+    },
+    {
+      "id": "religion_target_messenger",
+      "title": "Messenger",
+      "description": "A messenger of the faith."
+    },
+    {
+      "id": "religion_target_companion",
+      "title": "Companion",
+      "description": "A companion or early follower."
+    },
+    {
+      "id": "religion_target_scholar",
+      "title": "Scholar",
+      "description": "A religious scholar or jurist."
+    },
+    {
+      "id": "religion_target_holy_book",
+      "title": "Holy Book",
+      "description": "A sacred scripture or revelation."
+    },
+    {
+      "id": "religion_target_mosque",
+      "title": "Mosque",
+      "description": "A mosque or sacred building."
+    },
+    {
+      "id": "religion_target_religious_institution",
+      "title": "Religious Institution",
+      "description": "A religious institution or authority body."
+    },
+    {
+      "id": "religion_target_religious_community",
+      "title": "Religious Community",
+      "description": "A community of believers or worshippers."
+    }
+  ]
+}

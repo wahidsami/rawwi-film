@@ -1,0 +1,56 @@
+{
+  "id": "decision_034_educational_discussion_quoted",
+  "version": "1.0.0",
+  "title": "Educational discussion (quoted)",
+  "summary": "Educational discussion in quoted framing.",
+  "originalScenario": "قال الراوي: \"في الدرس نشرح حماية الطفل من الأذى\"",
+  "reviewQuestion": "Is this educational discussion?",
+  "initialSuspicion": "Instructional framing.",
+  "possibleConcepts": [
+    "children_child"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: في الدرس نشرح حماية الطفل من الأذى"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 5,
+      "atom_ids": [
+        "5-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "educational_discussion",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child"
+  ]
+}

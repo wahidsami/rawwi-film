@@ -1,0 +1,5312 @@
+{
+  "version": "1.0.0",
+  "id": "sexual_benchmark_catalog",
+  "title": "Sexuality Benchmark Catalog",
+  "description": "Deterministic benchmark cases for the sexual content academy knowledge bundle.",
+  "cases": [
+    {
+      "id": "sexual-bench-001-direct",
+      "title": "Sexual Reference (direct)",
+      "scriptSnippet": "A character uses an Arabic idiom with a double meaning that can only be sexual in context.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_reference",
+            "articleId": 9,
+            "variants": [
+              "Sexual Reference"
+            ],
+            "definition": "Sexual Reference anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_reference",
+        "sexual_reference"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9 | concepts=sexual_reference"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_reference | intent=literal | context=dialogue | exceptions=none | articles=9 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-001-quoted",
+      "title": "Sexual Reference (quoted)",
+      "scriptSnippet": "\"A character uses an Arabic idiom with a double meaning that can only be sexual in context.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_reference",
+            "articleId": 9,
+            "variants": [
+              "Sexual Reference"
+            ],
+            "definition": "Sexual Reference anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_reference",
+        "sexual_reference"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9 | concepts=sexual_reference"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_reference | intent=quoted | context=quoted | exceptions=quotation | articles=9 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-002-direct",
+      "title": "Sexual Joke (direct)",
+      "scriptSnippet": "A joke only becomes sexual after the next sentence clarifies the target.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_joke",
+            "articleId": 9,
+            "variants": [
+              "Sexual Joke"
+            ],
+            "definition": "Sexual Joke anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_joke",
+        "sexual_reference"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9 | concepts=sexual_joke"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_joke | intent=literal | context=dialogue | exceptions=none | articles=9 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-002-quoted",
+      "title": "Sexual Joke (quoted)",
+      "scriptSnippet": "\"A joke only becomes sexual after the next sentence clarifies the target.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_joke",
+            "articleId": 9,
+            "variants": [
+              "Sexual Joke"
+            ],
+            "definition": "Sexual Joke anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_joke",
+        "sexual_reference"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9 | concepts=sexual_joke"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_joke | intent=quoted | context=quoted | exceptions=quotation | articles=9 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-003-direct",
+      "title": "Sexual Double Meaning (direct)",
+      "scriptSnippet": "A character uses an Arabic idiom with a double meaning that can only be sexual in context.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_double_meaning",
+            "articleId": 9,
+            "variants": [
+              "Sexual Double Meaning"
+            ],
+            "definition": "Sexual Double Meaning anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_double_meaning",
+        "sexual_reference"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9 | concepts=sexual_double_meaning"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_double_meaning | intent=literal | context=dialogue | exceptions=none | articles=9 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-003-quoted",
+      "title": "Sexual Double Meaning (quoted)",
+      "scriptSnippet": "\"A character uses an Arabic idiom with a double meaning that can only be sexual in context.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_double_meaning",
+            "articleId": 9,
+            "variants": [
+              "Sexual Double Meaning"
+            ],
+            "definition": "Sexual Double Meaning anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_double_meaning",
+        "sexual_reference"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9 | concepts=sexual_double_meaning"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_double_meaning | intent=quoted | context=quoted | exceptions=quotation | articles=9 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-004-direct",
+      "title": "Sexual Metaphor (direct)",
+      "scriptSnippet": "A joke only becomes sexual after the next sentence clarifies the target.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_metaphor",
+            "articleId": 9,
+            "variants": [
+              "Sexual Metaphor"
+            ],
+            "definition": "Sexual Metaphor anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_metaphor",
+        "sexual_reference"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9 | concepts=sexual_metaphor"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_metaphor | intent=literal | context=dialogue | exceptions=none | articles=9 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-004-quoted",
+      "title": "Sexual Metaphor (quoted)",
+      "scriptSnippet": "\"A joke only becomes sexual after the next sentence clarifies the target.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_metaphor",
+            "articleId": 9,
+            "variants": [
+              "Sexual Metaphor"
+            ],
+            "definition": "Sexual Metaphor anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_metaphor",
+        "sexual_reference"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9 | concepts=sexual_metaphor"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_metaphor | intent=quoted | context=quoted | exceptions=quotation | articles=9 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-005-direct",
+      "title": "Sexual Symbolism (direct)",
+      "scriptSnippet": "A character uses an Arabic idiom with a double meaning that can only be sexual in context.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_symbolism",
+            "articleId": 9,
+            "variants": [
+              "Sexual Symbolism"
+            ],
+            "definition": "Sexual Symbolism anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_symbolism",
+        "sexual_reference"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9 | concepts=sexual_symbolism"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_symbolism | intent=literal | context=dialogue | exceptions=none | articles=9 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-005-quoted",
+      "title": "Sexual Symbolism (quoted)",
+      "scriptSnippet": "\"A character uses an Arabic idiom with a double meaning that can only be sexual in context.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_symbolism",
+            "articleId": 9,
+            "variants": [
+              "Sexual Symbolism"
+            ],
+            "definition": "Sexual Symbolism anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_symbolism",
+        "sexual_reference"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9 | concepts=sexual_symbolism"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_symbolism | intent=quoted | context=quoted | exceptions=quotation | articles=9 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-006-direct",
+      "title": "Sexual Flirting (direct)",
+      "scriptSnippet": "The scene shows a clear invitation, but consent is ambiguous until the next line.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_flirting",
+            "articleId": 9,
+            "variants": [
+              "Sexual Flirting"
+            ],
+            "definition": "Sexual Flirting anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_flirting",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_flirting"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_flirting | intent=literal | context=dialogue | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-006-quoted",
+      "title": "Sexual Flirting (quoted)",
+      "scriptSnippet": "\"The scene shows a clear invitation, but consent is ambiguous until the next line.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_flirting",
+            "articleId": 9,
+            "variants": [
+              "Sexual Flirting"
+            ],
+            "definition": "Sexual Flirting anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_flirting",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_flirting"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_flirting | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-007-direct",
+      "title": "Sexual Romance (direct)",
+      "scriptSnippet": "Two characters exchange implicit romance and family affection is easy to confuse with intimacy.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_romance",
+            "articleId": 9,
+            "variants": [
+              "Sexual Romance"
+            ],
+            "definition": "Sexual Romance anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_romance",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_romance"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_romance | intent=literal | context=dialogue | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-007-quoted",
+      "title": "Sexual Romance (quoted)",
+      "scriptSnippet": "\"Two characters exchange implicit romance and family affection is easy to confuse with intimacy.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_romance",
+            "articleId": 9,
+            "variants": [
+              "Sexual Romance"
+            ],
+            "definition": "Sexual Romance anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_romance",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_romance"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_romance | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-008-direct",
+      "title": "Sexual Suggestion (direct)",
+      "scriptSnippet": "The scene shows a clear invitation, but consent is ambiguous until the next line.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_suggestion",
+            "articleId": 9,
+            "variants": [
+              "Sexual Suggestion"
+            ],
+            "definition": "Sexual Suggestion anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_suggestion",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_suggestion"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_suggestion | intent=literal | context=dialogue | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-008-quoted",
+      "title": "Sexual Suggestion (quoted)",
+      "scriptSnippet": "\"The scene shows a clear invitation, but consent is ambiguous until the next line.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_suggestion",
+            "articleId": 9,
+            "variants": [
+              "Sexual Suggestion"
+            ],
+            "definition": "Sexual Suggestion anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_suggestion",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_suggestion"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_suggestion | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-009-direct",
+      "title": "Sexual Invitation (direct)",
+      "scriptSnippet": "Two characters exchange implicit romance and family affection is easy to confuse with intimacy.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_invitation",
+            "articleId": 9,
+            "variants": [
+              "Sexual Invitation"
+            ],
+            "definition": "Sexual Invitation anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_invitation",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_invitation"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_invitation | intent=literal | context=dialogue | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-009-quoted",
+      "title": "Sexual Invitation (quoted)",
+      "scriptSnippet": "\"Two characters exchange implicit romance and family affection is easy to confuse with intimacy.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_invitation",
+            "articleId": 9,
+            "variants": [
+              "Sexual Invitation"
+            ],
+            "definition": "Sexual Invitation anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_invitation",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_invitation"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_invitation | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-010-direct",
+      "title": "Sexual Kiss (direct)",
+      "scriptSnippet": "The scene shows a clear invitation, but consent is ambiguous until the next line.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_kiss",
+            "articleId": 9,
+            "variants": [
+              "Sexual Kiss"
+            ],
+            "definition": "Sexual Kiss anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_kiss",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_kiss"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_kiss | intent=literal | context=dialogue | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-010-quoted",
+      "title": "Sexual Kiss (quoted)",
+      "scriptSnippet": "\"The scene shows a clear invitation, but consent is ambiguous until the next line.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_kiss",
+            "articleId": 9,
+            "variants": [
+              "Sexual Kiss"
+            ],
+            "definition": "Sexual Kiss anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_kiss",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_kiss"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_kiss | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-011-direct",
+      "title": "Sexual Intimacy (direct)",
+      "scriptSnippet": "Two characters exchange implicit romance and family affection is easy to confuse with intimacy.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_intimacy",
+            "articleId": 9,
+            "variants": [
+              "Sexual Intimacy"
+            ],
+            "definition": "Sexual Intimacy anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_intimacy",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_intimacy"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_intimacy | intent=literal | context=dialogue | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-011-quoted",
+      "title": "Sexual Intimacy (quoted)",
+      "scriptSnippet": "\"Two characters exchange implicit romance and family affection is easy to confuse with intimacy.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_intimacy",
+            "articleId": 9,
+            "variants": [
+              "Sexual Intimacy"
+            ],
+            "definition": "Sexual Intimacy anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_intimacy",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_intimacy"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_intimacy | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-012-direct",
+      "title": "Sexual Touch (direct)",
+      "scriptSnippet": "The scene shows a clear invitation, but consent is ambiguous until the next line.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_touch",
+            "articleId": 9,
+            "variants": [
+              "Sexual Touch"
+            ],
+            "definition": "Sexual Touch anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_touch",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_touch"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_touch | intent=literal | context=dialogue | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-012-quoted",
+      "title": "Sexual Touch (quoted)",
+      "scriptSnippet": "\"The scene shows a clear invitation, but consent is ambiguous until the next line.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_touch",
+            "articleId": 9,
+            "variants": [
+              "Sexual Touch"
+            ],
+            "definition": "Sexual Touch anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_touch",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_touch"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_touch | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-013-direct",
+      "title": "Sexual Dancing (direct)",
+      "scriptSnippet": "Two characters exchange implicit romance and family affection is easy to confuse with intimacy.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_dancing",
+            "articleId": 9,
+            "variants": [
+              "Sexual Dancing"
+            ],
+            "definition": "Sexual Dancing anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_dancing",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_dancing"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_dancing | intent=literal | context=dialogue | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-013-quoted",
+      "title": "Sexual Dancing (quoted)",
+      "scriptSnippet": "\"Two characters exchange implicit romance and family affection is easy to confuse with intimacy.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_dancing",
+            "articleId": 9,
+            "variants": [
+              "Sexual Dancing"
+            ],
+            "definition": "Sexual Dancing anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_dancing",
+        "sexual_flirting"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_dancing"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_dancing | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-014-direct",
+      "title": "Sexual Harassment (direct)",
+      "scriptSnippet": "A police investigation and later court note describe coercion or grooming across scenes.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_harassment",
+            "articleId": 7,
+            "variants": [
+              "Sexual Harassment"
+            ],
+            "definition": "Sexual Harassment anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          7,
+          6,
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_harassment",
+        "sexual_harassment"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": "vulnerable target",
+        "narrativeIntent": "coercion",
+        "evidenceStrength": 0.96,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        7,
+        6,
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=7,6,17 | concepts=sexual_harassment"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_harassment | intent=coercion | context=dialogue | exceptions=none | articles=7,6,17 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.84,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-014-quoted",
+      "title": "Sexual Harassment (quoted)",
+      "scriptSnippet": "\"A police investigation and later court note describe coercion or grooming across scenes.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_harassment",
+            "articleId": 7,
+            "variants": [
+              "Sexual Harassment"
+            ],
+            "definition": "Sexual Harassment anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          7,
+          6,
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_harassment",
+        "sexual_harassment"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": "vulnerable target",
+        "narrativeIntent": "quotation",
+        "evidenceStrength": 0.96,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        7,
+        6,
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=7,6,17 | concepts=sexual_harassment"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_harassment | intent=quotation | context=quoted | exceptions=quotation | articles=7,6,17 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.92
+      }
+    },
+    {
+      "id": "sexual-bench-015-direct",
+      "title": "Sexual Assault (direct)",
+      "scriptSnippet": "A supervisor makes unwanted sexual remarks that the target rejects.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_assault",
+            "articleId": 7,
+            "variants": [
+              "Sexual Assault"
+            ],
+            "definition": "Sexual Assault anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          7,
+          6,
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_assault",
+        "sexual_harassment"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": "vulnerable target",
+        "narrativeIntent": "coercion",
+        "evidenceStrength": 0.96,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        7,
+        6,
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=7,6,17 | concepts=sexual_assault"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_assault | intent=coercion | context=dialogue | exceptions=none | articles=7,6,17 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.84,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-015-quoted",
+      "title": "Sexual Assault (quoted)",
+      "scriptSnippet": "\"A supervisor makes unwanted sexual remarks that the target rejects.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_assault",
+            "articleId": 7,
+            "variants": [
+              "Sexual Assault"
+            ],
+            "definition": "Sexual Assault anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          7,
+          6,
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_assault",
+        "sexual_harassment"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": "vulnerable target",
+        "narrativeIntent": "quotation",
+        "evidenceStrength": 0.96,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        7,
+        6,
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=7,6,17 | concepts=sexual_assault"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_assault | intent=quotation | context=quoted | exceptions=quotation | articles=7,6,17 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.92
+      }
+    },
+    {
+      "id": "sexual-bench-016-direct",
+      "title": "Sexual Abuse (direct)",
+      "scriptSnippet": "A police investigation and later court note describe coercion or grooming across scenes.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_abuse",
+            "articleId": 7,
+            "variants": [
+              "Sexual Abuse"
+            ],
+            "definition": "Sexual Abuse anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          7,
+          6,
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_abuse",
+        "sexual_harassment"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": "vulnerable target",
+        "narrativeIntent": "coercion",
+        "evidenceStrength": 0.96,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        7,
+        6,
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=7,6,17 | concepts=sexual_abuse"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_abuse | intent=coercion | context=dialogue | exceptions=none | articles=7,6,17 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.84,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-016-quoted",
+      "title": "Sexual Abuse (quoted)",
+      "scriptSnippet": "\"A police investigation and later court note describe coercion or grooming across scenes.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_abuse",
+            "articleId": 7,
+            "variants": [
+              "Sexual Abuse"
+            ],
+            "definition": "Sexual Abuse anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          7,
+          6,
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_abuse",
+        "sexual_harassment"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": "vulnerable target",
+        "narrativeIntent": "quotation",
+        "evidenceStrength": 0.96,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        7,
+        6,
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=7,6,17 | concepts=sexual_abuse"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_abuse | intent=quotation | context=quoted | exceptions=quotation | articles=7,6,17 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.92
+      }
+    },
+    {
+      "id": "sexual-bench-017-direct",
+      "title": "Sexual Exploitation (direct)",
+      "scriptSnippet": "A supervisor makes unwanted sexual remarks that the target rejects.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_exploitation",
+            "articleId": 7,
+            "variants": [
+              "Sexual Exploitation"
+            ],
+            "definition": "Sexual Exploitation anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          7,
+          6,
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_exploitation",
+        "sexual_harassment"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": "vulnerable target",
+        "narrativeIntent": "coercion",
+        "evidenceStrength": 0.96,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        7,
+        6,
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=7,6,17 | concepts=sexual_exploitation"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_exploitation | intent=coercion | context=dialogue | exceptions=none | articles=7,6,17 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.84,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-017-quoted",
+      "title": "Sexual Exploitation (quoted)",
+      "scriptSnippet": "\"A supervisor makes unwanted sexual remarks that the target rejects.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_exploitation",
+            "articleId": 7,
+            "variants": [
+              "Sexual Exploitation"
+            ],
+            "definition": "Sexual Exploitation anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          7,
+          6,
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_exploitation",
+        "sexual_harassment"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": "vulnerable target",
+        "narrativeIntent": "quotation",
+        "evidenceStrength": 0.96,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        7,
+        6,
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=7,6,17 | concepts=sexual_exploitation"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_exploitation | intent=quotation | context=quoted | exceptions=quotation | articles=7,6,17 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.92
+      }
+    },
+    {
+      "id": "sexual-bench-018-direct",
+      "title": "Sexual Grooming (direct)",
+      "scriptSnippet": "A police investigation and later court note describe coercion or grooming across scenes.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_grooming",
+            "articleId": 7,
+            "variants": [
+              "Sexual Grooming"
+            ],
+            "definition": "Sexual Grooming anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          7,
+          6,
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_grooming",
+        "sexual_harassment"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": "vulnerable target",
+        "narrativeIntent": "coercion",
+        "evidenceStrength": 0.96,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        7,
+        6,
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=7,6,17 | concepts=sexual_grooming"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_grooming | intent=coercion | context=dialogue | exceptions=none | articles=7,6,17 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.84,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-018-quoted",
+      "title": "Sexual Grooming (quoted)",
+      "scriptSnippet": "\"A police investigation and later court note describe coercion or grooming across scenes.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_grooming",
+            "articleId": 7,
+            "variants": [
+              "Sexual Grooming"
+            ],
+            "definition": "Sexual Grooming anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          7,
+          6,
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_grooming",
+        "sexual_harassment"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": "vulnerable target",
+        "narrativeIntent": "quotation",
+        "evidenceStrength": 0.96,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        7,
+        6,
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=7,6,17 | concepts=sexual_grooming"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_grooming | intent=quotation | context=quoted | exceptions=quotation | articles=7,6,17 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.92
+      }
+    },
+    {
+      "id": "sexual-bench-019-direct",
+      "title": "Sexual False Accusation (direct)",
+      "scriptSnippet": "One character falsely accuses another of sexual misconduct and later evidence clears the name.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_false_accusation",
+            "articleId": 17,
+            "variants": [
+              "Sexual False Accusation"
+            ],
+            "definition": "Sexual False Accusation anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_false_accusation",
+        "sexual_false_accusation"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "another character",
+        "victim": null,
+        "narrativeIntent": "accusation",
+        "evidenceStrength": 0.65,
+        "contextClassification": "dialogue",
+        "literalVsImpliedMeaning": "dialogue",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=17 | concepts=sexual_false_accusation"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_false_accusation | intent=accusation | context=dialogue | exceptions=none | articles=17 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-019-quoted",
+      "title": "Sexual False Accusation (quoted)",
+      "scriptSnippet": "\"One character falsely accuses another of sexual misconduct and later evidence clears the name.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_false_accusation",
+            "articleId": 17,
+            "variants": [
+              "Sexual False Accusation"
+            ],
+            "definition": "Sexual False Accusation anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_false_accusation",
+        "sexual_false_accusation"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "another character",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.65,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=17 | concepts=sexual_false_accusation"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_false_accusation | intent=quoted | context=quoted | exceptions=quotation | articles=17 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-020-direct",
+      "title": "Sexual Dialogue (direct)",
+      "scriptSnippet": "A scene description without dialogue still frames the clothing, body, and movement sexually.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_dialogue",
+            "articleId": 9,
+            "variants": [
+              "Sexual Dialogue"
+            ],
+            "definition": "Sexual Dialogue anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_dialogue",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | scene language",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.8,
+        "contextClassification": "scene_description",
+        "literalVsImpliedMeaning": "scene_description",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_dialogue"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_dialogue | intent=literal | context=scene_description | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.76,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-020-quoted",
+      "title": "Sexual Dialogue (quoted)",
+      "scriptSnippet": "\"A scene description without dialogue still frames the clothing, body, and movement sexually.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_dialogue",
+            "articleId": 9,
+            "variants": [
+              "Sexual Dialogue"
+            ],
+            "definition": "Sexual Dialogue anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_dialogue",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.8,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_dialogue"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_dialogue | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-021-direct",
+      "title": "Sexual Scene (direct)",
+      "scriptSnippet": "Camera description and music cue sexualize the body even though no one speaks.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_scene",
+            "articleId": 9,
+            "variants": [
+              "Sexual Scene"
+            ],
+            "definition": "Sexual Scene anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_scene",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | scene language",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.8,
+        "contextClassification": "scene_description",
+        "literalVsImpliedMeaning": "scene_description",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_scene"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_scene | intent=literal | context=scene_description | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.76,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-021-quoted",
+      "title": "Sexual Scene (quoted)",
+      "scriptSnippet": "\"Camera description and music cue sexualize the body even though no one speaks.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_scene",
+            "articleId": 9,
+            "variants": [
+              "Sexual Scene"
+            ],
+            "definition": "Sexual Scene anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_scene",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.8,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_scene"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_scene | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-022-direct",
+      "title": "Sexual Description (direct)",
+      "scriptSnippet": "A scene description without dialogue still frames the clothing, body, and movement sexually.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_description",
+            "articleId": 9,
+            "variants": [
+              "Sexual Description"
+            ],
+            "definition": "Sexual Description anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_description",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | scene language",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.8,
+        "contextClassification": "scene_description",
+        "literalVsImpliedMeaning": "scene_description",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_description"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_description | intent=literal | context=scene_description | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.76,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-022-quoted",
+      "title": "Sexual Description (quoted)",
+      "scriptSnippet": "\"A scene description without dialogue still frames the clothing, body, and movement sexually.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_description",
+            "articleId": 9,
+            "variants": [
+              "Sexual Description"
+            ],
+            "definition": "Sexual Description anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_description",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.8,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_description"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_description | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-023-direct",
+      "title": "Sexual Sound (direct)",
+      "scriptSnippet": "Camera description and music cue sexualize the body even though no one speaks.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_sound",
+            "articleId": 9,
+            "variants": [
+              "Sexual Sound"
+            ],
+            "definition": "Sexual Sound anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_sound",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | scene language",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.8,
+        "contextClassification": "scene_description",
+        "literalVsImpliedMeaning": "scene_description",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_sound"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_sound | intent=literal | context=scene_description | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.76,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-023-quoted",
+      "title": "Sexual Sound (quoted)",
+      "scriptSnippet": "\"Camera description and music cue sexualize the body even though no one speaks.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_sound",
+            "articleId": 9,
+            "variants": [
+              "Sexual Sound"
+            ],
+            "definition": "Sexual Sound anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_sound",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.8,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_sound"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_sound | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-024-direct",
+      "title": "Sexual Camera Focus (direct)",
+      "scriptSnippet": "A scene description without dialogue still frames the clothing, body, and movement sexually.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_camera_focus",
+            "articleId": 9,
+            "variants": [
+              "Sexual Camera Focus"
+            ],
+            "definition": "Sexual Camera Focus anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_camera_focus",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | scene language",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.8,
+        "contextClassification": "scene_description",
+        "literalVsImpliedMeaning": "scene_description",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_camera_focus"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_camera_focus | intent=literal | context=scene_description | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.76,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-024-quoted",
+      "title": "Sexual Camera Focus (quoted)",
+      "scriptSnippet": "\"A scene description without dialogue still frames the clothing, body, and movement sexually.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_camera_focus",
+            "articleId": 9,
+            "variants": [
+              "Sexual Camera Focus"
+            ],
+            "definition": "Sexual Camera Focus anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_camera_focus",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.8,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_camera_focus"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_camera_focus | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-025-direct",
+      "title": "Sexual Body Focus (direct)",
+      "scriptSnippet": "Camera description and music cue sexualize the body even though no one speaks.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_body_focus",
+            "articleId": 9,
+            "variants": [
+              "Sexual Body Focus"
+            ],
+            "definition": "Sexual Body Focus anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_body_focus",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | scene language",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.8,
+        "contextClassification": "scene_description",
+        "literalVsImpliedMeaning": "scene_description",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_body_focus"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_body_focus | intent=literal | context=scene_description | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.76,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-025-quoted",
+      "title": "Sexual Body Focus (quoted)",
+      "scriptSnippet": "\"Camera description and music cue sexualize the body even though no one speaks.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_body_focus",
+            "articleId": 9,
+            "variants": [
+              "Sexual Body Focus"
+            ],
+            "definition": "Sexual Body Focus anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_body_focus",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.8,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_body_focus"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_body_focus | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-026-direct",
+      "title": "Sexual Clothing (direct)",
+      "scriptSnippet": "A scene description without dialogue still frames the clothing, body, and movement sexually.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_clothing",
+            "articleId": 9,
+            "variants": [
+              "Sexual Clothing"
+            ],
+            "definition": "Sexual Clothing anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_clothing",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | scene language",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "literal",
+        "evidenceStrength": 0.8,
+        "contextClassification": "scene_description",
+        "literalVsImpliedMeaning": "scene_description",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_07_sexuality | disposition=match | articles=9,5 | concepts=sexual_clothing"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_clothing | intent=literal | context=scene_description | exceptions=none | articles=9,5 | disposition=match",
+      "expectedConfidenceRange": {
+        "min": 0.76,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-026-quoted",
+      "title": "Sexual Clothing (quoted)",
+      "scriptSnippet": "\"A scene description without dialogue still frames the clothing, body, and movement sexually.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_clothing",
+            "articleId": 9,
+            "variants": [
+              "Sexual Clothing"
+            ],
+            "definition": "Sexual Clothing anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_clothing",
+        "sexual_dialogue"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.8,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_clothing"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_clothing | intent=quoted | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-027-direct",
+      "title": "Sexual Normalization (direct)",
+      "scriptSnippet": "The narrator normalizes the conduct, but the next scene condemns it.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_normalization",
+            "articleId": 9,
+            "variants": [
+              "Sexual Normalization"
+            ],
+            "definition": "Sexual Normalization anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_normalization",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "normalization",
+        "evidenceStrength": 0.9,
+        "contextClassification": "documentary",
+        "literalVsImpliedMeaning": "documentary",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9,5 | concepts=sexual_normalization"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_normalization | intent=normalization | context=documentary | exceptions=none | articles=9,5 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-027-quoted",
+      "title": "Sexual Normalization (quoted)",
+      "scriptSnippet": "\"The narrator normalizes the conduct, but the next scene condemns it.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_normalization",
+            "articleId": 9,
+            "variants": [
+              "Sexual Normalization"
+            ],
+            "definition": "Sexual Normalization anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_normalization",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quotation",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_normalization"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_normalization | intent=quotation | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-028-direct",
+      "title": "Sexual Glorification (direct)",
+      "scriptSnippet": "A comedy scene mocks the subject rather than endorsing it.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_glorification",
+            "articleId": 9,
+            "variants": [
+              "Sexual Glorification"
+            ],
+            "definition": "Sexual Glorification anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_glorification",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "normalization",
+        "evidenceStrength": 0.9,
+        "contextClassification": "documentary",
+        "literalVsImpliedMeaning": "documentary",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9,5 | concepts=sexual_glorification"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_glorification | intent=normalization | context=documentary | exceptions=none | articles=9,5 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-028-quoted",
+      "title": "Sexual Glorification (quoted)",
+      "scriptSnippet": "\"A comedy scene mocks the subject rather than endorsing it.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_glorification",
+            "articleId": 9,
+            "variants": [
+              "Sexual Glorification"
+            ],
+            "definition": "Sexual Glorification anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_glorification",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quotation",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_glorification"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_glorification | intent=quotation | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-029-direct",
+      "title": "Sexual Instruction (direct)",
+      "scriptSnippet": "The narrator normalizes the conduct, but the next scene condemns it.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_instruction",
+            "articleId": 9,
+            "variants": [
+              "Sexual Instruction"
+            ],
+            "definition": "Sexual Instruction anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_instruction",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "normalization",
+        "evidenceStrength": 0.9,
+        "contextClassification": "documentary",
+        "literalVsImpliedMeaning": "documentary",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9,5 | concepts=sexual_instruction"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_instruction | intent=normalization | context=documentary | exceptions=none | articles=9,5 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-029-quoted",
+      "title": "Sexual Instruction (quoted)",
+      "scriptSnippet": "\"The narrator normalizes the conduct, but the next scene condemns it.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_instruction",
+            "articleId": 9,
+            "variants": [
+              "Sexual Instruction"
+            ],
+            "definition": "Sexual Instruction anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_instruction",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quotation",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_instruction"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_instruction | intent=quotation | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-030-direct",
+      "title": "Sexual Comedy (direct)",
+      "scriptSnippet": "A comedy scene mocks the subject rather than endorsing it.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_comedy",
+            "articleId": 9,
+            "variants": [
+              "Sexual Comedy"
+            ],
+            "definition": "Sexual Comedy anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_comedy",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "normalization",
+        "evidenceStrength": 0.9,
+        "contextClassification": "documentary",
+        "literalVsImpliedMeaning": "documentary",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9,5 | concepts=sexual_comedy"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_comedy | intent=normalization | context=documentary | exceptions=none | articles=9,5 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-030-quoted",
+      "title": "Sexual Comedy (quoted)",
+      "scriptSnippet": "\"A comedy scene mocks the subject rather than endorsing it.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_comedy",
+            "articleId": 9,
+            "variants": [
+              "Sexual Comedy"
+            ],
+            "definition": "Sexual Comedy anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_comedy",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quotation",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_comedy"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_comedy | intent=quotation | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-031-direct",
+      "title": "Sexual Condemnation (direct)",
+      "scriptSnippet": "The narrator normalizes the conduct, but the next scene condemns it.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_condemnation",
+            "articleId": 9,
+            "variants": [
+              "Sexual Condemnation"
+            ],
+            "definition": "Sexual Condemnation anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_condemnation",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "normalization",
+        "evidenceStrength": 0.9,
+        "contextClassification": "documentary",
+        "literalVsImpliedMeaning": "documentary",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9,5 | concepts=sexual_condemnation"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_condemnation | intent=normalization | context=documentary | exceptions=none | articles=9,5 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-031-quoted",
+      "title": "Sexual Condemnation (quoted)",
+      "scriptSnippet": "\"The narrator normalizes the conduct, but the next scene condemns it.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_condemnation",
+            "articleId": 9,
+            "variants": [
+              "Sexual Condemnation"
+            ],
+            "definition": "Sexual Condemnation anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_condemnation",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quotation",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_condemnation"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_condemnation | intent=quotation | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-032-direct",
+      "title": "Sexual Documentary (direct)",
+      "scriptSnippet": "A comedy scene mocks the subject rather than endorsing it.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_documentary",
+            "articleId": 9,
+            "variants": [
+              "Sexual Documentary"
+            ],
+            "definition": "Sexual Documentary anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_documentary",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dialogue | direct",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "normalization",
+        "evidenceStrength": 0.9,
+        "contextClassification": "documentary",
+        "literalVsImpliedMeaning": "documentary",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9,5 | concepts=sexual_documentary"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_documentary | intent=normalization | context=documentary | exceptions=none | articles=9,5 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-032-quoted",
+      "title": "Sexual Documentary (quoted)",
+      "scriptSnippet": "\"A comedy scene mocks the subject rather than endorsing it.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_documentary",
+            "articleId": 9,
+            "variants": [
+              "Sexual Documentary"
+            ],
+            "definition": "Sexual Documentary anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_documentary",
+        "sexual_normalization"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quotation",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_documentary"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_documentary | intent=quotation | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-033-direct",
+      "title": "Sexual Medical (direct)",
+      "scriptSnippet": "A doctor explains anatomy in a medical consultation.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_medical",
+            "articleId": 9,
+            "variants": [
+              "Sexual Medical"
+            ],
+            "definition": "Sexual Medical anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_medical",
+        "sexual_medical"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "medical | educational",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "education",
+        "evidenceStrength": 0.9,
+        "contextClassification": "educational",
+        "literalVsImpliedMeaning": "educational",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9,5 | concepts=sexual_medical"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_medical | intent=education | context=educational | exceptions=none | articles=9,5 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-033-quoted",
+      "title": "Sexual Medical (quoted)",
+      "scriptSnippet": "\"A doctor explains anatomy in a medical consultation.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_medical",
+            "articleId": 9,
+            "variants": [
+              "Sexual Medical"
+            ],
+            "definition": "Sexual Medical anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_medical",
+        "sexual_medical"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "education",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_medical"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_medical | intent=education | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-034-direct",
+      "title": "Sexual Educational (direct)",
+      "scriptSnippet": "A teacher describes educational biology or historical marriage customs.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_educational",
+            "articleId": 9,
+            "variants": [
+              "Sexual Educational"
+            ],
+            "definition": "Sexual Educational anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_educational",
+        "sexual_medical"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "medical | educational",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "education",
+        "evidenceStrength": 0.9,
+        "contextClassification": "educational",
+        "literalVsImpliedMeaning": "educational",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9,5 | concepts=sexual_educational"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_educational | intent=education | context=educational | exceptions=none | articles=9,5 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-034-quoted",
+      "title": "Sexual Educational (quoted)",
+      "scriptSnippet": "\"A teacher describes educational biology or historical marriage customs.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_educational",
+            "articleId": 9,
+            "variants": [
+              "Sexual Educational"
+            ],
+            "definition": "Sexual Educational anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_educational",
+        "sexual_medical"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "education",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_educational"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_educational | intent=education | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-035-direct",
+      "title": "Sexual Historical (direct)",
+      "scriptSnippet": "A doctor explains anatomy in a medical consultation.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_historical",
+            "articleId": 9,
+            "variants": [
+              "Sexual Historical"
+            ],
+            "definition": "Sexual Historical anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_historical",
+        "sexual_medical"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "medical | educational",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "education",
+        "evidenceStrength": 0.9,
+        "contextClassification": "educational",
+        "literalVsImpliedMeaning": "educational",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9,5 | concepts=sexual_historical"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_historical | intent=education | context=educational | exceptions=none | articles=9,5 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-035-quoted",
+      "title": "Sexual Historical (quoted)",
+      "scriptSnippet": "\"A doctor explains anatomy in a medical consultation.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_historical",
+            "articleId": 9,
+            "variants": [
+              "Sexual Historical"
+            ],
+            "definition": "Sexual Historical anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9,
+          5
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_historical",
+        "sexual_medical"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "education",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9,
+        5
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9,5 | concepts=sexual_historical"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_historical | intent=education | context=quoted | exceptions=quotation | articles=9,5 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-036-direct",
+      "title": "Sexual Dream (direct)",
+      "scriptSnippet": "A flashback or imagination sequence replays a sexual idea without present endorsement.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_dream",
+            "articleId": 9,
+            "variants": [
+              "Sexual Dream"
+            ],
+            "definition": "Sexual Dream anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_dream",
+        "sexual_dream"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dream | memory",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "fantasy",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dream",
+        "literalVsImpliedMeaning": "dream",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9 | concepts=sexual_dream"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_dream | intent=fantasy | context=dream | exceptions=none | articles=9 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-036-quoted",
+      "title": "Sexual Dream (quoted)",
+      "scriptSnippet": "\"A flashback or imagination sequence replays a sexual idea without present endorsement.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_dream",
+            "articleId": 9,
+            "variants": [
+              "Sexual Dream"
+            ],
+            "definition": "Sexual Dream anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_dream",
+        "sexual_dream"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9 | concepts=sexual_dream"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_dream | intent=quoted | context=quoted | exceptions=quotation | articles=9 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-037-direct",
+      "title": "Sexual Flashback (direct)",
+      "scriptSnippet": "The character dreams about the image and the scene later returns to reality.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_flashback",
+            "articleId": 9,
+            "variants": [
+              "Sexual Flashback"
+            ],
+            "definition": "Sexual Flashback anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_flashback",
+        "sexual_dream"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dream | memory",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "fantasy",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dream",
+        "literalVsImpliedMeaning": "dream",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9 | concepts=sexual_flashback"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_flashback | intent=fantasy | context=dream | exceptions=none | articles=9 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-037-quoted",
+      "title": "Sexual Flashback (quoted)",
+      "scriptSnippet": "\"The character dreams about the image and the scene later returns to reality.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_flashback",
+            "articleId": 9,
+            "variants": [
+              "Sexual Flashback"
+            ],
+            "definition": "Sexual Flashback anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_flashback",
+        "sexual_dream"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9 | concepts=sexual_flashback"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_flashback | intent=quoted | context=quoted | exceptions=quotation | articles=9 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    },
+    {
+      "id": "sexual-bench-038-direct",
+      "title": "Sexual Imagination (direct)",
+      "scriptSnippet": "A flashback or imagination sequence replays a sexual idea without present endorsement.",
+      "storyMemory": null,
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line appears in a larger scene."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_imagination",
+            "articleId": 9,
+            "variants": [
+              "Sexual Imagination"
+            ],
+            "definition": "Sexual Imagination anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_imagination",
+        "sexual_dream"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dream | memory",
+        "speaker": "Character A",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "fantasy",
+        "evidenceStrength": 0.9,
+        "contextClassification": "dream",
+        "literalVsImpliedMeaning": "dream",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_07_sexuality | disposition=review | articles=9 | concepts=sexual_imagination"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_imagination | intent=fantasy | context=dream | exceptions=none | articles=9 | disposition=review",
+      "expectedConfidenceRange": {
+        "min": 0.8,
+        "max": 1
+      }
+    },
+    {
+      "id": "sexual-bench-038-quoted",
+      "title": "Sexual Imagination (quoted)",
+      "scriptSnippet": "\"A flashback or imagination sequence replays a sexual idea without present endorsement.\"",
+      "storyMemory": "The line is quoted for analysis.",
+      "sceneMemory": null,
+      "neighboringSentences": [
+        "The line is repeated as evidence."
+      ],
+      "glossary": {
+        "title": "Sexuality Glossary",
+        "entries": [
+          {
+            "term": "sexual_imagination",
+            "articleId": 9,
+            "variants": [
+              "Sexual Imagination"
+            ],
+            "definition": "Sexual Imagination anchor."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_07_sexuality",
+        "titleAr": "المحتوى الجنسي",
+        "scope": "Sexual content benchmark case",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          9
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "sexual_imagination",
+        "sexual_dream"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quoted | dialogue",
+        "speaker": "Narrator",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "quoted",
+        "evidenceStrength": 0.9,
+        "contextClassification": "quoted",
+        "literalVsImpliedMeaning": "quoted",
+        "exceptionSignals": [
+          "quotation"
+        ]
+      },
+      "expectedLegalModule": "v3_07_sexuality",
+      "expectedArticleMapping": [
+        9
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_07_sexuality | disposition=reject | articles=9 | concepts=sexual_imagination"
+      },
+      "expectedExplanation": "module=v3_07_sexuality | concepts=sexual_imagination | intent=quoted | context=quoted | exceptions=quotation | articles=9 | disposition=reject",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.78
+      }
+    }
+  ]
+}

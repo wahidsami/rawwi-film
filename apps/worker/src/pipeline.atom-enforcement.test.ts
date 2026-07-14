@@ -13,7 +13,10 @@ const loc = { start_offset: 0, end_offset: 10, start_line: 1, end_line: 1 };
 
 function buildFinding(overrides: Partial<JudgeFinding>): JudgeFinding {
   return {
+    source: null,
     article_id: 5,
+    lineage_id: null,
+    parent_lineage_id: null,
     atom_id: "5-2",
     canonical_atom: null,
     canonical_atoms: null,
@@ -33,6 +36,8 @@ function buildFinding(overrides: Partial<JudgeFinding>): JudgeFinding {
     context_confidence: null,
     lexical_confidence: null,
     policy_confidence: null,
+    evidence_hash: null,
+    canonical_hash: null,
     rationale_ar: null,
     final_ruling: null,
     detection_pass: null,

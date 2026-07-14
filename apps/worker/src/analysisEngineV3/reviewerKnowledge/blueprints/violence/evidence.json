@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "id": "violence_evidence",
+  "title": "Violence Evidence",
+  "description": "Evidence categories for violence reasoning.",
+  "entries": [
+    {
+      "id": "violence_evidence_direct",
+      "title": "Direct Event",
+      "description": "Explicit violent act."
+    },
+    {
+      "id": "violence_evidence_threat",
+      "title": "Threat",
+      "description": "Explicit threat or intimidation."
+    },
+    {
+      "id": "violence_evidence_attempt",
+      "title": "Attempt",
+      "description": "Attempted but incomplete harm."
+    },
+    {
+      "id": "violence_evidence_glorification",
+      "title": "Glorification",
+      "description": "Praise or celebration of violence."
+    },
+    {
+      "id": "violence_evidence_encouragement",
+      "title": "Encouragement",
+      "description": "Encouraging violent action."
+    },
+    {
+      "id": "violence_evidence_instruction",
+      "title": "Instruction",
+      "description": "How-to or operational guidance."
+    },
+    {
+      "id": "violence_evidence_reward",
+      "title": "Reward",
+      "description": "Violence framed as rewarded."
+    },
+    {
+      "id": "violence_evidence_defense",
+      "title": "Defense",
+      "description": "Self-defense or protective justification."
+    },
+    {
+      "id": "violence_evidence_law_enforcement",
+      "title": "Law Enforcement",
+      "description": "Police or lawful force framing."
+    },
+    {
+      "id": "violence_evidence_context",
+      "title": "Context",
+      "description": "Context that changes interpretation."
+    },
+    {
+      "id": "violence_evidence_exception",
+      "title": "Exception",
+      "description": "Documentary, historical, fantasy, or comedic exceptions."
+    },
+    {
+      "id": "violence_evidence_description",
+      "title": "Scene Description",
+      "description": "Scene description that shows harm."
+    }
+  ]
+}

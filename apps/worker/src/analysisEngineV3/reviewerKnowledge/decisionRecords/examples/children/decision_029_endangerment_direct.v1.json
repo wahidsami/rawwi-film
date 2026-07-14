@@ -1,0 +1,54 @@
+{
+  "id": "decision_029_endangerment_direct",
+  "version": "1.0.0",
+  "title": "Endangerment (direct)",
+  "summary": "Endangerment in direct framing.",
+  "originalScenario": "يترك الطفل قرب النار",
+  "reviewQuestion": "Is this endangerment?",
+  "initialSuspicion": "Unsafe placement.",
+  "possibleConcepts": [
+    "children_child",
+    "children_endangerment"
+  ],
+  "supportingEvidence": [
+    "يترك الطفل قرب النار"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-5"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "endangerment",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child",
+    "children_endangerment"
+  ]
+}

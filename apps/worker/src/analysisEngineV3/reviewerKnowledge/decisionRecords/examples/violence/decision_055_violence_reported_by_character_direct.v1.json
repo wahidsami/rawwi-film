@@ -1,0 +1,51 @@
+{
+  "id": "violence_055_violence_reported_by_character_direct",
+  "version": "1.0.0",
+  "title": "Violence Reported by Character (direct)",
+  "summary": "Violence Reported by Character in direct framing.",
+  "originalScenario": "قال الشاهد إنهم هاجموه.",
+  "reviewQuestion": "Is this violence reported by character?",
+  "initialSuspicion": "Possible violence reported by character.",
+  "possibleConcepts": [
+    "violence_reported_by_character"
+  ],
+  "supportingEvidence": [
+    "قال الشاهد إنهم هاجموه."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "contextual",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_reported_by_character",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_reported_by_character"
+  ]
+}

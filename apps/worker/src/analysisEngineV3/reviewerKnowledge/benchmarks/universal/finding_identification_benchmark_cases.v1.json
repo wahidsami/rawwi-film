@@ -1,0 +1,82 @@
+{
+  "version": "1.0.0",
+  "id": "finding_identification_benchmark_catalog",
+  "title": "Finding Identification Benchmark Catalog",
+  "description": "Deterministic benchmark cases for GCAM finding identification knowledge.",
+  "cases": [
+    {
+      "id": "finding-identification-bench-001",
+      "title": "Multi-atom finding identification",
+      "scriptSnippet": "A supported finding matches more than one canonical atom.",
+      "storyMemory": "The note applies to GCAM finding construction rather than a single subject domain.",
+      "sceneMemory": "The reviewer is comparing canonical atoms and selecting a primary atom deterministically.",
+      "neighboringSentences": [
+        "The finding is still one finding even when multiple canonical atoms apply.",
+        "Primary atom selection follows semantic strength, severity, and clarity."
+      ],
+      "glossary": {
+        "title": "Finding Identification Glossary",
+        "entries": [
+          {
+            "term": "finding_identification",
+            "articleId": 4,
+            "variants": [
+              "finding identification",
+              "finding_identification"
+            ],
+            "definition": "A reviewer must identify the supported finding before final classification."
+          }
+        ],
+        "notes": [
+          "Canonical atom selection is deterministic."
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          4
+        ],
+        "notes": [
+          "One finding may map to multiple canonical atoms."
+        ]
+      },
+      "expectedConcepts": [
+        "finding_identification",
+        "canonical_atom",
+        "primary_atom_selection"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "observation",
+        "speaker": "reviewer",
+        "target": "method",
+        "victim": null,
+        "narrativeIntent": "observation",
+        "evidenceStrength": 0.68,
+        "contextClassification": "literal",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        4
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_15_reviewer_methodology | disposition=review | articles=4 | concepts=finding_identification | canonical_atoms=multiple"
+      },
+      "expectedExplanation": "The finding-identification note allows one supported finding to map to multiple canonical atoms, with the primary atom selected deterministically by semantic match, severity, and clarity.",
+      "expectedConfidenceRange": {
+        "min": 0.45,
+        "max": 0.75
+      }
+    }
+  ]
+}

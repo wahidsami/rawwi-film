@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "id": "narrative_review_questions",
+  "title": "Narrative Review Questions",
+  "description": "Questions that guide story-first reviewer reasoning.",
+  "entries": [
+    {
+      "id": "narrative_question_story",
+      "title": "What is the story doing overall?",
+      "description": "Start with the full scene before judging a sentence."
+    },
+    {
+      "id": "narrative_question_speaker",
+      "title": "Who is speaking or narrating?",
+      "description": "Separate character speech from narrator voice."
+    },
+    {
+      "id": "narrative_question_target",
+      "title": "Who or what is the target of the scene?",
+      "description": "Use context, not guesswork."
+    },
+    {
+      "id": "narrative_question_intent",
+      "title": "What is the narrative intent?",
+      "description": "Decide whether the scene is endorsement, criticism, neutral narration, or fiction."
+    },
+    {
+      "id": "narrative_question_context",
+      "title": "What context changes the meaning?",
+      "description": "Track flashback, dream, voice over, and unreliable narration."
+    },
+    {
+      "id": "narrative_question_relationship",
+      "title": "Which character relationship matters most?",
+      "description": "Track changing relationships across scenes."
+    },
+    {
+      "id": "narrative_question_memory",
+      "title": "Does earlier or later memory change the reading?",
+      "description": "Cross-scene context can reverse a first impression."
+    },
+    {
+      "id": "narrative_question_confidence",
+      "title": "How confident is the reading?",
+      "description": "Confidence should fall when context is incomplete."
+    }
+  ]
+}

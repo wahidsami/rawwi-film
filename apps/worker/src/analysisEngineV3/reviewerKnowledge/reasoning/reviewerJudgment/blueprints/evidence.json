@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_judgment_evidence",
+  "title": "Reviewer Judgment Evidence",
+  "description": "Evidence categories for reviewer judgment.",
+  "entries": [
+    {
+      "id": "single_clue",
+      "title": "Single Clue",
+      "description": "One clue that may begin a hypothesis."
+    },
+    {
+      "id": "corroborated_clue",
+      "title": "Corroborated Clue",
+      "description": "Multiple clues agree on the same reading."
+    },
+    {
+      "id": "contradictory_clue",
+      "title": "Contradictory Clue",
+      "description": "A clue that points toward a competing interpretation."
+    },
+    {
+      "id": "insufficient_clue",
+      "title": "Insufficient Clue",
+      "description": "A clue that is not enough by itself."
+    },
+    {
+      "id": "contextual_reversal",
+      "title": "Contextual Reversal",
+      "description": "Later context reverses the initial reading."
+    },
+    {
+      "id": "exception_signal",
+      "title": "Exception Signal",
+      "description": "A signal that suggests quotation, fiction, history, or another exception."
+    }
+  ]
+}

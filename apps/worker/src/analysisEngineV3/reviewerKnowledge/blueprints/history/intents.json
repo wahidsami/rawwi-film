@@ -1,0 +1,83 @@
+{
+  "version": "1.0.0",
+  "id": "historical_intents",
+  "title": "History Intents",
+  "description": "Canonical history intents for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "historical_intent_fact",
+      "title": "Intent Fact",
+      "description": "Intent Fact for history reasoning."
+    },
+    {
+      "id": "historical_intent_interpretation",
+      "title": "Intent Interpretation",
+      "description": "Intent Interpretation for history reasoning."
+    },
+    {
+      "id": "historical_intent_fiction",
+      "title": "Intent Fiction",
+      "description": "Intent Fiction for history reasoning."
+    },
+    {
+      "id": "historical_intent_alternate_history",
+      "title": "Intent Alternate History",
+      "description": "Intent Alternate History for history reasoning."
+    },
+    {
+      "id": "historical_intent_satire",
+      "title": "Intent Satire",
+      "description": "Intent Satire for history reasoning."
+    },
+    {
+      "id": "historical_intent_education",
+      "title": "Intent Education",
+      "description": "Intent Education for history reasoning."
+    },
+    {
+      "id": "historical_intent_documentary",
+      "title": "Intent Documentary",
+      "description": "Intent Documentary for history reasoning."
+    },
+    {
+      "id": "historical_intent_quote",
+      "title": "Intent Quote",
+      "description": "Intent Quote for history reasoning."
+    },
+    {
+      "id": "historical_intent_academic",
+      "title": "Intent Academic",
+      "description": "Intent Academic for history reasoning."
+    },
+    {
+      "id": "historical_intent_reenactment",
+      "title": "Intent Reenactment",
+      "description": "Intent Reenactment for history reasoning."
+    },
+    {
+      "id": "historical_intent_religious_narration",
+      "title": "Intent Religious Narration",
+      "description": "Intent Religious Narration for history reasoning."
+    },
+    {
+      "id": "historical_intent_political_narration",
+      "title": "Intent Political Narration",
+      "description": "Intent Political Narration for history reasoning."
+    },
+    {
+      "id": "historical_intent_symbolic_representation",
+      "title": "Intent Symbolic Representation",
+      "description": "Intent Symbolic Representation for history reasoning."
+    },
+    {
+      "id": "historical_intent_criticism",
+      "title": "Intent Criticism",
+      "description": "Intent Criticism for history reasoning."
+    },
+    {
+      "id": "historical_intent_praise",
+      "title": "Intent Praise",
+      "description": "Intent Praise for history reasoning."
+    }
+  ]
+}

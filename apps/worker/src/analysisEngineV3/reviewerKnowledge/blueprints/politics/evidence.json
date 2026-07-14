@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "politics_evidence",
+  "title": "Politics Evidence",
+  "description": "Canonical politics evidence types for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "politics_evidence_direct_statement",
+      "title": "Evidence Direct Statement",
+      "description": "Evidence Direct Statement for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_symbol_reference",
+      "title": "Evidence Symbol Reference",
+      "description": "Evidence Symbol Reference for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_institutional_language",
+      "title": "Evidence Institutional Language",
+      "description": "Evidence Institutional Language for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_power_imbalance",
+      "title": "Evidence Power Imbalance",
+      "description": "Evidence Power Imbalance for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_repeated_behavior",
+      "title": "Evidence Repeated Behavior",
+      "description": "Evidence Repeated Behavior for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_public_setting",
+      "title": "Evidence Public Setting",
+      "description": "Evidence Public Setting for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_speech_event",
+      "title": "Evidence Speech Event",
+      "description": "Evidence Speech Event for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_debate_exchange",
+      "title": "Evidence Debate Exchange",
+      "description": "Evidence Debate Exchange for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_news_frame",
+      "title": "Evidence News Frame",
+      "description": "Evidence News Frame for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_documentary_frame",
+      "title": "Evidence Documentary Frame",
+      "description": "Evidence Documentary Frame for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_historical_frame",
+      "title": "Evidence Historical Frame",
+      "description": "Evidence Historical Frame for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_quoted_speech",
+      "title": "Evidence Quoted Speech",
+      "description": "Evidence Quoted Speech for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_scene_description",
+      "title": "Evidence Scene Description",
+      "description": "Evidence Scene Description for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_dialogue",
+      "title": "Evidence Dialogue",
+      "description": "Evidence Dialogue for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_cross_sentence",
+      "title": "Evidence Cross Sentence",
+      "description": "Evidence Cross Sentence for politics reasoning."
+    },
+    {
+      "id": "politics_evidence_cross_scene",
+      "title": "Evidence Cross Scene",
+      "description": "Evidence Cross Scene for politics reasoning."
+    }
+  ]
+}

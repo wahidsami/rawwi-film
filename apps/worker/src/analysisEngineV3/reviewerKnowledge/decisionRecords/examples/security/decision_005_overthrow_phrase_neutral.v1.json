@@ -1,0 +1,74 @@
+{
+  "id": "decision_005_overthrow_phrase_neutral",
+  "version": "1.0.0",
+  "title": "Direct overthrow phrase (neutral)",
+  "summary": "Explicit overthrow language against the governing order.",
+  "originalScenario": "A character says: \"لنُسقط الدولة الليلة\".",
+  "reviewQuestion": "Is this a direct call to overthrow the governing order?",
+  "initialSuspicion": "Explicit overthrow language.",
+  "possibleConcepts": [
+    "government",
+    "state_institutions"
+  ],
+  "supportingEvidence": [
+    "لنُسقط الدولة الليلة"
+  ],
+  "contradictingEvidence": [
+    "Ambiguous context."
+  ],
+  "requiredMissingEvidence": [
+    "No explicit endorsement or additional evidence."
+  ],
+  "sceneContext": "Dialogue in a heated exchange.",
+  "speakerAnalysis": "The speaker is explicit and direct.",
+  "targetAnalysis": "The target is the governing order.",
+  "intentAnalysis": "Incitement and overthrow.",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Apply overthrow rule",
+    "Map to article 14"
+  ],
+  "reviewerDecision": "No finding",
+  "confidence": "medium",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "id": "gcam_security_14_1",
+      "article_id": 14,
+      "atom_ids": [
+        "14-1",
+        "14-5"
+      ],
+      "role": "Overthrow and incitement",
+      "note": "Use for direct overthrow calls."
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Use the shortest exact phrase. Variant: neutral.",
+  "benchmarkTags": [
+    "overthrow",
+    "incitement",
+    "security",
+    "neutral"
+  ],
+  "relatedLessons": [
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "security_pattern_overthrow_call"
+  ],
+  "relatedBlueprintConcepts": [
+    "security_government",
+    "security_state_institutions"
+  ]
+}

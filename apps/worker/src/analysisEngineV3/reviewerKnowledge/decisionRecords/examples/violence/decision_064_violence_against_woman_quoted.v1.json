@@ -1,0 +1,55 @@
+{
+  "id": "violence_064_violence_against_woman_quoted",
+  "version": "1.0.0",
+  "title": "Violence Against Woman (quoted)",
+  "summary": "Violence Against Woman in quoted framing.",
+  "originalScenario": "قال الراوي: \"يهين ويضرب المرأة.\"",
+  "reviewQuestion": "Is this violence against woman?",
+  "initialSuspicion": "Possible violence against woman.",
+  "possibleConcepts": [
+    "violence_against_woman"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: يهين ويضرب المرأة."
+  ],
+  "contradictingEvidence": [
+    "Quoted or reported framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear endorsement in the narrator's own voice."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "Target remains dependent on the quoted voice.",
+  "intentAnalysis": "quotation",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Quoted speech is not automatically endorsement.",
+  "benchmarkTags": [
+    "violence_against_woman",
+    "quoted",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_against_woman"
+  ]
+}

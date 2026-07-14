@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "id": "crime_actions",
+  "title": "Crime Actions",
+  "description": "Action taxonomy for crime reasoning.",
+  "entries": [
+    {
+      "id": "crime_action_reference",
+      "title": "Crime reference",
+      "description": "General reference to criminal content."
+    },
+    {
+      "id": "crime_action_attempt",
+      "title": "Attempt",
+      "description": "Attempting an unlawful act."
+    },
+    {
+      "id": "crime_action_plan",
+      "title": "Planning",
+      "description": "Planning or conspiring to commit crime."
+    },
+    {
+      "id": "crime_action_execute",
+      "title": "Execution",
+      "description": "Executing the criminal act."
+    },
+    {
+      "id": "crime_action_escape",
+      "title": "Escape",
+      "description": "Evading detection or fleeing after crime."
+    },
+    {
+      "id": "crime_action_coverup",
+      "title": "Cover-up",
+      "description": "Concealing evidence or responsibility."
+    },
+    {
+      "id": "crime_action_report",
+      "title": "Report",
+      "description": "Reporting or documenting crime."
+    },
+    {
+      "id": "crime_action_confess",
+      "title": "Confess",
+      "description": "Admitting criminal conduct."
+    }
+  ]
+}

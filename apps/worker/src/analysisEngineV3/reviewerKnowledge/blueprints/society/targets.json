@@ -1,0 +1,93 @@
+{
+  "version": "1.0.0",
+  "id": "society_targets",
+  "title": "Society Targets",
+  "description": "Canonical society targets for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "society_target_family",
+      "title": "Target Family",
+      "description": "Target Family as a target in society reasoning."
+    },
+    {
+      "id": "society_target_child",
+      "title": "Target Child",
+      "description": "Target Child as a target in society reasoning."
+    },
+    {
+      "id": "society_target_parent",
+      "title": "Target Parent",
+      "description": "Target Parent as a target in society reasoning."
+    },
+    {
+      "id": "society_target_mother",
+      "title": "Target Mother",
+      "description": "Target Mother as a target in society reasoning."
+    },
+    {
+      "id": "society_target_father",
+      "title": "Target Father",
+      "description": "Target Father as a target in society reasoning."
+    },
+    {
+      "id": "society_target_elderly",
+      "title": "Target Elderly",
+      "description": "Target Elderly as a target in society reasoning."
+    },
+    {
+      "id": "society_target_disabled_person",
+      "title": "Target Disabled Person",
+      "description": "Target Disabled Person as a target in society reasoning."
+    },
+    {
+      "id": "society_target_woman",
+      "title": "Target Woman",
+      "description": "Target Woman as a target in society reasoning."
+    },
+    {
+      "id": "society_target_community",
+      "title": "Target Community",
+      "description": "Target Community as a target in society reasoning."
+    },
+    {
+      "id": "society_target_neighbor",
+      "title": "Target Neighbor",
+      "description": "Target Neighbor as a target in society reasoning."
+    },
+    {
+      "id": "society_target_coworker",
+      "title": "Target Coworker",
+      "description": "Target Coworker as a target in society reasoning."
+    },
+    {
+      "id": "society_target_student",
+      "title": "Target Student",
+      "description": "Target Student as a target in society reasoning."
+    },
+    {
+      "id": "society_target_teacher",
+      "title": "Target Teacher",
+      "description": "Target Teacher as a target in society reasoning."
+    },
+    {
+      "id": "society_target_public",
+      "title": "Target Public",
+      "description": "Target Public as a target in society reasoning."
+    },
+    {
+      "id": "society_target_state",
+      "title": "Target State",
+      "description": "Target State as a target in society reasoning."
+    },
+    {
+      "id": "society_target_vulnerable_person",
+      "title": "Target Vulnerable Person",
+      "description": "Target Vulnerable Person as a target in society reasoning."
+    },
+    {
+      "id": "society_target_identity_group",
+      "title": "Target Identity Group",
+      "description": "Target Identity Group as a target in society reasoning."
+    }
+  ]
+}

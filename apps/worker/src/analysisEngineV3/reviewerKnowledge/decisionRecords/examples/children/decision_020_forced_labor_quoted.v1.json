@@ -1,0 +1,58 @@
+{
+  "id": "decision_020_forced_labor_quoted",
+  "version": "1.0.0",
+  "title": "Forced labor (quoted)",
+  "summary": "Forced labor in quoted framing.",
+  "originalScenario": "قال الراوي: \"أجبر القاصر على العمل ليلًا\"",
+  "reviewQuestion": "Is this forced labor?",
+  "initialSuspicion": "Compelled labor.",
+  "possibleConcepts": [
+    "children_minor",
+    "children_forced_labor"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: أجبر القاصر على العمل ليلًا"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-5"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "forced_labor",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_minor",
+    "children_forced_labor"
+  ]
+}

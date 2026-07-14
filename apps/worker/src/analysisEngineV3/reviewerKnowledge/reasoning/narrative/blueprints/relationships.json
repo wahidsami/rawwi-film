@@ -1,0 +1,194 @@
+{
+  "version": "1.0.0",
+  "id": "narrative_relationships",
+  "title": "Narrative Relationships",
+  "description": "Graph relationships across narrative concepts.",
+  "entries": [
+    {
+      "from": "narrative_domain",
+      "to": "story_arc",
+      "type": "parent",
+      "description": "Global narrative reasoning domain used by all other concepts."
+    },
+    {
+      "from": "story_arc",
+      "to": "story_progression",
+      "type": "supports",
+      "description": "Overall story progression from start to finish."
+    },
+    {
+      "from": "story_goal",
+      "to": "story_arc",
+      "type": "supports",
+      "description": "The objective that drives the narrative."
+    },
+    {
+      "from": "story_conflict",
+      "to": "story_goal",
+      "type": "opposite",
+      "description": "The pressure that resists the story goal."
+    },
+    {
+      "from": "story_resolution",
+      "to": "story_conflict",
+      "type": "supports",
+      "description": "The outcome that resolves the conflict."
+    },
+    {
+      "from": "scene_goal",
+      "to": "story_goal",
+      "type": "related",
+      "description": "The local purpose of a scene."
+    },
+    {
+      "from": "scene_transition",
+      "to": "story_progression",
+      "type": "supports",
+      "description": "Movement between scenes."
+    },
+    {
+      "from": "character_arc",
+      "to": "story_arc",
+      "type": "supports",
+      "description": "How a character changes across the story."
+    },
+    {
+      "from": "relationship_arc",
+      "to": "character_arc",
+      "type": "related",
+      "description": "How relationships change across the story."
+    },
+    {
+      "from": "motivation_change",
+      "to": "character_arc",
+      "type": "supports",
+      "description": "A shift in why a character acts."
+    },
+    {
+      "from": "belief_change",
+      "to": "character_arc",
+      "type": "supports",
+      "description": "A shift in what a character believes."
+    },
+    {
+      "from": "moral_change",
+      "to": "character_arc",
+      "type": "supports",
+      "description": "A shift in ethical outlook."
+    },
+    {
+      "from": "tone_shift",
+      "to": "story_arc",
+      "type": "related",
+      "description": "A change in emotional tone."
+    },
+    {
+      "from": "theme",
+      "to": "story_arc",
+      "type": "supports",
+      "description": "The underlying story idea."
+    },
+    {
+      "from": "subtext",
+      "to": "hidden_meaning",
+      "type": "supports",
+      "description": "Meaning beneath the surface wording."
+    },
+    {
+      "from": "symbolism",
+      "to": "hidden_meaning",
+      "type": "supports",
+      "description": "Symbolic objects or actions."
+    },
+    {
+      "from": "foreshadowing",
+      "to": "callback",
+      "type": "related",
+      "description": "A clue to a later event."
+    },
+    {
+      "from": "plot_twist",
+      "to": "red_herring",
+      "type": "opposite",
+      "description": "A sudden reinterpretation of prior events."
+    },
+    {
+      "from": "flashback",
+      "to": "background_story",
+      "type": "supports",
+      "description": "A return to an earlier time."
+    },
+    {
+      "from": "flashforward",
+      "to": "time_skip",
+      "type": "supports",
+      "description": "A preview of a later event."
+    },
+    {
+      "from": "dream",
+      "to": "imaginary_sequence",
+      "type": "supports",
+      "description": "A dreamlike scene."
+    },
+    {
+      "from": "hallucination",
+      "to": "dream",
+      "type": "related",
+      "description": "A scene that may not be objectively real."
+    },
+    {
+      "from": "voice_over",
+      "to": "narrative_context_narration",
+      "type": "supports",
+      "description": "Narration over the visual scene."
+    },
+    {
+      "from": "unreliable_narrator",
+      "to": "narrative_context_narration",
+      "type": "supports",
+      "description": "A narrator whose account needs caution."
+    },
+    {
+      "from": "parallel_story",
+      "to": "story_arc",
+      "type": "related",
+      "description": "A second line that mirrors or contrasts the first."
+    },
+    {
+      "from": "background_story",
+      "to": "story_arc",
+      "type": "supports",
+      "description": "Earlier events that explain the present."
+    },
+    {
+      "from": "scene_description",
+      "to": "environmental_storytelling",
+      "type": "supports",
+      "description": "Visual description of the scene."
+    },
+    {
+      "from": "off_screen_event",
+      "to": "implicit_event",
+      "type": "supports",
+      "description": "An event occurring outside the frame."
+    },
+    {
+      "from": "implicit_event",
+      "to": "missing_information",
+      "type": "related",
+      "description": "An event that is inferred rather than shown."
+    },
+    {
+      "from": "missing_information",
+      "to": "subtext",
+      "type": "related",
+      "description": "A gap that blocks certainty."
+    },
+    {
+      "from": "time_skip",
+      "to": "story_progression",
+      "type": "supports",
+      "description": "A jump in time between events."
+    }
+  ]
+}

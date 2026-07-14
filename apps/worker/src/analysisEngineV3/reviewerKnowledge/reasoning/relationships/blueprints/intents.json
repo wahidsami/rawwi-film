@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "relationships_intents",
+  "title": "Relationship Intents",
+  "description": "Intent categories used in relationship reasoning.",
+  "entries": [
+    {
+      "id": "relationship_intent_authority",
+      "title": "Authority",
+      "description": "The speaker is using authority or command."
+    },
+    {
+      "id": "relationship_intent_procedural",
+      "title": "Procedural",
+      "description": "The speaker is following a procedure."
+    },
+    {
+      "id": "relationship_intent_bribery",
+      "title": "Bribery",
+      "description": "The speaker implies improper influence or payment."
+    },
+    {
+      "id": "relationship_intent_discretion",
+      "title": "Discretion",
+      "description": "The speaker is using lawful discretion."
+    },
+    {
+      "id": "relationship_intent_care",
+      "title": "Care",
+      "description": "The speaker is protecting or caring for someone."
+    },
+    {
+      "id": "relationship_intent_neutral",
+      "title": "Neutral",
+      "description": "The speaker is merely observing or reporting."
+    }
+  ]
+}

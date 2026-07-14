@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "society_actions",
+  "title": "Society Actions",
+  "description": "Canonical society actions for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "society_action_bullying",
+      "title": "Action Bullying",
+      "description": "Action Bullying as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_harassment",
+      "title": "Action Harassment",
+      "description": "Action Harassment as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_discrimination",
+      "title": "Action Discrimination",
+      "description": "Action Discrimination as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_racism",
+      "title": "Action Racism",
+      "description": "Action Racism as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_tribalism",
+      "title": "Action Tribalism",
+      "description": "Action Tribalism as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_humiliation",
+      "title": "Action Humiliation",
+      "description": "Action Humiliation as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_insult",
+      "title": "Action Insult",
+      "description": "Action Insult as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_defamation",
+      "title": "Action Defamation",
+      "description": "Action Defamation as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_mockery",
+      "title": "Action Mockery",
+      "description": "Action Mockery as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_hate",
+      "title": "Action Hate",
+      "description": "Action Hate as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_support",
+      "title": "Action Support",
+      "description": "Action Support as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_care",
+      "title": "Action Care",
+      "description": "Action Care as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_abuse_of_authority",
+      "title": "Action Abuse Of Authority",
+      "description": "Action Abuse Of Authority as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_neglect",
+      "title": "Action Neglect",
+      "description": "Action Neglect as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_rumor_spreading",
+      "title": "Action Rumor Spreading",
+      "description": "Action Rumor Spreading as a reviewer-relevant social action."
+    },
+    {
+      "id": "society_action_public_panic",
+      "title": "Action Public Panic",
+      "description": "Action Public Panic as a reviewer-relevant social action."
+    }
+  ]
+}

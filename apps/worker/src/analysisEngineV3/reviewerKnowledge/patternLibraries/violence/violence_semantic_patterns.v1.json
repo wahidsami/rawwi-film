@@ -1,0 +1,3445 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "violence_semantic_patterns",
+    "title": "Violence Semantic Patterns",
+    "description": "Semantic patterns for the violence universe.",
+    "concepts": [
+      {
+        "id": "violence_event",
+        "title": "Violence Event",
+        "description": "A violent act, harm event, or physical escalation."
+      },
+      {
+        "id": "violence_threat",
+        "title": "Violence Threat",
+        "description": "A threat, warning, or intimidation that signals harm."
+      },
+      {
+        "id": "violence_attempt",
+        "title": "Violence Attempt",
+        "description": "An attempt to commit violence that may or may not succeed."
+      },
+      {
+        "id": "violence_glorification",
+        "title": "Violence Glorification",
+        "description": "Praise, celebration, or normalization of violence."
+      },
+      {
+        "id": "violence_encouragement",
+        "title": "Violence Encouragement",
+        "description": "Encouraging someone else to use violence."
+      },
+      {
+        "id": "violence_instruction",
+        "title": "Violence Instruction",
+        "description": "Operational guidance for violent action."
+      },
+      {
+        "id": "violence_reward",
+        "title": "Violence Reward",
+        "description": "Violence framed as rewarded, desirable, or beneficial."
+      },
+      {
+        "id": "violence_revenge",
+        "title": "Violence Revenge",
+        "description": "Violence framed as retaliation or payback."
+      },
+      {
+        "id": "violence_self_defense",
+        "title": "Violence Self Defense",
+        "description": "Violence framed as self-defense or protection."
+      },
+      {
+        "id": "violence_law_enforcement",
+        "title": "Violence Law Enforcement",
+        "description": "Violence framed as police, security, or lawful force."
+      },
+      {
+        "id": "violence_accident",
+        "title": "Violence Accident",
+        "description": "Violence that happens by accident or unintended impact."
+      },
+      {
+        "id": "violence_negligence",
+        "title": "Violence Negligence",
+        "description": "Violence caused by negligence, omission, or carelessness."
+      },
+      {
+        "id": "violence_condemnation",
+        "title": "Violence Condemnation",
+        "description": "Violence mentioned to reject, criticize, or condemn it."
+      },
+      {
+        "id": "violence_documentary",
+        "title": "Violence Documentary",
+        "description": "Violence discussed in documentary or factual reporting context."
+      },
+      {
+        "id": "violence_historical",
+        "title": "Violence Historical",
+        "description": "Violence framed as a historical event or record."
+      },
+      {
+        "id": "violence_training",
+        "title": "Violence Training",
+        "description": "Violence used in training, safety, or educational practice."
+      },
+      {
+        "id": "violence_game",
+        "title": "Violence Game",
+        "description": "Violence embedded in a game, simulation, or play context."
+      },
+      {
+        "id": "violence_fantasy",
+        "title": "Violence Fantasy",
+        "description": "Violence in fantasy, mythic, or imaginary settings."
+      },
+      {
+        "id": "violence_comedy",
+        "title": "Violence Comedy",
+        "description": "Violence played for humor, irony, or comedic effect."
+      },
+      {
+        "id": "violence_dream",
+        "title": "Violence Dream",
+        "description": "Violence appearing in a dream or dreamlike scene."
+      },
+      {
+        "id": "violence_flashback",
+        "title": "Violence Flashback",
+        "description": "Violence shown as a flashback or recollection."
+      },
+      {
+        "id": "violence_memory",
+        "title": "Violence Memory",
+        "description": "Violence recalled from memory or remembered experience."
+      },
+      {
+        "id": "violence_imagination",
+        "title": "Violence Imagination",
+        "description": "Violence imagined, hypothesized, or mentally simulated."
+      },
+      {
+        "id": "violence_failed_attempt",
+        "title": "Violence Failed Attempt",
+        "description": "A violent act that fails or is interrupted."
+      },
+      {
+        "id": "violence_offscreen",
+        "title": "Violence Offscreen",
+        "description": "Violence implied to occur outside the visible frame."
+      },
+      {
+        "id": "violence_scene_description",
+        "title": "Violence Scene Description",
+        "description": "Violence conveyed through descriptive scene language."
+      },
+      {
+        "id": "violence_dialogue",
+        "title": "Violence Dialogue",
+        "description": "Violence delivered in dialogue or quoted speech."
+      },
+      {
+        "id": "violence_reported_by_character",
+        "title": "Violence Reported by Character",
+        "description": "Violence described by one character about another event."
+      },
+      {
+        "id": "violence_observed",
+        "title": "Violence Observed",
+        "description": "Violence directly witnessed or observed by a character or narrator."
+      },
+      {
+        "id": "violence_implied",
+        "title": "Violence Implied",
+        "description": "Violence suggested by context rather than explicit wording."
+      },
+      {
+        "id": "violence_against_child",
+        "title": "Violence Against Child",
+        "description": "Violence targeting a child or minor."
+      },
+      {
+        "id": "violence_against_woman",
+        "title": "Violence Against Woman",
+        "description": "Violence targeting a woman or female-presenting target."
+      },
+      {
+        "id": "violence_against_disabled",
+        "title": "Violence Against Disabled",
+        "description": "Violence targeting a disabled person."
+      },
+      {
+        "id": "violence_against_public",
+        "title": "Violence Against Public",
+        "description": "Violence targeting the public, crowd, or civilians."
+      },
+      {
+        "id": "violence_against_state",
+        "title": "Violence Against State",
+        "description": "Violence targeting state institutions or authority."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "violence_pattern_violence_event",
+      "title": "Violence Event",
+      "description": "A violent act, harm event, or physical escalation.",
+      "primary_concept_id": "violence_event",
+      "related_concept_ids": [],
+      "direct_expressions": [
+        "Violence Event مباشر",
+        "violence violence event",
+        "Violence Event literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Event",
+        "hint of Violence Event"
+      ],
+      "semantic_intent": [
+        "violence event",
+        "physical harm"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Event.",
+        "Speaker, target, and scene context support Violence Event."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Event.",
+        "The scene is clearly a documentary or historical report about Violence Event."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Event.",
+        "A fantasy, game, comedy, or dream context around Violence Event."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Event without endorsement.",
+        "A quotation that does not endorse Violence Event."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Event.",
+        "The previous sentence changes the meaning of Violence Event."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Event from other violence concepts.",
+        "Do not collapse Violence Event into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_event_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_event_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_event_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_event_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Event",
+          "note": "Use for violence event."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_event_ex_1",
+          "title": "Violence Event example",
+          "text": "Violence Event example text",
+          "expected_outcome": "Violence Event",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_threat",
+      "title": "Violence Threat",
+      "description": "A threat, warning, or intimidation that signals harm.",
+      "primary_concept_id": "violence_threat",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Threat مباشر",
+        "violence violence threat",
+        "Violence Threat literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Threat",
+        "hint of Violence Threat"
+      ],
+      "semantic_intent": [
+        "threat",
+        "intimidation"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Threat.",
+        "Speaker, target, and scene context support Violence Threat."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Threat.",
+        "The scene is clearly a documentary or historical report about Violence Threat."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Threat.",
+        "A fantasy, game, comedy, or dream context around Violence Threat."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Threat without endorsement.",
+        "A quotation that does not endorse Violence Threat."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Threat.",
+        "The previous sentence changes the meaning of Violence Threat."
+      ],
+      "scene_indicators": [
+        "narration",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Threat from other violence concepts.",
+        "Do not collapse Violence Threat into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_threat_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_threat_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_threat_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_threat_gcam_1",
+          "article_id": 14,
+          "atom_ids": [
+            "9-1"
+          ],
+          "role": "Violence Threat",
+          "note": "Use for violence threat."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_threat_ex_1",
+          "title": "Violence Threat example",
+          "text": "Violence Threat example text",
+          "expected_outcome": "Violence Threat",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_attempt",
+      "title": "Violence Attempt",
+      "description": "An attempt to commit violence that may or may not succeed.",
+      "primary_concept_id": "violence_attempt",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Attempt مباشر",
+        "violence violence attempt",
+        "Violence Attempt literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Attempt",
+        "hint of Violence Attempt"
+      ],
+      "semantic_intent": [
+        "attempt",
+        "incomplete harm"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Attempt.",
+        "Speaker, target, and scene context support Violence Attempt."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Attempt.",
+        "The scene is clearly a documentary or historical report about Violence Attempt."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Attempt.",
+        "A fantasy, game, comedy, or dream context around Violence Attempt."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Attempt without endorsement.",
+        "A quotation that does not endorse Violence Attempt."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Attempt.",
+        "The previous sentence changes the meaning of Violence Attempt."
+      ],
+      "scene_indicators": [
+        "scene description",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Attempt from other violence concepts.",
+        "Do not collapse Violence Attempt into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_attempt_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_attempt_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_attempt_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_attempt_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Attempt",
+          "note": "Use for violence attempt."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_attempt_ex_1",
+          "title": "Violence Attempt example",
+          "text": "Violence Attempt example text",
+          "expected_outcome": "Violence Attempt",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_glorification",
+      "title": "Violence Glorification",
+      "description": "Praise, celebration, or normalization of violence.",
+      "primary_concept_id": "violence_glorification",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Glorification مباشر",
+        "violence violence glorification",
+        "Violence Glorification literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Glorification",
+        "hint of Violence Glorification"
+      ],
+      "semantic_intent": [
+        "glorification",
+        "endorsement"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Glorification.",
+        "Speaker, target, and scene context support Violence Glorification."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Glorification.",
+        "The scene is clearly a documentary or historical report about Violence Glorification."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Glorification.",
+        "A fantasy, game, comedy, or dream context around Violence Glorification."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Glorification without endorsement.",
+        "A quotation that does not endorse Violence Glorification."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Glorification.",
+        "The previous sentence changes the meaning of Violence Glorification."
+      ],
+      "scene_indicators": [
+        "observed",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Glorification from other violence concepts.",
+        "Do not collapse Violence Glorification into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_glorification_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_glorification_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_glorification_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_glorification_gcam_1",
+          "article_id": 14,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Glorification",
+          "note": "Use for violence glorification."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_glorification_ex_1",
+          "title": "Violence Glorification example",
+          "text": "Violence Glorification example text",
+          "expected_outcome": "Violence Glorification",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_encouragement",
+      "title": "Violence Encouragement",
+      "description": "Encouraging someone else to use violence.",
+      "primary_concept_id": "violence_encouragement",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Encouragement مباشر",
+        "violence violence encouragement",
+        "Violence Encouragement literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Encouragement",
+        "hint of Violence Encouragement"
+      ],
+      "semantic_intent": [
+        "encouragement",
+        "promotion"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Encouragement.",
+        "Speaker, target, and scene context support Violence Encouragement."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Encouragement.",
+        "The scene is clearly a documentary or historical report about Violence Encouragement."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Encouragement.",
+        "A fantasy, game, comedy, or dream context around Violence Encouragement."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Encouragement without endorsement.",
+        "A quotation that does not endorse Violence Encouragement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Encouragement.",
+        "The previous sentence changes the meaning of Violence Encouragement."
+      ],
+      "scene_indicators": [
+        "reported by character",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Encouragement from other violence concepts.",
+        "Do not collapse Violence Encouragement into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_encouragement_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_encouragement_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_encouragement_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_encouragement_gcam_1",
+          "article_id": 14,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Encouragement",
+          "note": "Use for violence encouragement."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_encouragement_ex_1",
+          "title": "Violence Encouragement example",
+          "text": "Violence Encouragement example text",
+          "expected_outcome": "Violence Encouragement",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_instruction",
+      "title": "Violence Instruction",
+      "description": "Operational guidance for violent action.",
+      "primary_concept_id": "violence_instruction",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Instruction مباشر",
+        "violence violence instruction",
+        "Violence Instruction literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Instruction",
+        "hint of Violence Instruction"
+      ],
+      "semantic_intent": [
+        "instruction",
+        "operational guidance"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Instruction.",
+        "Speaker, target, and scene context support Violence Instruction."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Instruction.",
+        "The scene is clearly a documentary or historical report about Violence Instruction."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Instruction.",
+        "A fantasy, game, comedy, or dream context around Violence Instruction."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Instruction without endorsement.",
+        "A quotation that does not endorse Violence Instruction."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Instruction.",
+        "The previous sentence changes the meaning of Violence Instruction."
+      ],
+      "scene_indicators": [
+        "offscreen",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Instruction from other violence concepts.",
+        "Do not collapse Violence Instruction into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_instruction_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_instruction_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_instruction_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_instruction_gcam_1",
+          "article_id": 14,
+          "atom_ids": [
+            "14-3"
+          ],
+          "role": "Violence Instruction",
+          "note": "Use for violence instruction."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_instruction_ex_1",
+          "title": "Violence Instruction example",
+          "text": "Violence Instruction example text",
+          "expected_outcome": "Violence Instruction",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_reward",
+      "title": "Violence Reward",
+      "description": "Violence framed as rewarded, desirable, or beneficial.",
+      "primary_concept_id": "violence_reward",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Reward مباشر",
+        "violence violence reward",
+        "Violence Reward literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Reward",
+        "hint of Violence Reward"
+      ],
+      "semantic_intent": [
+        "reward",
+        "positive framing"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Reward.",
+        "Speaker, target, and scene context support Violence Reward."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Reward.",
+        "The scene is clearly a documentary or historical report about Violence Reward."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Reward.",
+        "A fantasy, game, comedy, or dream context around Violence Reward."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Reward without endorsement.",
+        "A quotation that does not endorse Violence Reward."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Reward.",
+        "The previous sentence changes the meaning of Violence Reward."
+      ],
+      "scene_indicators": [
+        "implied",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Reward from other violence concepts.",
+        "Do not collapse Violence Reward into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_reward_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_reward_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_reward_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_reward_gcam_1",
+          "article_id": 14,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Reward",
+          "note": "Use for violence reward."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_reward_ex_1",
+          "title": "Violence Reward example",
+          "text": "Violence Reward example text",
+          "expected_outcome": "Violence Reward",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_revenge",
+      "title": "Violence Revenge",
+      "description": "Violence framed as retaliation or payback.",
+      "primary_concept_id": "violence_revenge",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Revenge مباشر",
+        "violence violence revenge",
+        "Violence Revenge literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Revenge",
+        "hint of Violence Revenge"
+      ],
+      "semantic_intent": [
+        "revenge",
+        "retaliation"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Revenge.",
+        "Speaker, target, and scene context support Violence Revenge."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Revenge.",
+        "The scene is clearly a documentary or historical report about Violence Revenge."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Revenge.",
+        "A fantasy, game, comedy, or dream context around Violence Revenge."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Revenge without endorsement.",
+        "A quotation that does not endorse Violence Revenge."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Revenge.",
+        "The previous sentence changes the meaning of Violence Revenge."
+      ],
+      "scene_indicators": [
+        "documentary",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Revenge from other violence concepts.",
+        "Do not collapse Violence Revenge into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_revenge_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_revenge_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_revenge_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_revenge_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Revenge",
+          "note": "Use for violence revenge."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_revenge_ex_1",
+          "title": "Violence Revenge example",
+          "text": "Violence Revenge example text",
+          "expected_outcome": "Violence Revenge",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_self_defense",
+      "title": "Violence Self Defense",
+      "description": "Violence framed as self-defense or protection.",
+      "primary_concept_id": "violence_self_defense",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Self Defense مباشر",
+        "violence violence self defense",
+        "Violence Self Defense literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Self Defense",
+        "hint of Violence Self Defense"
+      ],
+      "semantic_intent": [
+        "self-defense",
+        "protection"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Self Defense.",
+        "Speaker, target, and scene context support Violence Self Defense."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Self Defense.",
+        "The scene is clearly a documentary or historical report about Violence Self Defense."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Self Defense.",
+        "A fantasy, game, comedy, or dream context around Violence Self Defense."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Self Defense without endorsement.",
+        "A quotation that does not endorse Violence Self Defense."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Self Defense.",
+        "The previous sentence changes the meaning of Violence Self Defense."
+      ],
+      "scene_indicators": [
+        "historical",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Self Defense from other violence concepts.",
+        "Do not collapse Violence Self Defense into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_self_defense_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_self_defense_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_self_defense_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_self_defense_gcam_1",
+          "article_id": 12,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Self Defense",
+          "note": "Use for violence self defense."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_self_defense_ex_1",
+          "title": "Violence Self Defense example",
+          "text": "Violence Self Defense example text",
+          "expected_outcome": "Violence Self Defense",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_law_enforcement",
+      "title": "Violence Law Enforcement",
+      "description": "Violence framed as police, security, or lawful force.",
+      "primary_concept_id": "violence_law_enforcement",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Law Enforcement مباشر",
+        "violence violence law enforcement",
+        "Violence Law Enforcement literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Law Enforcement",
+        "hint of Violence Law Enforcement"
+      ],
+      "semantic_intent": [
+        "law enforcement",
+        "authorized force"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Law Enforcement.",
+        "Speaker, target, and scene context support Violence Law Enforcement."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Law Enforcement.",
+        "The scene is clearly a documentary or historical report about Violence Law Enforcement."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Law Enforcement.",
+        "A fantasy, game, comedy, or dream context around Violence Law Enforcement."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Law Enforcement without endorsement.",
+        "A quotation that does not endorse Violence Law Enforcement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Law Enforcement.",
+        "The previous sentence changes the meaning of Violence Law Enforcement."
+      ],
+      "scene_indicators": [
+        "training",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Law Enforcement from other violence concepts.",
+        "Do not collapse Violence Law Enforcement into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_law_enforcement_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_law_enforcement_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_law_enforcement_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_law_enforcement_gcam_1",
+          "article_id": 12,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Law Enforcement",
+          "note": "Use for violence law enforcement."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_law_enforcement_ex_1",
+          "title": "Violence Law Enforcement example",
+          "text": "Violence Law Enforcement example text",
+          "expected_outcome": "Violence Law Enforcement",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_accident",
+      "title": "Violence Accident",
+      "description": "Violence that happens by accident or unintended impact.",
+      "primary_concept_id": "violence_accident",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Accident مباشر",
+        "violence violence accident",
+        "Violence Accident literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Accident",
+        "hint of Violence Accident"
+      ],
+      "semantic_intent": [
+        "accident",
+        "unintentional harm"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Accident.",
+        "Speaker, target, and scene context support Violence Accident."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Accident.",
+        "The scene is clearly a documentary or historical report about Violence Accident."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Accident.",
+        "A fantasy, game, comedy, or dream context around Violence Accident."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Accident without endorsement.",
+        "A quotation that does not endorse Violence Accident."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Accident.",
+        "The previous sentence changes the meaning of Violence Accident."
+      ],
+      "scene_indicators": [
+        "game",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Accident from other violence concepts.",
+        "Do not collapse Violence Accident into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_accident_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_accident_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_accident_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_accident_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Accident",
+          "note": "Use for violence accident."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_accident_ex_1",
+          "title": "Violence Accident example",
+          "text": "Violence Accident example text",
+          "expected_outcome": "Violence Accident",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_negligence",
+      "title": "Violence Negligence",
+      "description": "Violence caused by negligence, omission, or carelessness.",
+      "primary_concept_id": "violence_negligence",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Negligence مباشر",
+        "violence violence negligence",
+        "Violence Negligence literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Negligence",
+        "hint of Violence Negligence"
+      ],
+      "semantic_intent": [
+        "negligence",
+        "omission"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Negligence.",
+        "Speaker, target, and scene context support Violence Negligence."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Negligence.",
+        "The scene is clearly a documentary or historical report about Violence Negligence."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Negligence.",
+        "A fantasy, game, comedy, or dream context around Violence Negligence."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Negligence without endorsement.",
+        "A quotation that does not endorse Violence Negligence."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Negligence.",
+        "The previous sentence changes the meaning of Violence Negligence."
+      ],
+      "scene_indicators": [
+        "fantasy",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Negligence from other violence concepts.",
+        "Do not collapse Violence Negligence into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_negligence_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_negligence_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_negligence_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_negligence_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Negligence",
+          "note": "Use for violence negligence."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_negligence_ex_1",
+          "title": "Violence Negligence example",
+          "text": "Violence Negligence example text",
+          "expected_outcome": "Violence Negligence",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_condemnation",
+      "title": "Violence Condemnation",
+      "description": "Violence mentioned to reject, criticize, or condemn it.",
+      "primary_concept_id": "violence_condemnation",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Condemnation مباشر",
+        "violence violence condemnation",
+        "Violence Condemnation literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Condemnation",
+        "hint of Violence Condemnation"
+      ],
+      "semantic_intent": [
+        "condemnation",
+        "rejection"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Condemnation.",
+        "Speaker, target, and scene context support Violence Condemnation."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Condemnation.",
+        "The scene is clearly a documentary or historical report about Violence Condemnation."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Condemnation.",
+        "A fantasy, game, comedy, or dream context around Violence Condemnation."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Condemnation without endorsement.",
+        "A quotation that does not endorse Violence Condemnation."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Condemnation.",
+        "The previous sentence changes the meaning of Violence Condemnation."
+      ],
+      "scene_indicators": [
+        "comedy",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Condemnation from other violence concepts.",
+        "Do not collapse Violence Condemnation into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_condemnation_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_condemnation_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_condemnation_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_condemnation_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Condemnation",
+          "note": "Use for violence condemnation."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_condemnation_ex_1",
+          "title": "Violence Condemnation example",
+          "text": "Violence Condemnation example text",
+          "expected_outcome": "Violence Condemnation",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_documentary",
+      "title": "Violence Documentary",
+      "description": "Violence discussed in documentary or factual reporting context.",
+      "primary_concept_id": "violence_documentary",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Documentary مباشر",
+        "violence violence documentary",
+        "Violence Documentary literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Documentary",
+        "hint of Violence Documentary"
+      ],
+      "semantic_intent": [
+        "documentary",
+        "factual reporting"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Documentary.",
+        "Speaker, target, and scene context support Violence Documentary."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Documentary.",
+        "The scene is clearly a documentary or historical report about Violence Documentary."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Documentary.",
+        "A fantasy, game, comedy, or dream context around Violence Documentary."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Documentary without endorsement.",
+        "A quotation that does not endorse Violence Documentary."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Documentary.",
+        "The previous sentence changes the meaning of Violence Documentary."
+      ],
+      "scene_indicators": [
+        "dream",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Documentary from other violence concepts.",
+        "Do not collapse Violence Documentary into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_documentary_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_documentary_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_documentary_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_documentary_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Documentary",
+          "note": "Use for violence documentary."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_documentary_ex_1",
+          "title": "Violence Documentary example",
+          "text": "Violence Documentary example text",
+          "expected_outcome": "Violence Documentary",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_historical",
+      "title": "Violence Historical",
+      "description": "Violence framed as a historical event or record.",
+      "primary_concept_id": "violence_historical",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Historical مباشر",
+        "violence violence historical",
+        "Violence Historical literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Historical",
+        "hint of Violence Historical"
+      ],
+      "semantic_intent": [
+        "historical narration",
+        "archive"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Historical.",
+        "Speaker, target, and scene context support Violence Historical."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Historical.",
+        "The scene is clearly a documentary or historical report about Violence Historical."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Historical.",
+        "A fantasy, game, comedy, or dream context around Violence Historical."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Historical without endorsement.",
+        "A quotation that does not endorse Violence Historical."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Historical.",
+        "The previous sentence changes the meaning of Violence Historical."
+      ],
+      "scene_indicators": [
+        "flashback",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Historical from other violence concepts.",
+        "Do not collapse Violence Historical into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_historical_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_historical_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_historical_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_historical_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Historical",
+          "note": "Use for violence historical."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_historical_ex_1",
+          "title": "Violence Historical example",
+          "text": "Violence Historical example text",
+          "expected_outcome": "Violence Historical",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_training",
+      "title": "Violence Training",
+      "description": "Violence used in training, safety, or educational practice.",
+      "primary_concept_id": "violence_training",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Training مباشر",
+        "violence violence training",
+        "Violence Training literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Training",
+        "hint of Violence Training"
+      ],
+      "semantic_intent": [
+        "training",
+        "safety instruction"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Training.",
+        "Speaker, target, and scene context support Violence Training."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Training.",
+        "The scene is clearly a documentary or historical report about Violence Training."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Training.",
+        "A fantasy, game, comedy, or dream context around Violence Training."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Training without endorsement.",
+        "A quotation that does not endorse Violence Training."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Training.",
+        "The previous sentence changes the meaning of Violence Training."
+      ],
+      "scene_indicators": [
+        "memory",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Training from other violence concepts.",
+        "Do not collapse Violence Training into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_training_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_training_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_training_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_training_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Training",
+          "note": "Use for violence training."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_training_ex_1",
+          "title": "Violence Training example",
+          "text": "Violence Training example text",
+          "expected_outcome": "Violence Training",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_game",
+      "title": "Violence Game",
+      "description": "Violence embedded in a game, simulation, or play context.",
+      "primary_concept_id": "violence_game",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Game مباشر",
+        "violence violence game",
+        "Violence Game literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Game",
+        "hint of Violence Game"
+      ],
+      "semantic_intent": [
+        "game",
+        "simulation"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Game.",
+        "Speaker, target, and scene context support Violence Game."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Game.",
+        "The scene is clearly a documentary or historical report about Violence Game."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Game.",
+        "A fantasy, game, comedy, or dream context around Violence Game."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Game without endorsement.",
+        "A quotation that does not endorse Violence Game."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Game.",
+        "The previous sentence changes the meaning of Violence Game."
+      ],
+      "scene_indicators": [
+        "imagination",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Game from other violence concepts.",
+        "Do not collapse Violence Game into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_game_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_game_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_game_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_game_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Game",
+          "note": "Use for violence game."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_game_ex_1",
+          "title": "Violence Game example",
+          "text": "Violence Game example text",
+          "expected_outcome": "Violence Game",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_fantasy",
+      "title": "Violence Fantasy",
+      "description": "Violence in fantasy, mythic, or imaginary settings.",
+      "primary_concept_id": "violence_fantasy",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Fantasy مباشر",
+        "violence violence fantasy",
+        "Violence Fantasy literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Fantasy",
+        "hint of Violence Fantasy"
+      ],
+      "semantic_intent": [
+        "fantasy",
+        "imaginary action"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Fantasy.",
+        "Speaker, target, and scene context support Violence Fantasy."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Fantasy.",
+        "The scene is clearly a documentary or historical report about Violence Fantasy."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Fantasy.",
+        "A fantasy, game, comedy, or dream context around Violence Fantasy."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Fantasy without endorsement.",
+        "A quotation that does not endorse Violence Fantasy."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Fantasy.",
+        "The previous sentence changes the meaning of Violence Fantasy."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Fantasy from other violence concepts.",
+        "Do not collapse Violence Fantasy into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_fantasy_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_fantasy_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_fantasy_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_fantasy_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Fantasy",
+          "note": "Use for violence fantasy."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_fantasy_ex_1",
+          "title": "Violence Fantasy example",
+          "text": "Violence Fantasy example text",
+          "expected_outcome": "Violence Fantasy",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_comedy",
+      "title": "Violence Comedy",
+      "description": "Violence played for humor, irony, or comedic effect.",
+      "primary_concept_id": "violence_comedy",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Comedy مباشر",
+        "violence violence comedy",
+        "Violence Comedy literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Comedy",
+        "hint of Violence Comedy"
+      ],
+      "semantic_intent": [
+        "comedy",
+        "humor"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Comedy.",
+        "Speaker, target, and scene context support Violence Comedy."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Comedy.",
+        "The scene is clearly a documentary or historical report about Violence Comedy."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Comedy.",
+        "A fantasy, game, comedy, or dream context around Violence Comedy."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Comedy without endorsement.",
+        "A quotation that does not endorse Violence Comedy."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Comedy.",
+        "The previous sentence changes the meaning of Violence Comedy."
+      ],
+      "scene_indicators": [
+        "narration",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Comedy from other violence concepts.",
+        "Do not collapse Violence Comedy into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_comedy_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_comedy_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_comedy_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_comedy_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Comedy",
+          "note": "Use for violence comedy."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_comedy_ex_1",
+          "title": "Violence Comedy example",
+          "text": "Violence Comedy example text",
+          "expected_outcome": "Violence Comedy",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_dream",
+      "title": "Violence Dream",
+      "description": "Violence appearing in a dream or dreamlike scene.",
+      "primary_concept_id": "violence_dream",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Dream مباشر",
+        "violence violence dream",
+        "Violence Dream literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Dream",
+        "hint of Violence Dream"
+      ],
+      "semantic_intent": [
+        "dream",
+        "dreamlike action"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Dream.",
+        "Speaker, target, and scene context support Violence Dream."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Dream.",
+        "The scene is clearly a documentary or historical report about Violence Dream."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Dream.",
+        "A fantasy, game, comedy, or dream context around Violence Dream."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Dream without endorsement.",
+        "A quotation that does not endorse Violence Dream."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Dream.",
+        "The previous sentence changes the meaning of Violence Dream."
+      ],
+      "scene_indicators": [
+        "scene description",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Dream from other violence concepts.",
+        "Do not collapse Violence Dream into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_dream_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_dream_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_dream_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_dream_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Dream",
+          "note": "Use for violence dream."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_dream_ex_1",
+          "title": "Violence Dream example",
+          "text": "Violence Dream example text",
+          "expected_outcome": "Violence Dream",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_flashback",
+      "title": "Violence Flashback",
+      "description": "Violence shown as a flashback or recollection.",
+      "primary_concept_id": "violence_flashback",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Flashback مباشر",
+        "violence violence flashback",
+        "Violence Flashback literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Flashback",
+        "hint of Violence Flashback"
+      ],
+      "semantic_intent": [
+        "flashback",
+        "recollection"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Flashback.",
+        "Speaker, target, and scene context support Violence Flashback."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Flashback.",
+        "The scene is clearly a documentary or historical report about Violence Flashback."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Flashback.",
+        "A fantasy, game, comedy, or dream context around Violence Flashback."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Flashback without endorsement.",
+        "A quotation that does not endorse Violence Flashback."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Flashback.",
+        "The previous sentence changes the meaning of Violence Flashback."
+      ],
+      "scene_indicators": [
+        "observed",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Flashback from other violence concepts.",
+        "Do not collapse Violence Flashback into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_flashback_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_flashback_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_flashback_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_flashback_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Flashback",
+          "note": "Use for violence flashback."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_flashback_ex_1",
+          "title": "Violence Flashback example",
+          "text": "Violence Flashback example text",
+          "expected_outcome": "Violence Flashback",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_memory",
+      "title": "Violence Memory",
+      "description": "Violence recalled from memory or remembered experience.",
+      "primary_concept_id": "violence_memory",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Memory مباشر",
+        "violence violence memory",
+        "Violence Memory literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Memory",
+        "hint of Violence Memory"
+      ],
+      "semantic_intent": [
+        "memory",
+        "recollection"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Memory.",
+        "Speaker, target, and scene context support Violence Memory."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Memory.",
+        "The scene is clearly a documentary or historical report about Violence Memory."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Memory.",
+        "A fantasy, game, comedy, or dream context around Violence Memory."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Memory without endorsement.",
+        "A quotation that does not endorse Violence Memory."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Memory.",
+        "The previous sentence changes the meaning of Violence Memory."
+      ],
+      "scene_indicators": [
+        "reported by character",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Memory from other violence concepts.",
+        "Do not collapse Violence Memory into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_memory_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_memory_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_memory_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_memory_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Memory",
+          "note": "Use for violence memory."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_memory_ex_1",
+          "title": "Violence Memory example",
+          "text": "Violence Memory example text",
+          "expected_outcome": "Violence Memory",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_imagination",
+      "title": "Violence Imagination",
+      "description": "Violence imagined, hypothesized, or mentally simulated.",
+      "primary_concept_id": "violence_imagination",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Imagination مباشر",
+        "violence violence imagination",
+        "Violence Imagination literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Imagination",
+        "hint of Violence Imagination"
+      ],
+      "semantic_intent": [
+        "imagination",
+        "hypothesis"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Imagination.",
+        "Speaker, target, and scene context support Violence Imagination."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Imagination.",
+        "The scene is clearly a documentary or historical report about Violence Imagination."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Imagination.",
+        "A fantasy, game, comedy, or dream context around Violence Imagination."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Imagination without endorsement.",
+        "A quotation that does not endorse Violence Imagination."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Imagination.",
+        "The previous sentence changes the meaning of Violence Imagination."
+      ],
+      "scene_indicators": [
+        "offscreen",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Imagination from other violence concepts.",
+        "Do not collapse Violence Imagination into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_imagination_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_imagination_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_imagination_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_imagination_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Imagination",
+          "note": "Use for violence imagination."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_imagination_ex_1",
+          "title": "Violence Imagination example",
+          "text": "Violence Imagination example text",
+          "expected_outcome": "Violence Imagination",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_failed_attempt",
+      "title": "Violence Failed Attempt",
+      "description": "A violent act that fails or is interrupted.",
+      "primary_concept_id": "violence_failed_attempt",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Failed Attempt مباشر",
+        "violence violence failed attempt",
+        "Violence Failed Attempt literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Failed Attempt",
+        "hint of Violence Failed Attempt"
+      ],
+      "semantic_intent": [
+        "attempt",
+        "failed action"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Failed Attempt.",
+        "Speaker, target, and scene context support Violence Failed Attempt."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Failed Attempt.",
+        "The scene is clearly a documentary or historical report about Violence Failed Attempt."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Failed Attempt.",
+        "A fantasy, game, comedy, or dream context around Violence Failed Attempt."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Failed Attempt without endorsement.",
+        "A quotation that does not endorse Violence Failed Attempt."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Failed Attempt.",
+        "The previous sentence changes the meaning of Violence Failed Attempt."
+      ],
+      "scene_indicators": [
+        "implied",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Failed Attempt from other violence concepts.",
+        "Do not collapse Violence Failed Attempt into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_failed_attempt_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_failed_attempt_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_failed_attempt_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_failed_attempt_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Failed Attempt",
+          "note": "Use for violence failed attempt."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_failed_attempt_ex_1",
+          "title": "Violence Failed Attempt example",
+          "text": "Violence Failed Attempt example text",
+          "expected_outcome": "Violence Failed Attempt",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_offscreen",
+      "title": "Violence Offscreen",
+      "description": "Violence implied to occur outside the visible frame.",
+      "primary_concept_id": "violence_offscreen",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Offscreen مباشر",
+        "violence violence offscreen",
+        "Violence Offscreen literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Offscreen",
+        "hint of Violence Offscreen"
+      ],
+      "semantic_intent": [
+        "offscreen violence",
+        "implied harm"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Offscreen.",
+        "Speaker, target, and scene context support Violence Offscreen."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Offscreen.",
+        "The scene is clearly a documentary or historical report about Violence Offscreen."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Offscreen.",
+        "A fantasy, game, comedy, or dream context around Violence Offscreen."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Offscreen without endorsement.",
+        "A quotation that does not endorse Violence Offscreen."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Offscreen.",
+        "The previous sentence changes the meaning of Violence Offscreen."
+      ],
+      "scene_indicators": [
+        "documentary",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Offscreen from other violence concepts.",
+        "Do not collapse Violence Offscreen into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_offscreen_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_offscreen_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_offscreen_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_offscreen_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Offscreen",
+          "note": "Use for violence offscreen."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_offscreen_ex_1",
+          "title": "Violence Offscreen example",
+          "text": "Violence Offscreen example text",
+          "expected_outcome": "Violence Offscreen",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_scene_description",
+      "title": "Violence Scene Description",
+      "description": "Violence conveyed through descriptive scene language.",
+      "primary_concept_id": "violence_scene_description",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Scene Description مباشر",
+        "violence violence scene description",
+        "Violence Scene Description literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Scene Description",
+        "hint of Violence Scene Description"
+      ],
+      "semantic_intent": [
+        "scene description",
+        "narration"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Scene Description.",
+        "Speaker, target, and scene context support Violence Scene Description."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Scene Description.",
+        "The scene is clearly a documentary or historical report about Violence Scene Description."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Scene Description.",
+        "A fantasy, game, comedy, or dream context around Violence Scene Description."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Scene Description without endorsement.",
+        "A quotation that does not endorse Violence Scene Description."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Scene Description.",
+        "The previous sentence changes the meaning of Violence Scene Description."
+      ],
+      "scene_indicators": [
+        "historical",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Scene Description from other violence concepts.",
+        "Do not collapse Violence Scene Description into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_scene_description_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_scene_description_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_scene_description_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_scene_description_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Scene Description",
+          "note": "Use for violence scene description."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_scene_description_ex_1",
+          "title": "Violence Scene Description example",
+          "text": "Violence Scene Description example text",
+          "expected_outcome": "Violence Scene Description",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_dialogue",
+      "title": "Violence Dialogue",
+      "description": "Violence delivered in dialogue or quoted speech.",
+      "primary_concept_id": "violence_dialogue",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Dialogue مباشر",
+        "violence violence dialogue",
+        "Violence Dialogue literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Dialogue",
+        "hint of Violence Dialogue"
+      ],
+      "semantic_intent": [
+        "dialogue",
+        "quoted speech"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Dialogue.",
+        "Speaker, target, and scene context support Violence Dialogue."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Dialogue.",
+        "The scene is clearly a documentary or historical report about Violence Dialogue."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Dialogue.",
+        "A fantasy, game, comedy, or dream context around Violence Dialogue."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Dialogue without endorsement.",
+        "A quotation that does not endorse Violence Dialogue."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Dialogue.",
+        "The previous sentence changes the meaning of Violence Dialogue."
+      ],
+      "scene_indicators": [
+        "training",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Dialogue from other violence concepts.",
+        "Do not collapse Violence Dialogue into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_dialogue_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_dialogue_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_dialogue_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_dialogue_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Dialogue",
+          "note": "Use for violence dialogue."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_dialogue_ex_1",
+          "title": "Violence Dialogue example",
+          "text": "Violence Dialogue example text",
+          "expected_outcome": "Violence Dialogue",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_reported_by_character",
+      "title": "Violence Reported by Character",
+      "description": "Violence described by one character about another event.",
+      "primary_concept_id": "violence_reported_by_character",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Reported by Character مباشر",
+        "violence violence reported by character",
+        "Violence Reported by Character literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Reported by Character",
+        "hint of Violence Reported by Character"
+      ],
+      "semantic_intent": [
+        "reported speech",
+        "character report"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Reported by Character.",
+        "Speaker, target, and scene context support Violence Reported by Character."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Reported by Character.",
+        "The scene is clearly a documentary or historical report about Violence Reported by Character."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Reported by Character.",
+        "A fantasy, game, comedy, or dream context around Violence Reported by Character."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Reported by Character without endorsement.",
+        "A quotation that does not endorse Violence Reported by Character."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Reported by Character.",
+        "The previous sentence changes the meaning of Violence Reported by Character."
+      ],
+      "scene_indicators": [
+        "game",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Reported by Character from other violence concepts.",
+        "Do not collapse Violence Reported by Character into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_reported_by_character_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_reported_by_character_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_reported_by_character_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_reported_by_character_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Reported by Character",
+          "note": "Use for violence reported by character."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_reported_by_character_ex_1",
+          "title": "Violence Reported by Character example",
+          "text": "Violence Reported by Character example text",
+          "expected_outcome": "Violence Reported by Character",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_observed",
+      "title": "Violence Observed",
+      "description": "Violence directly witnessed or observed by a character or narrator.",
+      "primary_concept_id": "violence_observed",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Observed مباشر",
+        "violence violence observed",
+        "Violence Observed literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Observed",
+        "hint of Violence Observed"
+      ],
+      "semantic_intent": [
+        "observed violence",
+        "witnessed action"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Observed.",
+        "Speaker, target, and scene context support Violence Observed."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Observed.",
+        "The scene is clearly a documentary or historical report about Violence Observed."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Observed.",
+        "A fantasy, game, comedy, or dream context around Violence Observed."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Observed without endorsement.",
+        "A quotation that does not endorse Violence Observed."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Observed.",
+        "The previous sentence changes the meaning of Violence Observed."
+      ],
+      "scene_indicators": [
+        "fantasy",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Observed from other violence concepts.",
+        "Do not collapse Violence Observed into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_observed_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_observed_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_observed_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_observed_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Observed",
+          "note": "Use for violence observed."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_observed_ex_1",
+          "title": "Violence Observed example",
+          "text": "Violence Observed example text",
+          "expected_outcome": "Violence Observed",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_implied",
+      "title": "Violence Implied",
+      "description": "Violence suggested by context rather than explicit wording.",
+      "primary_concept_id": "violence_implied",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Implied مباشر",
+        "violence violence implied",
+        "Violence Implied literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Implied",
+        "hint of Violence Implied"
+      ],
+      "semantic_intent": [
+        "implied violence",
+        "contextual inference"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Implied.",
+        "Speaker, target, and scene context support Violence Implied."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Implied.",
+        "The scene is clearly a documentary or historical report about Violence Implied."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Implied.",
+        "A fantasy, game, comedy, or dream context around Violence Implied."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Implied without endorsement.",
+        "A quotation that does not endorse Violence Implied."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Implied.",
+        "The previous sentence changes the meaning of Violence Implied."
+      ],
+      "scene_indicators": [
+        "comedy",
+        "context-dependent"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Implied from other violence concepts.",
+        "Do not collapse Violence Implied into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_implied_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_implied_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_implied_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_implied_gcam_1",
+          "article_id": 9,
+          "atom_ids": [
+            "9-3"
+          ],
+          "role": "Violence Implied",
+          "note": "Use for violence implied."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_implied_ex_1",
+          "title": "Violence Implied example",
+          "text": "Violence Implied example text",
+          "expected_outcome": "Violence Implied",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_against_child",
+      "title": "Violence Against Child",
+      "description": "Violence targeting a child or minor.",
+      "primary_concept_id": "violence_against_child",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Against Child مباشر",
+        "violence violence against child",
+        "Violence Against Child literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Against Child",
+        "hint of Violence Against Child"
+      ],
+      "semantic_intent": [
+        "protected-target violence",
+        "child harm"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Against Child.",
+        "Speaker, target, and scene context support Violence Against Child."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Against Child.",
+        "The scene is clearly a documentary or historical report about Violence Against Child."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Against Child.",
+        "A fantasy, game, comedy, or dream context around Violence Against Child."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Against Child without endorsement.",
+        "A quotation that does not endorse Violence Against Child."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Against Child.",
+        "The previous sentence changes the meaning of Violence Against Child."
+      ],
+      "scene_indicators": [
+        "dream",
+        "targeted harm"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Against Child from other violence concepts.",
+        "Do not collapse Violence Against Child into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_against_child_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_against_child_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_against_child_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_against_child_gcam_1",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "Violence Against Child",
+          "note": "Use for violence against child."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_against_child_ex_1",
+          "title": "Violence Against Child example",
+          "text": "Violence Against Child example text",
+          "expected_outcome": "Violence Against Child",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_against_woman",
+      "title": "Violence Against Woman",
+      "description": "Violence targeting a woman or female-presenting target.",
+      "primary_concept_id": "violence_against_woman",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Against Woman مباشر",
+        "violence violence against woman",
+        "Violence Against Woman literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Against Woman",
+        "hint of Violence Against Woman"
+      ],
+      "semantic_intent": [
+        "protected-target violence",
+        "woman harm"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Against Woman.",
+        "Speaker, target, and scene context support Violence Against Woman."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Against Woman.",
+        "The scene is clearly a documentary or historical report about Violence Against Woman."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Against Woman.",
+        "A fantasy, game, comedy, or dream context around Violence Against Woman."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Against Woman without endorsement.",
+        "A quotation that does not endorse Violence Against Woman."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Against Woman.",
+        "The previous sentence changes the meaning of Violence Against Woman."
+      ],
+      "scene_indicators": [
+        "flashback",
+        "targeted harm"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Against Woman from other violence concepts.",
+        "Do not collapse Violence Against Woman into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_against_woman_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_against_woman_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_against_woman_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_against_woman_gcam_1",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "Violence Against Woman",
+          "note": "Use for violence against woman."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_against_woman_ex_1",
+          "title": "Violence Against Woman example",
+          "text": "Violence Against Woman example text",
+          "expected_outcome": "Violence Against Woman",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_against_disabled",
+      "title": "Violence Against Disabled",
+      "description": "Violence targeting a disabled person.",
+      "primary_concept_id": "violence_against_disabled",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Against Disabled مباشر",
+        "violence violence against disabled",
+        "Violence Against Disabled literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Against Disabled",
+        "hint of Violence Against Disabled"
+      ],
+      "semantic_intent": [
+        "protected-target violence",
+        "disabled-target harm"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Against Disabled.",
+        "Speaker, target, and scene context support Violence Against Disabled."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Against Disabled.",
+        "The scene is clearly a documentary or historical report about Violence Against Disabled."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Against Disabled.",
+        "A fantasy, game, comedy, or dream context around Violence Against Disabled."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Against Disabled without endorsement.",
+        "A quotation that does not endorse Violence Against Disabled."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Against Disabled.",
+        "The previous sentence changes the meaning of Violence Against Disabled."
+      ],
+      "scene_indicators": [
+        "memory",
+        "targeted harm"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Against Disabled from other violence concepts.",
+        "Do not collapse Violence Against Disabled into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_against_disabled_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_against_disabled_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_against_disabled_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_against_disabled_gcam_1",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "Violence Against Disabled",
+          "note": "Use for violence against disabled."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_against_disabled_ex_1",
+          "title": "Violence Against Disabled example",
+          "text": "Violence Against Disabled example text",
+          "expected_outcome": "Violence Against Disabled",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_against_public",
+      "title": "Violence Against Public",
+      "description": "Violence targeting the public, crowd, or civilians.",
+      "primary_concept_id": "violence_against_public",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Against Public مباشر",
+        "violence violence against public",
+        "Violence Against Public literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Against Public",
+        "hint of Violence Against Public"
+      ],
+      "semantic_intent": [
+        "public-target violence",
+        "crowd harm"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Against Public.",
+        "Speaker, target, and scene context support Violence Against Public."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Against Public.",
+        "The scene is clearly a documentary or historical report about Violence Against Public."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Against Public.",
+        "A fantasy, game, comedy, or dream context around Violence Against Public."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Against Public without endorsement.",
+        "A quotation that does not endorse Violence Against Public."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Against Public.",
+        "The previous sentence changes the meaning of Violence Against Public."
+      ],
+      "scene_indicators": [
+        "imagination",
+        "targeted harm"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Against Public from other violence concepts.",
+        "Do not collapse Violence Against Public into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_against_public_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_against_public_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_against_public_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_against_public_gcam_1",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "Violence Against Public",
+          "note": "Use for violence against public."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_against_public_ex_1",
+          "title": "Violence Against Public example",
+          "text": "Violence Against Public example text",
+          "expected_outcome": "Violence Against Public",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "violence_pattern_violence_against_state",
+      "title": "Violence Against State",
+      "description": "Violence targeting state institutions or authority.",
+      "primary_concept_id": "violence_against_state",
+      "related_concept_ids": [
+        "violence_event"
+      ],
+      "direct_expressions": [
+        "Violence Against State مباشر",
+        "violence violence against state",
+        "Violence Against State literal cue"
+      ],
+      "indirect_expressions": [
+        "cue implying Violence Against State",
+        "hint of Violence Against State"
+      ],
+      "semantic_intent": [
+        "state-target violence",
+        "authority harm"
+      ],
+      "supporting_evidence": [
+        "The chunk contains a literal span tied to Violence Against State.",
+        "Speaker, target, and scene context support Violence Against State."
+      ],
+      "contradictory_evidence": [
+        "The scene is clearly a condemnation of Violence Against State.",
+        "The scene is clearly a documentary or historical report about Violence Against State."
+      ],
+      "false_positives": [
+        "A lawful or protective context around Violence Against State.",
+        "A fantasy, game, comedy, or dream context around Violence Against State."
+      ],
+      "counter_examples": [
+        "A neutral mention of Violence Against State without endorsement.",
+        "A quotation that does not endorse Violence Against State."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies Violence Against State.",
+        "The previous sentence changes the meaning of Violence Against State."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "targeted harm"
+      ],
+      "reviewer_guidance": [
+        "Separate Violence Against State from other violence concepts.",
+        "Do not collapse Violence Against State into a single violence node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "violence_against_state_high",
+          "title": "Direct and explicit",
+          "description": "The cue is explicit and direct.",
+          "confidence": 98
+        },
+        {
+          "id": "violence_against_state_medium",
+          "title": "Contextual",
+          "description": "The cue is supported by context only.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "violence_against_state_g1",
+          "from_concept_id": "violence_threat",
+          "to_concept_id": "violence_event",
+          "relation": "supports",
+          "note": "Primary violence relationship."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "violence_against_state_gcam_1",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "role": "Violence Against State",
+          "note": "Use for violence against state."
+        }
+      ],
+      "examples": [
+        {
+          "id": "violence_against_state_ex_1",
+          "title": "Violence Against State example",
+          "text": "Violence Against State example text",
+          "expected_outcome": "Violence Against State",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

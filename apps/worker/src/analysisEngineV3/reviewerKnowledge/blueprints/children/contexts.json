@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "children_contexts",
+  "title": "Children Contexts",
+  "description": "Context types that influence child-safety interpretation.",
+  "entries": [
+    {
+      "id": "children_context_educational",
+      "title": "Educational",
+      "description": "Instructional or teaching-oriented framing."
+    },
+    {
+      "id": "children_context_documentary",
+      "title": "Documentary",
+      "description": "Documentary or factual report framing."
+    },
+    {
+      "id": "children_context_historical",
+      "title": "Historical",
+      "description": "Historical narration or reference."
+    },
+    {
+      "id": "children_context_fiction",
+      "title": "Fiction",
+      "description": "Explicitly fictional framing."
+    },
+    {
+      "id": "children_context_medical",
+      "title": "Medical",
+      "description": "Medical examination or healthcare context."
+    },
+    {
+      "id": "children_context_court",
+      "title": "Court",
+      "description": "Courtroom or testimony framing."
+    },
+    {
+      "id": "children_context_police_investigation",
+      "title": "Police Investigation",
+      "description": "Investigative or law-enforcement framing."
+    },
+    {
+      "id": "children_context_news",
+      "title": "News",
+      "description": "News reporting or bulletin framing."
+    },
+    {
+      "id": "children_context_dream",
+      "title": "Dream",
+      "description": "Dream or dreamlike framing."
+    },
+    {
+      "id": "children_context_flashback",
+      "title": "Flashback",
+      "description": "Recollection of prior events."
+    }
+  ]
+}

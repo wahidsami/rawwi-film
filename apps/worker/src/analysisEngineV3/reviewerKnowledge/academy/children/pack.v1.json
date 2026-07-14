@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_05_children",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Children and Vulnerable Persons Reviewer Knowledge Pack",
+    "description": "Full academy knowledge pack for child safety, vulnerable persons, abuse, neglect, grooming, exploitation, and disability harm.",
+    "supported_concepts": [
+      "children",
+      "child_harm",
+      "age_rating",
+      "vulnerable_person",
+      "child_abuse",
+      "child_recruitment",
+      "bullying",
+      "criminal_exploitation",
+      "elderly_person",
+      "fear_induction",
+      "psychological_abuse",
+      "sexual_exploitation",
+      "threatening",
+      "disabled_adult",
+      "neglect",
+      "grooming",
+      "trafficking",
+      "disability_abuse"
+    ]
+  },
+  "pack": {
+    "id": "v3_05_children",
+    "module_id": "v3_05_children",
+    "title": "Children and Vulnerable Persons Reviewer Knowledge Pack",
+    "trigger_concept_ids": [
+      "child_harm",
+      "violence",
+      "sexuality",
+      "organized_crime"
+    ],
+    "purpose": "Provide reviewer knowledge for child safety, vulnerable persons, abuse, neglect, exploitation, grooming, trafficking, and disability harm.",
+    "protected_interests": [
+      "child safety",
+      "vulnerable-person safety",
+      "physical safety",
+      "psychological safety",
+      "family care",
+      "dignity",
+      "protection from exploitation",
+      "protection from trafficking",
+      "protection from forced labor",
+      "protection from disability abuse"
+    ],
+    "protected_concepts": [
+      "child harm",
+      "children",
+      "infants",
+      "teenagers",
+      "minors",
+      "vulnerable persons",
+      "parents",
+      "guardians",
+      "bullying",
+      "child recruitment",
+      "disabled adults",
+      "criminal exploitation",
+      "elderly persons",
+      "fear induction",
+      "neglect",
+      "abandonment",
+      "psychological abuse",
+      "grooming",
+      "sexual exploitation",
+      "threatening",
+      "trafficking",
+      "forced labor",
+      "mocking disability",
+      "discrimination",
+      "isolation"
+    ],
+    "required_evidence": [
+      "A literal chunk-level span showing direct abuse, neglect, exploitation, grooming, trafficking, forced labor, discrimination, or endangerment.",
+      "A scene or dialogue span that makes the child or vulnerable person the clear target of the harmful action.",
+      "A cross-sentence pattern that links a later sentence to the earlier vulnerable target or harmful act."
+    ],
+    "insufficient_evidence": [
+      "A neutral mention of a child, teenager, parent, or guardian without harmful treatment.",
+      "A medical, educational, documentary, court, or police reference that only records the topic.",
+      "A fictional, dreamlike, or flashback scene that does not endorse the harmful act."
+    ],
+    "reviewer_heuristics": [
+      "Anchor the finding to the exact literal phrase that shows harm, coercion, neglect, or exploitation.",
+      "Do not treat parental discipline as abuse unless the text clearly shows harm, humiliation, fear, or endangerment.",
+      "Look for grooming, isolation, secrecy, gifts, control, or recruitment when exploitation is implied.",
+      "Treat disability mockery and discrimination as separate from general rudeness when a protected person is targeted.",
+      "Use the scene, dialogue, and cross-sentence context to determine whether the conduct is harmful, protective, or neutral."
+    ],
+    "legal_exceptions": [
+      "Educational",
+      "Medical",
+      "Historical",
+      "Court",
+      "News",
+      "Dream",
+      "Flashback",
+      "Documentary",
+      "Fiction",
+      "Condemnation"
+    ],
+    "positive_examples": [
+      "Direct abuse: يضرب الطفل بقسوة — explicit physical abuse.",
+      "Grooming: أعطي الطفل هدايا لكي يبقى سرًا معي — manipulative grooming.",
+      "Neglect: تركته بلا طعام أو ماء طوال اليوم — direct neglect.",
+      "Disability mockery: يضحكون على الإعاقة أمامه — deliberate disability humiliation.",
+      "Forced labor: أجبر القاصر على العمل ليلًا — forced labor of a minor.",
+      "Trafficking: نقلوه بين المدن لاستغلاله — trafficking-style exploitation."
+    ],
+    "negative_examples": [
+      "Educational lecture: يشرح المعلم كيف نحمي الطفل من الأذى — protective education.",
+      "Medical examination: يفحص الطبيب الطفل بعد الإصابة — clinical context only.",
+      "Court testimony: يعيد الشاهد العبارة داخل المحكمة — quoted legal evidence.",
+      "Historical narration: يصف الوثائقي واقعة قديمة عن الإهمال — historical account only.",
+      "Fictional rescue: تنقذه القصة في النهاية — protective fiction with no endorsement.",
+      "Parenting guidance: يشرح الأب قواعد البيت بهدوء — discipline without explicit harm."
+    ],
+    "common_false_positives": [
+      "A parent setting rules or discipline without humiliation, fear, or injury.",
+      "A doctor, teacher, or reporter discussing child safety in a factual way.",
+      "A quotation, flashback, or fictional villain line that the story rejects.",
+      "A mention of disability without mockery or discriminatory framing.",
+      "A neutral scene where the child or vulnerable person is protected rather than harmed."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "طفل",
+        "concept_id": "children_child",
+        "relation": "Direct child anchor",
+        "note": "Strong anchor for child-target reasoning."
+      },
+      {
+        "term": "قاصر",
+        "concept_id": "children_minor",
+        "relation": "Minor anchor",
+        "note": "Signals a minor rather than an adult."
+      },
+      {
+        "term": "رضيع",
+        "concept_id": "children_infant",
+        "relation": "Infant anchor",
+        "note": "Signals heightened vulnerability."
+      },
+      {
+        "term": "إعاقة",
+        "concept_id": "children_disabled_child",
+        "relation": "Disability anchor",
+        "note": "Relevant when abuse or mockery targets disability."
+      },
+      {
+        "term": "وصي",
+        "concept_id": "children_guardian",
+        "relation": "Guardian anchor",
+        "note": "Relevant for responsibility and care."
+      },
+      {
+        "term": "إهمال",
+        "concept_id": "children_neglect",
+        "relation": "Neglect anchor",
+        "note": "Strong indicator of omission-based harm."
+      },
+      {
+        "term": "استغلال",
+        "concept_id": "children_exploitation",
+        "relation": "Exploitation anchor",
+        "note": "Strong when a vulnerable person is used for gain."
+      },
+      {
+        "term": "تحرش",
+        "concept_id": "children_grooming",
+        "relation": "Grooming anchor",
+        "note": "Relevant when secrecy, gifts, or control appear."
+      },
+      {
+        "term": "اتجار",
+        "concept_id": "children_human_trafficking",
+        "relation": "Trafficking anchor",
+        "note": "Strong when movement or control for exploitation appears."
+      },
+      {
+        "term": "سخرية من الإعاقة",
+        "concept_id": "children_mocking_disability",
+        "relation": "Mocking-disability anchor",
+        "note": "Strong indicator of protected-person abuse."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 5,
+        "atom_ids": [
+          "5-1",
+          "5-2"
+        ],
+        "role": "Age-sensitive protection",
+        "note": "Use when child or vulnerable-person content also affects rating sensitivity."
+      },
+      {
+        "article_id": 6,
+        "atom_ids": [
+          "6-1",
+          "6-2",
+          "6-3",
+          "6-4",
+          "6-5"
+        ],
+        "role": "Child safety and abuse",
+        "note": "Primary mapping for abuse, neglect, grooming, trafficking, forced labor, and endangerment."
+      },
+      {
+        "article_id": 17,
+        "atom_ids": [
+          "17-1",
+          "17-2",
+          "17-3",
+          "17-4",
+          "17-5"
+        ],
+        "role": "Dignity and discrimination",
+        "note": "Use when the content humiliates, bullies, isolates, or discriminates against a vulnerable person."
+      }
+    ],
+    "reporting_guidance": [
+      "Report the shortest literal span that demonstrates the harmful act or harmful intent.",
+      "Explain whether the target is a child, vulnerable adult, disabled person, parent, or guardian.",
+      "If the context is educational, medical, documentary, court, news, or clearly protective, say so and suppress or downgrade the finding.",
+      "Use article 6 for direct abuse or exploitation and article 17 for dignity and discrimination issues."
+    ]
+  }
+}

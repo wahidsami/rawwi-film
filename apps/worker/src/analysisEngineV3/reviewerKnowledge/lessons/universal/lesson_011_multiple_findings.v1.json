@@ -1,0 +1,127 @@
+{
+  "id": "lesson_011_multiple_findings",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 11,
+  "title": "Multiple Findings in One Scene",
+  "summary": "Teach the reviewer that a single scene may legitimately contain multiple independent findings and each must be evaluated separately.",
+  "dependsOn": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition"
+  ],
+  "learningObjectives": [
+    "Recognize multiple findings in a single scene.",
+    "Separate independent violations.",
+    "Avoid merging unrelated findings.",
+    "Avoid stopping after the first detected issue."
+  ],
+  "definitions": {
+    "finding": "An independently reportable observation supported by evidence.",
+    "compoundScene": "A scene containing multiple reviewable events.",
+    "duplicateFinding": "The same finding reported more than once.",
+    "independentFinding": "A unique finding supported by separate evidence."
+  },
+  "reviewerPrinciples": [
+    "A scene may contain zero, one, or many findings.",
+    "Each finding requires its own evidence.",
+    "Do not merge unrelated findings.",
+    "Do not duplicate identical findings.",
+    "Evaluate every significant event independently."
+  ],
+  "reviewerQuestions": [
+    "Have all independent findings been identified?",
+    "Are any findings duplicates?",
+    "Does each finding have separate evidence?",
+    "Can each finding stand alone in the report?",
+    "Would another reviewer identify the same number of findings?"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Are multiple harmful events present?",
+      "yes": 2,
+      "no": "Single Finding"
+    },
+    {
+      "step": 2,
+      "question": "Can each event be independently supported?",
+      "yes": "Create Separate Findings",
+      "no": "Merge or Review"
+    }
+  ],
+  "examples": [
+    {
+      "text": "A child is threatened with a weapon while drugs are being sold.",
+      "findings": [
+        "Threat against child",
+        "Weapon-related concern",
+        "Drug activity"
+      ]
+    },
+    {
+      "text": "One insult repeated several times in the same exchange.",
+      "findings": [
+        "Single profanity finding"
+      ]
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Report one finding because the first violation was detected.",
+      "reason": "Incomplete review."
+    },
+    {
+      "text": "Create five identical findings for one repeated insult.",
+      "reason": "Duplicate reporting."
+    }
+  ],
+  "commonMistakes": [
+    "Stopping after the first finding.",
+    "Duplicating findings.",
+    "Combining unrelated findings.",
+    "Ignoring secondary violations."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Can one scene contain multiple valid findings?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Should duplicate findings be reported separately?",
+        "answer": "No"
+      },
+      {
+        "question": "Must each finding have its own evidence?",
+        "answer": "Yes"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Detect all valid findings.",
+    "Reduce missed violations.",
+    "Prevent duplicate reporting."
+  ],
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "multi_findings_scene",
+    "duplicate_detection",
+    "compound_scene"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 11
+  }
+}

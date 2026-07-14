@@ -1,0 +1,71 @@
+{
+  "id": "decision_014_direct_sectarian_language",
+  "version": "1.0.0",
+  "title": "Direct sectarian language",
+  "summary": "Direct division between religious groups.",
+  "originalScenario": "A speaker calls for believers to be split into hostile camps.",
+  "reviewQuestion": "Is this direct sectarian division?",
+  "initialSuspicion": "Direct division language.",
+  "possibleConcepts": [
+    "sectarian_division",
+    "religious_unity",
+    "religious_hate_speech"
+  ],
+  "supportingEvidence": [
+    "split into hostile camps"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Dialogue attack.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "Religious communities.",
+  "intentAnalysis": "Incitement.",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check context",
+    "Apply religion pack heuristics",
+    "Map to GCAM article"
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 3,
+      "atom_ids": [],
+      "note": "Sectarian division."
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct incitement is strong evidence.",
+  "benchmarkTags": [
+    "religion",
+    "sectarian",
+    "division"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "religion_pattern_sectarian"
+  ],
+  "relatedBlueprintConcepts": [
+    "religion_sectarian_division",
+    "religion_religious_unity",
+    "religion_religious_hate_speech"
+  ]
+}

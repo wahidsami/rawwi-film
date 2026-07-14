@@ -1,0 +1,772 @@
+{
+  "id": "lesson_001_relationship_framework",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 1,
+  "title": "Relationship Framework",
+  "summary": "Teach the reviewer how relationship context changes the meaning of the same sentence.",
+  "learningObjectives": [
+    "Identify the relationship before judging meaning.",
+    "Treat the same sentence differently across roles.",
+    "Use scene context and later lines to refine confidence.",
+    "Avoid turning relationship reasoning into a violation by itself."
+  ],
+  "definitions": {
+    "relationship": [
+      {
+        "id": "relationship_family_parent_child",
+        "title": "Family Parent Child",
+        "description": "Shared meaning for family parent child."
+      },
+      {
+        "id": "relationship_family_siblings",
+        "title": "Family Siblings",
+        "description": "Shared meaning for family siblings."
+      },
+      {
+        "id": "relationship_family_spouses",
+        "title": "Family Spouses",
+        "description": "Shared meaning for family spouses."
+      },
+      {
+        "id": "relationship_family_extended",
+        "title": "Family Extended",
+        "description": "Shared meaning for family extended."
+      },
+      {
+        "id": "relationship_father_child",
+        "title": "Father Child",
+        "description": "Shared meaning for father child."
+      },
+      {
+        "id": "relationship_mother_child",
+        "title": "Mother Child",
+        "description": "Shared meaning for mother child."
+      },
+      {
+        "id": "relationship_guardian_child",
+        "title": "Guardian Child",
+        "description": "Shared meaning for guardian child."
+      },
+      {
+        "id": "relationship_child_child",
+        "title": "Child Child",
+        "description": "Shared meaning for child child."
+      },
+      {
+        "id": "relationship_adult_child",
+        "title": "Adult Child",
+        "description": "Shared meaning for adult child."
+      },
+      {
+        "id": "relationship_adult_adult",
+        "title": "Adult Adult",
+        "description": "Shared meaning for adult adult."
+      },
+      {
+        "id": "relationship_teacher_student",
+        "title": "Teacher Student",
+        "description": "Shared meaning for teacher student."
+      },
+      {
+        "id": "relationship_doctor_patient",
+        "title": "Doctor Patient",
+        "description": "Shared meaning for doctor patient."
+      },
+      {
+        "id": "relationship_therapist_patient",
+        "title": "Therapist Patient",
+        "description": "Shared meaning for therapist patient."
+      },
+      {
+        "id": "relationship_imam_follower",
+        "title": "Imam Follower",
+        "description": "Shared meaning for imam follower."
+      },
+      {
+        "id": "relationship_leader_follower",
+        "title": "Leader Follower",
+        "description": "Shared meaning for leader follower."
+      },
+      {
+        "id": "relationship_commander_soldier",
+        "title": "Commander Soldier",
+        "description": "Shared meaning for commander soldier."
+      },
+      {
+        "id": "relationship_police_suspect",
+        "title": "Police Suspect",
+        "description": "Shared meaning for police suspect."
+      },
+      {
+        "id": "relationship_police_commander",
+        "title": "Police Commander",
+        "description": "Shared meaning for police commander."
+      },
+      {
+        "id": "relationship_police_officer_public",
+        "title": "Police Officer Public",
+        "description": "Shared meaning for police officer public."
+      },
+      {
+        "id": "relationship_judge_accused",
+        "title": "Judge Accused",
+        "description": "Shared meaning for judge accused."
+      },
+      {
+        "id": "relationship_judge_public",
+        "title": "Judge Public",
+        "description": "Shared meaning for judge public."
+      },
+      {
+        "id": "relationship_lawyer_client",
+        "title": "Lawyer Client",
+        "description": "Shared meaning for lawyer client."
+      },
+      {
+        "id": "relationship_employer_employee",
+        "title": "Employer Employee",
+        "description": "Shared meaning for employer employee."
+      },
+      {
+        "id": "relationship_coworkers",
+        "title": "Coworkers",
+        "description": "Shared meaning for coworkers."
+      },
+      {
+        "id": "relationship_friend_friend",
+        "title": "Friend Friend",
+        "description": "Shared meaning for friend friend."
+      },
+      {
+        "id": "relationship_neighbor_neighbor",
+        "title": "Neighbor Neighbor",
+        "description": "Shared meaning for neighbor neighbor."
+      },
+      {
+        "id": "relationship_stranger_stranger",
+        "title": "Stranger Stranger",
+        "description": "Shared meaning for stranger stranger."
+      },
+      {
+        "id": "relationship_government_citizen",
+        "title": "Government Citizen",
+        "description": "Shared meaning for government citizen."
+      },
+      {
+        "id": "relationship_government_employee_public",
+        "title": "Government Employee Public",
+        "description": "Shared meaning for government employee public."
+      },
+      {
+        "id": "relationship_journalist_source",
+        "title": "Journalist Source",
+        "description": "Shared meaning for journalist source."
+      },
+      {
+        "id": "relationship_actor_audience",
+        "title": "Actor Audience",
+        "description": "Shared meaning for actor audience."
+      },
+      {
+        "id": "relationship_story_narrator",
+        "title": "Story Narrator",
+        "description": "Shared meaning for story narrator."
+      },
+      {
+        "id": "relationship_narrator_character",
+        "title": "Narrator Character",
+        "description": "Shared meaning for narrator character."
+      },
+      {
+        "id": "relationship_customer_vendor",
+        "title": "Customer Vendor",
+        "description": "Shared meaning for customer vendor."
+      },
+      {
+        "id": "relationship_officer_public",
+        "title": "Officer Public",
+        "description": "Shared meaning for officer public."
+      },
+      {
+        "id": "relationship_criminal_victim",
+        "title": "Criminal Victim",
+        "description": "Shared meaning for criminal victim."
+      },
+      {
+        "id": "relationship_criminal_accomplice",
+        "title": "Criminal Accomplice",
+        "description": "Shared meaning for criminal accomplice."
+      },
+      {
+        "id": "relationship_gang_member",
+        "title": "Gang Member",
+        "description": "Shared meaning for gang member."
+      },
+      {
+        "id": "relationship_gang_leader",
+        "title": "Gang Leader",
+        "description": "Shared meaning for gang leader."
+      },
+      {
+        "id": "relationship_terrorist_recruit",
+        "title": "Terrorist Recruit",
+        "description": "Shared meaning for terrorist recruit."
+      },
+      {
+        "id": "relationship_disabled_caregiver",
+        "title": "Disabled Caregiver",
+        "description": "Shared meaning for disabled caregiver."
+      },
+      {
+        "id": "relationship_elderly_caregiver",
+        "title": "Elderly Caregiver",
+        "description": "Shared meaning for elderly caregiver."
+      }
+    ],
+    "actions": [
+      {
+        "id": "relationship_action_command",
+        "title": "Command",
+        "description": "A direct order that reveals authority or control."
+      },
+      {
+        "id": "relationship_action_release",
+        "title": "Release",
+        "description": "A procedural or discretionary release."
+      },
+      {
+        "id": "relationship_action_ignore",
+        "title": "Ignore",
+        "description": "A refusal or decision not to respond."
+      },
+      {
+        "id": "relationship_action_discipline",
+        "title": "Discipline",
+        "description": "A corrective or punitive action within a relationship."
+      },
+      {
+        "id": "relationship_action_recruit",
+        "title": "Recruit",
+        "description": "An attempt to draw someone into a group or cause."
+      },
+      {
+        "id": "relationship_action_request",
+        "title": "Request",
+        "description": "A polite or indirect appeal."
+      }
+    ],
+    "targets": [
+      {
+        "id": "relationship_target_child",
+        "title": "Child",
+        "description": "The child role as a target of speech or action."
+      },
+      {
+        "id": "relationship_target_public",
+        "title": "Public",
+        "description": "The public or a general audience."
+      },
+      {
+        "id": "relationship_target_suspect",
+        "title": "Suspect",
+        "description": "A suspect or accused person."
+      },
+      {
+        "id": "relationship_target_employee",
+        "title": "Employee",
+        "description": "A worker in an employment relationship."
+      },
+      {
+        "id": "relationship_target_source",
+        "title": "Source",
+        "description": "A journalist source or confidential informant."
+      },
+      {
+        "id": "relationship_target_patient",
+        "title": "Patient",
+        "description": "A patient receiving treatment or care."
+      }
+    ],
+    "contexts": [
+      {
+        "id": "relationship_context_dialogue",
+        "title": "Dialogue",
+        "description": "Speech exchanged between characters."
+      },
+      {
+        "id": "relationship_context_narration",
+        "title": "Narration",
+        "description": "Narrative description rather than dialogue."
+      },
+      {
+        "id": "relationship_context_scene_description",
+        "title": "Scene Description",
+        "description": "Visual or staging description."
+      },
+      {
+        "id": "relationship_context_documentary",
+        "title": "Documentary",
+        "description": "Documentary framing or reporting."
+      },
+      {
+        "id": "relationship_context_court",
+        "title": "Court",
+        "description": "Courtroom or legal testimony context."
+      },
+      {
+        "id": "relationship_context_news",
+        "title": "News",
+        "description": "News reporting or journalistic framing."
+      },
+      {
+        "id": "relationship_context_education",
+        "title": "Education",
+        "description": "Teaching, explanation, or instruction."
+      },
+      {
+        "id": "relationship_context_flashback",
+        "title": "Flashback",
+        "description": "A recollected past event."
+      },
+      {
+        "id": "relationship_context_dream",
+        "title": "Dream",
+        "description": "A dream or dreamlike frame."
+      }
+    ],
+    "intents": [
+      {
+        "id": "relationship_intent_authority",
+        "title": "Authority",
+        "description": "The speaker is using authority or command."
+      },
+      {
+        "id": "relationship_intent_procedural",
+        "title": "Procedural",
+        "description": "The speaker is following a procedure."
+      },
+      {
+        "id": "relationship_intent_bribery",
+        "title": "Bribery",
+        "description": "The speaker implies improper influence or payment."
+      },
+      {
+        "id": "relationship_intent_discretion",
+        "title": "Discretion",
+        "description": "The speaker is using lawful discretion."
+      },
+      {
+        "id": "relationship_intent_care",
+        "title": "Care",
+        "description": "The speaker is protecting or caring for someone."
+      },
+      {
+        "id": "relationship_intent_neutral",
+        "title": "Neutral",
+        "description": "The speaker is merely observing or reporting."
+      }
+    ],
+    "evidence": [
+      {
+        "id": "relationship_evidence_speaker",
+        "title": "Speaker Identity",
+        "description": "Who is speaking or acting."
+      },
+      {
+        "id": "relationship_evidence_target",
+        "title": "Target Identity",
+        "description": "Who is being addressed or affected."
+      },
+      {
+        "id": "relationship_evidence_context",
+        "title": "Context",
+        "description": "Surrounding scene or dialogue."
+      },
+      {
+        "id": "relationship_evidence_followup",
+        "title": "Follow-up",
+        "description": "A later line that clarifies the meaning."
+      },
+      {
+        "id": "relationship_evidence_quotation",
+        "title": "Quotation",
+        "description": "Quoted speech or reported speech."
+      },
+      {
+        "id": "relationship_evidence_relation",
+        "title": "Relationship",
+        "description": "The social or authority relationship."
+      }
+    ],
+    "reviewerQuestions": [
+      {
+        "id": "relationship_question_speaker",
+        "purpose": "Speaker",
+        "expectedAnswerFormat": "Who is speaking?",
+        "reasoningGuidance": "Identify the speaker before interpretation.",
+        "evidenceRequirements": [
+          "Speaker",
+          "Identify the speaker before interpretation."
+        ]
+      },
+      {
+        "id": "relationship_question_target",
+        "purpose": "Target",
+        "expectedAnswerFormat": "Who is the target?",
+        "reasoningGuidance": "Check whether the target is explicit or implied.",
+        "evidenceRequirements": [
+          "Target",
+          "Check whether the target is explicit or implied."
+        ]
+      },
+      {
+        "id": "relationship_question_relationship",
+        "purpose": "Relationship",
+        "expectedAnswerFormat": "What is the relationship?",
+        "reasoningGuidance": "A relationship can change the same sentence.",
+        "evidenceRequirements": [
+          "Relationship",
+          "A relationship can change the same sentence."
+        ]
+      },
+      {
+        "id": "relationship_question_intent",
+        "purpose": "Intent",
+        "expectedAnswerFormat": "What is the intent?",
+        "reasoningGuidance": "Intent can turn the same words into different outcomes.",
+        "evidenceRequirements": [
+          "Intent",
+          "Intent can turn the same words into different outcomes."
+        ]
+      },
+      {
+        "id": "relationship_question_context",
+        "purpose": "Context",
+        "expectedAnswerFormat": "What is the scene context?",
+        "reasoningGuidance": "Dialogue, narration, and documentary framing matter.",
+        "evidenceRequirements": [
+          "Context",
+          "Dialogue, narration, and documentary framing matter."
+        ]
+      },
+      {
+        "id": "relationship_question_evidence",
+        "purpose": "Evidence",
+        "expectedAnswerFormat": "What evidence supports the reading?",
+        "reasoningGuidance": "Use only supported evidence.",
+        "evidenceRequirements": [
+          "Evidence",
+          "Use only supported evidence."
+        ]
+      },
+      {
+        "id": "relationship_question_confidence",
+        "purpose": "Confidence",
+        "expectedAnswerFormat": "How confident are we?",
+        "reasoningGuidance": "Lower confidence when relationship context is ambiguous.",
+        "evidenceRequirements": [
+          "Confidence",
+          "Lower confidence when relationship context is ambiguous."
+        ]
+      }
+    ]
+  },
+  "reviewerPrinciples": [
+    "The same sentence can mean different things for different relationships.",
+    "Relationships influence reasoning and confidence, not violations by themselves.",
+    "Authority, family, friendship, and formal roles all matter.",
+    "Quote, narration, and scene context can neutralize an apparent command."
+  ],
+  "reviewerMethodology": [
+    "Identify the speaker and target.",
+    "Identify the relationship type.",
+    "Check the scene for authority, trust, or dependence.",
+    "Check if later lines reverse the first impression.",
+    "Apply confidence based on corroboration."
+  ],
+  "reasoningProcess": [
+    "Start from the relationship frame.",
+    "Compare the same sentence across roles.",
+    "Look for procedural, protective, corrupt, or casual meaning.",
+    "Require evidence before escalation."
+  ],
+  "evidenceRules": {
+    "minimum": [
+      "Speaker role and target role must be visible in the scene."
+    ],
+    "strong": [
+      "Relationship is explicit and the scene reinforces the reading.",
+      "Later dialogue confirms the meaning."
+    ],
+    "weak": [
+      "A bare sentence without role context.",
+      "A command with no follow-up."
+    ],
+    "insufficient": [
+      "Guessing from the phrase alone.",
+      "Assuming corruption without evidence."
+    ],
+    "confidenceGuidance": [
+      "95: clear and corroborated",
+      "80: supported by relationship context",
+      "60: plausible but ambiguous",
+      "40: weak and uncertain",
+      "0: unsupported"
+    ]
+  },
+  "contextRules": [
+    "Use neighboring sentences before finalizing.",
+    "Treat narrated or quoted speech differently from direct speech.",
+    "A later correction can change the reading entirely."
+  ],
+  "sceneLevelReasoning": [
+    "Evaluate the whole exchange, not a single word.",
+    "Scene purpose can change the meaning of the same phrase."
+  ],
+  "characterRelationshipAnalysis": [
+    "Authority relations can turn a command into procedure.",
+    "Family relations can turn harsh words into discipline or protection.",
+    "Peer relations can turn a command into casual dismissal."
+  ],
+  "crossSentenceReasoning": [
+    "Later lines can clarify whether the phrase is malicious, lawful, or casual.",
+    "The phrase alone is not enough."
+  ],
+  "crossSceneReasoning": [
+    "Earlier scenes may establish lawful or corrupt behavior.",
+    "Later scenes can reverse the apparent meaning."
+  ],
+  "confidenceRules": [
+    "One sentence alone is usually low confidence.",
+    "Multiple supporting sentences raise confidence.",
+    "Dialogue plus action is stronger than dialogue alone.",
+    "Relationship and role context can lower or raise confidence."
+  ],
+  "falsePositives": [
+    "Assuming bribery from a release phrase without context.",
+    "Assuming violence from a command without role evidence.",
+    "Assuming corruption when lawful discretion is possible."
+  ],
+  "exceptions": [
+    "Quotation",
+    "Narration",
+    "Documentary",
+    "Educational",
+    "Historical",
+    "Court testimony",
+    "Police procedure",
+    "Family discipline",
+    "Professional discretion",
+    "Joking or casual peer dismissal",
+    "Later clarification"
+  ],
+  "examples": [
+    {
+      "text": "قال الأب: اقتله.",
+      "result": "Relationship changes the sentence into a disciplinary or harmful command depending on context."
+    },
+    {
+      "text": "قال القاضي: خلها تمشي.",
+      "result": "May indicate lawful discretion instead of corruption."
+    },
+    {
+      "text": "قال الصديق: خلها تمشي.",
+      "result": "Likely casual dismissal or de-escalation."
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Treat every command as a violation.",
+      "reason": "Relationship context matters."
+    },
+    {
+      "text": "Treat every release request as bribery.",
+      "reason": "Procedural and lawful meanings exist."
+    }
+  ],
+  "reviewerQuestions": [
+    {
+      "id": "relationship_question_speaker",
+      "purpose": "Speaker",
+      "expectedAnswerFormat": "Who is speaking?",
+      "reasoningGuidance": "Identify the speaker before interpretation.",
+      "evidenceRequirements": [
+        "Speaker identity",
+        "Quotation context"
+      ]
+    },
+    {
+      "id": "relationship_question_target",
+      "purpose": "Target",
+      "expectedAnswerFormat": "Who is the target?",
+      "reasoningGuidance": "Check whether the target is explicit or implied.",
+      "evidenceRequirements": [
+        "Target identity",
+        "Power imbalance"
+      ]
+    },
+    {
+      "id": "relationship_question_relationship",
+      "purpose": "Relationship",
+      "expectedAnswerFormat": "What is the relationship?",
+      "reasoningGuidance": "A relationship can change the same sentence.",
+      "evidenceRequirements": [
+        "Role hierarchy",
+        "Trust level"
+      ]
+    },
+    {
+      "id": "relationship_question_intent",
+      "purpose": "Intent",
+      "expectedAnswerFormat": "What is the intent?",
+      "reasoningGuidance": "Intent can turn the same words into different outcomes.",
+      "evidenceRequirements": [
+        "Observed action",
+        "Scene context"
+      ]
+    },
+    {
+      "id": "relationship_question_context",
+      "purpose": "Context",
+      "expectedAnswerFormat": "What is the scene context?",
+      "reasoningGuidance": "Dialogue, narration, and documentary framing matter.",
+      "evidenceRequirements": [
+        "Neighboring sentences",
+        "Scene memory"
+      ]
+    },
+    {
+      "id": "relationship_question_evidence",
+      "purpose": "Evidence",
+      "expectedAnswerFormat": "What evidence supports the reading?",
+      "reasoningGuidance": "Use only supported evidence.",
+      "evidenceRequirements": [
+        "Literal words",
+        "Follow-up dialogue"
+      ]
+    },
+    {
+      "id": "relationship_question_confidence",
+      "purpose": "Confidence",
+      "expectedAnswerFormat": "How confident are we?",
+      "reasoningGuidance": "Lower confidence when relationship context is ambiguous.",
+      "evidenceRequirements": [
+        "Corroboration",
+        "Contradiction"
+      ]
+    }
+  ],
+  "gcamMapping": [
+    {
+      "article_id": 4,
+      "article_title": "Relationship Context",
+      "article_number": "4",
+      "atom_number": "REL_CONTEXT",
+      "report_title": "Relationship Framework",
+      "note": "Authority, family, and power imbalance."
+    },
+    {
+      "article_id": 11,
+      "article_title": "Relationship Reasoning",
+      "article_number": "11",
+      "atom_number": "REL_REASONING",
+      "report_title": "Relationship Framework",
+      "note": "Context and quotation."
+    },
+    {
+      "article_id": 17,
+      "article_title": "Relationship Exceptions",
+      "article_number": "17",
+      "atom_number": "REL_EXCEPTIONS",
+      "report_title": "Relationship Framework",
+      "note": "Procedural, protective, and familial exceptions."
+    }
+  ],
+  "exercises": [
+    {
+      "prompt": "Explain why 'اقتله' can mean different things for a commander, father, teacher, and child.",
+      "expectedOutcome": "The reviewer should separate authority, discipline, play, and coercion."
+    },
+    {
+      "prompt": "Explain why 'خلها تمشي' can mean release, discretion, ignore it, or bribery.",
+      "expectedOutcome": "The reviewer should inspect speaker role and surrounding context."
+    }
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "What is the relationship?",
+      "yes": 2,
+      "no": "Needs Review"
+    },
+    {
+      "step": 2,
+      "question": "Does context confirm the role reading?",
+      "yes": 3,
+      "no": "Needs Review"
+    },
+    {
+      "step": 3,
+      "question": "Does later dialogue reverse the meaning?",
+      "yes": "Re-evaluate",
+      "no": "Proceed"
+    }
+  ],
+  "commonMistakes": [
+    "Ignoring the relationship entirely.",
+    "Using one interpretation for every speaker.",
+    "Calling relationship reasoning a violation by itself."
+  ],
+  "reportTemplate": {
+    "findingTitle": "Relationship Framework Finding",
+    "reasonTemplate": "The reviewer first identified the relationship, then read the sentence in context.",
+    "recommendationTemplate": "The reviewer should state whether the relationship changes the meaning and whether confidence should move up or down."
+  },
+  "benchmarkReferences": [
+    "relationship_benchmark_001",
+    "relationship_benchmark_002",
+    "relationship_benchmark_003",
+    "relationship_benchmark_004",
+    "relationship_benchmark_005",
+    "relationship_benchmark_006",
+    "relationship_benchmark_007",
+    "relationship_benchmark_008",
+    "relationship_benchmark_009",
+    "relationship_benchmark_010",
+    "relationship_benchmark_011",
+    "relationship_benchmark_012",
+    "relationship_benchmark_013",
+    "relationship_benchmark_014",
+    "relationship_benchmark_015",
+    "relationship_benchmark_016",
+    "relationship_benchmark_017",
+    "relationship_benchmark_018",
+    "relationship_benchmark_019",
+    "relationship_benchmark_020",
+    "relationship_benchmark_021",
+    "relationship_benchmark_022",
+    "relationship_benchmark_023",
+    "relationship_benchmark_024",
+    "relationship_benchmark_025",
+    "relationship_benchmark_026",
+    "relationship_benchmark_027",
+    "relationship_benchmark_028",
+    "relationship_benchmark_029",
+    "relationship_benchmark_030"
+  ],
+  "confidenceGuidance": {
+    "0": "No reliable relationship reading.",
+    "40": "Weak relationship clue or missing context.",
+    "60": "Plausible reading but not fully resolved.",
+    "80": "Strong relationship cue with supporting scene details.",
+    "95": "Clear relationship and corroborating context."
+  },
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 1
+  }
+}

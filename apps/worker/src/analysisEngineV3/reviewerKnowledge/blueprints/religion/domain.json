@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "religion_domain",
+  "title": "Religion Domain Blueprint",
+  "description": "Top-level religion knowledge blueprint used by Academy lessons and reviewer packs.",
+  "entries": [
+    {
+      "id": "religion_domain",
+      "title": "Religion",
+      "description": "Religion-related reasoning across sanctities, prophets, holy books, holy places, rituals, symbols, and sectarian harm."
+    }
+  ]
+}

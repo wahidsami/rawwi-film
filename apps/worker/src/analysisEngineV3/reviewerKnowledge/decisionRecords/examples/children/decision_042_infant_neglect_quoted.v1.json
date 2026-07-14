@@ -1,0 +1,58 @@
+{
+  "id": "decision_042_infant_neglect_quoted",
+  "version": "1.0.0",
+  "title": "Infant neglect (quoted)",
+  "summary": "Infant neglect in quoted framing.",
+  "originalScenario": "قال الراوي: \"ترك الرضيع بلا رعاية\"",
+  "reviewQuestion": "Is this neglect of an infant?",
+  "initialSuspicion": "Infant left without care.",
+  "possibleConcepts": [
+    "children_infant",
+    "children_neglect"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: ترك الرضيع بلا رعاية"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-3"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "infant_neglect",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_infant",
+    "children_neglect"
+  ]
+}

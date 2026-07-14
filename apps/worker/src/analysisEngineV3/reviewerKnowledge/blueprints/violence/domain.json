@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "violence_domain",
+  "title": "Violence Domain Blueprint",
+  "description": "Top-level ontology for the violence semantic universe.",
+  "entries": [
+    {
+      "id": "violence_domain",
+      "title": "Violence Domain",
+      "description": "Semantic universe for violence reasoning."
+    }
+  ]
+}

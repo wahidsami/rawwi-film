@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "crime_intents",
+  "title": "Crime Intents",
+  "description": "Intent taxonomy for crime reasoning.",
+  "entries": [
+    {
+      "id": "crime_intent_reference",
+      "title": "Reference",
+      "description": "Mentioning crime without endorsing it."
+    },
+    {
+      "id": "crime_intent_glorification",
+      "title": "Glorification",
+      "description": "Praising criminal behavior."
+    },
+    {
+      "id": "crime_intent_encouragement",
+      "title": "Encouragement",
+      "description": "Urging criminal behavior."
+    },
+    {
+      "id": "crime_intent_instruction",
+      "title": "Instruction",
+      "description": "Explaining how to commit crime."
+    },
+    {
+      "id": "crime_intent_normalization",
+      "title": "Normalization",
+      "description": "Presenting crime as normal."
+    },
+    {
+      "id": "crime_intent_reporting",
+      "title": "Reporting",
+      "description": "Reporting or documenting crime."
+    },
+    {
+      "id": "crime_intent_condemnation",
+      "title": "Condemnation",
+      "description": "Rejecting or condemning crime."
+    },
+    {
+      "id": "crime_intent_recruitment",
+      "title": "Recruitment",
+      "description": "Inviting others into crime."
+    },
+    {
+      "id": "crime_intent_defense",
+      "title": "Defense",
+      "description": "Self-defense or legal defense context."
+    },
+    {
+      "id": "crime_intent_investigation",
+      "title": "Investigation",
+      "description": "Investigative or evidentiary context."
+    }
+  ]
+}

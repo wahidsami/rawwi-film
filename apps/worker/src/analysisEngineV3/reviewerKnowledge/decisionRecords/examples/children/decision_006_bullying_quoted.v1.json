@@ -1,0 +1,58 @@
+{
+  "id": "decision_006_bullying_quoted",
+  "version": "1.0.0",
+  "title": "Bullying (quoted)",
+  "summary": "Bullying in quoted framing.",
+  "originalScenario": "قال الراوي: \"يسخرون من الطفل أمام الصف\"",
+  "reviewQuestion": "Is this bullying?",
+  "initialSuspicion": "Repeated ridicule.",
+  "possibleConcepts": [
+    "children_child",
+    "children_bullying"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: يسخرون من الطفل أمام الصف"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-2"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "bullying",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child",
+    "children_bullying"
+  ]
+}

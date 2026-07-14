@@ -15,7 +15,7 @@ export type JudgeDiagnosticInsert = {
   parsed_judge_response?: unknown;
   raw_finding_count?: number | null;
   parsed_finding_count?: number | null;
-  diagnostic_kind?: "judge_call" | "chunk_final" | "validated_snapshot" | "pass_output_snapshot" | "raw_judge_snapshot";
+  diagnostic_kind?: "judge_call" | "chunk_final" | "validated_snapshot" | "pass_output_snapshot" | "raw_judge_snapshot" | "v3_fallback";
   pass_name?: string | null;
   findings_json?: unknown;
   finding_count?: number | null;
@@ -25,6 +25,7 @@ export type JudgeDiagnosticInsert = {
   openai_response_id?: string | null;
   raw_response_timestamp?: string | null;
   parse_status?: "SUCCESS" | "REPAIRED" | "SALVAGED" | "FAILED" | null;
+  repair_invoked?: boolean | null;
   repair_reason?: string | null;
   salvage_reason?: string | null;
   repaired_finding_count?: number | null;
@@ -80,6 +81,7 @@ export async function persistJudgeDiagnostic(row: JudgeDiagnosticInsert): Promis
       openai_response_id: row.openai_response_id ?? null,
       raw_response_timestamp: row.raw_response_timestamp ?? null,
       parse_status: row.parse_status ?? null,
+      repair_invoked: row.repair_invoked ?? null,
       repair_reason: row.repair_reason ?? null,
       salvage_reason: row.salvage_reason ?? null,
       repaired_finding_count: row.repaired_finding_count ?? null,

@@ -1,0 +1,75 @@
+{
+  "id": "ka_reviewer_interpretation_universal_2e8f97e2909d5da1",
+  "version": "1.0.0",
+  "source": "official_gcam_canonical_atom_framework_v1 + official_gcam_severity_rulebook_v1",
+  "date": "2026-07-14",
+  "reviewerConfidence": 0.84,
+  "knowledgeType": "reviewer_interpretation",
+  "domain": "universal",
+  "concepts": [
+    "evidence_collection",
+    "evidence_quality",
+    "evidence_priority",
+    "multiple_evidence_sources",
+    "weak_evidence",
+    "strong_evidence",
+    "insufficient_evidence",
+    "conflicting_evidence"
+  ],
+  "storyContext": "Evidence evaluation is a universal reviewer discipline that sits before legal judgment and determines whether a scene is sufficiently supported, corroborated, or still too weak to classify.",
+  "evidence": [
+    "GCAM severity guidance distinguishes levels of strength and prominence.",
+    "GCAM canonical atom guidance allows deterministic primary selection when multiple supported mappings exist.",
+    "The reviewer methodology lesson defines explicit, contextual, weak, conflicting, and insufficient evidence handling."
+  ],
+  "reasoning": [
+    "Evidence must be collected before interpretation.",
+    "A weak cue should not outrank a strong direct cue.",
+    "Multiple consistent sources raise confidence, but unresolved conflict lowers it.",
+    "Insufficient evidence should remain unresolved rather than being upgraded into a finding."
+  ],
+  "decision": "Store evidence evaluation as a universal reviewer interpretation that prioritizes traceable evidence, preserves corroboration, and downgrades unresolved conflict or insufficiency instead of forcing a premature finding.",
+  "alternativeDecisions": [
+    "Treat the first visible cue as primary regardless of strength.",
+    "Treat several weak cues as equivalent to one explicit source.",
+    "Treat missing support as a contradiction rather than insufficiency."
+  ],
+  "rejectedInterpretations": [
+    "Counting evidence is more important than evaluating evidence quality.",
+    "A lone ambiguous cue is enough to finalize a finding.",
+    "Absence of support proves the opposite claim."
+  ],
+  "relatedLessons": [
+    "lesson_002_what_is_evidence",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "pattern_bribery_exchange",
+    "pattern_influence_peddling"
+  ],
+  "relatedDecisionRecords": [
+    "decision_001_bribery_phrase",
+    "decision_002_travel_observation"
+  ],
+  "relatedBenchmarks": [
+    "evidence-evaluation-bench-001",
+    "evidence-evaluation-bench-002",
+    "evidence-evaluation-bench-003",
+    "evidence-evaluation-bench-004",
+    "evidence-evaluation-bench-005"
+  ],
+  "knowledgeDebtReference": "KD-GCAM-EVIDENCE-EVALUATION-001",
+  "futureReviewNotes": [
+    "If the repository gains a dedicated GCAM evidence hierarchy article or slide, replace the interpretation with a source-backed acquisition record.",
+    "If official GCAM reviewers publish evidence-specific guidance, split strong, weak, conflicting, and insufficient evidence into separate source-backed records."
+  ],
+  "reviewerId": null,
+  "reviewerName": null,
+  "agreementState": "consensus",
+  "disagreementGroupId": null,
+  "supersedesId": null,
+  "supersededById": null,
+  "relatedRecordIds": []
+}

@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "historical_evidence",
+  "title": "History Evidence",
+  "description": "Canonical history evidence types for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "historical_evidence_direct_reference",
+      "title": "Evidence Direct Reference",
+      "description": "Evidence Direct Reference for history reasoning."
+    },
+    {
+      "id": "historical_evidence_person_name",
+      "title": "Evidence Person Name",
+      "description": "Evidence Person Name for history reasoning."
+    },
+    {
+      "id": "historical_evidence_event_name",
+      "title": "Evidence Event Name",
+      "description": "Evidence Event Name for history reasoning."
+    },
+    {
+      "id": "historical_evidence_site_name",
+      "title": "Evidence Site Name",
+      "description": "Evidence Site Name for history reasoning."
+    },
+    {
+      "id": "historical_evidence_symbol_name",
+      "title": "Evidence Symbol Name",
+      "description": "Evidence Symbol Name for history reasoning."
+    },
+    {
+      "id": "historical_evidence_archive_reference",
+      "title": "Evidence Archive Reference",
+      "description": "Evidence Archive Reference for history reasoning."
+    },
+    {
+      "id": "historical_evidence_quote_marker",
+      "title": "Evidence Quote Marker",
+      "description": "Evidence Quote Marker for history reasoning."
+    },
+    {
+      "id": "historical_evidence_narration_frame",
+      "title": "Evidence Narration Frame",
+      "description": "Evidence Narration Frame for history reasoning."
+    },
+    {
+      "id": "historical_evidence_documentary_frame",
+      "title": "Evidence Documentary Frame",
+      "description": "Evidence Documentary Frame for history reasoning."
+    },
+    {
+      "id": "historical_evidence_educational_frame",
+      "title": "Evidence Educational Frame",
+      "description": "Evidence Educational Frame for history reasoning."
+    },
+    {
+      "id": "historical_evidence_news_frame",
+      "title": "Evidence News Frame",
+      "description": "Evidence News Frame for history reasoning."
+    },
+    {
+      "id": "historical_evidence_flashback_marker",
+      "title": "Evidence Flashback Marker",
+      "description": "Evidence Flashback Marker for history reasoning."
+    },
+    {
+      "id": "historical_evidence_cultural_marker",
+      "title": "Evidence Cultural Marker",
+      "description": "Evidence Cultural Marker for history reasoning."
+    },
+    {
+      "id": "historical_evidence_religious_marker",
+      "title": "Evidence Religious Marker",
+      "description": "Evidence Religious Marker for history reasoning."
+    },
+    {
+      "id": "historical_evidence_political_marker",
+      "title": "Evidence Political Marker",
+      "description": "Evidence Political Marker for history reasoning."
+    },
+    {
+      "id": "historical_evidence_cross_scene",
+      "title": "Evidence Cross Scene",
+      "description": "Evidence Cross Scene for history reasoning."
+    }
+  ]
+}

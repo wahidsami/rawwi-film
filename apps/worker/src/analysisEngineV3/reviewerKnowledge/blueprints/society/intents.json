@@ -1,0 +1,83 @@
+{
+  "version": "1.0.0",
+  "id": "society_intents",
+  "title": "Society Intents",
+  "description": "Canonical society intents for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "society_intent_discussion",
+      "title": "Intent Discussion",
+      "description": "Intent Discussion for society reasoning."
+    },
+    {
+      "id": "society_intent_criticism",
+      "title": "Intent Criticism",
+      "description": "Intent Criticism for society reasoning."
+    },
+    {
+      "id": "society_intent_satire",
+      "title": "Intent Satire",
+      "description": "Intent Satire for society reasoning."
+    },
+    {
+      "id": "society_intent_condemnation",
+      "title": "Intent Condemnation",
+      "description": "Intent Condemnation for society reasoning."
+    },
+    {
+      "id": "society_intent_promotion",
+      "title": "Intent Promotion",
+      "description": "Intent Promotion for society reasoning."
+    },
+    {
+      "id": "society_intent_encouragement",
+      "title": "Intent Encouragement",
+      "description": "Intent Encouragement for society reasoning."
+    },
+    {
+      "id": "society_intent_education",
+      "title": "Intent Education",
+      "description": "Intent Education for society reasoning."
+    },
+    {
+      "id": "society_intent_historical_narration",
+      "title": "Intent Historical Narration",
+      "description": "Intent Historical Narration for society reasoning."
+    },
+    {
+      "id": "society_intent_documentary",
+      "title": "Intent Documentary",
+      "description": "Intent Documentary for society reasoning."
+    },
+    {
+      "id": "society_intent_news_reporting",
+      "title": "Intent News Reporting",
+      "description": "Intent News Reporting for society reasoning."
+    },
+    {
+      "id": "society_intent_fiction",
+      "title": "Intent Fiction",
+      "description": "Intent Fiction for society reasoning."
+    },
+    {
+      "id": "society_intent_dream",
+      "title": "Intent Dream",
+      "description": "Intent Dream for society reasoning."
+    },
+    {
+      "id": "society_intent_flashback",
+      "title": "Intent Flashback",
+      "description": "Intent Flashback for society reasoning."
+    },
+    {
+      "id": "society_intent_quotation",
+      "title": "Intent Quotation",
+      "description": "Intent Quotation for society reasoning."
+    },
+    {
+      "id": "society_intent_neutral",
+      "title": "Intent Neutral",
+      "description": "Intent Neutral for society reasoning."
+    }
+  ]
+}

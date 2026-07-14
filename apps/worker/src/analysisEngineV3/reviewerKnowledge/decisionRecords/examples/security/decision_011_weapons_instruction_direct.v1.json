@@ -1,0 +1,78 @@
+{
+  "id": "decision_011_weapons_instruction_direct",
+  "version": "1.0.0",
+  "title": "Weapons instruction (direct)",
+  "summary": "A line gives practical weapons instructions.",
+  "originalScenario": "A character says: \"كيف تصنع قنبلة في البيت\".",
+  "reviewQuestion": "Is this operational weapons guidance?",
+  "initialSuspicion": "Explosives instruction.",
+  "possibleConcepts": [
+    "weapons",
+    "violence"
+  ],
+  "supportingEvidence": [
+    "كيف تصنع قنبلة في البيت"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Workshop-like dialogue.",
+  "speakerAnalysis": "The speaker gives direct instruction.",
+  "targetAnalysis": "The implied audience is anyone hearing the method.",
+  "intentAnalysis": "Operational instruction.",
+  "reasoningSteps": [
+    "Identify method language",
+    "Identify weapon concept",
+    "Map to article 14 and 9"
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "id": "gcam_security_9_3",
+      "article_id": 9,
+      "atom_ids": [
+        "9-3"
+      ],
+      "role": "Violence and intimidation",
+      "note": "Use when weapons content creates fear or harm."
+    },
+    {
+      "id": "gcam_security_14_3",
+      "article_id": 14,
+      "atom_ids": [
+        "14-3",
+        "14-4"
+      ],
+      "role": "Violent incitement",
+      "note": "Use when weapons are framed as a means to violent goals."
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Operational guidance is the key fact. Variant: direct.",
+  "benchmarkTags": [
+    "weapons",
+    "explosives",
+    "instruction",
+    "direct"
+  ],
+  "relatedLessons": [
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "security_pattern_weapons_instruction"
+  ],
+  "relatedBlueprintConcepts": [
+    "security_weapons",
+    "security_violence"
+  ]
+}

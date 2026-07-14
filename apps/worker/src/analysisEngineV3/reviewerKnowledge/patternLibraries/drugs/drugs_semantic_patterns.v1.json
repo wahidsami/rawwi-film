@@ -1,0 +1,1225 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "drugs_semantic_patterns",
+    "title": "Drugs Semantic Patterns",
+    "description": "Semantic pattern library for drugs reasoning.",
+    "concepts": [
+      {
+        "id": "drug_reference",
+        "title": "Drug Reference",
+        "description": "Shared reviewer concept for drug reference."
+      },
+      {
+        "id": "drug_consumption",
+        "title": "Drug Consumption",
+        "description": "Shared reviewer concept for drug consumption."
+      },
+      {
+        "id": "drug_possession",
+        "title": "Drug Possession",
+        "description": "Shared reviewer concept for drug possession."
+      },
+      {
+        "id": "drug_distribution",
+        "title": "Drug Distribution",
+        "description": "Shared reviewer concept for drug distribution."
+      },
+      {
+        "id": "drug_sale",
+        "title": "Drug Sale",
+        "description": "Shared reviewer concept for drug sale."
+      },
+      {
+        "id": "drug_purchase",
+        "title": "Drug Purchase",
+        "description": "Shared reviewer concept for drug purchase."
+      },
+      {
+        "id": "drug_smuggling",
+        "title": "Drug Smuggling",
+        "description": "Shared reviewer concept for drug smuggling."
+      },
+      {
+        "id": "drug_trafficking",
+        "title": "Drug Trafficking",
+        "description": "Shared reviewer concept for drug trafficking."
+      },
+      {
+        "id": "drug_manufacturing",
+        "title": "Drug Manufacturing",
+        "description": "Shared reviewer concept for drug manufacturing."
+      },
+      {
+        "id": "drug_cultivation",
+        "title": "Drug Cultivation",
+        "description": "Shared reviewer concept for drug cultivation."
+      },
+      {
+        "id": "drug_storage",
+        "title": "Drug Storage",
+        "description": "Shared reviewer concept for drug storage."
+      },
+      {
+        "id": "drug_transportation",
+        "title": "Drug Transportation",
+        "description": "Shared reviewer concept for drug transportation."
+      },
+      {
+        "id": "drug_glorification",
+        "title": "Drug Glorification",
+        "description": "Shared reviewer concept for drug glorification."
+      },
+      {
+        "id": "drug_encouragement",
+        "title": "Drug Encouragement",
+        "description": "Shared reviewer concept for drug encouragement."
+      },
+      {
+        "id": "drug_instruction",
+        "title": "Drug Instruction",
+        "description": "Shared reviewer concept for drug instruction."
+      },
+      {
+        "id": "drug_normalization",
+        "title": "Drug Normalization",
+        "description": "Shared reviewer concept for drug normalization."
+      },
+      {
+        "id": "drug_dependency",
+        "title": "Drug Dependency",
+        "description": "Shared reviewer concept for drug dependency."
+      },
+      {
+        "id": "drug_addiction",
+        "title": "Drug Addiction",
+        "description": "Shared reviewer concept for drug addiction."
+      },
+      {
+        "id": "drug_overdose",
+        "title": "Drug Overdose",
+        "description": "Shared reviewer concept for drug overdose."
+      },
+      {
+        "id": "drug_rehabilitation",
+        "title": "Drug Rehabilitation",
+        "description": "Shared reviewer concept for drug rehabilitation."
+      },
+      {
+        "id": "medical_drug_use",
+        "title": "Medical Drug Use",
+        "description": "Shared reviewer concept for medical drug use."
+      },
+      {
+        "id": "prescription_drug_use",
+        "title": "Prescription Drug Use",
+        "description": "Shared reviewer concept for prescription drug use."
+      },
+      {
+        "id": "illegal_prescription_use",
+        "title": "Illegal Prescription Use",
+        "description": "Shared reviewer concept for illegal prescription use."
+      },
+      {
+        "id": "drug_documentary",
+        "title": "Drug Documentary",
+        "description": "Shared reviewer concept for drug documentary."
+      },
+      {
+        "id": "drug_educational",
+        "title": "Drug Educational",
+        "description": "Shared reviewer concept for drug educational."
+      },
+      {
+        "id": "drug_historical",
+        "title": "Drug Historical",
+        "description": "Shared reviewer concept for drug historical."
+      },
+      {
+        "id": "drug_news",
+        "title": "Drug News",
+        "description": "Shared reviewer concept for drug news."
+      },
+      {
+        "id": "drug_comedy",
+        "title": "Drug Comedy",
+        "description": "Shared reviewer concept for drug comedy."
+      },
+      {
+        "id": "drug_satire",
+        "title": "Drug Satire",
+        "description": "Shared reviewer concept for drug satire."
+      },
+      {
+        "id": "drug_dream",
+        "title": "Drug Dream",
+        "description": "Shared reviewer concept for drug dream."
+      },
+      {
+        "id": "drug_flashback",
+        "title": "Drug Flashback",
+        "description": "Shared reviewer concept for drug flashback."
+      },
+      {
+        "id": "drug_hallucination",
+        "title": "Drug Hallucination",
+        "description": "Shared reviewer concept for drug hallucination."
+      },
+      {
+        "id": "drug_false_accusation",
+        "title": "Drug False Accusation",
+        "description": "Shared reviewer concept for drug false accusation."
+      },
+      {
+        "id": "drug_symbolism",
+        "title": "Drug Symbolism",
+        "description": "Shared reviewer concept for drug symbolism."
+      },
+      {
+        "id": "drug_scene_description",
+        "title": "Drug Scene Description",
+        "description": "Shared reviewer concept for drug scene description."
+      },
+      {
+        "id": "drug_dialogue",
+        "title": "Drug Dialogue",
+        "description": "Shared reviewer concept for drug dialogue."
+      },
+      {
+        "id": "drug_implied_use",
+        "title": "Drug Implied Use",
+        "description": "Shared reviewer concept for drug implied use."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "pattern_direct_consumption",
+      "title": "Direct Consumption",
+      "description": "Direct consumption versus reference, medical use, or depiction.",
+      "primary_concept_id": "drug_consumption",
+      "related_concept_ids": [
+        "drug_possession",
+        "drug_implied_use",
+        "drug_dialogue"
+      ],
+      "direct_expressions": [
+        "يأخذ الحبة",
+        "يبتلعها",
+        "يدخنها"
+      ],
+      "indirect_expressions": [
+        "الرائحة غريبة",
+        "يتماسك بصعوبة"
+      ],
+      "semantic_intent": [
+        "consumption",
+        "reference",
+        "implied use"
+      ],
+      "supporting_evidence": [
+        "direct action",
+        "scene cue"
+      ],
+      "contradictory_evidence": [
+        "doctor's orders",
+        "educational warning"
+      ],
+      "false_positives": [
+        "medical use",
+        "harmless reference"
+      ],
+      "counter_examples": [
+        "prescription medication",
+        "news report about drugs"
+      ],
+      "cross_sentence_indicators": [
+        "later line confirms use",
+        "another line says it is medicine"
+      ],
+      "scene_indicators": [
+        "bathroom",
+        "party",
+        "street corner"
+      ],
+      "reviewer_guidance": [
+        "Check whether the substance is illicit or prescribed.",
+        "Do not confuse smell or props with use."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "consumption_direct",
+          "title": "Direct action",
+          "description": "The scene shows an actual act of use.",
+          "confidence": 90
+        },
+        {
+          "id": "consumption_contextual",
+          "title": "Contextual",
+          "description": "The scene only implies use.",
+          "confidence": 65
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "consumption_rel_1",
+          "from_concept_id": "drug_consumption",
+          "to_concept_id": "medical_drug_use",
+          "relation": "opposite",
+          "note": "Medical use can neutralize illicit reading."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "consumption_map_1",
+          "article_id": 10,
+          "atom_ids": [
+            "DRUG_CONSUMPTION"
+          ],
+          "role": "drug use reasoning",
+          "note": "Direct use and implied use."
+        }
+      ],
+      "examples": [
+        {
+          "id": "consumption_ex_1",
+          "title": "Direct use",
+          "text": "يأخذ الحبة الآن",
+          "expected_outcome": "Direct consumption",
+          "note": null
+        },
+        {
+          "id": "consumption_ex_2",
+          "title": "Medical use",
+          "text": "الطبيب وصف الدواء",
+          "expected_outcome": "Medical exception",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_medical_context",
+      "title": "Medical Context",
+      "description": "Clinical and prescription contexts.",
+      "primary_concept_id": "medical_drug_use",
+      "related_concept_ids": [
+        "prescription_drug_use",
+        "illegal_prescription_use",
+        "drug_rehabilitation"
+      ],
+      "direct_expressions": [
+        "الطبيب وصف الدواء",
+        "جرعة دقيقة"
+      ],
+      "indirect_expressions": [
+        "medical treatment",
+        "clinical use"
+      ],
+      "semantic_intent": [
+        "medical",
+        "prescription",
+        "treatment"
+      ],
+      "supporting_evidence": [
+        "doctor",
+        "patient",
+        "dosage"
+      ],
+      "contradictory_evidence": [
+        "promotion language",
+        "street sale"
+      ],
+      "false_positives": [
+        "calling medicine illegal",
+        "calling rehab promotion"
+      ],
+      "counter_examples": [
+        "doctor prescribing",
+        "pharmacist counseling"
+      ],
+      "cross_sentence_indicators": [
+        "later line mentions dose",
+        "patient confirms treatment"
+      ],
+      "scene_indicators": [
+        "hospital",
+        "clinic",
+        "pharmacy"
+      ],
+      "reviewer_guidance": [
+        "Clinical context is usually protective.",
+        "Check whether the substance is prescribed."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "medical_clear",
+          "title": "Clear medical frame",
+          "description": "The scene is explicitly clinical.",
+          "confidence": 88
+        },
+        {
+          "id": "medical_weak",
+          "title": "Weak medical frame",
+          "description": "Clinical cues are partial.",
+          "confidence": 58
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "medical_rel_1",
+          "from_concept_id": "medical_drug_use",
+          "to_concept_id": "prescription_drug_use",
+          "relation": "supports",
+          "note": "Prescription often implies medical context."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "medical_map_1",
+          "article_id": 10,
+          "atom_ids": [
+            "DRUG_MEDICAL"
+          ],
+          "role": "medical reasoning",
+          "note": "Clinical and prescription use."
+        }
+      ],
+      "examples": [
+        {
+          "id": "medical_ex_1",
+          "title": "Prescription",
+          "text": "الطبيب وصف الدواء",
+          "expected_outcome": "Medical use",
+          "note": null
+        },
+        {
+          "id": "medical_ex_2",
+          "title": "Rehab",
+          "text": "ينتظم في برنامج تأهيلي",
+          "expected_outcome": "Rehabilitation context",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_educational_context",
+      "title": "Educational Context",
+      "description": "Teaching and warning scenes about drugs.",
+      "primary_concept_id": "drug_educational",
+      "related_concept_ids": [
+        "drug_instruction",
+        "drug_news",
+        "drug_documentary"
+      ],
+      "direct_expressions": [
+        "المدرس يشرح",
+        "الدرس يوضح"
+      ],
+      "indirect_expressions": [
+        "lesson about overdose",
+        "awareness talk"
+      ],
+      "semantic_intent": [
+        "educational",
+        "warning",
+        "explanation"
+      ],
+      "supporting_evidence": [
+        "classroom",
+        "teacher",
+        "warning"
+      ],
+      "contradictory_evidence": [
+        "glamorizing language",
+        "recruitment"
+      ],
+      "false_positives": [
+        "instruction mistaken for encouragement",
+        "warning mistaken for promotion"
+      ],
+      "counter_examples": [
+        "health class",
+        "public safety talk"
+      ],
+      "cross_sentence_indicators": [
+        "later line says do not try this",
+        "students take notes"
+      ],
+      "scene_indicators": [
+        "classroom",
+        "lecture",
+        "awareness poster"
+      ],
+      "reviewer_guidance": [
+        "Educational intent usually lowers risk.",
+        "Look for warning language."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "edu_warning",
+          "title": "Warning",
+          "description": "The lesson warns against use.",
+          "confidence": 85
+        },
+        {
+          "id": "edu_bare",
+          "title": "Bare mention",
+          "description": "The scene merely mentions a drug term.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "edu_rel_1",
+          "from_concept_id": "drug_educational",
+          "to_concept_id": "drug_instruction",
+          "relation": "opposite",
+          "note": "Instruction can be harmful, education usually warns."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "edu_map_1",
+          "article_id": 10,
+          "atom_ids": [
+            "DRUG_EDUCATION"
+          ],
+          "role": "educational reasoning",
+          "note": "Teaching and warnings."
+        }
+      ],
+      "examples": [
+        {
+          "id": "edu_ex_1",
+          "title": "Classroom warning",
+          "text": "الدرس يشرح مخاطر الجرعة الزائدة",
+          "expected_outcome": "Educational",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_historical_context",
+      "title": "Historical Context",
+      "description": "Historical reporting and retrospective references.",
+      "primary_concept_id": "drug_historical",
+      "related_concept_ids": [
+        "drug_news",
+        "drug_documentary",
+        "drug_flashback"
+      ],
+      "direct_expressions": [
+        "قبل سنوات",
+        "في الماضي"
+      ],
+      "indirect_expressions": [
+        "historical report",
+        "archival narration"
+      ],
+      "semantic_intent": [
+        "historical",
+        "reporting"
+      ],
+      "supporting_evidence": [
+        "date reference",
+        "archival style"
+      ],
+      "contradictory_evidence": [
+        "present-tense endorsement",
+        "instruction"
+      ],
+      "false_positives": [
+        "past mention mistaken for current promotion",
+        "history mistaken for present use"
+      ],
+      "counter_examples": [
+        "museum narration",
+        "historical newspaper recap"
+      ],
+      "cross_sentence_indicators": [
+        "the next line says it happened years ago",
+        "the narrator dates the event"
+      ],
+      "scene_indicators": [
+        "archive room",
+        "historical documentary",
+        "flashback"
+      ],
+      "reviewer_guidance": [
+        "Historical framing changes meaning.",
+        "Do not infer present endorsement."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "hist_clear",
+          "title": "Clear historical frame",
+          "description": "The scene is dated and retrospective.",
+          "confidence": 84
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "hist_rel_1",
+          "from_concept_id": "drug_historical",
+          "to_concept_id": "drug_news",
+          "relation": "supports",
+          "note": "News can report history."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "hist_map_1",
+          "article_id": 10,
+          "atom_ids": [
+            "DRUG_HISTORICAL"
+          ],
+          "role": "historical reasoning",
+          "note": "Past event reporting."
+        }
+      ],
+      "examples": [
+        {
+          "id": "hist_ex_1",
+          "title": "Archive",
+          "text": "الخبر يذكر تجارة المخدرات قبل سنوات",
+          "expected_outcome": "Historical reporting",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_rehabilitation_context",
+      "title": "Rehabilitation Context",
+      "description": "Recovery and treatment framing around drugs.",
+      "primary_concept_id": "drug_rehabilitation",
+      "related_concept_ids": [
+        "medical_drug_use",
+        "drug_dependency",
+        "drug_addiction"
+      ],
+      "direct_expressions": [
+        "مركز التأهيل",
+        "برنامج علاج"
+      ],
+      "indirect_expressions": [
+        "recovery",
+        "sober support"
+      ],
+      "semantic_intent": [
+        "rehabilitation",
+        "recovery",
+        "medical"
+      ],
+      "supporting_evidence": [
+        "therapy",
+        "support group"
+      ],
+      "contradictory_evidence": [
+        "glorification",
+        "sale"
+      ],
+      "false_positives": [
+        "treatment mistaken for abuse",
+        "support mistaken for promotion"
+      ],
+      "counter_examples": [
+        "counseling session",
+        "recovery meeting"
+      ],
+      "cross_sentence_indicators": [
+        "later line says he is recovering",
+        "the scene mentions treatment"
+      ],
+      "scene_indicators": [
+        "clinic",
+        "support room",
+        "rehab center"
+      ],
+      "reviewer_guidance": [
+        "Rehab is protective context.",
+        "Do not overclassify recovery."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "rehab_clear",
+          "title": "Clear rehab",
+          "description": "The recovery frame is explicit.",
+          "confidence": 86
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rehab_rel_1",
+          "from_concept_id": "drug_rehabilitation",
+          "to_concept_id": "drug_addiction",
+          "relation": "supports",
+          "note": "Rehab often follows addiction."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "rehab_map_1",
+          "article_id": 10,
+          "atom_ids": [
+            "DRUG_REHAB"
+          ],
+          "role": "rehabilitation reasoning",
+          "note": "Recovery and treatment."
+        }
+      ],
+      "examples": [
+        {
+          "id": "rehab_ex_1",
+          "title": "Recovery",
+          "text": "ينتظم في برنامج تأهيلي",
+          "expected_outcome": "Rehabilitation",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_promotion",
+      "title": "Promotion",
+      "description": "Glorifying or encouraging drugs.",
+      "primary_concept_id": "drug_glorification",
+      "related_concept_ids": [
+        "drug_encouragement",
+        "drug_normalization",
+        "drug_instruction"
+      ],
+      "direct_expressions": [
+        "جربها",
+        "ستحبها"
+      ],
+      "indirect_expressions": [
+        "everyone does it",
+        "it is harmless"
+      ],
+      "semantic_intent": [
+        "promotion",
+        "glorification",
+        "encouragement"
+      ],
+      "supporting_evidence": [
+        "positive tone",
+        "pressure"
+      ],
+      "contradictory_evidence": [
+        "warning language",
+        "condemnation"
+      ],
+      "false_positives": [
+        "medical advice mistaken for encouragement",
+        "humor mistaken for promotion"
+      ],
+      "counter_examples": [
+        "anti-drug warning",
+        "recovery message"
+      ],
+      "cross_sentence_indicators": [
+        "later line praises use",
+        "scene reinforces pressure"
+      ],
+      "scene_indicators": [
+        "party",
+        "peer pressure",
+        "social media"
+      ],
+      "reviewer_guidance": [
+        "Promotion needs supportive tone and context.",
+        "Do not assume from one word alone."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "promo_clear",
+          "title": "Clear promotion",
+          "description": "The scene explicitly praises use.",
+          "confidence": 90
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "promo_rel_1",
+          "from_concept_id": "drug_glorification",
+          "to_concept_id": "drug_normalization",
+          "relation": "supports",
+          "note": "Normalization can soften promotion."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "promo_map_1",
+          "article_id": 10,
+          "atom_ids": [
+            "DRUG_PROMOTION"
+          ],
+          "role": "promotion reasoning",
+          "note": "Encouragement and glorification."
+        }
+      ],
+      "examples": [
+        {
+          "id": "promo_ex_1",
+          "title": "Peer pressure",
+          "text": "جربها وستعجبك",
+          "expected_outcome": "Promotion",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_symbolism",
+      "title": "Symbolism",
+      "description": "Symbolic or metaphorical drug references.",
+      "primary_concept_id": "drug_symbolism",
+      "related_concept_ids": [
+        "drug_dream",
+        "drug_flashback",
+        "drug_hallucination"
+      ],
+      "direct_expressions": [
+        "دخان كثيف",
+        "رحلة ضبابية"
+      ],
+      "indirect_expressions": [
+        "symbolic trip",
+        "foggy road"
+      ],
+      "semantic_intent": [
+        "symbolism",
+        "metaphor",
+        "imagery"
+      ],
+      "supporting_evidence": [
+        "artistic framing",
+        "nonliteral cues"
+      ],
+      "contradictory_evidence": [
+        "explicit use",
+        "explicit sale"
+      ],
+      "false_positives": [
+        "metaphor mistaken for use",
+        "imagery mistaken for possession"
+      ],
+      "counter_examples": [
+        "poetic description",
+        "surreal dream"
+      ],
+      "cross_sentence_indicators": [
+        "later line says it is a dream",
+        "the scene is figurative"
+      ],
+      "scene_indicators": [
+        "art film",
+        "poetry",
+        "surreal sequence"
+      ],
+      "reviewer_guidance": [
+        "Symbolic language needs careful reading.",
+        "Use context to avoid literal mistakes."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sym_clear",
+          "title": "Clear symbolism",
+          "description": "The scene is obviously figurative.",
+          "confidence": 82
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sym_rel_1",
+          "from_concept_id": "drug_symbolism",
+          "to_concept_id": "drug_dream",
+          "relation": "supports",
+          "note": "Dreams often carry symbolic references."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sym_map_1",
+          "article_id": 10,
+          "atom_ids": [
+            "DRUG_SYMBOLISM"
+          ],
+          "role": "symbolic reasoning",
+          "note": "Metaphor and imagery."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sym_ex_1",
+          "title": "Surreal imagery",
+          "text": "رحلة ضبابية",
+          "expected_outcome": "Symbolic reference",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_false_positive",
+      "title": "False Positive Guard",
+      "description": "Scenes that look risky but are not findings.",
+      "primary_concept_id": "drug_false_accusation",
+      "related_concept_ids": [
+        "drug_educational",
+        "drug_historical",
+        "drug_documentary"
+      ],
+      "direct_expressions": [
+        "ليس مخدرًا",
+        "دواء فقط"
+      ],
+      "indirect_expressions": [
+        "false alarm",
+        "misread cue"
+      ],
+      "semantic_intent": [
+        "correction",
+        "denial",
+        "clarification"
+      ],
+      "supporting_evidence": [
+        "explicit denial",
+        "later correction"
+      ],
+      "contradictory_evidence": [
+        "no denial",
+        "direct use"
+      ],
+      "false_positives": [
+        "assuming a violation from a harmless cue"
+      ],
+      "counter_examples": [
+        "clarifying the object is medicine",
+        "a false accusation in dialogue"
+      ],
+      "cross_sentence_indicators": [
+        "later line corrects the first impression",
+        "the speaker denies the allegation"
+      ],
+      "scene_indicators": [
+        "court testimony",
+        "police interview",
+        "news correction"
+      ],
+      "reviewer_guidance": [
+        "Always check for denial or correction.",
+        "Do not overread props or labels."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "fp_clear",
+          "title": "Clear correction",
+          "description": "The scene explicitly denies the suspicion.",
+          "confidence": 78
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "fp_rel_1",
+          "from_concept_id": "drug_false_accusation",
+          "to_concept_id": "drug_reference",
+          "relation": "supports",
+          "note": "Accusation works against the baseline reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "fp_map_1",
+          "article_id": 10,
+          "atom_ids": [
+            "DRUG_FALSE_POSITIVE"
+          ],
+          "role": "false positive guard",
+          "note": "Avoid overclassification."
+        }
+      ],
+      "examples": [
+        {
+          "id": "fp_ex_1",
+          "title": "Correction",
+          "text": "ليس مخدرًا، إنه دواء فقط",
+          "expected_outcome": "False positive guard",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_documentary_context",
+      "title": "Documentary Context",
+      "description": "Documentary narration or reporting that discusses drug activity without endorsing it.",
+      "primary_concept_id": "drug_documentary",
+      "related_concept_ids": [
+        "drug_news",
+        "drug_historical",
+        "drug_educational"
+      ],
+      "direct_expressions": [
+        "وثائقي عن المخدرات",
+        "drug documentary"
+      ],
+      "indirect_expressions": [
+        "documentary narration",
+        "reported drug case"
+      ],
+      "semantic_intent": [
+        "documentary",
+        "reporting",
+        "explanation"
+      ],
+      "supporting_evidence": [
+        "documentary framing",
+        "informational tone"
+      ],
+      "contradictory_evidence": [
+        "promotional tone",
+        "instruction to use"
+      ],
+      "false_positives": [
+        "reporting mistaken for glorification",
+        "neutral documentary mistaken for promotion"
+      ],
+      "counter_examples": [
+        "news segment about a raid",
+        "documentary about rehabilitation"
+      ],
+      "cross_sentence_indicators": [
+        "voice-over explains the scene",
+        "later line identifies the material as a report"
+      ],
+      "scene_indicators": [
+        "voice over",
+        "news insert",
+        "documentary narration"
+      ],
+      "reviewer_guidance": [
+        "Treat documentary framing as context, not endorsement.",
+        "Use the surrounding scene to confirm neutrality."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "doc_clear",
+          "title": "Clear documentary framing",
+          "description": "The scene is explicitly documentary or journalistic.",
+          "confidence": 86
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "doc_rel_1",
+          "from_concept_id": "drug_documentary",
+          "to_concept_id": "drug_news",
+          "relation": "supports",
+          "note": "Documentary material often overlaps with reporting."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "doc_map_1",
+          "article_id": 10,
+          "atom_ids": [
+            "DRUG_DOCUMENTARY"
+          ],
+          "role": "context guard",
+          "note": "Neutral documentary treatment."
+        }
+      ],
+      "examples": [
+        {
+          "id": "doc_ex_1",
+          "title": "Documentary report",
+          "text": "وثائقي عن تجارة المخدرات",
+          "expected_outcome": "Documentary context",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_visual_implication",
+      "title": "Visual Implication",
+      "description": "Visual or scene cues that imply drug use without explicit wording.",
+      "primary_concept_id": "drug_implied_use",
+      "related_concept_ids": [
+        "drug_scene_description",
+        "drug_consumption",
+        "drug_reference"
+      ],
+      "direct_expressions": [
+        "سرنجة على الطاولة",
+        "white powder"
+      ],
+      "indirect_expressions": [
+        "empty baggies",
+        "rolled bill"
+      ],
+      "semantic_intent": [
+        "implication",
+        "visual cue",
+        "scene evidence"
+      ],
+      "supporting_evidence": [
+        "props or objects associated with use",
+        "scene composition"
+      ],
+      "contradictory_evidence": [
+        "medical context",
+        "clear alternative explanation"
+      ],
+      "false_positives": [
+        "ordinary objects mistaken for drug paraphernalia",
+        "stylized imagery mistaken for literal use"
+      ],
+      "counter_examples": [
+        "a medical kit on a table",
+        "a craft scene using white powder for baking"
+      ],
+      "cross_sentence_indicators": [
+        "later line confirms the object",
+        "scene follows with use behavior"
+      ],
+      "scene_indicators": [
+        "close-up shot",
+        "tabletop props",
+        "hands handling an object"
+      ],
+      "reviewer_guidance": [
+        "Visual implication needs corroboration.",
+        "Do not overclassify ordinary props."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "vis_clear",
+          "title": "Clear visual cue",
+          "description": "The object and surrounding scene strongly imply drug use.",
+          "confidence": 78
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "vis_rel_1",
+          "from_concept_id": "drug_implied_use",
+          "to_concept_id": "drug_scene_description",
+          "relation": "supports",
+          "note": "Visual implication depends on scene description."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "vis_map_1",
+          "article_id": 10,
+          "atom_ids": [
+            "DRUG_IMPLICATION"
+          ],
+          "role": "implied use",
+          "note": "Scene-based implication."
+        }
+      ],
+      "examples": [
+        {
+          "id": "vis_ex_1",
+          "title": "Scene prop",
+          "text": "سرنجة على الطاولة",
+          "expected_outcome": "Visual implication",
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "pattern_reversal_and_false_positive",
+      "title": "Reversal and False Positive Guard",
+      "description": "A scene initially appears suspicious but later context reverses the meaning.",
+      "primary_concept_id": "drug_false_accusation",
+      "related_concept_ids": [
+        "drug_documentary",
+        "drug_educational",
+        "drug_historical"
+      ],
+      "direct_expressions": [
+        "ليس هذا مخدرًا",
+        "it was medicine"
+      ],
+      "indirect_expressions": [
+        "later correction",
+        "context reversal"
+      ],
+      "semantic_intent": [
+        "correction",
+        "reversal",
+        "clarification"
+      ],
+      "supporting_evidence": [
+        "later dialogue corrects the first impression",
+        "speaker explicitly denies the suspicion"
+      ],
+      "contradictory_evidence": [
+        "direct drug use remains uncorrected",
+        "no later clarification"
+      ],
+      "false_positives": [
+        "assuming the first impression is final",
+        "ignoring explicit correction"
+      ],
+      "counter_examples": [
+        "police clarification",
+        "medical explanation"
+      ],
+      "cross_sentence_indicators": [
+        "a later sentence reverses the meaning",
+        "a follow-up line explains the object"
+      ],
+      "scene_indicators": [
+        "court correction",
+        "investigation",
+        "dialogue clarification"
+      ],
+      "reviewer_guidance": [
+        "Always check later context before finalizing.",
+        "A suspicious first impression is not enough."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "rev_clear",
+          "title": "Clear reversal",
+          "description": "The later context directly reverses the initial reading.",
+          "confidence": 80
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rev_rel_1",
+          "from_concept_id": "drug_false_accusation",
+          "to_concept_id": "drug_reference",
+          "relation": "supports",
+          "note": "False accusation still begins from a reference."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "rev_map_1",
+          "article_id": 10,
+          "atom_ids": [
+            "DRUG_FALSE_POSITIVE"
+          ],
+          "role": "reversal guard",
+          "note": "Correct the initial assumption."
+        }
+      ],
+      "examples": [
+        {
+          "id": "rev_ex_1",
+          "title": "Correction",
+          "text": "ليس هذا مخدرًا، هذا دواء",
+          "expected_outcome": "False positive guard",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "id": "decision_041_infant_neglect_direct",
+  "version": "1.0.0",
+  "title": "Infant neglect (direct)",
+  "summary": "Infant neglect in direct framing.",
+  "originalScenario": "ترك الرضيع بلا رعاية",
+  "reviewQuestion": "Is this neglect of an infant?",
+  "initialSuspicion": "Infant left without care.",
+  "possibleConcepts": [
+    "children_infant",
+    "children_neglect"
+  ],
+  "supportingEvidence": [
+    "ترك الرضيع بلا رعاية"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-3"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "infant_neglect",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_infant",
+    "children_neglect"
+  ]
+}

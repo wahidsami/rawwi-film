@@ -1,0 +1,5084 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "sexuality_semantic_patterns",
+    "title": "Sexuality Semantic Patterns",
+    "description": "Semantic patterns for sexual content, intimacy, context, and exception reasoning.",
+    "concepts": [
+      {
+        "id": "sexual_reference",
+        "title": "Sexual Reference",
+        "description": "Sexual Reference covers literal mentions, jokes, double meanings, metaphors, and symbolism that point to sexual material."
+      },
+      {
+        "id": "sexual_joke",
+        "title": "Sexual Joke",
+        "description": "Sexual Joke covers literal mentions, jokes, double meanings, metaphors, and symbolism that point to sexual material."
+      },
+      {
+        "id": "sexual_double_meaning",
+        "title": "Sexual Double Meaning",
+        "description": "Sexual Double Meaning covers literal mentions, jokes, double meanings, metaphors, and symbolism that point to sexual material."
+      },
+      {
+        "id": "sexual_metaphor",
+        "title": "Sexual Metaphor",
+        "description": "Sexual Metaphor covers literal mentions, jokes, double meanings, metaphors, and symbolism that point to sexual material."
+      },
+      {
+        "id": "sexual_symbolism",
+        "title": "Sexual Symbolism",
+        "description": "Sexual Symbolism covers literal mentions, jokes, double meanings, metaphors, and symbolism that point to sexual material."
+      },
+      {
+        "id": "sexual_flirting",
+        "title": "Sexual Flirting",
+        "description": "Sexual Flirting covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+      },
+      {
+        "id": "sexual_romance",
+        "title": "Sexual Romance",
+        "description": "Sexual Romance covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+      },
+      {
+        "id": "sexual_suggestion",
+        "title": "Sexual Suggestion",
+        "description": "Sexual Suggestion covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+      },
+      {
+        "id": "sexual_invitation",
+        "title": "Sexual Invitation",
+        "description": "Sexual Invitation covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+      },
+      {
+        "id": "sexual_kiss",
+        "title": "Sexual Kiss",
+        "description": "Sexual Kiss covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+      },
+      {
+        "id": "sexual_intimacy",
+        "title": "Sexual Intimacy",
+        "description": "Sexual Intimacy covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+      },
+      {
+        "id": "sexual_touch",
+        "title": "Sexual Touch",
+        "description": "Sexual Touch covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+      },
+      {
+        "id": "sexual_dancing",
+        "title": "Sexual Dancing",
+        "description": "Sexual Dancing covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+      },
+      {
+        "id": "sexual_harassment",
+        "title": "Sexual Harassment",
+        "description": "Sexual Harassment covers unwanted sexual pressure, coercion, abuse, exploitation, grooming, or false-accusation framing."
+      },
+      {
+        "id": "sexual_assault",
+        "title": "Sexual Assault",
+        "description": "Sexual Assault covers unwanted sexual pressure, coercion, abuse, exploitation, grooming, or false-accusation framing."
+      },
+      {
+        "id": "sexual_abuse",
+        "title": "Sexual Abuse",
+        "description": "Sexual Abuse covers unwanted sexual pressure, coercion, abuse, exploitation, grooming, or false-accusation framing."
+      },
+      {
+        "id": "sexual_exploitation",
+        "title": "Sexual Exploitation",
+        "description": "Sexual Exploitation covers unwanted sexual pressure, coercion, abuse, exploitation, grooming, or false-accusation framing."
+      },
+      {
+        "id": "sexual_grooming",
+        "title": "Sexual Grooming",
+        "description": "Sexual Grooming covers unwanted sexual pressure, coercion, abuse, exploitation, grooming, or false-accusation framing."
+      },
+      {
+        "id": "sexual_false_accusation",
+        "title": "Sexual False Accusation",
+        "description": "Sexual False Accusation covers a sexual allegation that is disputed, corrected, or proven false by later evidence."
+      },
+      {
+        "id": "sexual_dialogue",
+        "title": "Sexual Dialogue",
+        "description": "Sexual Dialogue covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+      },
+      {
+        "id": "sexual_scene",
+        "title": "Sexual Scene",
+        "description": "Sexual Scene covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+      },
+      {
+        "id": "sexual_description",
+        "title": "Sexual Description",
+        "description": "Sexual Description covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+      },
+      {
+        "id": "sexual_sound",
+        "title": "Sexual Sound",
+        "description": "Sexual Sound covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+      },
+      {
+        "id": "sexual_camera_focus",
+        "title": "Sexual Camera Focus",
+        "description": "Sexual Camera Focus covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+      },
+      {
+        "id": "sexual_body_focus",
+        "title": "Sexual Body Focus",
+        "description": "Sexual Body Focus covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+      },
+      {
+        "id": "sexual_clothing",
+        "title": "Sexual Clothing",
+        "description": "Sexual Clothing covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+      },
+      {
+        "id": "sexual_normalization",
+        "title": "Sexual Normalization",
+        "description": "Sexual Normalization covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+      },
+      {
+        "id": "sexual_glorification",
+        "title": "Sexual Glorification",
+        "description": "Sexual Glorification covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+      },
+      {
+        "id": "sexual_instruction",
+        "title": "Sexual Instruction",
+        "description": "Sexual Instruction covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+      },
+      {
+        "id": "sexual_comedy",
+        "title": "Sexual Comedy",
+        "description": "Sexual Comedy covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+      },
+      {
+        "id": "sexual_condemnation",
+        "title": "Sexual Condemnation",
+        "description": "Sexual Condemnation covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+      },
+      {
+        "id": "sexual_documentary",
+        "title": "Sexual Documentary",
+        "description": "Sexual Documentary covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+      },
+      {
+        "id": "sexual_medical",
+        "title": "Sexual Medical",
+        "description": "Sexual Medical covers medical, educational, historical, court, police, and news contexts around sexual material."
+      },
+      {
+        "id": "sexual_educational",
+        "title": "Sexual Educational",
+        "description": "Sexual Educational covers medical, educational, historical, court, police, and news contexts around sexual material."
+      },
+      {
+        "id": "sexual_historical",
+        "title": "Sexual Historical",
+        "description": "Sexual Historical covers medical, educational, historical, court, police, and news contexts around sexual material."
+      },
+      {
+        "id": "sexual_dream",
+        "title": "Sexual Dream",
+        "description": "Sexual Dream covers dreams, flashbacks, and imagination where the sexual image exists inside the character's mind or memory."
+      },
+      {
+        "id": "sexual_flashback",
+        "title": "Sexual Flashback",
+        "description": "Sexual Flashback covers dreams, flashbacks, and imagination where the sexual image exists inside the character's mind or memory."
+      },
+      {
+        "id": "sexual_imagination",
+        "title": "Sexual Imagination",
+        "description": "Sexual Imagination covers dreams, flashbacks, and imagination where the sexual image exists inside the character's mind or memory."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "sexual_pattern_01_sexual_reference",
+      "title": "Sexual Reference Pattern",
+      "description": "Sexual Reference reasoning pattern for the reference bucket.",
+      "primary_concept_id": "sexual_reference",
+      "related_concept_ids": [],
+      "direct_expressions": [
+        "إشارة جنسية",
+        "Sexual Reference إشارة جنسية"
+      ],
+      "indirect_expressions": [
+        "تلميح جنسي",
+        "Sexual Reference تلميح جنسي"
+      ],
+      "semantic_intent": [
+        "reference",
+        "double meaning",
+        "innuendo"
+      ],
+      "supporting_evidence": [
+        "Sexual Reference appears in the literal text or scene direction.",
+        "The context supports the reference reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A neutral description of a body part or garment.",
+        "A medical or educational explanation with no flirtation or insinuation."
+      ],
+      "counter_examples": [
+        "A line that appears suggestive but is later clarified as literal housekeeping.",
+        "A symbolic image with no recoverable sexual meaning."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Double meanings should be checked against speaker, target, and neighboring lines.",
+        "Metaphor and symbolism count only when the sexual reference is recoverable from context.",
+        "Do not collapse reference, joke, and symbolism into one node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_reference_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_reference_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [],
+      "gcam_mappings": [
+        {
+          "id": "sexual_reference_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual reference and innuendo",
+          "note": "Primary content-standard mapping for sexual references."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_reference_example_01",
+          "title": "Sexual Reference direct",
+          "text": "إشارة جنسية (sexual_reference)",
+          "expected_outcome": "The reviewer should recognize sexual reference in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_reference_example_02",
+          "title": "Sexual Reference contextual",
+          "text": "تلميح جنسي (sexual_reference)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual reference.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_02_sexual_joke",
+      "title": "Sexual Joke Pattern",
+      "description": "Sexual Joke reasoning pattern for the reference bucket.",
+      "primary_concept_id": "sexual_joke",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "إشارة جنسية",
+        "Sexual Joke إشارة جنسية"
+      ],
+      "indirect_expressions": [
+        "تلميح جنسي",
+        "Sexual Joke تلميح جنسي"
+      ],
+      "semantic_intent": [
+        "reference",
+        "double meaning",
+        "innuendo"
+      ],
+      "supporting_evidence": [
+        "Sexual Joke appears in the literal text or scene direction.",
+        "The context supports the reference reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A neutral description of a body part or garment.",
+        "A medical or educational explanation with no flirtation or insinuation."
+      ],
+      "counter_examples": [
+        "A line that appears suggestive but is later clarified as literal housekeeping.",
+        "A symbolic image with no recoverable sexual meaning."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Double meanings should be checked against speaker, target, and neighboring lines.",
+        "Metaphor and symbolism count only when the sexual reference is recoverable from context.",
+        "Do not collapse reference, joke, and symbolism into one node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_joke_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_joke_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_joke_glossary_01",
+          "from_concept_id": "sexual_joke",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "إشارة is a useful glossary anchor for Sexual Joke."
+        },
+        {
+          "id": "sexual_joke_glossary_02",
+          "from_concept_id": "sexual_joke",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تلميح is a useful glossary anchor for Sexual Joke."
+        },
+        {
+          "id": "sexual_joke_glossary_03",
+          "from_concept_id": "sexual_joke",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رمز is a useful glossary anchor for Sexual Joke."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_joke_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual reference and innuendo",
+          "note": "Primary content-standard mapping for sexual references."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_joke_example_01",
+          "title": "Sexual Joke direct",
+          "text": "إشارة جنسية (sexual_joke)",
+          "expected_outcome": "The reviewer should recognize sexual joke in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_joke_example_02",
+          "title": "Sexual Joke contextual",
+          "text": "تلميح جنسي (sexual_joke)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual joke.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_03_sexual_double_meaning",
+      "title": "Sexual Double Meaning Pattern",
+      "description": "Sexual Double Meaning reasoning pattern for the reference bucket.",
+      "primary_concept_id": "sexual_double_meaning",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "إشارة جنسية",
+        "Sexual Double Meaning إشارة جنسية"
+      ],
+      "indirect_expressions": [
+        "تلميح جنسي",
+        "Sexual Double Meaning تلميح جنسي"
+      ],
+      "semantic_intent": [
+        "reference",
+        "double meaning",
+        "innuendo"
+      ],
+      "supporting_evidence": [
+        "Sexual Double Meaning appears in the literal text or scene direction.",
+        "The context supports the reference reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A neutral description of a body part or garment.",
+        "A medical or educational explanation with no flirtation or insinuation."
+      ],
+      "counter_examples": [
+        "A line that appears suggestive but is later clarified as literal housekeeping.",
+        "A symbolic image with no recoverable sexual meaning."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Double meanings should be checked against speaker, target, and neighboring lines.",
+        "Metaphor and symbolism count only when the sexual reference is recoverable from context.",
+        "Do not collapse reference, joke, and symbolism into one node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_double_meaning_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_double_meaning_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_double_meaning_glossary_01",
+          "from_concept_id": "sexual_double_meaning",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "إشارة is a useful glossary anchor for Sexual Double Meaning."
+        },
+        {
+          "id": "sexual_double_meaning_glossary_02",
+          "from_concept_id": "sexual_double_meaning",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تلميح is a useful glossary anchor for Sexual Double Meaning."
+        },
+        {
+          "id": "sexual_double_meaning_glossary_03",
+          "from_concept_id": "sexual_double_meaning",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رمز is a useful glossary anchor for Sexual Double Meaning."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_double_meaning_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual reference and innuendo",
+          "note": "Primary content-standard mapping for sexual references."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_double_meaning_example_01",
+          "title": "Sexual Double Meaning direct",
+          "text": "إشارة جنسية (sexual_double_meaning)",
+          "expected_outcome": "The reviewer should recognize sexual double meaning in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_double_meaning_example_02",
+          "title": "Sexual Double Meaning contextual",
+          "text": "تلميح جنسي (sexual_double_meaning)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual double meaning.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_04_sexual_metaphor",
+      "title": "Sexual Metaphor Pattern",
+      "description": "Sexual Metaphor reasoning pattern for the reference bucket.",
+      "primary_concept_id": "sexual_metaphor",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "إشارة جنسية",
+        "Sexual Metaphor إشارة جنسية"
+      ],
+      "indirect_expressions": [
+        "تلميح جنسي",
+        "Sexual Metaphor تلميح جنسي"
+      ],
+      "semantic_intent": [
+        "reference",
+        "double meaning",
+        "innuendo"
+      ],
+      "supporting_evidence": [
+        "Sexual Metaphor appears in the literal text or scene direction.",
+        "The context supports the reference reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A neutral description of a body part or garment.",
+        "A medical or educational explanation with no flirtation or insinuation."
+      ],
+      "counter_examples": [
+        "A line that appears suggestive but is later clarified as literal housekeeping.",
+        "A symbolic image with no recoverable sexual meaning."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Double meanings should be checked against speaker, target, and neighboring lines.",
+        "Metaphor and symbolism count only when the sexual reference is recoverable from context.",
+        "Do not collapse reference, joke, and symbolism into one node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_metaphor_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_metaphor_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_metaphor_glossary_01",
+          "from_concept_id": "sexual_metaphor",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "إشارة is a useful glossary anchor for Sexual Metaphor."
+        },
+        {
+          "id": "sexual_metaphor_glossary_02",
+          "from_concept_id": "sexual_metaphor",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تلميح is a useful glossary anchor for Sexual Metaphor."
+        },
+        {
+          "id": "sexual_metaphor_glossary_03",
+          "from_concept_id": "sexual_metaphor",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رمز is a useful glossary anchor for Sexual Metaphor."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_metaphor_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual reference and innuendo",
+          "note": "Primary content-standard mapping for sexual references."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_metaphor_example_01",
+          "title": "Sexual Metaphor direct",
+          "text": "إشارة جنسية (sexual_metaphor)",
+          "expected_outcome": "The reviewer should recognize sexual metaphor in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_metaphor_example_02",
+          "title": "Sexual Metaphor contextual",
+          "text": "تلميح جنسي (sexual_metaphor)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual metaphor.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_05_sexual_symbolism",
+      "title": "Sexual Symbolism Pattern",
+      "description": "Sexual Symbolism reasoning pattern for the reference bucket.",
+      "primary_concept_id": "sexual_symbolism",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "إشارة جنسية",
+        "Sexual Symbolism إشارة جنسية"
+      ],
+      "indirect_expressions": [
+        "تلميح جنسي",
+        "Sexual Symbolism تلميح جنسي"
+      ],
+      "semantic_intent": [
+        "reference",
+        "double meaning",
+        "innuendo"
+      ],
+      "supporting_evidence": [
+        "Sexual Symbolism appears in the literal text or scene direction.",
+        "The context supports the reference reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A neutral description of a body part or garment.",
+        "A medical or educational explanation with no flirtation or insinuation."
+      ],
+      "counter_examples": [
+        "A line that appears suggestive but is later clarified as literal housekeeping.",
+        "A symbolic image with no recoverable sexual meaning."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Double meanings should be checked against speaker, target, and neighboring lines.",
+        "Metaphor and symbolism count only when the sexual reference is recoverable from context.",
+        "Do not collapse reference, joke, and symbolism into one node."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_symbolism_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_symbolism_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_symbolism_glossary_01",
+          "from_concept_id": "sexual_symbolism",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "إشارة is a useful glossary anchor for Sexual Symbolism."
+        },
+        {
+          "id": "sexual_symbolism_glossary_02",
+          "from_concept_id": "sexual_symbolism",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تلميح is a useful glossary anchor for Sexual Symbolism."
+        },
+        {
+          "id": "sexual_symbolism_glossary_03",
+          "from_concept_id": "sexual_symbolism",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رمز is a useful glossary anchor for Sexual Symbolism."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_symbolism_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual reference and innuendo",
+          "note": "Primary content-standard mapping for sexual references."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_symbolism_example_01",
+          "title": "Sexual Symbolism direct",
+          "text": "إشارة جنسية (sexual_symbolism)",
+          "expected_outcome": "The reviewer should recognize sexual symbolism in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_symbolism_example_02",
+          "title": "Sexual Symbolism contextual",
+          "text": "تلميح جنسي (sexual_symbolism)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual symbolism.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_06_sexual_flirting",
+      "title": "Sexual Flirting Pattern",
+      "description": "Sexual Flirting reasoning pattern for the relational bucket.",
+      "primary_concept_id": "sexual_flirting",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "غزل أو دعوة حميمة",
+        "Sexual Flirting غزل أو دعوة حميمة"
+      ],
+      "indirect_expressions": [
+        "إيحاء بعلاقة أو رغبة",
+        "Sexual Flirting إيحاء بعلاقة أو رغبة"
+      ],
+      "semantic_intent": [
+        "flirtation",
+        "romance",
+        "suggestion",
+        "invitation"
+      ],
+      "supporting_evidence": [
+        "Sexual Flirting appears in the literal text or scene direction.",
+        "The context supports the relational reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "Family affection mistaken for intimacy.",
+        "A casual compliment or dance that is not sexualized by the scene."
+      ],
+      "counter_examples": [
+        "Two characters holding hands in a family scene.",
+        "A polite invitation to talk with no erotic signal."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Do not assume intent from a single affectionate line.",
+        "Check whether the scene shows mutual consent, pressure, or ambiguity.",
+        "Differentiate flirting from harassment and from ordinary romance."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_flirting_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_flirting_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_flirting_glossary_01",
+          "from_concept_id": "sexual_flirting",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "غزل is a useful glossary anchor for Sexual Flirting."
+        },
+        {
+          "id": "sexual_flirting_glossary_02",
+          "from_concept_id": "sexual_flirting",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رومانسية is a useful glossary anchor for Sexual Flirting."
+        },
+        {
+          "id": "sexual_flirting_glossary_03",
+          "from_concept_id": "sexual_flirting",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "دعوة is a useful glossary anchor for Sexual Flirting."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_flirting_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual suggestion and intimacy",
+          "note": "Primary content-standard mapping for relational intimacy."
+        },
+        {
+          "id": "sexual_flirting_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age-appropriateness and suitability",
+          "note": "Use when intimacy affects age suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_flirting_example_01",
+          "title": "Sexual Flirting direct",
+          "text": "غزل أو دعوة حميمة (sexual_flirting)",
+          "expected_outcome": "The reviewer should recognize sexual flirting in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_flirting_example_02",
+          "title": "Sexual Flirting contextual",
+          "text": "إيحاء بعلاقة أو رغبة (sexual_flirting)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual flirting.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_07_sexual_romance",
+      "title": "Sexual Romance Pattern",
+      "description": "Sexual Romance reasoning pattern for the relational bucket.",
+      "primary_concept_id": "sexual_romance",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "غزل أو دعوة حميمة",
+        "Sexual Romance غزل أو دعوة حميمة"
+      ],
+      "indirect_expressions": [
+        "إيحاء بعلاقة أو رغبة",
+        "Sexual Romance إيحاء بعلاقة أو رغبة"
+      ],
+      "semantic_intent": [
+        "flirtation",
+        "romance",
+        "suggestion",
+        "invitation"
+      ],
+      "supporting_evidence": [
+        "Sexual Romance appears in the literal text or scene direction.",
+        "The context supports the relational reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "Family affection mistaken for intimacy.",
+        "A casual compliment or dance that is not sexualized by the scene."
+      ],
+      "counter_examples": [
+        "Two characters holding hands in a family scene.",
+        "A polite invitation to talk with no erotic signal."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Do not assume intent from a single affectionate line.",
+        "Check whether the scene shows mutual consent, pressure, or ambiguity.",
+        "Differentiate flirting from harassment and from ordinary romance."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_romance_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_romance_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_romance_glossary_01",
+          "from_concept_id": "sexual_romance",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "غزل is a useful glossary anchor for Sexual Romance."
+        },
+        {
+          "id": "sexual_romance_glossary_02",
+          "from_concept_id": "sexual_romance",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رومانسية is a useful glossary anchor for Sexual Romance."
+        },
+        {
+          "id": "sexual_romance_glossary_03",
+          "from_concept_id": "sexual_romance",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "دعوة is a useful glossary anchor for Sexual Romance."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_romance_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual suggestion and intimacy",
+          "note": "Primary content-standard mapping for relational intimacy."
+        },
+        {
+          "id": "sexual_romance_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age-appropriateness and suitability",
+          "note": "Use when intimacy affects age suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_romance_example_01",
+          "title": "Sexual Romance direct",
+          "text": "غزل أو دعوة حميمة (sexual_romance)",
+          "expected_outcome": "The reviewer should recognize sexual romance in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_romance_example_02",
+          "title": "Sexual Romance contextual",
+          "text": "إيحاء بعلاقة أو رغبة (sexual_romance)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual romance.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_08_sexual_suggestion",
+      "title": "Sexual Suggestion Pattern",
+      "description": "Sexual Suggestion reasoning pattern for the relational bucket.",
+      "primary_concept_id": "sexual_suggestion",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "غزل أو دعوة حميمة",
+        "Sexual Suggestion غزل أو دعوة حميمة"
+      ],
+      "indirect_expressions": [
+        "إيحاء بعلاقة أو رغبة",
+        "Sexual Suggestion إيحاء بعلاقة أو رغبة"
+      ],
+      "semantic_intent": [
+        "flirtation",
+        "romance",
+        "suggestion",
+        "invitation"
+      ],
+      "supporting_evidence": [
+        "Sexual Suggestion appears in the literal text or scene direction.",
+        "The context supports the relational reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "Family affection mistaken for intimacy.",
+        "A casual compliment or dance that is not sexualized by the scene."
+      ],
+      "counter_examples": [
+        "Two characters holding hands in a family scene.",
+        "A polite invitation to talk with no erotic signal."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Do not assume intent from a single affectionate line.",
+        "Check whether the scene shows mutual consent, pressure, or ambiguity.",
+        "Differentiate flirting from harassment and from ordinary romance."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_suggestion_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_suggestion_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_suggestion_glossary_01",
+          "from_concept_id": "sexual_suggestion",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "غزل is a useful glossary anchor for Sexual Suggestion."
+        },
+        {
+          "id": "sexual_suggestion_glossary_02",
+          "from_concept_id": "sexual_suggestion",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رومانسية is a useful glossary anchor for Sexual Suggestion."
+        },
+        {
+          "id": "sexual_suggestion_glossary_03",
+          "from_concept_id": "sexual_suggestion",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "دعوة is a useful glossary anchor for Sexual Suggestion."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_suggestion_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual suggestion and intimacy",
+          "note": "Primary content-standard mapping for relational intimacy."
+        },
+        {
+          "id": "sexual_suggestion_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age-appropriateness and suitability",
+          "note": "Use when intimacy affects age suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_suggestion_example_01",
+          "title": "Sexual Suggestion direct",
+          "text": "غزل أو دعوة حميمة (sexual_suggestion)",
+          "expected_outcome": "The reviewer should recognize sexual suggestion in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_suggestion_example_02",
+          "title": "Sexual Suggestion contextual",
+          "text": "إيحاء بعلاقة أو رغبة (sexual_suggestion)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual suggestion.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_09_sexual_invitation",
+      "title": "Sexual Invitation Pattern",
+      "description": "Sexual Invitation reasoning pattern for the relational bucket.",
+      "primary_concept_id": "sexual_invitation",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "غزل أو دعوة حميمة",
+        "Sexual Invitation غزل أو دعوة حميمة"
+      ],
+      "indirect_expressions": [
+        "إيحاء بعلاقة أو رغبة",
+        "Sexual Invitation إيحاء بعلاقة أو رغبة"
+      ],
+      "semantic_intent": [
+        "flirtation",
+        "romance",
+        "suggestion",
+        "invitation"
+      ],
+      "supporting_evidence": [
+        "Sexual Invitation appears in the literal text or scene direction.",
+        "The context supports the relational reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "Family affection mistaken for intimacy.",
+        "A casual compliment or dance that is not sexualized by the scene."
+      ],
+      "counter_examples": [
+        "Two characters holding hands in a family scene.",
+        "A polite invitation to talk with no erotic signal."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Do not assume intent from a single affectionate line.",
+        "Check whether the scene shows mutual consent, pressure, or ambiguity.",
+        "Differentiate flirting from harassment and from ordinary romance."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_invitation_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_invitation_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_invitation_glossary_01",
+          "from_concept_id": "sexual_invitation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "غزل is a useful glossary anchor for Sexual Invitation."
+        },
+        {
+          "id": "sexual_invitation_glossary_02",
+          "from_concept_id": "sexual_invitation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رومانسية is a useful glossary anchor for Sexual Invitation."
+        },
+        {
+          "id": "sexual_invitation_glossary_03",
+          "from_concept_id": "sexual_invitation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "دعوة is a useful glossary anchor for Sexual Invitation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_invitation_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual suggestion and intimacy",
+          "note": "Primary content-standard mapping for relational intimacy."
+        },
+        {
+          "id": "sexual_invitation_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age-appropriateness and suitability",
+          "note": "Use when intimacy affects age suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_invitation_example_01",
+          "title": "Sexual Invitation direct",
+          "text": "غزل أو دعوة حميمة (sexual_invitation)",
+          "expected_outcome": "The reviewer should recognize sexual invitation in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_invitation_example_02",
+          "title": "Sexual Invitation contextual",
+          "text": "إيحاء بعلاقة أو رغبة (sexual_invitation)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual invitation.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_10_sexual_kiss",
+      "title": "Sexual Kiss Pattern",
+      "description": "Sexual Kiss reasoning pattern for the relational bucket.",
+      "primary_concept_id": "sexual_kiss",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "غزل أو دعوة حميمة",
+        "Sexual Kiss غزل أو دعوة حميمة"
+      ],
+      "indirect_expressions": [
+        "إيحاء بعلاقة أو رغبة",
+        "Sexual Kiss إيحاء بعلاقة أو رغبة"
+      ],
+      "semantic_intent": [
+        "flirtation",
+        "romance",
+        "suggestion",
+        "invitation"
+      ],
+      "supporting_evidence": [
+        "Sexual Kiss appears in the literal text or scene direction.",
+        "The context supports the relational reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "Family affection mistaken for intimacy.",
+        "A casual compliment or dance that is not sexualized by the scene."
+      ],
+      "counter_examples": [
+        "Two characters holding hands in a family scene.",
+        "A polite invitation to talk with no erotic signal."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Do not assume intent from a single affectionate line.",
+        "Check whether the scene shows mutual consent, pressure, or ambiguity.",
+        "Differentiate flirting from harassment and from ordinary romance."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_kiss_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_kiss_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_kiss_glossary_01",
+          "from_concept_id": "sexual_kiss",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "غزل is a useful glossary anchor for Sexual Kiss."
+        },
+        {
+          "id": "sexual_kiss_glossary_02",
+          "from_concept_id": "sexual_kiss",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رومانسية is a useful glossary anchor for Sexual Kiss."
+        },
+        {
+          "id": "sexual_kiss_glossary_03",
+          "from_concept_id": "sexual_kiss",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "دعوة is a useful glossary anchor for Sexual Kiss."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_kiss_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual suggestion and intimacy",
+          "note": "Primary content-standard mapping for relational intimacy."
+        },
+        {
+          "id": "sexual_kiss_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age-appropriateness and suitability",
+          "note": "Use when intimacy affects age suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_kiss_example_01",
+          "title": "Sexual Kiss direct",
+          "text": "غزل أو دعوة حميمة (sexual_kiss)",
+          "expected_outcome": "The reviewer should recognize sexual kiss in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_kiss_example_02",
+          "title": "Sexual Kiss contextual",
+          "text": "إيحاء بعلاقة أو رغبة (sexual_kiss)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual kiss.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_11_sexual_intimacy",
+      "title": "Sexual Intimacy Pattern",
+      "description": "Sexual Intimacy reasoning pattern for the relational bucket.",
+      "primary_concept_id": "sexual_intimacy",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "غزل أو دعوة حميمة",
+        "Sexual Intimacy غزل أو دعوة حميمة"
+      ],
+      "indirect_expressions": [
+        "إيحاء بعلاقة أو رغبة",
+        "Sexual Intimacy إيحاء بعلاقة أو رغبة"
+      ],
+      "semantic_intent": [
+        "flirtation",
+        "romance",
+        "suggestion",
+        "invitation"
+      ],
+      "supporting_evidence": [
+        "Sexual Intimacy appears in the literal text or scene direction.",
+        "The context supports the relational reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "Family affection mistaken for intimacy.",
+        "A casual compliment or dance that is not sexualized by the scene."
+      ],
+      "counter_examples": [
+        "Two characters holding hands in a family scene.",
+        "A polite invitation to talk with no erotic signal."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Do not assume intent from a single affectionate line.",
+        "Check whether the scene shows mutual consent, pressure, or ambiguity.",
+        "Differentiate flirting from harassment and from ordinary romance."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_intimacy_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_intimacy_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_intimacy_glossary_01",
+          "from_concept_id": "sexual_intimacy",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "غزل is a useful glossary anchor for Sexual Intimacy."
+        },
+        {
+          "id": "sexual_intimacy_glossary_02",
+          "from_concept_id": "sexual_intimacy",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رومانسية is a useful glossary anchor for Sexual Intimacy."
+        },
+        {
+          "id": "sexual_intimacy_glossary_03",
+          "from_concept_id": "sexual_intimacy",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "دعوة is a useful glossary anchor for Sexual Intimacy."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_intimacy_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual suggestion and intimacy",
+          "note": "Primary content-standard mapping for relational intimacy."
+        },
+        {
+          "id": "sexual_intimacy_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age-appropriateness and suitability",
+          "note": "Use when intimacy affects age suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_intimacy_example_01",
+          "title": "Sexual Intimacy direct",
+          "text": "غزل أو دعوة حميمة (sexual_intimacy)",
+          "expected_outcome": "The reviewer should recognize sexual intimacy in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_intimacy_example_02",
+          "title": "Sexual Intimacy contextual",
+          "text": "إيحاء بعلاقة أو رغبة (sexual_intimacy)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual intimacy.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_12_sexual_touch",
+      "title": "Sexual Touch Pattern",
+      "description": "Sexual Touch reasoning pattern for the relational bucket.",
+      "primary_concept_id": "sexual_touch",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "غزل أو دعوة حميمة",
+        "Sexual Touch غزل أو دعوة حميمة"
+      ],
+      "indirect_expressions": [
+        "إيحاء بعلاقة أو رغبة",
+        "Sexual Touch إيحاء بعلاقة أو رغبة"
+      ],
+      "semantic_intent": [
+        "flirtation",
+        "romance",
+        "suggestion",
+        "invitation"
+      ],
+      "supporting_evidence": [
+        "Sexual Touch appears in the literal text or scene direction.",
+        "The context supports the relational reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "Family affection mistaken for intimacy.",
+        "A casual compliment or dance that is not sexualized by the scene."
+      ],
+      "counter_examples": [
+        "Two characters holding hands in a family scene.",
+        "A polite invitation to talk with no erotic signal."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Do not assume intent from a single affectionate line.",
+        "Check whether the scene shows mutual consent, pressure, or ambiguity.",
+        "Differentiate flirting from harassment and from ordinary romance."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_touch_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_touch_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_touch_glossary_01",
+          "from_concept_id": "sexual_touch",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "غزل is a useful glossary anchor for Sexual Touch."
+        },
+        {
+          "id": "sexual_touch_glossary_02",
+          "from_concept_id": "sexual_touch",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رومانسية is a useful glossary anchor for Sexual Touch."
+        },
+        {
+          "id": "sexual_touch_glossary_03",
+          "from_concept_id": "sexual_touch",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "دعوة is a useful glossary anchor for Sexual Touch."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_touch_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual suggestion and intimacy",
+          "note": "Primary content-standard mapping for relational intimacy."
+        },
+        {
+          "id": "sexual_touch_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age-appropriateness and suitability",
+          "note": "Use when intimacy affects age suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_touch_example_01",
+          "title": "Sexual Touch direct",
+          "text": "غزل أو دعوة حميمة (sexual_touch)",
+          "expected_outcome": "The reviewer should recognize sexual touch in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_touch_example_02",
+          "title": "Sexual Touch contextual",
+          "text": "إيحاء بعلاقة أو رغبة (sexual_touch)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual touch.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_13_sexual_dancing",
+      "title": "Sexual Dancing Pattern",
+      "description": "Sexual Dancing reasoning pattern for the relational bucket.",
+      "primary_concept_id": "sexual_dancing",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "غزل أو دعوة حميمة",
+        "Sexual Dancing غزل أو دعوة حميمة"
+      ],
+      "indirect_expressions": [
+        "إيحاء بعلاقة أو رغبة",
+        "Sexual Dancing إيحاء بعلاقة أو رغبة"
+      ],
+      "semantic_intent": [
+        "flirtation",
+        "romance",
+        "suggestion",
+        "invitation"
+      ],
+      "supporting_evidence": [
+        "Sexual Dancing appears in the literal text or scene direction.",
+        "The context supports the relational reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "Family affection mistaken for intimacy.",
+        "A casual compliment or dance that is not sexualized by the scene."
+      ],
+      "counter_examples": [
+        "Two characters holding hands in a family scene.",
+        "A polite invitation to talk with no erotic signal."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Do not assume intent from a single affectionate line.",
+        "Check whether the scene shows mutual consent, pressure, or ambiguity.",
+        "Differentiate flirting from harassment and from ordinary romance."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_dancing_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_dancing_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_dancing_glossary_01",
+          "from_concept_id": "sexual_dancing",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "غزل is a useful glossary anchor for Sexual Dancing."
+        },
+        {
+          "id": "sexual_dancing_glossary_02",
+          "from_concept_id": "sexual_dancing",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "رومانسية is a useful glossary anchor for Sexual Dancing."
+        },
+        {
+          "id": "sexual_dancing_glossary_03",
+          "from_concept_id": "sexual_dancing",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "دعوة is a useful glossary anchor for Sexual Dancing."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_dancing_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual suggestion and intimacy",
+          "note": "Primary content-standard mapping for relational intimacy."
+        },
+        {
+          "id": "sexual_dancing_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age-appropriateness and suitability",
+          "note": "Use when intimacy affects age suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_dancing_example_01",
+          "title": "Sexual Dancing direct",
+          "text": "غزل أو دعوة حميمة (sexual_dancing)",
+          "expected_outcome": "The reviewer should recognize sexual dancing in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_dancing_example_02",
+          "title": "Sexual Dancing contextual",
+          "text": "إيحاء بعلاقة أو رغبة (sexual_dancing)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual dancing.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_14_sexual_harassment",
+      "title": "Sexual Harassment Pattern",
+      "description": "Sexual Harassment reasoning pattern for the harm bucket.",
+      "primary_concept_id": "sexual_harassment",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "تحرش أو اعتداء أو استغلال",
+        "Sexual Harassment تحرش أو اعتداء أو استغلال"
+      ],
+      "indirect_expressions": [
+        "ضغط أو استدراج أو ابتزاز",
+        "Sexual Harassment ضغط أو استدراج أو ابتزاز"
+      ],
+      "semantic_intent": [
+        "harassment",
+        "assault",
+        "abuse",
+        "exploitation",
+        "grooming"
+      ],
+      "supporting_evidence": [
+        "Sexual Harassment appears in the literal text or scene direction.",
+        "The context supports the harm reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A police report repeating a harmful allegation as evidence.",
+        "A story condemning abuse rather than endorsing it."
+      ],
+      "counter_examples": [
+        "A consensual couple scene with no pressure.",
+        "A courtroom denial of a false accusation."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Harassment is distinct from flirtation.",
+        "Assault is distinct from suggestion.",
+        "Grooming often requires multiple steps across scene boundaries."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_harassment_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_harassment_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_harassment_glossary_01",
+          "from_concept_id": "sexual_harassment",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تحرش is a useful glossary anchor for Sexual Harassment."
+        },
+        {
+          "id": "sexual_harassment_glossary_02",
+          "from_concept_id": "sexual_harassment",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "استغلال is a useful glossary anchor for Sexual Harassment."
+        },
+        {
+          "id": "sexual_harassment_glossary_03",
+          "from_concept_id": "sexual_harassment",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "استدراج is a useful glossary anchor for Sexual Harassment."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_harassment_gcam_01",
+          "article_id": 7,
+          "atom_ids": [
+            "7-1",
+            "7-3",
+            "7-4",
+            "7-5"
+          ],
+          "role": "Sexual harm, harassment, and coercion",
+          "note": "Use when the scene turns sexual language into coercive harm."
+        },
+        {
+          "id": "sexual_harassment_gcam_02",
+          "article_id": 6,
+          "atom_ids": [
+            "6-1",
+            "6-3",
+            "6-4",
+            "6-5"
+          ],
+          "role": "Child vulnerability and grooming",
+          "note": "Use when the sexual harm targets a child or minor."
+        },
+        {
+          "id": "sexual_harassment_gcam_03",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1",
+            "17-2",
+            "17-3",
+            "17-5",
+            "17-6"
+          ],
+          "role": "Dignity, privacy, and false accusation",
+          "note": "Use for abuse, invasive framing, or false sexual allegations."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_harassment_example_01",
+          "title": "Sexual Harassment direct",
+          "text": "تحرش أو اعتداء أو استغلال (sexual_harassment)",
+          "expected_outcome": "The reviewer should recognize sexual harassment in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_harassment_example_02",
+          "title": "Sexual Harassment contextual",
+          "text": "ضغط أو استدراج أو ابتزاز (sexual_harassment)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual harassment.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_15_sexual_assault",
+      "title": "Sexual Assault Pattern",
+      "description": "Sexual Assault reasoning pattern for the harm bucket.",
+      "primary_concept_id": "sexual_assault",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "تحرش أو اعتداء أو استغلال",
+        "Sexual Assault تحرش أو اعتداء أو استغلال"
+      ],
+      "indirect_expressions": [
+        "ضغط أو استدراج أو ابتزاز",
+        "Sexual Assault ضغط أو استدراج أو ابتزاز"
+      ],
+      "semantic_intent": [
+        "harassment",
+        "assault",
+        "abuse",
+        "exploitation",
+        "grooming"
+      ],
+      "supporting_evidence": [
+        "Sexual Assault appears in the literal text or scene direction.",
+        "The context supports the harm reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A police report repeating a harmful allegation as evidence.",
+        "A story condemning abuse rather than endorsing it."
+      ],
+      "counter_examples": [
+        "A consensual couple scene with no pressure.",
+        "A courtroom denial of a false accusation."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Harassment is distinct from flirtation.",
+        "Assault is distinct from suggestion.",
+        "Grooming often requires multiple steps across scene boundaries."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_assault_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_assault_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_assault_glossary_01",
+          "from_concept_id": "sexual_assault",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تحرش is a useful glossary anchor for Sexual Assault."
+        },
+        {
+          "id": "sexual_assault_glossary_02",
+          "from_concept_id": "sexual_assault",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "استغلال is a useful glossary anchor for Sexual Assault."
+        },
+        {
+          "id": "sexual_assault_glossary_03",
+          "from_concept_id": "sexual_assault",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "استدراج is a useful glossary anchor for Sexual Assault."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_assault_gcam_01",
+          "article_id": 7,
+          "atom_ids": [
+            "7-1",
+            "7-3",
+            "7-4",
+            "7-5"
+          ],
+          "role": "Sexual harm, harassment, and coercion",
+          "note": "Use when the scene turns sexual language into coercive harm."
+        },
+        {
+          "id": "sexual_assault_gcam_02",
+          "article_id": 6,
+          "atom_ids": [
+            "6-1",
+            "6-3",
+            "6-4",
+            "6-5"
+          ],
+          "role": "Child vulnerability and grooming",
+          "note": "Use when the sexual harm targets a child or minor."
+        },
+        {
+          "id": "sexual_assault_gcam_03",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1",
+            "17-2",
+            "17-3",
+            "17-5",
+            "17-6"
+          ],
+          "role": "Dignity, privacy, and false accusation",
+          "note": "Use for abuse, invasive framing, or false sexual allegations."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_assault_example_01",
+          "title": "Sexual Assault direct",
+          "text": "تحرش أو اعتداء أو استغلال (sexual_assault)",
+          "expected_outcome": "The reviewer should recognize sexual assault in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_assault_example_02",
+          "title": "Sexual Assault contextual",
+          "text": "ضغط أو استدراج أو ابتزاز (sexual_assault)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual assault.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_16_sexual_abuse",
+      "title": "Sexual Abuse Pattern",
+      "description": "Sexual Abuse reasoning pattern for the harm bucket.",
+      "primary_concept_id": "sexual_abuse",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "تحرش أو اعتداء أو استغلال",
+        "Sexual Abuse تحرش أو اعتداء أو استغلال"
+      ],
+      "indirect_expressions": [
+        "ضغط أو استدراج أو ابتزاز",
+        "Sexual Abuse ضغط أو استدراج أو ابتزاز"
+      ],
+      "semantic_intent": [
+        "harassment",
+        "assault",
+        "abuse",
+        "exploitation",
+        "grooming"
+      ],
+      "supporting_evidence": [
+        "Sexual Abuse appears in the literal text or scene direction.",
+        "The context supports the harm reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A police report repeating a harmful allegation as evidence.",
+        "A story condemning abuse rather than endorsing it."
+      ],
+      "counter_examples": [
+        "A consensual couple scene with no pressure.",
+        "A courtroom denial of a false accusation."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Harassment is distinct from flirtation.",
+        "Assault is distinct from suggestion.",
+        "Grooming often requires multiple steps across scene boundaries."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_abuse_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_abuse_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_abuse_glossary_01",
+          "from_concept_id": "sexual_abuse",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تحرش is a useful glossary anchor for Sexual Abuse."
+        },
+        {
+          "id": "sexual_abuse_glossary_02",
+          "from_concept_id": "sexual_abuse",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "استغلال is a useful glossary anchor for Sexual Abuse."
+        },
+        {
+          "id": "sexual_abuse_glossary_03",
+          "from_concept_id": "sexual_abuse",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "استدراج is a useful glossary anchor for Sexual Abuse."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_abuse_gcam_01",
+          "article_id": 7,
+          "atom_ids": [
+            "7-1",
+            "7-3",
+            "7-4",
+            "7-5"
+          ],
+          "role": "Sexual harm, harassment, and coercion",
+          "note": "Use when the scene turns sexual language into coercive harm."
+        },
+        {
+          "id": "sexual_abuse_gcam_02",
+          "article_id": 6,
+          "atom_ids": [
+            "6-1",
+            "6-3",
+            "6-4",
+            "6-5"
+          ],
+          "role": "Child vulnerability and grooming",
+          "note": "Use when the sexual harm targets a child or minor."
+        },
+        {
+          "id": "sexual_abuse_gcam_03",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1",
+            "17-2",
+            "17-3",
+            "17-5",
+            "17-6"
+          ],
+          "role": "Dignity, privacy, and false accusation",
+          "note": "Use for abuse, invasive framing, or false sexual allegations."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_abuse_example_01",
+          "title": "Sexual Abuse direct",
+          "text": "تحرش أو اعتداء أو استغلال (sexual_abuse)",
+          "expected_outcome": "The reviewer should recognize sexual abuse in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_abuse_example_02",
+          "title": "Sexual Abuse contextual",
+          "text": "ضغط أو استدراج أو ابتزاز (sexual_abuse)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual abuse.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_17_sexual_exploitation",
+      "title": "Sexual Exploitation Pattern",
+      "description": "Sexual Exploitation reasoning pattern for the harm bucket.",
+      "primary_concept_id": "sexual_exploitation",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "تحرش أو اعتداء أو استغلال",
+        "Sexual Exploitation تحرش أو اعتداء أو استغلال"
+      ],
+      "indirect_expressions": [
+        "ضغط أو استدراج أو ابتزاز",
+        "Sexual Exploitation ضغط أو استدراج أو ابتزاز"
+      ],
+      "semantic_intent": [
+        "harassment",
+        "assault",
+        "abuse",
+        "exploitation",
+        "grooming"
+      ],
+      "supporting_evidence": [
+        "Sexual Exploitation appears in the literal text or scene direction.",
+        "The context supports the harm reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A police report repeating a harmful allegation as evidence.",
+        "A story condemning abuse rather than endorsing it."
+      ],
+      "counter_examples": [
+        "A consensual couple scene with no pressure.",
+        "A courtroom denial of a false accusation."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Harassment is distinct from flirtation.",
+        "Assault is distinct from suggestion.",
+        "Grooming often requires multiple steps across scene boundaries."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_exploitation_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_exploitation_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_exploitation_glossary_01",
+          "from_concept_id": "sexual_exploitation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تحرش is a useful glossary anchor for Sexual Exploitation."
+        },
+        {
+          "id": "sexual_exploitation_glossary_02",
+          "from_concept_id": "sexual_exploitation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "استغلال is a useful glossary anchor for Sexual Exploitation."
+        },
+        {
+          "id": "sexual_exploitation_glossary_03",
+          "from_concept_id": "sexual_exploitation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "استدراج is a useful glossary anchor for Sexual Exploitation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_exploitation_gcam_01",
+          "article_id": 7,
+          "atom_ids": [
+            "7-1",
+            "7-3",
+            "7-4",
+            "7-5"
+          ],
+          "role": "Sexual harm, harassment, and coercion",
+          "note": "Use when the scene turns sexual language into coercive harm."
+        },
+        {
+          "id": "sexual_exploitation_gcam_02",
+          "article_id": 6,
+          "atom_ids": [
+            "6-1",
+            "6-3",
+            "6-4",
+            "6-5"
+          ],
+          "role": "Child vulnerability and grooming",
+          "note": "Use when the sexual harm targets a child or minor."
+        },
+        {
+          "id": "sexual_exploitation_gcam_03",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1",
+            "17-2",
+            "17-3",
+            "17-5",
+            "17-6"
+          ],
+          "role": "Dignity, privacy, and false accusation",
+          "note": "Use for abuse, invasive framing, or false sexual allegations."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_exploitation_example_01",
+          "title": "Sexual Exploitation direct",
+          "text": "تحرش أو اعتداء أو استغلال (sexual_exploitation)",
+          "expected_outcome": "The reviewer should recognize sexual exploitation in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_exploitation_example_02",
+          "title": "Sexual Exploitation contextual",
+          "text": "ضغط أو استدراج أو ابتزاز (sexual_exploitation)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual exploitation.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_18_sexual_grooming",
+      "title": "Sexual Grooming Pattern",
+      "description": "Sexual Grooming reasoning pattern for the harm bucket.",
+      "primary_concept_id": "sexual_grooming",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "تحرش أو اعتداء أو استغلال",
+        "Sexual Grooming تحرش أو اعتداء أو استغلال"
+      ],
+      "indirect_expressions": [
+        "ضغط أو استدراج أو ابتزاز",
+        "Sexual Grooming ضغط أو استدراج أو ابتزاز"
+      ],
+      "semantic_intent": [
+        "harassment",
+        "assault",
+        "abuse",
+        "exploitation",
+        "grooming"
+      ],
+      "supporting_evidence": [
+        "Sexual Grooming appears in the literal text or scene direction.",
+        "The context supports the harm reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A police report repeating a harmful allegation as evidence.",
+        "A story condemning abuse rather than endorsing it."
+      ],
+      "counter_examples": [
+        "A consensual couple scene with no pressure.",
+        "A courtroom denial of a false accusation."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Harassment is distinct from flirtation.",
+        "Assault is distinct from suggestion.",
+        "Grooming often requires multiple steps across scene boundaries."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_grooming_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_grooming_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_grooming_glossary_01",
+          "from_concept_id": "sexual_grooming",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تحرش is a useful glossary anchor for Sexual Grooming."
+        },
+        {
+          "id": "sexual_grooming_glossary_02",
+          "from_concept_id": "sexual_grooming",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "استغلال is a useful glossary anchor for Sexual Grooming."
+        },
+        {
+          "id": "sexual_grooming_glossary_03",
+          "from_concept_id": "sexual_grooming",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "استدراج is a useful glossary anchor for Sexual Grooming."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_grooming_gcam_01",
+          "article_id": 7,
+          "atom_ids": [
+            "7-1",
+            "7-3",
+            "7-4",
+            "7-5"
+          ],
+          "role": "Sexual harm, harassment, and coercion",
+          "note": "Use when the scene turns sexual language into coercive harm."
+        },
+        {
+          "id": "sexual_grooming_gcam_02",
+          "article_id": 6,
+          "atom_ids": [
+            "6-1",
+            "6-3",
+            "6-4",
+            "6-5"
+          ],
+          "role": "Child vulnerability and grooming",
+          "note": "Use when the sexual harm targets a child or minor."
+        },
+        {
+          "id": "sexual_grooming_gcam_03",
+          "article_id": 17,
+          "atom_ids": [
+            "17-1",
+            "17-2",
+            "17-3",
+            "17-5",
+            "17-6"
+          ],
+          "role": "Dignity, privacy, and false accusation",
+          "note": "Use for abuse, invasive framing, or false sexual allegations."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_grooming_example_01",
+          "title": "Sexual Grooming direct",
+          "text": "تحرش أو اعتداء أو استغلال (sexual_grooming)",
+          "expected_outcome": "The reviewer should recognize sexual grooming in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_grooming_example_02",
+          "title": "Sexual Grooming contextual",
+          "text": "ضغط أو استدراج أو ابتزاز (sexual_grooming)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual grooming.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_19_sexual_false_accusation",
+      "title": "Sexual False Accusation Pattern",
+      "description": "Sexual False Accusation reasoning pattern for the false_accusation bucket.",
+      "primary_concept_id": "sexual_false_accusation",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "اتهام جنسي كاذب",
+        "Sexual False Accusation اتهام جنسي كاذب"
+      ],
+      "indirect_expressions": [
+        "افتراء أو سوء فهم",
+        "Sexual False Accusation افتراء أو سوء فهم"
+      ],
+      "semantic_intent": [
+        "accusation",
+        "misunderstanding",
+        "correction"
+      ],
+      "supporting_evidence": [
+        "Sexual False Accusation appears in the literal text or scene direction.",
+        "The context supports the false_accusation reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A headline or court quote repeated for reporting.",
+        "A character wrongly accusing another as a plot twist."
+      ],
+      "counter_examples": [
+        "A false allegation that is explicitly retracted.",
+        "A misunderstanding that later resolves as harmless family contact."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Do not let accusation language alone force a sexual finding.",
+        "Track the story outcome before finalizing the interpretation.",
+        "Separate concept from framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_false_accusation_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_false_accusation_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_false_accusation_glossary_01",
+          "from_concept_id": "sexual_false_accusation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "افتراء is a useful glossary anchor for Sexual False Accusation."
+        },
+        {
+          "id": "sexual_false_accusation_glossary_02",
+          "from_concept_id": "sexual_false_accusation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "اتهام is a useful glossary anchor for Sexual False Accusation."
+        },
+        {
+          "id": "sexual_false_accusation_glossary_03",
+          "from_concept_id": "sexual_false_accusation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "سوء فهم is a useful glossary anchor for Sexual False Accusation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_false_accusation_gcam_01",
+          "article_id": 17,
+          "atom_ids": [
+            "17-2",
+            "17-3",
+            "17-5",
+            "17-6"
+          ],
+          "role": "False accusation and dignity",
+          "note": "Use when sexual accusation language is later corrected or disproved."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_false_accusation_example_01",
+          "title": "Sexual False Accusation direct",
+          "text": "اتهام جنسي كاذب (sexual_false_accusation)",
+          "expected_outcome": "The reviewer should recognize sexual false accusation in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_false_accusation_example_02",
+          "title": "Sexual False Accusation contextual",
+          "text": "افتراء أو سوء فهم (sexual_false_accusation)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual false accusation.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_20_sexual_dialogue",
+      "title": "Sexual Dialogue Pattern",
+      "description": "Sexual Dialogue reasoning pattern for the scene bucket.",
+      "primary_concept_id": "sexual_dialogue",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "وصف جسدي أو بصري",
+        "Sexual Dialogue وصف جسدي أو بصري"
+      ],
+      "indirect_expressions": [
+        "تركيز الكاميرا أو الإخراج",
+        "Sexual Dialogue تركيز الكاميرا أو الإخراج"
+      ],
+      "semantic_intent": [
+        "dialogue",
+        "description",
+        "camera focus",
+        "sound",
+        "body focus",
+        "clothing"
+      ],
+      "supporting_evidence": [
+        "Sexual Dialogue appears in the literal text or scene direction.",
+        "The context supports the scene reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A fashion description with no sexual emphasis.",
+        "A neutral camera note that does not focus on the body sexually."
+      ],
+      "counter_examples": [
+        "A director note that only moves the camera to establish geography.",
+        "A sound cue used to build suspense rather than sexual framing."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Check whether visual framing makes a sexual meaning explicit.",
+        "Do not ignore non-verbal cues such as music, motion, or camera emphasis.",
+        "Separate concept from framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_dialogue_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_dialogue_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_dialogue_glossary_01",
+          "from_concept_id": "sexual_dialogue",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الكاميرا is a useful glossary anchor for Sexual Dialogue."
+        },
+        {
+          "id": "sexual_dialogue_glossary_02",
+          "from_concept_id": "sexual_dialogue",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الجسد is a useful glossary anchor for Sexual Dialogue."
+        },
+        {
+          "id": "sexual_dialogue_glossary_03",
+          "from_concept_id": "sexual_dialogue",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الملابس is a useful glossary anchor for Sexual Dialogue."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_dialogue_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual scene framing",
+          "note": "Use when visual language or sound carries the meaning."
+        },
+        {
+          "id": "sexual_dialogue_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age suitability and content rating",
+          "note": "Use when scene framing affects age-appropriateness."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_dialogue_example_01",
+          "title": "Sexual Dialogue direct",
+          "text": "وصف جسدي أو بصري (sexual_dialogue)",
+          "expected_outcome": "The reviewer should recognize sexual dialogue in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_dialogue_example_02",
+          "title": "Sexual Dialogue contextual",
+          "text": "تركيز الكاميرا أو الإخراج (sexual_dialogue)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual dialogue.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_21_sexual_scene",
+      "title": "Sexual Scene Pattern",
+      "description": "Sexual Scene reasoning pattern for the scene bucket.",
+      "primary_concept_id": "sexual_scene",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "وصف جسدي أو بصري",
+        "Sexual Scene وصف جسدي أو بصري"
+      ],
+      "indirect_expressions": [
+        "تركيز الكاميرا أو الإخراج",
+        "Sexual Scene تركيز الكاميرا أو الإخراج"
+      ],
+      "semantic_intent": [
+        "dialogue",
+        "description",
+        "camera focus",
+        "sound",
+        "body focus",
+        "clothing"
+      ],
+      "supporting_evidence": [
+        "Sexual Scene appears in the literal text or scene direction.",
+        "The context supports the scene reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A fashion description with no sexual emphasis.",
+        "A neutral camera note that does not focus on the body sexually."
+      ],
+      "counter_examples": [
+        "A director note that only moves the camera to establish geography.",
+        "A sound cue used to build suspense rather than sexual framing."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Check whether visual framing makes a sexual meaning explicit.",
+        "Do not ignore non-verbal cues such as music, motion, or camera emphasis.",
+        "Separate concept from framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_scene_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_scene_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_scene_glossary_01",
+          "from_concept_id": "sexual_scene",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الكاميرا is a useful glossary anchor for Sexual Scene."
+        },
+        {
+          "id": "sexual_scene_glossary_02",
+          "from_concept_id": "sexual_scene",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الجسد is a useful glossary anchor for Sexual Scene."
+        },
+        {
+          "id": "sexual_scene_glossary_03",
+          "from_concept_id": "sexual_scene",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الملابس is a useful glossary anchor for Sexual Scene."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_scene_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual scene framing",
+          "note": "Use when visual language or sound carries the meaning."
+        },
+        {
+          "id": "sexual_scene_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age suitability and content rating",
+          "note": "Use when scene framing affects age-appropriateness."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_scene_example_01",
+          "title": "Sexual Scene direct",
+          "text": "وصف جسدي أو بصري (sexual_scene)",
+          "expected_outcome": "The reviewer should recognize sexual scene in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_scene_example_02",
+          "title": "Sexual Scene contextual",
+          "text": "تركيز الكاميرا أو الإخراج (sexual_scene)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual scene.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_22_sexual_description",
+      "title": "Sexual Description Pattern",
+      "description": "Sexual Description reasoning pattern for the scene bucket.",
+      "primary_concept_id": "sexual_description",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "وصف جسدي أو بصري",
+        "Sexual Description وصف جسدي أو بصري"
+      ],
+      "indirect_expressions": [
+        "تركيز الكاميرا أو الإخراج",
+        "Sexual Description تركيز الكاميرا أو الإخراج"
+      ],
+      "semantic_intent": [
+        "dialogue",
+        "description",
+        "camera focus",
+        "sound",
+        "body focus",
+        "clothing"
+      ],
+      "supporting_evidence": [
+        "Sexual Description appears in the literal text or scene direction.",
+        "The context supports the scene reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A fashion description with no sexual emphasis.",
+        "A neutral camera note that does not focus on the body sexually."
+      ],
+      "counter_examples": [
+        "A director note that only moves the camera to establish geography.",
+        "A sound cue used to build suspense rather than sexual framing."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Check whether visual framing makes a sexual meaning explicit.",
+        "Do not ignore non-verbal cues such as music, motion, or camera emphasis.",
+        "Separate concept from framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_description_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_description_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_description_glossary_01",
+          "from_concept_id": "sexual_description",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الكاميرا is a useful glossary anchor for Sexual Description."
+        },
+        {
+          "id": "sexual_description_glossary_02",
+          "from_concept_id": "sexual_description",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الجسد is a useful glossary anchor for Sexual Description."
+        },
+        {
+          "id": "sexual_description_glossary_03",
+          "from_concept_id": "sexual_description",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الملابس is a useful glossary anchor for Sexual Description."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_description_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual scene framing",
+          "note": "Use when visual language or sound carries the meaning."
+        },
+        {
+          "id": "sexual_description_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age suitability and content rating",
+          "note": "Use when scene framing affects age-appropriateness."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_description_example_01",
+          "title": "Sexual Description direct",
+          "text": "وصف جسدي أو بصري (sexual_description)",
+          "expected_outcome": "The reviewer should recognize sexual description in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_description_example_02",
+          "title": "Sexual Description contextual",
+          "text": "تركيز الكاميرا أو الإخراج (sexual_description)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual description.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_23_sexual_sound",
+      "title": "Sexual Sound Pattern",
+      "description": "Sexual Sound reasoning pattern for the scene bucket.",
+      "primary_concept_id": "sexual_sound",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "وصف جسدي أو بصري",
+        "Sexual Sound وصف جسدي أو بصري"
+      ],
+      "indirect_expressions": [
+        "تركيز الكاميرا أو الإخراج",
+        "Sexual Sound تركيز الكاميرا أو الإخراج"
+      ],
+      "semantic_intent": [
+        "dialogue",
+        "description",
+        "camera focus",
+        "sound",
+        "body focus",
+        "clothing"
+      ],
+      "supporting_evidence": [
+        "Sexual Sound appears in the literal text or scene direction.",
+        "The context supports the scene reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A fashion description with no sexual emphasis.",
+        "A neutral camera note that does not focus on the body sexually."
+      ],
+      "counter_examples": [
+        "A director note that only moves the camera to establish geography.",
+        "A sound cue used to build suspense rather than sexual framing."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Check whether visual framing makes a sexual meaning explicit.",
+        "Do not ignore non-verbal cues such as music, motion, or camera emphasis.",
+        "Separate concept from framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_sound_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_sound_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_sound_glossary_01",
+          "from_concept_id": "sexual_sound",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الكاميرا is a useful glossary anchor for Sexual Sound."
+        },
+        {
+          "id": "sexual_sound_glossary_02",
+          "from_concept_id": "sexual_sound",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الجسد is a useful glossary anchor for Sexual Sound."
+        },
+        {
+          "id": "sexual_sound_glossary_03",
+          "from_concept_id": "sexual_sound",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الملابس is a useful glossary anchor for Sexual Sound."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_sound_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual scene framing",
+          "note": "Use when visual language or sound carries the meaning."
+        },
+        {
+          "id": "sexual_sound_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age suitability and content rating",
+          "note": "Use when scene framing affects age-appropriateness."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_sound_example_01",
+          "title": "Sexual Sound direct",
+          "text": "وصف جسدي أو بصري (sexual_sound)",
+          "expected_outcome": "The reviewer should recognize sexual sound in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_sound_example_02",
+          "title": "Sexual Sound contextual",
+          "text": "تركيز الكاميرا أو الإخراج (sexual_sound)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual sound.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_24_sexual_camera_focus",
+      "title": "Sexual Camera Focus Pattern",
+      "description": "Sexual Camera Focus reasoning pattern for the scene bucket.",
+      "primary_concept_id": "sexual_camera_focus",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "وصف جسدي أو بصري",
+        "Sexual Camera Focus وصف جسدي أو بصري"
+      ],
+      "indirect_expressions": [
+        "تركيز الكاميرا أو الإخراج",
+        "Sexual Camera Focus تركيز الكاميرا أو الإخراج"
+      ],
+      "semantic_intent": [
+        "dialogue",
+        "description",
+        "camera focus",
+        "sound",
+        "body focus",
+        "clothing"
+      ],
+      "supporting_evidence": [
+        "Sexual Camera Focus appears in the literal text or scene direction.",
+        "The context supports the scene reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A fashion description with no sexual emphasis.",
+        "A neutral camera note that does not focus on the body sexually."
+      ],
+      "counter_examples": [
+        "A director note that only moves the camera to establish geography.",
+        "A sound cue used to build suspense rather than sexual framing."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Check whether visual framing makes a sexual meaning explicit.",
+        "Do not ignore non-verbal cues such as music, motion, or camera emphasis.",
+        "Separate concept from framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_camera_focus_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_camera_focus_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_camera_focus_glossary_01",
+          "from_concept_id": "sexual_camera_focus",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الكاميرا is a useful glossary anchor for Sexual Camera Focus."
+        },
+        {
+          "id": "sexual_camera_focus_glossary_02",
+          "from_concept_id": "sexual_camera_focus",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الجسد is a useful glossary anchor for Sexual Camera Focus."
+        },
+        {
+          "id": "sexual_camera_focus_glossary_03",
+          "from_concept_id": "sexual_camera_focus",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الملابس is a useful glossary anchor for Sexual Camera Focus."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_camera_focus_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual scene framing",
+          "note": "Use when visual language or sound carries the meaning."
+        },
+        {
+          "id": "sexual_camera_focus_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age suitability and content rating",
+          "note": "Use when scene framing affects age-appropriateness."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_camera_focus_example_01",
+          "title": "Sexual Camera Focus direct",
+          "text": "وصف جسدي أو بصري (sexual_camera_focus)",
+          "expected_outcome": "The reviewer should recognize sexual camera focus in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_camera_focus_example_02",
+          "title": "Sexual Camera Focus contextual",
+          "text": "تركيز الكاميرا أو الإخراج (sexual_camera_focus)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual camera focus.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_25_sexual_body_focus",
+      "title": "Sexual Body Focus Pattern",
+      "description": "Sexual Body Focus reasoning pattern for the scene bucket.",
+      "primary_concept_id": "sexual_body_focus",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "وصف جسدي أو بصري",
+        "Sexual Body Focus وصف جسدي أو بصري"
+      ],
+      "indirect_expressions": [
+        "تركيز الكاميرا أو الإخراج",
+        "Sexual Body Focus تركيز الكاميرا أو الإخراج"
+      ],
+      "semantic_intent": [
+        "dialogue",
+        "description",
+        "camera focus",
+        "sound",
+        "body focus",
+        "clothing"
+      ],
+      "supporting_evidence": [
+        "Sexual Body Focus appears in the literal text or scene direction.",
+        "The context supports the scene reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A fashion description with no sexual emphasis.",
+        "A neutral camera note that does not focus on the body sexually."
+      ],
+      "counter_examples": [
+        "A director note that only moves the camera to establish geography.",
+        "A sound cue used to build suspense rather than sexual framing."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Check whether visual framing makes a sexual meaning explicit.",
+        "Do not ignore non-verbal cues such as music, motion, or camera emphasis.",
+        "Separate concept from framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_body_focus_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_body_focus_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_body_focus_glossary_01",
+          "from_concept_id": "sexual_body_focus",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الكاميرا is a useful glossary anchor for Sexual Body Focus."
+        },
+        {
+          "id": "sexual_body_focus_glossary_02",
+          "from_concept_id": "sexual_body_focus",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الجسد is a useful glossary anchor for Sexual Body Focus."
+        },
+        {
+          "id": "sexual_body_focus_glossary_03",
+          "from_concept_id": "sexual_body_focus",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الملابس is a useful glossary anchor for Sexual Body Focus."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_body_focus_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual scene framing",
+          "note": "Use when visual language or sound carries the meaning."
+        },
+        {
+          "id": "sexual_body_focus_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age suitability and content rating",
+          "note": "Use when scene framing affects age-appropriateness."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_body_focus_example_01",
+          "title": "Sexual Body Focus direct",
+          "text": "وصف جسدي أو بصري (sexual_body_focus)",
+          "expected_outcome": "The reviewer should recognize sexual body focus in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_body_focus_example_02",
+          "title": "Sexual Body Focus contextual",
+          "text": "تركيز الكاميرا أو الإخراج (sexual_body_focus)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual body focus.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_26_sexual_clothing",
+      "title": "Sexual Clothing Pattern",
+      "description": "Sexual Clothing reasoning pattern for the scene bucket.",
+      "primary_concept_id": "sexual_clothing",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "وصف جسدي أو بصري",
+        "Sexual Clothing وصف جسدي أو بصري"
+      ],
+      "indirect_expressions": [
+        "تركيز الكاميرا أو الإخراج",
+        "Sexual Clothing تركيز الكاميرا أو الإخراج"
+      ],
+      "semantic_intent": [
+        "dialogue",
+        "description",
+        "camera focus",
+        "sound",
+        "body focus",
+        "clothing"
+      ],
+      "supporting_evidence": [
+        "Sexual Clothing appears in the literal text or scene direction.",
+        "The context supports the scene reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A fashion description with no sexual emphasis.",
+        "A neutral camera note that does not focus on the body sexually."
+      ],
+      "counter_examples": [
+        "A director note that only moves the camera to establish geography.",
+        "A sound cue used to build suspense rather than sexual framing."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Check whether visual framing makes a sexual meaning explicit.",
+        "Do not ignore non-verbal cues such as music, motion, or camera emphasis.",
+        "Separate concept from framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_clothing_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_clothing_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_clothing_glossary_01",
+          "from_concept_id": "sexual_clothing",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الكاميرا is a useful glossary anchor for Sexual Clothing."
+        },
+        {
+          "id": "sexual_clothing_glossary_02",
+          "from_concept_id": "sexual_clothing",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الجسد is a useful glossary anchor for Sexual Clothing."
+        },
+        {
+          "id": "sexual_clothing_glossary_03",
+          "from_concept_id": "sexual_clothing",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "الملابس is a useful glossary anchor for Sexual Clothing."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_clothing_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual scene framing",
+          "note": "Use when visual language or sound carries the meaning."
+        },
+        {
+          "id": "sexual_clothing_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age suitability and content rating",
+          "note": "Use when scene framing affects age-appropriateness."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_clothing_example_01",
+          "title": "Sexual Clothing direct",
+          "text": "وصف جسدي أو بصري (sexual_clothing)",
+          "expected_outcome": "The reviewer should recognize sexual clothing in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_clothing_example_02",
+          "title": "Sexual Clothing contextual",
+          "text": "تركيز الكاميرا أو الإخراج (sexual_clothing)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual clothing.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_27_sexual_normalization",
+      "title": "Sexual Normalization Pattern",
+      "description": "Sexual Normalization reasoning pattern for the framing bucket.",
+      "primary_concept_id": "sexual_normalization",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "تطبيع أو تمجيد أو إدانة",
+        "Sexual Normalization تطبيع أو تمجيد أو إدانة"
+      ],
+      "indirect_expressions": [
+        "سياق يغير الحكم",
+        "Sexual Normalization سياق يغير الحكم"
+      ],
+      "semantic_intent": [
+        "normalization",
+        "glorification",
+        "instruction",
+        "comedy",
+        "condemnation",
+        "documentary"
+      ],
+      "supporting_evidence": [
+        "Sexual Normalization appears in the literal text or scene direction.",
+        "The context supports the framing reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A documentary clip describing sexual behavior as evidence.",
+        "A comedy scene that mocks the subject rather than endorsing it."
+      ],
+      "counter_examples": [
+        "A teacher explaining a biology diagram.",
+        "A news report quoting a problematic line for context."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "A harmful concept can be present while the story condemns it.",
+        "Instruction is distinct from depiction.",
+        "Documentary framing usually reduces confidence unless it also promotes the content."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_normalization_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_normalization_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_normalization_glossary_01",
+          "from_concept_id": "sexual_normalization",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "إدانة is a useful glossary anchor for Sexual Normalization."
+        },
+        {
+          "id": "sexual_normalization_glossary_02",
+          "from_concept_id": "sexual_normalization",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تمجيد is a useful glossary anchor for Sexual Normalization."
+        },
+        {
+          "id": "sexual_normalization_glossary_03",
+          "from_concept_id": "sexual_normalization",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تطبيع is a useful glossary anchor for Sexual Normalization."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_normalization_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual framing and content control",
+          "note": "Use when the scene normalizes or glorifies sexual content."
+        },
+        {
+          "id": "sexual_normalization_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-2",
+            "5-5"
+          ],
+          "role": "Age-rating suitability and instructional framing",
+          "note": "Use when framing affects content suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_normalization_example_01",
+          "title": "Sexual Normalization direct",
+          "text": "تطبيع أو تمجيد أو إدانة (sexual_normalization)",
+          "expected_outcome": "The reviewer should recognize sexual normalization in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_normalization_example_02",
+          "title": "Sexual Normalization contextual",
+          "text": "سياق يغير الحكم (sexual_normalization)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual normalization.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_28_sexual_glorification",
+      "title": "Sexual Glorification Pattern",
+      "description": "Sexual Glorification reasoning pattern for the framing bucket.",
+      "primary_concept_id": "sexual_glorification",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "تطبيع أو تمجيد أو إدانة",
+        "Sexual Glorification تطبيع أو تمجيد أو إدانة"
+      ],
+      "indirect_expressions": [
+        "سياق يغير الحكم",
+        "Sexual Glorification سياق يغير الحكم"
+      ],
+      "semantic_intent": [
+        "normalization",
+        "glorification",
+        "instruction",
+        "comedy",
+        "condemnation",
+        "documentary"
+      ],
+      "supporting_evidence": [
+        "Sexual Glorification appears in the literal text or scene direction.",
+        "The context supports the framing reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A documentary clip describing sexual behavior as evidence.",
+        "A comedy scene that mocks the subject rather than endorsing it."
+      ],
+      "counter_examples": [
+        "A teacher explaining a biology diagram.",
+        "A news report quoting a problematic line for context."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "A harmful concept can be present while the story condemns it.",
+        "Instruction is distinct from depiction.",
+        "Documentary framing usually reduces confidence unless it also promotes the content."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_glorification_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_glorification_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_glorification_glossary_01",
+          "from_concept_id": "sexual_glorification",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "إدانة is a useful glossary anchor for Sexual Glorification."
+        },
+        {
+          "id": "sexual_glorification_glossary_02",
+          "from_concept_id": "sexual_glorification",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تمجيد is a useful glossary anchor for Sexual Glorification."
+        },
+        {
+          "id": "sexual_glorification_glossary_03",
+          "from_concept_id": "sexual_glorification",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تطبيع is a useful glossary anchor for Sexual Glorification."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_glorification_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual framing and content control",
+          "note": "Use when the scene normalizes or glorifies sexual content."
+        },
+        {
+          "id": "sexual_glorification_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-2",
+            "5-5"
+          ],
+          "role": "Age-rating suitability and instructional framing",
+          "note": "Use when framing affects content suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_glorification_example_01",
+          "title": "Sexual Glorification direct",
+          "text": "تطبيع أو تمجيد أو إدانة (sexual_glorification)",
+          "expected_outcome": "The reviewer should recognize sexual glorification in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_glorification_example_02",
+          "title": "Sexual Glorification contextual",
+          "text": "سياق يغير الحكم (sexual_glorification)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual glorification.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_29_sexual_instruction",
+      "title": "Sexual Instruction Pattern",
+      "description": "Sexual Instruction reasoning pattern for the framing bucket.",
+      "primary_concept_id": "sexual_instruction",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "تطبيع أو تمجيد أو إدانة",
+        "Sexual Instruction تطبيع أو تمجيد أو إدانة"
+      ],
+      "indirect_expressions": [
+        "سياق يغير الحكم",
+        "Sexual Instruction سياق يغير الحكم"
+      ],
+      "semantic_intent": [
+        "normalization",
+        "glorification",
+        "instruction",
+        "comedy",
+        "condemnation",
+        "documentary"
+      ],
+      "supporting_evidence": [
+        "Sexual Instruction appears in the literal text or scene direction.",
+        "The context supports the framing reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A documentary clip describing sexual behavior as evidence.",
+        "A comedy scene that mocks the subject rather than endorsing it."
+      ],
+      "counter_examples": [
+        "A teacher explaining a biology diagram.",
+        "A news report quoting a problematic line for context."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "A harmful concept can be present while the story condemns it.",
+        "Instruction is distinct from depiction.",
+        "Documentary framing usually reduces confidence unless it also promotes the content."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_instruction_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_instruction_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_instruction_glossary_01",
+          "from_concept_id": "sexual_instruction",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "إدانة is a useful glossary anchor for Sexual Instruction."
+        },
+        {
+          "id": "sexual_instruction_glossary_02",
+          "from_concept_id": "sexual_instruction",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تمجيد is a useful glossary anchor for Sexual Instruction."
+        },
+        {
+          "id": "sexual_instruction_glossary_03",
+          "from_concept_id": "sexual_instruction",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تطبيع is a useful glossary anchor for Sexual Instruction."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_instruction_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual framing and content control",
+          "note": "Use when the scene normalizes or glorifies sexual content."
+        },
+        {
+          "id": "sexual_instruction_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-2",
+            "5-5"
+          ],
+          "role": "Age-rating suitability and instructional framing",
+          "note": "Use when framing affects content suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_instruction_example_01",
+          "title": "Sexual Instruction direct",
+          "text": "تطبيع أو تمجيد أو إدانة (sexual_instruction)",
+          "expected_outcome": "The reviewer should recognize sexual instruction in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_instruction_example_02",
+          "title": "Sexual Instruction contextual",
+          "text": "سياق يغير الحكم (sexual_instruction)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual instruction.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_30_sexual_comedy",
+      "title": "Sexual Comedy Pattern",
+      "description": "Sexual Comedy reasoning pattern for the framing bucket.",
+      "primary_concept_id": "sexual_comedy",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "تطبيع أو تمجيد أو إدانة",
+        "Sexual Comedy تطبيع أو تمجيد أو إدانة"
+      ],
+      "indirect_expressions": [
+        "سياق يغير الحكم",
+        "Sexual Comedy سياق يغير الحكم"
+      ],
+      "semantic_intent": [
+        "normalization",
+        "glorification",
+        "instruction",
+        "comedy",
+        "condemnation",
+        "documentary"
+      ],
+      "supporting_evidence": [
+        "Sexual Comedy appears in the literal text or scene direction.",
+        "The context supports the framing reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A documentary clip describing sexual behavior as evidence.",
+        "A comedy scene that mocks the subject rather than endorsing it."
+      ],
+      "counter_examples": [
+        "A teacher explaining a biology diagram.",
+        "A news report quoting a problematic line for context."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "A harmful concept can be present while the story condemns it.",
+        "Instruction is distinct from depiction.",
+        "Documentary framing usually reduces confidence unless it also promotes the content."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_comedy_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_comedy_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_comedy_glossary_01",
+          "from_concept_id": "sexual_comedy",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "إدانة is a useful glossary anchor for Sexual Comedy."
+        },
+        {
+          "id": "sexual_comedy_glossary_02",
+          "from_concept_id": "sexual_comedy",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تمجيد is a useful glossary anchor for Sexual Comedy."
+        },
+        {
+          "id": "sexual_comedy_glossary_03",
+          "from_concept_id": "sexual_comedy",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تطبيع is a useful glossary anchor for Sexual Comedy."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_comedy_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual framing and content control",
+          "note": "Use when the scene normalizes or glorifies sexual content."
+        },
+        {
+          "id": "sexual_comedy_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-2",
+            "5-5"
+          ],
+          "role": "Age-rating suitability and instructional framing",
+          "note": "Use when framing affects content suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_comedy_example_01",
+          "title": "Sexual Comedy direct",
+          "text": "تطبيع أو تمجيد أو إدانة (sexual_comedy)",
+          "expected_outcome": "The reviewer should recognize sexual comedy in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_comedy_example_02",
+          "title": "Sexual Comedy contextual",
+          "text": "سياق يغير الحكم (sexual_comedy)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual comedy.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_31_sexual_condemnation",
+      "title": "Sexual Condemnation Pattern",
+      "description": "Sexual Condemnation reasoning pattern for the framing bucket.",
+      "primary_concept_id": "sexual_condemnation",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "تطبيع أو تمجيد أو إدانة",
+        "Sexual Condemnation تطبيع أو تمجيد أو إدانة"
+      ],
+      "indirect_expressions": [
+        "سياق يغير الحكم",
+        "Sexual Condemnation سياق يغير الحكم"
+      ],
+      "semantic_intent": [
+        "normalization",
+        "glorification",
+        "instruction",
+        "comedy",
+        "condemnation",
+        "documentary"
+      ],
+      "supporting_evidence": [
+        "Sexual Condemnation appears in the literal text or scene direction.",
+        "The context supports the framing reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A documentary clip describing sexual behavior as evidence.",
+        "A comedy scene that mocks the subject rather than endorsing it."
+      ],
+      "counter_examples": [
+        "A teacher explaining a biology diagram.",
+        "A news report quoting a problematic line for context."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "A harmful concept can be present while the story condemns it.",
+        "Instruction is distinct from depiction.",
+        "Documentary framing usually reduces confidence unless it also promotes the content."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_condemnation_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_condemnation_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_condemnation_glossary_01",
+          "from_concept_id": "sexual_condemnation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "إدانة is a useful glossary anchor for Sexual Condemnation."
+        },
+        {
+          "id": "sexual_condemnation_glossary_02",
+          "from_concept_id": "sexual_condemnation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تمجيد is a useful glossary anchor for Sexual Condemnation."
+        },
+        {
+          "id": "sexual_condemnation_glossary_03",
+          "from_concept_id": "sexual_condemnation",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تطبيع is a useful glossary anchor for Sexual Condemnation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_condemnation_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual framing and content control",
+          "note": "Use when the scene normalizes or glorifies sexual content."
+        },
+        {
+          "id": "sexual_condemnation_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-2",
+            "5-5"
+          ],
+          "role": "Age-rating suitability and instructional framing",
+          "note": "Use when framing affects content suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_condemnation_example_01",
+          "title": "Sexual Condemnation direct",
+          "text": "تطبيع أو تمجيد أو إدانة (sexual_condemnation)",
+          "expected_outcome": "The reviewer should recognize sexual condemnation in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_condemnation_example_02",
+          "title": "Sexual Condemnation contextual",
+          "text": "سياق يغير الحكم (sexual_condemnation)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual condemnation.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_32_sexual_documentary",
+      "title": "Sexual Documentary Pattern",
+      "description": "Sexual Documentary reasoning pattern for the framing bucket.",
+      "primary_concept_id": "sexual_documentary",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "تطبيع أو تمجيد أو إدانة",
+        "Sexual Documentary تطبيع أو تمجيد أو إدانة"
+      ],
+      "indirect_expressions": [
+        "سياق يغير الحكم",
+        "Sexual Documentary سياق يغير الحكم"
+      ],
+      "semantic_intent": [
+        "normalization",
+        "glorification",
+        "instruction",
+        "comedy",
+        "condemnation",
+        "documentary"
+      ],
+      "supporting_evidence": [
+        "Sexual Documentary appears in the literal text or scene direction.",
+        "The context supports the framing reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A documentary clip describing sexual behavior as evidence.",
+        "A comedy scene that mocks the subject rather than endorsing it."
+      ],
+      "counter_examples": [
+        "A teacher explaining a biology diagram.",
+        "A news report quoting a problematic line for context."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "A harmful concept can be present while the story condemns it.",
+        "Instruction is distinct from depiction.",
+        "Documentary framing usually reduces confidence unless it also promotes the content."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_documentary_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_documentary_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_documentary_glossary_01",
+          "from_concept_id": "sexual_documentary",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "إدانة is a useful glossary anchor for Sexual Documentary."
+        },
+        {
+          "id": "sexual_documentary_glossary_02",
+          "from_concept_id": "sexual_documentary",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تمجيد is a useful glossary anchor for Sexual Documentary."
+        },
+        {
+          "id": "sexual_documentary_glossary_03",
+          "from_concept_id": "sexual_documentary",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تطبيع is a useful glossary anchor for Sexual Documentary."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_documentary_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual framing and content control",
+          "note": "Use when the scene normalizes or glorifies sexual content."
+        },
+        {
+          "id": "sexual_documentary_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-2",
+            "5-5"
+          ],
+          "role": "Age-rating suitability and instructional framing",
+          "note": "Use when framing affects content suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_documentary_example_01",
+          "title": "Sexual Documentary direct",
+          "text": "تطبيع أو تمجيد أو إدانة (sexual_documentary)",
+          "expected_outcome": "The reviewer should recognize sexual documentary in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_documentary_example_02",
+          "title": "Sexual Documentary contextual",
+          "text": "سياق يغير الحكم (sexual_documentary)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual documentary.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_33_sexual_medical",
+      "title": "Sexual Medical Pattern",
+      "description": "Sexual Medical reasoning pattern for the context bucket.",
+      "primary_concept_id": "sexual_medical",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "شرح طبي أو تعليمي أو تاريخي",
+        "Sexual Medical شرح طبي أو تعليمي أو تاريخي"
+      ],
+      "indirect_expressions": [
+        "سياق يخفف التفسير",
+        "Sexual Medical سياق يخفف التفسير"
+      ],
+      "semantic_intent": [
+        "medical",
+        "educational",
+        "historical",
+        "court",
+        "police",
+        "news"
+      ],
+      "supporting_evidence": [
+        "Sexual Medical appears in the literal text or scene direction.",
+        "The context supports the context reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A clinic explanation of anatomy.",
+        "A textbook or archive description."
+      ],
+      "counter_examples": [
+        "A police officer reading a complaint file.",
+        "A teacher explaining consent or puberty in class."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Medical terminology should not be treated as sexual content by default.",
+        "Educational biology is a context, not a violation.",
+        "Historical marriage or ritual narration is often contextual rather than promotional."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_medical_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_medical_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_medical_glossary_01",
+          "from_concept_id": "sexual_medical",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "طبي is a useful glossary anchor for Sexual Medical."
+        },
+        {
+          "id": "sexual_medical_glossary_02",
+          "from_concept_id": "sexual_medical",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تعليمي is a useful glossary anchor for Sexual Medical."
+        },
+        {
+          "id": "sexual_medical_glossary_03",
+          "from_concept_id": "sexual_medical",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تاريخي is a useful glossary anchor for Sexual Medical."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_medical_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual content in contextual settings",
+          "note": "Use when sexual material appears in a factual explanation."
+        },
+        {
+          "id": "sexual_medical_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age-appropriateness and educational framing",
+          "note": "Use when context affects age suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_medical_example_01",
+          "title": "Sexual Medical direct",
+          "text": "شرح طبي أو تعليمي أو تاريخي (sexual_medical)",
+          "expected_outcome": "The reviewer should recognize sexual medical in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_medical_example_02",
+          "title": "Sexual Medical contextual",
+          "text": "سياق يخفف التفسير (sexual_medical)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual medical.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_34_sexual_educational",
+      "title": "Sexual Educational Pattern",
+      "description": "Sexual Educational reasoning pattern for the context bucket.",
+      "primary_concept_id": "sexual_educational",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "شرح طبي أو تعليمي أو تاريخي",
+        "Sexual Educational شرح طبي أو تعليمي أو تاريخي"
+      ],
+      "indirect_expressions": [
+        "سياق يخفف التفسير",
+        "Sexual Educational سياق يخفف التفسير"
+      ],
+      "semantic_intent": [
+        "medical",
+        "educational",
+        "historical",
+        "court",
+        "police",
+        "news"
+      ],
+      "supporting_evidence": [
+        "Sexual Educational appears in the literal text or scene direction.",
+        "The context supports the context reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A clinic explanation of anatomy.",
+        "A textbook or archive description."
+      ],
+      "counter_examples": [
+        "A police officer reading a complaint file.",
+        "A teacher explaining consent or puberty in class."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Medical terminology should not be treated as sexual content by default.",
+        "Educational biology is a context, not a violation.",
+        "Historical marriage or ritual narration is often contextual rather than promotional."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_educational_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_educational_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_educational_glossary_01",
+          "from_concept_id": "sexual_educational",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "طبي is a useful glossary anchor for Sexual Educational."
+        },
+        {
+          "id": "sexual_educational_glossary_02",
+          "from_concept_id": "sexual_educational",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تعليمي is a useful glossary anchor for Sexual Educational."
+        },
+        {
+          "id": "sexual_educational_glossary_03",
+          "from_concept_id": "sexual_educational",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تاريخي is a useful glossary anchor for Sexual Educational."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_educational_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual content in contextual settings",
+          "note": "Use when sexual material appears in a factual explanation."
+        },
+        {
+          "id": "sexual_educational_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age-appropriateness and educational framing",
+          "note": "Use when context affects age suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_educational_example_01",
+          "title": "Sexual Educational direct",
+          "text": "شرح طبي أو تعليمي أو تاريخي (sexual_educational)",
+          "expected_outcome": "The reviewer should recognize sexual educational in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_educational_example_02",
+          "title": "Sexual Educational contextual",
+          "text": "سياق يخفف التفسير (sexual_educational)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual educational.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_35_sexual_historical",
+      "title": "Sexual Historical Pattern",
+      "description": "Sexual Historical reasoning pattern for the context bucket.",
+      "primary_concept_id": "sexual_historical",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "شرح طبي أو تعليمي أو تاريخي",
+        "Sexual Historical شرح طبي أو تعليمي أو تاريخي"
+      ],
+      "indirect_expressions": [
+        "سياق يخفف التفسير",
+        "Sexual Historical سياق يخفف التفسير"
+      ],
+      "semantic_intent": [
+        "medical",
+        "educational",
+        "historical",
+        "court",
+        "police",
+        "news"
+      ],
+      "supporting_evidence": [
+        "Sexual Historical appears in the literal text or scene direction.",
+        "The context supports the context reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A clinic explanation of anatomy.",
+        "A textbook or archive description."
+      ],
+      "counter_examples": [
+        "A police officer reading a complaint file.",
+        "A teacher explaining consent or puberty in class."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Medical terminology should not be treated as sexual content by default.",
+        "Educational biology is a context, not a violation.",
+        "Historical marriage or ritual narration is often contextual rather than promotional."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_historical_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_historical_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_historical_glossary_01",
+          "from_concept_id": "sexual_historical",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "طبي is a useful glossary anchor for Sexual Historical."
+        },
+        {
+          "id": "sexual_historical_glossary_02",
+          "from_concept_id": "sexual_historical",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تعليمي is a useful glossary anchor for Sexual Historical."
+        },
+        {
+          "id": "sexual_historical_glossary_03",
+          "from_concept_id": "sexual_historical",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تاريخي is a useful glossary anchor for Sexual Historical."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_historical_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual content in contextual settings",
+          "note": "Use when sexual material appears in a factual explanation."
+        },
+        {
+          "id": "sexual_historical_gcam_02",
+          "article_id": 5,
+          "atom_ids": [
+            "5-1",
+            "5-5"
+          ],
+          "role": "Age-appropriateness and educational framing",
+          "note": "Use when context affects age suitability."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_historical_example_01",
+          "title": "Sexual Historical direct",
+          "text": "شرح طبي أو تعليمي أو تاريخي (sexual_historical)",
+          "expected_outcome": "The reviewer should recognize sexual historical in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_historical_example_02",
+          "title": "Sexual Historical contextual",
+          "text": "سياق يخفف التفسير (sexual_historical)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual historical.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_36_sexual_dream",
+      "title": "Sexual Dream Pattern",
+      "description": "Sexual Dream reasoning pattern for the fantasy bucket.",
+      "primary_concept_id": "sexual_dream",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "حلم أو فلاش باك أو تخيل",
+        "Sexual Dream حلم أو فلاش باك أو تخيل"
+      ],
+      "indirect_expressions": [
+        "مشهد ذهني أو استرجاع",
+        "Sexual Dream مشهد ذهني أو استرجاع"
+      ],
+      "semantic_intent": [
+        "dream",
+        "flashback",
+        "imagination"
+      ],
+      "supporting_evidence": [
+        "Sexual Dream appears in the literal text or scene direction.",
+        "The context supports the fantasy reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A mundane flashback being misread as sexual.",
+        "A dream that is only symbolic, with no recoverable sexual meaning."
+      ],
+      "counter_examples": [
+        "A harmless memory of family affection.",
+        "A dream that later resolves as a non-sexual fear image."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Dreams and flashbacks often require later clarification.",
+        "Imagination can change confidence but does not eliminate the concept if the image is sexual.",
+        "Separate concept from framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_dream_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_dream_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_dream_glossary_01",
+          "from_concept_id": "sexual_dream",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "حلم is a useful glossary anchor for Sexual Dream."
+        },
+        {
+          "id": "sexual_dream_glossary_02",
+          "from_concept_id": "sexual_dream",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "فلاش باك is a useful glossary anchor for Sexual Dream."
+        },
+        {
+          "id": "sexual_dream_glossary_03",
+          "from_concept_id": "sexual_dream",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تخيل is a useful glossary anchor for Sexual Dream."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_dream_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual content in fantasy framing",
+          "note": "Use when the sexual image appears inside fantasy."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_dream_example_01",
+          "title": "Sexual Dream direct",
+          "text": "حلم أو فلاش باك أو تخيل (sexual_dream)",
+          "expected_outcome": "The reviewer should recognize sexual dream in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_dream_example_02",
+          "title": "Sexual Dream contextual",
+          "text": "مشهد ذهني أو استرجاع (sexual_dream)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual dream.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_37_sexual_flashback",
+      "title": "Sexual Flashback Pattern",
+      "description": "Sexual Flashback reasoning pattern for the fantasy bucket.",
+      "primary_concept_id": "sexual_flashback",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "حلم أو فلاش باك أو تخيل",
+        "Sexual Flashback حلم أو فلاش باك أو تخيل"
+      ],
+      "indirect_expressions": [
+        "مشهد ذهني أو استرجاع",
+        "Sexual Flashback مشهد ذهني أو استرجاع"
+      ],
+      "semantic_intent": [
+        "dream",
+        "flashback",
+        "imagination"
+      ],
+      "supporting_evidence": [
+        "Sexual Flashback appears in the literal text or scene direction.",
+        "The context supports the fantasy reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A mundane flashback being misread as sexual.",
+        "A dream that is only symbolic, with no recoverable sexual meaning."
+      ],
+      "counter_examples": [
+        "A harmless memory of family affection.",
+        "A dream that later resolves as a non-sexual fear image."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Dreams and flashbacks often require later clarification.",
+        "Imagination can change confidence but does not eliminate the concept if the image is sexual.",
+        "Separate concept from framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_flashback_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_flashback_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_flashback_glossary_01",
+          "from_concept_id": "sexual_flashback",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "حلم is a useful glossary anchor for Sexual Flashback."
+        },
+        {
+          "id": "sexual_flashback_glossary_02",
+          "from_concept_id": "sexual_flashback",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "فلاش باك is a useful glossary anchor for Sexual Flashback."
+        },
+        {
+          "id": "sexual_flashback_glossary_03",
+          "from_concept_id": "sexual_flashback",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تخيل is a useful glossary anchor for Sexual Flashback."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_flashback_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual content in fantasy framing",
+          "note": "Use when the sexual image appears inside fantasy."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_flashback_example_01",
+          "title": "Sexual Flashback direct",
+          "text": "حلم أو فلاش باك أو تخيل (sexual_flashback)",
+          "expected_outcome": "The reviewer should recognize sexual flashback in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_flashback_example_02",
+          "title": "Sexual Flashback contextual",
+          "text": "مشهد ذهني أو استرجاع (sexual_flashback)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual flashback.",
+          "note": "Contextual example."
+        }
+      ]
+    },
+    {
+      "id": "sexual_pattern_38_sexual_imagination",
+      "title": "Sexual Imagination Pattern",
+      "description": "Sexual Imagination reasoning pattern for the fantasy bucket.",
+      "primary_concept_id": "sexual_imagination",
+      "related_concept_ids": [
+        "sexual_reference"
+      ],
+      "direct_expressions": [
+        "حلم أو فلاش باك أو تخيل",
+        "Sexual Imagination حلم أو فلاش باك أو تخيل"
+      ],
+      "indirect_expressions": [
+        "مشهد ذهني أو استرجاع",
+        "Sexual Imagination مشهد ذهني أو استرجاع"
+      ],
+      "semantic_intent": [
+        "dream",
+        "flashback",
+        "imagination"
+      ],
+      "supporting_evidence": [
+        "Sexual Imagination appears in the literal text or scene direction.",
+        "The context supports the fantasy reading."
+      ],
+      "contradictory_evidence": [
+        "The text is purely neutral and lacks sexual meaning.",
+        "The story explicitly condemns the line or uses it as evidence."
+      ],
+      "false_positives": [
+        "A mundane flashback being misread as sexual.",
+        "A dream that is only symbolic, with no recoverable sexual meaning."
+      ],
+      "counter_examples": [
+        "A harmless memory of family affection.",
+        "A dream that later resolves as a non-sexual fear image."
+      ],
+      "cross_sentence_indicators": [
+        "Later dialogue confirms the sexual meaning.",
+        "The neighboring sentence changes the interpretation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "narration",
+        "scene direction",
+        "camera language"
+      ],
+      "reviewer_guidance": [
+        "Dreams and flashbacks often require later clarification.",
+        "Imagination can change confidence but does not eliminate the concept if the image is sexual.",
+        "Separate concept from framing."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "sexual_imagination_direct",
+          "title": "Direct Signal",
+          "description": "The sexual meaning is explicit in the literal span.",
+          "confidence": 96
+        },
+        {
+          "id": "sexual_imagination_contextual",
+          "title": "Contextual Signal",
+          "description": "The sexual meaning is implied by context, framing, or later dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "sexual_imagination_glossary_01",
+          "from_concept_id": "sexual_imagination",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "حلم is a useful glossary anchor for Sexual Imagination."
+        },
+        {
+          "id": "sexual_imagination_glossary_02",
+          "from_concept_id": "sexual_imagination",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "فلاش باك is a useful glossary anchor for Sexual Imagination."
+        },
+        {
+          "id": "sexual_imagination_glossary_03",
+          "from_concept_id": "sexual_imagination",
+          "to_concept_id": "sexual_reference",
+          "relation": "supports",
+          "note": "تخيل is a useful glossary anchor for Sexual Imagination."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "sexual_imagination_gcam_01",
+          "article_id": 9,
+          "atom_ids": [
+            "9-4"
+          ],
+          "role": "Sexual content in fantasy framing",
+          "note": "Use when the sexual image appears inside fantasy."
+        }
+      ],
+      "examples": [
+        {
+          "id": "sexual_imagination_example_01",
+          "title": "Sexual Imagination direct",
+          "text": "حلم أو فلاش باك أو تخيل (sexual_imagination)",
+          "expected_outcome": "The reviewer should recognize sexual imagination in the literal span.",
+          "note": "Direct example."
+        },
+        {
+          "id": "sexual_imagination_example_02",
+          "title": "Sexual Imagination contextual",
+          "text": "مشهد ذهني أو استرجاع (sexual_imagination)",
+          "expected_outcome": "The reviewer should use context to evaluate sexual imagination.",
+          "note": "Contextual example."
+        }
+      ]
+    }
+  ]
+}

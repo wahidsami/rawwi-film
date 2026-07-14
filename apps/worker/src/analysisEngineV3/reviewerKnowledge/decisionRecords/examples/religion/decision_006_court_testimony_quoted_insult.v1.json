@@ -1,0 +1,71 @@
+{
+  "id": "decision_006_court_testimony_quoted_insult",
+  "version": "1.0.0",
+  "title": "Court testimony with quoted insult",
+  "summary": "Quoted harmful line repeated in court.",
+  "originalScenario": "The witness repeats the insult in court as evidence.",
+  "reviewQuestion": "Is this a quotation or an endorsement?",
+  "initialSuspicion": "Quoted harmful wording.",
+  "possibleConcepts": [
+    "religious_hate_speech",
+    "prophets"
+  ],
+  "supportingEvidence": [
+    "repeats the insult in court"
+  ],
+  "contradictingEvidence": [
+    "court context"
+  ],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Court testimony.",
+  "speakerAnalysis": "Witness quoting another person.",
+  "targetAnalysis": "Prophet or religion as quoted target.",
+  "intentAnalysis": "Quotation.",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check context",
+    "Apply religion pack heuristics",
+    "Map to GCAM article"
+  ],
+  "reviewerDecision": "Review or reject depending on context",
+  "confidence": "medium",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 2,
+      "atom_ids": [],
+      "note": "Quoted prophet insult."
+    }
+  ],
+  "falsePositiveRisk": "High",
+  "reviewerNotes": "Quotation lowers certainty.",
+  "benchmarkTags": [
+    "religion",
+    "court",
+    "quote"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "religion_pattern_direct_insult"
+  ],
+  "relatedBlueprintConcepts": [
+    "religion_religious_hate_speech",
+    "religion_prophets"
+  ]
+}

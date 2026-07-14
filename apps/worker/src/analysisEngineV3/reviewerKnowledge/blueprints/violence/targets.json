@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "id": "violence_targets",
+  "title": "Violence Targets",
+  "description": "Target distinctions for violence reasoning.",
+  "entries": [
+    {
+      "id": "violence_target_child",
+      "title": "Child",
+      "description": "A child or minor target."
+    },
+    {
+      "id": "violence_target_woman",
+      "title": "Woman",
+      "description": "A woman or female-presenting target."
+    },
+    {
+      "id": "violence_target_disabled",
+      "title": "Disabled Person",
+      "description": "A disabled target."
+    },
+    {
+      "id": "violence_target_public",
+      "title": "Public",
+      "description": "Civilians, crowd, or public target."
+    },
+    {
+      "id": "violence_target_state",
+      "title": "State",
+      "description": "State institutions, police, or authority target."
+    }
+  ]
+}

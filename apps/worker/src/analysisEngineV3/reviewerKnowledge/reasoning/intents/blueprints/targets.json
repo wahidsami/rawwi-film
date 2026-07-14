@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "id": "intents_targets",
+  "title": "Intent Targets",
+  "description": "Targets and audiences used in intent reasoning.",
+  "entries": [
+    { "id": "target_listener", "title": "Listener", "description": "The person receiving the message." },
+    { "id": "target_audience", "title": "Audience", "description": "The people addressed by the scene." },
+    { "id": "target_subject", "title": "Subject", "description": "The person or thing being described." },
+    { "id": "target_authority", "title": "Authority", "description": "The institution receiving the statement." },
+    { "id": "target_self", "title": "Self", "description": "The speaker is addressing themselves." },
+    { "id": "target_group", "title": "Group", "description": "A collective target or audience." },
+    { "id": "target_child", "title": "Child", "description": "A vulnerable child target." },
+    { "id": "target_unknown", "title": "Unknown", "description": "The target cannot yet be established." }
+  ]
+}

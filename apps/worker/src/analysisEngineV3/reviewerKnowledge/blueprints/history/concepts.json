@@ -1,0 +1,223 @@
+{
+  "version": "1.0.0",
+  "id": "historical_concepts",
+  "title": "History Concepts",
+  "description": "Canonical history concepts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "historical_person",
+      "title": "Person",
+      "description": "Person reasoning in history content."
+    },
+    {
+      "id": "historical_leader",
+      "title": "Leader",
+      "description": "Leader reasoning in history content."
+    },
+    {
+      "id": "historical_event",
+      "title": "Event",
+      "description": "Event reasoning in history content."
+    },
+    {
+      "id": "historical_battle",
+      "title": "Battle",
+      "description": "Battle reasoning in history content."
+    },
+    {
+      "id": "historical_conflict",
+      "title": "Conflict",
+      "description": "Conflict reasoning in history content."
+    },
+    {
+      "id": "historical_religious_event",
+      "title": "Religious Event",
+      "description": "Religious Event reasoning in history content."
+    },
+    {
+      "id": "historical_state",
+      "title": "State",
+      "description": "State reasoning in history content."
+    },
+    {
+      "id": "historical_empire",
+      "title": "Empire",
+      "description": "Empire reasoning in history content."
+    },
+    {
+      "id": "historical_dynasty",
+      "title": "Dynasty",
+      "description": "Dynasty reasoning in history content."
+    },
+    {
+      "id": "historical_reenactment",
+      "title": "Reenactment",
+      "description": "Reenactment reasoning in history content."
+    },
+    {
+      "id": "historical_documentary",
+      "title": "Documentary",
+      "description": "Documentary reasoning in history content."
+    },
+    {
+      "id": "historical_education",
+      "title": "Education",
+      "description": "Education reasoning in history content."
+    },
+    {
+      "id": "historical_news",
+      "title": "News",
+      "description": "News reasoning in history content."
+    },
+    {
+      "id": "historical_reference",
+      "title": "Reference",
+      "description": "Reference reasoning in history content."
+    },
+    {
+      "id": "historical_quote",
+      "title": "Quote",
+      "description": "Quote reasoning in history content."
+    },
+    {
+      "id": "historical_narration",
+      "title": "Narration",
+      "description": "Narration reasoning in history content."
+    },
+    {
+      "id": "historical_fiction",
+      "title": "Fiction",
+      "description": "Fiction reasoning in history content."
+    },
+    {
+      "id": "alternate_history",
+      "title": "Alternate History",
+      "description": "Alternate History reasoning in history content."
+    },
+    {
+      "id": "mythological_history",
+      "title": "Mythological History",
+      "description": "Mythological History reasoning in history content."
+    },
+    {
+      "id": "historical_symbol",
+      "title": "Symbol",
+      "description": "Symbol reasoning in history content."
+    },
+    {
+      "id": "historical_monument",
+      "title": "Monument",
+      "description": "Monument reasoning in history content."
+    },
+    {
+      "id": "historical_site",
+      "title": "Site",
+      "description": "Site reasoning in history content."
+    },
+    {
+      "id": "historical_map",
+      "title": "Map",
+      "description": "Map reasoning in history content."
+    },
+    {
+      "id": "historical_archive",
+      "title": "Archive",
+      "description": "Archive reasoning in history content."
+    },
+    {
+      "id": "historical_flashback",
+      "title": "Flashback",
+      "description": "Flashback reasoning in history content."
+    },
+    {
+      "id": "historical_memory",
+      "title": "Memory",
+      "description": "Memory reasoning in history content."
+    },
+    {
+      "id": "historical_scene_description",
+      "title": "Scene Description",
+      "description": "Scene Description reasoning in history content."
+    },
+    {
+      "id": "historical_dialogue",
+      "title": "Dialogue",
+      "description": "Dialogue reasoning in history content."
+    },
+    {
+      "id": "historical_observation",
+      "title": "Observation",
+      "description": "Observation reasoning in history content."
+    },
+    {
+      "id": "historical_criticism",
+      "title": "Criticism",
+      "description": "Criticism reasoning in history content."
+    },
+    {
+      "id": "historical_praise",
+      "title": "Praise",
+      "description": "Praise reasoning in history content."
+    },
+    {
+      "id": "historical_mockery",
+      "title": "Mockery",
+      "description": "Mockery reasoning in history content."
+    },
+    {
+      "id": "historical_distortion",
+      "title": "Distortion",
+      "description": "Distortion reasoning in history content."
+    },
+    {
+      "id": "historical_revisionism",
+      "title": "Revisionism",
+      "description": "Revisionism reasoning in history content."
+    },
+    {
+      "id": "historical_context",
+      "title": "Context",
+      "description": "Context reasoning in history content."
+    },
+    {
+      "id": "historical_timeline",
+      "title": "Timeline",
+      "description": "Timeline reasoning in history content."
+    },
+    {
+      "id": "historical_character",
+      "title": "Character",
+      "description": "Character reasoning in history content."
+    },
+    {
+      "id": "historical_government",
+      "title": "Government",
+      "description": "Government reasoning in history content."
+    },
+    {
+      "id": "historical_society",
+      "title": "Society",
+      "description": "Society reasoning in history content."
+    },
+    {
+      "id": "historical_tradition",
+      "title": "Tradition",
+      "description": "Tradition reasoning in history content."
+    },
+    {
+      "id": "historical_custom",
+      "title": "Custom",
+      "description": "Custom reasoning in history content."
+    },
+    {
+      "id": "historical_culture",
+      "title": "Culture",
+      "description": "Culture reasoning in history content."
+    },
+    {
+      "id": "historical_identity",
+      "title": "Identity",
+      "description": "Identity reasoning in history content."
+    }
+  ]
+}

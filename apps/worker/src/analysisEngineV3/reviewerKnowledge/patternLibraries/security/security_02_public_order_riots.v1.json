@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "security_public_order_riot_patterns",
+    "title": "Security Public Order and Riot Patterns",
+    "description": "Patterns for riot incitement, disorder, and public order harm.",
+    "concepts": [
+      {
+        "id": "public_order",
+        "title": "Public Order",
+        "description": "Order, stability, compliance, and societal calm."
+      },
+      {
+        "id": "riots",
+        "title": "Riots",
+        "description": "Rioting, unrest, disorder, or deliberate public disturbance."
+      },
+      {
+        "id": "government",
+        "title": "Government",
+        "description": "Government authority, ministries, or the governing order."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "security_pattern_public_order_disorder",
+      "title": "Public Order Disorder",
+      "description": "Language that celebrates unrest, instructs disorder, or urges deliberate rule breaking.",
+      "primary_concept_id": "riots",
+      "related_concept_ids": [
+        "public_order",
+        "government"
+      ],
+      "direct_expressions": [
+        "الفوضى هي الحل",
+        "نكسّر الأوامر",
+        "لنشعل الشارع"
+      ],
+      "indirect_expressions": [
+        "لا تسمعوا لهم",
+        "اكسر الهدوء",
+        "دعهم ينهارون"
+      ],
+      "semantic_intent": [
+        "encouragement of disorder",
+        "public unrest"
+      ],
+      "supporting_evidence": [
+        "Language that invites chaos or public disturbance.",
+        "Calls to break rules or disturb stability."
+      ],
+      "contradictory_evidence": [
+        "The scene shows a warning.",
+        "The line is quoted and explicitly rejected."
+      ],
+      "false_positives": [
+        "A protest report without endorsement.",
+        "A fictional riot scene later condemned."
+      ],
+      "counter_examples": [
+        "A legal discussion about public order.",
+        "A history lesson on past unrest."
+      ],
+      "cross_sentence_indicators": [
+        "A mild sentence is followed by a riot directive."
+      ],
+      "scene_indicators": [
+        "street scene",
+        "crowd scene",
+        "public gathering"
+      ],
+      "reviewer_guidance": [
+        "Separate frustration from incitement.",
+        "Use the exact directive to anchor the finding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "modifier_explicit_riot",
+          "title": "Explicit Riot Directive",
+          "description": "Direct instruction to cause unrest.",
+          "confidence": 95
+        },
+        {
+          "id": "modifier_general_frustration",
+          "title": "General Frustration",
+          "description": "Vague anger without direct action.",
+          "confidence": 55
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rel_riot_public_order",
+          "from_concept_id": "riots",
+          "to_concept_id": "public_order",
+          "relation": "supports",
+          "note": "Riots weaken public order."
+        },
+        {
+          "id": "rel_riot_government",
+          "from_concept_id": "riots",
+          "to_concept_id": "government",
+          "relation": "supports",
+          "note": "Riot language often targets the governing order."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "gcam_security_12_1",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1",
+            "12-2",
+            "12-3"
+          ],
+          "role": "Public order harm",
+          "note": "Use for disorder, chaos, or calls to ignore rules."
+        }
+      ],
+      "examples": [
+        {
+          "id": "example_riot_001",
+          "title": "Street chaos",
+          "text": "الفوضى هي الحل",
+          "expected_outcome": "Explicit public-order disruption.",
+          "note": null
+        },
+        {
+          "id": "example_riot_002",
+          "title": "Rule breaking",
+          "text": "نكسّر الأوامر الليلة",
+          "expected_outcome": "Direct encouragement to break rules.",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

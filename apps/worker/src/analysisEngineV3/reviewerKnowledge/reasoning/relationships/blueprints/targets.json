@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "relationships_targets",
+  "title": "Relationship Targets",
+  "description": "Targets affected by relationship reasoning.",
+  "entries": [
+    {
+      "id": "relationship_target_child",
+      "title": "Child",
+      "description": "The child role as a target of speech or action."
+    },
+    {
+      "id": "relationship_target_public",
+      "title": "Public",
+      "description": "The public or a general audience."
+    },
+    {
+      "id": "relationship_target_suspect",
+      "title": "Suspect",
+      "description": "A suspect or accused person."
+    },
+    {
+      "id": "relationship_target_employee",
+      "title": "Employee",
+      "description": "A worker in an employment relationship."
+    },
+    {
+      "id": "relationship_target_source",
+      "title": "Source",
+      "description": "A journalist source or confidential informant."
+    },
+    {
+      "id": "relationship_target_patient",
+      "title": "Patient",
+      "description": "A patient receiving treatment or care."
+    }
+  ]
+}

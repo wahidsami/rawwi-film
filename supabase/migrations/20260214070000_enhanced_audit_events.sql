@@ -27,7 +27,7 @@ DECLARE
   v_event_type TEXT;
 BEGIN
   -- Get script title for audit log
-  SELECT title INTO v_script_title FROM scripts WHERE id = p_script_id LIMIT 1;
+  SELECT title INTO v_script_title FROM scripts WHERE id = p_script_id ORDER BY id ASC LIMIT 1;
   
   -- Determine event type
   CASE 

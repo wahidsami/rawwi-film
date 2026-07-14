@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "children_intents",
+  "title": "Children Intents",
+  "description": "Intent types for child-safety reasoning.",
+  "entries": [
+    {
+      "id": "children_intent_encourage",
+      "title": "Encourage",
+      "description": "Encouraging harmful conduct or protection."
+    },
+    {
+      "id": "children_intent_condemn",
+      "title": "Condemn",
+      "description": "Condemning harmful conduct."
+    },
+    {
+      "id": "children_intent_neutral",
+      "title": "Neutral",
+      "description": "Neutral or observational framing."
+    },
+    {
+      "id": "children_intent_documentary",
+      "title": "Documentary",
+      "description": "Documentary intent or reporting."
+    },
+    {
+      "id": "children_intent_educational",
+      "title": "Educational",
+      "description": "Teaching or explanation."
+    },
+    {
+      "id": "children_intent_satire",
+      "title": "Satire",
+      "description": "Satirical or ironic framing."
+    },
+    {
+      "id": "children_intent_threat",
+      "title": "Threat",
+      "description": "Threatening or coercive intent."
+    },
+    {
+      "id": "children_intent_abuse",
+      "title": "Abuse",
+      "description": "Intent to harm or dominate."
+    },
+    {
+      "id": "children_intent_protection",
+      "title": "Protection",
+      "description": "Protective or safeguarding intent."
+    },
+    {
+      "id": "children_intent_rescue",
+      "title": "Rescue",
+      "description": "Rescue or intervention intent."
+    }
+  ]
+}

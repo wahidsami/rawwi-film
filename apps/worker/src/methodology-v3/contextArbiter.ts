@@ -2,7 +2,7 @@ import type { ContextWindow } from "./segmenter.js";
 import { containsAnyNormalized } from "../textDetectionNormalize.js";
 
 export type HybridFindingLike = {
-  source?: string;
+  source?: string | null;
   article_id: number;
   atom_id?: string | null;
   severity: string;
@@ -21,12 +21,17 @@ export type HybridFindingLike = {
   rationale_ar?: string | null;
   final_ruling?: "violation" | "needs_review" | "context_ok" | null;
   narrative_consequence?: "punished" | "rewarded" | "neutralized" | "unresolved" | "unknown";
-  policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
+  policy_links?: ReadonlyArray<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
   primary_article_id?: number;
-  related_article_ids?: number[];
+  related_article_ids?: readonly number[];
   canonical_finding_id?: string;
   pillar_id?: string;
-  secondary_pillar_ids?: string[];
+  secondary_pillar_ids?: readonly string[];
+  canonical_atom?: string | null;
+  lineage_id?: string | null;
+  parent_lineage_id?: string | null;
+  evidence_hash?: string | null;
+  canonical_hash?: string | null;
 };
 
 const CONDEMNATION_HINTS = ["ممنوع", "غير مقبول", "تنديد", "عوقب", "عقوبة", "ندم", "اعتذر", "رفض", "رفضت"];

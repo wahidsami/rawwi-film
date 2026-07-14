@@ -1,0 +1,55 @@
+{
+  "id": "violence_034_violence_game_quoted",
+  "version": "1.0.0",
+  "title": "Violence Game (quoted)",
+  "summary": "Violence Game in quoted framing.",
+  "originalScenario": "قال الراوي: \"اللعبة تعرض قتالًا خياليًا.\"",
+  "reviewQuestion": "Is this violence game?",
+  "initialSuspicion": "Possible violence game.",
+  "possibleConcepts": [
+    "violence_game"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: اللعبة تعرض قتالًا خياليًا."
+  ],
+  "contradictingEvidence": [
+    "Quoted or reported framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear endorsement in the narrator's own voice."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "Target remains dependent on the quoted voice.",
+  "intentAnalysis": "quotation",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Quoted speech is not automatically endorsement.",
+  "benchmarkTags": [
+    "violence_game",
+    "quoted",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_game"
+  ]
+}

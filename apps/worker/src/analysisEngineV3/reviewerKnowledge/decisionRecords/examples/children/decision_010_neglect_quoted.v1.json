@@ -1,0 +1,58 @@
+{
+  "id": "decision_010_neglect_quoted",
+  "version": "1.0.0",
+  "title": "Neglect (quoted)",
+  "summary": "Neglect in quoted framing.",
+  "originalScenario": "قال الراوي: \"تركته بلا طعام أو ماء\"",
+  "reviewQuestion": "Is this neglect?",
+  "initialSuspicion": "Failure to provide care.",
+  "possibleConcepts": [
+    "children_child",
+    "children_neglect"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: تركته بلا طعام أو ماء"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-3"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "neglect",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child",
+    "children_neglect"
+  ]
+}

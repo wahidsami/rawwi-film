@@ -1,0 +1,54 @@
+{
+  "id": "decision_001_direct_physical_abuse_direct",
+  "version": "1.0.0",
+  "title": "Direct physical abuse (direct)",
+  "summary": "Direct physical abuse in direct framing.",
+  "originalScenario": "الطفل يحتاج ضربة الآن",
+  "reviewQuestion": "Is this direct physical abuse?",
+  "initialSuspicion": "Direct abuse.",
+  "possibleConcepts": [
+    "children_child",
+    "children_physical_abuse"
+  ],
+  "supportingEvidence": [
+    "الطفل يحتاج ضربة الآن"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "direct_physical_abuse",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child",
+    "children_physical_abuse"
+  ]
+}

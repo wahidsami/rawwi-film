@@ -1,0 +1,69 @@
+{
+  "id": "decision_021_unity_condemnation",
+  "version": "1.0.0",
+  "title": "Condemnation of sectarian hatred",
+  "summary": "A line condemns sectarian hatred instead of endorsing it.",
+  "originalScenario": "A character says sectarian division is wrong and should stop.",
+  "reviewQuestion": "Is this condemnation rather than endorsement?",
+  "initialSuspicion": "Condemnation.",
+  "possibleConcepts": [
+    "religious_unity",
+    "sectarian_division"
+  ],
+  "supportingEvidence": [
+    "says sectarian division is wrong"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct condemnation.",
+  "speakerAnalysis": "The speaker rejects the harmful idea.",
+  "targetAnalysis": "Sectarian hostility as the topic.",
+  "intentAnalysis": "Condemnation.",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check context",
+    "Apply religion pack heuristics",
+    "Map to GCAM article"
+  ],
+  "reviewerDecision": "No finding",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 3,
+      "atom_ids": [],
+      "note": "Condemnation of division."
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Condemnation is an exception context.",
+  "benchmarkTags": [
+    "religion",
+    "condemnation",
+    "unity"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "religion_pattern_incitement"
+  ],
+  "relatedBlueprintConcepts": [
+    "religion_religious_unity",
+    "religion_sectarian_division"
+  ]
+}

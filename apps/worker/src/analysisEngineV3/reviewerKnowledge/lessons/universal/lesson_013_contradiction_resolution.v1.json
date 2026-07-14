@@ -1,0 +1,129 @@
+{
+  "id": "lesson_013_contradiction_resolution",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 13,
+  "title": "Contradiction Resolution",
+  "summary": "Teach the reviewer to reconcile conflicting cues before finalizing a finding.",
+  "learningObjectives": [
+    "Recognize when later text contradicts an earlier interpretation.",
+    "Separate supporting evidence from weakening evidence.",
+    "Separate conflicting evidence from insufficient evidence.",
+    "Avoid freezing on the first plausible reading.",
+    "Re-evaluate the scene when new information appears."
+  ],
+  "definitions": {
+    "contradiction": "A later cue that weakens, reverses, or clarifies an earlier interpretation.",
+    "resolution": "The process of choosing the most defensible interpretation after considering all cues.",
+    "supportingEvidence": "Evidence that strengthens a reading.",
+    "contradictingEvidence": "Evidence that pushes against a reading.",
+    "insufficientEvidence": "A state where the available evidence does not support a stable conclusion."
+  },
+  "reviewerPrinciples": [
+    "Do not freeze on the first interpretation.",
+    "A contradiction lowers confidence even if the first cue looked strong.",
+    "Later context can overturn an earlier assumption.",
+    "Conflicting evidence may require review instead of a final finding.",
+    "Evidence must be weighed as a whole, not as isolated fragments.",
+    "Manual review is better than a premature finding."
+  ],
+  "reviewerQuestions": [
+    "Does later text contradict the first reading?",
+    "Is the original interpretation still the strongest one?",
+    "Which evidence is supporting and which is contradicting?",
+    "Is the remaining evidence still sufficient?",
+    "Should the finding become review-only?",
+    "Would another reviewer revise the first conclusion?"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Is there a contradiction?",
+      "yes": 2,
+      "no": "Proceed"
+    },
+    {
+      "step": 2,
+      "question": "Does the contradiction change the interpretation?",
+      "yes": "Re-evaluate",
+      "no": "Proceed"
+    },
+    {
+      "step": 3,
+      "question": "Is confidence still strong enough?",
+      "yes": "Proceed",
+      "no": "Needs Review"
+    }
+  ],
+  "examples": [
+    {
+      "text": "يبدو أنه يوافق.\nلكن لاحقًا يرفض الفكرة بوضوح.",
+      "classification": "Contradiction lowers confidence."
+    },
+    {
+      "text": "يبدأ الحوار كاتهام ثم يتحول إلى تفسير.",
+      "classification": "Re-evaluate the scene."
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Assume the first sentence is final even after later contradiction.",
+      "reason": "Reviewer ignored the full exchange."
+    },
+    {
+      "text": "Treat missing support as if it were contradictory support.",
+      "reason": "Insufficient evidence is not the same as conflict."
+    }
+  ],
+  "commonMistakes": [
+    "Freezing on the first reading.",
+    "Ignoring later clarification.",
+    "Confusing ambiguity with certainty.",
+    "Treating insufficient evidence as a confirmed contradiction.",
+    "Treating contradiction as irrelevant."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Should later contradiction affect confidence?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Is the first plausible reading always correct?",
+        "answer": "No"
+      },
+      {
+        "question": "Can contradiction turn a finding into a review item?",
+        "answer": "Yes"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Recognize contradictory cues.",
+    "Distinguish conflict from insufficiency.",
+    "Improve confidence calibration.",
+    "Reduce premature findings."
+  ],
+  "gcamMapping": [
+    {
+      "article_id": 3,
+      "article_title": "احترام الدين الإسلامي",
+      "article_number": "3",
+      "atom_number": null,
+      "report_title": "Contradiction Handling",
+      "note": "Use when later context weakens an apparent religious violation."
+    }
+  ],
+  "benchmarkReferences": [
+    "evidence-evaluation-bench-004",
+    "evidence-evaluation-bench-005"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 13
+  }
+}

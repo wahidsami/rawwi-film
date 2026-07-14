@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_methodology_targets",
+  "title": "Reviewer Methodology Targets",
+  "description": "The reviewer objects used in methodology reasoning.",
+  "entries": [
+    {
+      "id": "methodology_target_finding",
+      "title": "Finding",
+      "description": "A reviewer finding or candidate finding."
+    },
+    {
+      "id": "methodology_target_evidence",
+      "title": "Evidence",
+      "description": "A literal evidence span or supporting clue."
+    },
+    {
+      "id": "methodology_target_context",
+      "title": "Context",
+      "description": "Story, scene, and neighboring context."
+    },
+    {
+      "id": "methodology_target_speaker",
+      "title": "Speaker",
+      "description": "The voice or speaker being evaluated."
+    },
+    {
+      "id": "methodology_target_target",
+      "title": "Target",
+      "description": "The person or object being referenced."
+    },
+    {
+      "id": "methodology_target_victim",
+      "title": "Victim",
+      "description": "The harmed or affected party."
+    },
+    {
+      "id": "methodology_target_scene",
+      "title": "Scene",
+      "description": "The local scene or beat."
+    },
+    {
+      "id": "methodology_target_story",
+      "title": "Story",
+      "description": "The broader story arc."
+    },
+    {
+      "id": "methodology_target_question",
+      "title": "Question",
+      "description": "The reviewer question being answered."
+    },
+    {
+      "id": "methodology_target_report",
+      "title": "Report",
+      "description": "The final report outcome."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_methodology_review_questions",
+  "title": "Reviewer Methodology Review Questions",
+  "description": "Questions that guide reviewer methodology reasoning.",
+  "entries": [
+    {
+      "id": "methodology_question_observation",
+      "title": "What is the first observation?",
+      "description": "Start with a neutral observation before any finding."
+    },
+    {
+      "id": "methodology_question_evidence",
+      "title": "What is the primary evidence?",
+      "description": "Name the strongest evidence, not every clue."
+    },
+    {
+      "id": "methodology_question_context",
+      "title": "What context changes the reading?",
+      "description": "Track nearby sentences and cross-scene context."
+    },
+    {
+      "id": "methodology_question_sentence",
+      "title": "Does another sentence change the meaning?",
+      "description": "Never stop at one sentence when more context exists."
+    },
+    {
+      "id": "methodology_question_scene",
+      "title": "Does another scene change the meaning?",
+      "description": "Use cross-scene memory when needed."
+    },
+    {
+      "id": "methodology_question_intent",
+      "title": "What is the reviewer intent?",
+      "description": "Separate review comment, possible finding, and confirmed finding."
+    },
+    {
+      "id": "methodology_question_confidence",
+      "title": "How confident is the reading?",
+      "description": "Calibrate confidence to the quality of the evidence."
+    },
+    {
+      "id": "methodology_question_exception",
+      "title": "Does an exception apply?",
+      "description": "Check quotation, fiction, history, education, and other exceptions."
+    },
+    {
+      "id": "methodology_question_false_positive",
+      "title": "Could this be a false positive?",
+      "description": "Identify tempting but unsupported interpretations."
+    },
+    {
+      "id": "methodology_question_false_negative",
+      "title": "Could something be missed?",
+      "description": "Look for undercalled evidence or hidden context."
+    }
+  ]
+}

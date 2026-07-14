@@ -1,0 +1,51 @@
+{
+  "id": "violence_039_violence_dream_direct",
+  "version": "1.0.0",
+  "title": "Violence Dream (direct)",
+  "summary": "Violence Dream in direct framing.",
+  "originalScenario": "في الحلم يرى نفسه يهرب من الضرب.",
+  "reviewQuestion": "Is this violence dream?",
+  "initialSuspicion": "Possible violence dream.",
+  "possibleConcepts": [
+    "violence_dream"
+  ],
+  "supportingEvidence": [
+    "في الحلم يرى نفسه يهرب من الضرب."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "contextual",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_dream",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_dream"
+  ]
+}

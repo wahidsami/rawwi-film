@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "id": "intents_intents",
+  "title": "Intent Stance Classes",
+  "description": "Stance and motivation classes used by the reviewer.",
+  "entries": [
+    { "id": "intent_factual", "title": "Factual Intent", "description": "A literal or report-like intent that presents information." },
+    { "id": "intent_evaluative", "title": "Evaluative Intent", "description": "An intent that judges, praises, warns, or criticizes." },
+    { "id": "intent_coercive", "title": "Coercive Intent", "description": "An intent that pressures or forces behavior." },
+    { "id": "intent_expressive", "title": "Expressive Intent", "description": "An intent shown through humor, sarcasm, or irony." },
+    { "id": "intent_fictional", "title": "Fictional Intent", "description": "An intent framed as story, acting, dream, or fantasy." },
+    { "id": "intent_corrective", "title": "Corrective Intent", "description": "An intent that clarifies or corrects an earlier misunderstanding." },
+    { "id": "intent_confessional", "title": "Confessional Intent", "description": "An intent that reveals or admits something." },
+    { "id": "intent_questioning", "title": "Questioning Intent", "description": "An intent that seeks clarification rather than asserting meaning." }
+  ]
+}

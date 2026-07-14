@@ -1,0 +1,80 @@
+{
+  "id": "ka_reviewer_interpretation_universal_c3efbef021a95d57",
+  "version": "1.0.0",
+  "source": "official_gcam_canonical_atom_framework_v1 + official_gcam_severity_rulebook_v1",
+  "date": "2026-07-14",
+  "reviewerConfidence": 0.87,
+  "knowledgeType": "reviewer_interpretation",
+  "domain": "universal",
+  "concepts": [
+    "context_analysis",
+    "historical_context",
+    "educational_context",
+    "documentary_context",
+    "comedy_context",
+    "satire_context",
+    "dream_context",
+    "flashback_context",
+    "quotation_context",
+    "narration_context",
+    "scene_description_context"
+  ],
+  "storyContext": "GCAM guidance shows that historical context can still be flagged, protective or educational context changes interpretation, and comedy does not automatically erase a harmful meaning. The universal reviewer context layer must therefore distinguish framing modes before judgment.",
+  "evidence": [
+    "Historical context → still flagged.",
+    "Protective or educational context.",
+    "Comedy → still violation if insulting."
+  ],
+  "reasoning": [
+    "Context analysis must treat framing as meaning-shaping information, not as automatic exemption.",
+    "Historical and educational framing are explicit GCAM cues that affect interpretation and confidence.",
+    "Comedy, quotation, narration, dream, flashback, documentary style, and scene description are all context signals that the reviewer must evaluate before finalizing a reading."
+  ],
+  "decision": "Store context analysis as a universal reviewer interpretation that distinguishes historical, educational, documentary, comedic, satirical, dream, flashback, quotation, narration, and scene-description framing before legal judgment is made.",
+  "alternativeDecisions": [
+    "Treat every framed line as automatically safe.",
+    "Treat every framed line as automatically harmful.",
+    "Treat quotation, narration, and scene description as if they were the same thing as direct dialogue."
+  ],
+  "rejectedInterpretations": [
+    "Historical context always cancels a finding.",
+    "Educational context always cancels a finding.",
+    "Comedy automatically removes harmful meaning.",
+    "Quotation is the same as endorsement."
+  ],
+  "relatedLessons": [
+    "lesson_003_understanding_context",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [],
+  "relatedDecisionRecords": [
+    "decision_001_bribery_phrase",
+    "decision_002_travel_observation"
+  ],
+  "relatedBenchmarks": [
+    "context-analysis-bench-001",
+    "context-analysis-bench-002",
+    "context-analysis-bench-003",
+    "context-analysis-bench-004",
+    "context-analysis-bench-005",
+    "context-analysis-bench-006",
+    "context-analysis-bench-007",
+    "context-analysis-bench-008",
+    "context-analysis-bench-009",
+    "context-analysis-bench-010"
+  ],
+  "knowledgeDebtReference": "KD-GCAM-CONTEXT-ANALYSIS-001",
+  "futureReviewNotes": [
+    "If the repository later exposes a dedicated GCAM documentary, dream, flashback, quotation, narration, or scene-description source, split each into its own source-backed note.",
+    "The current GCAM source set explicitly supports historical, educational, and comedy framing observations; the other context modes remain reviewer-methodology framing signals."
+  ],
+  "reviewerId": null,
+  "reviewerName": null,
+  "agreementState": "consensus",
+  "disagreementGroupId": null,
+  "supersedesId": null,
+  "supersededById": null,
+  "relatedRecordIds": []
+}

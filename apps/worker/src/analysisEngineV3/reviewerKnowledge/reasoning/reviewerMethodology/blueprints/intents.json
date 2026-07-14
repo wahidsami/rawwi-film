@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_methodology_intents",
+  "title": "Reviewer Methodology Intents",
+  "description": "Intent states used by the reviewer methodology layer.",
+  "entries": [
+    {
+      "id": "methodology_intent_observation",
+      "title": "Observation",
+      "description": "Observe before deciding."
+    },
+    {
+      "id": "methodology_intent_comment",
+      "title": "Comment",
+      "description": "Write reviewer comments before a finding."
+    },
+    {
+      "id": "methodology_intent_possible_finding",
+      "title": "Possible Finding",
+      "description": "Tentatively support a finding."
+    },
+    {
+      "id": "methodology_intent_confirmed_finding",
+      "title": "Confirmed Finding",
+      "description": "Support a confirmed finding."
+    },
+    {
+      "id": "methodology_intent_insufficient_evidence",
+      "title": "Insufficient Evidence",
+      "description": "Stop when evidence is not enough."
+    },
+    {
+      "id": "methodology_intent_need_more_context",
+      "title": "Need More Context",
+      "description": "Request more surrounding context."
+    },
+    {
+      "id": "methodology_intent_false_positive",
+      "title": "False Positive",
+      "description": "Reject an overread interpretation."
+    },
+    {
+      "id": "methodology_intent_false_negative",
+      "title": "False Negative",
+      "description": "Recover a missed interpretation."
+    },
+    {
+      "id": "methodology_intent_escalate",
+      "title": "Escalate",
+      "description": "Escalate ambiguous cases."
+    },
+    {
+      "id": "methodology_intent_resolve",
+      "title": "Resolve",
+      "description": "Resolve a supported case."
+    }
+  ]
+}

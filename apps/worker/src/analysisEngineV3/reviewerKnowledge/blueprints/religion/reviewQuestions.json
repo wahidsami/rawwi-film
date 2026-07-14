@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "religion_review_questions",
+  "title": "Religion Review Questions",
+  "description": "Deterministic reviewer questions for religion blueprints.",
+  "entries": [
+    {
+      "id": "religion_question_who_speaks",
+      "title": "Who speaks?",
+      "description": "Identify the speaker before judging the line."
+    },
+    {
+      "id": "religion_question_what_target",
+      "title": "What is the target?",
+      "description": "Identify the person, symbol, or institution being addressed."
+    },
+    {
+      "id": "religion_question_what_intent",
+      "title": "What is the intent?",
+      "description": "Determine whether the line educates, condemns, attacks, or remains neutral."
+    },
+    {
+      "id": "religion_question_what_context",
+      "title": "What is the context?",
+      "description": "Check for documentary, educational, court, or fictional framing."
+    },
+    {
+      "id": "religion_question_what_evidence",
+      "title": "What is the evidence?",
+      "description": "Locate the literal phrase that supports the reading."
+    },
+    {
+      "id": "religion_question_what_relationship",
+      "title": "What relationships matter?",
+      "description": "See how concepts reinforce or contradict each other."
+    }
+  ]
+}

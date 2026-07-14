@@ -1,0 +1,82 @@
+{
+  "id": "decision_017_security_force_attack_quoted",
+  "version": "1.0.0",
+  "title": "Security force hostility (quoted)",
+  "summary": "The text attacks police as a class.",
+  "originalScenario": "A character says: \"الشرطة كلهم فاسدون\".",
+  "reviewQuestion": "Is this a class-wide attack on security forces?",
+  "initialSuspicion": "Institutional hostility.",
+  "possibleConcepts": [
+    "police",
+    "state_institutions"
+  ],
+  "supportingEvidence": [
+    "الشرطة كلهم فاسدون"
+  ],
+  "contradictingEvidence": [
+    "Quoted in the scene."
+  ],
+  "requiredMissingEvidence": [
+    "No explicit endorsement or additional evidence."
+  ],
+  "sceneContext": "Dialogue in a protest scene.",
+  "speakerAnalysis": "The speaker addresses an institution as a whole.",
+  "targetAnalysis": "Police as a class.",
+  "intentAnalysis": "Hostility toward security institutions.",
+  "reasoningSteps": [
+    "Identify class-wide hostility",
+    "Identify institutional target",
+    "Map to article 13 and 12"
+  ],
+  "reviewerDecision": "No finding",
+  "confidence": "medium",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "id": "gcam_security_13_4",
+      "article_id": 13,
+      "atom_ids": [
+        "13-4",
+        "13-5"
+      ],
+      "role": "Institutional hostility",
+      "note": "Use when state institutions are attacked."
+    },
+    {
+      "id": "gcam_security_12_4",
+      "article_id": 12,
+      "atom_ids": [
+        "12-4"
+      ],
+      "role": "Public order destabilization",
+      "note": "Use when hostility undermines social peace."
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Distinguish a class attack from an individual complaint. Variant: quoted.",
+  "benchmarkTags": [
+    "police",
+    "institution",
+    "hostility",
+    "quoted"
+  ],
+  "relatedLessons": [
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "security_pattern_security_force_targeting"
+  ],
+  "relatedBlueprintConcepts": [
+    "security_police",
+    "security_state_institutions"
+  ]
+}

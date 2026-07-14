@@ -1,0 +1,370 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_05_society",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Society Reviewer Knowledge Pack",
+    "description": "Full academy knowledge pack for society, civility, family, identity, community, and discrimination reasoning.",
+    "supported_concepts": [
+      "society_family_values",
+      "society_family_breakdown",
+      "society_family_respect",
+      "society_parents",
+      "society_mother",
+      "society_father",
+      "society_elderly",
+      "society_disabled_persons",
+      "society_women",
+      "society_children",
+      "society_caregiving",
+      "society_domestic_abuse",
+      "society_neglect",
+      "society_bullying",
+      "society_harassment",
+      "society_discrimination",
+      "society_racism",
+      "society_tribalism",
+      "society_social_exclusion",
+      "society_humiliation",
+      "society_insult",
+      "society_defamation",
+      "society_mockery",
+      "society_hate",
+      "society_abuse_of_authority",
+      "society_cyber_bullying",
+      "society_rumor_spreading",
+      "society_public_panic",
+      "society_public_behavior",
+      "society_public_decency",
+      "society_social_responsibility",
+      "society_volunteering",
+      "society_charity",
+      "society_kindness",
+      "society_community_support",
+      "society_neighbor_relations",
+      "society_workplace_behavior",
+      "society_school_behavior",
+      "society_teacher_behavior",
+      "society_student_behavior",
+      "society_professional_ethics",
+      "society_civil_behavior",
+      "society_social_media_behavior",
+      "society_social_cohesion",
+      "society_cultural_identity",
+      "society_national_identity",
+      "society_social_dialogue",
+      "society_social_scene_description",
+      "society_social_observation"
+    ]
+  },
+  "pack": {
+    "id": "v3_05_society",
+    "module_id": "v3_05_society",
+    "title": "Society Reasoning Framework",
+    "default_question_set_id": "default_society_question_set",
+    "trigger_concept_ids": [
+      "society_family_values",
+      "society_family_breakdown",
+      "society_family_respect",
+      "society_parents",
+      "society_mother",
+      "society_father",
+      "society_elderly",
+      "society_disabled_persons",
+      "society_women",
+      "society_children",
+      "society_caregiving",
+      "society_domestic_abuse",
+      "society_neglect",
+      "society_bullying",
+      "society_harassment",
+      "society_discrimination",
+      "society_racism",
+      "society_tribalism",
+      "society_social_exclusion",
+      "society_humiliation",
+      "society_insult",
+      "society_defamation",
+      "society_mockery",
+      "society_hate",
+      "society_abuse_of_authority",
+      "society_cyber_bullying",
+      "society_rumor_spreading",
+      "society_public_panic",
+      "society_public_behavior",
+      "society_public_decency",
+      "society_social_responsibility",
+      "society_volunteering",
+      "society_charity",
+      "society_kindness",
+      "society_community_support",
+      "society_neighbor_relations",
+      "society_workplace_behavior",
+      "society_school_behavior",
+      "society_teacher_behavior",
+      "society_student_behavior",
+      "society_professional_ethics",
+      "society_civil_behavior",
+      "society_social_media_behavior",
+      "society_social_cohesion",
+      "society_cultural_identity",
+      "society_national_identity",
+      "society_social_dialogue",
+      "society_social_scene_description",
+      "society_social_observation"
+    ],
+    "purpose": "Provide reviewer knowledge for society, family, civility, discrimination, identity, community support, and public behavior reasoning.",
+    "protected_interests": [
+      "family cohesion",
+      "family respect",
+      "public decency",
+      "social cohesion",
+      "community trust",
+      "civic responsibility",
+      "dignity of vulnerable people",
+      "anti-bullying protection",
+      "anti-discrimination protection",
+      "online civility",
+      "professional ethics",
+      "social dialogue",
+      "national identity"
+    ],
+    "protected_concepts": [
+      "society_family_values",
+      "society_family_breakdown",
+      "society_family_respect",
+      "society_parents",
+      "society_mother",
+      "society_father",
+      "society_elderly",
+      "society_disabled_persons",
+      "society_women",
+      "society_children",
+      "society_caregiving",
+      "society_domestic_abuse",
+      "society_neglect",
+      "society_bullying",
+      "society_harassment",
+      "society_discrimination",
+      "society_racism",
+      "society_tribalism",
+      "society_social_exclusion",
+      "society_humiliation",
+      "society_insult",
+      "society_defamation",
+      "society_mockery",
+      "society_hate",
+      "society_abuse_of_authority",
+      "society_cyber_bullying",
+      "society_rumor_spreading",
+      "society_public_panic",
+      "society_public_behavior",
+      "society_public_decency",
+      "society_social_responsibility",
+      "society_volunteering",
+      "society_charity",
+      "society_kindness",
+      "society_community_support",
+      "society_neighbor_relations",
+      "society_workplace_behavior",
+      "society_school_behavior",
+      "society_teacher_behavior",
+      "society_student_behavior",
+      "society_professional_ethics",
+      "society_civil_behavior",
+      "society_social_media_behavior",
+      "society_social_cohesion",
+      "society_cultural_identity",
+      "society_national_identity",
+      "society_social_dialogue",
+      "society_social_scene_description",
+      "society_social_observation"
+    ],
+    "required_evidence": [
+      "A literal span showing the social behavior, insult, discrimination, exclusion, or support inside the chunk.",
+      "Speaker identity, target identity, and relationship cues that explain who is affected.",
+      "Context clues that distinguish discussion, criticism, satire, education, or news from endorsement.",
+      "Cross-sentence or cross-scene support when the harmful or supportive meaning is only revealed later."
+    ],
+    "insufficient_evidence": [
+      "A neutral mention of family, school, workplace, or community with no harmful or supportive social meaning.",
+      "A documentary, court, or news report that records the social issue without endorsing it.",
+      "A quotation, flashback, dream, or fictional scene that is clearly framed as non-endorsing.",
+      "A single ambiguous word without speaker, target, or relationship support."
+    ],
+    "reviewer_heuristics": [
+      "Do not collapse all social talk into one concept; identify the exact social issue first.",
+      "Separate discussion from criticism, satire, condemnation, promotion, encouragement, education, historical narration, documentary, news, fiction, dream, flashback, and quotation.",
+      "Check whether the text targets a protected person, a family role, a workplace role, or the public at large.",
+      "Use social context to distinguish rudeness from bullying, exclusion, discrimination, or abuse.",
+      "Treat social media posts, rumors, and public panic as context-sensitive reasoning rather than automatic violations.",
+      "Use the strongest literal span that supports the reviewer conclusion."
+    ],
+    "legal_exceptions": [
+      "Discussion",
+      "Criticism",
+      "Satire",
+      "Condemnation",
+      "Promotion",
+      "Encouragement",
+      "Education",
+      "Historical narration",
+      "Documentary",
+      "News",
+      "Fiction",
+      "Dream",
+      "Flashback",
+      "Quotation"
+    ],
+    "positive_examples": [
+      "Direct bullying of a student in class.",
+      "Public humiliation of a disabled person.",
+      "Racist or tribal language attacking a family or community.",
+      "A social media post spreading rumor and panic about a neighbor.",
+      "Abuse of authority against a worker or citizen.",
+      "A direct insult that clearly targets a protected person.",
+      "Domestic abuse framed as a harmful event in the scene."
+    ],
+    "negative_examples": [
+      "A teacher calmly explaining why bullying is wrong.",
+      "A documentary about family breakdown without endorsement.",
+      "A court transcript repeating insult language as evidence.",
+      "A news report describing social unrest without celebrating it.",
+      "A fictional villain line that the story clearly condemns.",
+      "A scene description of family tension that does not itself insult anyone.",
+      "A neutral discussion of cultural identity in class."
+    ],
+    "common_false_positives": [
+      "Criticism mistaken for hate or discrimination.",
+      "Family discipline mistaken for abuse without harm or humiliation.",
+      "A quotation or documentary mention mistaken for endorsement.",
+      "A workplace or school instruction mistaken for public shaming.",
+      "A social media rumor mistaken for a confirmed finding.",
+      "A scene of support or caregiving mistaken for a negative social issue."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "المجتمع",
+        "concept_id": "society_social_cohesion",
+        "relation": "framework",
+        "note": "General society anchor."
+      },
+      {
+        "term": "العائلة",
+        "concept_id": "society_family_values",
+        "relation": "family",
+        "note": "Family cohesion anchor."
+      },
+      {
+        "term": "التنمر",
+        "concept_id": "society_bullying",
+        "relation": "harm",
+        "note": "Bullying anchor."
+      },
+      {
+        "term": "الإهانة",
+        "concept_id": "society_humiliation",
+        "relation": "harm",
+        "note": "Humiliation and insult anchor."
+      },
+      {
+        "term": "التمييز",
+        "concept_id": "society_discrimination",
+        "relation": "harm",
+        "note": "Discrimination anchor."
+      },
+      {
+        "term": "وسائل التواصل",
+        "concept_id": "society_social_media_behavior",
+        "relation": "context",
+        "note": "Social media context anchor."
+      },
+      {
+        "term": "الهوية الوطنية",
+        "concept_id": "society_national_identity",
+        "relation": "identity",
+        "note": "Identity and national cohesion anchor."
+      },
+      {
+        "term": "الجار",
+        "concept_id": "society_neighbor_relations",
+        "relation": "community",
+        "note": "Neighbourhood relation anchor."
+      },
+      {
+        "term": "المعلمة",
+        "concept_id": "society_teacher_behavior",
+        "relation": "school",
+        "note": "Teacher behaviour anchor."
+      },
+      {
+        "term": "الطالب",
+        "concept_id": "society_student_behavior",
+        "relation": "school",
+        "note": "Student behaviour anchor."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 4,
+        "atom_ids": [
+          "4-1",
+          "4-2"
+        ],
+        "role": "Public civility and behavior",
+        "note": "General social conduct and civility."
+      },
+      {
+        "article_id": 8,
+        "atom_ids": [
+          "8-1",
+          "8-2"
+        ],
+        "role": "Family and caregiving",
+        "note": "Family stability, respect, and caregiving."
+      },
+      {
+        "article_id": 12,
+        "atom_ids": [
+          "12-1",
+          "12-2"
+        ],
+        "role": "Public order and online civility",
+        "note": "Public panic, rumor spreading, and social media harm."
+      },
+      {
+        "article_id": 17,
+        "atom_ids": [
+          "17-1",
+          "17-2"
+        ],
+        "role": "Dignity and discrimination",
+        "note": "Bullying, harassment, discrimination, and humiliation."
+      },
+      {
+        "article_id": 18,
+        "atom_ids": [
+          "18-1",
+          "18-2"
+        ],
+        "role": "Social cohesion and identity",
+        "note": "Community support, identity, and cohesion."
+      }
+    ],
+    "reporting_guidance": [
+      "State the exact social concept first, then explain the relationship, target, and context.",
+      "Use article 17 for dignity and discrimination issues, article 12 for public-order or rumor-driven problems, article 8 for family and caregiving issues, article 4 for civility and conduct issues, and article 18 for cohesion and identity issues.",
+      "If the text is discussion, criticism, satire, educational, documentary, news, fictional, dreamlike, flashback, or quotation, say so explicitly and downgrade or reject the finding as appropriate.",
+      "When the scene involves multiple speakers, multiple targets, or cross-sentence meaning, explain that in the report instead of flattening it."
+    ]
+  }
+}

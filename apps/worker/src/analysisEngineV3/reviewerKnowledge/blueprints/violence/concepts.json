@@ -1,0 +1,183 @@
+{
+  "version": "1.0.0",
+  "id": "violence_concepts",
+  "title": "Violence Concepts",
+  "description": "Canonical violence concepts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "violence_event",
+      "title": "Violence Event",
+      "description": "A violent act, harm event, or physical escalation."
+    },
+    {
+      "id": "violence_threat",
+      "title": "Violence Threat",
+      "description": "A threat, warning, or intimidation that signals harm."
+    },
+    {
+      "id": "violence_attempt",
+      "title": "Violence Attempt",
+      "description": "An attempt to commit violence that may or may not succeed."
+    },
+    {
+      "id": "violence_glorification",
+      "title": "Violence Glorification",
+      "description": "Praise, celebration, or normalization of violence."
+    },
+    {
+      "id": "violence_encouragement",
+      "title": "Violence Encouragement",
+      "description": "Encouraging someone else to use violence."
+    },
+    {
+      "id": "violence_instruction",
+      "title": "Violence Instruction",
+      "description": "Operational guidance for violent action."
+    },
+    {
+      "id": "violence_reward",
+      "title": "Violence Reward",
+      "description": "Violence framed as rewarded, desirable, or beneficial."
+    },
+    {
+      "id": "violence_revenge",
+      "title": "Violence Revenge",
+      "description": "Violence framed as retaliation or payback."
+    },
+    {
+      "id": "violence_self_defense",
+      "title": "Violence Self Defense",
+      "description": "Violence framed as self-defense or protection."
+    },
+    {
+      "id": "violence_law_enforcement",
+      "title": "Violence Law Enforcement",
+      "description": "Violence framed as police, security, or lawful force."
+    },
+    {
+      "id": "violence_accident",
+      "title": "Violence Accident",
+      "description": "Violence that happens by accident or unintended impact."
+    },
+    {
+      "id": "violence_negligence",
+      "title": "Violence Negligence",
+      "description": "Violence caused by negligence, omission, or carelessness."
+    },
+    {
+      "id": "violence_condemnation",
+      "title": "Violence Condemnation",
+      "description": "Violence mentioned to reject, criticize, or condemn it."
+    },
+    {
+      "id": "violence_documentary",
+      "title": "Violence Documentary",
+      "description": "Violence discussed in documentary or factual reporting context."
+    },
+    {
+      "id": "violence_historical",
+      "title": "Violence Historical",
+      "description": "Violence framed as a historical event or record."
+    },
+    {
+      "id": "violence_training",
+      "title": "Violence Training",
+      "description": "Violence used in training, safety, or educational practice."
+    },
+    {
+      "id": "violence_game",
+      "title": "Violence Game",
+      "description": "Violence embedded in a game, simulation, or play context."
+    },
+    {
+      "id": "violence_fantasy",
+      "title": "Violence Fantasy",
+      "description": "Violence in fantasy, mythic, or imaginary settings."
+    },
+    {
+      "id": "violence_comedy",
+      "title": "Violence Comedy",
+      "description": "Violence played for humor, irony, or comedic effect."
+    },
+    {
+      "id": "violence_dream",
+      "title": "Violence Dream",
+      "description": "Violence appearing in a dream or dreamlike scene."
+    },
+    {
+      "id": "violence_flashback",
+      "title": "Violence Flashback",
+      "description": "Violence shown as a flashback or recollection."
+    },
+    {
+      "id": "violence_memory",
+      "title": "Violence Memory",
+      "description": "Violence recalled from memory or remembered experience."
+    },
+    {
+      "id": "violence_imagination",
+      "title": "Violence Imagination",
+      "description": "Violence imagined, hypothesized, or mentally simulated."
+    },
+    {
+      "id": "violence_failed_attempt",
+      "title": "Violence Failed Attempt",
+      "description": "A violent act that fails or is interrupted."
+    },
+    {
+      "id": "violence_offscreen",
+      "title": "Violence Offscreen",
+      "description": "Violence implied to occur outside the visible frame."
+    },
+    {
+      "id": "violence_scene_description",
+      "title": "Violence Scene Description",
+      "description": "Violence conveyed through descriptive scene language."
+    },
+    {
+      "id": "violence_dialogue",
+      "title": "Violence Dialogue",
+      "description": "Violence delivered in dialogue or quoted speech."
+    },
+    {
+      "id": "violence_reported_by_character",
+      "title": "Violence Reported by Character",
+      "description": "Violence described by one character about another event."
+    },
+    {
+      "id": "violence_observed",
+      "title": "Violence Observed",
+      "description": "Violence directly witnessed or observed by a character or narrator."
+    },
+    {
+      "id": "violence_implied",
+      "title": "Violence Implied",
+      "description": "Violence suggested by context rather than explicit wording."
+    },
+    {
+      "id": "violence_against_child",
+      "title": "Violence Against Child",
+      "description": "Violence targeting a child or minor."
+    },
+    {
+      "id": "violence_against_woman",
+      "title": "Violence Against Woman",
+      "description": "Violence targeting a woman or female-presenting target."
+    },
+    {
+      "id": "violence_against_disabled",
+      "title": "Violence Against Disabled",
+      "description": "Violence targeting a disabled person."
+    },
+    {
+      "id": "violence_against_public",
+      "title": "Violence Against Public",
+      "description": "Violence targeting the public, crowd, or civilians."
+    },
+    {
+      "id": "violence_against_state",
+      "title": "Violence Against State",
+      "description": "Violence targeting state institutions or authority."
+    }
+  ]
+}

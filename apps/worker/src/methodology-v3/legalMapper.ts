@@ -48,8 +48,16 @@ function compareFindingsStable(a: HybridFindingLike, b: HybridFindingLike): numb
     (a.end_offset_global ?? 0) - (b.end_offset_global ?? 0) ||
     (a.article_id ?? 0) - (b.article_id ?? 0) ||
     String(a.atom_id ?? "").localeCompare(String(b.atom_id ?? ""), "ar") ||
+    severityRank(a.severity) - severityRank(b.severity) ||
+    (a.confidence ?? -1) - (b.confidence ?? -1) ||
+    String(a.canonical_atom ?? "").localeCompare(String(b.canonical_atom ?? ""), "ar") ||
     String(a.evidence_snippet ?? "").localeCompare(String(b.evidence_snippet ?? ""), "ar") ||
-    String(a.title_ar ?? "").localeCompare(String(b.title_ar ?? ""), "ar")
+    String(a.title_ar ?? "").localeCompare(String(b.title_ar ?? ""), "ar") ||
+    String(a.rationale_ar ?? "").localeCompare(String(b.rationale_ar ?? ""), "ar") ||
+    String(a.lineage_id ?? "").localeCompare(String(b.lineage_id ?? ""), "ar") ||
+    String(a.parent_lineage_id ?? "").localeCompare(String(b.parent_lineage_id ?? ""), "ar") ||
+    String(a.evidence_hash ?? "").localeCompare(String(b.evidence_hash ?? ""), "ar") ||
+    String(a.canonical_hash ?? "").localeCompare(String(b.canonical_hash ?? ""), "ar")
   );
 }
 

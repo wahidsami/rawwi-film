@@ -1,0 +1,55 @@
+{
+  "id": "violence_048_violence_failed_attempt_quoted",
+  "version": "1.0.0",
+  "title": "Violence Failed Attempt (quoted)",
+  "summary": "Violence Failed Attempt in quoted framing.",
+  "originalScenario": "قال الراوي: \"حاول طعنه لكن السكين سقطت.\"",
+  "reviewQuestion": "Is this violence failed attempt?",
+  "initialSuspicion": "Possible violence failed attempt.",
+  "possibleConcepts": [
+    "violence_failed_attempt"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: حاول طعنه لكن السكين سقطت."
+  ],
+  "contradictingEvidence": [
+    "Quoted or reported framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear endorsement in the narrator's own voice."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "Target remains dependent on the quoted voice.",
+  "intentAnalysis": "quotation",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Quoted speech is not automatically endorsement.",
+  "benchmarkTags": [
+    "violence_failed_attempt",
+    "quoted",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_failed_attempt"
+  ]
+}

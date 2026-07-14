@@ -1,0 +1,56 @@
+{
+  "id": "decision_040_court_testimony_quoted",
+  "version": "1.0.0",
+  "title": "Court testimony (quoted)",
+  "summary": "Court testimony in quoted framing.",
+  "originalScenario": "قال الراوي: \"أعاد الشاهد العبارة داخل المحكمة\"",
+  "reviewQuestion": "Is this quoted legal testimony?",
+  "initialSuspicion": "Quoted evidence.",
+  "possibleConcepts": [
+    "children_child"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: أعاد الشاهد العبارة داخل المحكمة"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-2"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "court_testimony",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child"
+  ]
+}

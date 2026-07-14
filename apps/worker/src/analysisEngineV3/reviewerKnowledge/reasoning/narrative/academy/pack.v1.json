@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_14_narrative",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Narrative Intelligence Framework",
+    "description": "Shared reasoning framework for story-first interpretation across all domains, including subtext, hidden meaning, metaphor, symbolism, and indirect speech.",
+    "supported_concepts": [
+      "story_arc",
+      "story_goal",
+      "story_conflict",
+      "story_resolution",
+      "story_progression",
+      "scene_goal",
+      "scene_transition",
+      "character_arc",
+      "relationship_arc",
+      "motivation_change",
+      "belief_change",
+      "moral_change",
+      "tone_shift",
+      "theme",
+      "subtext",
+      "hidden_meaning",
+      "symbolism",
+      "foreshadowing",
+      "callback",
+      "plot_twist",
+      "red_herring",
+      "flashback",
+      "flashforward",
+      "dream",
+      "hallucination",
+      "imaginary_sequence",
+      "voice_over",
+      "unreliable_narrator",
+      "parallel_story",
+      "background_story",
+      "scene_description",
+      "environmental_storytelling",
+      "off_screen_event",
+      "implicit_event",
+      "missing_information",
+      "time_skip"
+    ]
+  },
+  "pack": {
+    "id": "v3_14_narrative",
+    "module_id": "v3_14_narrative",
+    "title": "Narrative Intelligence Framework",
+    "default_question_set_id": null,
+    "trigger_concept_ids": [
+      "story_arc",
+      "story_goal",
+      "story_conflict",
+      "story_resolution",
+      "story_progression",
+      "scene_goal",
+      "scene_transition",
+      "character_arc",
+      "relationship_arc",
+      "motivation_change",
+      "belief_change",
+      "moral_change",
+      "tone_shift",
+      "theme",
+      "subtext",
+      "hidden_meaning",
+      "symbolism",
+      "foreshadowing",
+      "callback",
+      "plot_twist",
+      "red_herring",
+      "flashback",
+      "flashforward",
+      "dream",
+      "hallucination",
+      "imaginary_sequence",
+      "voice_over",
+      "unreliable_narrator",
+      "parallel_story",
+      "background_story",
+      "scene_description",
+      "environmental_storytelling",
+      "off_screen_event",
+      "implicit_event",
+      "missing_information",
+      "time_skip"
+    ],
+    "purpose": "Teach reviewers to understand the story, scene, speaker, and context before any domain-specific judgment.",
+    "protected_interests": [
+      "story coherence",
+      "scene continuity",
+      "cross-scene meaning",
+      "narrator reliability",
+      "character meaning"
+    ],
+    "protected_concepts": [
+      "story_arc",
+      "story_goal",
+      "story_conflict",
+      "story_resolution",
+      "story_progression",
+      "scene_goal",
+      "scene_transition",
+      "character_arc",
+      "relationship_arc",
+      "motivation_change",
+      "belief_change",
+      "moral_change",
+      "tone_shift",
+      "theme",
+      "subtext",
+      "hidden_meaning",
+      "symbolism",
+      "foreshadowing",
+      "callback",
+      "plot_twist",
+      "red_herring",
+      "flashback",
+      "flashforward",
+      "dream",
+      "hallucination",
+      "imaginary_sequence",
+      "voice_over",
+      "unreliable_narrator",
+      "parallel_story",
+      "background_story",
+      "scene_description",
+      "environmental_storytelling",
+      "off_screen_event",
+      "implicit_event",
+      "missing_information",
+      "time_skip",
+      "story_endorsement",
+      "character_endorsement",
+      "author_endorsement",
+      "viewer_interpretation",
+      "narrator_opinion",
+      "character_opinion"
+    ],
+    "required_evidence": [
+      "A literal story clue inside the scene.",
+      "Speaker or narrator identity.",
+      "Later context when the meaning is ambiguous.",
+      "A visible relationship, action, symbol, or figurative cue that supports the reading.",
+      "Cross-scene or resolution-level context when the scene purpose is not local only."
+    ],
+    "insufficient_evidence": [
+      "One isolated sentence without narrative context.",
+      "A guess about author intent with no story support.",
+      "A character opinion treated as the story's own opinion."
+    ],
+    "reviewer_heuristics": [
+      "Read the scene as a story unit before judging a sentence.",
+      "Track speaker, target, narrator, and viewer separately.",
+      "Use later scenes to confirm or reverse the first impression.",
+      "Treat symbolism, metaphor, indirect speech, dream, flashback, and voice over as meaning shifters.",
+      "Do not force a literal reading when the story only supports subtext or hidden meaning.",
+      "Confidence should fall when the scene is isolated or ambiguous."
+    ],
+    "legal_exceptions": [
+      "quotation",
+      "fiction",
+      "fantasy",
+      "dream",
+      "flashback",
+      "flashforward",
+      "hallucination",
+      "voice_over",
+      "unreliable_narrator",
+      "historical narration"
+    ],
+    "positive_examples": [
+      "A scene where a later beat changes the meaning of an earlier sentence.",
+      "A story where symbolism matters more than the literal line.",
+      "A narrator whose perspective must be separated from the character's opinion.",
+      "An indirect line whose real meaning is only recoverable from the next scene.",
+      "A metaphor that becomes meaningful only through the surrounding story.",
+      "A character arc that is only visible after multiple scenes are read together.",
+      "A resolution that reframes earlier conflict or dialogue."
+    ],
+    "negative_examples": [
+      "A single sentence treated as the whole story.",
+      "A narrator opinion treated as author endorsement.",
+      "A dream sequence treated as literal story reality.",
+      "A metaphor or symbol treated as a direct factual event with no supporting context."
+    ],
+    "common_false_positives": [
+      "Treating character speech as the author's own belief.",
+      "Ignoring later reversal in a cross-scene story arc.",
+      "Missing symbolic or off-screen meaning.",
+      "Confusing viewer interpretation with story endorsement.",
+      "Treating indirect speech as a direct statement.",
+      "Over-reading figurative language that the story does not actually support.",
+      "Treating a scene purpose as final story meaning when later scenes alter it."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "story",
+        "concept_id": "story_arc",
+        "relation": "framework",
+        "note": "The story is the main unit of review."
+      },
+      {
+        "term": "scene",
+        "concept_id": "scene_goal",
+        "relation": "context",
+        "note": "Scenes carry local purpose."
+      },
+      {
+        "term": "scene purpose",
+        "concept_id": "scene_goal",
+        "relation": "supports",
+        "note": "Scene purpose is the local narrative function."
+      },
+      {
+        "term": "cross scene",
+        "concept_id": "story_progression",
+        "relation": "supports",
+        "note": "Cross-scene meaning is part of story progression."
+      },
+      {
+        "term": "story resolution",
+        "concept_id": "story_resolution",
+        "relation": "supports",
+        "note": "The ending can reframe earlier scenes."
+      },
+      {
+        "term": "relationship evolution",
+        "concept_id": "relationship_arc",
+        "relation": "supports",
+        "note": "Relationship evolution is the changing bond across scenes."
+      },
+      {
+        "term": "character arc",
+        "concept_id": "character_arc",
+        "relation": "supports",
+        "note": "Character arc is the character's change across the story."
+      },
+      {
+        "term": "narrative context",
+        "concept_id": "story_arc",
+        "relation": "framework",
+        "note": "Narrative context is the broader story frame around a scene."
+      },
+      {
+        "term": "subtext",
+        "concept_id": "subtext",
+        "relation": "meaning",
+        "note": "Subtext carries hidden meaning."
+      },
+      {
+        "term": "metaphor",
+        "concept_id": "hidden_meaning",
+        "relation": "meaning",
+        "note": "Metaphor can carry recoverable hidden meaning."
+      },
+      {
+        "term": "symbolism",
+        "concept_id": "symbolism",
+        "relation": "meaning",
+        "note": "Symbols often change the reading."
+      },
+      {
+        "term": "indirect speech",
+        "concept_id": "hidden_meaning",
+        "relation": "meaning",
+        "note": "Indirect speech often carries recoverable meaning through context."
+      },
+      {
+        "term": "unreliable narrator",
+        "concept_id": "unreliable_narrator",
+        "relation": "warning",
+        "note": "Narrator reliability must be checked."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 4,
+        "atom_ids": [
+          "4-1"
+        ],
+        "role": "interpretive framing",
+        "note": "Context and scene interpretation."
+      },
+      {
+        "article_id": 11,
+        "atom_ids": [
+          "11-1"
+        ],
+        "role": "story reasoning",
+        "note": "Story arc, subtext, and cross-scene meaning."
+      },
+      {
+        "article_id": 17,
+        "atom_ids": [
+          "17-1"
+        ],
+        "role": "fiction and framing",
+        "note": "Dreams, fantasy, and unreliable narration."
+      }
+    ],
+    "reporting_guidance": [
+      "Explain the story meaning before the domain-specific conclusion.",
+      "Mention any narrator, character, or viewer distinction explicitly.",
+      "State when later scenes reverse or narrow the first impression.",
+      "State whether the meaning is literal, implicit, symbolic, or indirect before moving to the subject domain."
+    ]
+  }
+}

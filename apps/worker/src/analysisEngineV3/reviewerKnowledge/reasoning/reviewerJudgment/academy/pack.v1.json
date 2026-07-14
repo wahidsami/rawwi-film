@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_18_reviewer_judgment",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Reviewer Judgment Framework",
+    "description": "A shared reviewer judgment pack for competing interpretations, evidence sufficiency, confidence calibration, reviewer disagreement, narrative justification, and final reviewer decision making.",
+    "supported_concepts": [
+      "competing_interpretations",
+      "evidence_sufficiency",
+      "confidence_calibration",
+      "reviewer_disagreement",
+      "narrative_justification",
+      "final_reviewer_decision"
+    ]
+  },
+  "pack": {
+    "id": "v3_18_reviewer_judgment",
+    "module_id": "v3_18_reviewer_judgment",
+    "title": "Reviewer Judgment Framework",
+    "trigger_concept_ids": [
+      "competing_interpretations",
+      "evidence_sufficiency",
+      "confidence_calibration",
+      "reviewer_disagreement",
+      "narrative_justification",
+      "final_reviewer_decision"
+    ],
+    "purpose": "Teach reviewers how experienced GCAM reviewers compare interpretations, judge evidence sufficiency, calibrate confidence, resolve disagreement, justify narrative outcomes, and make a final decision.",
+    "protected_interests": [
+      "Reviewer consistency",
+      "Decision quality",
+      "Evidence discipline",
+      "Cross-domain fairness"
+    ],
+    "protected_concepts": [
+      "competing_interpretations",
+      "evidence_sufficiency",
+      "confidence_calibration",
+      "reviewer_disagreement",
+      "narrative_justification",
+      "final_reviewer_decision"
+    ],
+    "required_evidence": [
+      "Literal evidence from the current chunk",
+      "Speaker and target cues when available",
+      "Context cues from surrounding sentences",
+      "Narrative cues from the scene"
+    ],
+    "insufficient_evidence": [
+      "One clue without corroboration",
+      "Speculation without literal support",
+      "Premature certainty before disagreement is resolved"
+    ],
+    "reviewer_heuristics": [
+      "List competing interpretations before choosing one.",
+      "Treat one clue as a hypothesis, not a conclusion.",
+      "Ask whether the evidence is sufficient or merely plausible.",
+      "Calibrate confidence to corroboration and contradiction.",
+      "Resolve disagreement before producing a final decision.",
+      "Use narrative justification when the story changes the meaning of a harmful-looking line.",
+      "Record the final decision only after the reviewer has exhausted the relevant context."
+    ],
+    "legal_exceptions": [
+      "quotation",
+      "historical narration",
+      "documentary framing",
+      "educational framing",
+      "medical discussion",
+      "fiction",
+      "dream",
+      "flashback",
+      "satire",
+      "self defense",
+      "law enforcement"
+    ],
+    "positive_examples": [
+      "The reviewer compares two plausible readings before deciding.",
+      "The reviewer lowers confidence when a later sentence contradicts the first reading.",
+      "The reviewer keeps the case as review until the context becomes sufficient.",
+      "The reviewer explains why the story changes the final outcome.",
+      "The reviewer resolves disagreement instead of pretending it does not exist."
+    ],
+    "negative_examples": [
+      "The reviewer accepts the first plausible reading.",
+      "The reviewer treats weak evidence as decisive.",
+      "The reviewer ignores disagreement between scenes.",
+      "The reviewer applies a final judgment before checking narrative justification."
+    ],
+    "common_false_positives": [
+      "Choosing the first plausible interpretation",
+      "Treating ambiguity as certainty",
+      "Ignoring contradictory later context",
+      "Collapsing review disagreement into one false answer",
+      "Using narrative justification as an excuse to skip evidence",
+      "Producing a final decision before evidence sufficiency is checked"
+    ],
+    "glossary_relationships": [
+      {
+        "term": "competing interpretations",
+        "concept_id": "competing_interpretations",
+        "relation": "supports",
+        "note": "Start with the competing readings."
+      },
+      {
+        "term": "evidence sufficiency",
+        "concept_id": "evidence_sufficiency",
+        "relation": "supports",
+        "note": "Decide whether the evidence is enough."
+      },
+      {
+        "term": "confidence",
+        "concept_id": "confidence_calibration",
+        "relation": "supports",
+        "note": "Confidence must follow the evidence."
+      },
+      {
+        "term": "disagreement",
+        "concept_id": "reviewer_disagreement",
+        "relation": "supports",
+        "note": "Legitimate reviewer disagreement must be represented."
+      },
+      {
+        "term": "narrative justification",
+        "concept_id": "narrative_justification",
+        "relation": "supports",
+        "note": "Story context may change the reviewer outcome."
+      },
+      {
+        "term": "final decision",
+        "concept_id": "final_reviewer_decision",
+        "relation": "supports",
+        "note": "The final reviewer decision is the output of judgment."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 4,
+        "atom_ids": [
+          "4-1"
+        ],
+        "role": "comparison and review",
+        "note": "Reviewer judgment begins with comparing interpretations."
+      },
+      {
+        "article_id": 11,
+        "atom_ids": [
+          "11-1"
+        ],
+        "role": "evidence sufficiency",
+        "note": "Reviewer judgment evaluates whether evidence is enough."
+      },
+      {
+        "article_id": 17,
+        "atom_ids": [
+          "17-1"
+        ],
+        "role": "confidence and exceptions",
+        "note": "Reviewer judgment calibrates confidence and handles exceptions."
+      }
+    ],
+    "reporting_guidance": [
+      "State the competing interpretations before the final answer.",
+      "Explain why the evidence is sufficient or insufficient.",
+      "Show how confidence changed when the context changed.",
+      "Name legitimate reviewer disagreement instead of hiding it.",
+      "If narrative justification changes the result, say so explicitly.",
+      "Finalize the report only after the judgment process is complete."
+    ]
+  }
+}

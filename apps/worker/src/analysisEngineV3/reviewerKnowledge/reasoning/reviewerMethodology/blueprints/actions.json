@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_methodology_actions",
+  "title": "Reviewer Methodology Actions",
+  "description": "Reviewer actions used in methodology reasoning.",
+  "entries": [
+    {
+      "id": "methodology_action_identify",
+      "title": "Identify",
+      "description": "Recognize the reviewer task that must happen first."
+    },
+    {
+      "id": "methodology_action_collect",
+      "title": "Collect",
+      "description": "Gather literal evidence from the local chunk."
+    },
+    {
+      "id": "methodology_action_prioritize",
+      "title": "Prioritize",
+      "description": "Rank stronger evidence above weaker signals."
+    },
+    {
+      "id": "methodology_action_compare",
+      "title": "Compare",
+      "description": "Compare conflicting interpretations or clues."
+    },
+    {
+      "id": "methodology_action_resolve",
+      "title": "Resolve",
+      "description": "Resolve contradiction or ambiguity when evidence allows."
+    },
+    {
+      "id": "methodology_action_escalate",
+      "title": "Escalate",
+      "description": "Mark the case for more context or manual review."
+    },
+    {
+      "id": "methodology_action_classify",
+      "title": "Classify",
+      "description": "Move from observation toward a reviewer conclusion."
+    },
+    {
+      "id": "methodology_action_generate",
+      "title": "Generate",
+      "description": "Generate reviewer comments or a draft finding."
+    },
+    {
+      "id": "methodology_action_report",
+      "title": "Report",
+      "description": "Prioritize the final report output."
+    },
+    {
+      "id": "methodology_action_calibrate",
+      "title": "Calibrate",
+      "description": "Adjust confidence to match the evidence."
+    }
+  ]
+}

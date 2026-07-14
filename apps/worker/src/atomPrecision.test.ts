@@ -4,7 +4,12 @@ import type { JudgeFinding } from "./schemas.js";
 
 function baseFinding(overrides: Partial<JudgeFinding>): JudgeFinding {
   return {
+    source: null,
     article_id: 5,
+    lineage_id: null,
+    parent_lineage_id: null,
+    evidence_hash: null,
+    canonical_hash: null,
     atom_id: "5-2",
     canonical_atom: "INSULT",
     severity: "medium",

@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "id": "society_review_questions",
+  "title": "Society Review Questions",
+  "description": "Canonical society reviewer questions for reasoning.",
+  "entries": [
+    {
+      "id": "society_question_speaker",
+      "title": "Question Speaker",
+      "description": "Question Speaker for society reasoning."
+    },
+    {
+      "id": "society_question_target",
+      "title": "Question Target",
+      "description": "Question Target for society reasoning."
+    },
+    {
+      "id": "society_question_context",
+      "title": "Question Context",
+      "description": "Question Context for society reasoning."
+    },
+    {
+      "id": "society_question_intent",
+      "title": "Question Intent",
+      "description": "Question Intent for society reasoning."
+    },
+    {
+      "id": "society_question_relationship",
+      "title": "Question Relationship",
+      "description": "Question Relationship for society reasoning."
+    },
+    {
+      "id": "society_question_evidence",
+      "title": "Question Evidence",
+      "description": "Question Evidence for society reasoning."
+    },
+    {
+      "id": "society_question_exception",
+      "title": "Question Exception",
+      "description": "Question Exception for society reasoning."
+    },
+    {
+      "id": "society_question_confidence",
+      "title": "Question Confidence",
+      "description": "Question Confidence for society reasoning."
+    },
+    {
+      "id": "society_question_cross_sentence",
+      "title": "Question Cross Sentence",
+      "description": "Question Cross Sentence for society reasoning."
+    },
+    {
+      "id": "society_question_cross_scene",
+      "title": "Question Cross Scene",
+      "description": "Question Cross Scene for society reasoning."
+    },
+    {
+      "id": "society_question_discussion_vs_criticism",
+      "title": "Question Discussion Vs Criticism",
+      "description": "Question Discussion Vs Criticism for society reasoning."
+    },
+    {
+      "id": "society_question_dialogue_vs_narration",
+      "title": "Question Dialogue Vs Narration",
+      "description": "Question Dialogue Vs Narration for society reasoning."
+    }
+  ]
+}

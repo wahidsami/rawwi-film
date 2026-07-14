@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "crime_domain_framework",
+  "title": "Crime Domain Framework",
+  "description": "Root crime ontology for the academy.",
+  "entries": [
+    {
+      "id": "crime_domain_framework",
+      "title": "Crime Domain Framework",
+      "description": "Root node for crime reasoning."
+    }
+  ]
+}

@@ -1,0 +1,218 @@
+{
+  "version": "1.0.0",
+  "id": "relationships_relationships",
+  "title": "Relationship Graph",
+  "description": "A deterministic graph linking the shared relationship concepts.",
+  "entries": [
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_family_parent_child",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_family_siblings",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_family_spouses",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_family_extended",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_father_child",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_mother_child",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_guardian_child",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_child_child",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_adult_child",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_adult_adult",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_teacher_student",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_doctor_patient",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_therapist_patient",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_imam_follower",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_leader_follower",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_commander_soldier",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_police_suspect",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_police_commander",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_police_officer_public",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_judge_accused",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_judge_public",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_lawyer_client",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_employer_employee",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_coworkers",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_friend_friend",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_neighbor_neighbor",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_stranger_stranger",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_government_citizen",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_government_employee_public",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_journalist_source",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_actor_audience",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_story_narrator",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_narrator_character",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_customer_vendor",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_officer_public",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_criminal_victim",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_criminal_accomplice",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_gang_member",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_gang_leader",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_terrorist_recruit",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_disabled_caregiver",
+      "type": "supports"
+    },
+    {
+      "from": "relationship_domain_framework",
+      "to": "relationship_elderly_caregiver",
+      "type": "supports"
+    }
+  ]
+}

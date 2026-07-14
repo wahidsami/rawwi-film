@@ -1,0 +1,854 @@
+{
+  "schema_version": 1,
+  "lesson_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "lesson": {
+    "id": "lesson_001_narrative_framework",
+    "title": "Narrative Intelligence Framework",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "language": "en",
+    "summary": "Teach reviewers to understand the story before evaluating any individual sentence, including cross-scene meaning, scene purpose, character arc, relationship evolution, and story resolution.",
+    "learningObjectives": [
+      "Understand story before sentence.",
+      "Track meaning across scenes.",
+      "Separate narrator, character, and viewer interpretation.",
+      "Recognize symbolism, subtext, hidden meaning, and narrative context.",
+      "Track scene purpose, character arc, relationship evolution, and story resolution.",
+      "Use later context to revise early conclusions."
+    ],
+    "concepts": [
+      {
+        "id": "story_arc",
+        "title": "Story Arc",
+        "summary": "Overall story progression from setup to resolution, used to understand the story before judging individual lines.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "story_goal",
+        "title": "Story Goal",
+        "summary": "The objective driving the story forward.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "story_conflict",
+        "title": "Story Conflict",
+        "summary": "The central pressure or opposition in the story.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "story_resolution",
+        "title": "Story Resolution",
+        "summary": "The ending phase that resolves or transforms the conflict and can reframe earlier scenes.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "story_progression",
+        "title": "Story Progression",
+        "summary": "The ordered movement of events across the narrative.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "scene_goal",
+        "title": "Scene Goal",
+        "summary": "The purpose of a scene at the local level; the scene purpose the reviewer should recover before judging it.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "scene_transition",
+        "title": "Scene Transition",
+        "summary": "A shift between scenes, beats, or locations.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "character_arc",
+        "title": "Character Arc",
+        "summary": "A character's evolution across the story, including motivation, belief, and moral change.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "relationship_arc",
+        "title": "Relationship Arc",
+        "summary": "The changing bond between characters over time; the relationship evolution the reviewer tracks across scenes.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "motivation_change",
+        "title": "Motivation Change",
+        "summary": "A shift in what a character wants or why they act.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "belief_change",
+        "title": "Belief Change",
+        "summary": "A shift in what a character believes to be true.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "moral_change",
+        "title": "Moral Change",
+        "summary": "A shift in a character's ethical stance.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "tone_shift",
+        "title": "Tone Shift",
+        "summary": "A noticeable change in emotional or stylistic tone.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "theme",
+        "title": "Theme",
+        "summary": "The central idea or message of the story.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "subtext",
+        "title": "Subtext",
+        "summary": "Meaning implied beneath the literal wording.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "hidden_meaning",
+        "title": "Hidden Meaning",
+        "summary": "Meaning revealed by context rather than explicit wording.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "symbolism",
+        "title": "Symbolism",
+        "summary": "Objects or actions that stand for deeper meaning.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "foreshadowing",
+        "title": "Foreshadowing",
+        "summary": "An earlier clue that points toward a later event.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "callback",
+        "title": "Callback",
+        "summary": "A later reference to an earlier detail.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "plot_twist",
+        "title": "Plot Twist",
+        "summary": "A surprising change that reinterprets previous events.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "red_herring",
+        "title": "Red Herring",
+        "summary": "A misleading clue that pulls attention away from the real meaning.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "flashback",
+        "title": "Flashback",
+        "summary": "A return to an earlier event in time.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "flashforward",
+        "title": "Flashforward",
+        "summary": "A preview of a later event or outcome.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "dream",
+        "title": "Dream",
+        "summary": "A scene framed as a dream or dreamlike experience.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "hallucination",
+        "title": "Hallucination",
+        "summary": "A scene framed as perception that may not be real.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "imaginary_sequence",
+        "title": "Imaginary Sequence",
+        "summary": "A sequence that exists only in a character's mind.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "voice_over",
+        "title": "Voice Over",
+        "summary": "Narration spoken over the visual scene.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "unreliable_narrator",
+        "title": "Unreliable Narrator",
+        "summary": "A narrator whose account may not be trustworthy.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "parallel_story",
+        "title": "Parallel Story",
+        "summary": "A second story line that mirrors or contrasts the first.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "background_story",
+        "title": "Background Story",
+        "summary": "Events that happened before the current scene.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "scene_description",
+        "title": "Scene Description",
+        "summary": "Visual or written description of what is happening.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "environmental_storytelling",
+        "title": "Environmental Storytelling",
+        "summary": "Meaning conveyed through objects, space, or setting.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "off_screen_event",
+        "title": "Off Screen Event",
+        "summary": "An event that happens outside the visible scene.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "implicit_event",
+        "title": "Implicit Event",
+        "summary": "An event inferred from context rather than directly shown.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "missing_information",
+        "title": "Missing Information",
+        "summary": "A gap that prevents a full conclusion.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      },
+      {
+        "id": "time_skip",
+        "title": "Time Skip",
+        "summary": "A jump forward or backward in time.",
+        "tags": [
+          "narrative",
+          "story",
+          "reasoning"
+        ],
+        "target": null,
+        "articleIds": [
+          11,
+          17
+        ]
+      }
+    ],
+    "reviewerQuestions": [
+      {
+        "id": "narrative_question_story",
+        "purpose": "What is the story doing overall?",
+        "expectedAnswerFormat": "One concise story-level answer.",
+        "reasoningGuidance": "Start with the full scene before judging a sentence.",
+        "evidenceRequirements": [
+          "The answer must cite story-level evidence."
+        ]
+      },
+      {
+        "id": "narrative_question_speaker",
+        "purpose": "Who is speaking or narrating?",
+        "expectedAnswerFormat": "Short identification or null.",
+        "reasoningGuidance": "Separate character speech from narrator voice.",
+        "evidenceRequirements": [
+          "Evidence must identify the voice."
+        ]
+      },
+      {
+        "id": "narrative_question_target",
+        "purpose": "Who or what is the target of the scene?",
+        "expectedAnswerFormat": "Short identification or null.",
+        "reasoningGuidance": "Use context, not guesswork.",
+        "evidenceRequirements": [
+          "The answer must mention the target clue."
+        ]
+      },
+      {
+        "id": "narrative_question_intent",
+        "purpose": "What is the narrative intent?",
+        "expectedAnswerFormat": "One stance label.",
+        "reasoningGuidance": "Decide whether the scene is endorsement, criticism, neutral narration, or fiction.",
+        "evidenceRequirements": [
+          "Evidence must include framing signals."
+        ]
+      },
+      {
+        "id": "narrative_question_context",
+        "purpose": "What context changes the meaning?",
+        "expectedAnswerFormat": "A short context note.",
+        "reasoningGuidance": "Track flashback, dream, voice over, and unreliable narration.",
+        "evidenceRequirements": [
+          "The answer must point to context evidence."
+        ]
+      },
+      {
+        "id": "narrative_question_relationship",
+        "purpose": "Which character relationship matters most?",
+        "expectedAnswerFormat": "Short relationship label.",
+        "reasoningGuidance": "Track changing relationships across scenes.",
+        "evidenceRequirements": [
+          "The answer must use scene evidence."
+        ]
+      },
+      {
+        "id": "narrative_question_memory",
+        "purpose": "Does earlier or later memory change the reading?",
+        "expectedAnswerFormat": "Yes/No with explanation.",
+        "reasoningGuidance": "Cross-scene context can reverse a first impression.",
+        "evidenceRequirements": [
+          "The answer must cite the relevant scene or sentence."
+        ]
+      },
+      {
+        "id": "narrative_question_confidence",
+        "purpose": "How confident is the reading?",
+        "expectedAnswerFormat": "High / Medium / Low / Review.",
+        "reasoningGuidance": "Confidence should fall when context is incomplete.",
+        "evidenceRequirements": [
+          "The answer must reflect evidence strength."
+        ]
+      }
+    ],
+    "examples": [
+      "A single line can appear harmless until the next scene reveals the real meaning.",
+      "A dream sequence should not be read as literal story reality.",
+      "A narrator's opinion is not always the author's opinion."
+    ],
+    "counterExamples": [
+      "Treating one sentence as the whole story.",
+      "Ignoring later scenes that change the interpretation.",
+      "Confusing a character's opinion with the story's opinion."
+    ],
+    "exceptions": [
+      "quotation",
+      "fiction",
+      "fantasy",
+      "dream",
+      "flashback",
+      "flashforward",
+      "hallucination",
+      "voice_over",
+      "unreliable_narrator",
+      "historical narration"
+    ],
+    "evidenceRules": {
+      "minimum": [
+        "The scene must include at least one literal narrative clue.",
+        "A sentence alone is not enough when later context changes the meaning."
+      ],
+      "strong": [
+        "Dialogue plus action plus later scene context.",
+        "Narration that explicitly frames the story meaning.",
+        "A recurring motif that is confirmed in a later scene."
+      ],
+      "weak": [
+        "One isolated sentence without narrative support.",
+        "A symbol with no supporting scene context.",
+        "A claim about meaning without an actual story clue."
+      ],
+      "insufficient": [
+        "Speculation about theme without evidence.",
+        "Guessing author intent from a single line.",
+        "Assuming the narrator and the author are the same voice."
+      ],
+      "confidenceGuidance": [
+        "High confidence requires corroboration across more than one scene or signal.",
+        "Medium confidence is appropriate when a strong clue exists but later reversal remains possible.",
+        "Low confidence is appropriate when the scene is isolated or ambiguous.",
+        "Review is appropriate when narration, symbolism, or memory materially changes the reading."
+      ]
+    },
+    "conceptRelationships": [
+      {
+        "fromConceptId": "story_arc",
+        "toConceptId": "story_progression",
+        "relation": "supports",
+        "note": null
+      },
+      {
+        "fromConceptId": "story_goal",
+        "toConceptId": "story_conflict",
+        "relation": "supports",
+        "note": null
+      },
+      {
+        "fromConceptId": "story_conflict",
+        "toConceptId": "story_resolution",
+        "relation": "requires",
+        "note": null
+      },
+      {
+        "fromConceptId": "character_arc",
+        "toConceptId": "belief_change",
+        "relation": "supports",
+        "note": null
+      },
+      {
+        "fromConceptId": "character_arc",
+        "toConceptId": "motivation_change",
+        "relation": "supports",
+        "note": null
+      },
+      {
+        "fromConceptId": "relationship_arc",
+        "toConceptId": "tone_shift",
+        "relation": "supports",
+        "note": null
+      },
+      {
+        "fromConceptId": "theme",
+        "toConceptId": "subtext",
+        "relation": "supports",
+        "note": null
+      },
+      {
+        "fromConceptId": "subtext",
+        "toConceptId": "hidden_meaning",
+        "relation": "supports",
+        "note": null
+      },
+      {
+        "fromConceptId": "foreshadowing",
+        "toConceptId": "callback",
+        "relation": "supports",
+        "note": null
+      },
+      {
+        "fromConceptId": "flashback",
+        "toConceptId": "background_story",
+        "relation": "supports",
+        "note": null
+      },
+      {
+        "fromConceptId": "dream",
+        "toConceptId": "imaginary_sequence",
+        "relation": "supports",
+        "note": null
+      },
+      {
+        "fromConceptId": "voice_over",
+        "toConceptId": "unreliable_narrator",
+        "relation": "supports",
+        "note": null
+      }
+    ],
+    "glossaryReferences": [
+      {
+        "term": "story",
+        "conceptId": "story_arc",
+        "relation": "framework",
+        "note": "Story is the primary unit of analysis."
+      },
+      {
+        "term": "scene",
+        "conceptId": "scene_goal",
+        "relation": "context",
+        "note": "Scene purpose changes interpretation."
+      },
+      {
+        "term": "subtext",
+        "conceptId": "subtext",
+        "relation": "meaning",
+        "note": "Subtext carries hidden meaning."
+      },
+      {
+        "term": "symbolism",
+        "conceptId": "symbolism",
+        "relation": "meaning",
+        "note": "Symbolism often points beyond the literal line."
+      },
+      {
+        "term": "voice over",
+        "conceptId": "voice_over",
+        "relation": "context",
+        "note": "Voice over is narrator-driven framing."
+      }
+    ],
+    "gcamMappings": [
+      {
+        "articleId": 4,
+        "articleTitle": "Context and Interpretation",
+        "articleNumber": "4",
+        "atomNumber": "4-1",
+        "reportTitle": "Story and Scene Interpretation",
+        "note": "Use for cross-scene reasoning and context inheritance."
+      },
+      {
+        "articleId": 11,
+        "articleTitle": "Narrative Meaning",
+        "articleNumber": "11",
+        "atomNumber": "11-1",
+        "reportTitle": "Narrative Meaning",
+        "note": "Use for story progression, subtext, and scene purpose."
+      },
+      {
+        "articleId": 17,
+        "articleTitle": "Fiction and Framing",
+        "articleNumber": "17",
+        "atomNumber": "17-1",
+        "reportTitle": "Fictional and Symbolic Framing",
+        "note": "Use for dream, fantasy, and unreliable narration."
+      }
+    ],
+    "reportTemplates": [
+      {
+        "findingTitle": "Narrative Intelligence Finding",
+        "reasonTemplate": "Explain how the story, scene, and later context shape the meaning.",
+        "recommendationTemplate": "Use the story-level reading when making the final review decision.",
+        "severity": "medium",
+        "priority": 1,
+        "reportCategory": "narrative"
+      }
+    ],
+    "benchmarkReferences": [
+      "narrative_story_arc_direct",
+      "narrative_story_arc_cross_sentence",
+      "narrative_story_arc_dream",
+      "narrative_story_arc_flashback",
+      "narrative_story_arc_symbolic",
+      "narrative_story_arc_review"
+    ],
+    "prerequisites": [],
+    "relatedLessons": [
+      "lesson_014_cross_sentence_reasoning"
+    ],
+    "metadata": {
+      "author": "Raawi Academy",
+      "reviewLevel": "Shared Reasoning",
+      "priority": 1,
+      "category": "narrative",
+      "lesson_type": "framework",
+      "domain": "narrative"
+    }
+  }
+}

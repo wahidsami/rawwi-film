@@ -1,0 +1,1118 @@
+{
+  "version": "1.0.0",
+  "id": "religion_semantic_patterns",
+  "title": "Religion Semantic Patterns",
+  "description": "Semantic patterns for religion reviewer reasoning.",
+  "metadata": {
+    "id": "religion_semantic_patterns",
+    "title": "Religion Semantic Patterns",
+    "description": "Semantic patterns for religion reviewer reasoning.",
+    "concepts": [
+      {
+        "id": "religion_islamic_religion",
+        "title": "Islamic Religion",
+        "description": "The Islamic religion as a protected belief system and identity."
+      },
+      {
+        "id": "religion_religious_sanctities",
+        "title": "Religious Sanctities",
+        "description": "Sacred matters, inviolable symbols, and revered religious matters."
+      },
+      {
+        "id": "religion_holy_places",
+        "title": "Holy Places",
+        "description": "Mosques, shrines, and other sacred places."
+      },
+      {
+        "id": "religion_holy_books",
+        "title": "Holy Books",
+        "description": "Revealed scriptures and sacred texts."
+      },
+      {
+        "id": "religion_prophets",
+        "title": "Prophets",
+        "description": "Prophets and messengers held in reverence."
+      },
+      {
+        "id": "religion_companions",
+        "title": "Companions",
+        "description": "Companions and revered early followers."
+      },
+      {
+        "id": "religion_religious_scholars",
+        "title": "Religious Scholars",
+        "description": "Scholars, jurists, and recognized religious authorities."
+      },
+      {
+        "id": "religion_religious_rituals",
+        "title": "Religious Rituals",
+        "description": "Acts of worship, rites, and ritual practice."
+      },
+      {
+        "id": "religion_religious_symbols",
+        "title": "Religious Symbols",
+        "description": "Signs, emblems, and visible markers of the religion."
+      },
+      {
+        "id": "religion_religious_unity",
+        "title": "Religious Unity",
+        "description": "Community cohesion and avoidance of sectarian division."
+      },
+      {
+        "id": "religion_sectarian_division",
+        "title": "Sectarian Division",
+        "description": "Division, conflict, or hostility between religious groups."
+      },
+      {
+        "id": "religion_religious_hate_speech",
+        "title": "Religious Hate Speech",
+        "description": "Hostile, abusive, or degrading religious speech."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "religion_pattern_direct_insult",
+      "title": "Direct Religious Insult",
+      "description": "Direct insult or slur toward the religion or its prophets.",
+      "primary_concept_id": "religion_religious_hate_speech",
+      "related_concept_ids": [
+        "religion_islamic_religion",
+        "religion_prophets",
+        "religion_holy_books"
+      ],
+      "direct_expressions": [
+        "إهانة النبي",
+        "سبّ القرآن"
+      ],
+      "indirect_expressions": [
+        "التقليل من قيمة المقدسات",
+        "السخرية من الدين"
+      ],
+      "semantic_intent": [
+        "attack",
+        "mock"
+      ],
+      "supporting_evidence": [
+        "explicit insult to a prophet",
+        "hostile framing toward a holy book"
+      ],
+      "contradictory_evidence": [
+        "explicit condemnation",
+        "clearly educational framing"
+      ],
+      "false_positives": [
+        "court transcript",
+        "news report",
+        "academic citation"
+      ],
+      "counter_examples": [
+        "teacher explaining why insult is harmful"
+      ],
+      "cross_sentence_indicators": [
+        "later line repeats the slur",
+        "another speaker endorses the insult"
+      ],
+      "scene_indicators": [
+        "dialogue attack",
+        "hostile exchange"
+      ],
+      "reviewer_guidance": [
+        "Anchor on the exact insult and do not overgeneralize."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "religion_pattern_direct_insult_high",
+          "title": "High",
+          "description": "Direct insult with explicit target.",
+          "confidence": 95
+        },
+        {
+          "id": "religion_pattern_direct_insult_medium",
+          "title": "Medium",
+          "description": "Target is explicit but the wording is shorter.",
+          "confidence": 75
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "religion_pattern_direct_insult_rel_1",
+          "from_concept_id": "religion_religious_hate_speech",
+          "to_concept_id": "religion_prophets",
+          "relation": "supports",
+          "note": "Hostility often targets prophets."
+        },
+        {
+          "id": "religion_pattern_direct_insult_rel_2",
+          "from_concept_id": "religion_religious_hate_speech",
+          "to_concept_id": "religion_holy_books",
+          "relation": "supports",
+          "note": "Insults often target sacred texts."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "religion_pattern_direct_insult_gcam_1",
+          "article_id": 2,
+          "atom_ids": [],
+          "role": "Prophet insult",
+          "note": "Use when the insult targets prophets or messengers."
+        },
+        {
+          "id": "religion_pattern_direct_insult_gcam_2",
+          "article_id": 3,
+          "atom_ids": [],
+          "role": "Religious hostility",
+          "note": "Use as a broader fallback when the attack targets religion generally."
+        }
+      ],
+      "examples": [
+        {
+          "id": "religion_pattern_direct_insult_ex_1",
+          "title": "Direct insult",
+          "text": "A character says: \"إهانة النبي أمر عادي\".",
+          "expected_outcome": "Likely finding",
+          "note": "Direct hostility."
+        },
+        {
+          "id": "religion_pattern_direct_insult_ex_2",
+          "title": "Prophet slur",
+          "text": "The speaker calls the prophet a liar.",
+          "expected_outcome": "Likely finding",
+          "note": "Direct insult toward a revered figure."
+        }
+      ]
+    },
+    {
+      "id": "religion_pattern_indirect_mockery",
+      "title": "Indirect Religious Mockery",
+      "description": "Indirect mockery that still clearly targets sacred matters.",
+      "primary_concept_id": "religion_religious_hate_speech",
+      "related_concept_ids": [
+        "religion_religious_symbols",
+        "religion_holy_books"
+      ],
+      "direct_expressions": [
+        "مزاح على المقدسات",
+        "استهزاء بالدين"
+      ],
+      "indirect_expressions": [
+        "التلميح الساخر إلى القرآن",
+        "الضحك على الشعائر"
+      ],
+      "semantic_intent": [
+        "mock",
+        "attack"
+      ],
+      "supporting_evidence": [
+        "coded ridicule",
+        "sneering reference to sacred content"
+      ],
+      "contradictory_evidence": [
+        "clear condemnation",
+        "academic explanation"
+      ],
+      "false_positives": [
+        "neutral quotation",
+        "documentary reference"
+      ],
+      "counter_examples": [
+        "a scholar quotes the joke to criticize it"
+      ],
+      "cross_sentence_indicators": [
+        "later sentence makes the joke explicit",
+        "another character laughs approvingly"
+      ],
+      "scene_indicators": [
+        "sarcastic dialogue",
+        "mocking tone"
+      ],
+      "reviewer_guidance": [
+        "Use context to decide whether the mockery is real or merely cited."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "religion_pattern_indirect_mockery_high",
+          "title": "High",
+          "description": "Indirect mockery is reinforced by later context.",
+          "confidence": 88
+        },
+        {
+          "id": "religion_pattern_indirect_mockery_medium",
+          "title": "Medium",
+          "description": "Mockery is present but partly coded.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "religion_pattern_indirect_mockery_rel_1",
+          "from_concept_id": "religion_religious_hate_speech",
+          "to_concept_id": "religion_religious_symbols",
+          "relation": "supports",
+          "note": "Mockery often targets symbols."
+        },
+        {
+          "id": "religion_pattern_indirect_mockery_rel_2",
+          "from_concept_id": "religion_religious_hate_speech",
+          "to_concept_id": "religion_holy_books",
+          "relation": "supports",
+          "note": "Mockery may target sacred text."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "religion_pattern_indirect_mockery_gcam_1",
+          "article_id": 3,
+          "atom_ids": [],
+          "role": "Religious mockery",
+          "note": "Use for indirect attack on the religion itself."
+        }
+      ],
+      "examples": [
+        {
+          "id": "religion_pattern_indirect_mockery_ex_1",
+          "title": "Mocking line",
+          "text": "The speaker laughs at the sacred sign.",
+          "expected_outcome": "Likely finding",
+          "note": "Indirect hostility."
+        },
+        {
+          "id": "religion_pattern_indirect_mockery_ex_2",
+          "title": "Sarcastic reference",
+          "text": "He refers to the holy book with a sneer.",
+          "expected_outcome": "Likely finding",
+          "note": "Indirect mockery."
+        }
+      ]
+    },
+    {
+      "id": "religion_pattern_desecration",
+      "title": "Desecration",
+      "description": "Harmful treatment of holy places, holy books, or sacred objects.",
+      "primary_concept_id": "religion_religious_sanctities",
+      "related_concept_ids": [
+        "religion_holy_places",
+        "religion_holy_books"
+      ],
+      "direct_expressions": [
+        "دنس المسجد",
+        "تمزيق المصحف"
+      ],
+      "indirect_expressions": [
+        "إهانة المكان المقدس",
+        "معاملة المصحف كشيء مهمل"
+      ],
+      "semantic_intent": [
+        "attack",
+        "mock"
+      ],
+      "supporting_evidence": [
+        "literal desecration",
+        "explicit disrespect"
+      ],
+      "contradictory_evidence": [
+        "quoted condemnation",
+        "reverent handling"
+      ],
+      "false_positives": [
+        "museum display",
+        "historic archival mention"
+      ],
+      "counter_examples": [
+        "a scene showing protection of the place"
+      ],
+      "cross_sentence_indicators": [
+        "later action confirms damage",
+        "another character explains the desecration"
+      ],
+      "scene_indicators": [
+        "scene action",
+        "object destruction"
+      ],
+      "reviewer_guidance": [
+        "The object or place must be sacred and the disrespect must be literal or clearly implied."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "religion_pattern_desecration_high",
+          "title": "High",
+          "description": "Direct desecration is shown on the page.",
+          "confidence": 96
+        },
+        {
+          "id": "religion_pattern_desecration_medium",
+          "title": "Medium",
+          "description": "Desecration is implied but not fully explicit.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "religion_pattern_desecration_rel_1",
+          "from_concept_id": "religion_religious_sanctities",
+          "to_concept_id": "religion_holy_places",
+          "relation": "supports",
+          "note": "Sacred places are a primary desecration target."
+        },
+        {
+          "id": "religion_pattern_desecration_rel_2",
+          "from_concept_id": "religion_religious_sanctities",
+          "to_concept_id": "religion_holy_books",
+          "relation": "supports",
+          "note": "Holy books are a primary desecration target."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "religion_pattern_desecration_gcam_1",
+          "article_id": 1,
+          "atom_ids": [],
+          "role": "Sacred desecration",
+          "note": "Use for disrespect toward holy places or sacred objects."
+        },
+        {
+          "id": "religion_pattern_desecration_gcam_2",
+          "article_id": 3,
+          "atom_ids": [],
+          "role": "Religious hostility fallback",
+          "note": "Use when the attack is broader than a single sacred object."
+        }
+      ],
+      "examples": [
+        {
+          "id": "religion_pattern_desecration_ex_1",
+          "title": "Holy place abuse",
+          "text": "A character defaces the mosque door.",
+          "expected_outcome": "Likely finding",
+          "note": "Literal desecration."
+        },
+        {
+          "id": "religion_pattern_desecration_ex_2",
+          "title": "Holy book abuse",
+          "text": "The scene shows the sacred book being torn.",
+          "expected_outcome": "Likely finding",
+          "note": "Direct desecration."
+        }
+      ]
+    },
+    {
+      "id": "religion_pattern_symbols",
+      "title": "Religious Symbols",
+      "description": "Harmful treatment or ridicule of religious symbols and visible markers.",
+      "primary_concept_id": "religion_religious_symbols",
+      "related_concept_ids": [
+        "religion_islamic_religion",
+        "religion_religious_sanctities"
+      ],
+      "direct_expressions": [
+        "إهانة الرموز الدينية",
+        "تحقير الشعار الديني"
+      ],
+      "indirect_expressions": [
+        "السخرية من العلامة المقدسة",
+        "الاستهزاء بالحجاب كرمز"
+      ],
+      "semantic_intent": [
+        "mock",
+        "attack"
+      ],
+      "supporting_evidence": [
+        "the symbol is treated as an object of ridicule",
+        "the sacred marker is defaced"
+      ],
+      "contradictory_evidence": [
+        "neutral mention of the symbol",
+        "respectful description"
+      ],
+      "false_positives": [
+        "costume description",
+        "museum talk"
+      ],
+      "counter_examples": [
+        "protective handling of a symbol"
+      ],
+      "cross_sentence_indicators": [
+        "later line explains the disrespect",
+        "the symbol is torn in the next sentence"
+      ],
+      "scene_indicators": [
+        "physical gesture",
+        "close-up on the symbol"
+      ],
+      "reviewer_guidance": [
+        "Symbols become relevant only when the text makes the disrespect clear."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "religion_pattern_symbols_high",
+          "title": "High",
+          "description": "The symbol is explicitly mocked or damaged.",
+          "confidence": 90
+        },
+        {
+          "id": "religion_pattern_symbols_medium",
+          "title": "Medium",
+          "description": "The symbol is referenced with disrespect but not direct damage.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "religion_pattern_symbols_rel_1",
+          "from_concept_id": "religion_religious_symbols",
+          "to_concept_id": "religion_islamic_religion",
+          "relation": "supports",
+          "note": "Symbols point back to the core religion concept."
+        },
+        {
+          "id": "religion_pattern_symbols_rel_2",
+          "from_concept_id": "religion_religious_symbols",
+          "to_concept_id": "religion_religious_sanctities",
+          "relation": "supports",
+          "note": "Symbols also connect to sanctity reasoning."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "religion_pattern_symbols_gcam_1",
+          "article_id": 1,
+          "atom_ids": [],
+          "role": "Sacred symbol abuse",
+          "note": "Use for religious symbols and visible sanctities."
+        }
+      ],
+      "examples": [
+        {
+          "id": "religion_pattern_symbols_ex_1",
+          "title": "Symbol insult",
+          "text": "The speaker insults the sacred symbol.",
+          "expected_outcome": "Likely finding",
+          "note": "Hostile symbol treatment."
+        },
+        {
+          "id": "religion_pattern_symbols_ex_2",
+          "title": "Symbol mockery",
+          "text": "A character laughs at a visible religious marker.",
+          "expected_outcome": "Likely finding",
+          "note": "Mockery of a symbol."
+        }
+      ]
+    },
+    {
+      "id": "religion_pattern_incitement",
+      "title": "Religious Incitement",
+      "description": "Language that encourages sectarian division or hostility.",
+      "primary_concept_id": "religion_sectarian_division",
+      "related_concept_ids": [
+        "religion_religious_hate_speech",
+        "religion_religious_unity"
+      ],
+      "direct_expressions": [
+        "أشعلوا الفتنة",
+        "اقسموا الناس"
+      ],
+      "indirect_expressions": [
+        "زرع الانقسام",
+        "إثارة الكراهية بين الطوائف"
+      ],
+      "semantic_intent": [
+        "attack",
+        "incite"
+      ],
+      "supporting_evidence": [
+        "clear call for division",
+        "hostile grouping language"
+      ],
+      "contradictory_evidence": [
+        "call for unity",
+        "explicit condemnation of division"
+      ],
+      "false_positives": [
+        "political debate",
+        "historical discussion"
+      ],
+      "counter_examples": [
+        "a sermon urging unity"
+      ],
+      "cross_sentence_indicators": [
+        "later sentence confirms the call to divide",
+        "another character joins the incitement"
+      ],
+      "scene_indicators": [
+        "chant",
+        "crowd speech"
+      ],
+      "reviewer_guidance": [
+        "Use this pattern when the line turns groups against each other."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "religion_pattern_incitement_high",
+          "title": "High",
+          "description": "A direct call to sectarian conflict.",
+          "confidence": 94
+        },
+        {
+          "id": "religion_pattern_incitement_medium",
+          "title": "Medium",
+          "description": "A coded or partial incitement.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "religion_pattern_incitement_rel_1",
+          "from_concept_id": "religion_sectarian_division",
+          "to_concept_id": "religion_religious_unity",
+          "relation": "opposite",
+          "note": "Division directly opposes unity."
+        },
+        {
+          "id": "religion_pattern_incitement_rel_2",
+          "from_concept_id": "religion_sectarian_division",
+          "to_concept_id": "religion_religious_hate_speech",
+          "relation": "supports",
+          "note": "Incitement often uses hostile religious speech."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "religion_pattern_incitement_gcam_1",
+          "article_id": 3,
+          "atom_ids": [],
+          "role": "Sectarian incitement",
+          "note": "Use for division, hostility, or calls to fracture religious unity."
+        }
+      ],
+      "examples": [
+        {
+          "id": "religion_pattern_incitement_ex_1",
+          "title": "Division call",
+          "text": "The character tells people to split into hostile camps.",
+          "expected_outcome": "Likely finding",
+          "note": "Incitement to division."
+        },
+        {
+          "id": "religion_pattern_incitement_ex_2",
+          "title": "Sectarian push",
+          "text": "A line encourages hatred between religious groups.",
+          "expected_outcome": "Likely finding",
+          "note": "Sectarian hostility."
+        }
+      ]
+    },
+    {
+      "id": "religion_pattern_extremism",
+      "title": "Religious Extremism",
+      "description": "Language that normalises extremist religious hostility or violence.",
+      "primary_concept_id": "religion_religious_hate_speech",
+      "related_concept_ids": [
+        "religion_religious_unity",
+        "religion_islamic_religion"
+      ],
+      "direct_expressions": [
+        "تسويق التطرف باسم الدين",
+        "تمجيد الكراهية الدينية"
+      ],
+      "indirect_expressions": [
+        "التصوير البطولي للتعصب",
+        "التعاطف مع التشدد"
+      ],
+      "semantic_intent": [
+        "attack",
+        "glorify"
+      ],
+      "supporting_evidence": [
+        "hostility is framed positively",
+        "extremism is presented as admirable"
+      ],
+      "contradictory_evidence": [
+        "explicit condemnation of extremism",
+        "clear neutral reporting"
+      ],
+      "false_positives": [
+        "documentary mention",
+        "academic analysis"
+      ],
+      "counter_examples": [
+        "a character condemns radicalism"
+      ],
+      "cross_sentence_indicators": [
+        "later sentence praises the extremist idea",
+        "another character repeats the slogan"
+      ],
+      "scene_indicators": [
+        "recruitment tone",
+        "rally language"
+      ],
+      "reviewer_guidance": [
+        "Differentiate criticism of extremism from its endorsement."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "religion_pattern_extremism_high",
+          "title": "High",
+          "description": "Extremist speech is explicitly endorsed.",
+          "confidence": 93
+        },
+        {
+          "id": "religion_pattern_extremism_medium",
+          "title": "Medium",
+          "description": "Extremist meaning is implied or coded.",
+          "confidence": 71
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "religion_pattern_extremism_rel_1",
+          "from_concept_id": "religion_religious_hate_speech",
+          "to_concept_id": "religion_religious_unity",
+          "relation": "opposite",
+          "note": "Extremism breaks unity."
+        },
+        {
+          "id": "religion_pattern_extremism_rel_2",
+          "from_concept_id": "religion_religious_hate_speech",
+          "to_concept_id": "religion_islamic_religion",
+          "relation": "supports",
+          "note": "Extremism is often framed against the religion itself."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "religion_pattern_extremism_gcam_1",
+          "article_id": 3,
+          "atom_ids": [],
+          "role": "Religious extremism",
+          "note": "Use when the content glorifies extremist hostility."
+        }
+      ],
+      "examples": [
+        {
+          "id": "religion_pattern_extremism_ex_1",
+          "title": "Extremist praise",
+          "text": "The speaker praises extremism as a virtue.",
+          "expected_outcome": "Likely finding",
+          "note": "Positive framing of extremism."
+        },
+        {
+          "id": "religion_pattern_extremism_ex_2",
+          "title": "Radical slogan",
+          "text": "A slogan glorifies hostility in the name of religion.",
+          "expected_outcome": "Likely finding",
+          "note": "Extremist support."
+        }
+      ]
+    },
+    {
+      "id": "religion_pattern_historical",
+      "title": "Historical Narration",
+      "description": "Historical narration of religious events without endorsement.",
+      "primary_concept_id": "religion_islamic_religion",
+      "related_concept_ids": [
+        "religion_prophets",
+        "religion_holy_books"
+      ],
+      "direct_expressions": [
+        "سرد تاريخي",
+        "واقعة تاريخية"
+      ],
+      "indirect_expressions": [
+        "يذكر الحدث بوصفه ماضيًا",
+        "الوثائقي يعرض الرواية"
+      ],
+      "semantic_intent": [
+        "historical_narration",
+        "neutral"
+      ],
+      "supporting_evidence": [
+        "event is clearly framed as history",
+        "no endorsement is present"
+      ],
+      "contradictory_evidence": [
+        "current praise of the harmful line",
+        "explicit attack rather than narration"
+      ],
+      "false_positives": [
+        "present-tense endorsement mistaken as history"
+      ],
+      "counter_examples": [
+        "historian quoting the line only to explain it"
+      ],
+      "cross_sentence_indicators": [
+        "later sentence says it happened long ago",
+        "narrator labels it as history"
+      ],
+      "scene_indicators": [
+        "documentary voice",
+        "archival framing"
+      ],
+      "reviewer_guidance": [
+        "Historical narration should not be converted into a violation without present endorsement."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "religion_pattern_historical_high",
+          "title": "High",
+          "description": "Explicit historical framing is present.",
+          "confidence": 92
+        },
+        {
+          "id": "religion_pattern_historical_medium",
+          "title": "Medium",
+          "description": "Historical framing is implied by the scene.",
+          "confidence": 69
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "religion_pattern_historical_rel_1",
+          "from_concept_id": "religion_islamic_religion",
+          "to_concept_id": "religion_prophets",
+          "relation": "related",
+          "note": "Historical narration often refers to prophets."
+        },
+        {
+          "id": "religion_pattern_historical_rel_2",
+          "from_concept_id": "religion_islamic_religion",
+          "to_concept_id": "religion_holy_books",
+          "relation": "related",
+          "note": "Historical narration often cites scripture."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "religion_pattern_historical_gcam_1",
+          "article_id": 3,
+          "atom_ids": [],
+          "role": "Historical religious narration",
+          "note": "Use when the line is historical and neutral."
+        }
+      ],
+      "examples": [
+        {
+          "id": "religion_pattern_historical_ex_1",
+          "title": "Historical account",
+          "text": "The documentary recounts an old religious dispute.",
+          "expected_outcome": "No finding",
+          "note": "Historical narration only."
+        },
+        {
+          "id": "religion_pattern_historical_ex_2",
+          "title": "Past event",
+          "text": "The narrator explains a past event involving a holy book.",
+          "expected_outcome": "No finding",
+          "note": "Descriptive history."
+        }
+      ]
+    },
+    {
+      "id": "religion_pattern_academic",
+      "title": "Academic Discussion",
+      "description": "Academic or scholarly discussion of religion without attack.",
+      "primary_concept_id": "religion_religious_scholars",
+      "related_concept_ids": [
+        "religion_religious_rituals",
+        "religion_holy_books"
+      ],
+      "direct_expressions": [
+        "مقارنة أكاديمية",
+        "شرح فقهي"
+      ],
+      "indirect_expressions": [
+        "النقاش العلمي",
+        "التحليل البحثي"
+      ],
+      "semantic_intent": [
+        "explain",
+        "debate"
+      ],
+      "supporting_evidence": [
+        "scholarly explanation",
+        "no endorsement of hostility"
+      ],
+      "contradictory_evidence": [
+        "mocking tone",
+        "direct attack"
+      ],
+      "false_positives": [
+        "academic paper mistaken for attack"
+      ],
+      "counter_examples": [
+        "a professor explaining doctrine"
+      ],
+      "cross_sentence_indicators": [
+        "later sentence cites a source",
+        "another scholar responds academically"
+      ],
+      "scene_indicators": [
+        "lecture hall",
+        "classroom"
+      ],
+      "reviewer_guidance": [
+        "Academic language usually reduces the chance of a finding unless the line turns hostile."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "religion_pattern_academic_high",
+          "title": "High",
+          "description": "Clearly scholarly framing.",
+          "confidence": 90
+        },
+        {
+          "id": "religion_pattern_academic_medium",
+          "title": "Medium",
+          "description": "Some scholarly framing but not fully explicit.",
+          "confidence": 68
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "religion_pattern_academic_rel_1",
+          "from_concept_id": "religion_religious_scholars",
+          "to_concept_id": "religion_religious_rituals",
+          "relation": "supports",
+          "note": "Scholarly discussion often explains rituals."
+        },
+        {
+          "id": "religion_pattern_academic_rel_2",
+          "from_concept_id": "religion_religious_scholars",
+          "to_concept_id": "religion_holy_books",
+          "relation": "supports",
+          "note": "Scholarly discussion often references scripture."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "religion_pattern_academic_gcam_1",
+          "article_id": 3,
+          "atom_ids": [],
+          "role": "Academic religion discussion",
+          "note": "Use when the content is scholarly and neutral."
+        }
+      ],
+      "examples": [
+        {
+          "id": "religion_pattern_academic_ex_1",
+          "title": "Classroom explanation",
+          "text": "A teacher compares religious texts in class.",
+          "expected_outcome": "No finding",
+          "note": "Academic discussion."
+        },
+        {
+          "id": "religion_pattern_academic_ex_2",
+          "title": "Scholarly paper",
+          "text": "A researcher explains a ritual in a paper.",
+          "expected_outcome": "No finding",
+          "note": "Academic framing."
+        }
+      ]
+    },
+    {
+      "id": "religion_pattern_debate",
+      "title": "Religious Debate",
+      "description": "Reasoned debate about religion without hostility.",
+      "primary_concept_id": "religion_religious_unity",
+      "related_concept_ids": [
+        "religion_religious_scholars",
+        "religion_prophets"
+      ],
+      "direct_expressions": [
+        "مناظرة دينية",
+        "حوار محترم"
+      ],
+      "indirect_expressions": [
+        "جدال علمي",
+        "نقاش فقهي"
+      ],
+      "semantic_intent": [
+        "debate",
+        "explain"
+      ],
+      "supporting_evidence": [
+        "respectful debate",
+        "no abusive language"
+      ],
+      "contradictory_evidence": [
+        "direct insult",
+        "mockery"
+      ],
+      "false_positives": [
+        "argument mistaken for hostility"
+      ],
+      "counter_examples": [
+        "two scholars disagree politely"
+      ],
+      "cross_sentence_indicators": [
+        "another speaker responds with evidence",
+        "the debate stays civil"
+      ],
+      "scene_indicators": [
+        "panel discussion",
+        "debate stage"
+      ],
+      "reviewer_guidance": [
+        "Debate alone is not a violation; look for hostility or desecration."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "religion_pattern_debate_high",
+          "title": "High",
+          "description": "Debate is clearly respectful.",
+          "confidence": 88
+        },
+        {
+          "id": "religion_pattern_debate_medium",
+          "title": "Medium",
+          "description": "Debate is present but context is limited.",
+          "confidence": 66
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "religion_pattern_debate_rel_1",
+          "from_concept_id": "religion_religious_unity",
+          "to_concept_id": "religion_religious_scholars",
+          "relation": "supports",
+          "note": "Unity can be preserved through scholarly debate."
+        },
+        {
+          "id": "religion_pattern_debate_rel_2",
+          "from_concept_id": "religion_religious_unity",
+          "to_concept_id": "religion_prophets",
+          "relation": "related",
+          "note": "Debates often reference prophets and scripture."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "religion_pattern_debate_gcam_1",
+          "article_id": 3,
+          "atom_ids": [],
+          "role": "Religious debate",
+          "note": "Use for respectful debate or comparison."
+        }
+      ],
+      "examples": [
+        {
+          "id": "religion_pattern_debate_ex_1",
+          "title": "Civil debate",
+          "text": "The panel debates doctrine respectfully.",
+          "expected_outcome": "No finding",
+          "note": "Respectful discussion."
+        },
+        {
+          "id": "religion_pattern_debate_ex_2",
+          "title": "Comparative discussion",
+          "text": "Two speakers compare religious interpretations.",
+          "expected_outcome": "No finding",
+          "note": "Debate without abuse."
+        }
+      ]
+    },
+    {
+      "id": "religion_pattern_sectarian",
+      "title": "Sectarian Language",
+      "description": "Language that divides believers into hostile groups.",
+      "primary_concept_id": "religion_sectarian_division",
+      "related_concept_ids": [
+        "religion_religious_hate_speech",
+        "religion_religious_unity"
+      ],
+      "direct_expressions": [
+        "إقصاء الطائفة",
+        "الطائفة الفاسدة"
+      ],
+      "indirect_expressions": [
+        "وصفهم بأنهم أقل شأنًا",
+        "تحريض على الانقسام"
+      ],
+      "semantic_intent": [
+        "attack",
+        "incite"
+      ],
+      "supporting_evidence": [
+        "group hostility",
+        "division framed as desirable"
+      ],
+      "contradictory_evidence": [
+        "explicit call for unity",
+        "clear condemnation"
+      ],
+      "false_positives": [
+        "political faction talk",
+        "historical naming"
+      ],
+      "counter_examples": [
+        "a speaker urges mutual respect"
+      ],
+      "cross_sentence_indicators": [
+        "later line turns the comparison into hostility",
+        "another character adds exclusion"
+      ],
+      "scene_indicators": [
+        "crowd chant",
+        "heated argument"
+      ],
+      "reviewer_guidance": [
+        "Turn from neutral comparison into hostility is the key trigger."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "religion_pattern_sectarian_high",
+          "title": "High",
+          "description": "Direct exclusion or hostility.",
+          "confidence": 94
+        },
+        {
+          "id": "religion_pattern_sectarian_medium",
+          "title": "Medium",
+          "description": "Division is implied in coded language.",
+          "confidence": 69
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "religion_pattern_sectarian_rel_1",
+          "from_concept_id": "religion_sectarian_division",
+          "to_concept_id": "religion_religious_unity",
+          "relation": "opposite",
+          "note": "Sectarian division opposes unity."
+        },
+        {
+          "id": "religion_pattern_sectarian_rel_2",
+          "from_concept_id": "religion_sectarian_division",
+          "to_concept_id": "religion_religious_hate_speech",
+          "relation": "supports",
+          "note": "Sectarian language often includes hate speech."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "religion_pattern_sectarian_gcam_1",
+          "article_id": 3,
+          "atom_ids": [],
+          "role": "Sectarian division",
+          "note": "Use when the content divides believers or creates hostility."
+        }
+      ],
+      "examples": [
+        {
+          "id": "religion_pattern_sectarian_ex_1",
+          "title": "Divisive line",
+          "text": "A speaker says one group should be excluded.",
+          "expected_outcome": "Likely finding",
+          "note": "Sectarian hostility."
+        },
+        {
+          "id": "religion_pattern_sectarian_ex_2",
+          "title": "Hostile labeling",
+          "text": "A line labels believers as less worthy.",
+          "expected_outcome": "Likely finding",
+          "note": "Divisive speech."
+        }
+      ]
+    }
+  ]
+}

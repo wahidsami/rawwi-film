@@ -1,0 +1,78 @@
+{
+  "version": "1.0.0",
+  "id": "travel_evidence",
+  "title": "Travel Evidence",
+  "description": "Evidence rules for travel and country reasoning.",
+  "entries": [
+    {
+      "id": "travel_evidence_lit",
+      "title": "Literal Travel Evidence",
+      "description": "The exact text says or shows travel, places, or movement."
+    },
+    {
+      "id": "travel_evidence_context",
+      "title": "Contextual Travel Evidence",
+      "description": "Neighbouring context clarifies the travel meaning."
+    },
+    {
+      "id": "travel_evidence_dialogue",
+      "title": "Dialogue Evidence",
+      "description": "A character directly speaks about travel or a country."
+    },
+    {
+      "id": "travel_evidence_narration",
+      "title": "Narration Evidence",
+      "description": "Narration describes travel or country details."
+    },
+    {
+      "id": "travel_evidence_scene",
+      "title": "Scene Evidence",
+      "description": "Scene details show the travel or country context."
+    },
+    {
+      "id": "travel_evidence_documentary",
+      "title": "Documentary Evidence",
+      "description": "Documentary-style framing supports factual interpretation."
+    },
+    {
+      "id": "travel_evidence_historical",
+      "title": "Historical Evidence",
+      "description": "Historical framing supports migration or travel history."
+    },
+    {
+      "id": "travel_evidence_fiction",
+      "title": "Fiction Evidence",
+      "description": "Fiction or dream framing changes interpretation."
+    },
+    {
+      "id": "travel_evidence_quoted",
+      "title": "Quoted Evidence",
+      "description": "The text is quoted and may not reflect endorsement."
+    },
+    {
+      "id": "travel_evidence_evaluative",
+      "title": "Evaluative Evidence",
+      "description": "The text evaluates a country, people, or place."
+    },
+    {
+      "id": "travel_evidence_comparison",
+      "title": "Comparison Evidence",
+      "description": "The text compares countries, cultures, or places."
+    },
+    {
+      "id": "travel_evidence_travel_doc",
+      "title": "Travel Document Evidence",
+      "description": "Passport or visa language supports travel interpretation."
+    },
+    {
+      "id": "travel_evidence_border",
+      "title": "Border Evidence",
+      "description": "Border crossing, customs, or entry details are present."
+    },
+    {
+      "id": "travel_evidence_migration",
+      "title": "Migration Evidence",
+      "description": "Movement into or out of a country is explicit."
+    }
+  ]
+}

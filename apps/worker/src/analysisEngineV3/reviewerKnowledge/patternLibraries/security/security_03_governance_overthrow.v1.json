@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "security_governance_overthrow_patterns",
+    "title": "Security Governance and Overthrow Patterns",
+    "description": "Patterns for overthrow calls, anti-governance language, and system attack.",
+    "concepts": [
+      {
+        "id": "government",
+        "title": "Government",
+        "description": "Government authority, ministries, or the governing order."
+      },
+      {
+        "id": "state_institutions",
+        "title": "State Institutions",
+        "description": "Government institutions, state authority, and public order bodies."
+      },
+      {
+        "id": "national_unity",
+        "title": "National Unity",
+        "description": "Social cohesion, public peace, and rejection of division."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "security_pattern_overthrow_call",
+      "title": "Overthrow Call",
+      "description": "Direct or coded calls to topple, weaken, or attack the governing order.",
+      "primary_concept_id": "government",
+      "related_concept_ids": [
+        "state_institutions",
+        "national_unity"
+      ],
+      "direct_expressions": [
+        "لنُسقط الدولة",
+        "نسقط النظام",
+        "الليلة ننهي الحكم"
+      ],
+      "indirect_expressions": [
+        "النظام لازم ينهار",
+        "اكسروا الهيبة",
+        "اسحبوا الشرعية"
+      ],
+      "semantic_intent": [
+        "overthrow",
+        "anti-governance"
+      ],
+      "supporting_evidence": [
+        "The phrase attacks or negates governing authority.",
+        "The line frames institutional collapse as desirable."
+      ],
+      "contradictory_evidence": [
+        "The speaker is quoting someone else.",
+        "The text is a warning about a fictional threat."
+      ],
+      "false_positives": [
+        "A reform discussion that does not seek overthrow.",
+        "A school context using النظام for class order."
+      ],
+      "counter_examples": [
+        "A policy debate on governance.",
+        "A classroom instruction to maintain order."
+      ],
+      "cross_sentence_indicators": [
+        "A neutral line is followed by a call to remove legitimacy."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "political confrontation",
+        "crowd chant"
+      ],
+      "reviewer_guidance": [
+        "Treat explicit overthrow language as the strongest security signal.",
+        "Differentiate governance from classroom or household usage."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "modifier_direct_overthrow",
+          "title": "Direct Overthrow",
+          "description": "Explicit call to overthrow the state.",
+          "confidence": 98
+        },
+        {
+          "id": "modifier_contextually_coded",
+          "title": "Coded Overthrow",
+          "description": "Indirect but clearly anti-governance.",
+          "confidence": 70
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rel_government_state",
+          "from_concept_id": "government",
+          "to_concept_id": "state_institutions",
+          "relation": "supports",
+          "note": "Government attacks often implicate institutions."
+        },
+        {
+          "id": "rel_government_unity",
+          "from_concept_id": "government",
+          "to_concept_id": "national_unity",
+          "relation": "supports",
+          "note": "Overthrow language can weaken national unity."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "gcam_security_14_1",
+          "article_id": 14,
+          "atom_ids": [
+            "14-1",
+            "14-2",
+            "14-5"
+          ],
+          "role": "Overthrow and incitement",
+          "note": "Use for direct overthrow calls."
+        },
+        {
+          "id": "gcam_security_13_1",
+          "article_id": 13,
+          "atom_ids": [
+            "13-1",
+            "13-2",
+            "13-3"
+          ],
+          "role": "Constants of governance",
+          "note": "Use when the text undermines governing principles."
+        }
+      ],
+      "examples": [
+        {
+          "id": "example_overthrow_001",
+          "title": "Direct call",
+          "text": "لنُسقط الدولة",
+          "expected_outcome": "Direct overthrow incitement.",
+          "note": null
+        },
+        {
+          "id": "example_overthrow_002",
+          "title": "Anti-governance slogan",
+          "text": "نسقط النظام الليلة",
+          "expected_outcome": "Governance attack.",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

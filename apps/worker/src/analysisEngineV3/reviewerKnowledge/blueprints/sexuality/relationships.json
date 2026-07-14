@@ -1,0 +1,218 @@
+{
+  "version": "1.0.0",
+  "id": "sexuality_relationships",
+  "title": "Sexuality Relationships",
+  "description": "Deterministic semantic relationships between sexual-content concepts.",
+  "entries": [
+    {
+      "id": "sexual_relationship_001",
+      "from": "sexual_reference",
+      "to": "sexual_joke",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_002",
+      "from": "sexual_reference",
+      "to": "sexual_double_meaning",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_003",
+      "from": "sexual_reference",
+      "to": "sexual_metaphor",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_004",
+      "from": "sexual_reference",
+      "to": "sexual_symbolism",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_005",
+      "from": "sexual_flirting",
+      "to": "sexual_romance",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_006",
+      "from": "sexual_flirting",
+      "to": "sexual_suggestion",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_007",
+      "from": "sexual_flirting",
+      "to": "sexual_invitation",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_008",
+      "from": "sexual_flirting",
+      "to": "sexual_kiss",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_009",
+      "from": "sexual_flirting",
+      "to": "sexual_intimacy",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_010",
+      "from": "sexual_flirting",
+      "to": "sexual_touch",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_011",
+      "from": "sexual_flirting",
+      "to": "sexual_dancing",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_012",
+      "from": "sexual_harassment",
+      "to": "sexual_assault",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_013",
+      "from": "sexual_harassment",
+      "to": "sexual_abuse",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_014",
+      "from": "sexual_harassment",
+      "to": "sexual_exploitation",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_015",
+      "from": "sexual_harassment",
+      "to": "sexual_grooming",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_016",
+      "from": "sexual_scene",
+      "to": "sexual_dialogue",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_017",
+      "from": "sexual_scene",
+      "to": "sexual_description",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_018",
+      "from": "sexual_scene",
+      "to": "sexual_sound",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_019",
+      "from": "sexual_scene",
+      "to": "sexual_camera_focus",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_020",
+      "from": "sexual_scene",
+      "to": "sexual_body_focus",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_021",
+      "from": "sexual_scene",
+      "to": "sexual_clothing",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_022",
+      "from": "sexual_normalization",
+      "to": "sexual_glorification",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_023",
+      "from": "sexual_normalization",
+      "to": "sexual_instruction",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_024",
+      "from": "sexual_normalization",
+      "to": "sexual_comedy",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_025",
+      "from": "sexual_normalization",
+      "to": "sexual_condemnation",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_026",
+      "from": "sexual_normalization",
+      "to": "sexual_documentary",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_027",
+      "from": "sexual_documentary",
+      "to": "sexual_medical",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_028",
+      "from": "sexual_documentary",
+      "to": "sexual_educational",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_029",
+      "from": "sexual_documentary",
+      "to": "sexual_historical",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_030",
+      "from": "sexual_dream",
+      "to": "sexual_flashback",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_031",
+      "from": "sexual_dream",
+      "to": "sexual_imagination",
+      "type": "parent"
+    },
+    {
+      "id": "sexual_relationship_032",
+      "from": "sexual_false_accusation",
+      "to": "sexual_harassment",
+      "type": "related"
+    },
+    {
+      "id": "sexual_relationship_033",
+      "from": "sexual_false_accusation",
+      "to": "sexual_assault",
+      "type": "related"
+    },
+    {
+      "id": "sexual_relationship_034",
+      "from": "sexual_normalization",
+      "to": "sexual_reference",
+      "type": "supports"
+    },
+    {
+      "id": "sexual_relationship_035",
+      "from": "sexual_scene",
+      "to": "sexual_reference",
+      "type": "supports"
+    }
+  ]
+}

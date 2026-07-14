@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "violence_actions",
+  "title": "Violence Actions",
+  "description": "Violence action distinctions used by reviewers.",
+  "entries": [
+    {
+      "id": "violence_action_event",
+      "title": "Violence Event",
+      "description": "A violent act, harm event, or physical escalation."
+    },
+    {
+      "id": "violence_action_threat",
+      "title": "Violence Threat",
+      "description": "A threat or intimidation that signals harm."
+    },
+    {
+      "id": "violence_action_attempt",
+      "title": "Violence Attempt",
+      "description": "An attempted violent act."
+    },
+    {
+      "id": "violence_action_glorification",
+      "title": "Violence Glorification",
+      "description": "Praise or celebration of violence."
+    },
+    {
+      "id": "violence_action_encouragement",
+      "title": "Violence Encouragement",
+      "description": "Encouragement to use violence."
+    },
+    {
+      "id": "violence_action_instruction",
+      "title": "Violence Instruction",
+      "description": "Guidance for violent action."
+    },
+    {
+      "id": "violence_action_revenge",
+      "title": "Violence Revenge",
+      "description": "Violence framed as retaliation."
+    },
+    {
+      "id": "violence_action_self_defense",
+      "title": "Violence Self Defense",
+      "description": "Violence framed as self-defense."
+    },
+    {
+      "id": "violence_action_law_enforcement",
+      "title": "Violence Law Enforcement",
+      "description": "Violence framed as lawful force."
+    },
+    {
+      "id": "violence_action_failed_attempt",
+      "title": "Violence Failed Attempt",
+      "description": "A violent act that fails or is interrupted."
+    }
+  ]
+}

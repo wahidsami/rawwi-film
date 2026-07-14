@@ -1,0 +1,55 @@
+{
+  "id": "violence_002_violence_event_quoted",
+  "version": "1.0.0",
+  "title": "Violence Event (quoted)",
+  "summary": "Violence Event in quoted framing.",
+  "originalScenario": "قال الراوي: \"الراوي يصف عنفًا واضحًا في الزقاق.\"",
+  "reviewQuestion": "Is this violence event?",
+  "initialSuspicion": "Possible violence event.",
+  "possibleConcepts": [
+    "violence_event"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: الراوي يصف عنفًا واضحًا في الزقاق."
+  ],
+  "contradictingEvidence": [
+    "Quoted or reported framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear endorsement in the narrator's own voice."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "Target remains dependent on the quoted voice.",
+  "intentAnalysis": "quotation",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Quoted speech is not automatically endorsement.",
+  "benchmarkTags": [
+    "violence_event",
+    "quoted",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_event"
+  ]
+}

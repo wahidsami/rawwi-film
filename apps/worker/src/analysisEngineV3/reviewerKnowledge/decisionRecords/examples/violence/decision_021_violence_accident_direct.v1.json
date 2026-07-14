@@ -1,0 +1,51 @@
+{
+  "id": "violence_021_violence_accident_direct",
+  "version": "1.0.0",
+  "title": "Violence Accident (direct)",
+  "summary": "Violence Accident in direct framing.",
+  "originalScenario": "سقط الزجاج فأصابه.",
+  "reviewQuestion": "Is this violence accident?",
+  "initialSuspicion": "Possible violence accident.",
+  "possibleConcepts": [
+    "violence_accident"
+  ],
+  "supportingEvidence": [
+    "سقط الزجاج فأصابه."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "accidental",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_accident",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_accident"
+  ]
+}

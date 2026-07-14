@@ -1,0 +1,688 @@
+{
+  "version": "1.0.0",
+  "id": "context_analysis_benchmark_catalog",
+  "title": "Context Analysis Benchmark Catalog",
+  "description": "Deterministic benchmark cases for historical, educational, documentary, comedic, satirical, dream, flashback, quotation, narration, and scene-description context analysis.",
+  "cases": [
+    {
+      "id": "context-analysis-bench-001",
+      "title": "Historical context",
+      "scriptSnippet": "قال الراوي إن ذلك حدث في الماضي.",
+      "storyMemory": "The scene is a historical recollection.",
+      "sceneMemory": "The line is framed as past-event narration.",
+      "neighboringSentences": [
+        "No present-tense claim is being made.",
+        "The scene is clearly retrospective."
+      ],
+      "glossary": {
+        "title": "Context Glossary",
+        "entries": [
+          {
+            "term": "historical_context",
+            "articleId": 4,
+            "variants": [
+              "historical context"
+            ],
+            "definition": "A past-event frame that changes how the line should be read."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          4
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "context_analysis",
+        "historical_context"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "historical_context",
+        "speaker": "narrator",
+        "target": null,
+        "victim": null,
+        "narrativeIntent": "historical",
+        "evidenceStrength": 0.58,
+        "contextClassification": "historical",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        4
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_15_reviewer_methodology | disposition=review | articles=4 | concepts=context_analysis,historical_context"
+      },
+      "expectedExplanation": "The line is framed as historical narration, so the reviewer should evaluate it as context rather than an immediate finding.",
+      "expectedConfidenceRange": {
+        "min": 0.45,
+        "max": 0.7
+      }
+    },
+    {
+      "id": "context-analysis-bench-002",
+      "title": "Educational context",
+      "scriptSnippet": "كان المدرس يشرح معنى الإرهاب.",
+      "storyMemory": "The scene is a classroom lesson.",
+      "sceneMemory": "The speaker is explaining a concept, not promoting it.",
+      "neighboringSentences": [
+        "Students are asking questions.",
+        "The tone is instructional."
+      ],
+      "glossary": {
+        "title": "Context Glossary",
+        "entries": [
+          {
+            "term": "educational_context",
+            "articleId": 11,
+            "variants": [
+              "educational context"
+            ],
+            "definition": "A teaching frame that changes how the line should be read."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "context_analysis",
+        "educational_context"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "educational_context",
+        "speaker": "teacher",
+        "target": "students",
+        "victim": null,
+        "narrativeIntent": "educational",
+        "evidenceStrength": 0.62,
+        "contextClassification": "educational",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_15_reviewer_methodology | disposition=review | articles=11 | concepts=context_analysis,educational_context"
+      },
+      "expectedExplanation": "The line is instructional, so the reviewer should read it as educational framing before finalizing any interpretation.",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.75
+      }
+    },
+    {
+      "id": "context-analysis-bench-003",
+      "title": "Documentary context",
+      "scriptSnippet": "في فيلم وثائقي يشرح الراوي الأحداث.",
+      "storyMemory": "The narration is documentary in style.",
+      "sceneMemory": "The line appears as factual exposition.",
+      "neighboringSentences": [
+        "The speaker summarizes recorded events.",
+        "No fictional beat is present."
+      ],
+      "glossary": {
+        "title": "Context Glossary",
+        "entries": [
+          {
+            "term": "documentary_context",
+            "articleId": 17,
+            "variants": [
+              "documentary context"
+            ],
+            "definition": "A documentary framing that should be evaluated as a context signal."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "context_analysis",
+        "documentary_context"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "documentary_context",
+        "speaker": "narrator",
+        "target": null,
+        "victim": null,
+        "narrativeIntent": "documentary",
+        "evidenceStrength": 0.6,
+        "contextClassification": "documentary",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_15_reviewer_methodology | disposition=review | articles=17 | concepts=context_analysis,documentary_context"
+      },
+      "expectedExplanation": "The line is documentary framing, so the reviewer should keep the meaning anchored to reported facts and context.",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.75
+      }
+    },
+    {
+      "id": "context-analysis-bench-004",
+      "title": "Comedy context",
+      "scriptSnippet": "قالها على سبيل المزاح.",
+      "storyMemory": "The exchange is light and humorous.",
+      "sceneMemory": "The line is intended as a joke.",
+      "neighboringSentences": [
+        "The character laughs immediately after.",
+        "No escalation follows."
+      ],
+      "glossary": {
+        "title": "Context Glossary",
+        "entries": [
+          {
+            "term": "comedy_context",
+            "articleId": 4,
+            "variants": [
+              "comedy context"
+            ],
+            "definition": "A humorous framing that still requires evidence review."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          4
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "context_analysis",
+        "comedy_context"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "comedy_context",
+        "speaker": "character",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "comedic",
+        "evidenceStrength": 0.48,
+        "contextClassification": "comedy",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        4
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_15_reviewer_methodology | disposition=reject | articles=4 | concepts=context_analysis,comedy_context"
+      },
+      "expectedExplanation": "The line is comedic framing, so the reviewer should not overread it, but the context still matters if the words themselves are harmful.",
+      "expectedConfidenceRange": {
+        "min": 0.35,
+        "max": 0.6
+      }
+    },
+    {
+      "id": "context-analysis-bench-005",
+      "title": "Satire context",
+      "scriptSnippet": "قالها بسخرية واضحة.",
+      "storyMemory": "The speaker is mocking the idea rather than endorsing it.",
+      "sceneMemory": "The tone is critical and ironic.",
+      "neighboringSentences": [
+        "The character rolls their eyes.",
+        "The line is delivered with irony."
+      ],
+      "glossary": {
+        "title": "Context Glossary",
+        "entries": [
+          {
+            "term": "satire_context",
+            "articleId": 11,
+            "variants": [
+              "satire context"
+            ],
+            "definition": "An ironic or critical framing that requires context review."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "context_analysis",
+        "satire_context"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "satire_context",
+        "speaker": "character",
+        "target": "idea",
+        "victim": null,
+        "narrativeIntent": "satirical",
+        "evidenceStrength": 0.52,
+        "contextClassification": "satire",
+        "literalVsImpliedMeaning": "implied",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_15_reviewer_methodology | disposition=review | articles=11 | concepts=context_analysis,satire_context"
+      },
+      "expectedExplanation": "The line is satirical, so the reviewer should weigh the ironic framing before deciding whether the words carry an actual harmful meaning.",
+      "expectedConfidenceRange": {
+        "min": 0.4,
+        "max": 0.65
+      }
+    },
+    {
+      "id": "context-analysis-bench-006",
+      "title": "Dream context",
+      "scriptSnippet": "في حلمه أصبح قاتلاً.",
+      "storyMemory": "The scene is explicitly dreamlike.",
+      "sceneMemory": "Nothing indicates a real-world act.",
+      "neighboringSentences": [
+        "The scene begins with sleep.",
+        "The character wakes afterward."
+      ],
+      "glossary": {
+        "title": "Context Glossary",
+        "entries": [
+          {
+            "term": "dream_context",
+            "articleId": 17,
+            "variants": [
+              "dream context"
+            ],
+            "definition": "A dream or fantasy-like frame that requires contextual review."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "context_analysis",
+        "dream_context"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "dream_context",
+        "speaker": "character",
+        "target": "self",
+        "victim": null,
+        "narrativeIntent": "dreamlike",
+        "evidenceStrength": 0.55,
+        "contextClassification": "dream",
+        "literalVsImpliedMeaning": "implied",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_15_reviewer_methodology | disposition=reject | articles=17 | concepts=context_analysis,dream_context"
+      },
+      "expectedExplanation": "The line is dream framed, so it should be read as a narrative condition rather than a literal event.",
+      "expectedConfidenceRange": {
+        "min": 0.4,
+        "max": 0.65
+      }
+    },
+    {
+      "id": "context-analysis-bench-007",
+      "title": "Flashback context",
+      "scriptSnippet": "عاد إلى ذكرى قديمة في طفولته.",
+      "storyMemory": "The moment is a recollection from the past.",
+      "sceneMemory": "The current scene uses memory as a framing device.",
+      "neighboringSentences": [
+        "The character speaks in the present about the past.",
+        "The flashback explains later behavior."
+      ],
+      "glossary": {
+        "title": "Context Glossary",
+        "entries": [
+          {
+            "term": "flashback_context",
+            "articleId": 4,
+            "variants": [
+              "flashback context"
+            ],
+            "definition": "A remembered past event that can explain current meaning."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          4
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "context_analysis",
+        "flashback_context"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "flashback_context",
+        "speaker": "character",
+        "target": "memory",
+        "victim": null,
+        "narrativeIntent": "reflective",
+        "evidenceStrength": 0.54,
+        "contextClassification": "flashback",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        4
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_15_reviewer_methodology | disposition=review | articles=4 | concepts=context_analysis,flashback_context"
+      },
+      "expectedExplanation": "The flashback explains prior meaning, so the reviewer should read it as retrospective context rather than present conduct.",
+      "expectedConfidenceRange": {
+        "min": 0.4,
+        "max": 0.65
+      }
+    },
+    {
+      "id": "context-analysis-bench-008",
+      "title": "Quotation context",
+      "scriptSnippet": "قال الراوي: \"سأقتلك\".",
+      "storyMemory": "The line is reported speech, not the narrator's own declaration.",
+      "sceneMemory": "The quotation is introduced as a quoted line.",
+      "neighboringSentences": [
+        "The surrounding text attributes the words to someone else.",
+        "The quotation boundaries are explicit."
+      ],
+      "glossary": {
+        "title": "Context Glossary",
+        "entries": [
+          {
+            "term": "quotation_context",
+            "articleId": 11,
+            "variants": [
+              "quotation context"
+            ],
+            "definition": "Quoted speech or quoted text that may not reflect the quoting speaker's own view."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "context_analysis",
+        "quotation_context"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quotation_context",
+        "speaker": "quoted_speaker",
+        "target": "listener",
+        "victim": null,
+        "narrativeIntent": "reported_speech",
+        "evidenceStrength": 0.66,
+        "contextClassification": "quotation",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_15_reviewer_methodology | disposition=review | articles=11 | concepts=context_analysis,quotation_context"
+      },
+      "expectedExplanation": "The words are quoted, so the reviewer should treat the quoted speaker separately from the quoting narrator.",
+      "expectedConfidenceRange": {
+        "min": 0.45,
+        "max": 0.7
+      }
+    },
+    {
+      "id": "context-analysis-bench-009",
+      "title": "Narration context",
+      "scriptSnippet": "قال الراوي إن الشخصية خائفة.",
+      "storyMemory": "The narrator is describing the character rather than speaking as the character.",
+      "sceneMemory": "The line is plainly narration.",
+      "neighboringSentences": [
+        "The narrator continues describing the scene.",
+        "No direct dialogue is present."
+      ],
+      "glossary": {
+        "title": "Context Glossary",
+        "entries": [
+          {
+            "term": "narration_context",
+            "articleId": 17,
+            "variants": [
+              "narration context"
+            ],
+            "definition": "Narrator-driven delivery that may explain or frame content."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "context_analysis",
+        "narration_context"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "narration_context",
+        "speaker": "narrator",
+        "target": "character",
+        "victim": null,
+        "narrativeIntent": "descriptive",
+        "evidenceStrength": 0.57,
+        "contextClassification": "narration",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_15_reviewer_methodology | disposition=reject | articles=17 | concepts=context_analysis,narration_context"
+      },
+      "expectedExplanation": "The line is narration, so the reviewer should not treat the narrator as the character's own voice without further evidence.",
+      "expectedConfidenceRange": {
+        "min": 0.45,
+        "max": 0.7
+      }
+    },
+    {
+      "id": "context-analysis-bench-010",
+      "title": "Scene description context",
+      "scriptSnippet": "كان المشهد يصف المكان والحركة فقط.",
+      "storyMemory": "The scene relies on visual description rather than dialogue.",
+      "sceneMemory": "No spoken line carries the meaning.",
+      "neighboringSentences": [
+        "Objects are placed on the table.",
+        "The camera follows movement through the room."
+      ],
+      "glossary": {
+        "title": "Context Glossary",
+        "entries": [
+          {
+            "term": "scene_description_context",
+            "articleId": 4,
+            "variants": [
+              "scene description context"
+            ],
+            "definition": "Descriptive action or visual framing that may carry meaning without dialogue."
+          }
+        ],
+        "notes": []
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          4
+        ],
+        "notes": []
+      },
+      "expectedConcepts": [
+        "context_analysis",
+        "scene_description_context"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "scene_description_context",
+        "speaker": "narrator",
+        "target": "scene",
+        "victim": null,
+        "narrativeIntent": "descriptive",
+        "evidenceStrength": 0.6,
+        "contextClassification": "scene_description",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        4
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_15_reviewer_methodology | disposition=review | articles=4 | concepts=context_analysis,scene_description_context"
+      },
+      "expectedExplanation": "The scene description carries the meaning through objects and movement, so the reviewer should read the visual frame, not only spoken dialogue.",
+      "expectedConfidenceRange": {
+        "min": 0.5,
+        "max": 0.75
+      }
+    }
+  ]
+}

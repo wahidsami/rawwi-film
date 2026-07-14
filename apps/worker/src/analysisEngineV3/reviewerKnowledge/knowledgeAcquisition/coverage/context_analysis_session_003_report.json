@@ -1,0 +1,43 @@
+{
+  "session": "GCAM POPULATION SESSION 003",
+  "topic": "Context Analysis",
+  "coverageBefore": {
+    "sourceBackedNotes": 2,
+    "lessonUpdates": 3,
+    "patternUpdates": 2,
+    "decisionRecordUpdates": 2,
+    "benchmarkUpdates": 2,
+    "reviewerNotesUpdates": 2,
+    "knowledgeDebtItems": 2
+  },
+  "coverageAfter": {
+    "sourceBackedNotes": 3,
+    "lessonUpdates": 4,
+    "patternUpdates": 3,
+    "decisionRecordUpdates": 2,
+    "benchmarkUpdates": 3,
+    "reviewerNotesUpdates": 3,
+    "knowledgeDebtItems": 3
+  },
+  "knowledgeAdded": [
+    "Historical context can still be flagged.",
+    "Protective or educational context can change interpretation.",
+    "Comedy still requires review when the underlying words are insulting.",
+    "Documentary, dream, flashback, quotation, narration, and scene description are context frames that must be evaluated before judgment."
+  ],
+  "decisionRecordsAdded": 0,
+  "decisionRecordsUpdated": 0,
+  "lessonsUpdated": 1,
+  "benchmarksUpdated": 1,
+  "patternLibrariesUpdated": 1,
+  "reviewerNotesUpdated": 1,
+  "knowledgeDebtCreated": [
+    "KD-GCAM-CONTEXT-ANALYSIS-001"
+  ],
+  "reviewerConfidence": "high",
+  "remainingGaps": [
+    "No dedicated official GCAM passages were found for documentary, dream, flashback, quotation, narration, or scene-description framing in the source set.",
+    "Those remaining frames are retained as reviewer-methodology context signals until source-backed GCAM material is found."
+  ],
+  "readyForSession004": true
+}

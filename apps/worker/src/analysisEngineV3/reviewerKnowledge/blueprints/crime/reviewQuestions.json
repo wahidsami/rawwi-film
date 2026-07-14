@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "crime_review_questions",
+  "title": "Crime Review Questions",
+  "description": "Question inventory for crime reasoning.",
+  "entries": [
+    {
+      "id": "crime_question_narrative",
+      "title": "Narrative question",
+      "description": "What is happening in the scene?"
+    },
+    {
+      "id": "crime_question_speaker",
+      "title": "Speaker question",
+      "description": "Who is speaking?"
+    },
+    {
+      "id": "crime_question_target",
+      "title": "Target question",
+      "description": "Who or what is targeted?"
+    },
+    {
+      "id": "crime_question_intent",
+      "title": "Intent question",
+      "description": "What is the speaker trying to do?"
+    },
+    {
+      "id": "crime_question_context",
+      "title": "Context question",
+      "description": "Does the surrounding context change the meaning?"
+    },
+    {
+      "id": "crime_question_evidence",
+      "title": "Evidence question",
+      "description": "What exact evidence supports the conclusion?"
+    },
+    {
+      "id": "crime_question_confidence",
+      "title": "Confidence question",
+      "description": "How certain is the conclusion?"
+    },
+    {
+      "id": "crime_question_exception",
+      "title": "Exception question",
+      "description": "Is there a documentary, educational, police, or court exception?"
+    },
+    {
+      "id": "crime_question_cross",
+      "title": "Cross-scene question",
+      "description": "Do later scenes confirm or reverse the meaning?"
+    },
+    {
+      "id": "crime_question_false_positive",
+      "title": "False positive question",
+      "description": "Could this be a harmless mention or a false accusation?"
+    }
+  ]
+}

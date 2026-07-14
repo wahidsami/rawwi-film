@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "politics_contexts",
+  "title": "Politics Contexts",
+  "description": "Canonical politics contexts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "politics_context_dialogue",
+      "title": "Context Dialogue",
+      "description": "Context Dialogue for politics reasoning."
+    },
+    {
+      "id": "politics_context_debate",
+      "title": "Context Debate",
+      "description": "Context Debate for politics reasoning."
+    },
+    {
+      "id": "politics_context_speech",
+      "title": "Context Speech",
+      "description": "Context Speech for politics reasoning."
+    },
+    {
+      "id": "politics_context_rally",
+      "title": "Context Rally",
+      "description": "Context Rally for politics reasoning."
+    },
+    {
+      "id": "politics_context_news",
+      "title": "Context News",
+      "description": "Context News for politics reasoning."
+    },
+    {
+      "id": "politics_context_documentary",
+      "title": "Context Documentary",
+      "description": "Context Documentary for politics reasoning."
+    },
+    {
+      "id": "politics_context_historical",
+      "title": "Context Historical",
+      "description": "Context Historical for politics reasoning."
+    },
+    {
+      "id": "politics_context_educational",
+      "title": "Context Educational",
+      "description": "Context Educational for politics reasoning."
+    },
+    {
+      "id": "politics_context_court",
+      "title": "Context Court",
+      "description": "Context Court for politics reasoning."
+    },
+    {
+      "id": "politics_context_fiction",
+      "title": "Context Fiction",
+      "description": "Context Fiction for politics reasoning."
+    },
+    {
+      "id": "politics_context_satire",
+      "title": "Context Satire",
+      "description": "Context Satire for politics reasoning."
+    },
+    {
+      "id": "politics_context_dream",
+      "title": "Context Dream",
+      "description": "Context Dream for politics reasoning."
+    },
+    {
+      "id": "politics_context_flashback",
+      "title": "Context Flashback",
+      "description": "Context Flashback for politics reasoning."
+    },
+    {
+      "id": "politics_context_quotation",
+      "title": "Context Quotation",
+      "description": "Context Quotation for politics reasoning."
+    },
+    {
+      "id": "politics_context_scene_description",
+      "title": "Context Scene Description",
+      "description": "Context Scene Description for politics reasoning."
+    },
+    {
+      "id": "politics_context_observation",
+      "title": "Context Observation",
+      "description": "Context Observation for politics reasoning."
+    }
+  ]
+}

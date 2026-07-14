@@ -1,0 +1,129 @@
+{
+  "id": "lesson_008_narrative_structure",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 8,
+  "title": "Narrative Structure Recognition",
+  "summary": "Teach the reviewer to understand how events function within the structure of the screenplay before evaluating any potential violation.",
+  "dependsOn": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment"
+  ],
+  "learningObjectives": [
+    "Recognize narrative structure.",
+    "Identify scene purpose.",
+    "Understand character progression.",
+    "Avoid judging isolated scenes."
+  ],
+  "definitions": {
+    "scenePurpose": "The role a scene plays in advancing the story.",
+    "characterArc": "The evolution of a character across the screenplay.",
+    "storyArc": "The overall progression of the narrative.",
+    "turningPoint": "An event that significantly changes the direction of the story."
+  },
+  "reviewerPrinciples": [
+    "Review the scene as part of the story.",
+    "A scene may intentionally create tension without endorsing harmful behaviour.",
+    "Narrative progression influences interpretation.",
+    "Character growth often changes the meaning of earlier actions.",
+    "Resolution can redefine previous events."
+  ],
+  "reviewerQuestions": [
+    "What is the purpose of this scene?",
+    "Does this scene establish, escalate or resolve conflict?",
+    "Is this behaviour later condemned or rewarded?",
+    "Does the character change?",
+    "Would the story lose meaning if this scene were removed?"
+  ],
+  "storyStages": [
+    "Introduction",
+    "Setup",
+    "Conflict",
+    "Escalation",
+    "Turning Point",
+    "Climax",
+    "Resolution",
+    "Epilogue"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Has the narrative role of the scene been identified?",
+      "yes": 2,
+      "no": "Needs Review"
+    },
+    {
+      "step": 2,
+      "question": "Does later story context change the interpretation?",
+      "yes": "Re-evaluate",
+      "no": "Proceed"
+    }
+  ],
+  "examples": [
+    {
+      "text": "The villain threatens the hero early in the story.",
+      "classification": "Conflict Setup"
+    },
+    {
+      "text": "The villain is arrested at the end.",
+      "classification": "Resolution"
+    },
+    {
+      "text": "A flashback explains previous behaviour.",
+      "classification": "Narrative Context"
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Judge every scene independently.",
+      "reason": "Narrative structure ignored."
+    }
+  ],
+  "commonMistakes": [
+    "Ignoring story progression.",
+    "Ignoring character development.",
+    "Ignoring later resolution.",
+    "Reviewing scenes in isolation."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Should scenes be reviewed independently from the story?",
+        "answer": "No"
+      },
+      {
+        "question": "Can later scenes change the interpretation of earlier scenes?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Does character development affect review?",
+        "answer": "Yes"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Understand screenplay structure.",
+    "Reduce scene-level false positives.",
+    "Improve narrative reasoning."
+  ],
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "story_setup",
+    "story_conflict",
+    "story_resolution",
+    "character_arc"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 8
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "drugs_intents",
+  "title": "Drugs Intents",
+  "description": "Drug intents.",
+  "entries": [
+    {
+      "id": "drug_intent_reference",
+      "title": "Reference",
+      "description": "Neutral mention."
+    },
+    {
+      "id": "drug_intent_glorification",
+      "title": "Glorification",
+      "description": "Positive or glamorizing stance."
+    },
+    {
+      "id": "drug_intent_encouragement",
+      "title": "Encouragement",
+      "description": "Pushing someone toward drug use."
+    },
+    {
+      "id": "drug_intent_instruction",
+      "title": "Instruction",
+      "description": "Explaining how to use or make drugs."
+    },
+    {
+      "id": "drug_intent_normalization",
+      "title": "Normalization",
+      "description": "Making drug use seem ordinary."
+    },
+    {
+      "id": "drug_intent_medical",
+      "title": "Medical",
+      "description": "Clinical or therapeutic purpose."
+    },
+    {
+      "id": "drug_intent_educational",
+      "title": "Educational",
+      "description": "Teaching or warning."
+    },
+    {
+      "id": "drug_intent_condemnation",
+      "title": "Condemnation",
+      "description": "Rejecting or criticizing drug use."
+    },
+    {
+      "id": "drug_intent_news",
+      "title": "News",
+      "description": "Informational reporting."
+    },
+    {
+      "id": "drug_intent_fiction",
+      "title": "Fiction",
+      "description": "Non-literal fictional framing."
+    }
+  ]
+}

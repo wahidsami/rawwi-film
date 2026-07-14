@@ -1,0 +1,55 @@
+{
+  "id": "violence_010_violence_encouragement_quoted",
+  "version": "1.0.0",
+  "title": "Violence Encouragement (quoted)",
+  "summary": "Violence Encouragement in quoted framing.",
+  "originalScenario": "قال الراوي: \"اضربه الآن ولا تتراجع.\"",
+  "reviewQuestion": "Is this violence encouragement?",
+  "initialSuspicion": "Possible violence encouragement.",
+  "possibleConcepts": [
+    "violence_encouragement"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: اضربه الآن ولا تتراجع."
+  ],
+  "contradictingEvidence": [
+    "Quoted or reported framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear endorsement in the narrator's own voice."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "Target remains dependent on the quoted voice.",
+  "intentAnalysis": "quotation",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 14,
+      "atom_ids": [
+        "14-3"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Quoted speech is not automatically endorsement.",
+  "benchmarkTags": [
+    "violence_encouragement",
+    "quoted",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_encouragement"
+  ]
+}

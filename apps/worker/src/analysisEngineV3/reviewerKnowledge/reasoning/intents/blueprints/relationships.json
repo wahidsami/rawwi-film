@@ -1,0 +1,24 @@
+{
+  "version": "1.0.0",
+  "id": "intents_relationships",
+  "title": "Intent Relationships",
+  "description": "Relationship graph for intent reasoning.",
+  "entries": [
+    { "id": "rel_001", "from": "neutral", "to": "informative", "type": "supports" },
+    { "id": "rel_002", "from": "informative", "to": "educational", "type": "supports" },
+    { "id": "rel_002b", "from": "documentary", "to": "documentation", "type": "supports" },
+    { "id": "rel_003", "from": "historical", "to": "documentary", "type": "supports" },
+    { "id": "rel_004", "from": "news_reporting", "to": "court_testimony", "type": "supports" },
+    { "id": "rel_005", "from": "medical", "to": "scientific", "type": "supports" },
+    { "id": "rel_006", "from": "condemnation", "to": "approval", "type": "opposite" },
+    { "id": "rel_007", "from": "approval", "to": "promotion", "type": "supports" },
+    { "id": "rel_007b", "from": "approval", "to": "praise", "type": "supports" },
+    { "id": "rel_007c", "from": "promotion", "to": "normalization", "type": "supports" },
+    { "id": "rel_008", "from": "threat", "to": "coercion", "type": "supports" },
+    { "id": "rel_009", "from": "humor", "to": "satire", "type": "supports" },
+    { "id": "rel_009b", "from": "satire", "to": "mockery", "type": "supports" },
+    { "id": "rel_010", "from": "fiction", "to": "dream", "type": "supports" },
+    { "id": "rel_011", "from": "role_play", "to": "acting", "type": "supports" },
+    { "id": "rel_012", "from": "false_accusation", "to": "misunderstanding", "type": "supports" }
+  ]
+}

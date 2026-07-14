@@ -1,0 +1,54 @@
+{
+  "id": "decision_043_teenager_bullying_direct",
+  "version": "1.0.0",
+  "title": "Teenager bullying (direct)",
+  "summary": "Teenager bullying in direct framing.",
+  "originalScenario": "يسخرون من المراهق أمام الجميع",
+  "reviewQuestion": "Is this bullying of a teenager?",
+  "initialSuspicion": "Public ridicule.",
+  "possibleConcepts": [
+    "children_teenager",
+    "children_bullying"
+  ],
+  "supportingEvidence": [
+    "يسخرون من المراهق أمام الجميع"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-2"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "teenager_bullying",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_teenager",
+    "children_bullying"
+  ]
+}

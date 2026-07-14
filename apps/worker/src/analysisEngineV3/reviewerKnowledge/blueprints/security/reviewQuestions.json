@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "id": "security_review_questions",
+  "title": "Security Review Questions",
+  "description": "Deterministic reviewer questions for security blueprints.",
+  "entries": [
+    { "id": "security_question_who_speaks", "title": "Who speaks?", "description": "Identify the speaker before judging the statement." },
+    { "id": "security_question_what_target", "title": "What is the target?", "description": "Identify the target of the action or speech." },
+    { "id": "security_question_what_intent", "title": "What is the intent?", "description": "Determine whether the intent is promotion, condemnation, instruction, or neutral." },
+    { "id": "security_question_what_context", "title": "What is the context?", "description": "Check for documentary, educational, fiction, court, or police context." },
+    { "id": "security_question_what_evidence", "title": "What is the evidence?", "description": "Locate the literal phrase that supports the security reading." },
+    { "id": "security_question_what_relationship", "title": "What relationships matter?", "description": "Determine how concepts reinforce or contradict each other." }
+  ]
+}

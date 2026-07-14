@@ -128,7 +128,7 @@ const PASS_SIGNAL_SPECS: Record<string, SignalSpec[]> = {
 function normalizeSignalText(v: string): string {
   return canonicalArabicToken(v)
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
+    .replace(/\s+/g, "")
     .trim();
 }
 

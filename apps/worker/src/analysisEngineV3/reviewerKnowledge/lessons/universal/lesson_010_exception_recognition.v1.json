@@ -1,0 +1,163 @@
+{
+  "id": "lesson_010_exception_recognition",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 10,
+  "title": "Exception Recognition",
+  "summary": "Teach the reviewer to recognize legitimate contextual exceptions before creating any finding.",
+  "dependsOn": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships"
+  ],
+  "learningObjectives": [
+    "Recognize contextual exceptions.",
+    "Avoid false positives.",
+    "Separate harmful content from legitimate discussion.",
+    "Understand when an apparent violation should not become a finding."
+  ],
+  "definitions": {
+    "exception": "A contextual condition that changes or removes the legal significance of otherwise concerning content.",
+    "contextualException": "An exception supported by narrative context.",
+    "legalException": "An exception recognized by reviewer methodology.",
+    "reviewException": "A case requiring caution or manual review."
+  },
+  "reviewerPrinciples": [
+    "Every apparent violation must be checked for exceptions.",
+    "Exceptions are evidence-based, not assumptions.",
+    "Educational discussion is not promotion.",
+    "Historical description is not endorsement.",
+    "Condemnation is not encouragement.",
+    "Quotation is not ownership.",
+    "Roleplay is not reality.",
+    "Dreams and fantasies require contextual evaluation.",
+    "News reporting requires contextual evaluation.",
+    "Documentary material requires contextual evaluation."
+  ],
+  "reviewerQuestions": [
+    "Does an exception apply?",
+    "Is this educational?",
+    "Is this historical?",
+    "Is this documentary?",
+    "Is this satire?",
+    "Is this quotation?",
+    "Is this roleplay?",
+    "Is this dream or fantasy?",
+    "Is the harmful act condemned later?",
+    "Would another reviewer apply the same exception?"
+  ],
+  "exceptionCategories": [
+    "Educational",
+    "Historical",
+    "Documentary",
+    "News",
+    "Courtroom",
+    "Police Investigation",
+    "Medical",
+    "Scientific",
+    "Quotation",
+    "Narration",
+    "Roleplay",
+    "Dream",
+    "Flashback",
+    "Satire",
+    "Comedy",
+    "Condemnation"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Is there an apparent violation?",
+      "yes": 2,
+      "no": "No Finding"
+    },
+    {
+      "step": 2,
+      "question": "Does an exception clearly apply?",
+      "yes": "Apply Exception",
+      "no": 3
+    },
+    {
+      "step": 3,
+      "question": "Is the exception uncertain?",
+      "yes": "Needs Review",
+      "no": "Proceed with Legal Evaluation"
+    }
+  ],
+  "examples": [
+    {
+      "text": "The teacher explains the dangers of narcotics.",
+      "classification": "Educational Exception"
+    },
+    {
+      "text": "A documentary discusses terrorism.",
+      "classification": "Documentary Exception"
+    },
+    {
+      "text": "The judge reads a criminal confession in court.",
+      "classification": "Courtroom Exception"
+    },
+    {
+      "text": "The villain is praised without criticism.",
+      "classification": "No Exception"
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Ignore educational context and report promotion.",
+      "reason": "Exception ignored."
+    },
+    {
+      "text": "Treat every quotation as endorsement.",
+      "reason": "Quotation exception ignored."
+    }
+  ],
+  "commonMistakes": [
+    "Ignoring exceptions.",
+    "Inventing unsupported exceptions.",
+    "Confusing explanation with encouragement.",
+    "Confusing quotation with approval."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Must every finding be checked for exceptions?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Is educational discussion automatically a violation?",
+        "answer": "No"
+      },
+      {
+        "question": "Can quotation change legal interpretation?",
+        "answer": "Yes"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Apply exceptions consistently.",
+    "Reduce false positives.",
+    "Improve professional judgement."
+  ],
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "exception_education",
+    "exception_documentary",
+    "exception_quote",
+    "exception_condemnation"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 10
+  }
+}

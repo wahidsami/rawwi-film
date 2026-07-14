@@ -1,0 +1,58 @@
+{
+  "id": "decision_052_child_recruitment_quoted",
+  "version": "1.0.0",
+  "title": "Child recruitment (quoted)",
+  "summary": "Child recruitment in quoted framing.",
+  "originalScenario": "قال الراوي: \"انضم إلينا وستكسب مالًا\"",
+  "reviewQuestion": "Is this child recruitment?",
+  "initialSuspicion": "Recruitment into harm.",
+  "possibleConcepts": [
+    "children_child_recruitment",
+    "children_child"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: انضم إلينا وستكسب مالًا"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-4"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "child_recruitment",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_child_recruitment",
+    "children_child"
+  ]
+}

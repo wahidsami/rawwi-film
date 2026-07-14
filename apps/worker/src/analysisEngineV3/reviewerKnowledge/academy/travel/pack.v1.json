@@ -1,0 +1,392 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_13_travel",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Travel and Countries Reviewer Knowledge Pack",
+    "description": "Full academy knowledge pack for travel, countries, borders, immigration, foreign references, and country commentary.",
+    "supported_concepts": [
+      "travel_reference",
+      "travel_destination",
+      "travel_origin",
+      "travel_abroad",
+      "international_travel",
+      "domestic_travel",
+      "border_crossing",
+      "airport",
+      "passport",
+      "visa",
+      "foreign_country",
+      "foreign_city",
+      "foreign_government_reference",
+      "foreign_people",
+      "foreign_culture",
+      "foreign_religion",
+      "foreign_customs",
+      "foreign_landmarks",
+      "foreign_language",
+      "foreign_food",
+      "foreign_event",
+      "foreign_media",
+      "foreign_law",
+      "foreign_police",
+      "foreign_military",
+      "tourism",
+      "immigration",
+      "emigration",
+      "refugee",
+      "exile",
+      "deportation",
+      "international_business",
+      "international_study",
+      "medical_travel",
+      "religious_travel",
+      "historical_travel",
+      "fictional_travel",
+      "dream_travel",
+      "flashback_travel",
+      "imaginary_country",
+      "travel_scene_description",
+      "travel_dialogue",
+      "travel_observation",
+      "country_comparison",
+      "country_insult",
+      "country_praise",
+      "country_mockery",
+      "country_stereotype",
+      "country_security_reference",
+      "country_political_reference"
+    ]
+  },
+  "pack": {
+    "id": "v3_13_travel",
+    "module_id": "v3_13_travel",
+    "title": "Travel and Countries Reviewer Knowledge Pack",
+    "trigger_concept_ids": [
+      "travel_reference",
+      "travel_destination",
+      "travel_origin",
+      "travel_abroad",
+      "international_travel",
+      "domestic_travel",
+      "border_crossing",
+      "airport",
+      "passport",
+      "visa",
+      "foreign_country",
+      "foreign_city",
+      "foreign_government_reference",
+      "foreign_people",
+      "foreign_culture",
+      "foreign_religion",
+      "foreign_customs",
+      "foreign_landmarks",
+      "foreign_language",
+      "foreign_food",
+      "foreign_event",
+      "foreign_media",
+      "foreign_law",
+      "foreign_police",
+      "foreign_military",
+      "tourism",
+      "immigration",
+      "emigration",
+      "refugee",
+      "exile",
+      "deportation",
+      "international_business",
+      "international_study",
+      "medical_travel",
+      "religious_travel",
+      "historical_travel",
+      "fictional_travel",
+      "dream_travel",
+      "flashback_travel",
+      "imaginary_country",
+      "travel_scene_description",
+      "travel_dialogue",
+      "travel_observation",
+      "country_comparison",
+      "country_insult",
+      "country_praise",
+      "country_mockery",
+      "country_stereotype",
+      "country_security_reference",
+      "country_political_reference"
+    ],
+    "purpose": "Provide reviewer knowledge for travel, country, border, migration, and foreign-reference reasoning without collapsing neutral observation into a finding.",
+    "protected_interests": [
+      "accurate travel observation",
+      "neutral country reference interpretation",
+      "border and migration context",
+      "historical and documentary framing",
+      "fictional and dream framing",
+      "country comparison without distortion",
+      "review-only handling of ambiguous travel commentary"
+    ],
+    "protected_concepts": [
+      "travel_reference",
+      "travel_destination",
+      "travel_origin",
+      "travel_abroad",
+      "international_travel",
+      "domestic_travel",
+      "border_crossing",
+      "airport",
+      "passport",
+      "visa",
+      "foreign_country",
+      "foreign_city",
+      "foreign_government_reference",
+      "foreign_people",
+      "foreign_culture",
+      "foreign_religion",
+      "foreign_customs",
+      "foreign_landmarks",
+      "foreign_language",
+      "foreign_food",
+      "foreign_event",
+      "foreign_media",
+      "foreign_law",
+      "foreign_police",
+      "foreign_military",
+      "tourism",
+      "immigration",
+      "emigration",
+      "refugee",
+      "exile",
+      "deportation",
+      "international_business",
+      "international_study",
+      "medical_travel",
+      "religious_travel",
+      "historical_travel",
+      "fictional_travel",
+      "dream_travel",
+      "flashback_travel",
+      "imaginary_country",
+      "travel_scene_description",
+      "travel_dialogue",
+      "travel_observation",
+      "country_comparison",
+      "country_insult",
+      "country_praise",
+      "country_mockery",
+      "country_stereotype",
+      "country_security_reference",
+      "country_political_reference"
+    ],
+    "required_evidence": [
+      "Travel mention | minimum: A literal reference to travel, movement, or a destination inside the chunk. | strong: A clearly described journey, route, or location sequence. | weak: A coded or abbreviated travel mention that still remains local to the text. | insufficient: An unrelated place name, a generic mention of movement, or a foreign reference without travel intent.",
+      "Border crossing | minimum: A literal border, customs, or entry mention. | strong: A passage showing departure, arrival, visa, or passport context. | weak: A short reference to crossing or entering that still needs context. | insufficient: A country mention without entry or border meaning.",
+      "Migration | minimum: A literal statement of immigration, emigration, exile, refugee status, or deportation. | strong: A scene that clearly describes forced movement or settlement. | weak: A short mention that implies migration but does not finish the thought. | insufficient: A neutral travel note or unrelated geography mention.",
+      "Country evaluation | minimum: A literal insult, praise, mockery, stereotype, or political attack aimed at a country or its people. | strong: A direct evaluative phrase that clearly treats the country as a target. | weak: A coded or joking line that still clearly carries the same evaluative meaning. | insufficient: A documentary, quote, or neutral comparison without abuse or endorsement.",
+      "Fictional travel | minimum: A literal dream, fantasy, fiction, or imaginary-country frame. | strong: A scene that clearly signals invented geography or non-real travel. | weak: A short imaginative marker that still needs surrounding context. | insufficient: A factual travel statement or a historical reference without fantasy framing."
+    ],
+    "insufficient_evidence": [
+      "A neutral travel diary note with no evaluative language.",
+      "A documentary or news report repeating a travel phrase as evidence.",
+      "A quoted country insult that the story explicitly rejects.",
+      "A foreign place name used only as scenery or background."
+    ],
+    "reviewer_heuristics": [
+      "Separate travel observation from evaluative country commentary.",
+      "Treat documentary, news, court, and police framing as factual unless the text clearly adds judgment.",
+      "Use historical framing to distinguish exile, migration, and remembrance from present-day attacks.",
+      "Treat fiction, dreams, flashbacks, and imaginary-country language as non-literal unless later text confirms reality.",
+      "Do not collapse country comparison into insult, praise, or propaganda unless the wording actually does so.",
+      "Travel dialogue, scene description, and narration may all be neutral and should not be forced into a finding.",
+      "Use review-only outcomes when the text is travel-related but the evaluative meaning is still ambiguous."
+    ],
+    "legal_exceptions": [
+      "Educational",
+      "Historical",
+      "Documentary",
+      "News reporting",
+      "Court proceedings",
+      "Police investigation",
+      "Fiction",
+      "Role-play",
+      "Dream sequence",
+      "Flashback",
+      "Quotation",
+      "Academic discussion"
+    ],
+    "positive_examples": [
+      "Direct country insult in dialogue: هذا البلد متخلف.",
+      "Direct travel mention with clear destination: الوجهة هي إسطنبول.",
+      "Historical migration line: في التاريخ القديم سافروا ثم استقروا هناك.",
+      "Fictional journey: في القصة سافر إلى بلد خيالي.",
+      "Country mockery in a debate scene: يا له من بلد مضحك.",
+      "Passport and visa planning: لا تنسَ الجواز والفيزا قبل السفر.",
+      "Country political critique with a clear target: النظام هناك فاسد.",
+      "Border crossing scene with explicit movement: عبرنا الحدود بعد الفجر."
+    ],
+    "negative_examples": [
+      "Neutral travel diary: سافرنا إلى المدينة ثم عدنا مساءً.",
+      "Documentary reference: يشرح الفيلم مسار الهجرة القديمة بدون حكم.",
+      "Court transcript: يكرر الشاهد عبارة السفر كما قيلت في الملف.",
+      "Fictional frame: The story describes an imaginary country in a dream.",
+      "Educational geography lesson: يتحدث المعلم عن دول العالم بلا إهانة.",
+      "Travel planning only: الجواز جاهز والرحلة غداً.",
+      "Historical narration without endorsement: يروي المؤرخ قصة منفى قديم.",
+      "Border discussion without incitement: يتحدث الموظف عن إجراءات الدخول."
+    ],
+    "common_false_positives": [
+      "Treating any mention of a country as a harmful finding.",
+      "Treating a neutral travel plan as a political or security statement.",
+      "Treating a dream, fantasy, or fiction frame as factual travel.",
+      "Treating a documentary or news report as endorsement.",
+      "Treating a country comparison as an insult or stereotype.",
+      "Treating a border or passport mention as migration harm without context.",
+      "Treating quoted country criticism as the narrator's own view."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "سفر",
+        "concept_id": "travel_reference",
+        "relation": "Direct travel anchor",
+        "note": "Core travel anchor for factual or contextual travel mention."
+      },
+      {
+        "term": "رحلة",
+        "concept_id": "travel_destination",
+        "relation": "Travel movement anchor",
+        "note": "Signals movement or destination when the text is about a trip."
+      },
+      {
+        "term": "مطار",
+        "concept_id": "airport",
+        "relation": "Transport anchor",
+        "note": "Strong indicator of a travel scene or departure/arrival context."
+      },
+      {
+        "term": "جواز",
+        "concept_id": "passport",
+        "relation": "Travel-document anchor",
+        "note": "Relevant when passport and entry context appear."
+      },
+      {
+        "term": "فيزا",
+        "concept_id": "visa",
+        "relation": "Travel-document anchor",
+        "note": "Relevant when the line discusses entry permission or travel authorisation."
+      },
+      {
+        "term": "حدود",
+        "concept_id": "border_crossing",
+        "relation": "Border anchor",
+        "note": "Supports cross-border travel or entry reasoning."
+      },
+      {
+        "term": "هجرة",
+        "concept_id": "immigration",
+        "relation": "Migration anchor",
+        "note": "Signals immigration, emigration, or displacement reasoning."
+      },
+      {
+        "term": "لاجئ",
+        "concept_id": "refugee",
+        "relation": "Displacement anchor",
+        "note": "Supports refugee or forced movement reasoning."
+      },
+      {
+        "term": "منفى",
+        "concept_id": "exile",
+        "relation": "Historical displacement anchor",
+        "note": "Often historical or forced removal rather than ordinary travel."
+      },
+      {
+        "term": "ترحيل",
+        "concept_id": "deportation",
+        "relation": "Forced movement anchor",
+        "note": "Signals removal or expulsion context."
+      },
+      {
+        "term": "بلد أجنبي",
+        "concept_id": "foreign_country",
+        "relation": "Country anchor",
+        "note": "Relevant for neutral foreign-country mentions and comparisons."
+      },
+      {
+        "term": "ثقافة",
+        "concept_id": "foreign_culture",
+        "relation": "Cultural anchor",
+        "note": "Relevant when the text compares or describes culture abroad."
+      },
+      {
+        "term": "لغة",
+        "concept_id": "foreign_language",
+        "relation": "Language anchor",
+        "note": "Relevant when a foreign language is mentioned or learned."
+      },
+      {
+        "term": "سياحة",
+        "concept_id": "tourism",
+        "relation": "Visitor anchor",
+        "note": "Signals tourism and travel services reasoning."
+      },
+      {
+        "term": "خيال",
+        "concept_id": "imaginary_country",
+        "relation": "Imaginary-world anchor",
+        "note": "Relevant when travel is fictional or dreamlike."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 11,
+        "atom_ids": [
+          "11-1",
+          "11-2",
+          "11-3"
+        ],
+        "role": "Factual travel and country observation",
+        "note": "Use for factual travel mention, observation, or neutral country reference."
+      },
+      {
+        "article_id": 16,
+        "atom_ids": [
+          "16-1",
+          "16-2"
+        ],
+        "role": "Historical travel and migration",
+        "note": "Use for historical travel, exile, migration, or remembered journeys."
+      },
+      {
+        "article_id": 17,
+        "atom_ids": [
+          "17-1",
+          "17-2"
+        ],
+        "role": "Fictional and dream travel",
+        "note": "Use for fictional, dreamlike, or imaginary travel contexts."
+      },
+      {
+        "article_id": 4,
+        "atom_ids": [
+          "4-1",
+          "4-2"
+        ],
+        "role": "Evaluative country commentary",
+        "note": "Use when the text clearly insults, praises, mocks, or stereotypes a country or its people."
+      }
+    ],
+    "reporting_guidance": [
+      "Report the shortest exact phrase that carries the travel, migration, or country evaluation meaning.",
+      "Use reviewer comment language when the text is only travel observation, documentary description, or a neutral comparison.",
+      "Use a finding only when the wording clearly insults, praises, stereotypes, or politically attacks a country or its people.",
+      "Explain whether the text is factual, historical, fictional, dreamlike, quoted, or evaluative.",
+      "Mention review-only outcomes when the line is about travel but the country meaning is still ambiguous after context analysis."
+    ]
+  }
+}

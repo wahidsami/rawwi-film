@@ -1,0 +1,55 @@
+{
+  "id": "violence_032_violence_training_quoted",
+  "version": "1.0.0",
+  "title": "Violence Training (quoted)",
+  "summary": "Violence Training in quoted framing.",
+  "originalScenario": "قال الراوي: \"التدريب يوضح كيف نتجنب العنف.\"",
+  "reviewQuestion": "Is this violence training?",
+  "initialSuspicion": "Possible violence training.",
+  "possibleConcepts": [
+    "violence_training"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: التدريب يوضح كيف نتجنب العنف."
+  ],
+  "contradictingEvidence": [
+    "Quoted or reported framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear endorsement in the narrator's own voice."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "Target remains dependent on the quoted voice.",
+  "intentAnalysis": "quotation",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Quoted speech is not automatically endorsement.",
+  "benchmarkTags": [
+    "violence_training",
+    "quoted",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_training"
+  ]
+}

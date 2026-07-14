@@ -1,0 +1,131 @@
+{
+  "id": "lesson_007_confidence_assessment",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 7,
+  "title": "Confidence Assessment",
+  "summary": "Teach the reviewer to express how certain it is about every conclusion instead of treating all findings as equally reliable.",
+  "dependsOn": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition"
+  ],
+  "learningObjectives": [
+    "Measure confidence objectively.",
+    "Separate strong evidence from weak evidence.",
+    "Recognize uncertainty.",
+    "Escalate ambiguous cases for review."
+  ],
+  "definitions": {
+    "confidence": "The degree of certainty supported by evidence.",
+    "highConfidence": "Multiple independent pieces of evidence agree.",
+    "mediumConfidence": "Evidence supports the conclusion but alternatives remain.",
+    "lowConfidence": "Evidence is weak or incomplete.",
+    "insufficientEvidence": "No reliable conclusion can be reached."
+  },
+  "reviewerPrinciples": [
+    "Confidence follows evidence.",
+    "Never inflate certainty.",
+    "Ambiguous findings require lower confidence.",
+    "Multiple supporting signals increase confidence.",
+    "Contradictory evidence reduces confidence."
+  ],
+  "reviewerQuestions": [
+    "What evidence supports this conclusion?",
+    "Is the evidence direct or indirect?",
+    "Is another interpretation equally possible?",
+    "Would another reviewer likely reach the same conclusion?",
+    "Should this finding be reviewed manually?"
+  ],
+  "confidenceLevels": [
+    "High",
+    "Medium",
+    "Low",
+    "Needs Review",
+    "Insufficient Evidence"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Is evidence sufficient?",
+      "yes": 2,
+      "no": "Insufficient Evidence"
+    },
+    {
+      "step": 2,
+      "question": "Is there conflicting evidence?",
+      "yes": "Medium",
+      "no": 3
+    },
+    {
+      "step": 3,
+      "question": "Would another trained reviewer likely agree?",
+      "yes": "High",
+      "no": "Needs Review"
+    }
+  ],
+  "examples": [
+    {
+      "text": "Direct explicit threat with identified speaker and target.",
+      "confidence": "High"
+    },
+    {
+      "text": "Possible implied threat without clear target.",
+      "confidence": "Medium"
+    },
+    {
+      "text": "Ambiguous metaphor.",
+      "confidence": "Needs Review"
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Assigning High confidence with weak evidence.",
+      "reason": "Confidence not justified."
+    }
+  ],
+  "commonMistakes": [
+    "Overconfidence.",
+    "Ignoring contradictory evidence.",
+    "Treating all findings equally."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Should confidence follow evidence?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Can weak evidence produce High confidence?",
+        "answer": "No"
+      },
+      {
+        "question": "Should ambiguous cases be escalated?",
+        "answer": "Yes"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Assess confidence objectively.",
+    "Reduce false certainty.",
+    "Support consistent reviewer decisions."
+  ],
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "confidence_high",
+    "confidence_medium",
+    "confidence_low",
+    "confidence_review"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 7
+  }
+}

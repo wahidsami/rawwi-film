@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "narrative_targets",
+  "title": "Narrative Targets",
+  "description": "Narrative targets that shape scene interpretation.",
+  "entries": [
+    {
+      "id": "narrative_target_story",
+      "title": "Story",
+      "description": "The full narrative being reviewed."
+    },
+    {
+      "id": "narrative_target_scene",
+      "title": "Scene",
+      "description": "A local scene or beat."
+    },
+    {
+      "id": "narrative_target_character",
+      "title": "Character",
+      "description": "A person inside the story."
+    },
+    {
+      "id": "narrative_target_narrator",
+      "title": "Narrator",
+      "description": "The voice that tells the story."
+    },
+    {
+      "id": "narrative_target_audience",
+      "title": "Audience",
+      "description": "The intended audience or viewer."
+    },
+    {
+      "id": "narrative_target_memory",
+      "title": "Memory",
+      "description": "A remembered event or detail."
+    },
+    {
+      "id": "narrative_target_symbol",
+      "title": "Symbol",
+      "description": "An object or image carrying deeper meaning."
+    },
+    {
+      "id": "narrative_target_timeline",
+      "title": "Timeline",
+      "description": "The order of events in time."
+    },
+    {
+      "id": "narrative_target_relationship",
+      "title": "Relationship",
+      "description": "A connection between characters."
+    },
+    {
+      "id": "narrative_target_theme",
+      "title": "Theme",
+      "description": "The underlying idea being developed."
+    }
+  ]
+}

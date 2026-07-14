@@ -1,0 +1,86 @@
+{
+  "id": "decision_033_sexual_medical",
+  "version": "1.0.0",
+  "title": "Sexual Medical decision record",
+  "summary": "Reviewer reasoning record for sexual medical.",
+  "originalScenario": "A doctor explains anatomy in a medical consultation.",
+  "reviewQuestion": "Is this a reviewable sexual medical case?",
+  "initialSuspicion": "Sexual Medical appears in the scene or context.",
+  "possibleConcepts": [
+    "sexual_medical",
+    "sexual_educational",
+    "sexual_historical"
+  ],
+  "supportingEvidence": [
+    "A doctor explains anatomy in a medical consultation.",
+    "Sexual Medical is the active concept."
+  ],
+  "contradictingEvidence": [
+    "The context is exception-heavy or corrected later."
+  ],
+  "requiredMissingEvidence": [
+    "No additional evidence needed"
+  ],
+  "sceneContext": "A doctor explains anatomy in a medical consultation.",
+  "speakerAnalysis": "The speaker and target must be checked explicitly.",
+  "targetAnalysis": "The target must be identified from context.",
+  "intentAnalysis": "Context-sensitive sexual reasoning",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check evidence quality",
+    "Apply context and exception rules",
+    "Map to article guidance"
+  ],
+  "reviewerDecision": "The concept is present, but the reviewer should treat the case as context-heavy or exception-heavy.",
+  "confidence": "medium",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-4"
+      ],
+      "note": "Use when sexual material appears in a factual explanation."
+    },
+    {
+      "article_id": 5,
+      "atom_ids": [
+        "5-1",
+        "5-5"
+      ],
+      "note": "Use when context affects age suitability."
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Use the context bucket rules and preserve the exact evidence span for sexual_medical.",
+  "benchmarkTags": [
+    "context",
+    "sexual_medical",
+    "sexual_context"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "sexual_pattern_33_sexual_medical"
+  ],
+  "relatedBlueprintConcepts": [
+    "sexual_medical",
+    "sexual_educational",
+    "sexual_reference"
+  ]
+}

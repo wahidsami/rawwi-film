@@ -1,0 +1,153 @@
+{
+  "version": "1.0.0",
+  "id": "children_relationships",
+  "title": "Children Relationships",
+  "description": "Concept relationships for child-safety reasoning.",
+  "entries": [
+    {
+      "from": "children_domain",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_domain",
+      "to": "children_vulnerable_person",
+      "type": "supports"
+    },
+    {
+      "from": "children_child",
+      "to": "children_infant",
+      "type": "parent"
+    },
+    {
+      "from": "children_child",
+      "to": "children_teenager",
+      "type": "parent"
+    },
+    {
+      "from": "children_child",
+      "to": "children_minor",
+      "type": "parent"
+    },
+    {
+      "from": "children_child",
+      "to": "children_disabled_child",
+      "type": "parent"
+    },
+    {
+      "from": "children_vulnerable_person",
+      "to": "children_disabled_adult",
+      "type": "parent"
+    },
+    {
+      "from": "children_vulnerable_person",
+      "to": "children_elderly_person",
+      "type": "parent"
+    },
+    {
+      "from": "children_vulnerable_person",
+      "to": "children_parent",
+      "type": "supports"
+    },
+    {
+      "from": "children_vulnerable_person",
+      "to": "children_guardian",
+      "type": "supports"
+    },
+    {
+      "from": "children_physical_abuse",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_psychological_abuse",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_humiliation",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_bullying",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_threatening",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_fear_induction",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_neglect",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_abandonment",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_exploitation",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_sexual_exploitation",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_grooming",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_human_trafficking",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_child_recruitment",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_forced_labor",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_criminal_exploitation",
+      "to": "children_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_mocking_disability",
+      "to": "children_disabled_child",
+      "type": "supports"
+    },
+    {
+      "from": "children_discrimination",
+      "to": "children_vulnerable_person",
+      "type": "supports"
+    },
+    {
+      "from": "children_isolation",
+      "to": "children_vulnerable_person",
+      "type": "supports"
+    },
+    {
+      "from": "children_endangerment",
+      "to": "children_child",
+      "type": "supports"
+    }
+  ]
+}

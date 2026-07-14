@@ -1,0 +1,52 @@
+{
+  "id": "decision_031_parental_discipline_direct",
+  "version": "1.0.0",
+  "title": "Parental discipline (direct)",
+  "summary": "Parental discipline in direct framing.",
+  "originalScenario": "الأب يشرح القواعد بهدوء",
+  "reviewQuestion": "Is this abusive discipline?",
+  "initialSuspicion": "Possibly protective discipline.",
+  "possibleConcepts": [
+    "children_parent"
+  ],
+  "supportingEvidence": [
+    "الأب يشرح القواعد بهدوء"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 5,
+      "atom_ids": [
+        "5-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "parental_discipline",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_parent"
+  ]
+}

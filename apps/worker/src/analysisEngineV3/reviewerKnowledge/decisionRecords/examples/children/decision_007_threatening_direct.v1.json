@@ -1,0 +1,54 @@
+{
+  "id": "decision_007_threatening_direct",
+  "version": "1.0.0",
+  "title": "Threatening (direct)",
+  "summary": "Threatening in direct framing.",
+  "originalScenario": "إذا تكلمت سأؤذيك",
+  "reviewQuestion": "Is this threatening a minor?",
+  "initialSuspicion": "Direct intimidation.",
+  "possibleConcepts": [
+    "children_minor",
+    "children_threatening"
+  ],
+  "supportingEvidence": [
+    "إذا تكلمت سأؤذيك"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-2"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "threatening",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_minor",
+    "children_threatening"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "id": "decision_055_elderly_neglect_direct",
+  "version": "1.0.0",
+  "title": "Elderly person neglect (direct)",
+  "summary": "Elderly person neglect in direct framing.",
+  "originalScenario": "ترك المسن بلا دواء",
+  "reviewQuestion": "Is this neglect of an elderly person?",
+  "initialSuspicion": "Dependent adult ignored.",
+  "possibleConcepts": [
+    "children_elderly_person",
+    "children_neglect"
+  ],
+  "supportingEvidence": [
+    "ترك المسن بلا دواء"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-3"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "elderly_neglect",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_elderly_person",
+    "children_neglect"
+  ]
+}

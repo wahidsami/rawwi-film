@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "id": "security_targets",
+  "title": "Security Targets",
+  "description": "Protected targets that security reasoning may involve.",
+  "entries": [
+    { "id": "security_target_government", "title": "Government", "description": "Government authority, ministries, or the governing order." },
+    { "id": "security_target_police", "title": "Police", "description": "Police officers, police force, or police institutions." },
+    { "id": "security_target_military", "title": "Military", "description": "Army, armed forces, or military institutions." },
+    { "id": "security_target_state_institutions", "title": "State Institutions", "description": "Public institutions that represent state authority." },
+    { "id": "security_target_civilians", "title": "Civilians", "description": "The public or civilian population." },
+    { "id": "security_target_community", "title": "Community", "description": "Local or national communities and social groups." }
+  ]
+}

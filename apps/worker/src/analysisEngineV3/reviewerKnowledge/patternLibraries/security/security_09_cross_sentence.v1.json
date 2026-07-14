@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "security_cross_sentence_patterns",
+    "title": "Security Cross Sentence Patterns",
+    "description": "Patterns that require reading multiple sentences or the wider scene.",
+    "concepts": [
+      {
+        "id": "government",
+        "title": "Government",
+        "description": "Government authority, ministries, or the governing order."
+      },
+      {
+        "id": "weapons",
+        "title": "Weapons",
+        "description": "Weapons, explosives, or operational weapon use."
+      },
+      {
+        "id": "terrorism",
+        "title": "Terrorism",
+        "description": "Promotion, support, glorification, or operational discussion of terrorism."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "security_pattern_cross_sentence_escalation",
+      "title": "Cross Sentence Escalation",
+      "description": "A benign sentence becomes harmful only after later dialogue or scene context.",
+      "primary_concept_id": "government",
+      "related_concept_ids": [
+        "weapons",
+        "terrorism"
+      ],
+      "direct_expressions": [
+        "هذا ظرف بسيط",
+        "الحديد وصل",
+        "العقد جاهز"
+      ],
+      "indirect_expressions": [
+        "الليلة الهجوم",
+        "افتح الباب",
+        "خلها تمشي"
+      ],
+      "semantic_intent": [
+        "cross-sentence escalation",
+        "implied security harm"
+      ],
+      "supporting_evidence": [
+        "Later dialogue provides the harmful meaning.",
+        "Objects or actions in a later sentence transform the earlier sentence."
+      ],
+      "contradictory_evidence": [
+        "No later sentence adds the harmful meaning.",
+        "The later line clearly redirects the scene to a benign meaning."
+      ],
+      "false_positives": [
+        "Isolated harmless sentence with no later escalation.",
+        "A classroom example used only to explain context."
+      ],
+      "counter_examples": [
+        "A benign remark about an envelope.",
+        "A scene where the later line is unrelated."
+      ],
+      "cross_sentence_indicators": [
+        "Sentence one is neutral; sentence two reveals the security concept.",
+        "Objects, actions, or locations are clarified later."
+      ],
+      "scene_indicators": [
+        "two-person exchange",
+        "scene cut",
+        "follow-up dialogue"
+      ],
+      "reviewer_guidance": [
+        "Do not judge the first sentence in isolation.",
+        "Track objects and actions across sentences."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "modifier_later_reveal",
+          "title": "Later Reveal",
+          "description": "Later line resolves the earlier ambiguity.",
+          "confidence": 87
+        },
+        {
+          "id": "modifier_isolated_line",
+          "title": "Isolated Line",
+          "description": "No later sentence is available.",
+          "confidence": 35
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rel_cross_sentence_weapons",
+          "from_concept_id": "weapons",
+          "to_concept_id": "terrorism",
+          "relation": "supports",
+          "note": "Weapons references can become harmful across sentences."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "gcam_security_14_5",
+          "article_id": 14,
+          "atom_ids": [
+            "14-5"
+          ],
+          "role": "Cross-sentence incitement",
+          "note": "Use when later text turns an earlier neutral line into incitement."
+        }
+      ],
+      "examples": [
+        {
+          "id": "example_cross_001",
+          "title": "Envelope then approval",
+          "text": "هذا ظرف بسيط. وافق على الترخيص.",
+          "expected_outcome": "Possible bribery-like escalation.",
+          "note": null
+        },
+        {
+          "id": "example_cross_002",
+          "title": "Iron then attack",
+          "text": "الحديد وصل. الليلة الهجوم.",
+          "expected_outcome": "Weapon concept strengthened.",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "id": "narrative_evidence",
+  "title": "Narrative Evidence",
+  "description": "Evidence categories for story-level interpretation.",
+  "entries": [
+    {
+      "id": "narrative_evidence_dialogue",
+      "title": "Dialogue",
+      "description": "Spoken lines that reveal meaning."
+    },
+    {
+      "id": "narrative_evidence_narration",
+      "title": "Narration",
+      "description": "Narrated text that frames events."
+    },
+    {
+      "id": "narrative_evidence_scene_action",
+      "title": "Scene Action",
+      "description": "What the scene visibly shows characters doing."
+    },
+    {
+      "id": "narrative_evidence_scene_description",
+      "title": "Scene Description",
+      "description": "The descriptive details of the scene."
+    },
+    {
+      "id": "narrative_evidence_cross_sentence",
+      "title": "Cross Sentence",
+      "description": "Meaning that only becomes clear across multiple sentences."
+    },
+    {
+      "id": "narrative_evidence_cross_scene",
+      "title": "Cross Scene",
+      "description": "Meaning that only becomes clear across multiple scenes."
+    },
+    {
+      "id": "narrative_evidence_off_screen_event",
+      "title": "Off Screen Event",
+      "description": "A meaningful event that happens outside the frame."
+    },
+    {
+      "id": "narrative_evidence_implicit_event",
+      "title": "Implicit Event",
+      "description": "An event implied by context."
+    },
+    {
+      "id": "narrative_evidence_symbolic_detail",
+      "title": "Symbolic Detail",
+      "description": "A detail that carries symbolic meaning."
+    },
+    {
+      "id": "narrative_evidence_relationship_shift",
+      "title": "Relationship Shift",
+      "description": "A change in relationship that changes interpretation."
+    }
+  ]
+}

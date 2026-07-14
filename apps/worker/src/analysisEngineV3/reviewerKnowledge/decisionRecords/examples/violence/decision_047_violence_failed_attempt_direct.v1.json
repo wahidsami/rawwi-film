@@ -1,0 +1,51 @@
+{
+  "id": "violence_047_violence_failed_attempt_direct",
+  "version": "1.0.0",
+  "title": "Violence Failed Attempt (direct)",
+  "summary": "Violence Failed Attempt in direct framing.",
+  "originalScenario": "حاول طعنه لكن السكين سقطت.",
+  "reviewQuestion": "Is this violence failed attempt?",
+  "initialSuspicion": "Possible violence failed attempt.",
+  "possibleConcepts": [
+    "violence_failed_attempt"
+  ],
+  "supportingEvidence": [
+    "حاول طعنه لكن السكين سقطت."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "promotive",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_failed_attempt",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_failed_attempt"
+  ]
+}

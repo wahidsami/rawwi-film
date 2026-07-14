@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "id": "historical_actions",
+  "title": "History Actions",
+  "description": "Canonical history actions for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "historical_action_reference",
+      "title": "Action Reference",
+      "description": "Action Reference as a reviewer-relevant historical action."
+    },
+    {
+      "id": "historical_action_narration",
+      "title": "Action Narration",
+      "description": "Action Narration as a reviewer-relevant historical action."
+    },
+    {
+      "id": "historical_action_quote",
+      "title": "Action Quote",
+      "description": "Action Quote as a reviewer-relevant historical action."
+    },
+    {
+      "id": "historical_action_documentary",
+      "title": "Action Documentary",
+      "description": "Action Documentary as a reviewer-relevant historical action."
+    },
+    {
+      "id": "historical_action_education",
+      "title": "Action Education",
+      "description": "Action Education as a reviewer-relevant historical action."
+    },
+    {
+      "id": "historical_action_news",
+      "title": "Action News",
+      "description": "Action News as a reviewer-relevant historical action."
+    },
+    {
+      "id": "historical_action_reenactment",
+      "title": "Action Reenactment",
+      "description": "Action Reenactment as a reviewer-relevant historical action."
+    },
+    {
+      "id": "historical_action_distortion",
+      "title": "Action Distortion",
+      "description": "Action Distortion as a reviewer-relevant historical action."
+    },
+    {
+      "id": "historical_action_revisionism",
+      "title": "Action Revisionism",
+      "description": "Action Revisionism as a reviewer-relevant historical action."
+    },
+    {
+      "id": "historical_action_symbolism",
+      "title": "Action Symbolism",
+      "description": "Action Symbolism as a reviewer-relevant historical action."
+    },
+    {
+      "id": "historical_action_memory",
+      "title": "Action Memory",
+      "description": "Action Memory as a reviewer-relevant historical action."
+    },
+    {
+      "id": "historical_action_observation",
+      "title": "Action Observation",
+      "description": "Action Observation as a reviewer-relevant historical action."
+    }
+  ]
+}

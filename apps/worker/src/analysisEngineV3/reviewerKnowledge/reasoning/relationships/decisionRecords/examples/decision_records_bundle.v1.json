@@ -1,0 +1,3154 @@
+{
+  "records": [
+    {
+      "id": "relationship_001_kill_direct_police_commander",
+      "version": "1.0.0",
+      "title": "Police Commander - Kill Direct",
+      "summary": "Relationship reasoning record for police commander and the a command can mean murder, discipline, or coercion depending on the relationship.",
+      "originalScenario": "Police Commander hears \"اقتله\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"اقتله\" mean when spoken by a police commander?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_family_parent_child"
+      ],
+      "supportingEvidence": [
+        "اقتله",
+        "Speaker role: Police Commander.",
+        "A command can mean murder, discipline, or coercion depending on the relationship."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a police commander in a relationship-driven exchange.",
+      "speakerAnalysis": "Police Commander is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because the same command changes with authority and family roles.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because the same command changes with authority and family roles.",
+      "confidence": "very_high",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_DIRECT"
+          ],
+          "note": "Relationship reasoning around police commander."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for police commander.",
+      "benchmarkTags": [
+        "kill_direct",
+        "police_commander",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_family_parent_child"
+      ]
+    },
+    {
+      "id": "relationship_002_kill_quoted_police_commander",
+      "version": "1.0.0",
+      "title": "Police Commander - Kill Quoted",
+      "summary": "Relationship reasoning record for police commander and the quotation can remove direct endorsement and lower certainty.",
+      "originalScenario": "Police Commander hears \"قال: \"اقتله\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"اقتله\"\" mean when spoken by a police commander?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_family_siblings"
+      ],
+      "supportingEvidence": [
+        "قال: \"اقتله\"",
+        "Speaker role: Police Commander.",
+        "Quotation can remove direct endorsement and lower certainty."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a police commander in a relationship-driven exchange.",
+      "speakerAnalysis": "Police Commander is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until the quoted frame is resolved.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until the quoted frame is resolved.",
+      "confidence": "high",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_QUOTED"
+          ],
+          "note": "Relationship reasoning around police commander."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for police commander.",
+      "benchmarkTags": [
+        "kill_quoted",
+        "police_commander",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_family_siblings"
+      ]
+    },
+    {
+      "id": "relationship_003_release_direct_police_commander",
+      "version": "1.0.0",
+      "title": "Police Commander - Release Direct",
+      "summary": "Relationship reasoning record for police commander and the the phrase may mean procedural release, bribery, or discretion.",
+      "originalScenario": "Police Commander hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a police commander?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_family_spouses"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Police Commander.",
+        "The phrase may mean procedural release, bribery, or discretion."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a police commander in a relationship-driven exchange.",
+      "speakerAnalysis": "Police Commander is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "confidence": "medium",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_DIRECT"
+          ],
+          "note": "Relationship reasoning around police commander."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for police commander.",
+      "benchmarkTags": [
+        "release_direct",
+        "police_commander",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_family_spouses"
+      ]
+    },
+    {
+      "id": "relationship_004_release_quoted_police_commander",
+      "version": "1.0.0",
+      "title": "Police Commander - Release Quoted",
+      "summary": "Relationship reasoning record for police commander and the quoted release language may be reported speech rather than intent.",
+      "originalScenario": "Police Commander hears \"قال: \"خلها تمشي\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"خلها تمشي\"\" mean when spoken by a police commander?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_family_extended"
+      ],
+      "supportingEvidence": [
+        "قال: \"خلها تمشي\"",
+        "Speaker role: Police Commander.",
+        "Quoted release language may be reported speech rather than intent."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a police commander in a relationship-driven exchange.",
+      "speakerAnalysis": "Police Commander is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until surrounding dialogue clarifies the meaning.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until surrounding dialogue clarifies the meaning.",
+      "confidence": "low",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_QUOTED"
+          ],
+          "note": "Relationship reasoning around police commander."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for police commander.",
+      "benchmarkTags": [
+        "release_quoted",
+        "police_commander",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_family_extended"
+      ]
+    },
+    {
+      "id": "relationship_005_reversal_context_police_commander",
+      "version": "1.0.0",
+      "title": "Police Commander - Reversal Context",
+      "summary": "Relationship reasoning record for police commander and the later context may reverse the first impression and remove wrongdoing.",
+      "originalScenario": "Police Commander hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a police commander?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_father_child"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Police Commander.",
+        "Later context may reverse the first impression and remove wrongdoing."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a police commander in a relationship-driven exchange.",
+      "speakerAnalysis": "Police Commander is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Review because later context may convert suspicion into lawful discretion.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Review because later context may convert suspicion into lawful discretion.",
+      "confidence": "needs_review",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "REL_REVERSAL_CONTEXT"
+          ],
+          "note": "Relationship reasoning around police commander."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for police commander.",
+      "benchmarkTags": [
+        "reversal_context",
+        "police_commander",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_reversal_correction"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_father_child"
+      ]
+    },
+    {
+      "id": "relationship_006_kill_direct_gang_leader",
+      "version": "1.0.0",
+      "title": "Gang Leader - Kill Direct",
+      "summary": "Relationship reasoning record for gang leader and the a command can mean murder, discipline, or coercion depending on the relationship.",
+      "originalScenario": "Gang Leader hears \"اقتله\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"اقتله\" mean when spoken by a gang leader?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_mother_child"
+      ],
+      "supportingEvidence": [
+        "اقتله",
+        "Speaker role: Gang Leader.",
+        "A command can mean murder, discipline, or coercion depending on the relationship."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a gang leader in a relationship-driven exchange.",
+      "speakerAnalysis": "Gang Leader is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because the same command changes with authority and family roles.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because the same command changes with authority and family roles.",
+      "confidence": "very_high",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_DIRECT"
+          ],
+          "note": "Relationship reasoning around gang leader."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for gang leader.",
+      "benchmarkTags": [
+        "kill_direct",
+        "gang_leader",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_mother_child"
+      ]
+    },
+    {
+      "id": "relationship_007_kill_quoted_gang_leader",
+      "version": "1.0.0",
+      "title": "Gang Leader - Kill Quoted",
+      "summary": "Relationship reasoning record for gang leader and the quotation can remove direct endorsement and lower certainty.",
+      "originalScenario": "Gang Leader hears \"قال: \"اقتله\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"اقتله\"\" mean when spoken by a gang leader?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_guardian_child"
+      ],
+      "supportingEvidence": [
+        "قال: \"اقتله\"",
+        "Speaker role: Gang Leader.",
+        "Quotation can remove direct endorsement and lower certainty."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a gang leader in a relationship-driven exchange.",
+      "speakerAnalysis": "Gang Leader is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until the quoted frame is resolved.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until the quoted frame is resolved.",
+      "confidence": "high",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_QUOTED"
+          ],
+          "note": "Relationship reasoning around gang leader."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for gang leader.",
+      "benchmarkTags": [
+        "kill_quoted",
+        "gang_leader",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_guardian_child"
+      ]
+    },
+    {
+      "id": "relationship_008_release_direct_gang_leader",
+      "version": "1.0.0",
+      "title": "Gang Leader - Release Direct",
+      "summary": "Relationship reasoning record for gang leader and the the phrase may mean procedural release, bribery, or discretion.",
+      "originalScenario": "Gang Leader hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a gang leader?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_child_child"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Gang Leader.",
+        "The phrase may mean procedural release, bribery, or discretion."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a gang leader in a relationship-driven exchange.",
+      "speakerAnalysis": "Gang Leader is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "confidence": "medium",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_DIRECT"
+          ],
+          "note": "Relationship reasoning around gang leader."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for gang leader.",
+      "benchmarkTags": [
+        "release_direct",
+        "gang_leader",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_child_child"
+      ]
+    },
+    {
+      "id": "relationship_009_release_quoted_gang_leader",
+      "version": "1.0.0",
+      "title": "Gang Leader - Release Quoted",
+      "summary": "Relationship reasoning record for gang leader and the quoted release language may be reported speech rather than intent.",
+      "originalScenario": "Gang Leader hears \"قال: \"خلها تمشي\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"خلها تمشي\"\" mean when spoken by a gang leader?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_adult_child"
+      ],
+      "supportingEvidence": [
+        "قال: \"خلها تمشي\"",
+        "Speaker role: Gang Leader.",
+        "Quoted release language may be reported speech rather than intent."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a gang leader in a relationship-driven exchange.",
+      "speakerAnalysis": "Gang Leader is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until surrounding dialogue clarifies the meaning.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until surrounding dialogue clarifies the meaning.",
+      "confidence": "low",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_QUOTED"
+          ],
+          "note": "Relationship reasoning around gang leader."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for gang leader.",
+      "benchmarkTags": [
+        "release_quoted",
+        "gang_leader",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_adult_child"
+      ]
+    },
+    {
+      "id": "relationship_010_reversal_context_gang_leader",
+      "version": "1.0.0",
+      "title": "Gang Leader - Reversal Context",
+      "summary": "Relationship reasoning record for gang leader and the later context may reverse the first impression and remove wrongdoing.",
+      "originalScenario": "Gang Leader hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a gang leader?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_adult_adult"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Gang Leader.",
+        "Later context may reverse the first impression and remove wrongdoing."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a gang leader in a relationship-driven exchange.",
+      "speakerAnalysis": "Gang Leader is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Review because later context may convert suspicion into lawful discretion.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Review because later context may convert suspicion into lawful discretion.",
+      "confidence": "needs_review",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "REL_REVERSAL_CONTEXT"
+          ],
+          "note": "Relationship reasoning around gang leader."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for gang leader.",
+      "benchmarkTags": [
+        "reversal_context",
+        "gang_leader",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_reversal_correction"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_adult_adult"
+      ]
+    },
+    {
+      "id": "relationship_011_kill_direct_father",
+      "version": "1.0.0",
+      "title": "Father - Kill Direct",
+      "summary": "Relationship reasoning record for father and the a command can mean murder, discipline, or coercion depending on the relationship.",
+      "originalScenario": "Father hears \"اقتله\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"اقتله\" mean when spoken by a father?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_teacher_student"
+      ],
+      "supportingEvidence": [
+        "اقتله",
+        "Speaker role: Father.",
+        "A command can mean murder, discipline, or coercion depending on the relationship."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a father in a relationship-driven exchange.",
+      "speakerAnalysis": "Father is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because the same command changes with authority and family roles.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because the same command changes with authority and family roles.",
+      "confidence": "very_high",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_DIRECT"
+          ],
+          "note": "Relationship reasoning around father."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for father.",
+      "benchmarkTags": [
+        "kill_direct",
+        "father",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_teacher_student"
+      ]
+    },
+    {
+      "id": "relationship_012_kill_quoted_father",
+      "version": "1.0.0",
+      "title": "Father - Kill Quoted",
+      "summary": "Relationship reasoning record for father and the quotation can remove direct endorsement and lower certainty.",
+      "originalScenario": "Father hears \"قال: \"اقتله\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"اقتله\"\" mean when spoken by a father?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_doctor_patient"
+      ],
+      "supportingEvidence": [
+        "قال: \"اقتله\"",
+        "Speaker role: Father.",
+        "Quotation can remove direct endorsement and lower certainty."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a father in a relationship-driven exchange.",
+      "speakerAnalysis": "Father is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until the quoted frame is resolved.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until the quoted frame is resolved.",
+      "confidence": "high",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_QUOTED"
+          ],
+          "note": "Relationship reasoning around father."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for father.",
+      "benchmarkTags": [
+        "kill_quoted",
+        "father",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_doctor_patient"
+      ]
+    },
+    {
+      "id": "relationship_013_release_direct_father",
+      "version": "1.0.0",
+      "title": "Father - Release Direct",
+      "summary": "Relationship reasoning record for father and the the phrase may mean procedural release, bribery, or discretion.",
+      "originalScenario": "Father hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a father?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_therapist_patient"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Father.",
+        "The phrase may mean procedural release, bribery, or discretion."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a father in a relationship-driven exchange.",
+      "speakerAnalysis": "Father is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "confidence": "medium",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_DIRECT"
+          ],
+          "note": "Relationship reasoning around father."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for father.",
+      "benchmarkTags": [
+        "release_direct",
+        "father",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_therapist_patient"
+      ]
+    },
+    {
+      "id": "relationship_014_release_quoted_father",
+      "version": "1.0.0",
+      "title": "Father - Release Quoted",
+      "summary": "Relationship reasoning record for father and the quoted release language may be reported speech rather than intent.",
+      "originalScenario": "Father hears \"قال: \"خلها تمشي\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"خلها تمشي\"\" mean when spoken by a father?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_imam_follower"
+      ],
+      "supportingEvidence": [
+        "قال: \"خلها تمشي\"",
+        "Speaker role: Father.",
+        "Quoted release language may be reported speech rather than intent."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a father in a relationship-driven exchange.",
+      "speakerAnalysis": "Father is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until surrounding dialogue clarifies the meaning.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until surrounding dialogue clarifies the meaning.",
+      "confidence": "low",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_QUOTED"
+          ],
+          "note": "Relationship reasoning around father."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for father.",
+      "benchmarkTags": [
+        "release_quoted",
+        "father",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_imam_follower"
+      ]
+    },
+    {
+      "id": "relationship_015_reversal_context_father",
+      "version": "1.0.0",
+      "title": "Father - Reversal Context",
+      "summary": "Relationship reasoning record for father and the later context may reverse the first impression and remove wrongdoing.",
+      "originalScenario": "Father hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a father?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_leader_follower"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Father.",
+        "Later context may reverse the first impression and remove wrongdoing."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a father in a relationship-driven exchange.",
+      "speakerAnalysis": "Father is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Review because later context may convert suspicion into lawful discretion.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Review because later context may convert suspicion into lawful discretion.",
+      "confidence": "needs_review",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "REL_REVERSAL_CONTEXT"
+          ],
+          "note": "Relationship reasoning around father."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for father.",
+      "benchmarkTags": [
+        "reversal_context",
+        "father",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_reversal_correction"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_leader_follower"
+      ]
+    },
+    {
+      "id": "relationship_016_kill_direct_teacher",
+      "version": "1.0.0",
+      "title": "Teacher - Kill Direct",
+      "summary": "Relationship reasoning record for teacher and the a command can mean murder, discipline, or coercion depending on the relationship.",
+      "originalScenario": "Teacher hears \"اقتله\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"اقتله\" mean when spoken by a teacher?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_commander_soldier"
+      ],
+      "supportingEvidence": [
+        "اقتله",
+        "Speaker role: Teacher.",
+        "A command can mean murder, discipline, or coercion depending on the relationship."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a teacher in a relationship-driven exchange.",
+      "speakerAnalysis": "Teacher is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because the same command changes with authority and family roles.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because the same command changes with authority and family roles.",
+      "confidence": "very_high",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_DIRECT"
+          ],
+          "note": "Relationship reasoning around teacher."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for teacher.",
+      "benchmarkTags": [
+        "kill_direct",
+        "teacher",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_commander_soldier"
+      ]
+    },
+    {
+      "id": "relationship_017_kill_quoted_teacher",
+      "version": "1.0.0",
+      "title": "Teacher - Kill Quoted",
+      "summary": "Relationship reasoning record for teacher and the quotation can remove direct endorsement and lower certainty.",
+      "originalScenario": "Teacher hears \"قال: \"اقتله\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"اقتله\"\" mean when spoken by a teacher?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_police_suspect"
+      ],
+      "supportingEvidence": [
+        "قال: \"اقتله\"",
+        "Speaker role: Teacher.",
+        "Quotation can remove direct endorsement and lower certainty."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a teacher in a relationship-driven exchange.",
+      "speakerAnalysis": "Teacher is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until the quoted frame is resolved.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until the quoted frame is resolved.",
+      "confidence": "high",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_QUOTED"
+          ],
+          "note": "Relationship reasoning around teacher."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for teacher.",
+      "benchmarkTags": [
+        "kill_quoted",
+        "teacher",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_police_suspect"
+      ]
+    },
+    {
+      "id": "relationship_018_release_direct_teacher",
+      "version": "1.0.0",
+      "title": "Teacher - Release Direct",
+      "summary": "Relationship reasoning record for teacher and the the phrase may mean procedural release, bribery, or discretion.",
+      "originalScenario": "Teacher hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a teacher?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_police_commander"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Teacher.",
+        "The phrase may mean procedural release, bribery, or discretion."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a teacher in a relationship-driven exchange.",
+      "speakerAnalysis": "Teacher is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "confidence": "medium",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_DIRECT"
+          ],
+          "note": "Relationship reasoning around teacher."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for teacher.",
+      "benchmarkTags": [
+        "release_direct",
+        "teacher",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_police_commander"
+      ]
+    },
+    {
+      "id": "relationship_019_release_quoted_teacher",
+      "version": "1.0.0",
+      "title": "Teacher - Release Quoted",
+      "summary": "Relationship reasoning record for teacher and the quoted release language may be reported speech rather than intent.",
+      "originalScenario": "Teacher hears \"قال: \"خلها تمشي\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"خلها تمشي\"\" mean when spoken by a teacher?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_police_officer_public"
+      ],
+      "supportingEvidence": [
+        "قال: \"خلها تمشي\"",
+        "Speaker role: Teacher.",
+        "Quoted release language may be reported speech rather than intent."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a teacher in a relationship-driven exchange.",
+      "speakerAnalysis": "Teacher is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until surrounding dialogue clarifies the meaning.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until surrounding dialogue clarifies the meaning.",
+      "confidence": "low",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_QUOTED"
+          ],
+          "note": "Relationship reasoning around teacher."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for teacher.",
+      "benchmarkTags": [
+        "release_quoted",
+        "teacher",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_police_officer_public"
+      ]
+    },
+    {
+      "id": "relationship_020_reversal_context_teacher",
+      "version": "1.0.0",
+      "title": "Teacher - Reversal Context",
+      "summary": "Relationship reasoning record for teacher and the later context may reverse the first impression and remove wrongdoing.",
+      "originalScenario": "Teacher hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a teacher?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_judge_accused"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Teacher.",
+        "Later context may reverse the first impression and remove wrongdoing."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a teacher in a relationship-driven exchange.",
+      "speakerAnalysis": "Teacher is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Review because later context may convert suspicion into lawful discretion.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Review because later context may convert suspicion into lawful discretion.",
+      "confidence": "needs_review",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "REL_REVERSAL_CONTEXT"
+          ],
+          "note": "Relationship reasoning around teacher."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for teacher.",
+      "benchmarkTags": [
+        "reversal_context",
+        "teacher",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_reversal_correction"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_judge_accused"
+      ]
+    },
+    {
+      "id": "relationship_021_kill_direct_child",
+      "version": "1.0.0",
+      "title": "Child - Kill Direct",
+      "summary": "Relationship reasoning record for child and the a command can mean murder, discipline, or coercion depending on the relationship.",
+      "originalScenario": "Child hears \"اقتله\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"اقتله\" mean when spoken by a child?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_judge_public"
+      ],
+      "supportingEvidence": [
+        "اقتله",
+        "Speaker role: Child.",
+        "A command can mean murder, discipline, or coercion depending on the relationship."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a child in a relationship-driven exchange.",
+      "speakerAnalysis": "Child is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because the same command changes with authority and family roles.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because the same command changes with authority and family roles.",
+      "confidence": "very_high",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_DIRECT"
+          ],
+          "note": "Relationship reasoning around child."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for child.",
+      "benchmarkTags": [
+        "kill_direct",
+        "child",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_judge_public"
+      ]
+    },
+    {
+      "id": "relationship_022_kill_quoted_child",
+      "version": "1.0.0",
+      "title": "Child - Kill Quoted",
+      "summary": "Relationship reasoning record for child and the quotation can remove direct endorsement and lower certainty.",
+      "originalScenario": "Child hears \"قال: \"اقتله\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"اقتله\"\" mean when spoken by a child?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_lawyer_client"
+      ],
+      "supportingEvidence": [
+        "قال: \"اقتله\"",
+        "Speaker role: Child.",
+        "Quotation can remove direct endorsement and lower certainty."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a child in a relationship-driven exchange.",
+      "speakerAnalysis": "Child is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until the quoted frame is resolved.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until the quoted frame is resolved.",
+      "confidence": "high",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_QUOTED"
+          ],
+          "note": "Relationship reasoning around child."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for child.",
+      "benchmarkTags": [
+        "kill_quoted",
+        "child",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_lawyer_client"
+      ]
+    },
+    {
+      "id": "relationship_023_release_direct_child",
+      "version": "1.0.0",
+      "title": "Child - Release Direct",
+      "summary": "Relationship reasoning record for child and the the phrase may mean procedural release, bribery, or discretion.",
+      "originalScenario": "Child hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a child?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_employer_employee"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Child.",
+        "The phrase may mean procedural release, bribery, or discretion."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a child in a relationship-driven exchange.",
+      "speakerAnalysis": "Child is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "confidence": "medium",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_DIRECT"
+          ],
+          "note": "Relationship reasoning around child."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for child.",
+      "benchmarkTags": [
+        "release_direct",
+        "child",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_employer_employee"
+      ]
+    },
+    {
+      "id": "relationship_024_release_quoted_child",
+      "version": "1.0.0",
+      "title": "Child - Release Quoted",
+      "summary": "Relationship reasoning record for child and the quoted release language may be reported speech rather than intent.",
+      "originalScenario": "Child hears \"قال: \"خلها تمشي\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"خلها تمشي\"\" mean when spoken by a child?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_coworkers"
+      ],
+      "supportingEvidence": [
+        "قال: \"خلها تمشي\"",
+        "Speaker role: Child.",
+        "Quoted release language may be reported speech rather than intent."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a child in a relationship-driven exchange.",
+      "speakerAnalysis": "Child is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until surrounding dialogue clarifies the meaning.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until surrounding dialogue clarifies the meaning.",
+      "confidence": "low",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_QUOTED"
+          ],
+          "note": "Relationship reasoning around child."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for child.",
+      "benchmarkTags": [
+        "release_quoted",
+        "child",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_coworkers"
+      ]
+    },
+    {
+      "id": "relationship_025_reversal_context_child",
+      "version": "1.0.0",
+      "title": "Child - Reversal Context",
+      "summary": "Relationship reasoning record for child and the later context may reverse the first impression and remove wrongdoing.",
+      "originalScenario": "Child hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a child?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_friend_friend"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Child.",
+        "Later context may reverse the first impression and remove wrongdoing."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a child in a relationship-driven exchange.",
+      "speakerAnalysis": "Child is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Review because later context may convert suspicion into lawful discretion.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Review because later context may convert suspicion into lawful discretion.",
+      "confidence": "needs_review",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "REL_REVERSAL_CONTEXT"
+          ],
+          "note": "Relationship reasoning around child."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for child.",
+      "benchmarkTags": [
+        "reversal_context",
+        "child",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_reversal_correction"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_friend_friend"
+      ]
+    },
+    {
+      "id": "relationship_026_kill_direct_police_officer",
+      "version": "1.0.0",
+      "title": "Police Officer - Kill Direct",
+      "summary": "Relationship reasoning record for police officer and the a command can mean murder, discipline, or coercion depending on the relationship.",
+      "originalScenario": "Police Officer hears \"اقتله\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"اقتله\" mean when spoken by a police officer?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_neighbor_neighbor"
+      ],
+      "supportingEvidence": [
+        "اقتله",
+        "Speaker role: Police Officer.",
+        "A command can mean murder, discipline, or coercion depending on the relationship."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a police officer in a relationship-driven exchange.",
+      "speakerAnalysis": "Police Officer is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because the same command changes with authority and family roles.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because the same command changes with authority and family roles.",
+      "confidence": "very_high",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_DIRECT"
+          ],
+          "note": "Relationship reasoning around police officer."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for police officer.",
+      "benchmarkTags": [
+        "kill_direct",
+        "police_officer",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_neighbor_neighbor"
+      ]
+    },
+    {
+      "id": "relationship_027_kill_quoted_police_officer",
+      "version": "1.0.0",
+      "title": "Police Officer - Kill Quoted",
+      "summary": "Relationship reasoning record for police officer and the quotation can remove direct endorsement and lower certainty.",
+      "originalScenario": "Police Officer hears \"قال: \"اقتله\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"اقتله\"\" mean when spoken by a police officer?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_stranger_stranger"
+      ],
+      "supportingEvidence": [
+        "قال: \"اقتله\"",
+        "Speaker role: Police Officer.",
+        "Quotation can remove direct endorsement and lower certainty."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a police officer in a relationship-driven exchange.",
+      "speakerAnalysis": "Police Officer is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until the quoted frame is resolved.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until the quoted frame is resolved.",
+      "confidence": "high",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_QUOTED"
+          ],
+          "note": "Relationship reasoning around police officer."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for police officer.",
+      "benchmarkTags": [
+        "kill_quoted",
+        "police_officer",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_stranger_stranger"
+      ]
+    },
+    {
+      "id": "relationship_028_release_direct_police_officer",
+      "version": "1.0.0",
+      "title": "Police Officer - Release Direct",
+      "summary": "Relationship reasoning record for police officer and the the phrase may mean procedural release, bribery, or discretion.",
+      "originalScenario": "Police Officer hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a police officer?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_government_citizen"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Police Officer.",
+        "The phrase may mean procedural release, bribery, or discretion."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a police officer in a relationship-driven exchange.",
+      "speakerAnalysis": "Police Officer is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "confidence": "medium",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_DIRECT"
+          ],
+          "note": "Relationship reasoning around police officer."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for police officer.",
+      "benchmarkTags": [
+        "release_direct",
+        "police_officer",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_government_citizen"
+      ]
+    },
+    {
+      "id": "relationship_029_release_quoted_police_officer",
+      "version": "1.0.0",
+      "title": "Police Officer - Release Quoted",
+      "summary": "Relationship reasoning record for police officer and the quoted release language may be reported speech rather than intent.",
+      "originalScenario": "Police Officer hears \"قال: \"خلها تمشي\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"خلها تمشي\"\" mean when spoken by a police officer?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_government_employee_public"
+      ],
+      "supportingEvidence": [
+        "قال: \"خلها تمشي\"",
+        "Speaker role: Police Officer.",
+        "Quoted release language may be reported speech rather than intent."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a police officer in a relationship-driven exchange.",
+      "speakerAnalysis": "Police Officer is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until surrounding dialogue clarifies the meaning.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until surrounding dialogue clarifies the meaning.",
+      "confidence": "low",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_QUOTED"
+          ],
+          "note": "Relationship reasoning around police officer."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for police officer.",
+      "benchmarkTags": [
+        "release_quoted",
+        "police_officer",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_government_employee_public"
+      ]
+    },
+    {
+      "id": "relationship_030_reversal_context_police_officer",
+      "version": "1.0.0",
+      "title": "Police Officer - Reversal Context",
+      "summary": "Relationship reasoning record for police officer and the later context may reverse the first impression and remove wrongdoing.",
+      "originalScenario": "Police Officer hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a police officer?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_journalist_source"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Police Officer.",
+        "Later context may reverse the first impression and remove wrongdoing."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a police officer in a relationship-driven exchange.",
+      "speakerAnalysis": "Police Officer is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Review because later context may convert suspicion into lawful discretion.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Review because later context may convert suspicion into lawful discretion.",
+      "confidence": "needs_review",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "REL_REVERSAL_CONTEXT"
+          ],
+          "note": "Relationship reasoning around police officer."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for police officer.",
+      "benchmarkTags": [
+        "reversal_context",
+        "police_officer",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_reversal_correction"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_journalist_source"
+      ]
+    },
+    {
+      "id": "relationship_031_kill_direct_friend",
+      "version": "1.0.0",
+      "title": "Friend - Kill Direct",
+      "summary": "Relationship reasoning record for friend and the a command can mean murder, discipline, or coercion depending on the relationship.",
+      "originalScenario": "Friend hears \"اقتله\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"اقتله\" mean when spoken by a friend?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_actor_audience"
+      ],
+      "supportingEvidence": [
+        "اقتله",
+        "Speaker role: Friend.",
+        "A command can mean murder, discipline, or coercion depending on the relationship."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a friend in a relationship-driven exchange.",
+      "speakerAnalysis": "Friend is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because the same command changes with authority and family roles.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because the same command changes with authority and family roles.",
+      "confidence": "very_high",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_DIRECT"
+          ],
+          "note": "Relationship reasoning around friend."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for friend.",
+      "benchmarkTags": [
+        "kill_direct",
+        "friend",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_actor_audience"
+      ]
+    },
+    {
+      "id": "relationship_032_kill_quoted_friend",
+      "version": "1.0.0",
+      "title": "Friend - Kill Quoted",
+      "summary": "Relationship reasoning record for friend and the quotation can remove direct endorsement and lower certainty.",
+      "originalScenario": "Friend hears \"قال: \"اقتله\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"اقتله\"\" mean when spoken by a friend?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_story_narrator"
+      ],
+      "supportingEvidence": [
+        "قال: \"اقتله\"",
+        "Speaker role: Friend.",
+        "Quotation can remove direct endorsement and lower certainty."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a friend in a relationship-driven exchange.",
+      "speakerAnalysis": "Friend is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until the quoted frame is resolved.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until the quoted frame is resolved.",
+      "confidence": "high",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_QUOTED"
+          ],
+          "note": "Relationship reasoning around friend."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for friend.",
+      "benchmarkTags": [
+        "kill_quoted",
+        "friend",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_story_narrator"
+      ]
+    },
+    {
+      "id": "relationship_033_release_direct_friend",
+      "version": "1.0.0",
+      "title": "Friend - Release Direct",
+      "summary": "Relationship reasoning record for friend and the the phrase may mean procedural release, bribery, or discretion.",
+      "originalScenario": "Friend hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a friend?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_narrator_character"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Friend.",
+        "The phrase may mean procedural release, bribery, or discretion."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a friend in a relationship-driven exchange.",
+      "speakerAnalysis": "Friend is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "confidence": "medium",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_DIRECT"
+          ],
+          "note": "Relationship reasoning around friend."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for friend.",
+      "benchmarkTags": [
+        "release_direct",
+        "friend",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_narrator_character"
+      ]
+    },
+    {
+      "id": "relationship_034_release_quoted_friend",
+      "version": "1.0.0",
+      "title": "Friend - Release Quoted",
+      "summary": "Relationship reasoning record for friend and the quoted release language may be reported speech rather than intent.",
+      "originalScenario": "Friend hears \"قال: \"خلها تمشي\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"خلها تمشي\"\" mean when spoken by a friend?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_customer_vendor"
+      ],
+      "supportingEvidence": [
+        "قال: \"خلها تمشي\"",
+        "Speaker role: Friend.",
+        "Quoted release language may be reported speech rather than intent."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a friend in a relationship-driven exchange.",
+      "speakerAnalysis": "Friend is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until surrounding dialogue clarifies the meaning.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until surrounding dialogue clarifies the meaning.",
+      "confidence": "low",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_QUOTED"
+          ],
+          "note": "Relationship reasoning around friend."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for friend.",
+      "benchmarkTags": [
+        "release_quoted",
+        "friend",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_customer_vendor"
+      ]
+    },
+    {
+      "id": "relationship_035_reversal_context_friend",
+      "version": "1.0.0",
+      "title": "Friend - Reversal Context",
+      "summary": "Relationship reasoning record for friend and the later context may reverse the first impression and remove wrongdoing.",
+      "originalScenario": "Friend hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a friend?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_officer_public"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Friend.",
+        "Later context may reverse the first impression and remove wrongdoing."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a friend in a relationship-driven exchange.",
+      "speakerAnalysis": "Friend is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Review because later context may convert suspicion into lawful discretion.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Review because later context may convert suspicion into lawful discretion.",
+      "confidence": "needs_review",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "REL_REVERSAL_CONTEXT"
+          ],
+          "note": "Relationship reasoning around friend."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for friend.",
+      "benchmarkTags": [
+        "reversal_context",
+        "friend",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_reversal_correction"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_officer_public"
+      ]
+    },
+    {
+      "id": "relationship_036_kill_direct_government_employee",
+      "version": "1.0.0",
+      "title": "Government Employee - Kill Direct",
+      "summary": "Relationship reasoning record for government employee and the a command can mean murder, discipline, or coercion depending on the relationship.",
+      "originalScenario": "Government Employee hears \"اقتله\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"اقتله\" mean when spoken by a government employee?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_criminal_victim"
+      ],
+      "supportingEvidence": [
+        "اقتله",
+        "Speaker role: Government Employee.",
+        "A command can mean murder, discipline, or coercion depending on the relationship."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a government employee in a relationship-driven exchange.",
+      "speakerAnalysis": "Government Employee is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because the same command changes with authority and family roles.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because the same command changes with authority and family roles.",
+      "confidence": "very_high",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_DIRECT"
+          ],
+          "note": "Relationship reasoning around government employee."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for government employee.",
+      "benchmarkTags": [
+        "kill_direct",
+        "government_employee",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_criminal_victim"
+      ]
+    },
+    {
+      "id": "relationship_037_kill_quoted_government_employee",
+      "version": "1.0.0",
+      "title": "Government Employee - Kill Quoted",
+      "summary": "Relationship reasoning record for government employee and the quotation can remove direct endorsement and lower certainty.",
+      "originalScenario": "Government Employee hears \"قال: \"اقتله\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"اقتله\"\" mean when spoken by a government employee?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_criminal_accomplice"
+      ],
+      "supportingEvidence": [
+        "قال: \"اقتله\"",
+        "Speaker role: Government Employee.",
+        "Quotation can remove direct endorsement and lower certainty."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a government employee in a relationship-driven exchange.",
+      "speakerAnalysis": "Government Employee is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until the quoted frame is resolved.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until the quoted frame is resolved.",
+      "confidence": "high",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_QUOTED"
+          ],
+          "note": "Relationship reasoning around government employee."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for government employee.",
+      "benchmarkTags": [
+        "kill_quoted",
+        "government_employee",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_criminal_accomplice"
+      ]
+    },
+    {
+      "id": "relationship_038_release_direct_government_employee",
+      "version": "1.0.0",
+      "title": "Government Employee - Release Direct",
+      "summary": "Relationship reasoning record for government employee and the the phrase may mean procedural release, bribery, or discretion.",
+      "originalScenario": "Government Employee hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a government employee?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_gang_member"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Government Employee.",
+        "The phrase may mean procedural release, bribery, or discretion."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a government employee in a relationship-driven exchange.",
+      "speakerAnalysis": "Government Employee is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "confidence": "medium",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_DIRECT"
+          ],
+          "note": "Relationship reasoning around government employee."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for government employee.",
+      "benchmarkTags": [
+        "release_direct",
+        "government_employee",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_gang_member"
+      ]
+    },
+    {
+      "id": "relationship_039_release_quoted_government_employee",
+      "version": "1.0.0",
+      "title": "Government Employee - Release Quoted",
+      "summary": "Relationship reasoning record for government employee and the quoted release language may be reported speech rather than intent.",
+      "originalScenario": "Government Employee hears \"قال: \"خلها تمشي\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"خلها تمشي\"\" mean when spoken by a government employee?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_gang_leader"
+      ],
+      "supportingEvidence": [
+        "قال: \"خلها تمشي\"",
+        "Speaker role: Government Employee.",
+        "Quoted release language may be reported speech rather than intent."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a government employee in a relationship-driven exchange.",
+      "speakerAnalysis": "Government Employee is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until surrounding dialogue clarifies the meaning.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until surrounding dialogue clarifies the meaning.",
+      "confidence": "low",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_QUOTED"
+          ],
+          "note": "Relationship reasoning around government employee."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for government employee.",
+      "benchmarkTags": [
+        "release_quoted",
+        "government_employee",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_gang_leader"
+      ]
+    },
+    {
+      "id": "relationship_040_reversal_context_government_employee",
+      "version": "1.0.0",
+      "title": "Government Employee - Reversal Context",
+      "summary": "Relationship reasoning record for government employee and the later context may reverse the first impression and remove wrongdoing.",
+      "originalScenario": "Government Employee hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a government employee?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_terrorist_recruit"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Government Employee.",
+        "Later context may reverse the first impression and remove wrongdoing."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a government employee in a relationship-driven exchange.",
+      "speakerAnalysis": "Government Employee is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Review because later context may convert suspicion into lawful discretion.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Review because later context may convert suspicion into lawful discretion.",
+      "confidence": "needs_review",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "REL_REVERSAL_CONTEXT"
+          ],
+          "note": "Relationship reasoning around government employee."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for government employee.",
+      "benchmarkTags": [
+        "reversal_context",
+        "government_employee",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_reversal_correction"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_terrorist_recruit"
+      ]
+    },
+    {
+      "id": "relationship_041_kill_direct_judge",
+      "version": "1.0.0",
+      "title": "Judge - Kill Direct",
+      "summary": "Relationship reasoning record for judge and the a command can mean murder, discipline, or coercion depending on the relationship.",
+      "originalScenario": "Judge hears \"اقتله\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"اقتله\" mean when spoken by a judge?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_disabled_caregiver"
+      ],
+      "supportingEvidence": [
+        "اقتله",
+        "Speaker role: Judge.",
+        "A command can mean murder, discipline, or coercion depending on the relationship."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a judge in a relationship-driven exchange.",
+      "speakerAnalysis": "Judge is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because the same command changes with authority and family roles.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because the same command changes with authority and family roles.",
+      "confidence": "very_high",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_DIRECT"
+          ],
+          "note": "Relationship reasoning around judge."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for judge.",
+      "benchmarkTags": [
+        "kill_direct",
+        "judge",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_disabled_caregiver"
+      ]
+    },
+    {
+      "id": "relationship_042_kill_quoted_judge",
+      "version": "1.0.0",
+      "title": "Judge - Kill Quoted",
+      "summary": "Relationship reasoning record for judge and the quotation can remove direct endorsement and lower certainty.",
+      "originalScenario": "Judge hears \"قال: \"اقتله\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"اقتله\"\" mean when spoken by a judge?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_elderly_caregiver"
+      ],
+      "supportingEvidence": [
+        "قال: \"اقتله\"",
+        "Speaker role: Judge.",
+        "Quotation can remove direct endorsement and lower certainty."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a judge in a relationship-driven exchange.",
+      "speakerAnalysis": "Judge is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until the quoted frame is resolved.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until the quoted frame is resolved.",
+      "confidence": "high",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_QUOTED"
+          ],
+          "note": "Relationship reasoning around judge."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for judge.",
+      "benchmarkTags": [
+        "kill_quoted",
+        "judge",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_elderly_caregiver"
+      ]
+    },
+    {
+      "id": "relationship_043_release_direct_judge",
+      "version": "1.0.0",
+      "title": "Judge - Release Direct",
+      "summary": "Relationship reasoning record for judge and the the phrase may mean procedural release, bribery, or discretion.",
+      "originalScenario": "Judge hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a judge?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_family_parent_child"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Judge.",
+        "The phrase may mean procedural release, bribery, or discretion."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a judge in a relationship-driven exchange.",
+      "speakerAnalysis": "Judge is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "confidence": "medium",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_DIRECT"
+          ],
+          "note": "Relationship reasoning around judge."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for judge.",
+      "benchmarkTags": [
+        "release_direct",
+        "judge",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_family_parent_child"
+      ]
+    },
+    {
+      "id": "relationship_044_release_quoted_judge",
+      "version": "1.0.0",
+      "title": "Judge - Release Quoted",
+      "summary": "Relationship reasoning record for judge and the quoted release language may be reported speech rather than intent.",
+      "originalScenario": "Judge hears \"قال: \"خلها تمشي\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"خلها تمشي\"\" mean when spoken by a judge?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_family_siblings"
+      ],
+      "supportingEvidence": [
+        "قال: \"خلها تمشي\"",
+        "Speaker role: Judge.",
+        "Quoted release language may be reported speech rather than intent."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a judge in a relationship-driven exchange.",
+      "speakerAnalysis": "Judge is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until surrounding dialogue clarifies the meaning.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until surrounding dialogue clarifies the meaning.",
+      "confidence": "low",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_QUOTED"
+          ],
+          "note": "Relationship reasoning around judge."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for judge.",
+      "benchmarkTags": [
+        "release_quoted",
+        "judge",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_family_siblings"
+      ]
+    },
+    {
+      "id": "relationship_045_reversal_context_judge",
+      "version": "1.0.0",
+      "title": "Judge - Reversal Context",
+      "summary": "Relationship reasoning record for judge and the later context may reverse the first impression and remove wrongdoing.",
+      "originalScenario": "Judge hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a judge?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_family_spouses"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Judge.",
+        "Later context may reverse the first impression and remove wrongdoing."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a judge in a relationship-driven exchange.",
+      "speakerAnalysis": "Judge is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Review because later context may convert suspicion into lawful discretion.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Review because later context may convert suspicion into lawful discretion.",
+      "confidence": "needs_review",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "REL_REVERSAL_CONTEXT"
+          ],
+          "note": "Relationship reasoning around judge."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for judge.",
+      "benchmarkTags": [
+        "reversal_context",
+        "judge",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_reversal_correction"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_family_spouses"
+      ]
+    },
+    {
+      "id": "relationship_046_kill_direct_criminal",
+      "version": "1.0.0",
+      "title": "Criminal - Kill Direct",
+      "summary": "Relationship reasoning record for criminal and the a command can mean murder, discipline, or coercion depending on the relationship.",
+      "originalScenario": "Criminal hears \"اقتله\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"اقتله\" mean when spoken by a criminal?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_family_extended"
+      ],
+      "supportingEvidence": [
+        "اقتله",
+        "Speaker role: Criminal.",
+        "A command can mean murder, discipline, or coercion depending on the relationship."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a criminal in a relationship-driven exchange.",
+      "speakerAnalysis": "Criminal is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because the same command changes with authority and family roles.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because the same command changes with authority and family roles.",
+      "confidence": "very_high",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_DIRECT"
+          ],
+          "note": "Relationship reasoning around criminal."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for criminal.",
+      "benchmarkTags": [
+        "kill_direct",
+        "criminal",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_family_extended"
+      ]
+    },
+    {
+      "id": "relationship_047_kill_quoted_criminal",
+      "version": "1.0.0",
+      "title": "Criminal - Kill Quoted",
+      "summary": "Relationship reasoning record for criminal and the quotation can remove direct endorsement and lower certainty.",
+      "originalScenario": "Criminal hears \"قال: \"اقتله\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"اقتله\"\" mean when spoken by a criminal?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_father_child"
+      ],
+      "supportingEvidence": [
+        "قال: \"اقتله\"",
+        "Speaker role: Criminal.",
+        "Quotation can remove direct endorsement and lower certainty."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a criminal in a relationship-driven exchange.",
+      "speakerAnalysis": "Criminal is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until the quoted frame is resolved.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until the quoted frame is resolved.",
+      "confidence": "high",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "REL_KILL_QUOTED"
+          ],
+          "note": "Relationship reasoning around criminal."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for criminal.",
+      "benchmarkTags": [
+        "kill_quoted",
+        "criminal",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_authority_command"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_father_child"
+      ]
+    },
+    {
+      "id": "relationship_048_release_direct_criminal",
+      "version": "1.0.0",
+      "title": "Criminal - Release Direct",
+      "summary": "Relationship reasoning record for criminal and the the phrase may mean procedural release, bribery, or discretion.",
+      "originalScenario": "Criminal hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a criminal?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_mother_child"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Criminal.",
+        "The phrase may mean procedural release, bribery, or discretion."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a criminal in a relationship-driven exchange.",
+      "speakerAnalysis": "Criminal is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Needs review because procedural and corrupt meanings diverge by relationship.",
+      "confidence": "medium",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_DIRECT"
+          ],
+          "note": "Relationship reasoning around criminal."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for criminal.",
+      "benchmarkTags": [
+        "release_direct",
+        "criminal",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_mother_child"
+      ]
+    },
+    {
+      "id": "relationship_049_release_quoted_criminal",
+      "version": "1.0.0",
+      "title": "Criminal - Release Quoted",
+      "summary": "Relationship reasoning record for criminal and the quoted release language may be reported speech rather than intent.",
+      "originalScenario": "Criminal hears \"قال: \"خلها تمشي\"\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"قال: \"خلها تمشي\"\" mean when spoken by a criminal?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_guardian_child"
+      ],
+      "supportingEvidence": [
+        "قال: \"خلها تمشي\"",
+        "Speaker role: Criminal.",
+        "Quoted release language may be reported speech rather than intent."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a criminal in a relationship-driven exchange.",
+      "speakerAnalysis": "Criminal is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Reject until surrounding dialogue clarifies the meaning.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Reject until surrounding dialogue clarifies the meaning.",
+      "confidence": "low",
+      "findingType": "quoted_relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "REL_RELEASE_QUOTED"
+          ],
+          "note": "Relationship reasoning around criminal."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for criminal.",
+      "benchmarkTags": [
+        "release_quoted",
+        "criminal",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_procedural_release"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_guardian_child"
+      ]
+    },
+    {
+      "id": "relationship_050_reversal_context_criminal",
+      "version": "1.0.0",
+      "title": "Criminal - Reversal Context",
+      "summary": "Relationship reasoning record for criminal and the later context may reverse the first impression and remove wrongdoing.",
+      "originalScenario": "Criminal hears \"خلها تمشي\" in a scene where relationship context matters.",
+      "reviewQuestion": "What does \"خلها تمشي\" mean when spoken by a criminal?",
+      "initialSuspicion": "The phrase appears risky, but the relationship may change the reading.",
+      "possibleConcepts": [
+        "relationship_child_child"
+      ],
+      "supportingEvidence": [
+        "خلها تمشي",
+        "Speaker role: Criminal.",
+        "Later context may reverse the first impression and remove wrongdoing."
+      ],
+      "contradictingEvidence": [
+        "No separate evidence of coercion beyond the relationship frame."
+      ],
+      "requiredMissingEvidence": [
+        "Clear proof of intent beyond the literal phrase.",
+        "Independent evidence that the relationship supports a violation."
+      ],
+      "sceneContext": "The scene places a criminal in a relationship-driven exchange.",
+      "speakerAnalysis": "Criminal is the speaker and the relationship changes the sentence meaning.",
+      "targetAnalysis": "The target is the listener or affected person, not the phrase alone.",
+      "intentAnalysis": "Review because later context may convert suspicion into lawful discretion.",
+      "reasoningSteps": [
+        "Identify the speaker and relationship.",
+        "Check whether the line is quoted or direct.",
+        "Look for follow-up context.",
+        "Separate lawful discretion from bribery or coercion.",
+        "Render the reviewer decision with confidence."
+      ],
+      "reviewerDecision": "Review because later context may convert suspicion into lawful discretion.",
+      "confidence": "needs_review",
+      "findingType": "relationship_reasoning",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "REL_REVERSAL_CONTEXT"
+          ],
+          "note": "Relationship reasoning around criminal."
+        }
+      ],
+      "falsePositiveRisk": "High when the same sentence is evaluated without the relationship frame.",
+      "reviewerNotes": "The sentence alone is not enough; relationship and context determine meaning for criminal.",
+      "benchmarkTags": [
+        "reversal_context",
+        "criminal",
+        "relationship_reasoning"
+      ],
+      "relatedLessons": [
+        "lesson_001_relationship_framework"
+      ],
+      "relatedPatterns": [
+        "pattern_reversal_correction"
+      ],
+      "relatedBlueprintConcepts": [
+        "relationship_child_child"
+      ]
+    }
+  ]
+}

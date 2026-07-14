@@ -1,0 +1,51 @@
+{
+  "id": "violence_017_violence_self_defense_direct",
+  "version": "1.0.0",
+  "title": "Violence Self Defense (direct)",
+  "summary": "Violence Self Defense in direct framing.",
+  "originalScenario": "دافع عن نفسه بعد الاعتداء.",
+  "reviewQuestion": "Is this violence self defense?",
+  "initialSuspicion": "Possible violence self defense.",
+  "possibleConcepts": [
+    "violence_self_defense"
+  ],
+  "supportingEvidence": [
+    "دافع عن نفسه بعد الاعتداء."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "justified",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_self_defense",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_self_defense"
+  ]
+}

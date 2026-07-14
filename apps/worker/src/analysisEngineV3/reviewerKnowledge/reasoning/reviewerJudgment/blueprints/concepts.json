@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "reviewer_judgment_concepts",
+  "title": "Reviewer Judgment Concepts",
+  "description": "Canonical reviewer judgment concepts.",
+  "entries": [
+    {
+      "id": "competing_interpretations",
+      "title": "Competing Interpretations",
+      "description": "More than one valid reading exists and the reviewer must compare them."
+    },
+    {
+      "id": "evidence_sufficiency",
+      "title": "Evidence Sufficiency",
+      "description": "The reviewer decides whether the evidence is enough for a conclusion."
+    },
+    {
+      "id": "confidence_calibration",
+      "title": "Confidence Calibration",
+      "description": "The reviewer adjusts confidence to match evidence quality and uncertainty."
+    },
+    {
+      "id": "reviewer_disagreement",
+      "title": "Reviewer Disagreement",
+      "description": "Different reviewers may legitimately disagree and the difference must be recorded."
+    },
+    {
+      "id": "narrative_justification",
+      "title": "Narrative Justification",
+      "description": "The story context changes or explains the reviewer outcome."
+    },
+    {
+      "id": "final_reviewer_decision",
+      "title": "Final Reviewer Decision",
+      "description": "The combined judgment that resolves evidence, context, disagreement, and confidence."
+    }
+  ]
+}

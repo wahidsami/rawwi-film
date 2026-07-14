@@ -1,0 +1,69 @@
+{
+  "id": "decision_020_religious_ritual_mockery",
+  "version": "1.0.0",
+  "title": "Mockery of rituals",
+  "summary": "Mockery of worship practices.",
+  "originalScenario": "A joke targets a religious ritual in a way that sounds hostile.",
+  "reviewQuestion": "Is this mockery or a harmless mention?",
+  "initialSuspicion": "Ritual mockery.",
+  "possibleConcepts": [
+    "religious_rituals",
+    "religious_hate_speech"
+  ],
+  "supportingEvidence": [
+    "joke targets a ritual"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Humorous scene.",
+  "speakerAnalysis": "Comic voice may still be hostile.",
+  "targetAnalysis": "Religious ritual.",
+  "intentAnalysis": "Mock.",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check context",
+    "Apply religion pack heuristics",
+    "Map to GCAM article"
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 3,
+      "atom_ids": [],
+      "note": "Ritual mockery."
+    }
+  ],
+  "falsePositiveRisk": "High",
+  "reviewerNotes": "Humor can hide hostility.",
+  "benchmarkTags": [
+    "religion",
+    "ritual",
+    "mockery"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "religion_pattern_indirect_mockery"
+  ],
+  "relatedBlueprintConcepts": [
+    "religion_religious_rituals",
+    "religion_religious_hate_speech"
+  ]
+}

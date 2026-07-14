@@ -1,0 +1,253 @@
+{
+  "version": "1.0.0",
+  "id": "travel_relationships",
+  "title": "Travel Relationships",
+  "description": "Directed relationship graph for travel concepts.",
+  "entries": [
+    {
+      "from": "travel_reference",
+      "to": "travel_destination",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "travel_origin",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "travel_abroad",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "international_travel",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "domestic_travel",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "border_crossing",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "airport",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "passport",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "visa",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_country",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_city",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_government_reference",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_people",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_culture",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_religion",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_customs",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_landmarks",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_language",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_food",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_event",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_media",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_law",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_police",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "foreign_military",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "tourism",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "immigration",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "emigration",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "refugee",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "exile",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "deportation",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "international_business",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "international_study",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "medical_travel",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "religious_travel",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "historical_travel",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "fictional_travel",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "dream_travel",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "flashback_travel",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "imaginary_country",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "travel_scene_description",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "travel_dialogue",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "travel_observation",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "country_comparison",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "country_insult",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "country_praise",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "country_mockery",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "country_stereotype",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "country_security_reference",
+      "type": "supports"
+    },
+    {
+      "from": "travel_reference",
+      "to": "country_political_reference",
+      "type": "supports"
+    }
+  ]
+}

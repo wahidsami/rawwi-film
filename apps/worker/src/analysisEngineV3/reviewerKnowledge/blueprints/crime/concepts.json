@@ -1,0 +1,248 @@
+{
+  "version": "1.0.0",
+  "id": "crime_concepts",
+  "title": "Crime Concepts",
+  "description": "Crime ontology concept inventory.",
+  "entries": [
+    {
+      "id": "crime_reference",
+      "title": "Crime Reference",
+      "description": "Reasoning concept for crime reference."
+    },
+    {
+      "id": "crime_attempt",
+      "title": "Attempt",
+      "description": "Reasoning concept for attempt."
+    },
+    {
+      "id": "crime_conspiracy",
+      "title": "Conspiracy",
+      "description": "Reasoning concept for conspiracy."
+    },
+    {
+      "id": "crime_planning",
+      "title": "Planning",
+      "description": "Reasoning concept for planning."
+    },
+    {
+      "id": "crime_execution",
+      "title": "Execution",
+      "description": "Reasoning concept for execution."
+    },
+    {
+      "id": "crime_glorification",
+      "title": "Glorification",
+      "description": "Reasoning concept for glorification."
+    },
+    {
+      "id": "crime_encouragement",
+      "title": "Encouragement",
+      "description": "Reasoning concept for encouragement."
+    },
+    {
+      "id": "crime_instruction",
+      "title": "Instruction",
+      "description": "Reasoning concept for instruction."
+    },
+    {
+      "id": "crime_normalization",
+      "title": "Normalization",
+      "description": "Reasoning concept for normalization."
+    },
+    {
+      "id": "crime_reward",
+      "title": "Reward",
+      "description": "Reasoning concept for reward."
+    },
+    {
+      "id": "crime_coverup",
+      "title": "Cover-up",
+      "description": "Reasoning concept for cover-up."
+    },
+    {
+      "id": "crime_escape",
+      "title": "Escape",
+      "description": "Reasoning concept for escape."
+    },
+    {
+      "id": "crime_evasion",
+      "title": "Evasion",
+      "description": "Reasoning concept for evasion."
+    },
+    {
+      "id": "crime_theft",
+      "title": "Theft",
+      "description": "Reasoning concept for theft."
+    },
+    {
+      "id": "crime_robbery",
+      "title": "Robbery",
+      "description": "Reasoning concept for robbery."
+    },
+    {
+      "id": "crime_burglary",
+      "title": "Burglary",
+      "description": "Reasoning concept for burglary."
+    },
+    {
+      "id": "crime_fraud",
+      "title": "Fraud",
+      "description": "Reasoning concept for fraud."
+    },
+    {
+      "id": "crime_forgery",
+      "title": "Forgery",
+      "description": "Reasoning concept for forgery."
+    },
+    {
+      "id": "crime_blackmail",
+      "title": "Blackmail",
+      "description": "Reasoning concept for blackmail."
+    },
+    {
+      "id": "crime_extortion",
+      "title": "Extortion",
+      "description": "Reasoning concept for extortion."
+    },
+    {
+      "id": "crime_bribery",
+      "title": "Bribery",
+      "description": "Reasoning concept for bribery."
+    },
+    {
+      "id": "crime_corruption",
+      "title": "Corruption",
+      "description": "Reasoning concept for corruption."
+    },
+    {
+      "id": "crime_money_laundering",
+      "title": "Money Laundering",
+      "description": "Reasoning concept for money laundering."
+    },
+    {
+      "id": "crime_kidnapping",
+      "title": "Kidnapping",
+      "description": "Reasoning concept for kidnapping."
+    },
+    {
+      "id": "crime_hostage",
+      "title": "Hostage",
+      "description": "Reasoning concept for hostage."
+    },
+    {
+      "id": "crime_murder",
+      "title": "Murder",
+      "description": "Reasoning concept for murder."
+    },
+    {
+      "id": "crime_attempted_murder",
+      "title": "Attempted Murder",
+      "description": "Reasoning concept for attempted murder."
+    },
+    {
+      "id": "crime_assault",
+      "title": "Assault",
+      "description": "Reasoning concept for assault."
+    },
+    {
+      "id": "crime_property_damage",
+      "title": "Property Damage",
+      "description": "Reasoning concept for property damage."
+    },
+    {
+      "id": "crime_vandalism",
+      "title": "Vandalism",
+      "description": "Reasoning concept for vandalism."
+    },
+    {
+      "id": "crime_arson",
+      "title": "Arson",
+      "description": "Reasoning concept for arson."
+    },
+    {
+      "id": "crime_human_trafficking",
+      "title": "Human Trafficking",
+      "description": "Reasoning concept for human trafficking."
+    },
+    {
+      "id": "crime_smuggling",
+      "title": "Smuggling",
+      "description": "Reasoning concept for smuggling."
+    },
+    {
+      "id": "crime_organized_crime",
+      "title": "Organized Crime",
+      "description": "Reasoning concept for organized crime."
+    },
+    {
+      "id": "crime_cybercrime",
+      "title": "Cybercrime",
+      "description": "Reasoning concept for cybercrime."
+    },
+    {
+      "id": "crime_identity_theft",
+      "title": "Identity Theft",
+      "description": "Reasoning concept for identity theft."
+    },
+    {
+      "id": "crime_documentary",
+      "title": "Documentary Context",
+      "description": "Reasoning concept for documentary context."
+    },
+    {
+      "id": "crime_news",
+      "title": "News Context",
+      "description": "Reasoning concept for news context."
+    },
+    {
+      "id": "crime_historical",
+      "title": "Historical Context",
+      "description": "Reasoning concept for historical context."
+    },
+    {
+      "id": "crime_educational",
+      "title": "Educational Context",
+      "description": "Reasoning concept for educational context."
+    },
+    {
+      "id": "crime_police_investigation",
+      "title": "Police Investigation",
+      "description": "Reasoning concept for police investigation."
+    },
+    {
+      "id": "crime_court_case",
+      "title": "Court Case",
+      "description": "Reasoning concept for court case."
+    },
+    {
+      "id": "crime_false_accusation",
+      "title": "False Accusation",
+      "description": "Reasoning concept for false accusation."
+    },
+    {
+      "id": "crime_confession",
+      "title": "Confession",
+      "description": "Reasoning concept for confession."
+    },
+    {
+      "id": "crime_scene_description",
+      "title": "Scene Description",
+      "description": "Reasoning concept for scene description."
+    },
+    {
+      "id": "crime_dialogue",
+      "title": "Dialogue",
+      "description": "Reasoning concept for dialogue."
+    },
+    {
+      "id": "crime_observation",
+      "title": "Observation",
+      "description": "Reasoning concept for observation."
+    },
+    {
+      "id": "crime_reported_event",
+      "title": "Reported Event",
+      "description": "Reasoning concept for reported event."
+    }
+  ]
+}

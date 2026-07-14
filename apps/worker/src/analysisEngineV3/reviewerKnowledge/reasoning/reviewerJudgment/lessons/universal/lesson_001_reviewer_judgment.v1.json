@@ -1,0 +1,339 @@
+{
+  "schema_version": 1,
+  "lesson_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "lesson": {
+    "id": "lesson_001_reviewer_judgment",
+    "title": "Reviewer Judgment Framework",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "language": "en",
+    "summary": "Teach reviewers how to compare interpretations, judge evidence sufficiency, calibrate confidence, resolve disagreement, justify narrative outcomes, and reach a final decision.",
+    "learningObjectives": [
+      "Compare competing interpretations.",
+      "Judge whether evidence is sufficient.",
+      "Calibrate confidence to the available support.",
+      "Represent reviewer disagreement honestly.",
+      "Use narrative justification when the story changes the outcome.",
+      "Produce a final reviewer decision only after the full judgment process."
+    ],
+    "concepts": [
+      {
+        "id": "competing_interpretations",
+        "title": "Competing Interpretations",
+        "summary": "More than one valid reading exists and the reviewer must compare them.",
+        "tags": [
+          "reviewer_judgment",
+          "interpretation",
+          "narrative"
+        ],
+        "target": "Interpretation",
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "evidence_sufficiency",
+        "title": "Evidence Sufficiency",
+        "summary": "The reviewer decides whether the evidence is enough for a conclusion.",
+        "tags": [
+          "reviewer_judgment",
+          "evidence",
+          "narrative"
+        ],
+        "target": "Evidence",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "confidence_calibration",
+        "title": "Confidence Calibration",
+        "summary": "The reviewer adjusts confidence to match evidence quality and uncertainty.",
+        "tags": [
+          "reviewer_judgment",
+          "confidence",
+          "intent"
+        ],
+        "target": "Confidence",
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "reviewer_disagreement",
+        "title": "Reviewer Disagreement",
+        "summary": "Different reviewers may legitimately disagree and the difference must be recorded.",
+        "tags": [
+          "reviewer_judgment",
+          "disagreement",
+          "relationship"
+        ],
+        "target": "Disagreement",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "narrative_justification",
+        "title": "Narrative Justification",
+        "summary": "The story context changes or explains the reviewer outcome.",
+        "tags": [
+          "reviewer_judgment",
+          "narrative",
+          "intent"
+        ],
+        "target": "Narrative",
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "final_reviewer_decision",
+        "title": "Final Reviewer Decision",
+        "summary": "The combined judgment that resolves evidence, context, disagreement, and confidence.",
+        "tags": [
+          "reviewer_judgment",
+          "decision",
+          "knowledge_acquisition"
+        ],
+        "target": "Decision",
+        "articleIds": [
+          17
+        ]
+      }
+    ],
+    "reviewerQuestions": [
+      {
+        "id": "judgment_question_interpretation",
+        "purpose": "Which interpretations are still plausible?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "List the competing readings before choosing one.",
+        "evidenceRequirements": [
+          "The answer must cite literal evidence."
+        ]
+      },
+      {
+        "id": "judgment_question_evidence",
+        "purpose": "Is the evidence sufficient?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Separate strong support from weak support.",
+        "evidenceRequirements": [
+          "The answer must identify the strongest support."
+        ]
+      },
+      {
+        "id": "judgment_question_confidence",
+        "purpose": "How should confidence change?",
+        "expectedAnswerFormat": "Confidence label.",
+        "reasoningGuidance": "Confidence must follow the strength of evidence and the amount of contradiction.",
+        "evidenceRequirements": [
+          "The answer must reflect corroboration or uncertainty."
+        ]
+      },
+      {
+        "id": "judgment_question_disagreement",
+        "purpose": "Could reviewers disagree?",
+        "expectedAnswerFormat": "Yes/No with note.",
+        "reasoningGuidance": "Capture legitimate disagreement instead of hiding it.",
+        "evidenceRequirements": [
+          "The answer must explain why disagreement exists."
+        ]
+      },
+      {
+        "id": "judgment_question_narrative",
+        "purpose": "Does the narrative justify the outcome?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "The story may change the reviewer result even when the line looks harmful.",
+        "evidenceRequirements": [
+          "The answer must use story context."
+        ]
+      },
+      {
+        "id": "judgment_question_decision",
+        "purpose": "What is the final decision?",
+        "expectedAnswerFormat": "One label.",
+        "reasoningGuidance": "Finalize only after evidence, context, disagreement, and confidence are resolved.",
+        "evidenceRequirements": [
+          "The answer must state the final judgment."
+        ]
+      }
+    ],
+    "examples": [
+      "Two plausible readings exist, so the reviewer compares both before deciding.",
+      "A later sentence makes one reading weaker and another reading stronger.",
+      "The reviewer keeps the case as review until the evidence becomes sufficient.",
+      "A narrative explanation changes the final outcome."
+    ],
+    "counterExamples": [
+      "Picking the first plausible reading without comparison.",
+      "Treating weak evidence as sufficient.",
+      "Pretending reviewer disagreement does not exist.",
+      "Finalizing the decision before narrative justification is checked."
+    ],
+    "exceptions": [
+      "quotation must be checked before judgment",
+      "historical narration may change the outcome",
+      "documentary framing may lower confidence",
+      "educational framing may prevent overreading",
+      "fiction may require a different judgment path",
+      "dream and flashback may alter the final reading"
+    ],
+    "evidenceRules": {
+      "minimum": [
+        "At least one literal clue must exist in the chunk.",
+        "The reviewer must identify the competing readings or the reason the reading is uncertain."
+      ],
+      "strong": [
+        "More than one clue points toward the same interpretation.",
+        "Context and later text agree with the leading reading."
+      ],
+      "weak": [
+        "A single clue without corroboration.",
+        "A reading that remains plausible but unresolved."
+      ],
+      "insufficient": [
+        "Speculation without support.",
+        "A final answer before context is checked."
+      ],
+      "confidenceGuidance": [
+        "High confidence when the scene clearly resolves the dispute.",
+        "Medium confidence when competing readings remain partly open.",
+        "Low confidence when evidence is weak or contradictory.",
+        "Review required when the narrative has not yet justified the result."
+      ]
+    },
+    "conceptRelationships": [
+      {
+        "fromConceptId": "competing_interpretations",
+        "toConceptId": "evidence_sufficiency",
+        "relation": "supports",
+        "note": "Comparing readings comes before checking sufficiency."
+      },
+      {
+        "fromConceptId": "evidence_sufficiency",
+        "toConceptId": "confidence_calibration",
+        "relation": "supports",
+        "note": "Sufficient evidence determines confidence."
+      },
+      {
+        "fromConceptId": "confidence_calibration",
+        "toConceptId": "reviewer_disagreement",
+        "relation": "supports",
+        "note": "Confidence explains why reviewers may disagree."
+      },
+      {
+        "fromConceptId": "reviewer_disagreement",
+        "toConceptId": "narrative_justification",
+        "relation": "supports",
+        "note": "Disagreement may be resolved by narrative justification."
+      },
+      {
+        "fromConceptId": "narrative_justification",
+        "toConceptId": "final_reviewer_decision",
+        "relation": "supports",
+        "note": "Narrative justification leads into the final decision."
+      }
+    ],
+    "glossaryReferences": [
+      {
+        "term": "reviewer judgment",
+        "conceptId": "final_reviewer_decision",
+        "relation": "supports",
+        "note": "The framework ends in a final reviewer decision."
+      },
+      {
+        "term": "evidence sufficiency",
+        "conceptId": "evidence_sufficiency",
+        "relation": "supports",
+        "note": "The reviewer asks whether the evidence is enough."
+      },
+      {
+        "term": "narrative justification",
+        "conceptId": "narrative_justification",
+        "relation": "supports",
+        "note": "The story may justify the outcome."
+      }
+    ],
+    "gcamMappings": [
+      {
+        "articleId": 4,
+        "articleTitle": "Reviewer Methodology",
+        "articleNumber": "4",
+        "atomNumber": "4-1",
+        "reportTitle": "Comparing interpretations",
+        "note": "Comparison and comment."
+      },
+      {
+        "articleId": 11,
+        "articleTitle": "Reviewer Methodology",
+        "articleNumber": "11",
+        "atomNumber": "11-1",
+        "reportTitle": "Evidence sufficiency",
+        "note": "Support and corroboration."
+      },
+      {
+        "articleId": 17,
+        "articleTitle": "Reviewer Methodology",
+        "articleNumber": "17",
+        "atomNumber": "17-1",
+        "reportTitle": "Confidence and final decision",
+        "note": "Calibration and outcome."
+      }
+    ],
+    "reportTemplates": [
+      {
+        "findingTitle": "Reviewer Judgment Assessment",
+        "reasonTemplate": "Interpretations: {{interpretations}}. Evidence: {{evidence}}. Confidence: {{confidence}}. Decision: {{decision}}.",
+        "recommendationTemplate": "If the evidence is insufficient, keep the case in review and record the disagreement.",
+        "severity": "medium",
+        "priority": 1,
+        "reportCategory": "reviewer_judgment"
+      }
+    ],
+    "benchmarkReferences": [
+      "reviewer_judgment_competing_interpretations",
+      "reviewer_judgment_evidence_sufficiency",
+      "reviewer_judgment_confidence_calibration",
+      "reviewer_judgment_reviewer_disagreement",
+      "reviewer_judgment_narrative_justification",
+      "reviewer_judgment_final_reviewer_decision"
+    ],
+    "prerequisites": [
+      "lesson_001_reviewer_methodology",
+      "lesson_001_narrative_framework",
+      "lesson_001_intent_framework",
+      "lesson_001_relationship_framework"
+    ],
+    "relatedLessons": [
+      "lesson_001_reviewer_methodology",
+      "lesson_001_narrative_framework",
+      "lesson_001_intent_framework",
+      "lesson_001_relationship_framework"
+    ],
+    "metadata": {
+      "author": "Raawi Academy",
+      "reviewLevel": "Methodology Foundation",
+      "priority": 18,
+      "category": "methodology",
+      "subject": "reviewer_judgment",
+      "knowledgeAcquisition": [
+        "Lessons",
+        "Decision Records",
+        "Pattern Libraries",
+        "Benchmarks",
+        "Reviewer Methodology",
+        "Narrative",
+        "Intent",
+        "Relationship",
+        "Knowledge Acquisition"
+      ]
+    }
+  }
+}

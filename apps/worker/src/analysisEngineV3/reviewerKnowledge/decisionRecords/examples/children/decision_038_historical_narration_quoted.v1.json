@@ -1,0 +1,56 @@
+{
+  "id": "decision_038_historical_narration_quoted",
+  "version": "1.0.0",
+  "title": "Historical narration (quoted)",
+  "summary": "Historical narration in quoted framing.",
+  "originalScenario": "قال الراوي: \"الوثائقي يروي حادثة قديمة عن الإهمال\"",
+  "reviewQuestion": "Is this historical narration?",
+  "initialSuspicion": "Historical framing.",
+  "possibleConcepts": [
+    "children_neglect"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: الوثائقي يروي حادثة قديمة عن الإهمال"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-3"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "historical_narration",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_neglect"
+  ]
+}

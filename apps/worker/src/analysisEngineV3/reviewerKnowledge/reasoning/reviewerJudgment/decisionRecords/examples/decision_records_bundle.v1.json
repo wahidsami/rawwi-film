@@ -1,0 +1,390 @@
+{
+  "schema_version": 1,
+  "bundle_version": "1.0.0",
+  "records": [
+    {
+      "id": "judgment_decision_001_competing_interpretations",
+      "version": "1.0.0",
+      "title": "Competing interpretations review",
+      "summary": "A reviewer keeps two plausible readings open until the evidence resolves them.",
+      "originalScenario": "A line could mean advice or an invitation, and the surrounding scene has not yet resolved the dispute.",
+      "reviewQuestion": "Which interpretation is better supported?",
+      "initialSuspicion": "Competing interpretations exist and the reviewer should not finalize too early.",
+      "possibleConcepts": [
+        "competing_interpretations",
+        "evidence_sufficiency",
+        "confidence_calibration"
+      ],
+      "supportingEvidence": [
+        "Two readings remain plausible.",
+        "Later context may resolve the ambiguity."
+      ],
+      "contradictingEvidence": [
+        "No explicit target settles the meaning.",
+        "The current scene does not yet justify a final answer."
+      ],
+      "requiredMissingEvidence": [
+        "A later sentence or scene cue that chooses one reading."
+      ],
+      "sceneContext": "The narrative context is still open and the reviewer must keep the case in review.",
+      "speakerAnalysis": "Identify the speaker before choosing a reading.",
+      "targetAnalysis": "Identify the target before finalizing the interpretation.",
+      "intentAnalysis": "Check whether the line is tentative, directive, or purely observational.",
+      "reasoningSteps": [
+        "List both plausible readings.",
+        "Compare the available evidence for each reading.",
+        "Prefer the reading with stronger support.",
+        "Keep confidence moderate until the scene resolves."
+      ],
+      "reviewerDecision": "Keep the case in review until the scene resolves the ambiguity.",
+      "confidence": "medium",
+      "findingType": "reviewer_judgment_competing_interpretations",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "note": "Comparison and review."
+        }
+      ],
+      "falsePositiveRisk": "High if the reviewer picks the first plausible reading.",
+      "reviewerNotes": "The reviewer must preserve knowledge acquisition, narrative context, intent, and relationship cues before a final answer.",
+      "benchmarkTags": [
+        "competing_interpretations",
+        "ambiguity",
+        "review"
+      ],
+      "relatedLessons": [
+        "lesson_001_reviewer_judgment"
+      ],
+      "relatedPatterns": [
+        "judgment_pattern_competing_interpretations"
+      ],
+      "relatedBlueprintConcepts": [
+        "competing_interpretations",
+        "evidence_sufficiency"
+      ]
+    },
+    {
+      "id": "judgment_decision_002_evidence_sufficiency",
+      "version": "1.0.0",
+      "title": "Evidence sufficiency review",
+      "summary": "A reviewer refuses to finalize because the evidence is not enough.",
+      "originalScenario": "The scene contains one clue but does not yet provide sufficient support for a final judgment.",
+      "reviewQuestion": "Is the evidence sufficient?",
+      "initialSuspicion": "The evidence is weak and the reviewer should avoid overclaiming.",
+      "possibleConcepts": [
+        "evidence_sufficiency",
+        "confidence_calibration",
+        "narrative_justification"
+      ],
+      "supportingEvidence": [
+        "One clue exists.",
+        "The scene still leaves room for doubt."
+      ],
+      "contradictingEvidence": [
+        "A stronger reading is still possible.",
+        "The target cue is missing."
+      ],
+      "requiredMissingEvidence": [
+        "A corroborating clue or clarifying scene."
+      ],
+      "sceneContext": "The scene is incomplete and the reviewer should keep the answer open.",
+      "speakerAnalysis": "Identify who is speaking before weighing the clue.",
+      "targetAnalysis": "Identify the target if one exists.",
+      "intentAnalysis": "Ask whether the line is tentative, neutral, or directive.",
+      "reasoningSteps": [
+        "Measure the support that is actually present.",
+        "Separate a clue from a conclusion.",
+        "If support is thin, keep the case open.",
+        "Lower confidence when corroboration is missing."
+      ],
+      "reviewerDecision": "Reject the final judgment and keep the case open.",
+      "confidence": "low",
+      "findingType": "reviewer_judgment_evidence_sufficiency",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "note": "Evidence sufficiency."
+        }
+      ],
+      "falsePositiveRisk": "High if the reviewer turns one clue into a full finding.",
+      "reviewerNotes": "Evidence sufficiency is a knowledge acquisition checkpoint before any final answer.",
+      "benchmarkTags": [
+        "evidence_sufficiency",
+        "insufficient_evidence",
+        "review"
+      ],
+      "relatedLessons": [
+        "lesson_001_reviewer_judgment"
+      ],
+      "relatedPatterns": [
+        "judgment_pattern_evidence_sufficiency"
+      ],
+      "relatedBlueprintConcepts": [
+        "evidence_sufficiency",
+        "confidence_calibration"
+      ]
+    },
+    {
+      "id": "judgment_decision_003_confidence_calibration",
+      "version": "1.0.0",
+      "title": "Confidence calibration review",
+      "summary": "A reviewer lowers confidence after contradiction appears.",
+      "originalScenario": "The first read seems strong, but a later sentence weakens the claim.",
+      "reviewQuestion": "How should confidence change?",
+      "initialSuspicion": "Confidence should not stay high after contradiction appears.",
+      "possibleConcepts": [
+        "confidence_calibration",
+        "reviewer_disagreement",
+        "final_reviewer_decision"
+      ],
+      "supportingEvidence": [
+        "The first reading looked strong.",
+        "Later context introduces contradiction."
+      ],
+      "contradictingEvidence": [
+        "The scene does not fully settle the dispute.",
+        "Two reviewers could still differ."
+      ],
+      "requiredMissingEvidence": [
+        "A clarifying line or scene that resolves the contradiction."
+      ],
+      "sceneContext": "The scene shifts from apparent certainty to unresolved ambiguity.",
+      "speakerAnalysis": "Identify the speaker and any hidden stance before scoring confidence.",
+      "targetAnalysis": "Identify the target and whether the target changes across the scene.",
+      "intentAnalysis": "Check whether the line is a firm statement or a tentative one.",
+      "reasoningSteps": [
+        "Measure the strongest evidence.",
+        "Add the contradicting evidence.",
+        "Reduce confidence when the contradiction is unresolved.",
+        "Keep the case open if the scene does not settle the issue."
+      ],
+      "reviewerDecision": "Lower confidence and keep the case under review.",
+      "confidence": "medium",
+      "findingType": "reviewer_judgment_confidence_calibration",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "note": "Confidence calibration."
+        }
+      ],
+      "falsePositiveRisk": "High if the reviewer keeps certainty after contradiction appears.",
+      "reviewerNotes": "Confidence calibration is part of the knowledge acquisition record and should be visible in the report.",
+      "benchmarkTags": [
+        "confidence_calibration",
+        "contradiction",
+        "review"
+      ],
+      "relatedLessons": [
+        "lesson_001_reviewer_judgment"
+      ],
+      "relatedPatterns": [
+        "judgment_pattern_confidence_calibration"
+      ],
+      "relatedBlueprintConcepts": [
+        "confidence_calibration",
+        "reviewer_disagreement"
+      ]
+    },
+    {
+      "id": "judgment_decision_004_reviewer_disagreement",
+      "version": "1.0.0",
+      "title": "Reviewer disagreement record",
+      "summary": "Two reviewers reach different outcomes and both can explain why.",
+      "originalScenario": "One reviewer says review while another says reject, and both cite evidence.",
+      "reviewQuestion": "How should disagreement be documented?",
+      "initialSuspicion": "The disagreement is legitimate and should not be hidden.",
+      "possibleConcepts": [
+        "reviewer_disagreement",
+        "competing_interpretations",
+        "narrative_justification"
+      ],
+      "supportingEvidence": [
+        "Two evidence chains point in different directions.",
+        "The reviewers use different confidence thresholds."
+      ],
+      "contradictingEvidence": [
+        "A later scene could resolve the difference.",
+        "A shared context might reduce the disagreement."
+      ],
+      "requiredMissingEvidence": [
+        "A resolution cue or an agreed-upon narrative justification."
+      ],
+      "sceneContext": "The review history shows a legitimate difference in judgment.",
+      "speakerAnalysis": "Identify each reviewer voice before comparing the answers.",
+      "targetAnalysis": "Identify what each reviewer is actually judging.",
+      "intentAnalysis": "Keep the disagreement visible instead of collapsing it.",
+      "reasoningSteps": [
+        "Document both reasoning paths.",
+        "Compare the stronger support for each path.",
+        "Record why the reviewers disagree.",
+        "Leave room for future knowledge acquisition."
+      ],
+      "reviewerDecision": "Document the disagreement and keep the issue open if the scene does not settle it.",
+      "confidence": "needs_review",
+      "findingType": "reviewer_judgment_reviewer_disagreement",
+      "gcamMappings": [
+        {
+          "article_id": 11,
+          "atom_ids": [
+            "11-1"
+          ],
+          "note": "Reviewer disagreement."
+        }
+      ],
+      "falsePositiveRisk": "High if the reviewer erases the weaker but plausible reading.",
+      "reviewerNotes": "Reviewer disagreement is part of the evidence trail and should be preserved in the record.",
+      "benchmarkTags": [
+        "reviewer_disagreement",
+        "alternative_reading",
+        "review"
+      ],
+      "relatedLessons": [
+        "lesson_001_reviewer_judgment"
+      ],
+      "relatedPatterns": [
+        "judgment_pattern_reviewer_disagreement"
+      ],
+      "relatedBlueprintConcepts": [
+        "reviewer_disagreement",
+        "competing_interpretations"
+      ]
+    },
+    {
+      "id": "judgment_decision_005_narrative_justification",
+      "version": "1.0.0",
+      "title": "Narrative justification record",
+      "summary": "A harmful-looking line is explained by the story context.",
+      "originalScenario": "A line appears harmful until the surrounding scene reveals a historical or educational purpose.",
+      "reviewQuestion": "Does the narrative justify the outcome?",
+      "initialSuspicion": "The story context may change the reviewer outcome.",
+      "possibleConcepts": [
+        "narrative_justification",
+        "evidence_sufficiency",
+        "final_reviewer_decision"
+      ],
+      "supportingEvidence": [
+        "The scene is framed historically or educationally.",
+        "The line is not an endorsement in context."
+      ],
+      "contradictingEvidence": [
+        "A direct instruction would weaken the justification.",
+        "A missing story cue would keep the case unresolved."
+      ],
+      "requiredMissingEvidence": [
+        "A clear story cue such as history, education, documentary, or medical framing."
+      ],
+      "sceneContext": "The narrative context explains the apparent harm and changes the result.",
+      "speakerAnalysis": "Identify whether the speaker is a narrator, teacher, or character.",
+      "targetAnalysis": "Identify who is being discussed or addressed in the scene.",
+      "intentAnalysis": "Check whether the intent is educational, documentary, or historical rather than promotional.",
+      "reasoningSteps": [
+        "Check the harmful-looking line.",
+        "Check the narrative frame around it.",
+        "Use the story to justify the outcome only when the frame supports it.",
+        "Write the final result clearly."
+      ],
+      "reviewerDecision": "Accept the contextual justification and finalize the decision.",
+      "confidence": "high",
+      "findingType": "reviewer_judgment_narrative_justification",
+      "gcamMappings": [
+        {
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "note": "Narrative justification."
+        }
+      ],
+      "falsePositiveRisk": "High if the reviewer ignores narrative justification and overreads the line.",
+      "reviewerNotes": "This record preserves the link between narrative justification and knowledge acquisition.",
+      "benchmarkTags": [
+        "narrative_justification",
+        "historical",
+        "educational"
+      ],
+      "relatedLessons": [
+        "lesson_001_reviewer_judgment"
+      ],
+      "relatedPatterns": [
+        "judgment_pattern_narrative_justification"
+      ],
+      "relatedBlueprintConcepts": [
+        "narrative_justification",
+        "final_reviewer_decision"
+      ]
+    },
+    {
+      "id": "judgment_decision_006_final_reviewer_decision",
+      "version": "1.0.0",
+      "title": "Final reviewer decision record",
+      "summary": "The reviewer combines evidence, context, disagreement, and confidence into one final answer.",
+      "originalScenario": "After weighing the entire scene, the reviewer closes the case with one final judgment.",
+      "reviewQuestion": "What is the final reviewer decision?",
+      "initialSuspicion": "The case is ready to be finalized only after all reasoning is complete.",
+      "possibleConcepts": [
+        "final_reviewer_decision",
+        "confidence_calibration",
+        "narrative_justification"
+      ],
+      "supportingEvidence": [
+        "Evidence, context, and disagreement are all resolved.",
+        "The confidence level matches the available support."
+      ],
+      "contradictingEvidence": [
+        "An unresolved ambiguity would block finalization.",
+        "A missing narrative justification would keep the case open."
+      ],
+      "requiredMissingEvidence": [
+        "Any unresolved contradiction or missing context."
+      ],
+      "sceneContext": "The case closes only after the reviewer judgment path is complete.",
+      "speakerAnalysis": "Identify the relevant speaker voice before closing the record.",
+      "targetAnalysis": "Identify the final target of the judgment.",
+      "intentAnalysis": "Check that the final answer is not premature.",
+      "reasoningSteps": [
+        "Combine the best evidence.",
+        "Check the narrative justification.",
+        "Check the confidence level.",
+        "Finalize the decision and record it."
+      ],
+      "reviewerDecision": "Finalize the case with one stable judgment.",
+      "confidence": "very_high",
+      "findingType": "reviewer_judgment_final_reviewer_decision",
+      "gcamMappings": [
+        {
+          "article_id": 17,
+          "atom_ids": [
+            "17-1"
+          ],
+          "note": "Final decision."
+        }
+      ],
+      "falsePositiveRisk": "High if the reviewer finalizes before the evidence is settled.",
+      "reviewerNotes": "The final decision is the end of the judgment path and part of knowledge acquisition.",
+      "benchmarkTags": [
+        "final_reviewer_decision",
+        "final",
+        "review"
+      ],
+      "relatedLessons": [
+        "lesson_001_reviewer_judgment"
+      ],
+      "relatedPatterns": [
+        "judgment_pattern_final_reviewer_decision"
+      ],
+      "relatedBlueprintConcepts": [
+        "final_reviewer_decision",
+        "confidence_calibration"
+      ]
+    }
+  ]
+}

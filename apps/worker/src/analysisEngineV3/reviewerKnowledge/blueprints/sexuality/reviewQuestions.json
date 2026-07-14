@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "id": "sexuality_review_questions",
+  "title": "Sexuality Review Questions",
+  "description": "Reviewer questions for sexual-content reasoning.",
+  "entries": [
+    {
+      "id": "sexual_review_question_01",
+      "title": "Question 1",
+      "description": "Who is speaking?"
+    },
+    {
+      "id": "sexual_review_question_02",
+      "title": "Question 2",
+      "description": "Who is the target?"
+    },
+    {
+      "id": "sexual_review_question_03",
+      "title": "Question 3",
+      "description": "Is the wording explicit or implied?"
+    },
+    {
+      "id": "sexual_review_question_04",
+      "title": "Question 4",
+      "description": "Is the scene dialogue, narration, description, or camera language?"
+    },
+    {
+      "id": "sexual_review_question_05",
+      "title": "Question 5",
+      "description": "Does the scene show consent, pressure, coercion, or ambiguity?"
+    },
+    {
+      "id": "sexual_review_question_06",
+      "title": "Question 6",
+      "description": "Is the context educational, medical, historical, documentary, or fictional?"
+    },
+    {
+      "id": "sexual_review_question_07",
+      "title": "Question 7",
+      "description": "Does the story condemn or normalize the content?"
+    },
+    {
+      "id": "sexual_review_question_08",
+      "title": "Question 8",
+      "description": "Does later dialogue change the meaning?"
+    },
+    {
+      "id": "sexual_review_question_09",
+      "title": "Question 9",
+      "description": "Would the same meaning survive if the line were quoted by a reporter or judge?"
+    },
+    {
+      "id": "sexual_review_question_10",
+      "title": "Question 10",
+      "description": "Is this a false accusation or a corrected misunderstanding?"
+    },
+    {
+      "id": "sexual_review_question_11",
+      "title": "Question 11",
+      "description": "Does the scene rely on body language, music, or visual focus?"
+    },
+    {
+      "id": "sexual_review_question_12",
+      "title": "Question 12",
+      "description": "Would another trained reviewer reach the same conclusion?"
+    }
+  ]
+}

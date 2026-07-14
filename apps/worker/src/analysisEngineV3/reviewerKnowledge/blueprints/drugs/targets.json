@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "id": "drugs_targets",
+  "title": "Drugs Targets",
+  "description": "Drug targets.",
+  "entries": [
+    {
+      "id": "drug_target_user",
+      "title": "User",
+      "description": "A person using a substance."
+    },
+    {
+      "id": "drug_target_dealer",
+      "title": "Dealer",
+      "description": "A person distributing drugs."
+    },
+    {
+      "id": "drug_target_patient",
+      "title": "Patient",
+      "description": "A medical recipient."
+    },
+    {
+      "id": "drug_target_child",
+      "title": "Child",
+      "description": "A minor affected by drug content."
+    },
+    {
+      "id": "drug_target_public",
+      "title": "Public",
+      "description": "General audience or society."
+    },
+    {
+      "id": "drug_target_self",
+      "title": "Self",
+      "description": "Self-directed use or reflection."
+    },
+    {
+      "id": "drug_target_family",
+      "title": "Family",
+      "description": "Family members or household."
+    },
+    {
+      "id": "drug_target_state",
+      "title": "State",
+      "description": "State or law enforcement interests."
+    }
+  ]
+}

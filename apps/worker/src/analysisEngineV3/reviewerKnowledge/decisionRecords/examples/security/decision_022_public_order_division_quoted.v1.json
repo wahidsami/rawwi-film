@@ -1,0 +1,82 @@
+{
+  "id": "decision_022_public_order_division_quoted",
+  "version": "1.0.0",
+  "title": "National unity division (quoted)",
+  "summary": "The line encourages division between people.",
+  "originalScenario": "A character says: \"خلّو الناس تنقسم مع بعضهم\".",
+  "reviewQuestion": "Does the line encourage social division?",
+  "initialSuspicion": "Division and disunity.",
+  "possibleConcepts": [
+    "national_unity",
+    "public_order"
+  ],
+  "supportingEvidence": [
+    "خلّو الناس تنقسم مع بعضهم"
+  ],
+  "contradictingEvidence": [
+    "Quoted in the scene."
+  ],
+  "requiredMissingEvidence": [
+    "No explicit endorsement or additional evidence."
+  ],
+  "sceneContext": "Dialogue in a hostile group exchange.",
+  "speakerAnalysis": "The speaker addresses a group.",
+  "targetAnalysis": "Communities and social cohesion.",
+  "intentAnalysis": "Encouragement of division.",
+  "reasoningSteps": [
+    "Identify division language",
+    "Identify national unity impact",
+    "Map to article 4 and 12"
+  ],
+  "reviewerDecision": "No finding",
+  "confidence": "medium",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "id": "gcam_security_4_5",
+      "article_id": 4,
+      "atom_ids": [
+        "4-5",
+        "4-6"
+      ],
+      "role": "Unity and social peace",
+      "note": "Use when the text fractures cohesion."
+    },
+    {
+      "id": "gcam_security_12_4",
+      "article_id": 12,
+      "atom_ids": [
+        "12-4"
+      ],
+      "role": "Social harmony",
+      "note": "Use when division is used as a means of unrest."
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Explicit division language should be reported. Variant: quoted.",
+  "benchmarkTags": [
+    "unity",
+    "division",
+    "society",
+    "quoted"
+  ],
+  "relatedLessons": [
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "security_pattern_divisive_speech"
+  ],
+  "relatedBlueprintConcepts": [
+    "security_national_unity",
+    "security_public_order"
+  ]
+}

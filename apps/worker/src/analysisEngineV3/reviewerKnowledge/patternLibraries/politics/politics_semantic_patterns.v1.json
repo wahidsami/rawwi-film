@@ -1,0 +1,5124 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "politics_semantic_patterns",
+    "title": "Politics Semantic Patterns",
+    "description": "Semantic patterns for politics reasoning.",
+    "concepts": [
+      {
+        "id": "state_reference",
+        "title": "State Reference",
+        "description": "State Reference reasoning concept."
+      },
+      {
+        "id": "government_reference",
+        "title": "Government Reference",
+        "description": "Government Reference reasoning concept."
+      },
+      {
+        "id": "head_of_state",
+        "title": "Head Of State",
+        "description": "Head Of State reasoning concept."
+      },
+      {
+        "id": "royal_family",
+        "title": "Royal Family",
+        "description": "Royal Family reasoning concept."
+      },
+      {
+        "id": "government_institution",
+        "title": "Government Institution",
+        "description": "Government Institution reasoning concept."
+      },
+      {
+        "id": "public_official",
+        "title": "Public Official",
+        "description": "Public Official reasoning concept."
+      },
+      {
+        "id": "constitutional_reference",
+        "title": "Constitutional Reference",
+        "description": "Constitutional Reference reasoning concept."
+      },
+      {
+        "id": "state_scene_description",
+        "title": "State Scene Description",
+        "description": "State Scene Description reasoning concept."
+      },
+      {
+        "id": "state_observation",
+        "title": "State Observation",
+        "description": "State Observation reasoning concept."
+      },
+      {
+        "id": "national_flag",
+        "title": "National Flag",
+        "description": "National Flag reasoning concept."
+      },
+      {
+        "id": "national_anthem",
+        "title": "National Anthem",
+        "description": "National Anthem reasoning concept."
+      },
+      {
+        "id": "national_symbol",
+        "title": "National Symbol",
+        "description": "National Symbol reasoning concept."
+      },
+      {
+        "id": "national_identity",
+        "title": "National Identity",
+        "description": "National Identity reasoning concept."
+      },
+      {
+        "id": "national_unity",
+        "title": "National Unity",
+        "description": "National Unity reasoning concept."
+      },
+      {
+        "id": "patriotism",
+        "title": "Patriotism",
+        "description": "Patriotism reasoning concept."
+      },
+      {
+        "id": "foreign_government",
+        "title": "Foreign Government",
+        "description": "Foreign Government reasoning concept."
+      },
+      {
+        "id": "foreign_leader",
+        "title": "Foreign Leader",
+        "description": "Foreign Leader reasoning concept."
+      },
+      {
+        "id": "international_organization",
+        "title": "International Organization",
+        "description": "International Organization reasoning concept."
+      },
+      {
+        "id": "diplomatic_relations",
+        "title": "Diplomatic Relations",
+        "description": "Diplomatic Relations reasoning concept."
+      },
+      {
+        "id": "international_conflict",
+        "title": "International Conflict",
+        "description": "International Conflict reasoning concept."
+      },
+      {
+        "id": "state_security",
+        "title": "State Security",
+        "description": "State Security reasoning concept."
+      },
+      {
+        "id": "national_security",
+        "title": "National Security",
+        "description": "National Security reasoning concept."
+      },
+      {
+        "id": "treason",
+        "title": "Treason",
+        "description": "Treason reasoning concept."
+      },
+      {
+        "id": "espionage",
+        "title": "Espionage",
+        "description": "Espionage reasoning concept."
+      },
+      {
+        "id": "military_reference",
+        "title": "Military Reference",
+        "description": "Military Reference reasoning concept."
+      },
+      {
+        "id": "armed_forces",
+        "title": "Armed Forces",
+        "description": "Armed Forces reasoning concept."
+      },
+      {
+        "id": "intelligence_services",
+        "title": "Intelligence Services",
+        "description": "Intelligence Services reasoning concept."
+      },
+      {
+        "id": "police_institution",
+        "title": "Police Institution",
+        "description": "Police Institution reasoning concept."
+      },
+      {
+        "id": "political_dialogue",
+        "title": "Political Dialogue",
+        "description": "Political Dialogue reasoning concept."
+      },
+      {
+        "id": "political_debate",
+        "title": "Political Debate",
+        "description": "Political Debate reasoning concept."
+      },
+      {
+        "id": "political_satire",
+        "title": "Political Satire",
+        "description": "Political Satire reasoning concept."
+      },
+      {
+        "id": "political_criticism",
+        "title": "Political Criticism",
+        "description": "Political Criticism reasoning concept."
+      },
+      {
+        "id": "political_support",
+        "title": "Political Support",
+        "description": "Political Support reasoning concept."
+      },
+      {
+        "id": "political_glorification",
+        "title": "Political Glorification",
+        "description": "Political Glorification reasoning concept."
+      },
+      {
+        "id": "political_encouragement",
+        "title": "Political Encouragement",
+        "description": "Political Encouragement reasoning concept."
+      },
+      {
+        "id": "political_propaganda",
+        "title": "Political Propaganda",
+        "description": "Political Propaganda reasoning concept."
+      },
+      {
+        "id": "political_instruction",
+        "title": "Political Instruction",
+        "description": "Political Instruction reasoning concept."
+      },
+      {
+        "id": "political_documentary",
+        "title": "Political Documentary",
+        "description": "Political Documentary reasoning concept."
+      },
+      {
+        "id": "political_news",
+        "title": "Political News",
+        "description": "Political News reasoning concept."
+      },
+      {
+        "id": "political_historical",
+        "title": "Political Historical",
+        "description": "Political Historical reasoning concept."
+      },
+      {
+        "id": "political_educational",
+        "title": "Political Educational",
+        "description": "Political Educational reasoning concept."
+      },
+      {
+        "id": "political_rally",
+        "title": "Political Rally",
+        "description": "Political Rally reasoning concept."
+      },
+      {
+        "id": "public_demonstration",
+        "title": "Public Demonstration",
+        "description": "Public Demonstration reasoning concept."
+      },
+      {
+        "id": "civil_unrest",
+        "title": "Civil Unrest",
+        "description": "Civil Unrest reasoning concept."
+      },
+      {
+        "id": "riot",
+        "title": "Riot",
+        "description": "Riot reasoning concept."
+      },
+      {
+        "id": "revolution_reference",
+        "title": "Revolution Reference",
+        "description": "Revolution Reference reasoning concept."
+      },
+      {
+        "id": "coup_reference",
+        "title": "Coup Reference",
+        "description": "Coup Reference reasoning concept."
+      },
+      {
+        "id": "election_reference",
+        "title": "Election Reference",
+        "description": "Election Reference reasoning concept."
+      },
+      {
+        "id": "voting_reference",
+        "title": "Voting Reference",
+        "description": "Voting Reference reasoning concept."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "politics_pattern_state_reference",
+      "title": "State Reference",
+      "description": "State Reference semantic reasoning pattern for politics content.",
+      "primary_concept_id": "state_reference",
+      "related_concept_ids": [],
+      "direct_expressions": [
+        "State Reference direct",
+        "State Reference صريح"
+      ],
+      "indirect_expressions": [
+        "State Reference implied",
+        "State Reference بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "State Reference interpretation"
+      ],
+      "supporting_evidence": [
+        "State Reference supported by the local scene.",
+        "Context and speaker identity reinforce State Reference."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of State Reference in a report.",
+        "A quoted line about State Reference that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse State Reference.",
+        "A scene of documentation that references State Reference without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for State Reference."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows State Reference.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "state_reference_direct",
+          "title": "Direct support",
+          "description": "Direct support for State Reference.",
+          "confidence": 95
+        },
+        {
+          "id": "state_reference_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for State Reference.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [],
+      "gcam_mappings": [
+        {
+          "id": "state_reference_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "State Reference reasoning",
+          "note": "Use when State Reference is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "state_reference_example_1",
+          "title": "State Reference example 1",
+          "text": "State Reference appears in a clear politics scene.",
+          "expected_outcome": "State Reference recognized in literal context."
+        },
+        {
+          "id": "state_reference_example_2",
+          "title": "State Reference example 2",
+          "text": "State Reference appears with surrounding context.",
+          "expected_outcome": "State Reference recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_government_reference",
+      "title": "Government Reference",
+      "description": "Government Reference semantic reasoning pattern for politics content.",
+      "primary_concept_id": "government_reference",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Government Reference direct",
+        "Government Reference صريح"
+      ],
+      "indirect_expressions": [
+        "Government Reference implied",
+        "Government Reference بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "Government Reference interpretation"
+      ],
+      "supporting_evidence": [
+        "Government Reference supported by the local scene.",
+        "Context and speaker identity reinforce Government Reference."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Government Reference in a report.",
+        "A quoted line about Government Reference that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Government Reference.",
+        "A scene of documentation that references Government Reference without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Government Reference."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Government Reference.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "government_reference_direct",
+          "title": "Direct support",
+          "description": "Direct support for Government Reference.",
+          "confidence": 95
+        },
+        {
+          "id": "government_reference_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Government Reference.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "government_reference_glossary_observation",
+          "from_concept_id": "government_reference",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Government Reference can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "government_reference_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Government Reference reasoning",
+          "note": "Use when Government Reference is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "government_reference_example_1",
+          "title": "Government Reference example 1",
+          "text": "Government Reference appears in a clear politics scene.",
+          "expected_outcome": "Government Reference recognized in literal context."
+        },
+        {
+          "id": "government_reference_example_2",
+          "title": "Government Reference example 2",
+          "text": "Government Reference appears with surrounding context.",
+          "expected_outcome": "Government Reference recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_head_of_state",
+      "title": "Head Of State",
+      "description": "Head Of State semantic reasoning pattern for politics content.",
+      "primary_concept_id": "head_of_state",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Head Of State direct",
+        "Head Of State صريح"
+      ],
+      "indirect_expressions": [
+        "Head Of State implied",
+        "Head Of State بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "Head Of State interpretation"
+      ],
+      "supporting_evidence": [
+        "Head Of State supported by the local scene.",
+        "Context and speaker identity reinforce Head Of State."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Head Of State in a report.",
+        "A quoted line about Head Of State that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Head Of State.",
+        "A scene of documentation that references Head Of State without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Head Of State."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Head Of State.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "head_of_state_direct",
+          "title": "Direct support",
+          "description": "Direct support for Head Of State.",
+          "confidence": 95
+        },
+        {
+          "id": "head_of_state_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Head Of State.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "head_of_state_glossary_observation",
+          "from_concept_id": "head_of_state",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Head Of State can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "head_of_state_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Head Of State reasoning",
+          "note": "Use when Head Of State is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "head_of_state_example_1",
+          "title": "Head Of State example 1",
+          "text": "Head Of State appears in a clear politics scene.",
+          "expected_outcome": "Head Of State recognized in literal context."
+        },
+        {
+          "id": "head_of_state_example_2",
+          "title": "Head Of State example 2",
+          "text": "Head Of State appears with surrounding context.",
+          "expected_outcome": "Head Of State recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_royal_family",
+      "title": "Royal Family",
+      "description": "Royal Family semantic reasoning pattern for politics content.",
+      "primary_concept_id": "royal_family",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Royal Family direct",
+        "Royal Family صريح"
+      ],
+      "indirect_expressions": [
+        "Royal Family implied",
+        "Royal Family بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "Royal Family interpretation"
+      ],
+      "supporting_evidence": [
+        "Royal Family supported by the local scene.",
+        "Context and speaker identity reinforce Royal Family."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Royal Family in a report.",
+        "A quoted line about Royal Family that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Royal Family.",
+        "A scene of documentation that references Royal Family without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Royal Family."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Royal Family.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "royal_family_direct",
+          "title": "Direct support",
+          "description": "Direct support for Royal Family.",
+          "confidence": 95
+        },
+        {
+          "id": "royal_family_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Royal Family.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "royal_family_glossary_observation",
+          "from_concept_id": "royal_family",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Royal Family can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "royal_family_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Royal Family reasoning",
+          "note": "Use when Royal Family is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "royal_family_example_1",
+          "title": "Royal Family example 1",
+          "text": "Royal Family appears in a clear politics scene.",
+          "expected_outcome": "Royal Family recognized in literal context."
+        },
+        {
+          "id": "royal_family_example_2",
+          "title": "Royal Family example 2",
+          "text": "Royal Family appears with surrounding context.",
+          "expected_outcome": "Royal Family recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_government_institution",
+      "title": "Government Institution",
+      "description": "Government Institution semantic reasoning pattern for politics content.",
+      "primary_concept_id": "government_institution",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Government Institution direct",
+        "Government Institution صريح"
+      ],
+      "indirect_expressions": [
+        "Government Institution implied",
+        "Government Institution بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "Government Institution interpretation"
+      ],
+      "supporting_evidence": [
+        "Government Institution supported by the local scene.",
+        "Context and speaker identity reinforce Government Institution."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Government Institution in a report.",
+        "A quoted line about Government Institution that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Government Institution.",
+        "A scene of documentation that references Government Institution without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Government Institution."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Government Institution.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "government_institution_direct",
+          "title": "Direct support",
+          "description": "Direct support for Government Institution.",
+          "confidence": 95
+        },
+        {
+          "id": "government_institution_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Government Institution.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "government_institution_glossary_observation",
+          "from_concept_id": "government_institution",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Government Institution can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "government_institution_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Government Institution reasoning",
+          "note": "Use when Government Institution is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "government_institution_example_1",
+          "title": "Government Institution example 1",
+          "text": "Government Institution appears in a clear politics scene.",
+          "expected_outcome": "Government Institution recognized in literal context."
+        },
+        {
+          "id": "government_institution_example_2",
+          "title": "Government Institution example 2",
+          "text": "Government Institution appears with surrounding context.",
+          "expected_outcome": "Government Institution recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_public_official",
+      "title": "Public Official",
+      "description": "Public Official semantic reasoning pattern for politics content.",
+      "primary_concept_id": "public_official",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Public Official direct",
+        "Public Official صريح"
+      ],
+      "indirect_expressions": [
+        "Public Official implied",
+        "Public Official بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "Public Official interpretation"
+      ],
+      "supporting_evidence": [
+        "Public Official supported by the local scene.",
+        "Context and speaker identity reinforce Public Official."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Public Official in a report.",
+        "A quoted line about Public Official that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Public Official.",
+        "A scene of documentation that references Public Official without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Public Official."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Public Official.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "public_official_direct",
+          "title": "Direct support",
+          "description": "Direct support for Public Official.",
+          "confidence": 95
+        },
+        {
+          "id": "public_official_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Public Official.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "public_official_glossary_observation",
+          "from_concept_id": "public_official",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Public Official can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "public_official_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Public Official reasoning",
+          "note": "Use when Public Official is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "public_official_example_1",
+          "title": "Public Official example 1",
+          "text": "Public Official appears in a clear politics scene.",
+          "expected_outcome": "Public Official recognized in literal context."
+        },
+        {
+          "id": "public_official_example_2",
+          "title": "Public Official example 2",
+          "text": "Public Official appears with surrounding context.",
+          "expected_outcome": "Public Official recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_constitutional_reference",
+      "title": "Constitutional Reference",
+      "description": "Constitutional Reference semantic reasoning pattern for politics content.",
+      "primary_concept_id": "constitutional_reference",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Constitutional Reference direct",
+        "Constitutional Reference صريح"
+      ],
+      "indirect_expressions": [
+        "Constitutional Reference implied",
+        "Constitutional Reference بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "Constitutional Reference interpretation"
+      ],
+      "supporting_evidence": [
+        "Constitutional Reference supported by the local scene.",
+        "Context and speaker identity reinforce Constitutional Reference."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Constitutional Reference in a report.",
+        "A quoted line about Constitutional Reference that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Constitutional Reference.",
+        "A scene of documentation that references Constitutional Reference without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Constitutional Reference."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Constitutional Reference.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "constitutional_reference_direct",
+          "title": "Direct support",
+          "description": "Direct support for Constitutional Reference.",
+          "confidence": 95
+        },
+        {
+          "id": "constitutional_reference_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Constitutional Reference.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "constitutional_reference_glossary_observation",
+          "from_concept_id": "constitutional_reference",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Constitutional Reference can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "constitutional_reference_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Constitutional Reference reasoning",
+          "note": "Use when Constitutional Reference is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "constitutional_reference_example_1",
+          "title": "Constitutional Reference example 1",
+          "text": "Constitutional Reference appears in a clear politics scene.",
+          "expected_outcome": "Constitutional Reference recognized in literal context."
+        },
+        {
+          "id": "constitutional_reference_example_2",
+          "title": "Constitutional Reference example 2",
+          "text": "Constitutional Reference appears with surrounding context.",
+          "expected_outcome": "Constitutional Reference recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_state_scene_description",
+      "title": "State Scene Description",
+      "description": "State Scene Description semantic reasoning pattern for politics content.",
+      "primary_concept_id": "state_scene_description",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "State Scene Description direct",
+        "State Scene Description صريح"
+      ],
+      "indirect_expressions": [
+        "State Scene Description implied",
+        "State Scene Description بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "State Scene Description interpretation"
+      ],
+      "supporting_evidence": [
+        "State Scene Description supported by the local scene.",
+        "Context and speaker identity reinforce State Scene Description."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of State Scene Description in a report.",
+        "A quoted line about State Scene Description that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse State Scene Description.",
+        "A scene of documentation that references State Scene Description without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for State Scene Description."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows State Scene Description.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "state_scene_description_direct",
+          "title": "Direct support",
+          "description": "Direct support for State Scene Description.",
+          "confidence": 95
+        },
+        {
+          "id": "state_scene_description_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for State Scene Description.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "state_scene_description_glossary_observation",
+          "from_concept_id": "state_scene_description",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for State Scene Description can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "state_scene_description_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "State Scene Description reasoning",
+          "note": "Use when State Scene Description is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "state_scene_description_example_1",
+          "title": "State Scene Description example 1",
+          "text": "State Scene Description appears in a clear politics scene.",
+          "expected_outcome": "State Scene Description recognized in literal context."
+        },
+        {
+          "id": "state_scene_description_example_2",
+          "title": "State Scene Description example 2",
+          "text": "State Scene Description appears with surrounding context.",
+          "expected_outcome": "State Scene Description recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_state_observation",
+      "title": "State Observation",
+      "description": "State Observation semantic reasoning pattern for politics content.",
+      "primary_concept_id": "state_observation",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "State Observation direct",
+        "State Observation صريح"
+      ],
+      "indirect_expressions": [
+        "State Observation implied",
+        "State Observation بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "State Observation interpretation"
+      ],
+      "supporting_evidence": [
+        "State Observation supported by the local scene.",
+        "Context and speaker identity reinforce State Observation."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of State Observation in a report.",
+        "A quoted line about State Observation that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse State Observation.",
+        "A scene of documentation that references State Observation without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for State Observation."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows State Observation.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "state_observation_direct",
+          "title": "Direct support",
+          "description": "Direct support for State Observation.",
+          "confidence": 95
+        },
+        {
+          "id": "state_observation_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for State Observation.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "state_observation_glossary_observation",
+          "from_concept_id": "state_observation",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for State Observation can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "state_observation_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "State Observation reasoning",
+          "note": "Use when State Observation is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "state_observation_example_1",
+          "title": "State Observation example 1",
+          "text": "State Observation appears in a clear politics scene.",
+          "expected_outcome": "State Observation recognized in literal context."
+        },
+        {
+          "id": "state_observation_example_2",
+          "title": "State Observation example 2",
+          "text": "State Observation appears with surrounding context.",
+          "expected_outcome": "State Observation recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_national_flag",
+      "title": "National Flag",
+      "description": "National Flag semantic reasoning pattern for politics content.",
+      "primary_concept_id": "national_flag",
+      "related_concept_ids": [
+        "state_reference",
+        "national_identity"
+      ],
+      "direct_expressions": [
+        "National Flag direct",
+        "National Flag صريح"
+      ],
+      "indirect_expressions": [
+        "National Flag implied",
+        "National Flag بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "National Flag interpretation"
+      ],
+      "supporting_evidence": [
+        "National Flag supported by the local scene.",
+        "Context and speaker identity reinforce National Flag."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of National Flag in a report.",
+        "A quoted line about National Flag that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse National Flag.",
+        "A scene of documentation that references National Flag without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for National Flag."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows National Flag.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "national_flag_direct",
+          "title": "Direct support",
+          "description": "Direct support for National Flag.",
+          "confidence": 95
+        },
+        {
+          "id": "national_flag_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for National Flag.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "national_flag_glossary_observation",
+          "from_concept_id": "national_flag",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for National Flag can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "national_flag_gcam_18",
+          "article_id": 18,
+          "atom_ids": [
+            "18-1"
+          ],
+          "role": "National Flag reasoning",
+          "note": "Use when National Flag is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "national_flag_example_1",
+          "title": "National Flag example 1",
+          "text": "National Flag appears in a clear politics scene.",
+          "expected_outcome": "National Flag recognized in literal context."
+        },
+        {
+          "id": "national_flag_example_2",
+          "title": "National Flag example 2",
+          "text": "National Flag appears with surrounding context.",
+          "expected_outcome": "National Flag recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_national_anthem",
+      "title": "National Anthem",
+      "description": "National Anthem semantic reasoning pattern for politics content.",
+      "primary_concept_id": "national_anthem",
+      "related_concept_ids": [
+        "state_reference",
+        "national_identity"
+      ],
+      "direct_expressions": [
+        "National Anthem direct",
+        "National Anthem صريح"
+      ],
+      "indirect_expressions": [
+        "National Anthem implied",
+        "National Anthem بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "National Anthem interpretation"
+      ],
+      "supporting_evidence": [
+        "National Anthem supported by the local scene.",
+        "Context and speaker identity reinforce National Anthem."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of National Anthem in a report.",
+        "A quoted line about National Anthem that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse National Anthem.",
+        "A scene of documentation that references National Anthem without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for National Anthem."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows National Anthem.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "national_anthem_direct",
+          "title": "Direct support",
+          "description": "Direct support for National Anthem.",
+          "confidence": 95
+        },
+        {
+          "id": "national_anthem_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for National Anthem.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "national_anthem_glossary_observation",
+          "from_concept_id": "national_anthem",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for National Anthem can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "national_anthem_gcam_18",
+          "article_id": 18,
+          "atom_ids": [
+            "18-1"
+          ],
+          "role": "National Anthem reasoning",
+          "note": "Use when National Anthem is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "national_anthem_example_1",
+          "title": "National Anthem example 1",
+          "text": "National Anthem appears in a clear politics scene.",
+          "expected_outcome": "National Anthem recognized in literal context."
+        },
+        {
+          "id": "national_anthem_example_2",
+          "title": "National Anthem example 2",
+          "text": "National Anthem appears with surrounding context.",
+          "expected_outcome": "National Anthem recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_national_symbol",
+      "title": "National Symbol",
+      "description": "National Symbol semantic reasoning pattern for politics content.",
+      "primary_concept_id": "national_symbol",
+      "related_concept_ids": [
+        "state_reference",
+        "national_identity"
+      ],
+      "direct_expressions": [
+        "National Symbol direct",
+        "National Symbol صريح"
+      ],
+      "indirect_expressions": [
+        "National Symbol implied",
+        "National Symbol بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "National Symbol interpretation"
+      ],
+      "supporting_evidence": [
+        "National Symbol supported by the local scene.",
+        "Context and speaker identity reinforce National Symbol."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of National Symbol in a report.",
+        "A quoted line about National Symbol that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse National Symbol.",
+        "A scene of documentation that references National Symbol without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for National Symbol."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows National Symbol.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "national_symbol_direct",
+          "title": "Direct support",
+          "description": "Direct support for National Symbol.",
+          "confidence": 95
+        },
+        {
+          "id": "national_symbol_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for National Symbol.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "national_symbol_glossary_observation",
+          "from_concept_id": "national_symbol",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for National Symbol can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "national_symbol_gcam_18",
+          "article_id": 18,
+          "atom_ids": [
+            "18-1"
+          ],
+          "role": "National Symbol reasoning",
+          "note": "Use when National Symbol is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "national_symbol_example_1",
+          "title": "National Symbol example 1",
+          "text": "National Symbol appears in a clear politics scene.",
+          "expected_outcome": "National Symbol recognized in literal context."
+        },
+        {
+          "id": "national_symbol_example_2",
+          "title": "National Symbol example 2",
+          "text": "National Symbol appears with surrounding context.",
+          "expected_outcome": "National Symbol recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_national_identity",
+      "title": "National Identity",
+      "description": "National Identity semantic reasoning pattern for politics content.",
+      "primary_concept_id": "national_identity",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "National Identity direct",
+        "National Identity صريح"
+      ],
+      "indirect_expressions": [
+        "National Identity implied",
+        "National Identity بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "National Identity interpretation"
+      ],
+      "supporting_evidence": [
+        "National Identity supported by the local scene.",
+        "Context and speaker identity reinforce National Identity."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of National Identity in a report.",
+        "A quoted line about National Identity that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse National Identity.",
+        "A scene of documentation that references National Identity without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for National Identity."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows National Identity.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "national_identity_direct",
+          "title": "Direct support",
+          "description": "Direct support for National Identity.",
+          "confidence": 95
+        },
+        {
+          "id": "national_identity_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for National Identity.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "national_identity_glossary_observation",
+          "from_concept_id": "national_identity",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for National Identity can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "national_identity_gcam_18",
+          "article_id": 18,
+          "atom_ids": [
+            "18-1"
+          ],
+          "role": "National Identity reasoning",
+          "note": "Use when National Identity is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "national_identity_example_1",
+          "title": "National Identity example 1",
+          "text": "National Identity appears in a clear politics scene.",
+          "expected_outcome": "National Identity recognized in literal context."
+        },
+        {
+          "id": "national_identity_example_2",
+          "title": "National Identity example 2",
+          "text": "National Identity appears with surrounding context.",
+          "expected_outcome": "National Identity recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_national_unity",
+      "title": "National Unity",
+      "description": "National Unity semantic reasoning pattern for politics content.",
+      "primary_concept_id": "national_unity",
+      "related_concept_ids": [
+        "state_reference",
+        "national_identity"
+      ],
+      "direct_expressions": [
+        "National Unity direct",
+        "National Unity صريح"
+      ],
+      "indirect_expressions": [
+        "National Unity implied",
+        "National Unity بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "National Unity interpretation"
+      ],
+      "supporting_evidence": [
+        "National Unity supported by the local scene.",
+        "Context and speaker identity reinforce National Unity."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of National Unity in a report.",
+        "A quoted line about National Unity that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse National Unity.",
+        "A scene of documentation that references National Unity without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for National Unity."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows National Unity.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "national_unity_direct",
+          "title": "Direct support",
+          "description": "Direct support for National Unity.",
+          "confidence": 95
+        },
+        {
+          "id": "national_unity_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for National Unity.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "national_unity_glossary_observation",
+          "from_concept_id": "national_unity",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for National Unity can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "national_unity_gcam_18",
+          "article_id": 18,
+          "atom_ids": [
+            "18-1"
+          ],
+          "role": "National Unity reasoning",
+          "note": "Use when National Unity is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "national_unity_example_1",
+          "title": "National Unity example 1",
+          "text": "National Unity appears in a clear politics scene.",
+          "expected_outcome": "National Unity recognized in literal context."
+        },
+        {
+          "id": "national_unity_example_2",
+          "title": "National Unity example 2",
+          "text": "National Unity appears with surrounding context.",
+          "expected_outcome": "National Unity recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_patriotism",
+      "title": "Patriotism",
+      "description": "Patriotism semantic reasoning pattern for politics content.",
+      "primary_concept_id": "patriotism",
+      "related_concept_ids": [
+        "state_reference",
+        "national_identity"
+      ],
+      "direct_expressions": [
+        "Patriotism direct",
+        "Patriotism صريح"
+      ],
+      "indirect_expressions": [
+        "Patriotism implied",
+        "Patriotism بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "Patriotism interpretation"
+      ],
+      "supporting_evidence": [
+        "Patriotism supported by the local scene.",
+        "Context and speaker identity reinforce Patriotism."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Patriotism in a report.",
+        "A quoted line about Patriotism that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Patriotism.",
+        "A scene of documentation that references Patriotism without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Patriotism."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Patriotism.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "patriotism_direct",
+          "title": "Direct support",
+          "description": "Direct support for Patriotism.",
+          "confidence": 95
+        },
+        {
+          "id": "patriotism_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Patriotism.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "patriotism_glossary_observation",
+          "from_concept_id": "patriotism",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Patriotism can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "patriotism_gcam_18",
+          "article_id": 18,
+          "atom_ids": [
+            "18-1"
+          ],
+          "role": "Patriotism reasoning",
+          "note": "Use when Patriotism is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "patriotism_example_1",
+          "title": "Patriotism example 1",
+          "text": "Patriotism appears in a clear politics scene.",
+          "expected_outcome": "Patriotism recognized in literal context."
+        },
+        {
+          "id": "patriotism_example_2",
+          "title": "Patriotism example 2",
+          "text": "Patriotism appears with surrounding context.",
+          "expected_outcome": "Patriotism recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_foreign_government",
+      "title": "Foreign Government",
+      "description": "Foreign Government semantic reasoning pattern for politics content.",
+      "primary_concept_id": "foreign_government",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Foreign Government direct",
+        "Foreign Government صريح"
+      ],
+      "indirect_expressions": [
+        "Foreign Government implied",
+        "Foreign Government بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Foreign Government interpretation"
+      ],
+      "supporting_evidence": [
+        "Foreign Government supported by the local scene.",
+        "Context and speaker identity reinforce Foreign Government."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Foreign Government in a report.",
+        "A quoted line about Foreign Government that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Foreign Government.",
+        "A scene of documentation that references Foreign Government without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Foreign Government."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Foreign Government.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "foreign_government_direct",
+          "title": "Direct support",
+          "description": "Direct support for Foreign Government.",
+          "confidence": 95
+        },
+        {
+          "id": "foreign_government_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Foreign Government.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "foreign_government_glossary_observation",
+          "from_concept_id": "foreign_government",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Foreign Government can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "foreign_government_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Foreign Government reasoning",
+          "note": "Use when Foreign Government is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_government_example_1",
+          "title": "Foreign Government example 1",
+          "text": "Foreign Government appears in a clear politics scene.",
+          "expected_outcome": "Foreign Government recognized in literal context."
+        },
+        {
+          "id": "foreign_government_example_2",
+          "title": "Foreign Government example 2",
+          "text": "Foreign Government appears with surrounding context.",
+          "expected_outcome": "Foreign Government recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_foreign_leader",
+      "title": "Foreign Leader",
+      "description": "Foreign Leader semantic reasoning pattern for politics content.",
+      "primary_concept_id": "foreign_leader",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Foreign Leader direct",
+        "Foreign Leader صريح"
+      ],
+      "indirect_expressions": [
+        "Foreign Leader implied",
+        "Foreign Leader بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Foreign Leader interpretation"
+      ],
+      "supporting_evidence": [
+        "Foreign Leader supported by the local scene.",
+        "Context and speaker identity reinforce Foreign Leader."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Foreign Leader in a report.",
+        "A quoted line about Foreign Leader that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Foreign Leader.",
+        "A scene of documentation that references Foreign Leader without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Foreign Leader."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Foreign Leader.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "foreign_leader_direct",
+          "title": "Direct support",
+          "description": "Direct support for Foreign Leader.",
+          "confidence": 95
+        },
+        {
+          "id": "foreign_leader_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Foreign Leader.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "foreign_leader_glossary_observation",
+          "from_concept_id": "foreign_leader",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Foreign Leader can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "foreign_leader_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Foreign Leader reasoning",
+          "note": "Use when Foreign Leader is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "foreign_leader_example_1",
+          "title": "Foreign Leader example 1",
+          "text": "Foreign Leader appears in a clear politics scene.",
+          "expected_outcome": "Foreign Leader recognized in literal context."
+        },
+        {
+          "id": "foreign_leader_example_2",
+          "title": "Foreign Leader example 2",
+          "text": "Foreign Leader appears with surrounding context.",
+          "expected_outcome": "Foreign Leader recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_international_organization",
+      "title": "International Organization",
+      "description": "International Organization semantic reasoning pattern for politics content.",
+      "primary_concept_id": "international_organization",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "International Organization direct",
+        "International Organization صريح"
+      ],
+      "indirect_expressions": [
+        "International Organization implied",
+        "International Organization بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "International Organization interpretation"
+      ],
+      "supporting_evidence": [
+        "International Organization supported by the local scene.",
+        "Context and speaker identity reinforce International Organization."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of International Organization in a report.",
+        "A quoted line about International Organization that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse International Organization.",
+        "A scene of documentation that references International Organization without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for International Organization."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows International Organization.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "international_organization_direct",
+          "title": "Direct support",
+          "description": "Direct support for International Organization.",
+          "confidence": 95
+        },
+        {
+          "id": "international_organization_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for International Organization.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "international_organization_glossary_observation",
+          "from_concept_id": "international_organization",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for International Organization can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "international_organization_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "International Organization reasoning",
+          "note": "Use when International Organization is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "international_organization_example_1",
+          "title": "International Organization example 1",
+          "text": "International Organization appears in a clear politics scene.",
+          "expected_outcome": "International Organization recognized in literal context."
+        },
+        {
+          "id": "international_organization_example_2",
+          "title": "International Organization example 2",
+          "text": "International Organization appears with surrounding context.",
+          "expected_outcome": "International Organization recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_diplomatic_relations",
+      "title": "Diplomatic Relations",
+      "description": "Diplomatic Relations semantic reasoning pattern for politics content.",
+      "primary_concept_id": "diplomatic_relations",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Diplomatic Relations direct",
+        "Diplomatic Relations صريح"
+      ],
+      "indirect_expressions": [
+        "Diplomatic Relations implied",
+        "Diplomatic Relations بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "Diplomatic Relations interpretation"
+      ],
+      "supporting_evidence": [
+        "Diplomatic Relations supported by the local scene.",
+        "Context and speaker identity reinforce Diplomatic Relations."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Diplomatic Relations in a report.",
+        "A quoted line about Diplomatic Relations that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Diplomatic Relations.",
+        "A scene of documentation that references Diplomatic Relations without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Diplomatic Relations."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Diplomatic Relations.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "diplomatic_relations_direct",
+          "title": "Direct support",
+          "description": "Direct support for Diplomatic Relations.",
+          "confidence": 95
+        },
+        {
+          "id": "diplomatic_relations_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Diplomatic Relations.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "diplomatic_relations_glossary_observation",
+          "from_concept_id": "diplomatic_relations",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Diplomatic Relations can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "diplomatic_relations_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Diplomatic Relations reasoning",
+          "note": "Use when Diplomatic Relations is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "diplomatic_relations_example_1",
+          "title": "Diplomatic Relations example 1",
+          "text": "Diplomatic Relations appears in a clear politics scene.",
+          "expected_outcome": "Diplomatic Relations recognized in literal context."
+        },
+        {
+          "id": "diplomatic_relations_example_2",
+          "title": "Diplomatic Relations example 2",
+          "text": "Diplomatic Relations appears with surrounding context.",
+          "expected_outcome": "Diplomatic Relations recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_international_conflict",
+      "title": "International Conflict",
+      "description": "International Conflict semantic reasoning pattern for politics content.",
+      "primary_concept_id": "international_conflict",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "International Conflict direct",
+        "International Conflict صريح"
+      ],
+      "indirect_expressions": [
+        "International Conflict implied",
+        "International Conflict بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "International Conflict interpretation"
+      ],
+      "supporting_evidence": [
+        "International Conflict supported by the local scene.",
+        "Context and speaker identity reinforce International Conflict."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of International Conflict in a report.",
+        "A quoted line about International Conflict that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse International Conflict.",
+        "A scene of documentation that references International Conflict without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for International Conflict."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows International Conflict.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "international_conflict_direct",
+          "title": "Direct support",
+          "description": "Direct support for International Conflict.",
+          "confidence": 95
+        },
+        {
+          "id": "international_conflict_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for International Conflict.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "international_conflict_glossary_observation",
+          "from_concept_id": "international_conflict",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for International Conflict can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "international_conflict_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "International Conflict reasoning",
+          "note": "Use when International Conflict is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "international_conflict_example_1",
+          "title": "International Conflict example 1",
+          "text": "International Conflict appears in a clear politics scene.",
+          "expected_outcome": "International Conflict recognized in literal context."
+        },
+        {
+          "id": "international_conflict_example_2",
+          "title": "International Conflict example 2",
+          "text": "International Conflict appears with surrounding context.",
+          "expected_outcome": "International Conflict recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_state_security",
+      "title": "State Security",
+      "description": "State Security semantic reasoning pattern for politics content.",
+      "primary_concept_id": "state_security",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "State Security direct",
+        "State Security صريح"
+      ],
+      "indirect_expressions": [
+        "State Security implied",
+        "State Security بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "State Security interpretation"
+      ],
+      "supporting_evidence": [
+        "State Security supported by the local scene.",
+        "Context and speaker identity reinforce State Security."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of State Security in a report.",
+        "A quoted line about State Security that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse State Security.",
+        "A scene of documentation that references State Security without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for State Security."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows State Security.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "state_security_direct",
+          "title": "Direct support",
+          "description": "Direct support for State Security.",
+          "confidence": 95
+        },
+        {
+          "id": "state_security_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for State Security.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "state_security_glossary_observation",
+          "from_concept_id": "state_security",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for State Security can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "state_security_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "State Security reasoning",
+          "note": "Use when State Security is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "state_security_example_1",
+          "title": "State Security example 1",
+          "text": "State Security appears in a clear politics scene.",
+          "expected_outcome": "State Security recognized in literal context."
+        },
+        {
+          "id": "state_security_example_2",
+          "title": "State Security example 2",
+          "text": "State Security appears with surrounding context.",
+          "expected_outcome": "State Security recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_national_security",
+      "title": "National Security",
+      "description": "National Security semantic reasoning pattern for politics content.",
+      "primary_concept_id": "national_security",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "National Security direct",
+        "National Security صريح"
+      ],
+      "indirect_expressions": [
+        "National Security implied",
+        "National Security بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "National Security interpretation"
+      ],
+      "supporting_evidence": [
+        "National Security supported by the local scene.",
+        "Context and speaker identity reinforce National Security."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of National Security in a report.",
+        "A quoted line about National Security that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse National Security.",
+        "A scene of documentation that references National Security without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for National Security."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows National Security.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "national_security_direct",
+          "title": "Direct support",
+          "description": "Direct support for National Security.",
+          "confidence": 95
+        },
+        {
+          "id": "national_security_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for National Security.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "national_security_glossary_observation",
+          "from_concept_id": "national_security",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for National Security can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "national_security_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "National Security reasoning",
+          "note": "Use when National Security is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "national_security_example_1",
+          "title": "National Security example 1",
+          "text": "National Security appears in a clear politics scene.",
+          "expected_outcome": "National Security recognized in literal context."
+        },
+        {
+          "id": "national_security_example_2",
+          "title": "National Security example 2",
+          "text": "National Security appears with surrounding context.",
+          "expected_outcome": "National Security recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_treason",
+      "title": "Treason",
+      "description": "Treason semantic reasoning pattern for politics content.",
+      "primary_concept_id": "treason",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Treason direct",
+        "Treason صريح"
+      ],
+      "indirect_expressions": [
+        "Treason implied",
+        "Treason بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "Treason interpretation"
+      ],
+      "supporting_evidence": [
+        "Treason supported by the local scene.",
+        "Context and speaker identity reinforce Treason."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Treason in a report.",
+        "A quoted line about Treason that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Treason.",
+        "A scene of documentation that references Treason without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Treason."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Treason.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "treason_direct",
+          "title": "Direct support",
+          "description": "Direct support for Treason.",
+          "confidence": 95
+        },
+        {
+          "id": "treason_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Treason.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "treason_glossary_observation",
+          "from_concept_id": "treason",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Treason can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "treason_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Treason reasoning",
+          "note": "Use when Treason is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "treason_example_1",
+          "title": "Treason example 1",
+          "text": "Treason appears in a clear politics scene.",
+          "expected_outcome": "Treason recognized in literal context."
+        },
+        {
+          "id": "treason_example_2",
+          "title": "Treason example 2",
+          "text": "Treason appears with surrounding context.",
+          "expected_outcome": "Treason recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_espionage",
+      "title": "Espionage",
+      "description": "Espionage semantic reasoning pattern for politics content.",
+      "primary_concept_id": "espionage",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Espionage direct",
+        "Espionage صريح"
+      ],
+      "indirect_expressions": [
+        "Espionage implied",
+        "Espionage بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "Espionage interpretation"
+      ],
+      "supporting_evidence": [
+        "Espionage supported by the local scene.",
+        "Context and speaker identity reinforce Espionage."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Espionage in a report.",
+        "A quoted line about Espionage that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Espionage.",
+        "A scene of documentation that references Espionage without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Espionage."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Espionage.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "espionage_direct",
+          "title": "Direct support",
+          "description": "Direct support for Espionage.",
+          "confidence": 95
+        },
+        {
+          "id": "espionage_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Espionage.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "espionage_glossary_observation",
+          "from_concept_id": "espionage",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Espionage can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "espionage_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Espionage reasoning",
+          "note": "Use when Espionage is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "espionage_example_1",
+          "title": "Espionage example 1",
+          "text": "Espionage appears in a clear politics scene.",
+          "expected_outcome": "Espionage recognized in literal context."
+        },
+        {
+          "id": "espionage_example_2",
+          "title": "Espionage example 2",
+          "text": "Espionage appears with surrounding context.",
+          "expected_outcome": "Espionage recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_military_reference",
+      "title": "Military Reference",
+      "description": "Military Reference semantic reasoning pattern for politics content.",
+      "primary_concept_id": "military_reference",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Military Reference direct",
+        "Military Reference صريح"
+      ],
+      "indirect_expressions": [
+        "Military Reference implied",
+        "Military Reference بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Military Reference interpretation"
+      ],
+      "supporting_evidence": [
+        "Military Reference supported by the local scene.",
+        "Context and speaker identity reinforce Military Reference."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Military Reference in a report.",
+        "A quoted line about Military Reference that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Military Reference.",
+        "A scene of documentation that references Military Reference without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Military Reference."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Military Reference.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "military_reference_direct",
+          "title": "Direct support",
+          "description": "Direct support for Military Reference.",
+          "confidence": 95
+        },
+        {
+          "id": "military_reference_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Military Reference.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "military_reference_glossary_observation",
+          "from_concept_id": "military_reference",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Military Reference can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "military_reference_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Military Reference reasoning",
+          "note": "Use when Military Reference is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "military_reference_example_1",
+          "title": "Military Reference example 1",
+          "text": "Military Reference appears in a clear politics scene.",
+          "expected_outcome": "Military Reference recognized in literal context."
+        },
+        {
+          "id": "military_reference_example_2",
+          "title": "Military Reference example 2",
+          "text": "Military Reference appears with surrounding context.",
+          "expected_outcome": "Military Reference recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_armed_forces",
+      "title": "Armed Forces",
+      "description": "Armed Forces semantic reasoning pattern for politics content.",
+      "primary_concept_id": "armed_forces",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Armed Forces direct",
+        "Armed Forces صريح"
+      ],
+      "indirect_expressions": [
+        "Armed Forces implied",
+        "Armed Forces بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Armed Forces interpretation"
+      ],
+      "supporting_evidence": [
+        "Armed Forces supported by the local scene.",
+        "Context and speaker identity reinforce Armed Forces."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Armed Forces in a report.",
+        "A quoted line about Armed Forces that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Armed Forces.",
+        "A scene of documentation that references Armed Forces without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Armed Forces."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Armed Forces.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "armed_forces_direct",
+          "title": "Direct support",
+          "description": "Direct support for Armed Forces.",
+          "confidence": 95
+        },
+        {
+          "id": "armed_forces_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Armed Forces.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "armed_forces_glossary_observation",
+          "from_concept_id": "armed_forces",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Armed Forces can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "armed_forces_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Armed Forces reasoning",
+          "note": "Use when Armed Forces is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "armed_forces_example_1",
+          "title": "Armed Forces example 1",
+          "text": "Armed Forces appears in a clear politics scene.",
+          "expected_outcome": "Armed Forces recognized in literal context."
+        },
+        {
+          "id": "armed_forces_example_2",
+          "title": "Armed Forces example 2",
+          "text": "Armed Forces appears with surrounding context.",
+          "expected_outcome": "Armed Forces recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_intelligence_services",
+      "title": "Intelligence Services",
+      "description": "Intelligence Services semantic reasoning pattern for politics content.",
+      "primary_concept_id": "intelligence_services",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Intelligence Services direct",
+        "Intelligence Services صريح"
+      ],
+      "indirect_expressions": [
+        "Intelligence Services implied",
+        "Intelligence Services بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Intelligence Services interpretation"
+      ],
+      "supporting_evidence": [
+        "Intelligence Services supported by the local scene.",
+        "Context and speaker identity reinforce Intelligence Services."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Intelligence Services in a report.",
+        "A quoted line about Intelligence Services that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Intelligence Services.",
+        "A scene of documentation that references Intelligence Services without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Intelligence Services."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Intelligence Services.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "intelligence_services_direct",
+          "title": "Direct support",
+          "description": "Direct support for Intelligence Services.",
+          "confidence": 95
+        },
+        {
+          "id": "intelligence_services_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Intelligence Services.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "intelligence_services_glossary_observation",
+          "from_concept_id": "intelligence_services",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Intelligence Services can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "intelligence_services_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Intelligence Services reasoning",
+          "note": "Use when Intelligence Services is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "intelligence_services_example_1",
+          "title": "Intelligence Services example 1",
+          "text": "Intelligence Services appears in a clear politics scene.",
+          "expected_outcome": "Intelligence Services recognized in literal context."
+        },
+        {
+          "id": "intelligence_services_example_2",
+          "title": "Intelligence Services example 2",
+          "text": "Intelligence Services appears with surrounding context.",
+          "expected_outcome": "Intelligence Services recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_police_institution",
+      "title": "Police Institution",
+      "description": "Police Institution semantic reasoning pattern for politics content.",
+      "primary_concept_id": "police_institution",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Police Institution direct",
+        "Police Institution صريح"
+      ],
+      "indirect_expressions": [
+        "Police Institution implied",
+        "Police Institution بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Police Institution interpretation"
+      ],
+      "supporting_evidence": [
+        "Police Institution supported by the local scene.",
+        "Context and speaker identity reinforce Police Institution."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Police Institution in a report.",
+        "A quoted line about Police Institution that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Police Institution.",
+        "A scene of documentation that references Police Institution without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Police Institution."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Police Institution.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "police_institution_direct",
+          "title": "Direct support",
+          "description": "Direct support for Police Institution.",
+          "confidence": 95
+        },
+        {
+          "id": "police_institution_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Police Institution.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "police_institution_glossary_observation",
+          "from_concept_id": "police_institution",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Police Institution can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "police_institution_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Police Institution reasoning",
+          "note": "Use when Police Institution is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "police_institution_example_1",
+          "title": "Police Institution example 1",
+          "text": "Police Institution appears in a clear politics scene.",
+          "expected_outcome": "Police Institution recognized in literal context."
+        },
+        {
+          "id": "police_institution_example_2",
+          "title": "Police Institution example 2",
+          "text": "Police Institution appears with surrounding context.",
+          "expected_outcome": "Police Institution recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_dialogue",
+      "title": "Political Dialogue",
+      "description": "Political Dialogue semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_dialogue",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Political Dialogue direct",
+        "Political Dialogue صريح"
+      ],
+      "indirect_expressions": [
+        "Political Dialogue implied",
+        "Political Dialogue بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Political Dialogue interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Dialogue supported by the local scene.",
+        "Context and speaker identity reinforce Political Dialogue."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Dialogue in a report.",
+        "A quoted line about Political Dialogue that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Dialogue.",
+        "A scene of documentation that references Political Dialogue without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Dialogue."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Dialogue.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_dialogue_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Dialogue.",
+          "confidence": 95
+        },
+        {
+          "id": "political_dialogue_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Dialogue.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_dialogue_glossary_observation",
+          "from_concept_id": "political_dialogue",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Dialogue can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_dialogue_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Political Dialogue reasoning",
+          "note": "Use when Political Dialogue is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_dialogue_example_1",
+          "title": "Political Dialogue example 1",
+          "text": "Political Dialogue appears in a clear politics scene.",
+          "expected_outcome": "Political Dialogue recognized in literal context."
+        },
+        {
+          "id": "political_dialogue_example_2",
+          "title": "Political Dialogue example 2",
+          "text": "Political Dialogue appears with surrounding context.",
+          "expected_outcome": "Political Dialogue recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_debate",
+      "title": "Political Debate",
+      "description": "Political Debate semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_debate",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Political Debate direct",
+        "Political Debate صريح"
+      ],
+      "indirect_expressions": [
+        "Political Debate implied",
+        "Political Debate بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Political Debate interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Debate supported by the local scene.",
+        "Context and speaker identity reinforce Political Debate."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Debate in a report.",
+        "A quoted line about Political Debate that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Debate.",
+        "A scene of documentation that references Political Debate without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Debate."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Debate.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_debate_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Debate.",
+          "confidence": 95
+        },
+        {
+          "id": "political_debate_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Debate.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_debate_glossary_observation",
+          "from_concept_id": "political_debate",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Debate can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_debate_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Political Debate reasoning",
+          "note": "Use when Political Debate is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_debate_example_1",
+          "title": "Political Debate example 1",
+          "text": "Political Debate appears in a clear politics scene.",
+          "expected_outcome": "Political Debate recognized in literal context."
+        },
+        {
+          "id": "political_debate_example_2",
+          "title": "Political Debate example 2",
+          "text": "Political Debate appears with surrounding context.",
+          "expected_outcome": "Political Debate recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_satire",
+      "title": "Political Satire",
+      "description": "Political Satire semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_satire",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Political Satire direct",
+        "Political Satire صريح"
+      ],
+      "indirect_expressions": [
+        "Political Satire implied",
+        "Political Satire بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Political Satire interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Satire supported by the local scene.",
+        "Context and speaker identity reinforce Political Satire."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Satire in a report.",
+        "A quoted line about Political Satire that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Satire.",
+        "A scene of documentation that references Political Satire without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Satire."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Satire.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_satire_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Satire.",
+          "confidence": 95
+        },
+        {
+          "id": "political_satire_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Satire.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_satire_glossary_observation",
+          "from_concept_id": "political_satire",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Satire can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_satire_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Political Satire reasoning",
+          "note": "Use when Political Satire is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_satire_example_1",
+          "title": "Political Satire example 1",
+          "text": "Political Satire appears in a clear politics scene.",
+          "expected_outcome": "Political Satire recognized in literal context."
+        },
+        {
+          "id": "political_satire_example_2",
+          "title": "Political Satire example 2",
+          "text": "Political Satire appears with surrounding context.",
+          "expected_outcome": "Political Satire recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_criticism",
+      "title": "Political Criticism",
+      "description": "Political Criticism semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_criticism",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Political Criticism direct",
+        "Political Criticism صريح"
+      ],
+      "indirect_expressions": [
+        "Political Criticism implied",
+        "Political Criticism بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Political Criticism interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Criticism supported by the local scene.",
+        "Context and speaker identity reinforce Political Criticism."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Criticism in a report.",
+        "A quoted line about Political Criticism that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Criticism.",
+        "A scene of documentation that references Political Criticism without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Criticism."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Criticism.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_criticism_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Criticism.",
+          "confidence": 95
+        },
+        {
+          "id": "political_criticism_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Criticism.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_criticism_glossary_observation",
+          "from_concept_id": "political_criticism",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Criticism can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_criticism_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Political Criticism reasoning",
+          "note": "Use when Political Criticism is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_criticism_example_1",
+          "title": "Political Criticism example 1",
+          "text": "Political Criticism appears in a clear politics scene.",
+          "expected_outcome": "Political Criticism recognized in literal context."
+        },
+        {
+          "id": "political_criticism_example_2",
+          "title": "Political Criticism example 2",
+          "text": "Political Criticism appears with surrounding context.",
+          "expected_outcome": "Political Criticism recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_support",
+      "title": "Political Support",
+      "description": "Political Support semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_support",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Political Support direct",
+        "Political Support صريح"
+      ],
+      "indirect_expressions": [
+        "Political Support implied",
+        "Political Support بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "Political Support interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Support supported by the local scene.",
+        "Context and speaker identity reinforce Political Support."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Support in a report.",
+        "A quoted line about Political Support that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Support.",
+        "A scene of documentation that references Political Support without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Support."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Support.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_support_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Support.",
+          "confidence": 95
+        },
+        {
+          "id": "political_support_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Support.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_support_glossary_observation",
+          "from_concept_id": "political_support",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Support can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_support_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Political Support reasoning",
+          "note": "Use when Political Support is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_support_example_1",
+          "title": "Political Support example 1",
+          "text": "Political Support appears in a clear politics scene.",
+          "expected_outcome": "Political Support recognized in literal context."
+        },
+        {
+          "id": "political_support_example_2",
+          "title": "Political Support example 2",
+          "text": "Political Support appears with surrounding context.",
+          "expected_outcome": "Political Support recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_glorification",
+      "title": "Political Glorification",
+      "description": "Political Glorification semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_glorification",
+      "related_concept_ids": [
+        "state_reference",
+        "national_identity"
+      ],
+      "direct_expressions": [
+        "Political Glorification direct",
+        "Political Glorification صريح"
+      ],
+      "indirect_expressions": [
+        "Political Glorification implied",
+        "Political Glorification بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "supportive politics reasoning",
+        "Political Glorification interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Glorification supported by the local scene.",
+        "Context and speaker identity reinforce Political Glorification."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Glorification in a report.",
+        "A quoted line about Political Glorification that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Glorification.",
+        "A scene of documentation that references Political Glorification without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Glorification."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Glorification.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_glorification_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Glorification.",
+          "confidence": 95
+        },
+        {
+          "id": "political_glorification_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Glorification.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_glorification_glossary_observation",
+          "from_concept_id": "political_glorification",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Glorification can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_glorification_gcam_18",
+          "article_id": 18,
+          "atom_ids": [
+            "18-1"
+          ],
+          "role": "Political Glorification reasoning",
+          "note": "Use when Political Glorification is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_glorification_example_1",
+          "title": "Political Glorification example 1",
+          "text": "Political Glorification appears in a clear politics scene.",
+          "expected_outcome": "Political Glorification recognized in literal context."
+        },
+        {
+          "id": "political_glorification_example_2",
+          "title": "Political Glorification example 2",
+          "text": "Political Glorification appears with surrounding context.",
+          "expected_outcome": "Political Glorification recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_encouragement",
+      "title": "Political Encouragement",
+      "description": "Political Encouragement semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_encouragement",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Political Encouragement direct",
+        "Political Encouragement صريح"
+      ],
+      "indirect_expressions": [
+        "Political Encouragement implied",
+        "Political Encouragement بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "Political Encouragement interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Encouragement supported by the local scene.",
+        "Context and speaker identity reinforce Political Encouragement."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Encouragement in a report.",
+        "A quoted line about Political Encouragement that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Encouragement.",
+        "A scene of documentation that references Political Encouragement without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Encouragement."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Encouragement.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_encouragement_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Encouragement.",
+          "confidence": 95
+        },
+        {
+          "id": "political_encouragement_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Encouragement.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_encouragement_glossary_observation",
+          "from_concept_id": "political_encouragement",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Encouragement can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_encouragement_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Political Encouragement reasoning",
+          "note": "Use when Political Encouragement is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_encouragement_example_1",
+          "title": "Political Encouragement example 1",
+          "text": "Political Encouragement appears in a clear politics scene.",
+          "expected_outcome": "Political Encouragement recognized in literal context."
+        },
+        {
+          "id": "political_encouragement_example_2",
+          "title": "Political Encouragement example 2",
+          "text": "Political Encouragement appears with surrounding context.",
+          "expected_outcome": "Political Encouragement recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_propaganda",
+      "title": "Political Propaganda",
+      "description": "Political Propaganda semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_propaganda",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Political Propaganda direct",
+        "Political Propaganda صريح"
+      ],
+      "indirect_expressions": [
+        "Political Propaganda implied",
+        "Political Propaganda بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "Political Propaganda interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Propaganda supported by the local scene.",
+        "Context and speaker identity reinforce Political Propaganda."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Propaganda in a report.",
+        "A quoted line about Political Propaganda that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Propaganda.",
+        "A scene of documentation that references Political Propaganda without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Propaganda."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Propaganda.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_propaganda_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Propaganda.",
+          "confidence": 95
+        },
+        {
+          "id": "political_propaganda_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Propaganda.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_propaganda_glossary_observation",
+          "from_concept_id": "political_propaganda",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Propaganda can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_propaganda_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Political Propaganda reasoning",
+          "note": "Use when Political Propaganda is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_propaganda_example_1",
+          "title": "Political Propaganda example 1",
+          "text": "Political Propaganda appears in a clear politics scene.",
+          "expected_outcome": "Political Propaganda recognized in literal context."
+        },
+        {
+          "id": "political_propaganda_example_2",
+          "title": "Political Propaganda example 2",
+          "text": "Political Propaganda appears with surrounding context.",
+          "expected_outcome": "Political Propaganda recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_instruction",
+      "title": "Political Instruction",
+      "description": "Political Instruction semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_instruction",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Political Instruction direct",
+        "Political Instruction صريح"
+      ],
+      "indirect_expressions": [
+        "Political Instruction implied",
+        "Political Instruction بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "Political Instruction interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Instruction supported by the local scene.",
+        "Context and speaker identity reinforce Political Instruction."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Instruction in a report.",
+        "A quoted line about Political Instruction that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Instruction.",
+        "A scene of documentation that references Political Instruction without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Instruction."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Instruction.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_instruction_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Instruction.",
+          "confidence": 95
+        },
+        {
+          "id": "political_instruction_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Instruction.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_instruction_glossary_observation",
+          "from_concept_id": "political_instruction",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Instruction can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_instruction_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Political Instruction reasoning",
+          "note": "Use when Political Instruction is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_instruction_example_1",
+          "title": "Political Instruction example 1",
+          "text": "Political Instruction appears in a clear politics scene.",
+          "expected_outcome": "Political Instruction recognized in literal context."
+        },
+        {
+          "id": "political_instruction_example_2",
+          "title": "Political Instruction example 2",
+          "text": "Political Instruction appears with surrounding context.",
+          "expected_outcome": "Political Instruction recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_documentary",
+      "title": "Political Documentary",
+      "description": "Political Documentary semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_documentary",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Political Documentary direct",
+        "Political Documentary صريح"
+      ],
+      "indirect_expressions": [
+        "Political Documentary implied",
+        "Political Documentary بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Political Documentary interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Documentary supported by the local scene.",
+        "Context and speaker identity reinforce Political Documentary."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Documentary in a report.",
+        "A quoted line about Political Documentary that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Documentary.",
+        "A scene of documentation that references Political Documentary without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Documentary."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Documentary.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_documentary_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Documentary.",
+          "confidence": 95
+        },
+        {
+          "id": "political_documentary_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Documentary.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_documentary_glossary_observation",
+          "from_concept_id": "political_documentary",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Documentary can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_documentary_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Political Documentary reasoning",
+          "note": "Use when Political Documentary is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_documentary_example_1",
+          "title": "Political Documentary example 1",
+          "text": "Political Documentary appears in a clear politics scene.",
+          "expected_outcome": "Political Documentary recognized in literal context."
+        },
+        {
+          "id": "political_documentary_example_2",
+          "title": "Political Documentary example 2",
+          "text": "Political Documentary appears with surrounding context.",
+          "expected_outcome": "Political Documentary recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_news",
+      "title": "Political News",
+      "description": "Political News semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_news",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Political News direct",
+        "Political News صريح"
+      ],
+      "indirect_expressions": [
+        "Political News implied",
+        "Political News بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Political News interpretation"
+      ],
+      "supporting_evidence": [
+        "Political News supported by the local scene.",
+        "Context and speaker identity reinforce Political News."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political News in a report.",
+        "A quoted line about Political News that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political News.",
+        "A scene of documentation that references Political News without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political News."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political News.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_news_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political News.",
+          "confidence": 95
+        },
+        {
+          "id": "political_news_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political News.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_news_glossary_observation",
+          "from_concept_id": "political_news",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political News can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_news_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Political News reasoning",
+          "note": "Use when Political News is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_news_example_1",
+          "title": "Political News example 1",
+          "text": "Political News appears in a clear politics scene.",
+          "expected_outcome": "Political News recognized in literal context."
+        },
+        {
+          "id": "political_news_example_2",
+          "title": "Political News example 2",
+          "text": "Political News appears with surrounding context.",
+          "expected_outcome": "Political News recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_historical",
+      "title": "Political Historical",
+      "description": "Political Historical semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_historical",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Political Historical direct",
+        "Political Historical صريح"
+      ],
+      "indirect_expressions": [
+        "Political Historical implied",
+        "Political Historical بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Political Historical interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Historical supported by the local scene.",
+        "Context and speaker identity reinforce Political Historical."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Historical in a report.",
+        "A quoted line about Political Historical that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Historical.",
+        "A scene of documentation that references Political Historical without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Historical."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Historical.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_historical_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Historical.",
+          "confidence": 95
+        },
+        {
+          "id": "political_historical_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Historical.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_historical_glossary_observation",
+          "from_concept_id": "political_historical",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Historical can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_historical_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Political Historical reasoning",
+          "note": "Use when Political Historical is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_historical_example_1",
+          "title": "Political Historical example 1",
+          "text": "Political Historical appears in a clear politics scene.",
+          "expected_outcome": "Political Historical recognized in literal context."
+        },
+        {
+          "id": "political_historical_example_2",
+          "title": "Political Historical example 2",
+          "text": "Political Historical appears with surrounding context.",
+          "expected_outcome": "Political Historical recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_educational",
+      "title": "Political Educational",
+      "description": "Political Educational semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_educational",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Political Educational direct",
+        "Political Educational صريح"
+      ],
+      "indirect_expressions": [
+        "Political Educational implied",
+        "Political Educational بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Political Educational interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Educational supported by the local scene.",
+        "Context and speaker identity reinforce Political Educational."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Educational in a report.",
+        "A quoted line about Political Educational that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Educational.",
+        "A scene of documentation that references Political Educational without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Educational."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Educational.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_educational_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Educational.",
+          "confidence": 95
+        },
+        {
+          "id": "political_educational_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Educational.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_educational_glossary_observation",
+          "from_concept_id": "political_educational",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Educational can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_educational_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Political Educational reasoning",
+          "note": "Use when Political Educational is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_educational_example_1",
+          "title": "Political Educational example 1",
+          "text": "Political Educational appears in a clear politics scene.",
+          "expected_outcome": "Political Educational recognized in literal context."
+        },
+        {
+          "id": "political_educational_example_2",
+          "title": "Political Educational example 2",
+          "text": "Political Educational appears with surrounding context.",
+          "expected_outcome": "Political Educational recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_political_rally",
+      "title": "Political Rally",
+      "description": "Political Rally semantic reasoning pattern for politics content.",
+      "primary_concept_id": "political_rally",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Political Rally direct",
+        "Political Rally صريح"
+      ],
+      "indirect_expressions": [
+        "Political Rally implied",
+        "Political Rally بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Political Rally interpretation"
+      ],
+      "supporting_evidence": [
+        "Political Rally supported by the local scene.",
+        "Context and speaker identity reinforce Political Rally."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Political Rally in a report.",
+        "A quoted line about Political Rally that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Political Rally.",
+        "A scene of documentation that references Political Rally without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Political Rally."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Political Rally.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "political_rally_direct",
+          "title": "Direct support",
+          "description": "Direct support for Political Rally.",
+          "confidence": 95
+        },
+        {
+          "id": "political_rally_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Political Rally.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "political_rally_glossary_observation",
+          "from_concept_id": "political_rally",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Political Rally can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "political_rally_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Political Rally reasoning",
+          "note": "Use when Political Rally is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "political_rally_example_1",
+          "title": "Political Rally example 1",
+          "text": "Political Rally appears in a clear politics scene.",
+          "expected_outcome": "Political Rally recognized in literal context."
+        },
+        {
+          "id": "political_rally_example_2",
+          "title": "Political Rally example 2",
+          "text": "Political Rally appears with surrounding context.",
+          "expected_outcome": "Political Rally recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_public_demonstration",
+      "title": "Public Demonstration",
+      "description": "Public Demonstration semantic reasoning pattern for politics content.",
+      "primary_concept_id": "public_demonstration",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Public Demonstration direct",
+        "Public Demonstration صريح"
+      ],
+      "indirect_expressions": [
+        "Public Demonstration implied",
+        "Public Demonstration بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Public Demonstration interpretation"
+      ],
+      "supporting_evidence": [
+        "Public Demonstration supported by the local scene.",
+        "Context and speaker identity reinforce Public Demonstration."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Public Demonstration in a report.",
+        "A quoted line about Public Demonstration that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Public Demonstration.",
+        "A scene of documentation that references Public Demonstration without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Public Demonstration."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Public Demonstration.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "public_demonstration_direct",
+          "title": "Direct support",
+          "description": "Direct support for Public Demonstration.",
+          "confidence": 95
+        },
+        {
+          "id": "public_demonstration_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Public Demonstration.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "public_demonstration_glossary_observation",
+          "from_concept_id": "public_demonstration",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Public Demonstration can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "public_demonstration_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Public Demonstration reasoning",
+          "note": "Use when Public Demonstration is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "public_demonstration_example_1",
+          "title": "Public Demonstration example 1",
+          "text": "Public Demonstration appears in a clear politics scene.",
+          "expected_outcome": "Public Demonstration recognized in literal context."
+        },
+        {
+          "id": "public_demonstration_example_2",
+          "title": "Public Demonstration example 2",
+          "text": "Public Demonstration appears with surrounding context.",
+          "expected_outcome": "Public Demonstration recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_civil_unrest",
+      "title": "Civil Unrest",
+      "description": "Civil Unrest semantic reasoning pattern for politics content.",
+      "primary_concept_id": "civil_unrest",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Civil Unrest direct",
+        "Civil Unrest صريح"
+      ],
+      "indirect_expressions": [
+        "Civil Unrest implied",
+        "Civil Unrest بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "Civil Unrest interpretation"
+      ],
+      "supporting_evidence": [
+        "Civil Unrest supported by the local scene.",
+        "Context and speaker identity reinforce Civil Unrest."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Civil Unrest in a report.",
+        "A quoted line about Civil Unrest that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Civil Unrest.",
+        "A scene of documentation that references Civil Unrest without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Civil Unrest."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Civil Unrest.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "civil_unrest_direct",
+          "title": "Direct support",
+          "description": "Direct support for Civil Unrest.",
+          "confidence": 95
+        },
+        {
+          "id": "civil_unrest_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Civil Unrest.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "civil_unrest_glossary_observation",
+          "from_concept_id": "civil_unrest",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Civil Unrest can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "civil_unrest_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Civil Unrest reasoning",
+          "note": "Use when Civil Unrest is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "civil_unrest_example_1",
+          "title": "Civil Unrest example 1",
+          "text": "Civil Unrest appears in a clear politics scene.",
+          "expected_outcome": "Civil Unrest recognized in literal context."
+        },
+        {
+          "id": "civil_unrest_example_2",
+          "title": "Civil Unrest example 2",
+          "text": "Civil Unrest appears with surrounding context.",
+          "expected_outcome": "Civil Unrest recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_riot",
+      "title": "Riot",
+      "description": "Riot semantic reasoning pattern for politics content.",
+      "primary_concept_id": "riot",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Riot direct",
+        "Riot صريح"
+      ],
+      "indirect_expressions": [
+        "Riot implied",
+        "Riot بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "Riot interpretation"
+      ],
+      "supporting_evidence": [
+        "Riot supported by the local scene.",
+        "Context and speaker identity reinforce Riot."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Riot in a report.",
+        "A quoted line about Riot that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Riot.",
+        "A scene of documentation that references Riot without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Riot."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Riot.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "riot_direct",
+          "title": "Direct support",
+          "description": "Direct support for Riot.",
+          "confidence": 95
+        },
+        {
+          "id": "riot_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Riot.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "riot_glossary_observation",
+          "from_concept_id": "riot",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Riot can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "riot_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Riot reasoning",
+          "note": "Use when Riot is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "riot_example_1",
+          "title": "Riot example 1",
+          "text": "Riot appears in a clear politics scene.",
+          "expected_outcome": "Riot recognized in literal context."
+        },
+        {
+          "id": "riot_example_2",
+          "title": "Riot example 2",
+          "text": "Riot appears with surrounding context.",
+          "expected_outcome": "Riot recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_revolution_reference",
+      "title": "Revolution Reference",
+      "description": "Revolution Reference semantic reasoning pattern for politics content.",
+      "primary_concept_id": "revolution_reference",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Revolution Reference direct",
+        "Revolution Reference صريح"
+      ],
+      "indirect_expressions": [
+        "Revolution Reference implied",
+        "Revolution Reference بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "Revolution Reference interpretation"
+      ],
+      "supporting_evidence": [
+        "Revolution Reference supported by the local scene.",
+        "Context and speaker identity reinforce Revolution Reference."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Revolution Reference in a report.",
+        "A quoted line about Revolution Reference that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Revolution Reference.",
+        "A scene of documentation that references Revolution Reference without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Revolution Reference."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Revolution Reference.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "revolution_reference_direct",
+          "title": "Direct support",
+          "description": "Direct support for Revolution Reference.",
+          "confidence": 95
+        },
+        {
+          "id": "revolution_reference_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Revolution Reference.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "revolution_reference_glossary_observation",
+          "from_concept_id": "revolution_reference",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Revolution Reference can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "revolution_reference_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Revolution Reference reasoning",
+          "note": "Use when Revolution Reference is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "revolution_reference_example_1",
+          "title": "Revolution Reference example 1",
+          "text": "Revolution Reference appears in a clear politics scene.",
+          "expected_outcome": "Revolution Reference recognized in literal context."
+        },
+        {
+          "id": "revolution_reference_example_2",
+          "title": "Revolution Reference example 2",
+          "text": "Revolution Reference appears with surrounding context.",
+          "expected_outcome": "Revolution Reference recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_coup_reference",
+      "title": "Coup Reference",
+      "description": "Coup Reference semantic reasoning pattern for politics content.",
+      "primary_concept_id": "coup_reference",
+      "related_concept_ids": [
+        "state_reference",
+        "public_demonstration"
+      ],
+      "direct_expressions": [
+        "Coup Reference direct",
+        "Coup Reference صريح"
+      ],
+      "indirect_expressions": [
+        "Coup Reference implied",
+        "Coup Reference بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "harmful politics reasoning",
+        "Coup Reference interpretation"
+      ],
+      "supporting_evidence": [
+        "Coup Reference supported by the local scene.",
+        "Context and speaker identity reinforce Coup Reference."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Coup Reference in a report.",
+        "A quoted line about Coup Reference that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Coup Reference.",
+        "A scene of documentation that references Coup Reference without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Coup Reference."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Coup Reference.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "coup_reference_direct",
+          "title": "Direct support",
+          "description": "Direct support for Coup Reference.",
+          "confidence": 95
+        },
+        {
+          "id": "coup_reference_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Coup Reference.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "coup_reference_glossary_observation",
+          "from_concept_id": "coup_reference",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Coup Reference can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "coup_reference_gcam_12",
+          "article_id": 12,
+          "atom_ids": [
+            "12-1"
+          ],
+          "role": "Coup Reference reasoning",
+          "note": "Use when Coup Reference is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "coup_reference_example_1",
+          "title": "Coup Reference example 1",
+          "text": "Coup Reference appears in a clear politics scene.",
+          "expected_outcome": "Coup Reference recognized in literal context."
+        },
+        {
+          "id": "coup_reference_example_2",
+          "title": "Coup Reference example 2",
+          "text": "Coup Reference appears with surrounding context.",
+          "expected_outcome": "Coup Reference recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_election_reference",
+      "title": "Election Reference",
+      "description": "Election Reference semantic reasoning pattern for politics content.",
+      "primary_concept_id": "election_reference",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Election Reference direct",
+        "Election Reference صريح"
+      ],
+      "indirect_expressions": [
+        "Election Reference implied",
+        "Election Reference بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Election Reference interpretation"
+      ],
+      "supporting_evidence": [
+        "Election Reference supported by the local scene.",
+        "Context and speaker identity reinforce Election Reference."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Election Reference in a report.",
+        "A quoted line about Election Reference that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Election Reference.",
+        "A scene of documentation that references Election Reference without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Election Reference."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Election Reference.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "election_reference_direct",
+          "title": "Direct support",
+          "description": "Direct support for Election Reference.",
+          "confidence": 95
+        },
+        {
+          "id": "election_reference_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Election Reference.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "election_reference_glossary_observation",
+          "from_concept_id": "election_reference",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Election Reference can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "election_reference_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Election Reference reasoning",
+          "note": "Use when Election Reference is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "election_reference_example_1",
+          "title": "Election Reference example 1",
+          "text": "Election Reference appears in a clear politics scene.",
+          "expected_outcome": "Election Reference recognized in literal context."
+        },
+        {
+          "id": "election_reference_example_2",
+          "title": "Election Reference example 2",
+          "text": "Election Reference appears with surrounding context.",
+          "expected_outcome": "Election Reference recognized with context."
+        }
+      ]
+    },
+    {
+      "id": "politics_pattern_voting_reference",
+      "title": "Voting Reference",
+      "description": "Voting Reference semantic reasoning pattern for politics content.",
+      "primary_concept_id": "voting_reference",
+      "related_concept_ids": [
+        "state_reference"
+      ],
+      "direct_expressions": [
+        "Voting Reference direct",
+        "Voting Reference صريح"
+      ],
+      "indirect_expressions": [
+        "Voting Reference implied",
+        "Voting Reference بشكل غير مباشر"
+      ],
+      "semantic_intent": [
+        "neutral politics reasoning",
+        "Voting Reference interpretation"
+      ],
+      "supporting_evidence": [
+        "Voting Reference supported by the local scene.",
+        "Context and speaker identity reinforce Voting Reference."
+      ],
+      "contradictory_evidence": [
+        "Explicit condemnation or clear protective context.",
+        "A documentary, news, educational, or court frame that removes endorsement."
+      ],
+      "false_positives": [
+        "A neutral mention of Voting Reference in a report.",
+        "A quoted line about Voting Reference that the story rejects."
+      ],
+      "counter_examples": [
+        "A political discussion that does not endorse Voting Reference.",
+        "A scene of documentation that references Voting Reference without incitement."
+      ],
+      "cross_sentence_indicators": [
+        "The next sentence clarifies the target or relationship for Voting Reference."
+      ],
+      "scene_indicators": [
+        "dialogue",
+        "crowd chant",
+        "news report",
+        "documentary",
+        "rally scene"
+      ],
+      "reviewer_guidance": [
+        "Anchor the finding to the literal span that best shows Voting Reference.",
+        "Use context, relationship, and narrative frame before deciding."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "voting_reference_direct",
+          "title": "Direct support",
+          "description": "Direct support for Voting Reference.",
+          "confidence": 95
+        },
+        {
+          "id": "voting_reference_contextual",
+          "title": "Contextual support",
+          "description": "Contextual support for Voting Reference.",
+          "confidence": 72
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "voting_reference_glossary_observation",
+          "from_concept_id": "voting_reference",
+          "to_concept_id": "state_reference",
+          "relation": "supports",
+          "note": "Reasoning for Voting Reference can be anchored by observation."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "voting_reference_gcam_4",
+          "article_id": 4,
+          "atom_ids": [
+            "4-1"
+          ],
+          "role": "Voting Reference reasoning",
+          "note": "Use when Voting Reference is central to the scene."
+        }
+      ],
+      "examples": [
+        {
+          "id": "voting_reference_example_1",
+          "title": "Voting Reference example 1",
+          "text": "Voting Reference appears in a clear politics scene.",
+          "expected_outcome": "Voting Reference recognized in literal context."
+        },
+        {
+          "id": "voting_reference_example_2",
+          "title": "Voting Reference example 2",
+          "text": "Voting Reference appears with surrounding context.",
+          "expected_outcome": "Voting Reference recognized with context."
+        }
+      ]
+    }
+  ]
+}

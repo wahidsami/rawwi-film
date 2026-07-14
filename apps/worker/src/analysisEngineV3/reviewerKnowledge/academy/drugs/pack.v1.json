@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_12_drugs",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Drugs Reasoning Framework",
+    "description": "A cross-domain reviewer knowledge pack for drugs reasoning.",
+    "supported_concepts": [
+      "drug_reference",
+      "drug_consumption",
+      "drug_possession",
+      "drug_distribution",
+      "drug_sale",
+      "drug_purchase",
+      "drug_smuggling",
+      "drug_trafficking",
+      "drug_manufacturing",
+      "drug_cultivation",
+      "drug_storage",
+      "drug_transportation",
+      "drug_glorification",
+      "drug_encouragement",
+      "drug_instruction",
+      "drug_normalization",
+      "drug_dependency",
+      "drug_addiction",
+      "drug_overdose",
+      "drug_rehabilitation",
+      "medical_drug_use",
+      "prescription_drug_use",
+      "illegal_prescription_use",
+      "drug_documentary",
+      "drug_educational",
+      "drug_historical",
+      "drug_news",
+      "drug_comedy",
+      "drug_satire",
+      "drug_dream",
+      "drug_flashback",
+      "drug_hallucination",
+      "drug_false_accusation",
+      "drug_symbolism",
+      "drug_scene_description",
+      "drug_dialogue",
+      "drug_implied_use"
+    ]
+  },
+  "pack": {
+    "id": "v3_12_drugs",
+    "module_id": "v3_12_drugs",
+    "title": "Drugs Reasoning Framework",
+    "default_question_set_id": "default_drugs_question_set",
+    "trigger_concept_ids": [
+      "drug_reference",
+      "drug_consumption",
+      "drug_possession",
+      "drug_distribution",
+      "drug_sale",
+      "drug_purchase",
+      "drug_smuggling",
+      "drug_trafficking",
+      "drug_manufacturing",
+      "drug_cultivation",
+      "drug_storage",
+      "drug_transportation",
+      "drug_glorification",
+      "drug_encouragement",
+      "drug_instruction",
+      "drug_normalization",
+      "drug_dependency",
+      "drug_addiction",
+      "drug_overdose",
+      "drug_rehabilitation",
+      "medical_drug_use",
+      "prescription_drug_use",
+      "illegal_prescription_use",
+      "drug_documentary",
+      "drug_educational",
+      "drug_historical",
+      "drug_news",
+      "drug_comedy",
+      "drug_satire",
+      "drug_dream",
+      "drug_flashback",
+      "drug_hallucination",
+      "drug_false_accusation",
+      "drug_symbolism",
+      "drug_scene_description",
+      "drug_dialogue",
+      "drug_implied_use"
+    ],
+    "purpose": "Teach reviewers how to distinguish drug reference, use, promotion, instruction, medical context, and exceptions.",
+    "protected_interests": [
+      "Reviewer consistency",
+      "Medical nuance",
+      "Educational and documentary reasoning"
+    ],
+    "protected_concepts": [
+      "drug_reference",
+      "drug_consumption",
+      "drug_possession",
+      "drug_distribution",
+      "drug_sale",
+      "drug_purchase",
+      "drug_smuggling",
+      "drug_trafficking",
+      "drug_manufacturing",
+      "drug_cultivation",
+      "drug_storage",
+      "drug_transportation",
+      "drug_glorification",
+      "drug_encouragement",
+      "drug_instruction",
+      "drug_normalization",
+      "drug_dependency",
+      "drug_addiction",
+      "drug_overdose",
+      "drug_rehabilitation",
+      "medical_drug_use",
+      "prescription_drug_use",
+      "illegal_prescription_use",
+      "drug_documentary",
+      "drug_educational",
+      "drug_historical",
+      "drug_news",
+      "drug_comedy",
+      "drug_satire",
+      "drug_dream",
+      "drug_flashback",
+      "drug_hallucination",
+      "drug_false_accusation",
+      "drug_symbolism",
+      "drug_scene_description",
+      "drug_dialogue",
+      "drug_implied_use"
+    ],
+    "required_evidence": [
+      "Speaker identity",
+      "Target identity",
+      "Scene or narrative context",
+      "Literal wording or visual implication"
+    ],
+    "insufficient_evidence": [
+      "A single isolated word without context",
+      "Guessing drug use from a harmless scene detail",
+      "Treating medical discussion as promotion"
+    ],
+    "reviewer_heuristics": [
+      "Read the whole scene before classifying a drug reference.",
+      "Separate medical, educational, news, and historical frames from promotion.",
+      "Treat dreams, flashbacks, and comedy carefully.",
+      "Use confidence to reflect ambiguity."
+    ],
+    "legal_exceptions": [
+      "Medical",
+      "Prescription use",
+      "Educational",
+      "Documentary",
+      "Historical",
+      "News",
+      "Rehabilitation",
+      "Comedy",
+      "Satire",
+      "Dream",
+      "Flashback",
+      "Hallucination",
+      "False accusation"
+    ],
+    "positive_examples": [
+      "A character openly consumes an illegal drug.",
+      "A character sells or traffics drugs.",
+      "A scene shows manufacturing or smuggling."
+    ],
+    "negative_examples": [
+      "A doctor prescribing medication in a medical setting.",
+      "A teacher warning about overdose in class.",
+      "A news report describing a drug case."
+    ],
+    "common_false_positives": [
+      "Medical use mistaken for abuse.",
+      "Education mistaken for instruction.",
+      "Historical reporting mistaken for glorification."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "drug",
+        "concept_id": "drug_reference",
+        "relation": "framework",
+        "note": "General drug reference anchors the domain."
+      },
+      {
+        "term": "medical",
+        "concept_id": "medical_drug_use",
+        "relation": "context",
+        "note": "Medical framing can neutralize suspicion."
+      },
+      {
+        "term": "rehabilitation",
+        "concept_id": "drug_rehabilitation",
+        "relation": "exception",
+        "note": "Rehab is a distinct recovery frame."
+      },
+      {
+        "term": "instruction",
+        "concept_id": "drug_instruction",
+        "relation": "risk",
+        "note": "Instruction can imply harmful guidance."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 10,
+        "atom_ids": [
+          "DRUG_DOMAIN"
+        ],
+        "role": "drug reasoning",
+        "note": "Drug-related review and exceptions."
+      }
+    ],
+    "reporting_guidance": [
+      "State the drug concept first, then explain the contextual frame.",
+      "Mention medical, educational, historical, or rehabilitation exceptions explicitly.",
+      "Do not collapse all drug references into one undifferentiated finding."
+    ]
+  }
+}

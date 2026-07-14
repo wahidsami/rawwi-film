@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "travel_domain",
+  "title": "Travel and Countries Domain Blueprint",
+  "description": "Top-level travel, country, border, migration, and observation blueprint used by Academy lessons and reviewer packs.",
+  "entries": [
+    {
+      "id": "travel_domain",
+      "title": "Travel and Countries",
+      "description": "Travel-related reasoning across destinations, borders, migration, historical travel, fictional travel, and country commentary."
+    }
+  ]
+}

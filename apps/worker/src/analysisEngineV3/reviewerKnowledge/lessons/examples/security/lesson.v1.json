@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "lesson_version": { "major": 1, "minor": 0, "patch": 0 },
+  "lesson": {
+    "id": "security_basics",
+    "title": "Security Content Basics",
+    "version": { "major": 1, "minor": 0, "patch": 0 },
+    "language": "en",
+    "summary": "Teach the reviewer how to spot security-relevant harm in the local chunk.",
+    "learningObjectives": [
+      "Identify unrest and overthrow language.",
+      "Distinguish reporting from endorsement.",
+      "Use exact local evidence for security judgments."
+    ],
+    "concepts": [
+      {
+        "id": "security_basics",
+        "title": "Security harm",
+        "summary": "Security-relevant language that threatens public order.",
+        "tags": ["security", "public-order"],
+        "target": "state",
+        "articleIds": [12, 13, 14, 15]
+      }
+    ],
+    "reviewerQuestions": [
+      {
+        "id": "security-q1",
+        "purpose": "Check security intent.",
+        "expectedAnswerFormat": "short answer",
+        "reasoningGuidance": "Ask whether the text promotes, justifies, or reports security harm.",
+        "evidenceRequirements": ["local chunk", "explicit security wording"]
+      }
+    ],
+    "examples": ["A direct call for unrest in the scene."],
+    "counterExamples": ["A news report describing an incident without endorsement."],
+    "exceptions": ["News reporting", "Documentary"],
+    "evidenceRules": {
+      "minimum": ["An explicit call for disorder."],
+      "strong": ["Operational guidance for harm."],
+      "weak": ["A coded reference to unrest."],
+      "insufficient": ["A neutral mention of the topic."],
+      "confidenceGuidance": ["Prefer high confidence only when the wording is direct."]
+    },
+    "conceptRelationships": [],
+    "glossaryReferences": [
+      { "term": "إرهاب", "conceptId": "security_basics", "relation": "anchor", "note": null }
+    ],
+    "gcamMappings": [
+      { "articleId": 14, "articleTitle": "Overthrow and violent incitement", "articleNumber": "14", "atomNumber": "14-1", "reportTitle": "Security harms", "note": null }
+    ],
+    "reportTemplates": [
+      { "findingTitle": "Security finding", "reasonTemplate": "The text promotes security harm.", "recommendationTemplate": "Anchor the finding to the exact harmful phrase.", "severity": "high", "priority": 90, "reportCategory": "security" }
+    ],
+    "benchmarkReferences": ["security-benchmark-01"],
+    "prerequisites": ["universal_intro"],
+    "relatedLessons": [],
+    "metadata": { "subject": "security", "category": "academy", "tags": ["security"], "source": "example" }
+  }
+}
+

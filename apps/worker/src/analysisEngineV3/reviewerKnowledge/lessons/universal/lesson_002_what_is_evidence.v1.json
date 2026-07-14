@@ -1,0 +1,191 @@
+{
+  "id": "lesson_002_what_is_evidence",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 2,
+  "title": "What Is Evidence?",
+  "summary": "Teach the reviewer how to evaluate evidence quality before making any legal judgement.",
+  "dependsOn": [
+    "lesson_001_what_is_a_finding"
+  ],
+  "learningObjectives": [
+    "Understand what evidence is.",
+    "Separate evidence from opinion.",
+    "Recognize strong and weak evidence.",
+    "Recognize multiple evidence sources.",
+    "Recognize conflicting evidence.",
+    "Reject unsupported conclusions.",
+    "Understand evidence hierarchy."
+  ],
+  "definitions": {
+    "evidence": "Information directly supported by the screenplay.",
+    "evidenceCollection": "The process of locating all literal support before interpretation.",
+    "evidenceQuality": "How precise, complete, and reproducible the support is.",
+    "evidencePriority": "How the reviewer ranks competing pieces of support.",
+    "explicitEvidence": "Information stated directly.",
+    "implicitEvidence": "Information reasonably inferred from multiple supporting elements.",
+    "supportingEvidence": "Additional evidence strengthening another piece of evidence.",
+    "contradictoryEvidence": "Evidence that conflicts with another observation.",
+    "missingEvidence": "Evidence required for a conclusion but absent.",
+    "multipleEvidenceSources": "Two or more independent sources that support the same interpretation.",
+    "strongEvidence": "Evidence that is explicit, traceable, and corroborated.",
+    "weakEvidence": "Evidence that is partial, indirect, or easily overturned by context.",
+    "insufficientEvidence": "A state where the available support is too weak to justify a finding."
+  },
+  "reviewerPrinciples": [
+    "Evidence always precedes interpretation.",
+    "Evidence must originate from the screenplay.",
+    "Evidence must be reproducible.",
+    "Evidence is independent of reviewer opinion.",
+    "One strong source is more valuable than many weak sources.",
+    "Multiple evidence sources increase confidence.",
+    "Contradictory evidence reduces confidence.",
+    "Conflicting evidence must be resolved before a finding is finalized.",
+    "Absence of evidence is not evidence."
+  ],
+  "reviewerQuestions": [
+    "Where is the evidence?",
+    "Can I point to the exact sentence?",
+    "Is the evidence explicit or inferred?",
+    "Is there more than one supporting source?",
+    "Is another sentence supporting it?",
+    "Does another sentence contradict it?",
+    "Is the evidence strong enough on its own?",
+    "Is the evidence still sufficient after conflict is considered?",
+    "Would another reviewer identify the same evidence?",
+    "Am I assuming something not written?"
+  ],
+  "evidenceHierarchy": [
+    { "level": 1, "name": "Multiple Independent Strong Sources", "confidence": 100 },
+    { "level": 2, "name": "Explicit Direct Evidence", "confidence": 95 },
+    { "level": 3, "name": "Corroborated Contextual Evidence", "confidence": 85 },
+    { "level": 4, "name": "Single Weak Contextual Cue", "confidence": 55 },
+    { "level": 5, "name": "Conflicting or Insufficient Evidence", "confidence": 0 }
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Does evidence exist?",
+      "yes": 2,
+      "no": "Reject"
+    },
+    {
+      "step": 2,
+      "question": "Is evidence explicit?",
+      "yes": 5,
+      "no": 3
+    },
+    {
+      "step": 3,
+      "question": "Are there multiple evidence sources?",
+      "yes": 4,
+      "no": "Reject"
+    },
+    {
+      "step": 4,
+      "question": "Is the evidence conflicting?",
+      "yes": "Needs Review",
+      "no": 5
+    },
+    {
+      "step": 5,
+      "question": "Is contextual evidence sufficient?",
+      "yes": 4,
+      "no": "Reject"
+    },
+    {
+      "step": 6,
+      "question": "Can another reviewer reproduce this evidence?",
+      "yes": "Accept",
+      "no": "Needs Review"
+    }
+  ],
+  "examples": [
+    {
+      "text": "سأقتلك.",
+      "classification": "Explicit Direct Evidence"
+    },
+    {
+      "text": "رفع السكين واقترب منه.\nثم قال إنه سيؤذيه.",
+      "classification": "Multiple Independent Strong Sources"
+    },
+    {
+      "text": "نظر إليه بغضب.",
+      "classification": "Single Weak Contextual Cue"
+    },
+    {
+      "text": "قالت إنه هددها، ثم نفى ذلك في السطر التالي.",
+      "classification": "Conflicting or Insufficient Evidence"
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "أعتقد أنه كان يريد قتله.",
+      "reason": "Opinion."
+    },
+    {
+      "text": "ربما يقصد الإرهاب.",
+      "reason": "Speculation."
+    },
+    {
+      "text": "قد يكون مجرماً.",
+      "reason": "No evidence."
+    },
+    {
+      "text": "ثلاث إشارات ضعيفة تصبح أقوى من اعتراف مباشر.",
+      "reason": "Counting evidence is not the same as prioritizing it."
+    }
+  ],
+  "commonMistakes": [
+    "Using personal opinion.",
+    "Ignoring contradictory evidence.",
+    "Confusing context with evidence.",
+    "Promoting assumptions to facts.",
+    "Treating quantity as a substitute for quality.",
+    "Using outside knowledge."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Can evidence exist without screenplay support?",
+        "answer": "No"
+      },
+      {
+        "question": "Does opinion count as evidence?",
+        "answer": "No"
+      },
+      {
+        "question": "Does contradictory evidence reduce confidence?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Should every evidence item be traceable?",
+        "answer": "Yes"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Differentiate evidence from opinion.",
+    "Evaluate evidence strength.",
+    "Recognize when evidence is insufficient.",
+    "Recognize when evidence conflicts.",
+    "Reject unsupported assumptions.",
+    "Explain why evidence supports a finding."
+  ],
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "evidence-evaluation-bench-001",
+    "evidence-evaluation-bench-002",
+    "evidence-evaluation-bench-003",
+    "evidence-evaluation-bench-004",
+    "evidence-evaluation-bench-005"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 2
+  }
+}

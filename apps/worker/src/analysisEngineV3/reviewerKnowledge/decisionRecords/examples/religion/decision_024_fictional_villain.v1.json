@@ -1,0 +1,71 @@
+{
+  "id": "decision_024_fictional_villain",
+  "version": "1.0.0",
+  "title": "Fictional villain speaks",
+  "summary": "A villainous character says a hostile line in fiction.",
+  "originalScenario": "A villain insults a holy book, but the story later defeats him.",
+  "reviewQuestion": "Is the fiction endorsing the insult?",
+  "initialSuspicion": "Fictional villain speech.",
+  "possibleConcepts": [
+    "religious_hate_speech",
+    "holy_books"
+  ],
+  "supportingEvidence": [
+    "villain insults a holy book"
+  ],
+  "contradictingEvidence": [
+    "the story later defeats him"
+  ],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Fictional conflict.",
+  "speakerAnalysis": "Villain role within fiction.",
+  "targetAnalysis": "Holy book or religion.",
+  "intentAnalysis": "Villain dialogue.",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check context",
+    "Apply religion pack heuristics",
+    "Map to GCAM article"
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 1,
+      "atom_ids": [],
+      "note": "Fictional line with sacred target."
+    }
+  ],
+  "falsePositiveRisk": "High",
+  "reviewerNotes": "Fiction can reverse meaning later.",
+  "benchmarkTags": [
+    "religion",
+    "fiction",
+    "villain"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "religion_pattern_direct_insult"
+  ],
+  "relatedBlueprintConcepts": [
+    "religion_religious_hate_speech",
+    "religion_holy_books"
+  ]
+}

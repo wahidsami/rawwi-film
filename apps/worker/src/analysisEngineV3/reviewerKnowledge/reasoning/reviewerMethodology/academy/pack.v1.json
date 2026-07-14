@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_15_reviewer_methodology",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Reviewer Methodology Framework",
+    "description": "A shared reviewer methodology pack that teaches how to think before any domain analysis, including implicit meaning, indirect speech, metaphor, and symbolism.",
+    "supported_concepts": [
+      "finding_identification",
+      "evidence_collection",
+      "evidence_prioritization",
+      "context_analysis",
+      "cross_sentence_reasoning",
+      "cross_scene_reasoning",
+      "story_reasoning",
+      "intent_reasoning",
+      "relationship_reasoning",
+      "target_identification",
+      "speaker_identification",
+      "victim_identification",
+      "actor_identification",
+      "implicit_meaning",
+      "hidden_meaning",
+      "symbolic_reasoning",
+      "metaphor_reasoning",
+      "sarcasm_reasoning",
+      "comedy_reasoning",
+      "satire_reasoning",
+      "quotation_reasoning",
+      "historical_reasoning",
+      "documentary_reasoning",
+      "educational_reasoning",
+      "dream_reasoning",
+      "flashback_reasoning",
+      "scene_description_reasoning",
+      "observation_reasoning",
+      "dialogue_reasoning",
+      "visual_reasoning",
+      "audio_reasoning",
+      "confidence_assessment",
+      "contradiction_resolution",
+      "multi_evidence_reasoning",
+      "exception_recognition",
+      "false_positive_detection",
+      "false_negative_detection",
+      "reviewer_comment_generation",
+      "finding_generation",
+      "report_priority"
+    ]
+  },
+  "pack": {
+    "id": "v3_15_reviewer_methodology",
+    "module_id": "v3_15_reviewer_methodology",
+    "title": "Reviewer Methodology Framework",
+    "default_question_set_id": "v3_00_universal_questions_v1",
+    "trigger_concept_ids": [
+      "finding_identification",
+      "evidence_collection",
+      "evidence_prioritization",
+      "context_analysis",
+      "cross_sentence_reasoning",
+      "cross_scene_reasoning",
+      "story_reasoning",
+      "intent_reasoning",
+      "relationship_reasoning",
+      "target_identification",
+      "speaker_identification",
+      "victim_identification",
+      "actor_identification",
+      "implicit_meaning",
+      "hidden_meaning",
+      "symbolic_reasoning",
+      "metaphor_reasoning",
+      "sarcasm_reasoning",
+      "comedy_reasoning",
+      "satire_reasoning",
+      "quotation_reasoning",
+      "historical_reasoning",
+      "documentary_reasoning",
+      "educational_reasoning",
+      "dream_reasoning",
+      "flashback_reasoning",
+      "scene_description_reasoning",
+      "observation_reasoning",
+      "dialogue_reasoning",
+      "visual_reasoning",
+      "audio_reasoning",
+      "confidence_assessment",
+      "contradiction_resolution",
+      "multi_evidence_reasoning",
+      "exception_recognition",
+      "false_positive_detection",
+      "false_negative_detection",
+      "reviewer_comment_generation",
+      "finding_generation",
+      "report_priority"
+    ],
+    "purpose": "Teach reviewers how to think before any domain-specific reasoning begins.",
+    "protected_interests": [
+      "Reviewer consistency",
+      "Reasoning rigor",
+      "Evidence discipline",
+      "Cross-domain fairness"
+    ],
+    "protected_concepts": [
+      "finding_identification",
+      "evidence_collection",
+      "evidence_prioritization",
+      "context_analysis",
+      "cross_sentence_reasoning",
+      "cross_scene_reasoning",
+      "story_reasoning",
+      "intent_reasoning",
+      "relationship_reasoning",
+      "target_identification",
+      "speaker_identification",
+      "victim_identification",
+      "actor_identification",
+      "implicit_meaning",
+      "hidden_meaning",
+      "symbolic_reasoning",
+      "metaphor_reasoning",
+      "sarcasm_reasoning",
+      "comedy_reasoning",
+      "satire_reasoning",
+      "quotation_reasoning",
+      "historical_reasoning",
+      "documentary_reasoning",
+      "educational_reasoning",
+      "dream_reasoning",
+      "flashback_reasoning",
+      "scene_description_reasoning",
+      "observation_reasoning",
+      "dialogue_reasoning",
+      "visual_reasoning",
+      "audio_reasoning",
+      "confidence_assessment",
+      "contradiction_resolution",
+      "multi_evidence_reasoning",
+      "exception_recognition",
+      "false_positive_detection",
+      "false_negative_detection",
+      "reviewer_comment_generation",
+      "finding_generation",
+      "report_priority"
+    ],
+    "required_evidence": [
+      "Local chunk evidence",
+      "Speaker cue",
+      "Target cue",
+      "Context cue",
+      "Corroborating sentence"
+    ],
+    "insufficient_evidence": [
+      "Single sentence without supporting context",
+      "Speculation without literal support",
+      "Invented relationship or intent"
+    ],
+    "reviewer_heuristics": [
+      "Start with observation before classification.",
+      "Prefer literal evidence over assumption.",
+      "Compare stronger and weaker clues.",
+      "Use context to refine rather than replace evidence.",
+      "Treat indirect speech, metaphor, symbolism, and subtext as recoverable meaning only when the scene supports them.",
+      "Treat indirect encouragement and indirect threat as recoverable intent only when speaker, target, and surrounding context align.",
+      "Separate possible finding from confirmed finding.",
+      "Escalate when evidence remains ambiguous."
+    ],
+    "legal_exceptions": [
+      "quotation",
+      "historical narration",
+      "documentary framing",
+      "educational framing",
+      "fiction",
+      "dream",
+      "flashback",
+      "role play",
+      "satire"
+    ],
+    "positive_examples": [
+      "A reviewer distinguishes observation from finding.",
+      "A later sentence changes the confidence level.",
+      "A reviewer asks for more context before deciding.",
+      "A sentence gains meaning only after the following line explains the context.",
+      "A metaphor is kept as metaphor until the narrative makes the meaning recoverable."
+    ],
+    "negative_examples": [
+      "A reviewer converts one line into a confirmed finding.",
+      "A reviewer ignores an obvious exception signal.",
+      "A reviewer treats speculation as evidence.",
+      "A reviewer forces indirect speech into a literal claim with no support."
+    ],
+    "common_false_positives": [
+      "Treating reviewer comment as a finding.",
+      "Assuming one sentence is the whole story.",
+      "Ignoring contradictions from later context.",
+      "Confusing uncertainty with a confirmed violation.",
+      "Treating indirect speech as a direct assertion.",
+      "Turning symbolic language into literal fact without recovery from context."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "finding",
+        "concept_id": "finding_identification",
+        "relation": "supports",
+        "note": "Finding identification is the starting point."
+      },
+      {
+        "term": "evidence",
+        "concept_id": "evidence_collection",
+        "relation": "supports",
+        "note": "Evidence collection comes before judgment."
+      },
+      {
+        "term": "context",
+        "concept_id": "context_analysis",
+        "relation": "supports",
+        "note": "Context changes meaning."
+      },
+      {
+        "term": "implicit meaning",
+        "concept_id": "implicit_meaning",
+        "relation": "supports",
+        "note": "Implicit meaning is recoverable when the scene supports it."
+      },
+      {
+        "term": "indirect speech",
+        "concept_id": "implicit_meaning",
+        "relation": "supports",
+        "note": "Indirect speech can carry meaning that is not literal on the surface."
+      },
+      {
+        "term": "metaphor",
+        "concept_id": "hidden_meaning",
+        "relation": "supports",
+        "note": "Metaphor is a recoverable meaning device."
+      },
+      {
+        "term": "symbolism",
+        "concept_id": "hidden_meaning",
+        "relation": "supports",
+        "note": "Symbolism can carry hidden meaning across the scene."
+      },
+      {
+        "term": "confidence",
+        "concept_id": "confidence_assessment",
+        "relation": "supports",
+        "note": "Confidence must follow evidence."
+      },
+      {
+        "term": "exception",
+        "concept_id": "exception_recognition",
+        "relation": "supports",
+        "note": "Exceptions can block a finding."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 4,
+        "atom_ids": [
+          "METH-4-1"
+        ],
+        "role": "review process",
+        "note": "Observation and commentary."
+      },
+      {
+        "article_id": 11,
+        "atom_ids": [
+          "METH-11-1"
+        ],
+        "role": "narrative reasoning",
+        "note": "Cross-sentence and cross-scene reasoning."
+      },
+      {
+        "article_id": 17,
+        "atom_ids": [
+          "METH-17-1"
+        ],
+        "role": "exception handling",
+        "note": "Dream, fiction, and other exception handling."
+      }
+    ],
+    "reporting_guidance": [
+      "Describe the reviewer method before the domain-specific result.",
+      "Call out observation, comment, possible finding, and confirmed finding separately.",
+      "State why confidence changed and whether an exception applied.",
+      "Mention missing context explicitly when the answer is not final.",
+      "If meaning is indirect, say whether it is recovered through subtext, metaphor, symbolism, or later dialogue."
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "drugs_domain_framework",
+  "title": "Drugs Domain Framework",
+  "description": "Shared reasoning framework for drug-related reviewer analysis.",
+  "entries": [
+    {
+      "id": "drug_domain_framework",
+      "title": "Drug Domain Framework",
+      "description": "Root domain framework."
+    }
+  ]
+}

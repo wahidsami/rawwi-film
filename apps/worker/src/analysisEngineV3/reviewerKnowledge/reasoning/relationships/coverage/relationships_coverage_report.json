@@ -1,0 +1,485 @@
+{
+  "domainId": "relationships",
+  "domainTitle": "Relationship Framework",
+  "domainVersion": "1.0.0",
+  "blueprint": {
+    "title": "Blueprint",
+    "present": 9,
+    "expected": 9,
+    "coveragePercent": 100,
+    "missing": [
+      "actions.json",
+      "concepts.json",
+      "contexts.json",
+      "domain.json",
+      "evidence.json",
+      "intents.json",
+      "relationships.json",
+      "reviewquestions.json",
+      "targets.json"
+    ],
+    "warnings": [],
+    "notes": [
+      "bf9e055dd5fc6c1d13ef9d4ed32b18297426649de094b7017b9c95be45594155"
+    ],
+    "hash": "d2a569bd1242e840442c3dcd70641d8952d0f6af10f5bfc054da8051692c4064"
+  },
+  "knowledgePack": {
+    "title": "Knowledge Pack",
+    "present": 42,
+    "expected": 42,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "pack=d:\\waheed\\mypprojects\\raawifilm fix\\apps\\worker\\src\\analysisenginev3\\reviewerknowledge\\reasoning\\relationships\\academy\\pack.v1.json",
+      "relationship reasoning framework"
+    ],
+    "hash": "5ae5c4c801c5a3a377656d307fe48789d2fdaed031f8de446ec283a54cf64171"
+  },
+  "lessons": {
+    "title": "Lessons",
+    "present": 14,
+    "expected": 14,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [],
+    "hash": "e76f9e3c84e022aeacb5e6fca83cc350654bceedbaa715282f7ca2a60d14bbe1"
+  },
+  "patterns": {
+    "title": "Patterns",
+    "present": 42,
+    "expected": 42,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "1 pattern library documents loaded"
+    ],
+    "hash": "24d7f74e0916e6131ff87d270f37b3be3b0ca067d5197658b3faace445682e78"
+  },
+  "decisionRecords": {
+    "title": "Decision Records",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "50 decision records loaded"
+    ],
+    "hash": "b011e13b142aac91bec87d5904bf986dc44ba14497741e8ca6faa4da4d2a513e"
+  },
+  "benchmarks": {
+    "title": "Benchmarks",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "155 benchmark cases loaded"
+    ],
+    "hash": "54a9746172fe96556b81d0a33d20b0558278fe6253a97fa62fd88317baca1ab9"
+  },
+  "metrics": {
+    "conceptCount": 42,
+    "duplicateConceptCount": 0,
+    "missingConceptCount": 0,
+    "missingPatternCoverage": 0,
+    "missingDecisionCoverage": 0,
+    "missingBenchmarkCoverage": 0,
+    "glossaryCoverage": 100,
+    "crossSentenceCoverage": 100,
+    "crossSceneCoverage": 100,
+    "descriptionCoverage": 100,
+    "dialogueCoverage": 100,
+    "observationCoverage": 100,
+    "contextsCoverage": 100,
+    "targetsCoverage": 100,
+    "actionsCoverage": 100,
+    "intentsCoverage": 100,
+    "relationshipsCoverage": 100,
+    "evidenceRulesCoverage": 100,
+    "exceptionsCoverage": 100,
+    "falsePositivesCoverage": 100,
+    "falseNegativesCoverage": 100,
+    "reviewerQuestionsCoverage": 100,
+    "methodologyCoverage": 0,
+    "gcamMappingCoverage": 100,
+    "topics": [
+      {
+        "id": "actions",
+        "title": "Actions Coverage",
+        "present": 6,
+        "expected": 6,
+        "coveragePercent": 100,
+        "evidence": [
+          "relationship_action_command",
+          "relationship_action_discipline",
+          "relationship_action_ignore",
+          "relationship_action_recruit",
+          "relationship_action_release",
+          "relationship_action_request"
+        ],
+        "missing": []
+      },
+      {
+        "id": "concepts",
+        "title": "Concept Coverage",
+        "present": 42,
+        "expected": 42,
+        "coveragePercent": 100,
+        "evidence": [
+          "relationship_actor_audience",
+          "relationship_adult_adult",
+          "relationship_adult_child",
+          "relationship_child_child",
+          "relationship_commander_soldier",
+          "relationship_coworkers",
+          "relationship_criminal_accomplice",
+          "relationship_criminal_victim",
+          "relationship_customer_vendor",
+          "relationship_disabled_caregiver",
+          "relationship_doctor_patient",
+          "relationship_elderly_caregiver",
+          "relationship_employer_employee",
+          "relationship_family_extended",
+          "relationship_family_parent_child",
+          "relationship_family_siblings",
+          "relationship_family_spouses",
+          "relationship_father_child",
+          "relationship_friend_friend",
+          "relationship_gang_leader",
+          "relationship_gang_member",
+          "relationship_government_citizen",
+          "relationship_government_employee_public",
+          "relationship_guardian_child",
+          "relationship_imam_follower",
+          "relationship_journalist_source",
+          "relationship_judge_accused",
+          "relationship_judge_public",
+          "relationship_lawyer_client",
+          "relationship_leader_follower",
+          "relationship_mother_child",
+          "relationship_narrator_character",
+          "relationship_neighbor_neighbor",
+          "relationship_officer_public",
+          "relationship_police_commander",
+          "relationship_police_officer_public",
+          "relationship_police_suspect",
+          "relationship_story_narrator",
+          "relationship_stranger_stranger",
+          "relationship_teacher_student",
+          "relationship_terrorist_recruit",
+          "relationship_therapist_patient"
+        ],
+        "missing": []
+      },
+      {
+        "id": "contexts",
+        "title": "Contexts Coverage",
+        "present": 9,
+        "expected": 9,
+        "coveragePercent": 100,
+        "evidence": [
+          "relationship_context_court",
+          "relationship_context_dialogue",
+          "relationship_context_documentary",
+          "relationship_context_dream",
+          "relationship_context_education",
+          "relationship_context_flashback",
+          "relationship_context_narration",
+          "relationship_context_news",
+          "relationship_context_scene_description"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_scene",
+        "title": "Cross Scene Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross scene reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_sentence",
+        "title": "Cross Sentence Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross sentence reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "description",
+        "title": "Description Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "description coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "dialogue",
+        "title": "Dialogue Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "dialogue coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "duplicate_concepts",
+        "title": "Duplicate Concepts",
+        "present": 0,
+        "expected": 0,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "evidence_rules",
+        "title": "Evidence Rules Coverage",
+        "present": 6,
+        "expected": 6,
+        "coveragePercent": 100,
+        "evidence": [
+          "relationship_evidence_context",
+          "relationship_evidence_followup",
+          "relationship_evidence_quotation",
+          "relationship_evidence_relation",
+          "relationship_evidence_speaker",
+          "relationship_evidence_target"
+        ],
+        "missing": []
+      },
+      {
+        "id": "exceptions",
+        "title": "Exceptions Coverage",
+        "present": 9,
+        "expected": 9,
+        "coveragePercent": 100,
+        "evidence": [
+          "casual peer dismissal",
+          "documentary",
+          "educational",
+          "family discipline",
+          "historical",
+          "lawful discretion",
+          "narration",
+          "procedural release",
+          "quotation"
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_negatives",
+        "title": "False Negatives Coverage",
+        "present": 3,
+        "expected": 3,
+        "coveragePercent": 100,
+        "evidence": [
+          "assuming bribery from a release phrase without context.",
+          "treating a quoted command as the speaker’s own intent without support.",
+          "treating every sentence as a violation regardless of relationship."
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_positives",
+        "title": "False Positives Coverage",
+        "present": 3,
+        "expected": 3,
+        "coveragePercent": 100,
+        "evidence": [
+          "family protection mistaken for abuse.",
+          "lawful discretion mistaken for corruption.",
+          "peer dismissal mistaken for criminal intent."
+        ],
+        "missing": []
+      },
+      {
+        "id": "gcam_mapping",
+        "title": "GCAM Mapping Coverage",
+        "present": 3,
+        "expected": 3,
+        "coveragePercent": 100,
+        "evidence": [
+          "11",
+          "17",
+          "4"
+        ],
+        "missing": []
+      },
+      {
+        "id": "glossary",
+        "title": "Glossary Coverage",
+        "present": 4,
+        "expected": 4,
+        "coveragePercent": 100,
+        "evidence": [
+          "power imbalance",
+          "procedure",
+          "quotation",
+          "relationship"
+        ],
+        "missing": []
+      },
+      {
+        "id": "intents",
+        "title": "Intents Coverage",
+        "present": 6,
+        "expected": 6,
+        "coveragePercent": 100,
+        "evidence": [
+          "relationship_intent_authority",
+          "relationship_intent_bribery",
+          "relationship_intent_care",
+          "relationship_intent_discretion",
+          "relationship_intent_neutral",
+          "relationship_intent_procedural"
+        ],
+        "missing": []
+      },
+      {
+        "id": "missing_benchmark_coverage",
+        "title": "Missing Benchmark Coverage",
+        "present": 0,
+        "expected": 42,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_concepts",
+        "title": "Missing Concepts",
+        "present": 0,
+        "expected": 42,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_decision_coverage",
+        "title": "Missing Decision Coverage",
+        "present": 0,
+        "expected": 42,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_pattern_coverage",
+        "title": "Missing Pattern Coverage",
+        "present": 0,
+        "expected": 42,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "observation",
+        "title": "Observation Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "observation coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "relationships",
+        "title": "Relationships Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "relationship_domain_framework"
+        ],
+        "missing": []
+      },
+      {
+        "id": "reviewer_questions",
+        "title": "Reviewer Questions Coverage",
+        "present": 110,
+        "expected": 110,
+        "coveragePercent": 100,
+        "evidence": [
+          "q01",
+          "q02",
+          "q03",
+          "q04",
+          "q05",
+          "q06",
+          "q07",
+          "q08",
+          "q09",
+          "q10",
+          "q11",
+          "q12",
+          "q13",
+          "q14",
+          "q15"
+        ],
+        "missing": []
+      },
+      {
+        "id": "targets",
+        "title": "Targets Coverage",
+        "present": 6,
+        "expected": 6,
+        "coveragePercent": 100,
+        "evidence": [
+          "relationship_target_child",
+          "relationship_target_employee",
+          "relationship_target_patient",
+          "relationship_target_public",
+          "relationship_target_source",
+          "relationship_target_suspect"
+        ],
+        "missing": []
+      },
+      {
+        "id": "universal_reviewer_methodology_v1",
+        "title": "Universal Reviewer Methodology",
+        "present": 11,
+        "expected": 11,
+        "coveragePercent": 100,
+        "evidence": [
+          "applicable concept validation",
+          "confidence assessment",
+          "context classification",
+          "evidence strength",
+          "exception detection",
+          "literal vs implied meaning",
+          "narrative intent",
+          "narrative understanding",
+          "speaker identification",
+          "target identification",
+          "victim identification"
+        ],
+        "missing": []
+      }
+    ],
+    "hash": "540352e81b44f426b09810df8495b6a7d1b400d4bf0716d0cab46d4c7f8085af"
+  },
+  "productionReadiness": 100,
+  "recommendation": "READY",
+  "coverageGaps": [],
+  "criticalGaps": [],
+  "warnings": [],
+  "hash": "2ef1b8587b84405e49226a1c087bacab7a5edb4ca751c2b7efbab80e4289c784"
+}

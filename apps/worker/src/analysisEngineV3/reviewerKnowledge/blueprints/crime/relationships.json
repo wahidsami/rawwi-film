@@ -1,0 +1,248 @@
+{
+  "version": "1.0.0",
+  "id": "crime_relationships",
+  "title": "Crime Relationships",
+  "description": "Ontology relationships for crime reasoning.",
+  "entries": [
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_reference",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_attempt",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_conspiracy",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_planning",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_execution",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_glorification",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_encouragement",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_instruction",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_normalization",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_reward",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_coverup",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_escape",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_evasion",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_theft",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_robbery",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_burglary",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_fraud",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_forgery",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_blackmail",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_extortion",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_bribery",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_corruption",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_money_laundering",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_kidnapping",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_hostage",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_murder",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_attempted_murder",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_assault",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_property_damage",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_vandalism",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_arson",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_human_trafficking",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_smuggling",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_organized_crime",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_cybercrime",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_identity_theft",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_documentary",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_news",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_historical",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_educational",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_police_investigation",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_court_case",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_false_accusation",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_confession",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_scene_description",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_dialogue",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_observation",
+      "type": "supports"
+    },
+    {
+      "from": "crime_domain_framework",
+      "to": "crime_reported_event",
+      "type": "supports"
+    }
+  ]
+}

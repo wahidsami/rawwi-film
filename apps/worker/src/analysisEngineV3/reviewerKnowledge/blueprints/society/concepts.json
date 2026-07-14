@@ -1,0 +1,253 @@
+{
+  "version": "1.0.0",
+  "id": "society_concepts",
+  "title": "Society Concepts",
+  "description": "Canonical society concepts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "society_family_values",
+      "title": "Family Values",
+      "description": "Family Values reasoning in society content."
+    },
+    {
+      "id": "society_family_breakdown",
+      "title": "Family Breakdown",
+      "description": "Family Breakdown reasoning in society content."
+    },
+    {
+      "id": "society_family_respect",
+      "title": "Family Respect",
+      "description": "Family Respect reasoning in society content."
+    },
+    {
+      "id": "society_parents",
+      "title": "Parents",
+      "description": "Parents reasoning in society content."
+    },
+    {
+      "id": "society_mother",
+      "title": "Mother",
+      "description": "Mother reasoning in society content."
+    },
+    {
+      "id": "society_father",
+      "title": "Father",
+      "description": "Father reasoning in society content."
+    },
+    {
+      "id": "society_elderly",
+      "title": "Elderly",
+      "description": "Elderly reasoning in society content."
+    },
+    {
+      "id": "society_disabled_persons",
+      "title": "Disabled Persons",
+      "description": "Disabled Persons reasoning in society content."
+    },
+    {
+      "id": "society_women",
+      "title": "Women",
+      "description": "Women reasoning in society content."
+    },
+    {
+      "id": "society_children",
+      "title": "Children",
+      "description": "Children reasoning in society content."
+    },
+    {
+      "id": "society_caregiving",
+      "title": "Caregiving",
+      "description": "Caregiving reasoning in society content."
+    },
+    {
+      "id": "society_domestic_abuse",
+      "title": "Domestic Abuse",
+      "description": "Domestic Abuse reasoning in society content."
+    },
+    {
+      "id": "society_neglect",
+      "title": "Neglect",
+      "description": "Neglect reasoning in society content."
+    },
+    {
+      "id": "society_bullying",
+      "title": "Bullying",
+      "description": "Bullying reasoning in society content."
+    },
+    {
+      "id": "society_harassment",
+      "title": "Harassment",
+      "description": "Harassment reasoning in society content."
+    },
+    {
+      "id": "society_discrimination",
+      "title": "Discrimination",
+      "description": "Discrimination reasoning in society content."
+    },
+    {
+      "id": "society_racism",
+      "title": "Racism",
+      "description": "Racism reasoning in society content."
+    },
+    {
+      "id": "society_tribalism",
+      "title": "Tribalism",
+      "description": "Tribalism reasoning in society content."
+    },
+    {
+      "id": "society_social_exclusion",
+      "title": "Social Exclusion",
+      "description": "Social Exclusion reasoning in society content."
+    },
+    {
+      "id": "society_humiliation",
+      "title": "Humiliation",
+      "description": "Humiliation reasoning in society content."
+    },
+    {
+      "id": "society_insult",
+      "title": "Insult",
+      "description": "Insult reasoning in society content."
+    },
+    {
+      "id": "society_defamation",
+      "title": "Defamation",
+      "description": "Defamation reasoning in society content."
+    },
+    {
+      "id": "society_mockery",
+      "title": "Mockery",
+      "description": "Mockery reasoning in society content."
+    },
+    {
+      "id": "society_hate",
+      "title": "Hate",
+      "description": "Hate reasoning in society content."
+    },
+    {
+      "id": "society_abuse_of_authority",
+      "title": "Abuse Of Authority",
+      "description": "Abuse Of Authority reasoning in society content."
+    },
+    {
+      "id": "society_cyber_bullying",
+      "title": "Cyber Bullying",
+      "description": "Cyber Bullying reasoning in society content."
+    },
+    {
+      "id": "society_rumor_spreading",
+      "title": "Rumor Spreading",
+      "description": "Rumor Spreading reasoning in society content."
+    },
+    {
+      "id": "society_public_panic",
+      "title": "Public Panic",
+      "description": "Public Panic reasoning in society content."
+    },
+    {
+      "id": "society_public_behavior",
+      "title": "Public Behavior",
+      "description": "Public Behavior reasoning in society content."
+    },
+    {
+      "id": "society_public_decency",
+      "title": "Public Decency",
+      "description": "Public Decency reasoning in society content."
+    },
+    {
+      "id": "society_social_responsibility",
+      "title": "Social Responsibility",
+      "description": "Social Responsibility reasoning in society content."
+    },
+    {
+      "id": "society_volunteering",
+      "title": "Volunteering",
+      "description": "Volunteering reasoning in society content."
+    },
+    {
+      "id": "society_charity",
+      "title": "Charity",
+      "description": "Charity reasoning in society content."
+    },
+    {
+      "id": "society_kindness",
+      "title": "Kindness",
+      "description": "Kindness reasoning in society content."
+    },
+    {
+      "id": "society_community_support",
+      "title": "Community Support",
+      "description": "Community Support reasoning in society content."
+    },
+    {
+      "id": "society_neighbor_relations",
+      "title": "Neighbor Relations",
+      "description": "Neighbor Relations reasoning in society content."
+    },
+    {
+      "id": "society_workplace_behavior",
+      "title": "Workplace Behavior",
+      "description": "Workplace Behavior reasoning in society content."
+    },
+    {
+      "id": "society_school_behavior",
+      "title": "School Behavior",
+      "description": "School Behavior reasoning in society content."
+    },
+    {
+      "id": "society_teacher_behavior",
+      "title": "Teacher Behavior",
+      "description": "Teacher Behavior reasoning in society content."
+    },
+    {
+      "id": "society_student_behavior",
+      "title": "Student Behavior",
+      "description": "Student Behavior reasoning in society content."
+    },
+    {
+      "id": "society_professional_ethics",
+      "title": "Professional Ethics",
+      "description": "Professional Ethics reasoning in society content."
+    },
+    {
+      "id": "society_civil_behavior",
+      "title": "Civil Behavior",
+      "description": "Civil Behavior reasoning in society content."
+    },
+    {
+      "id": "society_social_media_behavior",
+      "title": "Social Media Behavior",
+      "description": "Social Media Behavior reasoning in society content."
+    },
+    {
+      "id": "society_social_cohesion",
+      "title": "Social Cohesion",
+      "description": "Social Cohesion reasoning in society content."
+    },
+    {
+      "id": "society_cultural_identity",
+      "title": "Cultural Identity",
+      "description": "Cultural Identity reasoning in society content."
+    },
+    {
+      "id": "society_national_identity",
+      "title": "National Identity",
+      "description": "National Identity reasoning in society content."
+    },
+    {
+      "id": "society_social_dialogue",
+      "title": "Social Dialogue",
+      "description": "Social Dialogue reasoning in society content."
+    },
+    {
+      "id": "society_social_scene_description",
+      "title": "Social Scene Description",
+      "description": "Social Scene Description reasoning in society content."
+    },
+    {
+      "id": "society_social_observation",
+      "title": "Social Observation",
+      "description": "Social Observation reasoning in society content."
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "decision_012_sexual_touch",
+  "version": "1.0.0",
+  "title": "Sexual Touch decision record",
+  "summary": "Reviewer reasoning record for sexual touch.",
+  "originalScenario": "The scene shows a clear invitation, but consent is ambiguous until the next line.",
+  "reviewQuestion": "Is this a reviewable sexual touch case?",
+  "initialSuspicion": "Sexual Touch appears in the scene or context.",
+  "possibleConcepts": [
+    "sexual_touch",
+    "sexual_flirting",
+    "sexual_romance"
+  ],
+  "supportingEvidence": [
+    "The scene shows a clear invitation, but consent is ambiguous until the next line.",
+    "Sexual Touch is the active concept."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [
+    "No additional evidence needed"
+  ],
+  "sceneContext": "The scene shows a clear invitation, but consent is ambiguous until the next line.",
+  "speakerAnalysis": "The speaker and target must be checked explicitly.",
+  "targetAnalysis": "The target must be identified from context.",
+  "intentAnalysis": "Context-sensitive sexual reasoning",
+  "reasoningSteps": [
+    "Identify speaker",
+    "Identify target",
+    "Check evidence quality",
+    "Apply context and exception rules",
+    "Map to article guidance"
+  ],
+  "reviewerDecision": "The finding is supported by the evidence.",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 9,
+      "atom_ids": [
+        "9-4"
+      ],
+      "note": "Primary content-standard mapping for relational intimacy."
+    },
+    {
+      "article_id": 5,
+      "atom_ids": [
+        "5-1",
+        "5-5"
+      ],
+      "note": "Use when intimacy affects age suitability."
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Use the relational bucket rules and preserve the exact evidence span for sexual_touch.",
+  "benchmarkTags": [
+    "relational",
+    "sexual_touch",
+    "sexual_relational"
+  ],
+  "relatedLessons": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification",
+    "lesson_005_target_identification",
+    "lesson_006_intent_recognition",
+    "lesson_007_confidence_assessment",
+    "lesson_008_narrative_structure",
+    "lesson_009_concept_relationships",
+    "lesson_010_exception_recognition",
+    "lesson_011_multiple_findings",
+    "lesson_012_evidence_prioritization",
+    "lesson_013_contradiction_resolution",
+    "lesson_014_cross_sentence_reasoning"
+  ],
+  "relatedPatterns": [
+    "sexual_pattern_12_sexual_touch"
+  ],
+  "relatedBlueprintConcepts": [
+    "sexual_touch",
+    "sexual_flirting",
+    "sexual_reference"
+  ]
+}

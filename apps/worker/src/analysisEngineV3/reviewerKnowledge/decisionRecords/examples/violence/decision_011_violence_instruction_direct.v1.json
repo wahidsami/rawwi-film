@@ -1,0 +1,51 @@
+{
+  "id": "violence_011_violence_instruction_direct",
+  "version": "1.0.0",
+  "title": "Violence Instruction (direct)",
+  "summary": "Violence Instruction in direct framing.",
+  "originalScenario": "كيف تنفذ الهجوم خطوة خطوة.",
+  "reviewQuestion": "Is this violence instruction?",
+  "initialSuspicion": "Possible violence instruction.",
+  "possibleConcepts": [
+    "violence_instruction"
+  ],
+  "supportingEvidence": [
+    "كيف تنفذ الهجوم خطوة خطوة."
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is stated or clearly implied.",
+  "intentAnalysis": "promotive",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 14,
+      "atom_ids": [
+        "14-3"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct context is evaluated against the semantic category.",
+  "benchmarkTags": [
+    "violence_instruction",
+    "direct",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_instruction"
+  ]
+}

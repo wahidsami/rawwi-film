@@ -1,0 +1,58 @@
+{
+  "id": "decision_050_fear_induction_quoted",
+  "version": "1.0.0",
+  "title": "Fear induction (quoted)",
+  "summary": "Fear induction in quoted framing.",
+  "originalScenario": "قال الراوي: \"إذا تكلمت سأرعبك\"",
+  "reviewQuestion": "Is this fear induction?",
+  "initialSuspicion": "Deliberate intimidation.",
+  "possibleConcepts": [
+    "children_fear_induction",
+    "children_child"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: إذا تكلمت سأرعبك"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 6,
+      "atom_ids": [
+        "6-2"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "fear_induction",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_fear_induction",
+    "children_child"
+  ]
+}

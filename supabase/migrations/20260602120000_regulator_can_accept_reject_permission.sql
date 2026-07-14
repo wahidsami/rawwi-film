@@ -8,7 +8,7 @@ DO $$
 DECLARE
   v_regulator_role_id uuid;
 BEGIN
-  SELECT id INTO v_regulator_role_id FROM roles WHERE key = 'regulator' LIMIT 1;
+  SELECT id INTO v_regulator_role_id FROM roles WHERE key = 'regulator' ORDER BY id ASC LIMIT 1;
 
   IF v_regulator_role_id IS NOT NULL THEN
     UPDATE auth.users au

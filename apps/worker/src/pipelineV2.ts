@@ -73,6 +73,7 @@ export async function processChunkJudgeV2(
 
   const originalConfig = job.config_snapshot ?? {};
   const originalSignature = (originalConfig as { analysis_signature?: Record<string, unknown> | null }).analysis_signature ?? {};
+  const analysisEngine = (originalConfig as { analysis_engine?: string | null }).analysis_engine ?? null;
   const v2Job: AnalysisJob = {
     ...job,
     config_snapshot: {
@@ -92,6 +93,7 @@ export async function processChunkJudgeV2(
       },
       pipeline_version: "v2",
       v2_prompt_context: promptContext,
+      analysis_prompt_context: analysisEngine === "v3" ? promptContext : null,
     },
   };
 

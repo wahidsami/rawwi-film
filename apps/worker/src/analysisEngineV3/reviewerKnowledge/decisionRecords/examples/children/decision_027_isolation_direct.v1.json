@@ -1,0 +1,54 @@
+{
+  "id": "decision_027_isolation_direct",
+  "version": "1.0.0",
+  "title": "Isolation (direct)",
+  "summary": "Isolation in direct framing.",
+  "originalScenario": "يعزله عن أصدقائه",
+  "reviewQuestion": "Is this isolation?",
+  "initialSuspicion": "Deliberate exclusion.",
+  "possibleConcepts": [
+    "children_vulnerable_person",
+    "children_isolation"
+  ],
+  "supportingEvidence": [
+    "يعزله عن أصدقائه"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-5"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "isolation",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_vulnerable_person",
+    "children_isolation"
+  ]
+}

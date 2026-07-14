@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "id": "relationships_evidence",
+  "title": "Relationship Evidence",
+  "description": "Evidence requirements for relationship reasoning.",
+  "entries": [
+    {
+      "id": "relationship_evidence_speaker",
+      "title": "Speaker Identity",
+      "description": "Who is speaking or acting."
+    },
+    {
+      "id": "relationship_evidence_target",
+      "title": "Target Identity",
+      "description": "Who is being addressed or affected."
+    },
+    {
+      "id": "relationship_evidence_context",
+      "title": "Context",
+      "description": "Surrounding scene or dialogue."
+    },
+    {
+      "id": "relationship_evidence_followup",
+      "title": "Follow-up",
+      "description": "A later line that clarifies the meaning."
+    },
+    {
+      "id": "relationship_evidence_quotation",
+      "title": "Quotation",
+      "description": "Quoted speech or reported speech."
+    },
+    {
+      "id": "relationship_evidence_relation",
+      "title": "Relationship",
+      "description": "The social or authority relationship."
+    }
+  ]
+}

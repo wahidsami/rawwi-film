@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "intents_domain",
+  "title": "Intent and Motivation Domain",
+  "description": "Cross-domain reviewer reasoning for intent, stance, and motivation.",
+  "entries": [
+    {
+      "id": "intent_framework_domain",
+      "title": "Intent Framework Domain",
+      "description": "A shared semantic universe for reviewer intent reasoning."
+    }
+  ]
+}

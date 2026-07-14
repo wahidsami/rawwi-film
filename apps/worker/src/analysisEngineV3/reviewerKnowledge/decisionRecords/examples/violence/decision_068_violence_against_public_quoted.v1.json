@@ -1,0 +1,55 @@
+{
+  "id": "violence_068_violence_against_public_quoted",
+  "version": "1.0.0",
+  "title": "Violence Against Public (quoted)",
+  "summary": "Violence Against Public in quoted framing.",
+  "originalScenario": "قال الراوي: \"هاجم المارة في الشارع.\"",
+  "reviewQuestion": "Is this violence against public?",
+  "initialSuspicion": "Possible violence against public.",
+  "possibleConcepts": [
+    "violence_against_public"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: هاجم المارة في الشارع."
+  ],
+  "contradictingEvidence": [
+    "Quoted or reported framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear endorsement in the narrator's own voice."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "Target remains dependent on the quoted voice.",
+  "intentAnalysis": "quotation",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Quoted speech is not automatically endorsement.",
+  "benchmarkTags": [
+    "violence_against_public",
+    "quoted",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_against_public"
+  ]
+}

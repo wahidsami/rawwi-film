@@ -1,0 +1,145 @@
+{
+  "id": "lesson_004_speaker_identification",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 4,
+  "title": "Speaker Identification",
+  "summary": "Teach the reviewer to correctly identify who is speaking before evaluating any statement.",
+  "dependsOn": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context"
+  ],
+  "learningObjectives": [
+    "Identify the speaker.",
+    "Separate narrator from character.",
+    "Recognize quoted speech.",
+    "Recognize anonymous speakers.",
+    "Understand that responsibility belongs to the speaker."
+  ],
+  "definitions": {
+    "speaker": "The source of the statement.",
+    "narrator": "The storyteller describing events.",
+    "character": "A participant inside the story.",
+    "quotedSpeaker": "A person whose words are quoted by another.",
+    "unknownSpeaker": "Speaker cannot be identified with confidence."
+  },
+  "reviewerPrinciples": [
+    "Always identify the speaker before judging the statement.",
+    "Narration is not dialogue.",
+    "Quotation is not endorsement.",
+    "Anonymous speech lowers confidence.",
+    "Responsibility belongs to the speaker, not necessarily the narrator."
+  ],
+  "reviewerQuestions": [
+    "Who is speaking?",
+    "Can the speaker be identified?",
+    "Is this dialogue or narration?",
+    "Is someone quoting another person?",
+    "Is the speaker fictional, historical or unknown?",
+    "Does speaker identity affect legal interpretation?"
+  ],
+  "speakerTypes": [
+    "Main Character",
+    "Supporting Character",
+    "Narrator",
+    "Victim",
+    "Villain",
+    "Police Officer",
+    "Judge",
+    "Teacher",
+    "Doctor",
+    "Child",
+    "Parent",
+    "News Reporter",
+    "Crowd",
+    "Unknown",
+    "Quoted Speaker"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Can the speaker be identified?",
+      "yes": 2,
+      "no": "Lower Confidence"
+    },
+    {
+      "step": 2,
+      "question": "Is this narration?",
+      "yes": "Evaluate Narration Context",
+      "no": 3
+    },
+    {
+      "step": 3,
+      "question": "Is the speech quoted?",
+      "yes": "Evaluate Quotation Context",
+      "no": "Proceed"
+    }
+  ],
+  "examples": [
+    {
+      "text": "قال أحمد: سأقتلك.",
+      "classification": "Speaker = Ahmed"
+    },
+    {
+      "text": "قال الراوي إن المجرم هدد الضحية.",
+      "classification": "Narrator"
+    },
+    {
+      "text": "اقتبس المدرس كلام الإرهابي.",
+      "classification": "Quoted Speaker"
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Treat narrator as the speaker.",
+      "reason": "Incorrect speaker attribution."
+    },
+    {
+      "text": "Treat quotation as endorsement.",
+      "reason": "Speaker misidentified."
+    }
+  ],
+  "commonMistakes": [
+    "Ignoring narration.",
+    "Ignoring quotation.",
+    "Assigning responsibility to the wrong character.",
+    "Ignoring anonymous speakers."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Should narration always be treated as dialogue?",
+        "answer": "No"
+      },
+      {
+        "question": "Does identifying the speaker matter?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Should quoted speech automatically become the reviewer's conclusion?",
+        "answer": "No"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Correctly identify speaker identity.",
+    "Reduce speaker-related false positives.",
+    "Understand responsibility attribution."
+  ],
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "speaker_main_character",
+    "speaker_narrator",
+    "speaker_quote",
+    "speaker_unknown"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 4
+  }
+}

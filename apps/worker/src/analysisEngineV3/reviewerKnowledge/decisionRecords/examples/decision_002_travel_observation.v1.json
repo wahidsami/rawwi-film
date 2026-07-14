@@ -1,0 +1,42 @@
+{
+  "id": "decision_002_travel_observation",
+  "version": "1.0.0",
+  "title": "Travel Observation Review",
+  "summary": "A travel observation that should remain a neutral observation unless later context proves a harmful meaning.",
+  "originalScenario": "A character says they traveled to India and continues talking about the trip.",
+  "reviewQuestion": "Is the travel mention itself a finding?",
+  "initialSuspicion": "The destination could become relevant if later scenes reveal a prohibited purpose.",
+  "possibleConcepts": ["travel", "observation", "location", "cross_scene_context"],
+  "supportingEvidence": [
+    "The sentence reports a travel event.",
+    "No harmful action is stated in the isolated observation."
+  ],
+  "contradictingEvidence": [
+    "There is no evidence of bribery, violence, or prohibited conduct in the line itself.",
+    "The sentence is neutral and observational."
+  ],
+  "requiredMissingEvidence": [
+    "Any later scene showing a harmful purpose.",
+    "Any explicit illegal or prohibited conduct tied to the travel."
+  ],
+  "sceneContext": "A neutral observation about movement or travel with no immediate violation.",
+  "speakerAnalysis": "The speaker is describing travel, not confessing wrongdoing.",
+  "targetAnalysis": "There is no clear target or victim in the statement.",
+  "intentAnalysis": "The intent appears descriptive and observational.",
+  "reasoningSteps": [
+    "Treat the line as an observation first.",
+    "Do not infer a finding from travel alone.",
+    "Wait for later scene evidence before escalating.",
+    "Use the surrounding scene to see whether the travel becomes relevant."
+  ],
+  "reviewerDecision": "Observation only. No finding yet.",
+  "confidence": "low",
+  "findingType": "no_finding",
+  "gcamMappings": [],
+  "falsePositiveRisk": "Very high if the reviewer assumes travel implies a hidden offense.",
+  "reviewerNotes": "This record is intentionally neutral. It should be retained as an observation example and only upgraded if later evidence supports a new concept.",
+  "benchmarkTags": ["travel", "observation", "no_finding", "cross_scene"],
+  "relatedLessons": ["lesson_001_what_is_a_finding", "lesson_003_understanding_context", "lesson_014_cross_sentence_reasoning"],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": []
+}

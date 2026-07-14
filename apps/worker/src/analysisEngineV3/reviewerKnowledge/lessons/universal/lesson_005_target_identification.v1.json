@@ -1,0 +1,146 @@
+{
+  "id": "lesson_005_target_identification",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 5,
+  "title": "Target Identification",
+  "summary": "Teach the reviewer to identify who or what is the target of an action, statement, or behaviour before evaluating any potential violation.",
+  "dependsOn": [
+    "lesson_001_what_is_a_finding",
+    "lesson_002_what_is_evidence",
+    "lesson_003_understanding_context",
+    "lesson_004_speaker_identification"
+  ],
+  "learningObjectives": [
+    "Identify the target of actions and speech.",
+    "Differentiate between direct and indirect targets.",
+    "Recognize protected targets.",
+    "Understand that target identification affects legal interpretation."
+  ],
+  "definitions": {
+    "target": "The person, group, institution, object or concept receiving the action or statement.",
+    "directTarget": "The explicit recipient.",
+    "indirectTarget": "An implied recipient supported by context.",
+    "protectedTarget": "A target specifically protected by regulations or reviewer policy."
+  },
+  "reviewerPrinciples": [
+    "Every harmful action has a target.",
+    "Do not assume the target.",
+    "Target identification precedes legal classification.",
+    "One statement may contain multiple targets.",
+    "Unknown targets reduce confidence."
+  ],
+  "reviewerQuestions": [
+    "Who is affected?",
+    "Is the target explicit?",
+    "Can the target be inferred confidently?",
+    "Are there multiple targets?",
+    "Is the target protected?",
+    "Would another reviewer identify the same target?"
+  ],
+  "targetCategories": [
+    "Child",
+    "Adult",
+    "Woman",
+    "Man",
+    "Person with Disability",
+    "Family",
+    "Community",
+    "Religious Group",
+    "Ethnic Group",
+    "Government",
+    "Police",
+    "Military",
+    "Public Institution",
+    "Animal",
+    "Property",
+    "Society",
+    "Unknown"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Can the target be identified?",
+      "yes": 2,
+      "no": "Lower Confidence"
+    },
+    {
+      "step": 2,
+      "question": "Is the target protected?",
+      "yes": 3,
+      "no": "Proceed"
+    },
+    {
+      "step": 3,
+      "question": "Does the surrounding context confirm the target?",
+      "yes": "Accept",
+      "no": "Needs Review"
+    }
+  ],
+  "examples": [
+    {
+      "text": "ضرب الطفل.",
+      "classification": "Target = Child"
+    },
+    {
+      "text": "أهان رجل الشرطة.",
+      "classification": "Target = Police Officer"
+    },
+    {
+      "text": "هاجم مبنى الوزارة.",
+      "classification": "Target = Government Institution"
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Assume the victim is a child without evidence.",
+      "reason": "Target not established."
+    },
+    {
+      "text": "Ignore multiple victims.",
+      "reason": "Incomplete target analysis."
+    }
+  ],
+  "commonMistakes": [
+    "Guessing the target.",
+    "Ignoring indirect targets.",
+    "Ignoring protected groups.",
+    "Confusing speaker with target."
+  ],
+  "graduationExam": {
+    "minimumScore": 95,
+    "questions": [
+      {
+        "question": "Should the reviewer identify the target before classification?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Can multiple targets exist?",
+        "answer": "Yes"
+      },
+      {
+        "question": "Should unknown targets reduce confidence?",
+        "answer": "Yes"
+      }
+    ]
+  },
+  "learningOutcome": [
+    "Correctly identify targets.",
+    "Reduce target-related false positives.",
+    "Improve protected-group reasoning."
+  ],
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "target_child",
+    "target_police",
+    "target_government",
+    "target_multiple"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 5
+  }
+}

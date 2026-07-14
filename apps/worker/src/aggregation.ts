@@ -41,6 +41,16 @@ export type SummaryJson = {
     /** Number of unique incidents (canonical findings). Use for main report count. */
     unique_incidents_count?: number;
   };
+  report_overview?: {
+    total_findings: number;
+    total_observations: number;
+    gcam_articles_triggered: readonly number[];
+    atoms_triggered: readonly string[];
+    highest_severity: "low" | "medium" | "high" | "critical" | "none";
+    knowledge_confidence: number;
+    reasoning_confidence: number;
+    overall_reviewer_confidence: number;
+  };
   checklist_articles: Array<{
     article_id: number;
     title_ar: string;
@@ -84,6 +94,7 @@ export type SummaryJson = {
   canonical_findings?: Array<{
     canonical_finding_id: string;
     title_ar: string;
+    description_ar?: string | null;
     evidence_snippet: string;
     severity: string;
     confidence: number;
@@ -99,6 +110,7 @@ export type SummaryJson = {
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
     page_number?: number | null;
+    location?: Record<string, unknown> | null;
     /** PolicyMap atom key e.g. 4-1; checklist UI. */
     primary_policy_atom_id?: string | null;
     canonical_atom?: string | null;
@@ -936,6 +948,167 @@ function rationaleSaysNotViolation(rationale: string | null | undefined): boolea
   return containsAnyNormalized(r, RATIONALE_SAYS_NOT_VIOLATION);
 }
 
+function uniqueSortedNumbers(values: readonly number[]): number[] {
+  return [...new Set(values.filter((value) => Number.isFinite(value)))].sort((a, b) => a - b);
+}
+
+function uniqueSortedStrings(values: readonly string[]): string[] {
+  return [...new Set(values.map((value) => String(value).trim()).filter((value) => value.length > 0))].sort((a, b) => a.localeCompare(b, "ar"));
+}
+
+function averageConfidence(values: readonly number[]): number {
+  const cleaned = values.filter((value) => Number.isFinite(value) && value >= 0 && value <= 1);
+  if (cleaned.length === 0) return 0;
+  return Number((cleaned.reduce((sum, value) => sum + value, 0) / cleaned.length).toFixed(6));
+}
+
+function highestSeverityLabel(values: readonly string[]): "low" | "medium" | "high" | "critical" | "none" {
+  if (values.some((value) => value === "critical")) return "critical";
+  if (values.some((value) => value === "high")) return "high";
+  if (values.some((value) => value === "medium")) return "medium";
+  if (values.some((value) => value === "low")) return "low";
+  return "none";
+}
+
+function buildReportOverview(summary: SummaryJson): NonNullable<SummaryJson["report_overview"]> {
+  const findings = summary.canonical_findings ?? [];
+  const observations = summary.report_hints ?? [];
+  const allDisplayed = [...findings, ...observations] as ReadonlyArray<{
+    primary_article_id?: number | null;
+    policy_links?: ReadonlyArray<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
+    primary_policy_atom_id?: string | null;
+    canonical_atom?: string | null;
+    severity: string;
+    confidence: number;
+  }>;
+  const gcamArticles = uniqueSortedNumbers(
+    allDisplayed.flatMap((item) => {
+      const articles = new Set<number>();
+      if (typeof item.primary_article_id === "number" && Number.isFinite(item.primary_article_id)) {
+        articles.add(item.primary_article_id);
+      }
+      for (const policyLink of item.policy_links ?? []) {
+        if (typeof policyLink.article_id === "number" && Number.isFinite(policyLink.article_id)) {
+          articles.add(policyLink.article_id);
+        }
+      }
+      return [...articles];
+    }),
+  );
+  const atoms = uniqueSortedStrings(
+    allDisplayed.flatMap((item) => [
+      item.primary_policy_atom_id ?? "",
+      item.canonical_atom ?? "",
+      ...((item.policy_links ?? []).flatMap((link) => [link.atom_concept_id ?? ""])),
+    ]),
+  );
+  const severityValues = allDisplayed.map((item) => item.severity).filter((value): value is string => typeof value === "string");
+  const knowledgeConfidence = averageConfidence(findings.map((item) => item.confidence));
+  const reasoningConfidence = observations.length > 0
+    ? averageConfidence(observations.map((item) => item.confidence))
+    : knowledgeConfidence;
+  const overallReviewerConfidence = averageConfidence([
+    ...findings.map((item) => item.confidence),
+    ...observations.map((item) => item.confidence),
+  ]);
+
+  return Object.freeze({
+    total_findings: summary.totals.findings_count,
+    total_observations: observations.length,
+    gcam_articles_triggered: Object.freeze(gcamArticles),
+    atoms_triggered: Object.freeze(atoms),
+    highest_severity: highestSeverityLabel(severityValues),
+    knowledge_confidence: knowledgeConfidence,
+    reasoning_confidence: reasoningConfidence,
+    overall_reviewer_confidence: overallReviewerConfidence,
+  });
+}
+
+type KnowledgeSourceFinding = Readonly<{
+  source?: string | null;
+  policy_links?: ReadonlyArray<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
+}>;
+
+function buildKnowledgeSourceSummary(finding: KnowledgeSourceFinding): readonly string[] {
+  const sources = [
+    finding.source ? `source:${finding.source}` : "",
+    ...(finding.policy_links ?? []).map((link) => {
+      const article = link.article_id;
+      const role = link.role ?? "linked";
+      const atom = link.atom_concept_id ?? null;
+      return atom ? `article:${article} atom:${atom} (${role})` : `article:${article} (${role})`;
+    }),
+  ];
+  return uniqueSortedStrings(sources);
+}
+
+function buildFindingDetailRow(
+  finding: {
+    canonical_finding_id: string;
+    title_ar: string;
+    description_ar?: string | null;
+    evidence_snippet: string;
+    severity: string;
+    confidence: number;
+    source?: string | null;
+    final_ruling?: string | null;
+    rationale?: string | null;
+    primary_article_id?: number | null;
+    related_article_ids?: number[];
+    policy_links?: Array<{ article_id: number; atom_concept_id?: string | null; role?: string | null }>;
+    start_offset_global?: number | null;
+    end_offset_global?: number | null;
+    start_line_chunk?: number | null;
+    end_line_chunk?: number | null;
+    page_number?: number | null;
+    page_numbers?: number[] | null;
+    location?: Record<string, unknown> | null;
+    primary_policy_atom_id?: string | null;
+    canonical_atom?: string | null;
+  }
+): Record<string, unknown> {
+  const articleId =
+    typeof finding.primary_article_id === "number" && Number.isFinite(finding.primary_article_id)
+      ? finding.primary_article_id
+      : finding.policy_links?.[0]?.article_id ?? null;
+  const atomId = finding.primary_policy_atom_id ?? finding.canonical_atom ?? null;
+  const articleTitle = typeof articleId === "number" ? (getPolicyArticle(articleId)?.title_ar ?? null) : null;
+  const atomTitle = typeof articleId === "number" ? getPolicyAtomTitle(articleId, atomId) ?? null : null;
+  const observationOrFinding = (finding.final_ruling ?? "").toLowerCase() === "context_ok" ? "observation" : "finding";
+  const knowledgeSourcesUsed = buildKnowledgeSourceSummary(finding);
+  const supportingScene =
+    finding.start_line_chunk != null || finding.end_line_chunk != null
+      ? `lines ${finding.start_line_chunk ?? "?"}-${finding.end_line_chunk ?? "?"}`
+      : finding.page_number != null
+        ? `page ${finding.page_number}`
+        : Array.isArray(finding.page_numbers) && finding.page_numbers.length > 0
+          ? `page ${finding.page_numbers[0]}`
+        : finding.location != null
+          ? "location metadata available"
+        : null;
+  return {
+    articleId,
+    articleTitle,
+    atomId,
+    atomTitle,
+    violationCategory: finding.canonical_atom ?? null,
+    violationSeverity: finding.severity,
+    reviewerDecision: finding.final_ruling ?? null,
+    confidence: finding.confidence,
+    evidenceSummary: finding.evidence_snippet,
+    supportingScene,
+    supportingDialogue: null,
+    supportingDescription: finding.description_ar ?? null,
+    reasoningSummary: finding.rationale ?? null,
+    observationOrFinding,
+    alternativeInterpretation: finding.final_ruling === "needs_review" ? finding.rationale ?? null : null,
+    knowledgeSourcesUsed,
+    decisionRecordsUsed: [] as string[],
+    patternLibrariesUsed: [] as string[],
+    reviewerNotesUsed: [] as string[],
+  };
+}
+
 type CanonicalFindingItem = NonNullable<SummaryJson["canonical_findings"]>[number];
 
 /**
@@ -1097,6 +1270,8 @@ function applyReportGate(summary: SummaryJson): void {
     summary.context_metrics.context_ok_count = violations.filter((x) => x.final_ruling === "context_ok").length;
   }
 
+  summary.report_overview = buildReportOverview(summary);
+
   logger.info("Report gate applied", { movedToHints: hints.length, violationsCount: violations.length });
 }
 
@@ -1114,7 +1289,7 @@ type DbFinding = {
   start_line_chunk: number | null;
   end_line_chunk: number | null;
   page_number?: number | null;
-  location: unknown;
+  location: ({ start_offset?: number | null; end_offset?: number | null } & Record<string, unknown>) | null;
   rationale_ar?: string | null;
   canonical_atom?: string | null;
   intensity?: number | null;
@@ -1178,7 +1353,9 @@ function compareCanonicalItemsStable(
     (a.primary_article_id ?? Number.MAX_SAFE_INTEGER) - (b.primary_article_id ?? Number.MAX_SAFE_INTEGER) ||
     String(a.evidence_snippet ?? "").localeCompare(String(b.evidence_snippet ?? ""), "ar") ||
     String(a.title_ar ?? "").localeCompare(String(b.title_ar ?? ""), "ar") ||
-    String(a.canonical_finding_id).localeCompare(String(b.canonical_finding_id), "ar")
+    String(a.canonical_finding_id).localeCompare(String(b.canonical_finding_id), "ar") ||
+    String((a as { canonical_hash?: string | null }).canonical_hash ?? "").localeCompare(String((b as { canonical_hash?: string | null }).canonical_hash ?? ""), "ar") ||
+    String((a as { evidence_hash?: string | null }).evidence_hash ?? "").localeCompare(String((b as { evidence_hash?: string | null }).evidence_hash ?? ""), "ar")
   );
 }
 
@@ -1202,9 +1379,17 @@ function compareDbFindingStable(a: DbFinding, b: DbFinding): number {
     (a.end_offset_global ?? Number.MAX_SAFE_INTEGER) - (b.end_offset_global ?? Number.MAX_SAFE_INTEGER) ||
     (a.article_id ?? 0) - (b.article_id ?? 0) ||
     String(a.atom_id ?? "").localeCompare(String(b.atom_id ?? ""), "ar") ||
+    (SEVERITY_ORDER[a.severity] ?? 0) - (SEVERITY_ORDER[b.severity] ?? 0) ||
+    ((a.confidence ?? -1) - (b.confidence ?? -1)) ||
+    String(a.canonical_atom ?? "").localeCompare(String(b.canonical_atom ?? ""), "ar") ||
     String(a.evidence_snippet ?? "").localeCompare(String(b.evidence_snippet ?? ""), "ar") ||
     String(a.title_ar ?? "").localeCompare(String(b.title_ar ?? ""), "ar") ||
-    String(a.source ?? "").localeCompare(String(b.source ?? ""), "ar")
+    String(a.source ?? "").localeCompare(String(b.source ?? ""), "ar") ||
+    String(a.rationale_ar ?? "").localeCompare(String(b.rationale_ar ?? ""), "ar") ||
+    String(a.lineage_id ?? "").localeCompare(String(b.lineage_id ?? ""), "ar") ||
+    String(a.parent_lineage_id ?? "").localeCompare(String(b.parent_lineage_id ?? ""), "ar") ||
+    String(a.evidence_hash ?? "").localeCompare(String(b.evidence_hash ?? ""), "ar") ||
+    String(a.canonical_hash ?? "").localeCompare(String(b.canonical_hash ?? ""), "ar")
   );
 }
 
@@ -1354,6 +1539,7 @@ export function buildSummaryJson(
   const canonicalMap = new Map<string, {
     canonical_finding_id: string;
     title_ar: string;
+    description_ar?: string | null;
     evidence_snippet: string;
     severity: string;
     confidence: number;
@@ -1368,6 +1554,7 @@ export function buildSummaryJson(
     start_line_chunk?: number | null;
     end_line_chunk?: number | null;
     page_number?: number | null;
+    location?: Record<string, unknown> | null;
     primary_policy_atom_id?: string | null;
     canonical_atom?: string | null;
     intensity?: number | null;
@@ -1404,6 +1591,7 @@ export function buildSummaryJson(
     canonicalMap.set(cId, {
       canonical_finding_id: cId,
       title_ar: primary.title_ar,
+      description_ar: primary.description_ar ?? null,
       evidence_snippet: primary.evidence_snippet,
       severity: primary.severity,
       confidence: primary.confidence ?? 0,
@@ -1424,6 +1612,7 @@ export function buildSummaryJson(
       start_line_chunk: primary.start_line_chunk ?? null,
       end_line_chunk: primary.end_line_chunk ?? null,
       page_number: primary.page_number ?? null,
+      location: (primary.location as Record<string, unknown> | null) ?? null,
       primary_policy_atom_id: (() => {
         const n = normalizeAtomId(primary.atom_id, primary.article_id);
         return n && String(n).trim() !== "" ? String(n) : null;
@@ -1575,7 +1764,7 @@ export function buildSummaryJson(
     })
     .sort((a, b) => b.count - a.count || String(a.canonical_atom).localeCompare(String(b.canonical_atom), "ar"));
 
-  return {
+  const summary: SummaryJson = {
     job_id: jobId,
     script_id: scriptId,
     generated_at,
@@ -1609,13 +1798,25 @@ export function buildSummaryJson(
     findings_by_canonical_atom,
     report_hints,
   };
+  summary.report_overview = buildReportOverview(summary);
+  return summary;
 }
 
 export function buildReportHtml(summary: SummaryJson): string {
   const s = summary;
+  const overview = s.report_overview ?? buildReportOverview(s);
   const typeCounts = s.totals.type_counts ?? { ai: 0, manual: 0, glossary: 0, special: (s.report_hints?.length ?? 0) };
-  const typeRow = (label: string, count: number) =>
-    `<tr><td>${label}</td><td>${count}</td></tr>`;
+  const typeRow = (label: string, count: number) => `<tr><td>${label}</td><td>${count}</td></tr>`;
+  const text = (value: unknown): string => {
+    if (value == null) return "—";
+    const normalized = String(value).trim();
+    return normalized.length > 0 ? normalized : "—";
+  };
+  const listText = (values: readonly unknown[]): string => {
+    if (!values.length) return "—";
+    return values.map((value) => text(value)).join("، ");
+  };
+  const detailRow = (label: string, value: unknown) => `<tr><th>${label}</th><td>${text(value)}</td></tr>`;
   const typeTable = `
     <table border="1" cellpadding="4"><tbody>
       ${typeRow("ملاحظات آلية", typeCounts.ai)}
@@ -1623,6 +1824,23 @@ export function buildReportHtml(summary: SummaryJson): string {
       ${typeRow("مطابقات القاموس", typeCounts.glossary)}
       ${typeRow("ملاحظات خاصة", typeCounts.special)}
     </tbody></table>`;
+
+  const reportSummaryHtml = `
+  <section>
+    <h2>ملخص التقرير</h2>
+    <table border="1" cellpadding="4">
+      <tbody>
+        <tr><th>إجمالي المخالفات</th><td>${overview.total_findings}</td></tr>
+        <tr><th>إجمالي الملاحظات</th><td>${overview.total_observations}</td></tr>
+        <tr><th>مواد GCAM المتأثرة</th><td>${overview.gcam_articles_triggered.join("، ") || "—"}</td></tr>
+        <tr><th>Atoms المتأثرة</th><td>${overview.atoms_triggered.join("، ") || "—"}</td></tr>
+        <tr><th>أعلى شدة</th><td>${overview.highest_severity}</td></tr>
+        <tr><th>ثقة المعرفة</th><td>${overview.knowledge_confidence}</td></tr>
+        <tr><th>ثقة الاستدلال</th><td>${overview.reasoning_confidence}</td></tr>
+        <tr><th>ثقة المراجع الكلية</th><td>${overview.overall_reviewer_confidence}</td></tr>
+      </tbody>
+    </table>
+  </section>`;
 
   const checklistRows = s.checklist_articles
     .filter((c) => c.counts.low + c.counts.medium + c.counts.high + c.counts.critical > 0)
@@ -1649,19 +1867,84 @@ export function buildReportHtml(summary: SummaryJson): string {
   </section>`
       : "";
 
-  let detailsHtml = "";
-  for (const art of s.findings_by_article) {
-    detailsHtml += `<h3>المادة ${art.article_id}: ${art.title_ar}</h3>`;
-    for (const f of art.top_findings) {
-      detailsHtml += `
-        <div style="margin:1em 0; padding:0.5em; border:1px solid #ccc;">
-          <strong>${f.title_ar}</strong> (ملاحظة، ثقة: ${f.confidence})<br/>
-          <em>الدليل:</em> "${f.evidence_snippet}"
+  const findings = [...(s.canonical_findings ?? [])].sort(compareCanonicalItemsStable);
+  const findingsHtml =
+    findings.length > 0
+      ? `
+  <section>
+    <h2>تفاصيل المخالفات</h2>
+    ${findings
+      .map((finding) => {
+        const row = buildFindingDetailRow(finding) as Record<string, unknown>;
+        const fields = [
+          ["GCAM Article Number", row.articleId],
+          ["GCAM Article Title", row.articleTitle],
+          ["Canonical Atom ID", row.atomId],
+          ["Canonical Atom Title", row.atomTitle],
+          ["Violation Category", row.violationCategory],
+          ["Violation Severity", row.violationSeverity],
+          ["Reviewer Decision", row.reviewerDecision],
+          ["Confidence", row.confidence],
+          ["Evidence Summary", row.evidenceSummary],
+          ["Supporting Scene", row.supportingScene],
+          ["Supporting Dialogue", row.supportingDialogue],
+          ["Supporting Description", row.supportingDescription],
+          ["Reasoning Summary", row.reasoningSummary],
+          ["Observation or Finding", row.observationOrFinding],
+          ["Alternative Interpretation", row.alternativeInterpretation],
+          ["Knowledge Sources Used", Array.isArray(row.knowledgeSourcesUsed) ? (row.knowledgeSourcesUsed as readonly unknown[]) : []],
+          ["Decision Records Used", Array.isArray(row.decisionRecordsUsed) ? (row.decisionRecordsUsed as readonly unknown[]) : []],
+          ["Pattern Libraries Used", Array.isArray(row.patternLibrariesUsed) ? (row.patternLibrariesUsed as readonly unknown[]) : []],
+          ["Reviewer Notes Used", Array.isArray(row.reviewerNotesUsed) ? (row.reviewerNotesUsed as readonly unknown[]) : []],
+        ];
+        return `
+        <div style="margin:1em 0; padding:0.75em; border:1px solid #cbd5e1; background:#ffffff;">
+          <h3>${text(row.articleTitle)} - ${text(row.atomTitle)} - ${text(row.violationCategory)}</h3>
+          <table border="1" cellpadding="4" style="width:100%; border-collapse:collapse;">
+            <tbody>
+              ${fields
+                .map(([label, value]) =>
+                  `<tr><th style="text-align:right; white-space:nowrap;">${label}</th><td>${Array.isArray(value) ? listText(value) : text(value)}</td></tr>`
+                )
+                .join("")}
+            </tbody>
+          </table>
         </div>`;
-    }
-  }
+      })
+      .join("")}
+  </section>`
+      : "";
 
-  const hintsHtml =
+  const observations = [...(s.report_hints ?? [])].sort((a, b) => compareCanonicalItemsStable(a, b));
+  const observationsHtml =
+    observations.length > 0
+      ? `
+  <section>
+    <h2>الملاحظات</h2>
+    ${observations
+      .map((finding) => {
+        const row = buildFindingDetailRow(finding) as Record<string, unknown>;
+        return `
+        <div style="margin:1em 0; padding:0.75em; border:1px solid #7dd3fc; background:#f0f9ff;">
+          <h3>${text(row.articleTitle)} - ${text(row.observationOrFinding)} - ${text(row.violationCategory)}</h3>
+          <table border="1" cellpadding="4" style="width:100%; border-collapse:collapse;">
+            <tbody>
+              ${detailRow("Observation Title", finding.title_ar)}
+              ${detailRow("Observation Type", row.observationOrFinding)}
+              ${detailRow("Reason", row.reasoningSummary)}
+              ${detailRow("Supporting Evidence", row.evidenceSummary)}
+              ${detailRow("Why it is NOT a finding", row.reasoningSummary)}
+              ${detailRow("Related Country / Person / Organization (if applicable)", null)}
+              ${detailRow("Knowledge Sources Used", Array.isArray(row.knowledgeSourcesUsed) ? listText(row.knowledgeSourcesUsed as readonly unknown[]) : "—")}
+            </tbody>
+          </table>
+        </div>`;
+      })
+      .join("")}
+  </section>`
+      : "";
+
+  const reviewHintsHtml =
     (s.report_hints?.length ?? 0) > 0
       ? `
   <section>
@@ -1714,6 +1997,7 @@ export function buildReportHtml(summary: SummaryJson): string {
     <p>إجمالي المخالفات: ${s.totals.findings_count}</p>
     ${typeTable}
   </section>
+  ${reportSummaryHtml}
   <section>
     <h2>٣ مصفوفة الالتزام</h2>
     <table border="1" cellpadding="4">
@@ -1724,9 +2008,10 @@ export function buildReportHtml(summary: SummaryJson): string {
   ${canonicalAtomSummaryHtml}
   <section>
     <h2>٤ النتائج التفصيلية</h2>
-    ${detailsHtml}
+    ${findingsHtml}
   </section>
-  ${hintsHtml}
+  ${observationsHtml}
+  ${reviewHintsHtml}
   ${revisitHtml}
 </body>
 </html>`;
@@ -1788,6 +2073,7 @@ export async function runAggregation(jobId: string): Promise<void> {
       .eq("script_id", scriptId)
       .eq("reanalyzed_job_id", jobId)
       .order("cycle_number", { ascending: false })
+      .order("id", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (!linkedCycle) return;
@@ -1842,6 +2128,7 @@ export async function runAggregation(jobId: string): Promise<void> {
         .select("snapshot_payload, findings_total, severity_counts")
         .eq("cycle_id", (linkedCycle as { id: string }).id)
         .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
         .limit(1)
         .maybeSingle();
 

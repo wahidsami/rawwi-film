@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "pack_version": { "major": 1, "minor": 0, "patch": 0 },
+  "metadata": {
+    "id": "v4_11_profanity",
+    "version": { "major": 1, "minor": 0, "patch": 0 },
+    "title": "Profanity Reviewer Knowledge Pack",
+    "description": "Full academy knowledge pack for direct profanity and abusive speech under the existing V2 profanity policy.",
+    "supported_concepts": ["profanity"]
+  },
+  "pack": {
+    "id": "v4_11_profanity",
+    "module_id": "v4_11_profanity",
+    "title": "Profanity Reviewer Knowledge Pack",
+    "trigger_concept_ids": ["profanity"],
+    "purpose": "Provide reviewer knowledge for direct profanity and abusive speech under the existing V2 profanity policy.",
+    "protected_interests": [
+      "public decency",
+      "audience protection",
+      "respectful language",
+      "clear distinction between direct use and contextual mention"
+    ],
+    "protected_concepts": [
+      "profanity",
+      "insults",
+      "abusive language",
+      "direct profanity"
+    ],
+    "required_evidence": [
+      "An admissible chunk-level evidence span containing a literal profanity term or phrase.",
+      "A direct utterance, narration, or quoted span that contains the profane wording itself."
+    ],
+    "insufficient_evidence": [
+      "A neutral mention that a profanity term exists without the term being used as speech.",
+      "An inferential claim that relies on context but does not preserve literal chunk evidence.",
+      "A fragmented or indirect reference with no actual profanity phrase in the chunk."
+    ],
+    "reviewer_heuristics": [
+      "Literal profanity is the strongest signal and should be treated as a direct hit when admissible.",
+      "Quotation, education, and condemnation can change the interpretation enough to suppress a violation.",
+      "Dialogue and narration can still be direct profanity if the literal wording is present.",
+      "The reviewer should anchor the finding to the exact literal phrase, not the surrounding narrative alone."
+    ],
+    "legal_exceptions": [
+      "Quotation",
+      "Educational usage",
+      "Condemnation"
+    ],
+    "positive_examples": [
+      "Direct profanity: يا كلب — Direct insult.",
+      "Profanity in narration: كان يصرخ: يا حمار — Direct insult.",
+      "Profanity insult with explicit term: يا خرا — Direct insult.",
+      "Profanity with direct address: يا نصاب — Direct insult.",
+      "Profanity with abusive phrase: العن أمك — Severe abusive phrase."
+    ],
+    "negative_examples": [
+      "Quoted profanity: المعلم قال: \"يا كلب\" — The teacher is reporting a quoted sentence.",
+      "Educational profanity discussion: في الدرس نشرح معنى كلمة يا حمار — The scene is instructional and explanatory.",
+      "Condemned profanity: الشخصية تدين قول يا خرا وتصفه بالإهانة — The story rejects abusive language.",
+      "Dictionary reference to profanity: في القاموس توجد كلمة سباب ضمن الأمثلة — This is a lexical explanation, not a use of profanity.",
+      "Neutral mention of profanity term: المشهد يذكر كلمة شتيمة فقط — No endorsement or direct insult appears."
+    ],
+    "common_false_positives": [
+      "Quoted profanity presented as a quotation rather than a direct insult.",
+      "Educational discussion of a profanity term without endorsement.",
+      "Condemnation of the profanity word or phrase.",
+      "Neutral narration that merely references the concept without the literal profanity text."
+    ],
+    "glossary_relationships": [
+      { "term": "سباب", "concept_id": "profanity", "relation": "Direct lexical anchor", "note": "The term is a lexical trigger for the profanity concept." },
+      { "term": "شتيمة", "concept_id": "profanity", "relation": "Direct lexical anchor", "note": "The term maps directly to the profanity concept." },
+      { "term": "قذف", "concept_id": "profanity", "relation": "Direct lexical anchor", "note": "The term is treated as a profanity-related lexical anchor." }
+    ],
+    "article_mapping": [
+      { "article_id": 4, "atom_ids": [], "role": "Primary content protection", "note": "Current V2 profanity implementation routes to article 4." },
+      { "article_id": 5, "atom_ids": [], "role": "Age-rating compatibility", "note": "The same profanity payload can affect age classification." },
+      { "article_id": 17, "atom_ids": [], "role": "Dignity and reputation protection", "note": "Direct profanity can also implicate dignity and reputation." }
+    ],
+    "reporting_guidance": [
+      "Report the exact literal profanity phrase and the immediate context used to interpret it.",
+      "Use the selected article mapping to explain the policy basis of the finding.",
+      "If the context is quotation, educational discussion, or condemnation, suppress the finding or mark it for review according to the module outcome."
+    ]
+  }
+}

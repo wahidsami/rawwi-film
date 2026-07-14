@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "id": "politics_domain",
+  "title": "Politics Domain Blueprint",
+  "description": "Top-level politics knowledge blueprint used by Academy lessons and reviewer packs.",
+  "entries": [
+    {
+      "id": "politics_domain",
+      "title": "Politics and State",
+      "description": "Politics reasoning across state, leadership, institutions, symbols, diplomacy, and unrest."
+    }
+  ]
+}

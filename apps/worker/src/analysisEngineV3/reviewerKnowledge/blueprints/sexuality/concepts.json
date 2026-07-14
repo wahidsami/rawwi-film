@@ -1,0 +1,198 @@
+{
+  "version": "1.0.0",
+  "id": "sexuality_concepts",
+  "title": "Sexuality Concepts",
+  "description": "Canonical sexual content concepts for reviewer reasoning.",
+  "entries": [
+    {
+      "id": "sexual_reference",
+      "title": "Sexual Reference",
+      "description": "Sexual Reference covers literal mentions, jokes, double meanings, metaphors, and symbolism that point to sexual material."
+    },
+    {
+      "id": "sexual_joke",
+      "title": "Sexual Joke",
+      "description": "Sexual Joke covers literal mentions, jokes, double meanings, metaphors, and symbolism that point to sexual material."
+    },
+    {
+      "id": "sexual_double_meaning",
+      "title": "Sexual Double Meaning",
+      "description": "Sexual Double Meaning covers literal mentions, jokes, double meanings, metaphors, and symbolism that point to sexual material."
+    },
+    {
+      "id": "sexual_metaphor",
+      "title": "Sexual Metaphor",
+      "description": "Sexual Metaphor covers literal mentions, jokes, double meanings, metaphors, and symbolism that point to sexual material."
+    },
+    {
+      "id": "sexual_symbolism",
+      "title": "Sexual Symbolism",
+      "description": "Sexual Symbolism covers literal mentions, jokes, double meanings, metaphors, and symbolism that point to sexual material."
+    },
+    {
+      "id": "sexual_flirting",
+      "title": "Sexual Flirting",
+      "description": "Sexual Flirting covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+    },
+    {
+      "id": "sexual_romance",
+      "title": "Sexual Romance",
+      "description": "Sexual Romance covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+    },
+    {
+      "id": "sexual_suggestion",
+      "title": "Sexual Suggestion",
+      "description": "Sexual Suggestion covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+    },
+    {
+      "id": "sexual_invitation",
+      "title": "Sexual Invitation",
+      "description": "Sexual Invitation covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+    },
+    {
+      "id": "sexual_kiss",
+      "title": "Sexual Kiss",
+      "description": "Sexual Kiss covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+    },
+    {
+      "id": "sexual_intimacy",
+      "title": "Sexual Intimacy",
+      "description": "Sexual Intimacy covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+    },
+    {
+      "id": "sexual_touch",
+      "title": "Sexual Touch",
+      "description": "Sexual Touch covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+    },
+    {
+      "id": "sexual_dancing",
+      "title": "Sexual Dancing",
+      "description": "Sexual Dancing covers flirting, romance, invitation, contact, and intimate interaction that may or may not be sexual."
+    },
+    {
+      "id": "sexual_harassment",
+      "title": "Sexual Harassment",
+      "description": "Sexual Harassment covers unwanted sexual pressure, coercion, abuse, exploitation, grooming, or false-accusation framing."
+    },
+    {
+      "id": "sexual_assault",
+      "title": "Sexual Assault",
+      "description": "Sexual Assault covers unwanted sexual pressure, coercion, abuse, exploitation, grooming, or false-accusation framing."
+    },
+    {
+      "id": "sexual_abuse",
+      "title": "Sexual Abuse",
+      "description": "Sexual Abuse covers unwanted sexual pressure, coercion, abuse, exploitation, grooming, or false-accusation framing."
+    },
+    {
+      "id": "sexual_exploitation",
+      "title": "Sexual Exploitation",
+      "description": "Sexual Exploitation covers unwanted sexual pressure, coercion, abuse, exploitation, grooming, or false-accusation framing."
+    },
+    {
+      "id": "sexual_grooming",
+      "title": "Sexual Grooming",
+      "description": "Sexual Grooming covers unwanted sexual pressure, coercion, abuse, exploitation, grooming, or false-accusation framing."
+    },
+    {
+      "id": "sexual_false_accusation",
+      "title": "Sexual False Accusation",
+      "description": "Sexual False Accusation covers a sexual allegation that is disputed, corrected, or proven false by later evidence."
+    },
+    {
+      "id": "sexual_dialogue",
+      "title": "Sexual Dialogue",
+      "description": "Sexual Dialogue covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+    },
+    {
+      "id": "sexual_scene",
+      "title": "Sexual Scene",
+      "description": "Sexual Scene covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+    },
+    {
+      "id": "sexual_description",
+      "title": "Sexual Description",
+      "description": "Sexual Description covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+    },
+    {
+      "id": "sexual_sound",
+      "title": "Sexual Sound",
+      "description": "Sexual Sound covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+    },
+    {
+      "id": "sexual_camera_focus",
+      "title": "Sexual Camera Focus",
+      "description": "Sexual Camera Focus covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+    },
+    {
+      "id": "sexual_body_focus",
+      "title": "Sexual Body Focus",
+      "description": "Sexual Body Focus covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+    },
+    {
+      "id": "sexual_clothing",
+      "title": "Sexual Clothing",
+      "description": "Sexual Clothing covers dialogue, scene direction, visual emphasis, sound, costume, or body-language framing."
+    },
+    {
+      "id": "sexual_normalization",
+      "title": "Sexual Normalization",
+      "description": "Sexual Normalization covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+    },
+    {
+      "id": "sexual_glorification",
+      "title": "Sexual Glorification",
+      "description": "Sexual Glorification covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+    },
+    {
+      "id": "sexual_instruction",
+      "title": "Sexual Instruction",
+      "description": "Sexual Instruction covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+    },
+    {
+      "id": "sexual_comedy",
+      "title": "Sexual Comedy",
+      "description": "Sexual Comedy covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+    },
+    {
+      "id": "sexual_condemnation",
+      "title": "Sexual Condemnation",
+      "description": "Sexual Condemnation covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+    },
+    {
+      "id": "sexual_documentary",
+      "title": "Sexual Documentary",
+      "description": "Sexual Documentary covers normalization, glorification, instruction, comedy, condemnation, or documentary framing."
+    },
+    {
+      "id": "sexual_medical",
+      "title": "Sexual Medical",
+      "description": "Sexual Medical covers medical, educational, historical, court, police, and news contexts around sexual material."
+    },
+    {
+      "id": "sexual_educational",
+      "title": "Sexual Educational",
+      "description": "Sexual Educational covers medical, educational, historical, court, police, and news contexts around sexual material."
+    },
+    {
+      "id": "sexual_historical",
+      "title": "Sexual Historical",
+      "description": "Sexual Historical covers medical, educational, historical, court, police, and news contexts around sexual material."
+    },
+    {
+      "id": "sexual_dream",
+      "title": "Sexual Dream",
+      "description": "Sexual Dream covers dreams, flashbacks, and imagination where the sexual image exists inside the character's mind or memory."
+    },
+    {
+      "id": "sexual_flashback",
+      "title": "Sexual Flashback",
+      "description": "Sexual Flashback covers dreams, flashbacks, and imagination where the sexual image exists inside the character's mind or memory."
+    },
+    {
+      "id": "sexual_imagination",
+      "title": "Sexual Imagination",
+      "description": "Sexual Imagination covers dreams, flashbacks, and imagination where the sexual image exists inside the character's mind or memory."
+    }
+  ]
+}

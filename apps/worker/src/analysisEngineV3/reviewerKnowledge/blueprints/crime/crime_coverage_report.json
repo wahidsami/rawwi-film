@@ -1,0 +1,550 @@
+{
+  "domainId": "crime",
+  "domainTitle": "Crime Domain Framework",
+  "domainVersion": "1.0.0",
+  "blueprint": {
+    "title": "Blueprint",
+    "present": 9,
+    "expected": 9,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "a62c77b8f0f97aa3873c9eafca9a5c76ca80a4f87d5cf844c415a176684c735e"
+    ],
+    "hash": "af053d48380dbd4eb1a67dcbabf6cdd92e85da3be25eed9cdcd603b58330cd4b"
+  },
+  "knowledgePack": {
+    "title": "Knowledge Pack",
+    "present": 48,
+    "expected": 48,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "crime reviewer knowledge pack",
+      "pack=d:\\waheed\\mypprojects\\raawifilm fix\\apps\\worker\\src\\analysisenginev3\\reviewerknowledge\\academy\\crime\\pack.v1.json"
+    ],
+    "hash": "c6da03488dfa7c224d9edd3b0af2dbfb78a894360cf51ecf34136f075af04933"
+  },
+  "lessons": {
+    "title": "Lessons",
+    "present": 14,
+    "expected": 14,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [],
+    "hash": "e76f9e3c84e022aeacb5e6fca83cc350654bceedbaa715282f7ca2a60d14bbe1"
+  },
+  "patterns": {
+    "title": "Patterns",
+    "present": 48,
+    "expected": 48,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "1 pattern library documents loaded"
+    ],
+    "hash": "a38a9c14d4bc8baac0d2c2838ff8a212c695e460e644c4896d8ac17555f18764"
+  },
+  "decisionRecords": {
+    "title": "Decision Records",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [
+      "invalid lesson reference: lesson_001_crime_framework.",
+      "invalid lesson reference: lesson_001_what_is_a_finding.",
+      "invalid lesson reference: lesson_002_what_is_evidence.",
+      "invalid lesson reference: lesson_003_understanding_context.",
+      "invalid pattern reference: pattern_arabic_dialect.",
+      "invalid pattern reference: pattern_attempted_crime.",
+      "invalid pattern reference: pattern_criminal_slang.",
+      "invalid pattern reference: pattern_cyber_crime.",
+      "invalid pattern reference: pattern_described_crime.",
+      "invalid pattern reference: pattern_false_guard.",
+      "invalid pattern reference: pattern_financial_crime.",
+      "invalid pattern reference: pattern_implicit_crime.",
+      "invalid pattern reference: pattern_offscreen_crime.",
+      "invalid pattern reference: pattern_organized_crime.",
+      "invalid pattern reference: pattern_planned_crime.",
+      "invalid pattern reference: pattern_reported_crime.",
+      "invalid pattern reference: pattern_white_collar."
+    ],
+    "notes": [
+      "80 decision records loaded"
+    ],
+    "hash": "ca9db4471b4d292ccdce0a36b0d72fe66c7a6026293c61aa65e26b4b4645bf91"
+  },
+  "benchmarks": {
+    "title": "Benchmarks",
+    "present": 1,
+    "expected": 1,
+    "coveragePercent": 100,
+    "missing": [],
+    "warnings": [],
+    "notes": [
+      "200 benchmark cases loaded"
+    ],
+    "hash": "0a9a226c895209e611560b0c993882c0b83718a34334dc9ae4d0d1d35a58505c"
+  },
+  "metrics": {
+    "conceptCount": 48,
+    "duplicateConceptCount": 0,
+    "missingConceptCount": 0,
+    "missingPatternCoverage": 0,
+    "missingDecisionCoverage": 0,
+    "missingBenchmarkCoverage": 0,
+    "glossaryCoverage": 100,
+    "crossSentenceCoverage": 100,
+    "crossSceneCoverage": 100,
+    "descriptionCoverage": 100,
+    "dialogueCoverage": 100,
+    "observationCoverage": 100,
+    "contextsCoverage": 100,
+    "targetsCoverage": 100,
+    "actionsCoverage": 100,
+    "intentsCoverage": 100,
+    "relationshipsCoverage": 100,
+    "evidenceRulesCoverage": 100,
+    "exceptionsCoverage": 100,
+    "falsePositivesCoverage": 100,
+    "falseNegativesCoverage": 100,
+    "reviewerQuestionsCoverage": 100,
+    "methodologyCoverage": 0,
+    "gcamMappingCoverage": 100,
+    "topics": [
+      {
+        "id": "actions",
+        "title": "Actions Coverage",
+        "present": 8,
+        "expected": 8,
+        "coveragePercent": 100,
+        "evidence": [
+          "crime_action_attempt",
+          "crime_action_confess",
+          "crime_action_coverup",
+          "crime_action_escape",
+          "crime_action_execute",
+          "crime_action_plan",
+          "crime_action_reference",
+          "crime_action_report"
+        ],
+        "missing": []
+      },
+      {
+        "id": "concepts",
+        "title": "Concept Coverage",
+        "present": 48,
+        "expected": 48,
+        "coveragePercent": 100,
+        "evidence": [
+          "crime_arson",
+          "crime_assault",
+          "crime_attempt",
+          "crime_attempted_murder",
+          "crime_blackmail",
+          "crime_bribery",
+          "crime_burglary",
+          "crime_confession",
+          "crime_conspiracy",
+          "crime_corruption",
+          "crime_court_case",
+          "crime_coverup",
+          "crime_cybercrime",
+          "crime_dialogue",
+          "crime_documentary",
+          "crime_educational",
+          "crime_encouragement",
+          "crime_escape",
+          "crime_evasion",
+          "crime_execution",
+          "crime_extortion",
+          "crime_false_accusation",
+          "crime_forgery",
+          "crime_fraud",
+          "crime_glorification",
+          "crime_historical",
+          "crime_hostage",
+          "crime_human_trafficking",
+          "crime_identity_theft",
+          "crime_instruction",
+          "crime_kidnapping",
+          "crime_money_laundering",
+          "crime_murder",
+          "crime_news",
+          "crime_normalization",
+          "crime_observation",
+          "crime_organized_crime",
+          "crime_planning",
+          "crime_police_investigation",
+          "crime_property_damage",
+          "crime_reference",
+          "crime_reported_event",
+          "crime_reward",
+          "crime_robbery",
+          "crime_scene_description",
+          "crime_smuggling",
+          "crime_theft",
+          "crime_vandalism"
+        ],
+        "missing": []
+      },
+      {
+        "id": "contexts",
+        "title": "Contexts Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "crime_context_court",
+          "crime_context_dialogue",
+          "crime_context_documentary",
+          "crime_context_educational",
+          "crime_context_historical",
+          "crime_context_narration",
+          "crime_context_news",
+          "crime_context_observation",
+          "crime_context_police",
+          "crime_context_scene"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_scene",
+        "title": "Cross Scene Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross scene reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "cross_sentence",
+        "title": "Cross Sentence Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "cross sentence reasoning"
+        ],
+        "missing": []
+      },
+      {
+        "id": "description",
+        "title": "Description Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "description coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "dialogue",
+        "title": "Dialogue Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "dialogue coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "duplicate_concepts",
+        "title": "Duplicate Concepts",
+        "present": 0,
+        "expected": 0,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "evidence_rules",
+        "title": "Evidence Rules Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "crime_evidence_action",
+          "crime_evidence_context",
+          "crime_evidence_cross",
+          "crime_evidence_cross_scene",
+          "crime_evidence_dialogue",
+          "crime_evidence_exception",
+          "crime_evidence_report",
+          "crime_evidence_scene",
+          "crime_evidence_speaker",
+          "crime_evidence_target"
+        ],
+        "missing": []
+      },
+      {
+        "id": "exceptions",
+        "title": "Exceptions Coverage",
+        "present": 13,
+        "expected": 13,
+        "coveragePercent": 100,
+        "evidence": [
+          "condemnation",
+          "confession",
+          "court case",
+          "documentary",
+          "dream",
+          "educational",
+          "false accusation",
+          "flashback",
+          "historical",
+          "news",
+          "observation",
+          "police investigation",
+          "witness testimony"
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_negatives",
+        "title": "False Negatives Coverage",
+        "present": 3,
+        "expected": 3,
+        "coveragePercent": 100,
+        "evidence": [
+          "a documentary discussing past criminal activity.",
+          "a news report describing an arrest.",
+          "a police interview repeating a suspect's words as evidence."
+        ],
+        "missing": []
+      },
+      {
+        "id": "false_positives",
+        "title": "False Positives Coverage",
+        "present": 4,
+        "expected": 4,
+        "coveragePercent": 100,
+        "evidence": [
+          "false accusation mistaken for proved crime.",
+          "historical narration mistaken for present criminal conduct.",
+          "neutral reporting mistaken for endorsement.",
+          "police or court language mistaken for the speaker's own criminal intent."
+        ],
+        "missing": []
+      },
+      {
+        "id": "gcam_mapping",
+        "title": "GCAM Mapping Coverage",
+        "present": 5,
+        "expected": 5,
+        "coveragePercent": 100,
+        "evidence": [
+          "12",
+          "13",
+          "14",
+          "4",
+          "9"
+        ],
+        "missing": []
+      },
+      {
+        "id": "glossary",
+        "title": "Glossary Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "اتحاد",
+          "احتيال",
+          "اعتراف",
+          "تحقيق",
+          "جريمة",
+          "رشوة",
+          "سرقة",
+          "عصابة",
+          "قتل",
+          "محكمة"
+        ],
+        "missing": []
+      },
+      {
+        "id": "intents",
+        "title": "Intents Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "crime_intent_condemnation",
+          "crime_intent_defense",
+          "crime_intent_encouragement",
+          "crime_intent_glorification",
+          "crime_intent_instruction",
+          "crime_intent_investigation",
+          "crime_intent_normalization",
+          "crime_intent_recruitment",
+          "crime_intent_reference",
+          "crime_intent_reporting"
+        ],
+        "missing": []
+      },
+      {
+        "id": "missing_benchmark_coverage",
+        "title": "Missing Benchmark Coverage",
+        "present": 0,
+        "expected": 48,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_concepts",
+        "title": "Missing Concepts",
+        "present": 0,
+        "expected": 48,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_decision_coverage",
+        "title": "Missing Decision Coverage",
+        "present": 0,
+        "expected": 48,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "missing_pattern_coverage",
+        "title": "Missing Pattern Coverage",
+        "present": 0,
+        "expected": 48,
+        "coveragePercent": 0,
+        "evidence": [],
+        "missing": []
+      },
+      {
+        "id": "observation",
+        "title": "Observation Coverage",
+        "present": 1,
+        "expected": 1,
+        "coveragePercent": 100,
+        "evidence": [
+          "observation coverage"
+        ],
+        "missing": []
+      },
+      {
+        "id": "relationships",
+        "title": "Relationships Coverage",
+        "present": 48,
+        "expected": 48,
+        "coveragePercent": 100,
+        "evidence": [
+          "crime_domain_framework"
+        ],
+        "missing": []
+      },
+      {
+        "id": "reviewer_questions",
+        "title": "Reviewer Questions Coverage",
+        "present": 101,
+        "expected": 101,
+        "coveragePercent": 100,
+        "evidence": [
+          "crime_question_confidence",
+          "crime_question_context",
+          "crime_question_cross",
+          "crime_question_evidence",
+          "crime_question_exception",
+          "crime_question_false_positive",
+          "crime_question_intent",
+          "crime_question_narrative",
+          "crime_question_speaker",
+          "crime_question_target",
+          "q01",
+          "q02",
+          "q03",
+          "q04",
+          "q05",
+          "q06",
+          "q07",
+          "q08",
+          "q09",
+          "q10"
+        ],
+        "missing": []
+      },
+      {
+        "id": "targets",
+        "title": "Targets Coverage",
+        "present": 10,
+        "expected": 10,
+        "coveragePercent": 100,
+        "evidence": [
+          "crime_target_bank",
+          "crime_target_child",
+          "crime_target_document",
+          "crime_target_money",
+          "crime_target_person",
+          "crime_target_property",
+          "crime_target_state",
+          "crime_target_system",
+          "crime_target_victim",
+          "crime_target_witness"
+        ],
+        "missing": []
+      },
+      {
+        "id": "universal_reviewer_methodology_v1",
+        "title": "Universal Reviewer Methodology",
+        "present": 11,
+        "expected": 11,
+        "coveragePercent": 100,
+        "evidence": [
+          "applicable concept validation",
+          "confidence assessment",
+          "context classification",
+          "evidence strength",
+          "exception detection",
+          "literal vs implied meaning",
+          "narrative intent",
+          "narrative understanding",
+          "speaker identification",
+          "target identification",
+          "victim identification"
+        ],
+        "missing": []
+      }
+    ],
+    "hash": "2264e0f0ae9058766f8bd9226af673b1e8298048fa4851afea1706deb443c35b"
+  },
+  "productionReadiness": 100,
+  "recommendation": "READY",
+  "coverageGaps": [],
+  "criticalGaps": [],
+  "warnings": [
+    "invalid lesson reference: lesson_001_crime_framework.",
+    "invalid lesson reference: lesson_001_what_is_a_finding.",
+    "invalid lesson reference: lesson_002_what_is_evidence.",
+    "invalid lesson reference: lesson_003_understanding_context.",
+    "invalid pattern reference: pattern_arabic_dialect.",
+    "invalid pattern reference: pattern_attempted_crime.",
+    "invalid pattern reference: pattern_criminal_slang.",
+    "invalid pattern reference: pattern_cyber_crime.",
+    "invalid pattern reference: pattern_described_crime.",
+    "invalid pattern reference: pattern_false_guard.",
+    "invalid pattern reference: pattern_financial_crime.",
+    "invalid pattern reference: pattern_implicit_crime.",
+    "invalid pattern reference: pattern_offscreen_crime.",
+    "invalid pattern reference: pattern_organized_crime.",
+    "invalid pattern reference: pattern_planned_crime.",
+    "invalid pattern reference: pattern_reported_crime.",
+    "invalid pattern reference: pattern_white_collar."
+  ],
+  "hash": "69b1663b5f592ee68cd3f441fc4bf1b1871d0f721e81b14ec49298f93b27de57"
+}

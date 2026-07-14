@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "id": "drugs_actions",
+  "title": "Drugs Actions",
+  "description": "Drug actions.",
+  "entries": [
+    {
+      "id": "drug_action_reference",
+      "title": "Drug Reference",
+      "description": "A direct mention of drugs or drug concepts."
+    },
+    {
+      "id": "drug_action_consumption",
+      "title": "Consumption",
+      "description": "A person taking or ingesting a substance."
+    },
+    {
+      "id": "drug_action_possession",
+      "title": "Possession",
+      "description": "Holding or hiding a substance."
+    },
+    {
+      "id": "drug_action_distribution",
+      "title": "Distribution",
+      "description": "Passing drugs to others."
+    },
+    {
+      "id": "drug_action_instruction",
+      "title": "Instruction",
+      "description": "Teaching how to use or make drugs."
+    },
+    {
+      "id": "drug_action_rehabilitation",
+      "title": "Rehabilitation",
+      "description": "Recovery or treatment framing."
+    },
+    {
+      "id": "drug_action_smuggling",
+      "title": "Smuggling",
+      "description": "Crossing boundaries with hidden substances."
+    },
+    {
+      "id": "drug_action_manufacturing",
+      "title": "Manufacturing",
+      "description": "Producing or preparing a substance."
+    }
+  ]
+}

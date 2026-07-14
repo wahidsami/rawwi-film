@@ -1,0 +1,54 @@
+{
+  "id": "decision_047_humiliation_public_direct",
+  "version": "1.0.0",
+  "title": "Humiliation (direct)",
+  "summary": "Humiliation in direct framing.",
+  "originalScenario": "يذله أمام الصف",
+  "reviewQuestion": "Is this humiliation?",
+  "initialSuspicion": "Public shaming.",
+  "possibleConcepts": [
+    "children_humiliation",
+    "children_child"
+  ],
+  "supportingEvidence": [
+    "يذله أمام الصف"
+  ],
+  "contradictingEvidence": [],
+  "requiredMissingEvidence": [],
+  "sceneContext": "Direct scene description.",
+  "speakerAnalysis": "Speaker is explicit.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Potential abuse or control.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Finding supported",
+  "confidence": "high",
+  "findingType": "match",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Low",
+  "reviewerNotes": "Direct harm is explicit.",
+  "benchmarkTags": [
+    "humiliation_public",
+    "direct",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_humiliation",
+    "children_child"
+  ]
+}

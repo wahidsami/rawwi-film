@@ -1,0 +1,328 @@
+{
+  "schema_version": 1,
+  "pack_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "v3_08_violence",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "title": "Violence Reviewer Knowledge Pack",
+    "description": "Production knowledge pack for violence as a semantic universe, not a single violation bucket.",
+    "supported_concepts": [
+      "violence_event",
+      "violence_threat",
+      "violence_attempt",
+      "violence_glorification",
+      "violence_encouragement",
+      "violence_instruction",
+      "violence_reward",
+      "violence_revenge",
+      "violence_self_defense",
+      "violence_law_enforcement",
+      "violence_accident",
+      "violence_negligence",
+      "violence_condemnation",
+      "violence_documentary",
+      "violence_historical",
+      "violence_training",
+      "violence_game",
+      "violence_fantasy",
+      "violence_comedy",
+      "violence_dream",
+      "violence_flashback",
+      "violence_memory",
+      "violence_imagination",
+      "violence_failed_attempt",
+      "violence_offscreen",
+      "violence_scene_description",
+      "violence_dialogue",
+      "violence_reported_by_character",
+      "violence_observed",
+      "violence_implied",
+      "violence_against_child",
+      "violence_against_woman",
+      "violence_against_disabled",
+      "violence_against_public",
+      "violence_against_state"
+    ]
+  },
+  "pack": {
+    "id": "v3_08_violence",
+    "module_id": "v3_08_violence",
+    "title": "Violence Reviewer Knowledge Pack",
+    "trigger_concept_ids": [
+      "violence_event",
+      "violence_threat",
+      "violence_attempt",
+      "violence_glorification",
+      "violence_encouragement",
+      "violence_instruction",
+      "violence_reward",
+      "violence_revenge",
+      "violence_self_defense",
+      "violence_law_enforcement",
+      "violence_accident",
+      "violence_negligence",
+      "violence_condemnation",
+      "violence_documentary",
+      "violence_historical",
+      "violence_training",
+      "violence_game",
+      "violence_fantasy",
+      "violence_comedy",
+      "violence_dream",
+      "violence_flashback",
+      "violence_memory",
+      "violence_imagination",
+      "violence_failed_attempt",
+      "violence_offscreen",
+      "violence_scene_description",
+      "violence_dialogue",
+      "violence_reported_by_character",
+      "violence_observed",
+      "violence_implied",
+      "violence_against_child",
+      "violence_against_woman",
+      "violence_against_disabled",
+      "violence_against_public",
+      "violence_against_state"
+    ],
+    "default_question_set_id": "violence_default_questions",
+    "purpose": "Teach reviewers to distinguish violence events, threats, attempts, glorification, encouragement, instruction, exceptions, protected-target contexts, and implied violence that becomes recoverable from context.",
+    "protected_interests": [
+      "semantic clarity",
+      "narrative intent",
+      "target protection",
+      "context-sensitive evaluation",
+      "distinguishing event from endorsement",
+      "distinguishing violence from exception contexts"
+    ],
+    "protected_concepts": [
+      "violence_event",
+      "violence_threat",
+      "violence_attempt",
+      "violence_glorification",
+      "violence_encouragement",
+      "violence_instruction",
+      "violence_reward",
+      "violence_revenge",
+      "violence_self_defense",
+      "violence_law_enforcement",
+      "violence_accident",
+      "violence_negligence",
+      "violence_condemnation",
+      "violence_documentary",
+      "violence_historical",
+      "violence_training",
+      "violence_game",
+      "violence_fantasy",
+      "violence_comedy",
+      "violence_dream",
+      "violence_flashback",
+      "violence_memory",
+      "violence_imagination",
+      "violence_failed_attempt",
+      "violence_offscreen",
+      "violence_scene_description",
+      "violence_dialogue",
+      "violence_reported_by_character",
+      "violence_observed",
+      "violence_implied",
+      "violence_against_child",
+      "violence_against_woman",
+      "violence_against_disabled",
+      "violence_against_public",
+      "violence_against_state"
+    ],
+    "required_evidence": [
+      "A literal chunk-level span showing the exact violence category under review.",
+      "Speaker, target, and intent support from the same scene or neighboring context.",
+      "A context signal that confirms whether the violence is an event, threat, attempt, exception, endorsement, or implied meaning.",
+      "Off-screen, reported, or symbolic language when the scene still lets the reviewer recover the violent meaning."
+    ],
+    "insufficient_evidence": [
+      "A vague mention of violence without intent, target, or scene support.",
+      "A documentary or historical reference that only records the event.",
+      "A self-defense, law-enforcement, fantasy, game, dream, flashback, or comedy scene without endorsement."
+    ],
+    "reviewer_heuristics": [
+      "Separate the violence event from the violence meaning.",
+      "Treat glorification, encouragement, and instruction as stronger than mere event description.",
+      "Down-rank self-defense, law enforcement, documentary, historical, game, fantasy, comedy, dream, and flashback contexts.",
+      "Use offscreen, observed, reported, and implied markers to decide how explicit the violence is.",
+      "Treat indirect violence and implied violence as reviewable when later dialogue, scene framing, or consequences recover the harm.",
+      "Protect child, woman, disabled, public, and state-targeted violence as separate outcomes.",
+      "Do not merge threat, attempt, event, and condemnation into one bucket."
+    ],
+    "legal_exceptions": [
+      "Self Defense",
+      "Law Enforcement",
+      "Documentary",
+      "Historical",
+      "Training",
+      "Game",
+      "Fantasy",
+      "Comedy",
+      "Dream",
+      "Flashback",
+      "Memory",
+      "Imagination"
+    ],
+    "positive_examples": [
+      "Direct violence event: ضربه بقوة حتى سقط.",
+      "Threat: إذا خرجت سأؤذيك الليلة.",
+      "Instruction: كيف تنفذ الهجوم خطوة خطوة.",
+      "Glorification: العنف حل رائع ويجب تمجيده.",
+      "Against child: يضرب الطفل بقسوة.",
+      "Against state: يهاجم مركز الشرطة.",
+      "Implied violence: the scene shows the aftermath and the dialogue makes the harm recoverable."
+    ],
+    "negative_examples": [
+      "Documentary narration: الوثائقي يشرح عنفًا تاريخيًا.",
+      "Historical reference: كان ذلك اعتداءً قديمًا في الحرب.",
+      "Self-defense: دافع عن نفسه بعد الهجوم.",
+      "Comedy: المشهد الكوميدي يسقط دون إصابة.",
+      "Fantasy: في عالم خيالي يقاتلون بالسحر.",
+      "Condemnation: تدين الشخصية هذا العنف.",
+      "Purely symbolic language without harm."
+    ],
+    "common_false_positives": [
+      "A lawful police intervention.",
+      "A self-defense explanation.",
+      "A documentary or historical report.",
+      "A fantasy, dream, or game scene.",
+      "A comedic pratfall without real harm.",
+      "An offscreen event reported only as background detail.",
+      "A metaphor with no recoverable harm or violent action."
+    ],
+    "glossary_relationships": [
+      {
+        "term": "ضرب",
+        "concept_id": "violence_event",
+        "relation": "supports",
+        "note": "Direct event anchor."
+      },
+      {
+        "term": "تهديد",
+        "concept_id": "violence_threat",
+        "relation": "supports",
+        "note": "Threat anchor."
+      },
+      {
+        "term": "دفاع عن النفس",
+        "concept_id": "violence_self_defense",
+        "relation": "supports",
+        "note": "Self-defense anchor."
+      },
+      {
+        "term": "شرطة",
+        "concept_id": "violence_law_enforcement",
+        "relation": "supports",
+        "note": "Law-enforcement anchor."
+      },
+      {
+        "term": "وثائقي",
+        "concept_id": "violence_documentary",
+        "relation": "supports",
+        "note": "Documentary anchor."
+      },
+      {
+        "term": "فلاشباك",
+        "concept_id": "violence_flashback",
+        "relation": "supports",
+        "note": "Flashback anchor."
+      },
+      {
+        "term": "حلم",
+        "concept_id": "violence_dream",
+        "relation": "supports",
+        "note": "Dream anchor."
+      },
+      {
+        "term": "كوميديا",
+        "concept_id": "violence_comedy",
+        "relation": "supports",
+        "note": "Comedy anchor."
+      },
+      {
+        "term": "خيال",
+        "concept_id": "violence_fantasy",
+        "relation": "supports",
+        "note": "Fantasy anchor."
+      },
+      {
+        "term": "وصف المشهد",
+        "concept_id": "violence_scene_description",
+        "relation": "supports",
+        "note": "Scene description anchor."
+      },
+      {
+        "term": "إيحاء",
+        "concept_id": "violence_implied",
+        "relation": "supports",
+        "note": "Implied violence can be recoverable from context."
+      }
+    ],
+    "article_mapping": [
+      {
+        "article_id": 9,
+        "atom_ids": [
+          "9-1",
+          "9-3"
+        ],
+        "role": "Violence and intimidation",
+        "note": "Primary mapping for violent acts, threats, and attempts."
+      },
+      {
+        "article_id": 12,
+        "atom_ids": [
+          "12-1",
+          "12-3"
+        ],
+        "role": "Public order",
+        "note": "Use when violence affects public order or civic stability."
+      },
+      {
+        "article_id": 13,
+        "atom_ids": [
+          "13-1",
+          "13-3"
+        ],
+        "role": "State institutions",
+        "note": "Use when violence targets state institutions or authority."
+      },
+      {
+        "article_id": 14,
+        "atom_ids": [
+          "14-3",
+          "14-4"
+        ],
+        "role": "Violent incitement",
+        "note": "Use for encouragement, glorification, or instruction."
+      },
+      {
+        "article_id": 17,
+        "atom_ids": [
+          "17-1",
+          "17-2",
+          "17-3",
+          "17-5"
+        ],
+        "role": "Protected targets",
+        "note": "Use when the violence targets a child, woman, disabled person, or public-facing protected target."
+      }
+    ],
+    "reporting_guidance": [
+      "Name the violence concept explicitly instead of collapsing everything into violence.",
+      "Explain whether the scene is event, threat, attempt, endorsement, exception, or context.",
+      "Use the shortest literal span that proves the concept.",
+      "If the context is self-defense, law enforcement, documentary, historical, fantasy, comedy, dream, or flashback, say so clearly."
+    ]
+  }
+}

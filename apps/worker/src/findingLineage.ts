@@ -2,6 +2,7 @@ import { config } from "./config.js";
 import { supabase } from "./db.js";
 import { evidenceHash, sha256 } from "./hash.js";
 import { logger } from "./logger.js";
+import { canonicalStringify } from "./canonicalJson.js";
 
 export type LineageStageName =
   | "pass_output"
@@ -69,7 +70,7 @@ function normalizeEvidence(value: string | null | undefined): string {
 }
 
 export function computeLineageCanonicalHash(finding: LineageFindingLike): string {
-  return sha256(JSON.stringify({
+  return sha256(canonicalStringify({
     article_id: finding.article_id ?? null,
     atom_id: finding.atom_id ?? null,
     canonical_atom: finding.canonical_atom ?? null,
@@ -163,19 +164,20 @@ export async function persistLineageEvents(events: LineageEventInsert[]): Promis
     if (!config.ENABLE_FINDING_LINEAGE) return;
     if (events.length === 0) return;
 
-    const insertPromise: Promise<{ error?: { message?: string } | null }> = supabase
-      .from("analysis_finding_lineage_events")
-      .insert(events)
-      .then((result) => ({ error: result.error ?? null }))
-      .catch((error: unknown) => ({
-        error: { message: error instanceof Error ? error.message : String(error) },
-      }));
+    const insertPromise: Promise<{ error?: { message?: string } | null }> = Promise.resolve(
+      supabase
+        .from("analysis_finding_lineage_events")
+        .insert(events)
+        .then((result) => ({ error: result.error ?? null })),
+    ).catch((error: unknown) => ({
+      error: { message: error instanceof Error ? error.message : String(error) },
+    }));
 
     const timeoutPromise: Promise<{ timedOut: true }> = new Promise((resolve) => {
       setTimeout(() => resolve({ timedOut: true }), LINEAGE_PERSIST_TIMEOUT_MS);
     });
 
-    const outcome = await Promise.race<[Awaited<typeof insertPromise> | { timedOut: true }]>([
+    const outcome = await Promise.race([
       insertPromise,
       timeoutPromise,
     ]);

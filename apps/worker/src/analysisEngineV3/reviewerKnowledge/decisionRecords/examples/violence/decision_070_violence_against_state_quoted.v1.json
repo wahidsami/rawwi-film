@@ -1,0 +1,55 @@
+{
+  "id": "violence_070_violence_against_state_quoted",
+  "version": "1.0.0",
+  "title": "Violence Against State (quoted)",
+  "summary": "Violence Against State in quoted framing.",
+  "originalScenario": "قال الراوي: \"اعتدى على مركز الشرطة.\"",
+  "reviewQuestion": "Is this violence against state?",
+  "initialSuspicion": "Possible violence against state.",
+  "possibleConcepts": [
+    "violence_against_state"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: اعتدى على مركز الشرطة."
+  ],
+  "contradictingEvidence": [
+    "Quoted or reported framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear endorsement in the narrator's own voice."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "Target remains dependent on the quoted voice.",
+  "intentAnalysis": "quotation",
+  "reasoningSteps": [
+    "Identify the violence concept.",
+    "Determine whether the scene is literal, quoted, or contextual.",
+    "Check whether the intent is endorsement, exception, or observation.",
+    "Map the case to the appropriate GCAM article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "review",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Quoted speech is not automatically endorsement.",
+  "benchmarkTags": [
+    "violence_against_state",
+    "quoted",
+    "violence"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "violence_against_state"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "decision_048_humiliation_public_quoted",
+  "version": "1.0.0",
+  "title": "Humiliation (quoted)",
+  "summary": "Humiliation in quoted framing.",
+  "originalScenario": "قال الراوي: \"يذله أمام الصف\"",
+  "reviewQuestion": "Is this humiliation?",
+  "initialSuspicion": "Public shaming.",
+  "possibleConcepts": [
+    "children_humiliation",
+    "children_child"
+  ],
+  "supportingEvidence": [
+    "Quoted as reported speech: يذله أمام الصف"
+  ],
+  "contradictingEvidence": [
+    "Protective or reporting framing."
+  ],
+  "requiredMissingEvidence": [
+    "Clear harmful endorsement."
+  ],
+  "sceneContext": "Quoted speech in a scene.",
+  "speakerAnalysis": "Speaker is quoting another voice.",
+  "targetAnalysis": "The target is a child or vulnerable person.",
+  "intentAnalysis": "Quotation or report.",
+  "reasoningSteps": [
+    "Identify the speaker.",
+    "Identify the vulnerable target.",
+    "Check the scene context.",
+    "Separate harm from protection.",
+    "Map to the child-safety article."
+  ],
+  "reviewerDecision": "Needs review",
+  "confidence": "low",
+  "findingType": "reject",
+  "gcamMappings": [
+    {
+      "article_id": 17,
+      "atom_ids": [
+        "17-1"
+      ],
+      "note": null
+    }
+  ],
+  "falsePositiveRisk": "Medium",
+  "reviewerNotes": "Context changes the reading.",
+  "benchmarkTags": [
+    "humiliation_public",
+    "quoted",
+    "children"
+  ],
+  "relatedLessons": [],
+  "relatedPatterns": [],
+  "relatedBlueprintConcepts": [
+    "children_humiliation",
+    "children_child"
+  ]
+}

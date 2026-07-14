@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "id": "travel_review_questions",
+  "title": "Travel Review Questions",
+  "description": "Deterministic reviewer questions for travel blueprints.",
+  "entries": [
+    {
+      "id": "travel_question_who_travels",
+      "title": "Who travels?",
+      "description": "Identify the traveller before judging the travel statement."
+    },
+    {
+      "id": "travel_question_where",
+      "title": "Where is the destination?",
+      "description": "Identify the destination or origin explicitly."
+    },
+    {
+      "id": "travel_question_what_context",
+      "title": "What is the context?",
+      "description": "Check for documentary, historical, fiction, or news framing."
+    },
+    {
+      "id": "travel_question_what_intent",
+      "title": "What is the intent?",
+      "description": "Determine whether the line is informative, evaluative, or fictional."
+    },
+    {
+      "id": "travel_question_is_quote",
+      "title": "Is it quoted?",
+      "description": "Check whether the line is quoted or reported speech."
+    },
+    {
+      "id": "travel_question_is_observation",
+      "title": "Is it only observation?",
+      "description": "Separate neutral observation from evaluative commentary."
+    },
+    {
+      "id": "travel_question_is_comparison",
+      "title": "Is there a comparison?",
+      "description": "Decide whether the comparison is neutral or harmful."
+    },
+    {
+      "id": "travel_question_is_evaluative",
+      "title": "Is it evaluative?",
+      "description": "Identify praise, insult, mockery, or stereotyping."
+    }
+  ]
+}

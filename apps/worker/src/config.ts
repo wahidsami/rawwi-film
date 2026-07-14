@@ -65,17 +65,25 @@ export const config = {
    */
   DETERMINISTIC_MODE: (process.env.DETERMINISTIC_MODE ?? "true").toLowerCase() !== "false",
   /**
-   * Analysis engine:
-   * - v2: existing detector-only behavior
-   * - hybrid: detector + context arbiter + policy reasoner
-   * - policy_v1: scene-event extraction + deterministic legal policy mapping
+   * V3 safe mode:
+   * - true: automatically fall back to the existing V2 worker path if the V3 runtime fails
+   * - false: propagate V3 exceptions normally
    */
-  ANALYSIS_ENGINE: ((): "v2" | "hybrid" | "policy_v1" => {
-    const value = (process.env.ANALYSIS_ENGINE ?? "v2").toLowerCase();
-    if (value === "hybrid") return "hybrid";
-    if (value === "policy_v1") return "policy_v1";
-    return "v2";
-  })(),
+  V3_ENABLE_AUTOMATIC_FALLBACK: (process.env.V3_ENABLE_AUTOMATIC_FALLBACK ?? "true").toLowerCase() !== "false",
+   /**
+    * Analysis engine:
+    * - v2: existing detector-only behavior
+    * - v3: new reasoning-engine scaffold
+    * - hybrid: detector + context arbiter + policy reasoner
+    * - policy_v1: scene-event extraction + deterministic legal policy mapping
+    */
+   ANALYSIS_ENGINE: ((): "v2" | "v3" | "hybrid" | "policy_v1" => {
+     const value = (process.env.ANALYSIS_ENGINE ?? "v2").toLowerCase();
+     if (value === "v3") return "v3";
+     if (value === "hybrid") return "hybrid";
+     if (value === "policy_v1") return "policy_v1";
+     return "v2";
+   })(),
   /**
    * Violation prompt pack:
    * - v2: current live prompts

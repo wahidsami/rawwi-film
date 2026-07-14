@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "id": "violence_contexts",
+  "title": "Violence Contexts",
+  "description": "Context categories that reshape violence interpretation.",
+  "entries": [
+    {
+      "id": "violence_context_documentary",
+      "title": "Documentary",
+      "description": "Documentary or factual reporting context."
+    },
+    {
+      "id": "violence_context_historical",
+      "title": "Historical",
+      "description": "Historical record or narration."
+    },
+    {
+      "id": "violence_context_training",
+      "title": "Training",
+      "description": "Training, safety, or practice context."
+    },
+    {
+      "id": "violence_context_game",
+      "title": "Game",
+      "description": "Game or simulation context."
+    },
+    {
+      "id": "violence_context_fantasy",
+      "title": "Fantasy",
+      "description": "Fantasy or imaginary setting."
+    },
+    {
+      "id": "violence_context_comedy",
+      "title": "Comedy",
+      "description": "Comedic or ironic framing."
+    },
+    {
+      "id": "violence_context_dream",
+      "title": "Dream",
+      "description": "Dream or dreamlike scene."
+    },
+    {
+      "id": "violence_context_flashback",
+      "title": "Flashback",
+      "description": "Flashback or recalled event."
+    },
+    {
+      "id": "violence_context_memory",
+      "title": "Memory",
+      "description": "Memory or recollection."
+    },
+    {
+      "id": "violence_context_imagination",
+      "title": "Imagination",
+      "description": "Imagined or simulated scene."
+    },
+    {
+      "id": "violence_context_offscreen",
+      "title": "Offscreen",
+      "description": "Event implied outside the frame."
+    },
+    {
+      "id": "violence_context_scene_description",
+      "title": "Scene Description",
+      "description": "Descriptive scene language."
+    },
+    {
+      "id": "violence_context_dialogue",
+      "title": "Dialogue",
+      "description": "Dialogue or quoted speech."
+    },
+    {
+      "id": "violence_context_reported",
+      "title": "Reported by Character",
+      "description": "Violence reported by a character."
+    },
+    {
+      "id": "violence_context_observed",
+      "title": "Observed",
+      "description": "Directly observed violence."
+    },
+    {
+      "id": "violence_context_implied",
+      "title": "Implied",
+      "description": "Violence implied by surrounding context."
+    }
+  ]
+}

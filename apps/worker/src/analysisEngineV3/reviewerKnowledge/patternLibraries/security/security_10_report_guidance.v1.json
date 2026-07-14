@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "security_report_guidance_patterns",
+    "title": "Security Report Guidance Patterns",
+    "description": "Patterns for how security findings should be reported deterministically.",
+    "concepts": [
+      {
+        "id": "terrorism",
+        "title": "Terrorism",
+        "description": "Promotion, support, glorification, or operational discussion of terrorism."
+      },
+      {
+        "id": "violence",
+        "title": "Violence",
+        "description": "Physical harm, violent action, or violent escalation."
+      },
+      {
+        "id": "public_order",
+        "title": "Public Order",
+        "description": "Order, stability, compliance, and societal calm."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "security_pattern_report_assembly",
+      "title": "Report Assembly",
+      "description": "Guidance for converting security analysis into a concise reviewer report.",
+      "primary_concept_id": "public_order",
+      "related_concept_ids": [
+        "terrorism",
+        "violence"
+      ],
+      "direct_expressions": [
+        "أخرجوا المقتطف",
+        "اكتب السبب",
+        "اذكر المادة"
+      ],
+      "indirect_expressions": [
+        "أقصر دليل",
+        "أوضح رابط",
+        "أقرب atom"
+      ],
+      "semantic_intent": [
+        "report assembly",
+        "finding presentation"
+      ],
+      "supporting_evidence": [
+        "The report should anchor the exact phrase and the specific article.",
+        "Reasoning should explain the security meaning in narrative terms."
+      ],
+      "contradictory_evidence": [
+        "The report invents facts outside the chunk.",
+        "The report ignores a clear exception."
+      ],
+      "false_positives": [
+        "Overstating a weak or neutral mention.",
+        "Using a broad article when a specific one fits better."
+      ],
+      "counter_examples": [
+        "A report that quotes the phrase and explains the context.",
+        "A report that marks a neutral mention as review-only."
+      ],
+      "cross_sentence_indicators": [
+        "A security phrase appears in one sentence and the report justification references later context.",
+        "Different articles may be combined when the same evidence supports them."
+      ],
+      "scene_indicators": [
+        "reporting context",
+        "review interface",
+        "analysis summary"
+      ],
+      "reviewer_guidance": [
+        "Use the shortest exact phrase and the most specific atom.",
+        "Keep a clear distinction between finding and review-only notes."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "modifier_specific_atom",
+          "title": "Specific Atom",
+          "description": "A precise atom is available.",
+          "confidence": 90
+        },
+        {
+          "id": "modifier_broad_only",
+          "title": "Broad Only",
+          "description": "Only a broad article is applicable.",
+          "confidence": 50
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rel_report_public_order",
+          "from_concept_id": "public_order",
+          "to_concept_id": "terrorism",
+          "relation": "supports",
+          "note": "Report guidance must preserve the security rationale."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "gcam_security_4_2",
+          "article_id": 4,
+          "atom_ids": [
+            "4-2",
+            "4-5"
+          ],
+          "role": "Content standard protection",
+          "note": "Use as an umbrella mapping when security content affects public interest."
+        }
+      ],
+      "examples": [
+        {
+          "id": "example_report_001",
+          "title": "Short exact phrase",
+          "text": "لنُسقط الدولة",
+          "expected_outcome": "Report the exact incitement phrase.",
+          "note": null
+        },
+        {
+          "id": "example_report_002",
+          "title": "Review only",
+          "text": "قالها في وثائقي",
+          "expected_outcome": "Mark as context-sensitive review.",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

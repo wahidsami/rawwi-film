@@ -1,0 +1,5164 @@
+{
+  "records": [
+    {
+      "id": "decision_001_historical_person_factual",
+      "version": "1.0.0",
+      "title": "Person decision (factual)",
+      "summary": "Deterministic history reviewer decision for person (factual).",
+      "originalScenario": "factual history scene with historical_person.",
+      "reviewQuestion": "Is this person (factual)?",
+      "initialSuspicion": "Possible historical_person.",
+      "possibleConcepts": [
+        "historical_person"
+      ],
+      "supportingEvidence": [
+        "historical_person",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: person.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_1",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Person reasoning",
+          "note": "Person history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_person",
+        "easy",
+        "people",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_person"
+      ]
+    },
+    {
+      "id": "decision_002_historical_person_quoted",
+      "version": "1.0.0",
+      "title": "Person decision (quoted)",
+      "summary": "Deterministic history reviewer decision for person (quoted).",
+      "originalScenario": "quoted history scene with historical_person.",
+      "reviewQuestion": "Is this person (quoted)?",
+      "initialSuspicion": "Possible historical_person.",
+      "possibleConcepts": [
+        "historical_person"
+      ],
+      "supportingEvidence": [
+        "historical_person",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: person.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_2",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Person reasoning",
+          "note": "Person history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_person",
+        "quotation",
+        "people",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_person"
+      ]
+    },
+    {
+      "id": "decision_003_historical_leader_factual",
+      "version": "1.0.0",
+      "title": "Leader decision (factual)",
+      "summary": "Deterministic history reviewer decision for leader (factual).",
+      "originalScenario": "factual history scene with historical_leader.",
+      "reviewQuestion": "Is this leader (factual)?",
+      "initialSuspicion": "Possible historical_leader.",
+      "possibleConcepts": [
+        "historical_leader"
+      ],
+      "supportingEvidence": [
+        "historical_leader",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: leader.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_3",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Leader reasoning",
+          "note": "Leader history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_leader",
+        "easy",
+        "people",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_leader"
+      ]
+    },
+    {
+      "id": "decision_004_historical_leader_quoted",
+      "version": "1.0.0",
+      "title": "Leader decision (quoted)",
+      "summary": "Deterministic history reviewer decision for leader (quoted).",
+      "originalScenario": "quoted history scene with historical_leader.",
+      "reviewQuestion": "Is this leader (quoted)?",
+      "initialSuspicion": "Possible historical_leader.",
+      "possibleConcepts": [
+        "historical_leader"
+      ],
+      "supportingEvidence": [
+        "historical_leader",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: leader.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_4",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Leader reasoning",
+          "note": "Leader history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_leader",
+        "quotation",
+        "people",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_leader"
+      ]
+    },
+    {
+      "id": "decision_005_historical_event_factual",
+      "version": "1.0.0",
+      "title": "Event decision (factual)",
+      "summary": "Deterministic history reviewer decision for event (factual).",
+      "originalScenario": "factual history scene with historical_event.",
+      "reviewQuestion": "Is this event (factual)?",
+      "initialSuspicion": "Possible historical_event.",
+      "possibleConcepts": [
+        "historical_event"
+      ],
+      "supportingEvidence": [
+        "historical_event",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: event.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_5",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Event reasoning",
+          "note": "Event history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_event",
+        "easy",
+        "events",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_event"
+      ]
+    },
+    {
+      "id": "decision_006_historical_event_quoted",
+      "version": "1.0.0",
+      "title": "Event decision (quoted)",
+      "summary": "Deterministic history reviewer decision for event (quoted).",
+      "originalScenario": "quoted history scene with historical_event.",
+      "reviewQuestion": "Is this event (quoted)?",
+      "initialSuspicion": "Possible historical_event.",
+      "possibleConcepts": [
+        "historical_event"
+      ],
+      "supportingEvidence": [
+        "historical_event",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: event.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_6",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Event reasoning",
+          "note": "Event history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_event",
+        "quotation",
+        "events",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_event"
+      ]
+    },
+    {
+      "id": "decision_007_historical_battle_factual",
+      "version": "1.0.0",
+      "title": "Battle decision (factual)",
+      "summary": "Deterministic history reviewer decision for battle (factual).",
+      "originalScenario": "factual history scene with historical_battle.",
+      "reviewQuestion": "Is this battle (factual)?",
+      "initialSuspicion": "Possible historical_battle.",
+      "possibleConcepts": [
+        "historical_battle"
+      ],
+      "supportingEvidence": [
+        "historical_battle",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: battle.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_7",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Battle reasoning",
+          "note": "Battle history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_battle",
+        "easy",
+        "events",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_battle"
+      ]
+    },
+    {
+      "id": "decision_008_historical_battle_quoted",
+      "version": "1.0.0",
+      "title": "Battle decision (quoted)",
+      "summary": "Deterministic history reviewer decision for battle (quoted).",
+      "originalScenario": "quoted history scene with historical_battle.",
+      "reviewQuestion": "Is this battle (quoted)?",
+      "initialSuspicion": "Possible historical_battle.",
+      "possibleConcepts": [
+        "historical_battle"
+      ],
+      "supportingEvidence": [
+        "historical_battle",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: battle.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_8",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Battle reasoning",
+          "note": "Battle history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_battle",
+        "quotation",
+        "events",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_battle"
+      ]
+    },
+    {
+      "id": "decision_009_historical_conflict_factual",
+      "version": "1.0.0",
+      "title": "Conflict decision (factual)",
+      "summary": "Deterministic history reviewer decision for conflict (factual).",
+      "originalScenario": "factual history scene with historical_conflict.",
+      "reviewQuestion": "Is this conflict (factual)?",
+      "initialSuspicion": "Possible historical_conflict.",
+      "possibleConcepts": [
+        "historical_conflict"
+      ],
+      "supportingEvidence": [
+        "historical_conflict",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: conflict.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_9",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Conflict reasoning",
+          "note": "Conflict history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_conflict",
+        "easy",
+        "events",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_conflict"
+      ]
+    },
+    {
+      "id": "decision_010_historical_conflict_quoted",
+      "version": "1.0.0",
+      "title": "Conflict decision (quoted)",
+      "summary": "Deterministic history reviewer decision for conflict (quoted).",
+      "originalScenario": "quoted history scene with historical_conflict.",
+      "reviewQuestion": "Is this conflict (quoted)?",
+      "initialSuspicion": "Possible historical_conflict.",
+      "possibleConcepts": [
+        "historical_conflict"
+      ],
+      "supportingEvidence": [
+        "historical_conflict",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: conflict.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_10",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Conflict reasoning",
+          "note": "Conflict history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_conflict",
+        "quotation",
+        "events",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_conflict"
+      ]
+    },
+    {
+      "id": "decision_011_historical_religious_event_factual",
+      "version": "1.0.0",
+      "title": "Religious Event decision (factual)",
+      "summary": "Deterministic history reviewer decision for religious event (factual).",
+      "originalScenario": "factual history scene with historical_religious_event.",
+      "reviewQuestion": "Is this religious event (factual)?",
+      "initialSuspicion": "Possible historical_religious_event.",
+      "possibleConcepts": [
+        "historical_religious_event"
+      ],
+      "supportingEvidence": [
+        "historical_religious_event",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: religious event.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_11",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Religious Event reasoning",
+          "note": "Religious Event history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_religious_event",
+        "easy",
+        "events",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_religious_event"
+      ]
+    },
+    {
+      "id": "decision_012_historical_religious_event_quoted",
+      "version": "1.0.0",
+      "title": "Religious Event decision (quoted)",
+      "summary": "Deterministic history reviewer decision for religious event (quoted).",
+      "originalScenario": "quoted history scene with historical_religious_event.",
+      "reviewQuestion": "Is this religious event (quoted)?",
+      "initialSuspicion": "Possible historical_religious_event.",
+      "possibleConcepts": [
+        "historical_religious_event"
+      ],
+      "supportingEvidence": [
+        "historical_religious_event",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: religious event.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_12",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Religious Event reasoning",
+          "note": "Religious Event history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_religious_event",
+        "quotation",
+        "events",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_religious_event"
+      ]
+    },
+    {
+      "id": "decision_013_historical_state_factual",
+      "version": "1.0.0",
+      "title": "State decision (factual)",
+      "summary": "Deterministic history reviewer decision for state (factual).",
+      "originalScenario": "factual history scene with historical_state.",
+      "reviewQuestion": "Is this state (factual)?",
+      "initialSuspicion": "Possible historical_state.",
+      "possibleConcepts": [
+        "historical_state"
+      ],
+      "supportingEvidence": [
+        "historical_state",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: state.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_13",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "State reasoning",
+          "note": "State history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_state",
+        "easy",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_state"
+      ]
+    },
+    {
+      "id": "decision_014_historical_state_quoted",
+      "version": "1.0.0",
+      "title": "State decision (quoted)",
+      "summary": "Deterministic history reviewer decision for state (quoted).",
+      "originalScenario": "quoted history scene with historical_state.",
+      "reviewQuestion": "Is this state (quoted)?",
+      "initialSuspicion": "Possible historical_state.",
+      "possibleConcepts": [
+        "historical_state"
+      ],
+      "supportingEvidence": [
+        "historical_state",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: state.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_14",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "State reasoning",
+          "note": "State history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_state",
+        "quotation",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_state"
+      ]
+    },
+    {
+      "id": "decision_015_historical_empire_factual",
+      "version": "1.0.0",
+      "title": "Empire decision (factual)",
+      "summary": "Deterministic history reviewer decision for empire (factual).",
+      "originalScenario": "factual history scene with historical_empire.",
+      "reviewQuestion": "Is this empire (factual)?",
+      "initialSuspicion": "Possible historical_empire.",
+      "possibleConcepts": [
+        "historical_empire"
+      ],
+      "supportingEvidence": [
+        "historical_empire",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: empire.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_15",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Empire reasoning",
+          "note": "Empire history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_empire",
+        "easy",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_empire"
+      ]
+    },
+    {
+      "id": "decision_016_historical_empire_quoted",
+      "version": "1.0.0",
+      "title": "Empire decision (quoted)",
+      "summary": "Deterministic history reviewer decision for empire (quoted).",
+      "originalScenario": "quoted history scene with historical_empire.",
+      "reviewQuestion": "Is this empire (quoted)?",
+      "initialSuspicion": "Possible historical_empire.",
+      "possibleConcepts": [
+        "historical_empire"
+      ],
+      "supportingEvidence": [
+        "historical_empire",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: empire.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_16",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Empire reasoning",
+          "note": "Empire history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_empire",
+        "quotation",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_empire"
+      ]
+    },
+    {
+      "id": "decision_017_historical_dynasty_factual",
+      "version": "1.0.0",
+      "title": "Dynasty decision (factual)",
+      "summary": "Deterministic history reviewer decision for dynasty (factual).",
+      "originalScenario": "factual history scene with historical_dynasty.",
+      "reviewQuestion": "Is this dynasty (factual)?",
+      "initialSuspicion": "Possible historical_dynasty.",
+      "possibleConcepts": [
+        "historical_dynasty"
+      ],
+      "supportingEvidence": [
+        "historical_dynasty",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: dynasty.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_17",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Dynasty reasoning",
+          "note": "Dynasty history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_dynasty",
+        "easy",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_dynasty"
+      ]
+    },
+    {
+      "id": "decision_018_historical_dynasty_quoted",
+      "version": "1.0.0",
+      "title": "Dynasty decision (quoted)",
+      "summary": "Deterministic history reviewer decision for dynasty (quoted).",
+      "originalScenario": "quoted history scene with historical_dynasty.",
+      "reviewQuestion": "Is this dynasty (quoted)?",
+      "initialSuspicion": "Possible historical_dynasty.",
+      "possibleConcepts": [
+        "historical_dynasty"
+      ],
+      "supportingEvidence": [
+        "historical_dynasty",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: dynasty.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_18",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Dynasty reasoning",
+          "note": "Dynasty history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_dynasty",
+        "quotation",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_dynasty"
+      ]
+    },
+    {
+      "id": "decision_019_historical_reenactment_factual",
+      "version": "1.0.0",
+      "title": "Reenactment decision (factual)",
+      "summary": "Deterministic history reviewer decision for reenactment (factual).",
+      "originalScenario": "factual history scene with historical_reenactment.",
+      "reviewQuestion": "Is this reenactment (factual)?",
+      "initialSuspicion": "Possible historical_reenactment.",
+      "possibleConcepts": [
+        "historical_reenactment"
+      ],
+      "supportingEvidence": [
+        "historical_reenactment",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: reenactment.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_19",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Reenactment reasoning",
+          "note": "Reenactment history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_reenactment",
+        "easy",
+        "events",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_reenactment"
+      ]
+    },
+    {
+      "id": "decision_020_historical_reenactment_quoted",
+      "version": "1.0.0",
+      "title": "Reenactment decision (quoted)",
+      "summary": "Deterministic history reviewer decision for reenactment (quoted).",
+      "originalScenario": "quoted history scene with historical_reenactment.",
+      "reviewQuestion": "Is this reenactment (quoted)?",
+      "initialSuspicion": "Possible historical_reenactment.",
+      "possibleConcepts": [
+        "historical_reenactment"
+      ],
+      "supportingEvidence": [
+        "historical_reenactment",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: reenactment.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_20",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Reenactment reasoning",
+          "note": "Reenactment history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_reenactment",
+        "quotation",
+        "events",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_reenactment"
+      ]
+    },
+    {
+      "id": "decision_021_historical_documentary_factual",
+      "version": "1.0.0",
+      "title": "Documentary decision (factual)",
+      "summary": "Deterministic history reviewer decision for documentary (factual).",
+      "originalScenario": "factual history scene with historical_documentary.",
+      "reviewQuestion": "Is this documentary (factual)?",
+      "initialSuspicion": "Possible historical_documentary.",
+      "possibleConcepts": [
+        "historical_documentary"
+      ],
+      "supportingEvidence": [
+        "historical_documentary",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: documentary.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_21",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Documentary reasoning",
+          "note": "Documentary history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_documentary",
+        "easy",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_documentary"
+      ]
+    },
+    {
+      "id": "decision_022_historical_documentary_quoted",
+      "version": "1.0.0",
+      "title": "Documentary decision (quoted)",
+      "summary": "Deterministic history reviewer decision for documentary (quoted).",
+      "originalScenario": "quoted history scene with historical_documentary.",
+      "reviewQuestion": "Is this documentary (quoted)?",
+      "initialSuspicion": "Possible historical_documentary.",
+      "possibleConcepts": [
+        "historical_documentary"
+      ],
+      "supportingEvidence": [
+        "historical_documentary",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: documentary.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_22",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Documentary reasoning",
+          "note": "Documentary history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_documentary",
+        "quotation",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_documentary"
+      ]
+    },
+    {
+      "id": "decision_023_historical_education_factual",
+      "version": "1.0.0",
+      "title": "Education decision (factual)",
+      "summary": "Deterministic history reviewer decision for education (factual).",
+      "originalScenario": "factual history scene with historical_education.",
+      "reviewQuestion": "Is this education (factual)?",
+      "initialSuspicion": "Possible historical_education.",
+      "possibleConcepts": [
+        "historical_education"
+      ],
+      "supportingEvidence": [
+        "historical_education",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: education.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_23",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Education reasoning",
+          "note": "Education history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_education",
+        "easy",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_education"
+      ]
+    },
+    {
+      "id": "decision_024_historical_education_quoted",
+      "version": "1.0.0",
+      "title": "Education decision (quoted)",
+      "summary": "Deterministic history reviewer decision for education (quoted).",
+      "originalScenario": "quoted history scene with historical_education.",
+      "reviewQuestion": "Is this education (quoted)?",
+      "initialSuspicion": "Possible historical_education.",
+      "possibleConcepts": [
+        "historical_education"
+      ],
+      "supportingEvidence": [
+        "historical_education",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: education.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_24",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Education reasoning",
+          "note": "Education history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_education",
+        "quotation",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_education"
+      ]
+    },
+    {
+      "id": "decision_025_historical_news_factual",
+      "version": "1.0.0",
+      "title": "News decision (factual)",
+      "summary": "Deterministic history reviewer decision for news (factual).",
+      "originalScenario": "factual history scene with historical_news.",
+      "reviewQuestion": "Is this news (factual)?",
+      "initialSuspicion": "Possible historical_news.",
+      "possibleConcepts": [
+        "historical_news"
+      ],
+      "supportingEvidence": [
+        "historical_news",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: news.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_25",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "News reasoning",
+          "note": "News history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_news",
+        "easy",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_news"
+      ]
+    },
+    {
+      "id": "decision_026_historical_news_quoted",
+      "version": "1.0.0",
+      "title": "News decision (quoted)",
+      "summary": "Deterministic history reviewer decision for news (quoted).",
+      "originalScenario": "quoted history scene with historical_news.",
+      "reviewQuestion": "Is this news (quoted)?",
+      "initialSuspicion": "Possible historical_news.",
+      "possibleConcepts": [
+        "historical_news"
+      ],
+      "supportingEvidence": [
+        "historical_news",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: news.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_26",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "News reasoning",
+          "note": "News history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_news",
+        "quotation",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_news"
+      ]
+    },
+    {
+      "id": "decision_027_historical_reference_factual",
+      "version": "1.0.0",
+      "title": "Reference decision (factual)",
+      "summary": "Deterministic history reviewer decision for reference (factual).",
+      "originalScenario": "factual history scene with historical_reference.",
+      "reviewQuestion": "Is this reference (factual)?",
+      "initialSuspicion": "Possible historical_reference.",
+      "possibleConcepts": [
+        "historical_reference"
+      ],
+      "supportingEvidence": [
+        "historical_reference",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: reference.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_27",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Reference reasoning",
+          "note": "Reference history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_reference",
+        "easy",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_reference"
+      ]
+    },
+    {
+      "id": "decision_028_historical_reference_quoted",
+      "version": "1.0.0",
+      "title": "Reference decision (quoted)",
+      "summary": "Deterministic history reviewer decision for reference (quoted).",
+      "originalScenario": "quoted history scene with historical_reference.",
+      "reviewQuestion": "Is this reference (quoted)?",
+      "initialSuspicion": "Possible historical_reference.",
+      "possibleConcepts": [
+        "historical_reference"
+      ],
+      "supportingEvidence": [
+        "historical_reference",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: reference.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_28",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Reference reasoning",
+          "note": "Reference history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_reference",
+        "quotation",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_reference"
+      ]
+    },
+    {
+      "id": "decision_029_historical_quote_factual",
+      "version": "1.0.0",
+      "title": "Quote decision (factual)",
+      "summary": "Deterministic history reviewer decision for quote (factual).",
+      "originalScenario": "factual history scene with historical_quote.",
+      "reviewQuestion": "Is this quote (factual)?",
+      "initialSuspicion": "Possible historical_quote.",
+      "possibleConcepts": [
+        "historical_quote"
+      ],
+      "supportingEvidence": [
+        "historical_quote",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: quote.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_29",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Quote reasoning",
+          "note": "Quote history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_quote",
+        "easy",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_quote"
+      ]
+    },
+    {
+      "id": "decision_030_historical_quote_quoted",
+      "version": "1.0.0",
+      "title": "Quote decision (quoted)",
+      "summary": "Deterministic history reviewer decision for quote (quoted).",
+      "originalScenario": "quoted history scene with historical_quote.",
+      "reviewQuestion": "Is this quote (quoted)?",
+      "initialSuspicion": "Possible historical_quote.",
+      "possibleConcepts": [
+        "historical_quote"
+      ],
+      "supportingEvidence": [
+        "historical_quote",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: quote.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_30",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Quote reasoning",
+          "note": "Quote history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_quote",
+        "quotation",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_quote"
+      ]
+    },
+    {
+      "id": "decision_031_historical_narration_factual",
+      "version": "1.0.0",
+      "title": "Narration decision (factual)",
+      "summary": "Deterministic history reviewer decision for narration (factual).",
+      "originalScenario": "factual history scene with historical_narration.",
+      "reviewQuestion": "Is this narration (factual)?",
+      "initialSuspicion": "Possible historical_narration.",
+      "possibleConcepts": [
+        "historical_narration"
+      ],
+      "supportingEvidence": [
+        "historical_narration",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: narration.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_31",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Narration reasoning",
+          "note": "Narration history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_narration",
+        "easy",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_narration"
+      ]
+    },
+    {
+      "id": "decision_032_historical_narration_quoted",
+      "version": "1.0.0",
+      "title": "Narration decision (quoted)",
+      "summary": "Deterministic history reviewer decision for narration (quoted).",
+      "originalScenario": "quoted history scene with historical_narration.",
+      "reviewQuestion": "Is this narration (quoted)?",
+      "initialSuspicion": "Possible historical_narration.",
+      "possibleConcepts": [
+        "historical_narration"
+      ],
+      "supportingEvidence": [
+        "historical_narration",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: narration.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_32",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Narration reasoning",
+          "note": "Narration history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_narration",
+        "quotation",
+        "framing",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_narration"
+      ]
+    },
+    {
+      "id": "decision_033_historical_fiction_factual",
+      "version": "1.0.0",
+      "title": "Fiction decision (factual)",
+      "summary": "Deterministic history reviewer decision for fiction (factual).",
+      "originalScenario": "factual history scene with historical_fiction.",
+      "reviewQuestion": "Is this fiction (factual)?",
+      "initialSuspicion": "Possible historical_fiction.",
+      "possibleConcepts": [
+        "historical_fiction"
+      ],
+      "supportingEvidence": [
+        "historical_fiction",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: fiction.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_33",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Fiction reasoning",
+          "note": "Fiction history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_fiction",
+        "easy",
+        "fiction",
+        "risk"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_fiction"
+      ]
+    },
+    {
+      "id": "decision_034_historical_fiction_quoted",
+      "version": "1.0.0",
+      "title": "Fiction decision (quoted)",
+      "summary": "Deterministic history reviewer decision for fiction (quoted).",
+      "originalScenario": "quoted history scene with historical_fiction.",
+      "reviewQuestion": "Is this fiction (quoted)?",
+      "initialSuspicion": "Possible historical_fiction.",
+      "possibleConcepts": [
+        "historical_fiction"
+      ],
+      "supportingEvidence": [
+        "historical_fiction",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: fiction.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_34",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Fiction reasoning",
+          "note": "Fiction history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_fiction",
+        "quotation",
+        "fiction",
+        "risk"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_fiction"
+      ]
+    },
+    {
+      "id": "decision_035_alternate_history_factual",
+      "version": "1.0.0",
+      "title": "Alternate History decision (factual)",
+      "summary": "Deterministic history reviewer decision for alternate history (factual).",
+      "originalScenario": "factual history scene with alternate_history.",
+      "reviewQuestion": "Is this alternate history (factual)?",
+      "initialSuspicion": "Possible alternate_history.",
+      "possibleConcepts": [
+        "alternate_history"
+      ],
+      "supportingEvidence": [
+        "alternate_history",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: alternate history.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_35",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Alternate History reasoning",
+          "note": "Alternate History history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "alternate_history",
+        "easy",
+        "fiction",
+        "risk"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "alternate_history"
+      ]
+    },
+    {
+      "id": "decision_036_alternate_history_quoted",
+      "version": "1.0.0",
+      "title": "Alternate History decision (quoted)",
+      "summary": "Deterministic history reviewer decision for alternate history (quoted).",
+      "originalScenario": "quoted history scene with alternate_history.",
+      "reviewQuestion": "Is this alternate history (quoted)?",
+      "initialSuspicion": "Possible alternate_history.",
+      "possibleConcepts": [
+        "alternate_history"
+      ],
+      "supportingEvidence": [
+        "alternate_history",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: alternate history.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_36",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Alternate History reasoning",
+          "note": "Alternate History history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "alternate_history",
+        "quotation",
+        "fiction",
+        "risk"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "alternate_history"
+      ]
+    },
+    {
+      "id": "decision_037_mythological_history_factual",
+      "version": "1.0.0",
+      "title": "Mythological History decision (factual)",
+      "summary": "Deterministic history reviewer decision for mythological history (factual).",
+      "originalScenario": "factual history scene with mythological_history.",
+      "reviewQuestion": "Is this mythological history (factual)?",
+      "initialSuspicion": "Possible mythological_history.",
+      "possibleConcepts": [
+        "mythological_history"
+      ],
+      "supportingEvidence": [
+        "mythological_history",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: mythological history.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_37",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Mythological History reasoning",
+          "note": "Mythological History history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "mythological_history",
+        "easy",
+        "fiction",
+        "risk"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "mythological_history"
+      ]
+    },
+    {
+      "id": "decision_038_mythological_history_quoted",
+      "version": "1.0.0",
+      "title": "Mythological History decision (quoted)",
+      "summary": "Deterministic history reviewer decision for mythological history (quoted).",
+      "originalScenario": "quoted history scene with mythological_history.",
+      "reviewQuestion": "Is this mythological history (quoted)?",
+      "initialSuspicion": "Possible mythological_history.",
+      "possibleConcepts": [
+        "mythological_history"
+      ],
+      "supportingEvidence": [
+        "mythological_history",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: mythological history.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_38",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Mythological History reasoning",
+          "note": "Mythological History history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "mythological_history",
+        "quotation",
+        "fiction",
+        "risk"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "mythological_history"
+      ]
+    },
+    {
+      "id": "decision_039_historical_symbol_factual",
+      "version": "1.0.0",
+      "title": "Symbol decision (factual)",
+      "summary": "Deterministic history reviewer decision for symbol (factual).",
+      "originalScenario": "factual history scene with historical_symbol.",
+      "reviewQuestion": "Is this symbol (factual)?",
+      "initialSuspicion": "Possible historical_symbol.",
+      "possibleConcepts": [
+        "historical_symbol"
+      ],
+      "supportingEvidence": [
+        "historical_symbol",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: symbol.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_39",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Symbol reasoning",
+          "note": "Symbol history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_symbol",
+        "easy",
+        "archives",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_symbol"
+      ]
+    },
+    {
+      "id": "decision_040_historical_symbol_quoted",
+      "version": "1.0.0",
+      "title": "Symbol decision (quoted)",
+      "summary": "Deterministic history reviewer decision for symbol (quoted).",
+      "originalScenario": "quoted history scene with historical_symbol.",
+      "reviewQuestion": "Is this symbol (quoted)?",
+      "initialSuspicion": "Possible historical_symbol.",
+      "possibleConcepts": [
+        "historical_symbol"
+      ],
+      "supportingEvidence": [
+        "historical_symbol",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: symbol.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_40",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Symbol reasoning",
+          "note": "Symbol history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_symbol",
+        "quotation",
+        "archives",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_symbol"
+      ]
+    },
+    {
+      "id": "decision_041_historical_monument_factual",
+      "version": "1.0.0",
+      "title": "Monument decision (factual)",
+      "summary": "Deterministic history reviewer decision for monument (factual).",
+      "originalScenario": "factual history scene with historical_monument.",
+      "reviewQuestion": "Is this monument (factual)?",
+      "initialSuspicion": "Possible historical_monument.",
+      "possibleConcepts": [
+        "historical_monument"
+      ],
+      "supportingEvidence": [
+        "historical_monument",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: monument.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_41",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Monument reasoning",
+          "note": "Monument history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_monument",
+        "easy",
+        "archives",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_monument"
+      ]
+    },
+    {
+      "id": "decision_042_historical_monument_quoted",
+      "version": "1.0.0",
+      "title": "Monument decision (quoted)",
+      "summary": "Deterministic history reviewer decision for monument (quoted).",
+      "originalScenario": "quoted history scene with historical_monument.",
+      "reviewQuestion": "Is this monument (quoted)?",
+      "initialSuspicion": "Possible historical_monument.",
+      "possibleConcepts": [
+        "historical_monument"
+      ],
+      "supportingEvidence": [
+        "historical_monument",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: monument.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_42",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Monument reasoning",
+          "note": "Monument history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_monument",
+        "quotation",
+        "archives",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_monument"
+      ]
+    },
+    {
+      "id": "decision_043_historical_site_factual",
+      "version": "1.0.0",
+      "title": "Site decision (factual)",
+      "summary": "Deterministic history reviewer decision for site (factual).",
+      "originalScenario": "factual history scene with historical_site.",
+      "reviewQuestion": "Is this site (factual)?",
+      "initialSuspicion": "Possible historical_site.",
+      "possibleConcepts": [
+        "historical_site"
+      ],
+      "supportingEvidence": [
+        "historical_site",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: site.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_43",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Site reasoning",
+          "note": "Site history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_site",
+        "easy",
+        "archives",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_site"
+      ]
+    },
+    {
+      "id": "decision_044_historical_site_quoted",
+      "version": "1.0.0",
+      "title": "Site decision (quoted)",
+      "summary": "Deterministic history reviewer decision for site (quoted).",
+      "originalScenario": "quoted history scene with historical_site.",
+      "reviewQuestion": "Is this site (quoted)?",
+      "initialSuspicion": "Possible historical_site.",
+      "possibleConcepts": [
+        "historical_site"
+      ],
+      "supportingEvidence": [
+        "historical_site",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: site.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_44",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Site reasoning",
+          "note": "Site history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_site",
+        "quotation",
+        "archives",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_site"
+      ]
+    },
+    {
+      "id": "decision_045_historical_map_factual",
+      "version": "1.0.0",
+      "title": "Map decision (factual)",
+      "summary": "Deterministic history reviewer decision for map (factual).",
+      "originalScenario": "factual history scene with historical_map.",
+      "reviewQuestion": "Is this map (factual)?",
+      "initialSuspicion": "Possible historical_map.",
+      "possibleConcepts": [
+        "historical_map"
+      ],
+      "supportingEvidence": [
+        "historical_map",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: map.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_45",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Map reasoning",
+          "note": "Map history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_map",
+        "easy",
+        "archives",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_map"
+      ]
+    },
+    {
+      "id": "decision_046_historical_map_quoted",
+      "version": "1.0.0",
+      "title": "Map decision (quoted)",
+      "summary": "Deterministic history reviewer decision for map (quoted).",
+      "originalScenario": "quoted history scene with historical_map.",
+      "reviewQuestion": "Is this map (quoted)?",
+      "initialSuspicion": "Possible historical_map.",
+      "possibleConcepts": [
+        "historical_map"
+      ],
+      "supportingEvidence": [
+        "historical_map",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: map.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_46",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Map reasoning",
+          "note": "Map history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_map",
+        "quotation",
+        "archives",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_map"
+      ]
+    },
+    {
+      "id": "decision_047_historical_archive_factual",
+      "version": "1.0.0",
+      "title": "Archive decision (factual)",
+      "summary": "Deterministic history reviewer decision for archive (factual).",
+      "originalScenario": "factual history scene with historical_archive.",
+      "reviewQuestion": "Is this archive (factual)?",
+      "initialSuspicion": "Possible historical_archive.",
+      "possibleConcepts": [
+        "historical_archive"
+      ],
+      "supportingEvidence": [
+        "historical_archive",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: archive.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_47",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Archive reasoning",
+          "note": "Archive history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_archive",
+        "easy",
+        "archives",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_archive"
+      ]
+    },
+    {
+      "id": "decision_048_historical_archive_quoted",
+      "version": "1.0.0",
+      "title": "Archive decision (quoted)",
+      "summary": "Deterministic history reviewer decision for archive (quoted).",
+      "originalScenario": "quoted history scene with historical_archive.",
+      "reviewQuestion": "Is this archive (quoted)?",
+      "initialSuspicion": "Possible historical_archive.",
+      "possibleConcepts": [
+        "historical_archive"
+      ],
+      "supportingEvidence": [
+        "historical_archive",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: archive.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_48",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Archive reasoning",
+          "note": "Archive history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_archive",
+        "quotation",
+        "archives",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_archive"
+      ]
+    },
+    {
+      "id": "decision_049_historical_flashback_factual",
+      "version": "1.0.0",
+      "title": "Flashback decision (factual)",
+      "summary": "Deterministic history reviewer decision for flashback (factual).",
+      "originalScenario": "factual history scene with historical_flashback.",
+      "reviewQuestion": "Is this flashback (factual)?",
+      "initialSuspicion": "Possible historical_flashback.",
+      "possibleConcepts": [
+        "historical_flashback"
+      ],
+      "supportingEvidence": [
+        "historical_flashback",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: flashback.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_49",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Flashback reasoning",
+          "note": "Flashback history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_flashback",
+        "easy",
+        "narrative",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_flashback"
+      ]
+    },
+    {
+      "id": "decision_050_historical_flashback_quoted",
+      "version": "1.0.0",
+      "title": "Flashback decision (quoted)",
+      "summary": "Deterministic history reviewer decision for flashback (quoted).",
+      "originalScenario": "quoted history scene with historical_flashback.",
+      "reviewQuestion": "Is this flashback (quoted)?",
+      "initialSuspicion": "Possible historical_flashback.",
+      "possibleConcepts": [
+        "historical_flashback"
+      ],
+      "supportingEvidence": [
+        "historical_flashback",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: flashback.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_50",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Flashback reasoning",
+          "note": "Flashback history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_flashback",
+        "quotation",
+        "narrative",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_flashback"
+      ]
+    },
+    {
+      "id": "decision_051_historical_memory_factual",
+      "version": "1.0.0",
+      "title": "Memory decision (factual)",
+      "summary": "Deterministic history reviewer decision for memory (factual).",
+      "originalScenario": "factual history scene with historical_memory.",
+      "reviewQuestion": "Is this memory (factual)?",
+      "initialSuspicion": "Possible historical_memory.",
+      "possibleConcepts": [
+        "historical_memory"
+      ],
+      "supportingEvidence": [
+        "historical_memory",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: memory.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_51",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Memory reasoning",
+          "note": "Memory history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_memory",
+        "easy",
+        "narrative",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_memory"
+      ]
+    },
+    {
+      "id": "decision_052_historical_memory_quoted",
+      "version": "1.0.0",
+      "title": "Memory decision (quoted)",
+      "summary": "Deterministic history reviewer decision for memory (quoted).",
+      "originalScenario": "quoted history scene with historical_memory.",
+      "reviewQuestion": "Is this memory (quoted)?",
+      "initialSuspicion": "Possible historical_memory.",
+      "possibleConcepts": [
+        "historical_memory"
+      ],
+      "supportingEvidence": [
+        "historical_memory",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: memory.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_52",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Memory reasoning",
+          "note": "Memory history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_memory",
+        "quotation",
+        "narrative",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_memory"
+      ]
+    },
+    {
+      "id": "decision_053_historical_scene_description_factual",
+      "version": "1.0.0",
+      "title": "Scene Description decision (factual)",
+      "summary": "Deterministic history reviewer decision for scene description (factual).",
+      "originalScenario": "factual history scene with historical_scene_description.",
+      "reviewQuestion": "Is this scene description (factual)?",
+      "initialSuspicion": "Possible historical_scene_description.",
+      "possibleConcepts": [
+        "historical_scene_description"
+      ],
+      "supportingEvidence": [
+        "historical_scene_description",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: scene description.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_53",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Scene Description reasoning",
+          "note": "Scene Description history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_scene_description",
+        "easy",
+        "narrative",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_scene_description"
+      ]
+    },
+    {
+      "id": "decision_054_historical_scene_description_quoted",
+      "version": "1.0.0",
+      "title": "Scene Description decision (quoted)",
+      "summary": "Deterministic history reviewer decision for scene description (quoted).",
+      "originalScenario": "quoted history scene with historical_scene_description.",
+      "reviewQuestion": "Is this scene description (quoted)?",
+      "initialSuspicion": "Possible historical_scene_description.",
+      "possibleConcepts": [
+        "historical_scene_description"
+      ],
+      "supportingEvidence": [
+        "historical_scene_description",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: scene description.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_54",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Scene Description reasoning",
+          "note": "Scene Description history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_scene_description",
+        "quotation",
+        "narrative",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_scene_description"
+      ]
+    },
+    {
+      "id": "decision_055_historical_dialogue_factual",
+      "version": "1.0.0",
+      "title": "Dialogue decision (factual)",
+      "summary": "Deterministic history reviewer decision for dialogue (factual).",
+      "originalScenario": "factual history scene with historical_dialogue.",
+      "reviewQuestion": "Is this dialogue (factual)?",
+      "initialSuspicion": "Possible historical_dialogue.",
+      "possibleConcepts": [
+        "historical_dialogue"
+      ],
+      "supportingEvidence": [
+        "historical_dialogue",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: dialogue.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_55",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Dialogue reasoning",
+          "note": "Dialogue history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_dialogue",
+        "easy",
+        "narrative",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_dialogue"
+      ]
+    },
+    {
+      "id": "decision_056_historical_dialogue_quoted",
+      "version": "1.0.0",
+      "title": "Dialogue decision (quoted)",
+      "summary": "Deterministic history reviewer decision for dialogue (quoted).",
+      "originalScenario": "quoted history scene with historical_dialogue.",
+      "reviewQuestion": "Is this dialogue (quoted)?",
+      "initialSuspicion": "Possible historical_dialogue.",
+      "possibleConcepts": [
+        "historical_dialogue"
+      ],
+      "supportingEvidence": [
+        "historical_dialogue",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: dialogue.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_56",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Dialogue reasoning",
+          "note": "Dialogue history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_dialogue",
+        "quotation",
+        "narrative",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_dialogue"
+      ]
+    },
+    {
+      "id": "decision_057_historical_observation_factual",
+      "version": "1.0.0",
+      "title": "Observation decision (factual)",
+      "summary": "Deterministic history reviewer decision for observation (factual).",
+      "originalScenario": "factual history scene with historical_observation.",
+      "reviewQuestion": "Is this observation (factual)?",
+      "initialSuspicion": "Possible historical_observation.",
+      "possibleConcepts": [
+        "historical_observation"
+      ],
+      "supportingEvidence": [
+        "historical_observation",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: observation.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_57",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Observation reasoning",
+          "note": "Observation history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_observation",
+        "easy",
+        "narrative",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_observation"
+      ]
+    },
+    {
+      "id": "decision_058_historical_observation_quoted",
+      "version": "1.0.0",
+      "title": "Observation decision (quoted)",
+      "summary": "Deterministic history reviewer decision for observation (quoted).",
+      "originalScenario": "quoted history scene with historical_observation.",
+      "reviewQuestion": "Is this observation (quoted)?",
+      "initialSuspicion": "Possible historical_observation.",
+      "possibleConcepts": [
+        "historical_observation"
+      ],
+      "supportingEvidence": [
+        "historical_observation",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: observation.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_58",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Observation reasoning",
+          "note": "Observation history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_observation",
+        "quotation",
+        "narrative",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_observation"
+      ]
+    },
+    {
+      "id": "decision_059_historical_criticism_factual",
+      "version": "1.0.0",
+      "title": "Criticism decision (factual)",
+      "summary": "Deterministic history reviewer decision for criticism (factual).",
+      "originalScenario": "factual history scene with historical_criticism.",
+      "reviewQuestion": "Is this criticism (factual)?",
+      "initialSuspicion": "Possible historical_criticism.",
+      "possibleConcepts": [
+        "historical_criticism"
+      ],
+      "supportingEvidence": [
+        "historical_criticism",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: criticism.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_59",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Criticism reasoning",
+          "note": "Criticism history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_criticism",
+        "easy",
+        "stance",
+        "critical"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_criticism"
+      ]
+    },
+    {
+      "id": "decision_060_historical_criticism_quoted",
+      "version": "1.0.0",
+      "title": "Criticism decision (quoted)",
+      "summary": "Deterministic history reviewer decision for criticism (quoted).",
+      "originalScenario": "quoted history scene with historical_criticism.",
+      "reviewQuestion": "Is this criticism (quoted)?",
+      "initialSuspicion": "Possible historical_criticism.",
+      "possibleConcepts": [
+        "historical_criticism"
+      ],
+      "supportingEvidence": [
+        "historical_criticism",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: criticism.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_60",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Criticism reasoning",
+          "note": "Criticism history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_criticism",
+        "quotation",
+        "stance",
+        "critical"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_criticism"
+      ]
+    },
+    {
+      "id": "decision_061_historical_praise_factual",
+      "version": "1.0.0",
+      "title": "Praise decision (factual)",
+      "summary": "Deterministic history reviewer decision for praise (factual).",
+      "originalScenario": "factual history scene with historical_praise.",
+      "reviewQuestion": "Is this praise (factual)?",
+      "initialSuspicion": "Possible historical_praise.",
+      "possibleConcepts": [
+        "historical_praise"
+      ],
+      "supportingEvidence": [
+        "historical_praise",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: praise.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_61",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Praise reasoning",
+          "note": "Praise history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_praise",
+        "easy",
+        "stance",
+        "supportive"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_praise"
+      ]
+    },
+    {
+      "id": "decision_062_historical_praise_quoted",
+      "version": "1.0.0",
+      "title": "Praise decision (quoted)",
+      "summary": "Deterministic history reviewer decision for praise (quoted).",
+      "originalScenario": "quoted history scene with historical_praise.",
+      "reviewQuestion": "Is this praise (quoted)?",
+      "initialSuspicion": "Possible historical_praise.",
+      "possibleConcepts": [
+        "historical_praise"
+      ],
+      "supportingEvidence": [
+        "historical_praise",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: praise.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_62",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Praise reasoning",
+          "note": "Praise history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_praise",
+        "quotation",
+        "stance",
+        "supportive"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_praise"
+      ]
+    },
+    {
+      "id": "decision_063_historical_mockery_factual",
+      "version": "1.0.0",
+      "title": "Mockery decision (factual)",
+      "summary": "Deterministic history reviewer decision for mockery (factual).",
+      "originalScenario": "factual history scene with historical_mockery.",
+      "reviewQuestion": "Is this mockery (factual)?",
+      "initialSuspicion": "Possible historical_mockery.",
+      "possibleConcepts": [
+        "historical_mockery"
+      ],
+      "supportingEvidence": [
+        "historical_mockery",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: mockery.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_63",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Mockery reasoning",
+          "note": "Mockery history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_mockery",
+        "easy",
+        "stance",
+        "critical"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_mockery"
+      ]
+    },
+    {
+      "id": "decision_064_historical_mockery_quoted",
+      "version": "1.0.0",
+      "title": "Mockery decision (quoted)",
+      "summary": "Deterministic history reviewer decision for mockery (quoted).",
+      "originalScenario": "quoted history scene with historical_mockery.",
+      "reviewQuestion": "Is this mockery (quoted)?",
+      "initialSuspicion": "Possible historical_mockery.",
+      "possibleConcepts": [
+        "historical_mockery"
+      ],
+      "supportingEvidence": [
+        "historical_mockery",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: mockery.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_64",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Mockery reasoning",
+          "note": "Mockery history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_mockery",
+        "quotation",
+        "stance",
+        "critical"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_mockery"
+      ]
+    },
+    {
+      "id": "decision_065_historical_distortion_factual",
+      "version": "1.0.0",
+      "title": "Distortion decision (factual)",
+      "summary": "Deterministic history reviewer decision for distortion (factual).",
+      "originalScenario": "factual history scene with historical_distortion.",
+      "reviewQuestion": "Is this distortion (factual)?",
+      "initialSuspicion": "Possible historical_distortion.",
+      "possibleConcepts": [
+        "historical_distortion"
+      ],
+      "supportingEvidence": [
+        "historical_distortion",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: distortion.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_65",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Distortion reasoning",
+          "note": "Distortion history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_distortion",
+        "easy",
+        "stance",
+        "risk"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_distortion"
+      ]
+    },
+    {
+      "id": "decision_066_historical_distortion_quoted",
+      "version": "1.0.0",
+      "title": "Distortion decision (quoted)",
+      "summary": "Deterministic history reviewer decision for distortion (quoted).",
+      "originalScenario": "quoted history scene with historical_distortion.",
+      "reviewQuestion": "Is this distortion (quoted)?",
+      "initialSuspicion": "Possible historical_distortion.",
+      "possibleConcepts": [
+        "historical_distortion"
+      ],
+      "supportingEvidence": [
+        "historical_distortion",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: distortion.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_66",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Distortion reasoning",
+          "note": "Distortion history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_distortion",
+        "quotation",
+        "stance",
+        "risk"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_distortion"
+      ]
+    },
+    {
+      "id": "decision_067_historical_revisionism_factual",
+      "version": "1.0.0",
+      "title": "Revisionism decision (factual)",
+      "summary": "Deterministic history reviewer decision for revisionism (factual).",
+      "originalScenario": "factual history scene with historical_revisionism.",
+      "reviewQuestion": "Is this revisionism (factual)?",
+      "initialSuspicion": "Possible historical_revisionism.",
+      "possibleConcepts": [
+        "historical_revisionism"
+      ],
+      "supportingEvidence": [
+        "historical_revisionism",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: revisionism.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_67",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Revisionism reasoning",
+          "note": "Revisionism history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_revisionism",
+        "easy",
+        "stance",
+        "risk"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_revisionism"
+      ]
+    },
+    {
+      "id": "decision_068_historical_revisionism_quoted",
+      "version": "1.0.0",
+      "title": "Revisionism decision (quoted)",
+      "summary": "Deterministic history reviewer decision for revisionism (quoted).",
+      "originalScenario": "quoted history scene with historical_revisionism.",
+      "reviewQuestion": "Is this revisionism (quoted)?",
+      "initialSuspicion": "Possible historical_revisionism.",
+      "possibleConcepts": [
+        "historical_revisionism"
+      ],
+      "supportingEvidence": [
+        "historical_revisionism",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: revisionism.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_68",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Revisionism reasoning",
+          "note": "Revisionism history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_revisionism",
+        "quotation",
+        "stance",
+        "risk"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_revisionism"
+      ]
+    },
+    {
+      "id": "decision_069_historical_context_factual",
+      "version": "1.0.0",
+      "title": "Context decision (factual)",
+      "summary": "Deterministic history reviewer decision for context (factual).",
+      "originalScenario": "factual history scene with historical_context.",
+      "reviewQuestion": "Is this context (factual)?",
+      "initialSuspicion": "Possible historical_context.",
+      "possibleConcepts": [
+        "historical_context"
+      ],
+      "supportingEvidence": [
+        "historical_context",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: context.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_69",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Context reasoning",
+          "note": "Context history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_context",
+        "easy",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_context"
+      ]
+    },
+    {
+      "id": "decision_070_historical_context_quoted",
+      "version": "1.0.0",
+      "title": "Context decision (quoted)",
+      "summary": "Deterministic history reviewer decision for context (quoted).",
+      "originalScenario": "quoted history scene with historical_context.",
+      "reviewQuestion": "Is this context (quoted)?",
+      "initialSuspicion": "Possible historical_context.",
+      "possibleConcepts": [
+        "historical_context"
+      ],
+      "supportingEvidence": [
+        "historical_context",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: context.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_70",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Context reasoning",
+          "note": "Context history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_context",
+        "quotation",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_context"
+      ]
+    },
+    {
+      "id": "decision_071_historical_timeline_factual",
+      "version": "1.0.0",
+      "title": "Timeline decision (factual)",
+      "summary": "Deterministic history reviewer decision for timeline (factual).",
+      "originalScenario": "factual history scene with historical_timeline.",
+      "reviewQuestion": "Is this timeline (factual)?",
+      "initialSuspicion": "Possible historical_timeline.",
+      "possibleConcepts": [
+        "historical_timeline"
+      ],
+      "supportingEvidence": [
+        "historical_timeline",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: timeline.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_71",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Timeline reasoning",
+          "note": "Timeline history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_timeline",
+        "easy",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_timeline"
+      ]
+    },
+    {
+      "id": "decision_072_historical_timeline_quoted",
+      "version": "1.0.0",
+      "title": "Timeline decision (quoted)",
+      "summary": "Deterministic history reviewer decision for timeline (quoted).",
+      "originalScenario": "quoted history scene with historical_timeline.",
+      "reviewQuestion": "Is this timeline (quoted)?",
+      "initialSuspicion": "Possible historical_timeline.",
+      "possibleConcepts": [
+        "historical_timeline"
+      ],
+      "supportingEvidence": [
+        "historical_timeline",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: timeline.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_72",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Timeline reasoning",
+          "note": "Timeline history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_timeline",
+        "quotation",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_timeline"
+      ]
+    },
+    {
+      "id": "decision_073_historical_character_factual",
+      "version": "1.0.0",
+      "title": "Character decision (factual)",
+      "summary": "Deterministic history reviewer decision for character (factual).",
+      "originalScenario": "factual history scene with historical_character.",
+      "reviewQuestion": "Is this character (factual)?",
+      "initialSuspicion": "Possible historical_character.",
+      "possibleConcepts": [
+        "historical_character"
+      ],
+      "supportingEvidence": [
+        "historical_character",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: character.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_73",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Character reasoning",
+          "note": "Character history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_character",
+        "easy",
+        "people",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_character"
+      ]
+    },
+    {
+      "id": "decision_074_historical_character_quoted",
+      "version": "1.0.0",
+      "title": "Character decision (quoted)",
+      "summary": "Deterministic history reviewer decision for character (quoted).",
+      "originalScenario": "quoted history scene with historical_character.",
+      "reviewQuestion": "Is this character (quoted)?",
+      "initialSuspicion": "Possible historical_character.",
+      "possibleConcepts": [
+        "historical_character"
+      ],
+      "supportingEvidence": [
+        "historical_character",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: character.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_74",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Character reasoning",
+          "note": "Character history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_character",
+        "quotation",
+        "people",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_character"
+      ]
+    },
+    {
+      "id": "decision_075_historical_government_factual",
+      "version": "1.0.0",
+      "title": "Government decision (factual)",
+      "summary": "Deterministic history reviewer decision for government (factual).",
+      "originalScenario": "factual history scene with historical_government.",
+      "reviewQuestion": "Is this government (factual)?",
+      "initialSuspicion": "Possible historical_government.",
+      "possibleConcepts": [
+        "historical_government"
+      ],
+      "supportingEvidence": [
+        "historical_government",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: government.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_75",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Government reasoning",
+          "note": "Government history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_government",
+        "easy",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_government"
+      ]
+    },
+    {
+      "id": "decision_076_historical_government_quoted",
+      "version": "1.0.0",
+      "title": "Government decision (quoted)",
+      "summary": "Deterministic history reviewer decision for government (quoted).",
+      "originalScenario": "quoted history scene with historical_government.",
+      "reviewQuestion": "Is this government (quoted)?",
+      "initialSuspicion": "Possible historical_government.",
+      "possibleConcepts": [
+        "historical_government"
+      ],
+      "supportingEvidence": [
+        "historical_government",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: government.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_76",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Government reasoning",
+          "note": "Government history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_government",
+        "quotation",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_government"
+      ]
+    },
+    {
+      "id": "decision_077_historical_society_factual",
+      "version": "1.0.0",
+      "title": "Society decision (factual)",
+      "summary": "Deterministic history reviewer decision for society (factual).",
+      "originalScenario": "factual history scene with historical_society.",
+      "reviewQuestion": "Is this society (factual)?",
+      "initialSuspicion": "Possible historical_society.",
+      "possibleConcepts": [
+        "historical_society"
+      ],
+      "supportingEvidence": [
+        "historical_society",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: society.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_77",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Society reasoning",
+          "note": "Society history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_society",
+        "easy",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_society"
+      ]
+    },
+    {
+      "id": "decision_078_historical_society_quoted",
+      "version": "1.0.0",
+      "title": "Society decision (quoted)",
+      "summary": "Deterministic history reviewer decision for society (quoted).",
+      "originalScenario": "quoted history scene with historical_society.",
+      "reviewQuestion": "Is this society (quoted)?",
+      "initialSuspicion": "Possible historical_society.",
+      "possibleConcepts": [
+        "historical_society"
+      ],
+      "supportingEvidence": [
+        "historical_society",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: society.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_78",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Society reasoning",
+          "note": "Society history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_society",
+        "quotation",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_society"
+      ]
+    },
+    {
+      "id": "decision_079_historical_tradition_factual",
+      "version": "1.0.0",
+      "title": "Tradition decision (factual)",
+      "summary": "Deterministic history reviewer decision for tradition (factual).",
+      "originalScenario": "factual history scene with historical_tradition.",
+      "reviewQuestion": "Is this tradition (factual)?",
+      "initialSuspicion": "Possible historical_tradition.",
+      "possibleConcepts": [
+        "historical_tradition"
+      ],
+      "supportingEvidence": [
+        "historical_tradition",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: tradition.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_79",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Tradition reasoning",
+          "note": "Tradition history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_tradition",
+        "easy",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_tradition"
+      ]
+    },
+    {
+      "id": "decision_080_historical_tradition_quoted",
+      "version": "1.0.0",
+      "title": "Tradition decision (quoted)",
+      "summary": "Deterministic history reviewer decision for tradition (quoted).",
+      "originalScenario": "quoted history scene with historical_tradition.",
+      "reviewQuestion": "Is this tradition (quoted)?",
+      "initialSuspicion": "Possible historical_tradition.",
+      "possibleConcepts": [
+        "historical_tradition"
+      ],
+      "supportingEvidence": [
+        "historical_tradition",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: tradition.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_80",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Tradition reasoning",
+          "note": "Tradition history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_tradition",
+        "quotation",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_tradition"
+      ]
+    },
+    {
+      "id": "decision_081_historical_custom_factual",
+      "version": "1.0.0",
+      "title": "Custom decision (factual)",
+      "summary": "Deterministic history reviewer decision for custom (factual).",
+      "originalScenario": "factual history scene with historical_custom.",
+      "reviewQuestion": "Is this custom (factual)?",
+      "initialSuspicion": "Possible historical_custom.",
+      "possibleConcepts": [
+        "historical_custom"
+      ],
+      "supportingEvidence": [
+        "historical_custom",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: custom.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_81",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Custom reasoning",
+          "note": "Custom history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_custom",
+        "easy",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_custom"
+      ]
+    },
+    {
+      "id": "decision_082_historical_custom_quoted",
+      "version": "1.0.0",
+      "title": "Custom decision (quoted)",
+      "summary": "Deterministic history reviewer decision for custom (quoted).",
+      "originalScenario": "quoted history scene with historical_custom.",
+      "reviewQuestion": "Is this custom (quoted)?",
+      "initialSuspicion": "Possible historical_custom.",
+      "possibleConcepts": [
+        "historical_custom"
+      ],
+      "supportingEvidence": [
+        "historical_custom",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: custom.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_82",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Custom reasoning",
+          "note": "Custom history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_custom",
+        "quotation",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_custom"
+      ]
+    },
+    {
+      "id": "decision_083_historical_culture_factual",
+      "version": "1.0.0",
+      "title": "Culture decision (factual)",
+      "summary": "Deterministic history reviewer decision for culture (factual).",
+      "originalScenario": "factual history scene with historical_culture.",
+      "reviewQuestion": "Is this culture (factual)?",
+      "initialSuspicion": "Possible historical_culture.",
+      "possibleConcepts": [
+        "historical_culture"
+      ],
+      "supportingEvidence": [
+        "historical_culture",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: culture.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_83",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Culture reasoning",
+          "note": "Culture history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_culture",
+        "easy",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_culture"
+      ]
+    },
+    {
+      "id": "decision_084_historical_culture_quoted",
+      "version": "1.0.0",
+      "title": "Culture decision (quoted)",
+      "summary": "Deterministic history reviewer decision for culture (quoted).",
+      "originalScenario": "quoted history scene with historical_culture.",
+      "reviewQuestion": "Is this culture (quoted)?",
+      "initialSuspicion": "Possible historical_culture.",
+      "possibleConcepts": [
+        "historical_culture"
+      ],
+      "supportingEvidence": [
+        "historical_culture",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: culture.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_84",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Culture reasoning",
+          "note": "Culture history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_culture",
+        "quotation",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_culture"
+      ]
+    },
+    {
+      "id": "decision_085_historical_identity_factual",
+      "version": "1.0.0",
+      "title": "Identity decision (factual)",
+      "summary": "Deterministic history reviewer decision for identity (factual).",
+      "originalScenario": "factual history scene with historical_identity.",
+      "reviewQuestion": "Is this identity (factual)?",
+      "initialSuspicion": "Possible historical_identity.",
+      "possibleConcepts": [
+        "historical_identity"
+      ],
+      "supportingEvidence": [
+        "historical_identity",
+        "Variant: factual.",
+        "History framing: historical fact."
+      ],
+      "contradictingEvidence": [],
+      "requiredMissingEvidence": [],
+      "sceneContext": "historical fact history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: identity.",
+      "intentAnalysis": "fact",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "Finding supported",
+      "confidence": "high",
+      "findingType": "match",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_85",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Identity reasoning",
+          "note": "Identity history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Low",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: factual.",
+      "benchmarkTags": [
+        "historical_identity",
+        "easy",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_identity"
+      ]
+    },
+    {
+      "id": "decision_086_historical_identity_quoted",
+      "version": "1.0.0",
+      "title": "Identity decision (quoted)",
+      "summary": "Deterministic history reviewer decision for identity (quoted).",
+      "originalScenario": "quoted history scene with historical_identity.",
+      "reviewQuestion": "Is this identity (quoted)?",
+      "initialSuspicion": "Possible historical_identity.",
+      "possibleConcepts": [
+        "historical_identity"
+      ],
+      "supportingEvidence": [
+        "historical_identity",
+        "Variant: quoted.",
+        "History framing: quoted."
+      ],
+      "contradictingEvidence": [
+        "The story frames the line as quoted speech."
+      ],
+      "requiredMissingEvidence": [
+        "Missing direct historical claim in the local scene."
+      ],
+      "sceneContext": "quoted history context.",
+      "speakerAnalysis": "The speaker is explicit or identifiable from the scene.",
+      "targetAnalysis": "Target context: identity.",
+      "intentAnalysis": "quotation",
+      "reasoningSteps": [
+        "Identify speaker",
+        "Identify target",
+        "Apply historical concept",
+        "Apply context and exception checks",
+        "Map to article 16"
+      ],
+      "reviewerDecision": "No finding",
+      "confidence": "no_finding",
+      "findingType": "reject",
+      "gcamMappings": [
+        {
+          "id": "gcam_history_16_86",
+          "article_id": 16,
+          "atom_ids": [
+            "16-1",
+            "16-2"
+          ],
+          "role": "Identity reasoning",
+          "note": "Identity history mapping."
+        }
+      ],
+      "falsePositiveRisk": "Medium",
+      "reviewerNotes": "Use the shortest exact phrase. Variant: quoted.",
+      "benchmarkTags": [
+        "historical_identity",
+        "quotation",
+        "context",
+        "neutral"
+      ],
+      "relatedLessons": [],
+      "relatedPatterns": [],
+      "relatedBlueprintConcepts": [
+        "historical_identity"
+      ]
+    }
+  ]
+}

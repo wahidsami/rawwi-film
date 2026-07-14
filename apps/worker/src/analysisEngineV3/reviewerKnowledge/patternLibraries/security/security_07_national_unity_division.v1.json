@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "metadata": {
+    "id": "security_national_unity_division_patterns",
+    "title": "Security National Unity Division Patterns",
+    "description": "Patterns for sectarian division, social fracture, and disunity.",
+    "concepts": [
+      {
+        "id": "national_unity",
+        "title": "National Unity",
+        "description": "Social cohesion, public peace, and rejection of division."
+      },
+      {
+        "id": "public_order",
+        "title": "Public Order",
+        "description": "Order, stability, compliance, and societal calm."
+      },
+      {
+        "id": "government",
+        "title": "Government",
+        "description": "Government authority, ministries, or the governing order."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "security_pattern_divisive_speech",
+      "title": "Divisive Speech",
+      "description": "Speech that encourages division between groups or weakens collective peace.",
+      "primary_concept_id": "national_unity",
+      "related_concept_ids": [
+        "public_order",
+        "government"
+      ],
+      "direct_expressions": [
+        "خلّو الناس تنقسم",
+        "افرقوا بينهم",
+        "كل فئة ضد الثانية"
+      ],
+      "indirect_expressions": [
+        "هم ضدنا",
+        "لا نختلط",
+        "دعهم يتنازعون"
+      ],
+      "semantic_intent": [
+        "division",
+        "social fragmentation"
+      ],
+      "supporting_evidence": [
+        "The text asks people to split or turn against each other.",
+        "The sentence frames division as useful or desirable."
+      ],
+      "contradictory_evidence": [
+        "The story later rejects the division.",
+        "The wording is historical or educational."
+      ],
+      "false_positives": [
+        "A fictional conflict that ends in reconciliation.",
+        "A neutral sociological discussion of division."
+      ],
+      "counter_examples": [
+        "A lesson on social cohesion.",
+        "A report describing a past dispute."
+      ],
+      "cross_sentence_indicators": [
+        "A neutral sentence is followed by a division directive."
+      ],
+      "scene_indicators": [
+        "group confrontation",
+        "political rally",
+        "family dispute"
+      ],
+      "reviewer_guidance": [
+        "Look for language that encourages fracture rather than debate.",
+        "Do not classify neutral analysis of social conflict."
+      ],
+      "confidence_modifiers": [
+        {
+          "id": "modifier_explicit_division",
+          "title": "Explicit Division",
+          "description": "Direct instruction to divide communities.",
+          "confidence": 93
+        },
+        {
+          "id": "modifier_tension_only",
+          "title": "Tension Only",
+          "description": "Scene describes tension without endorsement.",
+          "confidence": 42
+        }
+      ],
+      "glossary_relationships": [
+        {
+          "id": "rel_unity_public_order",
+          "from_concept_id": "national_unity",
+          "to_concept_id": "public_order",
+          "relation": "supports",
+          "note": "Division weakens public order."
+        },
+        {
+          "id": "rel_unity_government",
+          "from_concept_id": "national_unity",
+          "to_concept_id": "government",
+          "relation": "related",
+          "note": "Governance can be implicated when unity is attacked."
+        }
+      ],
+      "gcam_mappings": [
+        {
+          "id": "gcam_security_4_5",
+          "article_id": 4,
+          "atom_ids": [
+            "4-5",
+            "4-6"
+          ],
+          "role": "Unity and social peace",
+          "note": "Use when the text fractures cohesion or social peace."
+        },
+        {
+          "id": "gcam_security_12_4",
+          "article_id": 12,
+          "atom_ids": [
+            "12-4"
+          ],
+          "role": "Social harmony",
+          "note": "Use when division is used as a means of unrest."
+        }
+      ],
+      "examples": [
+        {
+          "id": "example_unity_001",
+          "title": "Division directive",
+          "text": "خلّو الناس تنقسم مع بعضهم",
+          "expected_outcome": "Encouragement of social division.",
+          "note": null
+        },
+        {
+          "id": "example_unity_002",
+          "title": "Us vs them",
+          "text": "كل فئة ضد الثانية",
+          "expected_outcome": "Disunity reasoning.",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

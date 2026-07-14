@@ -1,0 +1,224 @@
+{
+  "id": "lesson_014_cross_sentence_reasoning",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "course": "Universal Reviewer Foundations",
+  "lessonNumber": 14,
+  "title": "Cross-Sentence Reasoning",
+  "summary": "Teach Raawi that reviewer decisions often require multiple sentences, multiple speakers, multiple actions, or the full scene instead of a single isolated sentence.",
+  "learningObjectives": [
+    "Understand that a harmless sentence can become meaningful when later text is read.",
+    "Connect previous dialogue, following dialogue, narration, scene descriptions, actions, objects, locations, and relationships.",
+    "Accumulate evidence across the scene before reaching a conclusion.",
+    "Avoid evaluating any sentence in complete isolation."
+  ],
+  "definitions": {
+    "finding": "A supported conclusion grounded in evidence across one or more sentences.",
+    "evidence": "Literal text, action, narration, or context that supports a reviewer conclusion.",
+    "context": "The surrounding material that changes or clarifies the meaning of a sentence.",
+    "crossSentenceReasoning": "Connecting multiple sentences to understand the full meaning of a scene.",
+    "scene": "A continuous unit of action, dialogue, or description in the screenplay.",
+    "intent": "The purpose, direction, or meaning created by the surrounding scene."
+  },
+  "reviewerPrinciples": [
+    "A sentence may appear harmless on its own.",
+    "Later sentences can reveal the real intent.",
+    "Evidence accumulates across the scene.",
+    "Confidence increases with corroboration.",
+    "Never evaluate a sentence in complete isolation.",
+    "Connect dialogue, narration, actions, objects, locations, and character relationships before judging."
+  ],
+  "reviewerMethodology": [
+    "Read the current sentence in the context of the previous and following sentences.",
+    "Identify who is speaking and who is being addressed.",
+    "Check whether narration, dialogue, or scene description changes the meaning.",
+    "Look for actions or objects that confirm or contradict the sentence.",
+    "Only then decide whether the sentence supports a finding."
+  ],
+  "reasoningProcess": [
+    "Start with the local sentence.",
+    "Expand to the surrounding dialogue and narration.",
+    "Check whether a later sentence reveals a hidden intent.",
+    "Merge sentence-level signals into one scene-level interpretation.",
+    "Judge the scene, not the isolated line."
+  ],
+  "evidenceRules": {
+    "minimum": [
+      "A single sentence may be enough only if it is explicit and self-contained."
+    ],
+    "strong": [
+      "Two or more sentences reinforce the same interpretation.",
+      "Dialogue and narration agree.",
+      "Actions or objects confirm the spoken line."
+    ],
+    "weak": [
+      "One sentence without later confirmation.",
+      "A line that could mean more than one thing.",
+      "A sentence that only becomes suspicious after context."
+    ],
+    "insufficient": [
+      "Guessing based on one sentence alone.",
+      "Assuming intent before reading the scene.",
+      "Ignoring later dialogue that changes the meaning.",
+      "Ignoring contradictory action or narration."
+    ],
+    "confidenceGuidance": [
+      "Low: only one sentence or no corroboration.",
+      "Medium: multiple sentences support the same direction.",
+      "High: dialogue, action, and context align.",
+      "Very High: dialogue, action, objects, and intent all align."
+    ]
+  },
+  "contextRules": [
+    "Later dialogue may change the meaning of earlier dialogue.",
+    "Narration may explain or contradict what a character says.",
+    "Scene descriptions may reveal intent through objects, movement, or location.",
+    "Another character may confirm or contradict the apparent meaning.",
+    "The ending of the scene may reverse the interpretation of the beginning."
+  ],
+  "sceneLevelReasoning": [
+    "Determine the purpose of the entire scene before deciding.",
+    "Ask whether the scene is building tension, revealing a plan, or resolving it.",
+    "Treat the scene as one narrative unit when necessary.",
+    "Use the whole scene to resolve ambiguity."
+  ],
+  "characterRelationshipAnalysis": [
+    "Check whether one character is instructing, threatening, helping, or deceiving another.",
+    "Use relationships to understand whether an exchange is literal, cooperative, or concealed.",
+    "A relationship may explain why a harmless sentence later becomes suspicious."
+  ],
+  "crossSentenceReasoning": [
+    "Sentence 1 may set up an ordinary situation.",
+    "Sentence 2 may reveal the true intent.",
+    "Sentence 3 may confirm the meaning through action or object use.",
+    "Never finalize meaning before reading the full local exchange."
+  ],
+  "crossSceneReasoning": [
+    "Earlier scenes can create context for a later line.",
+    "A later scene can prove that an earlier line had a hidden meaning.",
+    "Do not freeze a conclusion before checking scene progression."
+  ],
+  "confidenceRules": [
+    "One sentence alone usually means low confidence.",
+    "Multiple supporting sentences raise confidence.",
+    "Dialogue plus action raises confidence further.",
+    "Dialogue plus action plus objects plus intent yields very high confidence."
+  ],
+  "falsePositives": [
+    "Treating a harmless sentence as a finding before reading the next line.",
+    "Assuming bribery, corruption, violence, or threat from a single vague sentence.",
+    "Ignoring later clarification that changes the meaning.",
+    "Missing scene-level context that explains the line."
+  ],
+  "exceptions": [
+    "Context must be evaluated before judgment.",
+    "A later sentence may reverse the meaning of an earlier sentence.",
+    "Ambiguous language must not become an automatic finding."
+  ],
+  "examples": [
+    {
+      "text": "هذا ظرف بسيط.\nوافق على الترخيص.",
+      "result": "Possible bribery because the later sentence changes the meaning of the first sentence."
+    },
+    {
+      "text": "الحديد وصل.\nالليلة الهجوم.",
+      "result": "Weapon concept strengthened because the second sentence gives the first sentence a harmful meaning."
+    },
+    {
+      "text": "خلها تمشي.\nالعقد جاهز.",
+      "result": "Possible corruption because the later line suggests a hidden arrangement."
+    },
+    {
+      "text": "خلها تمشي.\nافتح الباب.",
+      "result": "No bribery because the later sentence does not support a corrupt meaning."
+    },
+    {
+      "text": "يخرج من السيارة حاملاً حقيبة.\nيبدأ تصنيع العبوة.",
+      "result": "Explosive preparation because the scene description and later action combine into one harmful interpretation."
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Treat a single harmless sentence as conclusive evidence.",
+      "reason": "Later context may completely change the meaning."
+    },
+    {
+      "text": "Ignore the next sentence because the first sentence sounds neutral.",
+      "reason": "Evidence must be read across the exchange."
+    },
+    {
+      "text": "Assume bribery from any mention of an object.",
+      "reason": "Objects require supporting dialogue or action."
+    }
+  ],
+  "reviewerQuestions": [
+    "Does later dialogue change the meaning?",
+    "Does narration explain intent?",
+    "Do actions confirm dialogue?",
+    "Does another character contradict it?",
+    "Does the ending reverse the meaning?",
+    "Would this sentence alone justify a finding?"
+  ],
+  "gcamMapping": [],
+  "exercises": [
+    {
+      "prompt": "Read two consecutive lines and explain why the second line changes the meaning of the first.",
+      "expectedOutcome": "The reviewer should connect the lines before deciding."
+    },
+    {
+      "prompt": "Identify whether an object mentioned in one sentence becomes harmful when paired with a later action.",
+      "expectedOutcome": "The reviewer should evaluate the object in cross-sentence context."
+    }
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Does the sentence need surrounding context?",
+      "yes": 2,
+      "no": "Proceed"
+    },
+    {
+      "step": 2,
+      "question": "Do later sentences change the meaning?",
+      "yes": "Re-evaluate the scene",
+      "no": 3
+    },
+    {
+      "step": 3,
+      "question": "Do actions, objects, or narration confirm the interpretation?",
+      "yes": "Accept with context",
+      "no": "Needs Review"
+    }
+  ],
+  "commonMistakes": [
+    "Reviewing one sentence in isolation.",
+    "Ignoring later confirmation.",
+    "Ignoring contradictory later dialogue.",
+    "Missing the meaning created by the whole scene."
+  ],
+  "reportTemplate": {
+    "findingTitle": "Cross-Sentence Supported Finding",
+    "reasonTemplate": "The finding is supported by multiple sentences and scene context.",
+    "recommendationTemplate": "Reviewer should evaluate the full exchange before finalizing the finding."
+  },
+  "benchmarkReferences": [
+    "cross_sentence_bribery_possible",
+    "cross_sentence_weapon_concept",
+    "cross_sentence_corruption_possible",
+    "cross_sentence_no_bribery",
+    "cross_sentence_scene_preparation"
+  ],
+  "confidenceGuidance": {
+    "95": "Dialogue, action, objects, and intent all align.",
+    "80": "Multiple supporting sentences agree.",
+    "60": "Context supports the interpretation but some ambiguity remains.",
+    "40": "Only one sentence or weak corroboration exists.",
+    "0": "No reliable finding can be made."
+  },
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Universal Foundation",
+    "priority": 14
+  }
+}

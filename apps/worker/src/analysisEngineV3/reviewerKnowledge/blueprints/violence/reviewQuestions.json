@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "id": "violence_review_questions",
+  "title": "Violence Review Questions",
+  "description": "Deterministic reviewer questions for violence reasoning.",
+  "entries": [
+    {
+      "id": "violence_q01",
+      "title": "What kind of violence is this?",
+      "description": "Identify whether this is an event, threat, attempt, or another violence concept."
+    },
+    {
+      "id": "violence_q02",
+      "title": "Is this endorsement?",
+      "description": "Check whether the scene glorifies, encourages, or rewards violence."
+    },
+    {
+      "id": "violence_q03",
+      "title": "Is this exception-based?",
+      "description": "Check for documentary, historical, fantasy, training, game, dream, flashback, or comedic context."
+    },
+    {
+      "id": "violence_q04",
+      "title": "Is the target protected?",
+      "description": "Determine whether the target is a child, woman, disabled person, public, or state institution."
+    },
+    {
+      "id": "violence_q05",
+      "title": "Is the violence observed or implied?",
+      "description": "Separate explicit violence from offscreen, implied, or reported violence."
+    },
+    {
+      "id": "violence_q06",
+      "title": "Does the scene condemn the violence?",
+      "description": "Detect condemnation, rejection, or criticism of the violence."
+    },
+    {
+      "id": "violence_q07",
+      "title": "Is it self-defense or law enforcement?",
+      "description": "Check for justified force or lawful intervention."
+    },
+    {
+      "id": "violence_q08",
+      "title": "Does later context change the meaning?",
+      "description": "Use cross-sentence and cross-scene context before finalizing the outcome."
+    }
+  ]
+}
