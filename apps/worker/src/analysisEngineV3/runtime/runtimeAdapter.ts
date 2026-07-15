@@ -16,6 +16,7 @@ import { SEXUALITY_MODULE } from "../legal/modules/sexuality/sexualityModule.js"
 import { DRUGS_MODULE } from "../legal/modules/drugs/drugsModule.js";
 import { SOCIETY_MODULE } from "../legal/modules/society/societyModule.js";
 import { FAMILY_VALUES_MODULE } from "../legal/modules/familyValues/familyValuesModule.js";
+import { HISTORY_MODULE } from "../legal/modules/history/historyModule.js";
 import { createLegalEngine } from "../legal/legalEngine.js";
 import { createLegalModuleLoader } from "../legal/legalModuleLoader.js";
 import { LegalModuleRegistry } from "../legal/legalModuleRegistry.js";
@@ -93,6 +94,12 @@ function normalizeSubjectModule(subjectModule?: V3PromptSubjectModule): V3Prompt
     return {
       ...module,
       id: FAMILY_VALUES_MODULE.id,
+    };
+  }
+  if (module.id === "v3_04_history" || module.id === HISTORY_MODULE.id) {
+    return {
+      ...module,
+      id: HISTORY_MODULE.id,
     };
   }
   if (module.id === "v3_06_children") {
@@ -274,7 +281,7 @@ export async function runV3RuntimeAdapter(
     glossary: analysisRequest.glossary,
   });
   const legalEngine = createLegalEngine(
-    createLegalModuleLoader(new LegalModuleRegistry().register(PROFANITY_MODULE).register(RELIGION_MODULE).register(STATE_LEADERSHIP_MODULE).register(NATIONAL_SECURITY_MODULE).register(CHILDREN_MODULE).register(VIOLENCE_MODULE).register(SEXUALITY_MODULE).register(DRUGS_MODULE).register(SOCIETY_MODULE).register(FAMILY_VALUES_MODULE)),
+    createLegalModuleLoader(new LegalModuleRegistry().register(PROFANITY_MODULE).register(RELIGION_MODULE).register(STATE_LEADERSHIP_MODULE).register(NATIONAL_SECURITY_MODULE).register(CHILDREN_MODULE).register(VIOLENCE_MODULE).register(SEXUALITY_MODULE).register(DRUGS_MODULE).register(SOCIETY_MODULE).register(FAMILY_VALUES_MODULE).register(HISTORY_MODULE)),
   );
   const legalDecision = legalEngine.evaluate({
     moduleId: analysisRequest.subjectModule.id,
