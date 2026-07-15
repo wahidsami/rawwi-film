@@ -137,11 +137,23 @@ function makeBaseInput(): V3PromptBuilderInput {
       fields: [
         { name: "findings", description: "Structured findings." },
         { name: "reasoning_trace", description: "Trace of reasoning stages." },
+        {
+          name: "reasoned_decision",
+          description: "Why, evidence, counterargument, applicable articles, rejected articles, and confidence.",
+        },
       ],
       notes: ["Render the JSON contract exactly once."],
       example: {
         findings: [],
         reasoning_trace: [],
+        reasoned_decision: {
+          why: "Explain the reviewer conclusion.",
+          evidence: ["Support the decision with the chunk and precedent evidence."],
+          counterargument: "Explain the strongest rejected interpretation.",
+          applicable_articles: [11],
+          rejected_articles: [4],
+          confidence: 0.95,
+        },
       },
     },
   };
@@ -167,9 +179,11 @@ function testReviewerKnowledgePackRendered(): void {
   assert(rendered.prompt.indexOf("## Reviewer Questions") < rendered.prompt.indexOf("## Reviewer Knowledge Packs"), "questions should render before packs");
   assert(rendered.prompt.indexOf("## Reviewer Methodology") < rendered.prompt.indexOf("## Reviewer Questions"), "methodology should render before questions");
   assert(rendered.prompt.includes("Reviewer Knowledge Packs"), "reviewer knowledge section should be rendered");
+  assert(rendered.prompt.includes("Reviewer Reasoning Engine"), "reviewer reasoning engine should be rendered");
   assert(rendered.prompt.includes("Default Reviewer Question Set"), "default reviewer question set should render");
   assert(rendered.prompt.includes(getDefaultReviewerQuestionSet().id), "default reviewer question set id should render");
   assert(rendered.prompt.includes("Profanity Reviewer Knowledge Pack"), "profanity pack should be selected for profanity input");
+  assert(rendered.prompt.includes("reasoned_decision"), "output schema should request a reasoned decision");
   assert(!rendered.prompt.includes('"rules": ['), "subject rule bundles should no longer be rendered directly");
   console.log("✓ reviewer knowledge packs are rendered instead of subject rule bundles");
 }

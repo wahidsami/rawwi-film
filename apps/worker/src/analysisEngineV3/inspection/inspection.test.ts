@@ -11,7 +11,9 @@ import {
   buildV3FinalReportInspectionRecord,
   buildV3LegalReviewInspectionRecord,
   buildV3KnowledgeRegistryInspectionRecord,
+  buildV3KnowledgeRankingInspectionRecord,
   buildV3SemanticGenerationInspectionRecord,
+  buildV3ReviewerDebateInspectionRecord,
 } from "./inspectionStageBuilders.js";
 
 function buildRecord(input: Partial<V3InspectionRecord> & Pick<V3InspectionRecord, "findingKey" | "stageOrder" | "stageName" | "jobId" | "chunkId" | "payloadJson" | "createdAt">): V3InspectionRecord {
@@ -232,6 +234,43 @@ async function testStageBuildersHandleZeroCounts(): Promise<void> {
     },
   });
 
+  const knowledgeRankingRecord = buildV3KnowledgeRankingInspectionRecord({
+    base: {
+      jobId: "job-zero",
+      chunkId: "chunk-zero",
+      findingKey: "job:job-zero:chunk:chunk-zero",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+    analysisEngine: "v3",
+    pipelineVersion: "v2",
+    ranking: {
+      jobId: "job-zero",
+      chunkId: "chunk-zero",
+      analysisEngine: "v3",
+      pipelineVersion: "v2",
+      querySummary: {
+        subjectModuleId: "v3_11_profanity",
+        subjectModuleTitle: "الألفاظ النابية",
+        conceptIds: [],
+        articleIds: [],
+        semanticConfidence: 0,
+        evidenceConfidence: 0,
+        queryTerms: [],
+      },
+      domainScores: [],
+      conceptScores: [],
+      lessonScores: [],
+      blueprintScores: [],
+      patternScores: [],
+      relationshipScores: [],
+      articleScores: [],
+      selectedRegistryKeys: [],
+      knowledgeConfidence: 0,
+      retrievalCoverage: 0,
+      totalRegistryEntries: 0,
+    },
+  });
+
   assert.equal(semanticRecord.payloadJson.semantic_candidate_count, 0);
   assert.equal((semanticRecord.payloadJson.semantic_candidates as readonly unknown[]).length, 0);
   assert.equal(legalRecord.payloadJson.accepted_count, 0);
@@ -242,16 +281,190 @@ async function testStageBuildersHandleZeroCounts(): Promise<void> {
   assert.equal(finalReportRecord.payloadJson.observation_count, 0);
   assert.equal(knowledgeRegistryRecord.payloadJson.registry_total_count, 0);
   assert.equal(knowledgeRegistryRecord.payloadJson.validation_valid, true);
+  const knowledgeRankingPayload = knowledgeRankingRecord.payloadJson as Record<string, unknown>;
+  assert.equal(knowledgeRankingPayload.knowledge_confidence, 0);
+  assert.equal((knowledgeRankingPayload.domain_scores as readonly unknown[]).length, 0);
 
   const recorder = createV3InspectionRecorder({
     enabled: true,
     persist: async (records) => {
-      assert.equal(records.length, 5);
+      assert.equal(records.length, 6);
     },
     now: () => "2026-01-01T00:00:00.000Z",
   });
 
-  await recorder.recordStages([semanticRecord, legalRecord, aggregationRecord, finalReportRecord, knowledgeRegistryRecord]);
+  await recorder.recordStages([semanticRecord, legalRecord, aggregationRecord, finalReportRecord, knowledgeRegistryRecord, knowledgeRankingRecord]);
+}
+
+function testReviewerDebateStageBuilder(): void {
+  const debateRecord = buildV3ReviewerDebateInspectionRecord({
+    base: {
+      jobId: "job-debate",
+      chunkId: "chunk-debate",
+      findingKey: "job:job-debate:chunk:chunk-debate",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+    analysisEngine: "v3",
+    pipelineVersion: "v2",
+    debate: {
+      sharedPackage: {
+        semantic: {},
+        knowledge: {},
+        lessons: [],
+        blueprints: [],
+        patterns: [],
+        relationships: [],
+        cases: [],
+        precedents: {
+          best_match: null,
+          top_matches: [],
+          total_matches: 0,
+        },
+        decision_guidance: {},
+      } as never,
+      primaryDecision: {
+        moduleId: "profanity",
+        moduleTitle: "Profanity",
+        status: "accept",
+        confidence: 0.9,
+        articleIds: [4],
+        reason: "supported",
+      },
+      reviewerCount: 2,
+      executionOrder: ["Profanity Reviewer", "General Reviewer"],
+      reviewerDurations: [
+        { reviewerId: "profanity", reviewerName: "Profanity Reviewer", durationMs: 0 },
+        { reviewerId: "general_reviewer", reviewerName: "General Reviewer", durationMs: 0 },
+      ],
+      opinions: [
+        {
+          reviewerId: "profanity",
+          reviewerName: "Profanity Reviewer",
+          moduleId: "profanity",
+          moduleTitle: "Profanity",
+          applicable: true,
+          status: "accept",
+          confidence: 0.9,
+          reasoning: "supported",
+          supportingEvidence: ["quote"],
+          supportingKnowledge: {
+            lessons: ["lesson-1"],
+            blueprints: ["blueprint-1"],
+            patterns: ["pattern-1"],
+            relationships: ["relationship-1"],
+            cases: ["case-1"],
+            precedents: ["precedent-1"],
+          },
+          suggestedArticles: [4],
+          rejectedArticles: [],
+          counterargument: "none",
+          riskLevel: "critical",
+          escalationRecommendation: "No escalation required; specialist opinion is stable.",
+          needsHumanReview: false,
+          independence: "independent",
+          durationMs: 0,
+        },
+        {
+          reviewerId: "general_reviewer",
+          reviewerName: "General Reviewer",
+          moduleId: "general_reviewer",
+          moduleTitle: "General Reviewer",
+          applicable: true,
+          status: "accept",
+          confidence: 0.9,
+          reasoning: "consensus",
+          supportingEvidence: ["quote"],
+          supportingKnowledge: {
+            lessons: ["lesson-1"],
+            blueprints: ["blueprint-1"],
+            patterns: ["pattern-1"],
+            relationships: ["relationship-1"],
+            cases: ["case-1"],
+            precedents: ["precedent-1"],
+          },
+          suggestedArticles: [4],
+          rejectedArticles: [],
+          counterargument: "none",
+          riskLevel: "critical",
+          escalationRecommendation: "No escalation required; consensus is stable.",
+          needsHumanReview: false,
+          independence: "independent",
+          durationMs: 0,
+        },
+      ],
+      opinionSummaries: [
+        {
+          reviewerId: "profanity",
+          reviewerName: "Profanity Reviewer",
+          status: "accept",
+          confidence: 0.9,
+          applicable: true,
+          suggestedArticles: [4],
+          rejectedArticles: [],
+          riskLevel: "critical",
+          needsHumanReview: false,
+        },
+        {
+          reviewerId: "general_reviewer",
+          reviewerName: "General Reviewer",
+          status: "accept",
+          confidence: 0.9,
+          applicable: true,
+          suggestedArticles: [4],
+          rejectedArticles: [],
+          riskLevel: "critical",
+          needsHumanReview: false,
+        },
+      ],
+      agreementMatrix: [
+        {
+          leftReviewerId: "profanity",
+          rightReviewerId: "general_reviewer",
+          sameStatus: true,
+          articleOverlap: 1,
+          knowledgeOverlap: 1,
+          evidenceOverlap: 1,
+          confidenceDelta: 0,
+          agreementScore: 1,
+          disagreementScore: 0,
+        },
+      ],
+      disagreementMatrix: [],
+      highestConfidenceReviewer: "Profanity Reviewer",
+      lowestConfidenceReviewer: "Profanity Reviewer",
+      conflictingArticles: [],
+      supportingEvidenceOverlap: ["quote"],
+      knowledgeOverlap: ["lesson-1"],
+      confidenceDistribution: {
+        minimum: 0.9,
+        maximum: 0.9,
+        average: 0.9,
+        median: 0.9,
+        spread: 0,
+        buckets: {
+          low: 0,
+          medium: 0,
+          high: 0,
+          critical: 2,
+        },
+      },
+      consensusScore: 1,
+      metrics: {
+        agreement: 1,
+        disagreement: 0,
+        averageConfidence: 0.9,
+        participation: 1,
+        articleOverlap: 1,
+        knowledgeOverlap: 1,
+        evidenceOverlap: 1,
+        consensusPercentage: 1,
+      },
+    },
+  });
+
+  assert.equal(debateRecord.stageName, "reviewer_debate");
+  assert.equal(debateRecord.stageOrder, 10);
+  assert.equal((debateRecord.payloadJson as Record<string, unknown>).reviewer_count, 2);
 }
 
 async function main(): Promise<void> {
@@ -259,6 +472,7 @@ async function main(): Promise<void> {
   await testRecorderEnabledPersistsRecords();
   testOrderingAndRendering();
   await testStageBuildersHandleZeroCounts();
+  testReviewerDebateStageBuilder();
   console.log("✓ V3 inspection recorder, loader, and renderer behave correctly");
 }
 

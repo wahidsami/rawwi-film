@@ -13,6 +13,7 @@ import { getDefaultReviewerQuestionSet, renderReviewerQuestionSetSection, create
 import { selectReviewerKnowledgePacks } from "../reviewerKnowledge/reviewerKnowledgeSelector.js";
 import { createDefaultReviewerKnowledgeRegistry } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
 import { renderReviewerKnowledgePacksSection } from "../reviewerKnowledge/reviewerKnowledgeRenderer.js";
+import { buildReviewerReasoningEnginePayload } from "./reviewerReasoningEngine.js";
 
 function renderDecisionGraphSection(decisionGraph: V3PromptBuilderInput["decisionGraph"]): string {
   const nodeSections = decisionGraph.nodes.map((node) =>
@@ -75,6 +76,7 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
     ? reviewerQuestionRegistry.load(universalKnowledgePack.default_question_set_id) ?? getDefaultReviewerQuestionSet()
     : getDefaultReviewerQuestionSet();
   const reviewerKnowledgePacks = selectReviewerKnowledgePacks(reviewerAssessment, conceptContext);
+  const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(context, conceptContext, reviewerAssessment, reviewerKnowledgePacks);
   const reviewerMethodology = getDefaultReviewerMethodology();
 
   return joinPromptSections([
@@ -82,6 +84,7 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
     renderReviewerMethodologySection(reviewerMethodology, reviewerAssessment),
     renderReviewerQuestionSetSection(reviewerQuestionSet),
     renderReviewerKnowledgePacksSection(reviewerKnowledgePacks),
+    renderStableJsonSection("Reviewer Reasoning Engine", reviewerReasoningEngine),
     renderReasoningStageAssembly(context.reasoningContract),
     renderDecisionGraphSection(context.decisionGraph),
     renderSemanticLayerSection(context.semanticLayer),

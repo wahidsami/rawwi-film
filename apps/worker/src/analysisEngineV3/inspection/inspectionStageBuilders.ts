@@ -1,5 +1,7 @@
 import type { V3InspectionRecordInput, V3InspectionStageName, V3InspectionStageOrder } from "./inspectionTypes.js";
 import type { KnowledgeRegistryReport } from "../reviewerKnowledge/knowledgeRegistry/index.js";
+import type { KnowledgeRankingReport } from "../reviewerKnowledge/knowledgeRanking/index.js";
+import type { ReviewerDebatePackage } from "../reviewerDebate/index.js";
 
 type V3InspectionStageBaseInput = Readonly<{
   jobId: string;
@@ -279,5 +281,60 @@ export function buildV3KnowledgeRegistryInspectionRecord(input: Readonly<{
     validation_issues: [...input.registry.validation.issues],
     sample_registry_keys: input.registry.list().slice(0, 50).map((entry) => entry.registryKey),
     stage_timings: [...(input.stageTimings ?? [])],
+  });
+}
+
+export function buildV3KnowledgeRankingInspectionRecord(input: Readonly<{
+  base: V3InspectionStageBaseInput;
+  analysisEngine: string;
+  pipelineVersion: string;
+  ranking: KnowledgeRankingReport;
+  stageTimings?: readonly unknown[];
+}>): V3InspectionRecordInput {
+  return createStageRecord(input.base, 9, "knowledge_ranking", {
+    analysis_engine: input.analysisEngine,
+    pipeline_version: input.pipelineVersion,
+    query_summary: input.ranking.querySummary,
+    domain_scores: [...input.ranking.domainScores],
+    concept_scores: [...input.ranking.conceptScores],
+    lesson_scores: [...input.ranking.lessonScores],
+    blueprint_scores: [...input.ranking.blueprintScores],
+    pattern_scores: [...input.ranking.patternScores],
+    relationship_scores: [...input.ranking.relationshipScores],
+    article_scores: [...input.ranking.articleScores],
+    selected_registry_keys: [...input.ranking.selectedRegistryKeys],
+    knowledge_confidence: input.ranking.knowledgeConfidence,
+    retrieval_coverage: input.ranking.retrievalCoverage,
+    total_registry_entries: input.ranking.totalRegistryEntries,
+    stage_timings: [...(input.stageTimings ?? [])],
+  });
+}
+
+export function buildV3ReviewerDebateInspectionRecord(input: Readonly<{
+  base: V3InspectionStageBaseInput;
+  analysisEngine: string;
+  pipelineVersion: string;
+  debate: ReviewerDebatePackage;
+}>): V3InspectionRecordInput {
+  return createStageRecord(input.base, 10, "reviewer_debate", {
+    analysis_engine: input.analysisEngine,
+    pipeline_version: input.pipelineVersion,
+    reviewer_count: input.debate.reviewerCount,
+    execution_order: [...input.debate.executionOrder],
+    reviewer_durations: [...input.debate.reviewerDurations],
+    opinions: [...input.debate.opinions],
+    opinion_summaries: [...input.debate.opinionSummaries],
+    agreement_matrix: [...input.debate.agreementMatrix],
+    disagreement_matrix: [...input.debate.disagreementMatrix],
+    highest_confidence_reviewer: input.debate.highestConfidenceReviewer,
+    lowest_confidence_reviewer: input.debate.lowestConfidenceReviewer,
+    conflicting_articles: [...input.debate.conflictingArticles],
+    supporting_evidence_overlap: [...input.debate.supportingEvidenceOverlap],
+    knowledge_overlap: [...input.debate.knowledgeOverlap],
+    confidence_distribution: input.debate.confidenceDistribution,
+    consensus_score: input.debate.consensusScore,
+    metrics: input.debate.metrics,
+    shared_package: input.debate.sharedPackage,
+    primary_decision: input.debate.primaryDecision,
   });
 }

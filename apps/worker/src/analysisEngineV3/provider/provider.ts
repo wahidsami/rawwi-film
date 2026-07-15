@@ -11,6 +11,7 @@ import type {
 import { createPromptConceptContext, runReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRunner.js";
 import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRegistry.js";
 import { selectReviewerKnowledgePacks } from "../reviewerKnowledge/reviewerKnowledgeSelector.js";
+import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
 
 export type V3ProviderFlowInput = Readonly<{
   promptInput: V3PromptBuilderInput;
@@ -32,10 +33,12 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
   const conceptContext = createPromptConceptContext(input);
   const reviewerAssessment = runReviewerMethodology({ promptInput: input, conceptContext });
   const reviewerKnowledgePacks = selectReviewerKnowledgePacks(reviewerAssessment, conceptContext);
+  const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(input, conceptContext, reviewerAssessment, reviewerKnowledgePacks);
 
   return stableSerializePromptValue({
     chunkContext: input.chunkContext,
     glossary: input.glossary,
+    reviewerReasoningEngine,
     reviewerAssessment,
     reviewerMethodology: getDefaultReviewerMethodology(),
     reviewerKnowledgePacks,

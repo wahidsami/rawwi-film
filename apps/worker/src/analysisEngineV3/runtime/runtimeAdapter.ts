@@ -1,10 +1,12 @@
 import { buildV3RenderedPrompt } from "../builder/promptBuilder.js";
+import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
 import { createDefaultAnalysisEngineConfig } from "../engine/analysisConfig.js";
 import type { AnalysisRequest } from "../engine/analysisRequest.js";
 import type { AnalysisResponse } from "../engine/analysisResponse.js";
 import { buildV3ProviderUserPrompt } from "../provider/provider.js";
 import { createV3ProviderFactory } from "../provider/providerFactory.js";
 import { mapV3ProviderResponse } from "../provider/responseMapper.js";
+import { createPromptConceptContext, runReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRunner.js";
 import { buildIntelligenceContext } from "../intelligence/intelligenceBuilder.js";
 import { PROFANITY_MODULE } from "../legal/modules/profanity/profanityModule.js";
 import { RELIGION_MODULE } from "../legal/modules/religion/religionModule.js";
@@ -43,9 +45,14 @@ import {
   buildV3KnowledgeMatchingInspectionRecord,
   buildV3LegalReviewInspectionRecord,
   buildV3KnowledgeRegistryInspectionRecord,
+  buildV3KnowledgeRankingInspectionRecord,
   buildV3SemanticGenerationInspectionRecord,
+  buildV3ReviewerDebateInspectionRecord,
 } from "../inspection/inspectionStageBuilders.js";
 import { createKnowledgeRegistry, createKnowledgeRegistryFromEntries, defaultKnowledgeRegistryRoot } from "../reviewerKnowledge/knowledgeRegistry/index.js";
+import { createKnowledgeRankingReport } from "../reviewerKnowledge/knowledgeRanking/index.js";
+import { selectReviewerKnowledgePacks } from "../reviewerKnowledge/reviewerKnowledgeSelector.js";
+import { buildReviewerDebatePackage } from "../reviewerDebate/index.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -152,11 +159,14 @@ function defaultOutputSchema(): V3PromptOutputSchema {
       { name: "evidence", description: "Evidence result", required: true },
       { name: "semantic", description: "Semantic result", required: true },
       { name: "context", description: "Context result", required: true },
+      { name: "reasoned_decision", description: "Reviewer decision with why, evidence, counterargument, applicable articles, rejected articles, and confidence.", required: true },
     ],
     notes: [
       "The evidence object must include candidates and primaryCandidateIndex.",
       "Each evidence candidate must include the compatibility fields required by the existing mapper: text, startOffset, endOffset, confidence, source, and notes.",
       "To preserve downstream compatibility, candidate objects should also include id, quote, offsetStart, offsetEnd, concepts, entities, and reason.",
+      "The reasoned decision must answer why, evidence, counterargument, applicable_articles, rejected_articles, and confidence.",
+      "Use cases, precedents, lessons, blueprints, patterns, and relationships as reviewer memory, not as a substitute for evidence.",
       "Response is mapped into the existing V2 finding model after legal evaluation.",
     ],
     example: {
@@ -229,6 +239,14 @@ function defaultOutputSchema(): V3PromptOutputSchema {
         chunkContext: "chunk_index=0; start=0; end=34",
         neighboringSentences: [],
         narrativeContext: "contextual narrative summary",
+        confidence: 0.95,
+      },
+      reasoned_decision: {
+        why: "The quote directly supports the semantic conclusion.",
+        evidence: ["exact screenplay quote"],
+        counterargument: "The line could be read as a joke, but the context supports a direct attack.",
+        applicable_articles: [11],
+        rejected_articles: [4],
         confidence: 0.95,
       },
     },
@@ -391,8 +409,24 @@ export async function runV3RuntimeAdapter(
     context: mapped.context,
     glossary: analysisRequest.glossary,
   });
+  const legalModuleRegistry = new LegalModuleRegistry()
+    .register(PROFANITY_MODULE)
+    .register(RELIGION_MODULE)
+    .register(STATE_LEADERSHIP_MODULE)
+    .register(NATIONAL_SECURITY_MODULE)
+    .register(CHILDREN_MODULE)
+    .register(VIOLENCE_MODULE)
+    .register(SEXUALITY_MODULE)
+    .register(DRUGS_MODULE)
+    .register(SOCIETY_MODULE)
+    .register(FAMILY_VALUES_MODULE)
+    .register(HISTORY_MODULE)
+    .register(POLITICS_MODULE)
+    .register(CRIME_MODULE)
+    .register(TRAVEL_MODULE);
+  const legalModules = legalModuleRegistry.list();
   const legalEngine = createLegalEngine(
-    createLegalModuleLoader(new LegalModuleRegistry().register(PROFANITY_MODULE).register(RELIGION_MODULE).register(STATE_LEADERSHIP_MODULE).register(NATIONAL_SECURITY_MODULE).register(CHILDREN_MODULE).register(VIOLENCE_MODULE).register(SEXUALITY_MODULE).register(DRUGS_MODULE).register(SOCIETY_MODULE).register(FAMILY_VALUES_MODULE).register(HISTORY_MODULE).register(POLITICS_MODULE).register(CRIME_MODULE).register(TRAVEL_MODULE)),
+    createLegalModuleLoader(legalModuleRegistry),
   );
   const legalDecision = legalEngine.evaluate({
     moduleId: analysisRequest.subjectModule.id,
@@ -536,6 +570,50 @@ export async function runV3RuntimeAdapter(
         registry: knowledgeRegistry,
         stageTimings: analysisResponse.diagnostics.stageTimings as readonly unknown[],
       });
+      const knowledgeRanking = createKnowledgeRankingReport({
+        jobId: input.jobId,
+        chunkId: input.chunkId,
+        analysisEngine: "v3",
+        pipelineVersion,
+        chunkText: input.chunkText,
+        analysisPromptContext: input.analysisPromptContext ?? null,
+        storyMemory: analysisRequest.storyMemory,
+        sceneMemory: analysisRequest.sceneMemory,
+        neighboringSentences: input.neighboringSentences,
+        subjectModule: analysisRequest.subjectModule,
+        analysisRequest,
+        analysisResponse,
+        registry: knowledgeRegistry,
+      });
+      const reviewerConceptContext = createPromptConceptContext(promptInput);
+      const reviewerAssessment = runReviewerMethodology({
+        promptInput,
+        conceptContext: reviewerConceptContext,
+      });
+      const reviewerKnowledgePacks = selectReviewerKnowledgePacks(reviewerAssessment, reviewerConceptContext);
+      const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(
+        promptInput,
+        reviewerConceptContext,
+        reviewerAssessment,
+        reviewerKnowledgePacks,
+      );
+      const reviewerDebate = buildReviewerDebatePackage({
+        analysisResponse,
+        legalModules,
+        reviewerReasoningEngine,
+      });
+      const knowledgeRankingRecord = buildV3KnowledgeRankingInspectionRecord({
+        base: {
+          jobId: input.jobId,
+          chunkId: input.chunkId,
+          findingKey,
+          createdAt: inspectionTimestamp,
+        },
+        analysisEngine: "v3",
+        pipelineVersion,
+        ranking: knowledgeRanking,
+        stageTimings: analysisResponse.diagnostics.stageTimings as readonly unknown[],
+      });
       const knowledgeAssetsUsed = Object.freeze([
         ...new Set([
           ...((primaryTrace?.stages.flatMap((stage) => stage.items) ?? []) as readonly string[]),
@@ -607,6 +685,17 @@ export async function runV3RuntimeAdapter(
         rejectedCount: legalDecision.status === "reject" ? 1 : 0,
         needsReviewCount: legalDecision.status === "needs_review" ? 1 : 0,
       });
+      const debateRecord = buildV3ReviewerDebateInspectionRecord({
+        base: {
+          jobId: input.jobId,
+          chunkId: input.chunkId,
+          findingKey,
+          createdAt: inspectionTimestamp,
+        },
+        analysisEngine: "v3",
+        pipelineVersion,
+        debate: reviewerDebate,
+      });
       const mappingRecord = buildV3FindingMapperInspectionRecord({
         base: {
           jobId: input.jobId,
@@ -632,9 +721,11 @@ export async function runV3RuntimeAdapter(
       });
       await v3InspectionRecorder.recordStages([
         knowledgeRegistryRecord,
+        knowledgeRankingRecord,
         semanticRecord,
         knowledgeRecord,
         legalRecord,
+        debateRecord,
         mappingRecord,
       ]);
     } catch (error) {
