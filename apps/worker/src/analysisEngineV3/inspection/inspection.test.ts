@@ -7,6 +7,7 @@ import { buildV3InspectionTimeline, groupV3InspectionRecords, sortV3InspectionRe
 import { renderV3InspectionTimeline } from "./inspectionRenderer.js";
 import type { V3InspectionRecord } from "./inspectionTypes.js";
 import {
+  buildV3ArbitrationInspectionRecord,
   buildV3AggregationInspectionRecord,
   buildV3FinalReportInspectionRecord,
   buildV3LegalReviewInspectionRecord,
@@ -467,12 +468,181 @@ function testReviewerDebateStageBuilder(): void {
   assert.equal((debateRecord.payloadJson as Record<string, unknown>).reviewer_count, 2);
 }
 
+function testArbitrationStageBuilder(): void {
+  const arbitrationRecord = buildV3ArbitrationInspectionRecord({
+    base: {
+      jobId: "job-arbitration",
+      chunkId: "chunk-arbitration",
+      findingKey: "job:job-arbitration:chunk:chunk-arbitration",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+    analysisEngine: "v3",
+    pipelineVersion: "v2",
+    arbitration: {
+      debate: {
+        sharedPackage: {
+          semantic: {},
+          knowledge: {},
+          lessons: [],
+          blueprints: [],
+          patterns: [],
+          relationships: [],
+          cases: [],
+          precedents: {
+            best_match: null,
+            top_matches: [],
+            total_matches: 0,
+          },
+          decision_guidance: {},
+        } as never,
+        primaryDecision: {
+          moduleId: "profanity",
+          moduleTitle: "Profanity",
+          status: "accept",
+          confidence: 0.9,
+          articleIds: [4],
+          reason: "supported",
+        },
+        reviewerCount: 2,
+        executionOrder: ["Profanity Reviewer", "General Reviewer"],
+        reviewerDurations: [],
+        opinions: [],
+        opinionSummaries: [],
+        agreementMatrix: [],
+        disagreementMatrix: [],
+        highestConfidenceReviewer: "Profanity Reviewer",
+        lowestConfidenceReviewer: "Profanity Reviewer",
+        conflictingArticles: [],
+        supportingEvidenceOverlap: [],
+        knowledgeOverlap: [],
+        confidenceDistribution: {
+          minimum: 0.9,
+          maximum: 0.9,
+          average: 0.9,
+          median: 0.9,
+          spread: 0,
+          buckets: {
+            low: 0,
+            medium: 0,
+            high: 0,
+            critical: 1,
+          },
+        },
+        consensusScore: 1,
+        metrics: {
+          agreement: 1,
+          disagreement: 0,
+          averageConfidence: 0.9,
+          participation: 1,
+          articleOverlap: 1,
+          knowledgeOverlap: 1,
+          evidenceOverlap: 1,
+          consensusPercentage: 1,
+        },
+      } as never,
+      winningReviewer: {
+        reviewerId: "profanity",
+        reviewerName: "Profanity Reviewer",
+        status: "accept",
+        confidence: 0.9,
+      },
+      winningOpinion: {
+        reviewerId: "profanity",
+        reviewerName: "Profanity Reviewer",
+        moduleId: "profanity",
+        moduleTitle: "Profanity",
+        applicable: true,
+        status: "accept",
+        confidence: 0.9,
+        reasoning: "supported",
+        supportingEvidence: ["quote"],
+        supportingKnowledge: {
+          lessons: ["lesson-1"],
+          blueprints: ["blueprint-1"],
+          patterns: ["pattern-1"],
+          relationships: ["relationship-1"],
+          cases: ["case-1"],
+          precedents: ["precedent-1"],
+        },
+        suggestedArticles: [4],
+        rejectedArticles: [],
+        counterargument: "none",
+        riskLevel: "critical",
+        escalationRecommendation: "No escalation required; specialist opinion is stable.",
+        needsHumanReview: false,
+        independence: "independent",
+        durationMs: 0,
+      },
+      winningOpinionIndex: 0,
+      winningReason: "supported",
+      winningEvidence: ["quote"],
+      winningKnowledge: {
+        lessons: ["lesson-1"],
+        blueprints: ["blueprint-1"],
+        patterns: ["pattern-1"],
+        precedents: ["precedent-1"],
+        cases: ["case-1"],
+        relationships: ["relationship-1"],
+      },
+      winningLessons: ["lesson-1"],
+      winningBlueprints: ["blueprint-1"],
+      winningPatterns: ["pattern-1"],
+      winningPrecedents: ["precedent-1"],
+      winningCases: ["case-1"],
+      winningRelationships: ["relationship-1"],
+      winningArticle: 4,
+      finalArticle: 4,
+      rejectedReviewers: [],
+      rejectedReasons: [],
+      confidence: 0.9,
+      confidenceAdjustment: 1,
+      consensusScore: 1,
+      agreementMatrix: [],
+      disagreementMatrix: [],
+      confidenceDistribution: {
+        minimum: 0.9,
+        maximum: 0.9,
+        average: 0.9,
+        median: 0.9,
+        spread: 0,
+        buckets: {
+          low: 0,
+          medium: 0,
+          high: 0,
+          critical: 1,
+        },
+      },
+      metrics: {
+        agreement: 1,
+        disagreement: 0,
+        averageConfidence: 0.9,
+        participation: 1,
+        articleOverlap: 1,
+        knowledgeOverlap: 1,
+        evidenceOverlap: 1,
+        consensusPercentage: 1,
+      },
+      conflicts: [],
+      needsHumanReview: false,
+      escalationRecommendation: "No escalation required; arbitration consensus is stable.",
+      decisionExplanation: "Winning reviewer: Profanity Reviewer | Winning status: accept | Winning article: 4 | Consensus score: 1.000000 | Confidence adjustment: 1.000000 | Final confidence: 0.900000 | Escalation: not required",
+      decisionDurationMs: 0,
+      finalDecisionStatus: "accept",
+    },
+  });
+
+  assert.equal(arbitrationRecord.stageName, "arbitration");
+  assert.equal(arbitrationRecord.stageOrder, 11);
+  assert.equal((arbitrationRecord.payloadJson as Record<string, unknown>).winning_article, 4);
+}
+
 async function main(): Promise<void> {
   await testRecorderDisabledIsNoOp();
   await testRecorderEnabledPersistsRecords();
   testOrderingAndRendering();
   await testStageBuildersHandleZeroCounts();
   testReviewerDebateStageBuilder();
+  testArbitrationStageBuilder();
   console.log("✓ V3 inspection recorder, loader, and renderer behave correctly");
 }
 

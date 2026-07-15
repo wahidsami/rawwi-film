@@ -42,6 +42,7 @@ import { v3InspectionRecorder } from "../inspection/index.js";
 import { buildV3InspectionChunkFindingKey } from "../inspection/inspectionKeys.js";
 import {
   buildV3FindingMapperInspectionRecord,
+  buildV3ArbitrationInspectionRecord,
   buildV3KnowledgeMatchingInspectionRecord,
   buildV3LegalReviewInspectionRecord,
   buildV3KnowledgeRegistryInspectionRecord,
@@ -53,6 +54,7 @@ import { createKnowledgeRegistry, createKnowledgeRegistryFromEntries, defaultKno
 import { createKnowledgeRankingReport } from "../reviewerKnowledge/knowledgeRanking/index.js";
 import { selectReviewerKnowledgePacks } from "../reviewerKnowledge/reviewerKnowledgeSelector.js";
 import { buildReviewerDebatePackage } from "../reviewerDebate/index.js";
+import { buildArbitrationDecisionPackage } from "../arbitration/index.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -602,6 +604,13 @@ export async function runV3RuntimeAdapter(
         legalModules,
         reviewerReasoningEngine,
       });
+      const arbitrationStartedAt = Date.now();
+      const arbitration = Object.freeze({
+        ...buildArbitrationDecisionPackage({
+          debate: reviewerDebate,
+        }),
+        decisionDurationMs: Date.now() - arbitrationStartedAt,
+      });
       const knowledgeRankingRecord = buildV3KnowledgeRankingInspectionRecord({
         base: {
           jobId: input.jobId,
@@ -696,6 +705,17 @@ export async function runV3RuntimeAdapter(
         pipelineVersion,
         debate: reviewerDebate,
       });
+      const arbitrationRecord = buildV3ArbitrationInspectionRecord({
+        base: {
+          jobId: input.jobId,
+          chunkId: input.chunkId,
+          findingKey,
+          createdAt: inspectionTimestamp,
+        },
+        analysisEngine: "v3",
+        pipelineVersion,
+        arbitration,
+      });
       const mappingRecord = buildV3FindingMapperInspectionRecord({
         base: {
           jobId: input.jobId,
@@ -726,6 +746,7 @@ export async function runV3RuntimeAdapter(
         knowledgeRecord,
         legalRecord,
         debateRecord,
+        arbitrationRecord,
         mappingRecord,
       ]);
     } catch (error) {

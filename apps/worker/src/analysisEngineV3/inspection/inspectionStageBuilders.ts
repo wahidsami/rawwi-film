@@ -2,6 +2,7 @@ import type { V3InspectionRecordInput, V3InspectionStageName, V3InspectionStageO
 import type { KnowledgeRegistryReport } from "../reviewerKnowledge/knowledgeRegistry/index.js";
 import type { KnowledgeRankingReport } from "../reviewerKnowledge/knowledgeRanking/index.js";
 import type { ReviewerDebatePackage } from "../reviewerDebate/index.js";
+import type { ArbitrationDecisionPackage } from "../arbitration/index.js";
 
 type V3InspectionStageBaseInput = Readonly<{
   jobId: string;
@@ -336,5 +337,51 @@ export function buildV3ReviewerDebateInspectionRecord(input: Readonly<{
     metrics: input.debate.metrics,
     shared_package: input.debate.sharedPackage,
     primary_decision: input.debate.primaryDecision,
+  });
+}
+
+export function buildV3ArbitrationInspectionRecord(input: Readonly<{
+  base: V3InspectionStageBaseInput;
+  analysisEngine: string;
+  pipelineVersion: string;
+  arbitration: ArbitrationDecisionPackage;
+}>): V3InspectionRecordInput {
+  return createStageRecord(input.base, 11, "arbitration", {
+    analysis_engine: input.analysisEngine,
+    pipeline_version: input.pipelineVersion,
+    reviewer_count: input.arbitration.debate.reviewerCount,
+    execution_order: [...input.arbitration.debate.executionOrder],
+    reviewer_durations: [...input.arbitration.debate.reviewerDurations],
+    opinion_summaries: [...input.arbitration.debate.opinionSummaries],
+    agreement_matrix: [...input.arbitration.agreementMatrix],
+    disagreement_matrix: [...input.arbitration.disagreementMatrix],
+    confidence_distribution: input.arbitration.confidenceDistribution,
+    consensus_score: input.arbitration.consensusScore,
+    metrics: input.arbitration.metrics,
+    winning_reviewer_name: input.arbitration.winningReviewer.reviewerName,
+    winning_reviewer: input.arbitration.winningReviewer,
+    winning_opinion_index: input.arbitration.winningOpinionIndex,
+    winning_reason: input.arbitration.winningReason,
+    winning_evidence: [...input.arbitration.winningEvidence],
+    winning_knowledge: input.arbitration.winningKnowledge,
+    winning_lessons: [...input.arbitration.winningLessons],
+    winning_blueprints: [...input.arbitration.winningBlueprints],
+    winning_patterns: [...input.arbitration.winningPatterns],
+    winning_precedents: [...input.arbitration.winningPrecedents],
+    winning_cases: [...input.arbitration.winningCases],
+    winning_relationships: [...input.arbitration.winningRelationships],
+    winning_article: input.arbitration.winningArticle,
+    final_article: input.arbitration.finalArticle,
+    rejected_reviewers: [...input.arbitration.rejectedReviewers],
+    rejected_reasons: [...input.arbitration.rejectedReasons],
+    confidence: input.arbitration.confidence,
+    confidence_adjustment: input.arbitration.confidenceAdjustment,
+    conflicts: [...input.arbitration.conflicts],
+    needs_human_review: input.arbitration.needsHumanReview,
+    escalation_recommendation: input.arbitration.escalationRecommendation,
+    decision_explanation: input.arbitration.decisionExplanation,
+    decision_duration_ms: input.arbitration.decisionDurationMs,
+    final_decision_status: input.arbitration.finalDecisionStatus,
+    final_decision_package: input.arbitration,
   });
 }
