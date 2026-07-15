@@ -84,8 +84,10 @@ function buildMockOpenAIResponse(): string {
 
 async function createMockOpenAIEndpoint(): Promise<{
   baseURL: string;
+  getCapturedRequestBody: () => unknown;
   close: () => Promise<void>;
 }> {
+  let capturedRequestBody: unknown = null;
   const server = createServer((request, response) => {
     if (request.method !== "POST") {
       response.statusCode = 405;
@@ -93,32 +95,44 @@ async function createMockOpenAIEndpoint(): Promise<{
       return;
     }
 
-    const body = buildMockOpenAIResponse();
-    response.statusCode = 200;
-    response.setHeader("content-type", "application/json");
-    response.end(
-      JSON.stringify({
-        id: "chatcmpl-test",
-        object: "chat.completion",
-        created: Math.floor(Date.now() / 1000),
-        model: "gpt-4.1",
-        choices: [
-          {
-            index: 0,
-            message: {
-              role: "assistant",
-              content: body,
+    const requestChunks: Buffer[] = [];
+    request.on("data", (chunk) => {
+      requestChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    request.on("end", () => {
+      const requestBody = Buffer.concat(requestChunks).toString("utf8");
+      try {
+        capturedRequestBody = JSON.parse(requestBody);
+      } catch {
+        capturedRequestBody = requestBody;
+      }
+      const body = buildMockOpenAIResponse();
+      response.statusCode = 200;
+      response.setHeader("content-type", "application/json");
+      response.end(
+        JSON.stringify({
+          id: "chatcmpl-test",
+          object: "chat.completion",
+          created: Math.floor(Date.now() / 1000),
+          model: "gpt-4.1",
+          choices: [
+            {
+              index: 0,
+              message: {
+                role: "assistant",
+                content: body,
+              },
+              finish_reason: "stop",
             },
-            finish_reason: "stop",
+          ],
+          usage: {
+            prompt_tokens: 10,
+            completion_tokens: 20,
+            total_tokens: 30,
           },
-        ],
-        usage: {
-          prompt_tokens: 10,
-          completion_tokens: 20,
-          total_tokens: 30,
-        },
-      }),
-    );
+        }),
+      );
+    });
   });
 
   await new Promise<void>((resolve) => {
@@ -129,6 +143,7 @@ async function createMockOpenAIEndpoint(): Promise<{
   const baseURL = `http://127.0.0.1:${address.port}/v1`;
   return {
     baseURL,
+    getCapturedRequestBody: () => capturedRequestBody,
     close: () =>
       new Promise<void>((resolve, reject) => {
         server.close((error) => (error ? reject(error) : resolve()));
@@ -197,10 +212,24 @@ async function testReligionModuleIsReachableAtRuntime(): Promise<void> {
     });
 
     const gcamMapping = result.truthLayerMeta.gcam_mapping as { status?: string };
+    const capturedRequestBody = endpoint.getCapturedRequestBody() as {
+      messages?: Array<{ content?: string }>;
+      response_format?: { type?: string };
+    } | null;
     assert.equal(result.diagnostics.subjectModuleId, "v3_01_religion");
     assert.equal(result.truthLayerMeta.subject_module_id, "v3_01_religion");
     assert.equal(result.findings.length > 0, true, "religion module should be reachable at runtime");
     assert.equal(gcamMapping.status, "MAPPED");
+    assert(capturedRequestBody, "OpenAI request body should be captured");
+    assert.equal(capturedRequestBody?.response_format?.type, "json_object");
+    assert(
+      capturedRequestBody?.messages?.[0]?.content?.includes('"candidates"'),
+      "system prompt should explicitly request evidence candidates",
+    );
+    assert(
+      capturedRequestBody?.messages?.[0]?.content?.includes("primaryCandidateIndex"),
+      "system prompt should explicitly request the primary candidate index",
+    );
     console.log("✓ religion module reachable through runtime adapter");
   } finally {
     await endpoint.close();
