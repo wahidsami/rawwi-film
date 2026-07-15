@@ -16,3 +16,4 @@ export * from "./modules/nationalSecurity/index.js";
 export * from "./modules/children/index.js";
 export * from "./modules/violence/index.js";
 export * from "./modules/sexuality/index.js";
+export * from "./modules/drugs/index.js";
