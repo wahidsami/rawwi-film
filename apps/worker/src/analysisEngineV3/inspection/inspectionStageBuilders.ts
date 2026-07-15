@@ -1,4 +1,5 @@
 import type { V3InspectionRecordInput, V3InspectionStageName, V3InspectionStageOrder } from "./inspectionTypes.js";
+import type { KnowledgeRegistryReport } from "../reviewerKnowledge/knowledgeRegistry/index.js";
 
 type V3InspectionStageBaseInput = Readonly<{
   jobId: string;
@@ -246,5 +247,37 @@ export function buildV3FinalReportInspectionRecord(input: Readonly<{
     job_status: input.jobStatus,
     report_summary: input.reportSummary,
     report_html: input.reportHtml,
+  });
+}
+
+export function buildV3KnowledgeRegistryInspectionRecord(input: Readonly<{
+  base: V3InspectionStageBaseInput;
+  analysisEngine: string;
+  pipelineVersion: string;
+  registry: KnowledgeRegistryReport;
+  stageTimings?: readonly unknown[];
+}>): V3InspectionRecordInput {
+  return createStageRecord(input.base, 8, "knowledge_registry", {
+    analysis_engine: input.analysisEngine,
+    pipeline_version: input.pipelineVersion,
+    registry_root_dir: input.registry.rootDir,
+    registry_hash: input.registry.hash,
+    registry_total_count: input.registry.statistics.totalCount,
+    registry_kind_counts: input.registry.statistics.kindCounts,
+    registry_source_counts: input.registry.statistics.sourceCounts,
+    registry_domain_counts: input.registry.statistics.domainCounts,
+    traceability_coverage: input.registry.statistics.traceabilityCoverage,
+    explainability_coverage: input.registry.statistics.explainabilityCoverage,
+    duplicate_id_count: input.registry.statistics.duplicateIdCount,
+    missing_metadata_count: input.registry.statistics.missingMetadataCount,
+    missing_reference_count: input.registry.statistics.missingReferenceCount,
+    circular_reference_count: input.registry.statistics.circularReferenceCount,
+    orphan_count: input.registry.statistics.orphanCount,
+    coverage_percent: input.registry.statistics.coveragePercent,
+    production_readiness: input.registry.statistics.productionReadiness,
+    validation_valid: input.registry.validation.valid,
+    validation_issues: [...input.registry.validation.issues],
+    sample_registry_keys: input.registry.list().slice(0, 50).map((entry) => entry.registryKey),
+    stage_timings: [...(input.stageTimings ?? [])],
   });
 }

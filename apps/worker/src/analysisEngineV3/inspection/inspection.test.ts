@@ -10,6 +10,7 @@ import {
   buildV3AggregationInspectionRecord,
   buildV3FinalReportInspectionRecord,
   buildV3LegalReviewInspectionRecord,
+  buildV3KnowledgeRegistryInspectionRecord,
   buildV3SemanticGenerationInspectionRecord,
 } from "./inspectionStageBuilders.js";
 
@@ -191,6 +192,46 @@ async function testStageBuildersHandleZeroCounts(): Promise<void> {
     reportHtml: "<html />",
   });
 
+  const knowledgeRegistryRecord = buildV3KnowledgeRegistryInspectionRecord({
+    base: {
+      jobId: "job-zero",
+      chunkId: "chunk-zero",
+      findingKey: "job:job-zero:chunk:chunk-zero",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+    analysisEngine: "v3",
+    pipelineVersion: "v2",
+    registry: {
+      rootDir: "/tmp/reviewerKnowledge",
+      entries: [],
+      validation: {
+        valid: true,
+        issues: [],
+        hash: "registry-validation",
+      },
+      statistics: {
+        totalCount: 0,
+        kindCounts: {},
+        sourceCounts: {},
+        domainCounts: {},
+        traceabilityCoverage: 100,
+        explainabilityCoverage: 100,
+        duplicateIdCount: 0,
+        missingMetadataCount: 0,
+        missingReferenceCount: 0,
+        circularReferenceCount: 0,
+        orphanCount: 0,
+        coveragePercent: 100,
+        productionReadiness: 100,
+        hash: "registry-statistics",
+      },
+      hash: "registry-hash",
+      list: () => [],
+      get: () => null,
+      listByKind: () => [],
+    },
+  });
+
   assert.equal(semanticRecord.payloadJson.semantic_candidate_count, 0);
   assert.equal((semanticRecord.payloadJson.semantic_candidates as readonly unknown[]).length, 0);
   assert.equal(legalRecord.payloadJson.accepted_count, 0);
@@ -199,16 +240,18 @@ async function testStageBuildersHandleZeroCounts(): Promise<void> {
   assert.equal(aggregationRecord.payloadJson.report_findings, 0);
   assert.equal(finalReportRecord.payloadJson.final_finding_count, 0);
   assert.equal(finalReportRecord.payloadJson.observation_count, 0);
+  assert.equal(knowledgeRegistryRecord.payloadJson.registry_total_count, 0);
+  assert.equal(knowledgeRegistryRecord.payloadJson.validation_valid, true);
 
   const recorder = createV3InspectionRecorder({
     enabled: true,
     persist: async (records) => {
-      assert.equal(records.length, 4);
+      assert.equal(records.length, 5);
     },
     now: () => "2026-01-01T00:00:00.000Z",
   });
 
-  await recorder.recordStages([semanticRecord, legalRecord, aggregationRecord, finalReportRecord]);
+  await recorder.recordStages([semanticRecord, legalRecord, aggregationRecord, finalReportRecord, knowledgeRegistryRecord]);
 }
 
 async function main(): Promise<void> {

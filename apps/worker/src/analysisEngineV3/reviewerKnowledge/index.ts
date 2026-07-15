@@ -13,6 +13,7 @@ export * from "./reviewerKnowledgeValidator.js";
 export * from "./academy/index.js";
 export * from "./academyManifest/index.js";
 export * from "./gcamKnowledge/index.js";
+export * from "./knowledgeRegistry/index.js";
 export * from "../reviewerQuestions/index.js";
 export * from "./linter/index.js";
 export * from "../reviewerMethodology/index.js";

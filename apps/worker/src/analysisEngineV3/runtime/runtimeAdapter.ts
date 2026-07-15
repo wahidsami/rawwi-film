@@ -42,8 +42,10 @@ import {
   buildV3FindingMapperInspectionRecord,
   buildV3KnowledgeMatchingInspectionRecord,
   buildV3LegalReviewInspectionRecord,
+  buildV3KnowledgeRegistryInspectionRecord,
   buildV3SemanticGenerationInspectionRecord,
 } from "../inspection/inspectionStageBuilders.js";
+import { createKnowledgeRegistry, createKnowledgeRegistryFromEntries, defaultKnowledgeRegistryRoot } from "../reviewerKnowledge/knowledgeRegistry/index.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -468,6 +470,16 @@ export async function runV3RuntimeAdapter(
   if (config.V3_INSPECTION_MODE) {
     try {
       const inspectionTimestamp = new Date().toISOString();
+      let knowledgeRegistry;
+      try {
+        knowledgeRegistry = createKnowledgeRegistry();
+      } catch (error) {
+        logger.warn("V3 knowledge registry load failed", {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack ?? null : null,
+        });
+        knowledgeRegistry = createKnowledgeRegistryFromEntries([], defaultKnowledgeRegistryRoot());
+      }
       const reasoningTraces = buildV3ReasoningTrace({
         analysisResponse,
         findings,
@@ -510,6 +522,18 @@ export async function runV3RuntimeAdapter(
         candidateCount: semanticCandidates.length,
         candidateIds: semanticCandidates.map((candidate) => String(candidate.index)),
         candidates: semanticCandidates,
+        stageTimings: analysisResponse.diagnostics.stageTimings as readonly unknown[],
+      });
+      const knowledgeRegistryRecord = buildV3KnowledgeRegistryInspectionRecord({
+        base: {
+          jobId: input.jobId,
+          chunkId: input.chunkId,
+          findingKey,
+          createdAt: inspectionTimestamp,
+        },
+        analysisEngine: "v3",
+        pipelineVersion,
+        registry: knowledgeRegistry,
         stageTimings: analysisResponse.diagnostics.stageTimings as readonly unknown[],
       });
       const knowledgeAssetsUsed = Object.freeze([
@@ -607,6 +631,7 @@ export async function runV3RuntimeAdapter(
         droppedCount: Math.max(0, (legalDecision.finding ? 1 : 0) - findings.length),
       });
       await v3InspectionRecorder.recordStages([
+        knowledgeRegistryRecord,
         semanticRecord,
         knowledgeRecord,
         legalRecord,

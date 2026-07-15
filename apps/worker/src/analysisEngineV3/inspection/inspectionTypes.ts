@@ -6,6 +6,7 @@ export const V3_INSPECTION_STAGE_ORDER = [
   5,
   6,
   7,
+  8,
 ] as const;
 
 export type V3InspectionStageOrder = (typeof V3_INSPECTION_STAGE_ORDER)[number];
@@ -18,6 +19,7 @@ export const V3_INSPECTION_STAGE_NAMES = Object.freeze({
   5: "persistence",
   6: "aggregation",
   7: "final_report",
+  8: "knowledge_registry",
 } as const);
 
 export type V3InspectionStageName = (typeof V3_INSPECTION_STAGE_NAMES)[V3InspectionStageOrder];
