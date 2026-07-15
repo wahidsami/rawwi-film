@@ -18,6 +18,9 @@ import { DRUGS_MODULE } from "../legal/modules/drugs/drugsModule.js";
 import { SOCIETY_MODULE } from "../legal/modules/society/societyModule.js";
 import { FAMILY_VALUES_MODULE } from "../legal/modules/familyValues/familyValuesModule.js";
 import { HISTORY_MODULE } from "../legal/modules/history/historyModule.js";
+import { POLITICS_MODULE } from "../legal/modules/politics/politicsModule.js";
+import { CRIME_MODULE } from "../legal/modules/crime/crimeModule.js";
+import { TRAVEL_MODULE } from "../legal/modules/travel/travelModule.js";
 
 export type AnalysisEngineConfig = Readonly<{
   reasoningContract: V3PromptReasoningContract;
@@ -136,7 +139,7 @@ function buildSemanticLayer(): V3PromptSemanticLayer {
 }
 
 export function createDefaultAnalysisEngineConfig(overrides?: Partial<AnalysisEngineConfig>): AnalysisEngineConfig {
-  const registry = overrides?.registry ?? new Registry().register(PROFANITY_MODULE).register(RELIGION_MODULE).register(STATE_LEADERSHIP_MODULE).register(NATIONAL_SECURITY_MODULE).register(CHILDREN_MODULE).register(VIOLENCE_MODULE).register(SEXUALITY_MODULE).register(DRUGS_MODULE).register(SOCIETY_MODULE).register(FAMILY_VALUES_MODULE).register(HISTORY_MODULE);
+  const registry = overrides?.registry ?? new Registry().register(PROFANITY_MODULE).register(RELIGION_MODULE).register(STATE_LEADERSHIP_MODULE).register(NATIONAL_SECURITY_MODULE).register(CHILDREN_MODULE).register(VIOLENCE_MODULE).register(SEXUALITY_MODULE).register(DRUGS_MODULE).register(SOCIETY_MODULE).register(FAMILY_VALUES_MODULE).register(HISTORY_MODULE).register(POLITICS_MODULE).register(CRIME_MODULE).register(TRAVEL_MODULE);
   return {
     reasoningContract: overrides?.reasoningContract ?? buildReasoningContract(),
     decisionGraph: overrides?.decisionGraph ?? buildDecisionGraph(),

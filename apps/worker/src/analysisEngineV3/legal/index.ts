@@ -20,3 +20,6 @@ export * from "./modules/drugs/index.js";
 export * from "./modules/society/index.js";
 export * from "./modules/familyValues/index.js";
 export * from "./modules/history/index.js";
+export * from "./modules/politics/index.js";
+export * from "./modules/crime/index.js";
+export * from "./modules/travel/index.js";
