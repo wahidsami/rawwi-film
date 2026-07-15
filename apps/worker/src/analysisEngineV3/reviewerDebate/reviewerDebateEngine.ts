@@ -462,5 +462,6 @@ export function buildReviewerDebatePackage(input: ReviewerDebateEngineInput): Re
     confidenceDistribution,
     consensusScore,
     metrics,
+    gptAssistant: input.gptAssistant ?? null,
   });
 }

@@ -1,6 +1,6 @@
 import type { LegalContextResult, LegalEvidenceCandidate, LegalEvidenceResult, LegalNarrativeResult, LegalSemanticResult } from "../legal/legalTypes.js";
 import type { V3PromptJsonObject, V3PromptJsonValue } from "../builder/builderTypes.js";
-import type { V3ReasoningResponsePayload } from "./providerTypes.js";
+import type { V3ReasonedDecisionResult, V3ReasoningResponsePayload } from "./providerTypes.js";
 
 function isObject(value: unknown): value is V3PromptJsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -30,6 +30,14 @@ function clampConfidence(value: unknown): number {
 function normalizeList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.map((item) => String(item)).filter((item) => item.trim().length > 0);
+}
+
+function normalizeArticleList(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => Number(item))
+    .filter((item) => Number.isFinite(item))
+    .map((item) => Number(item));
 }
 
 function normalizeNarrativeResult(value: unknown): LegalNarrativeResult {
@@ -124,11 +132,28 @@ function normalizeContextResult(value: unknown): LegalContextResult {
   });
 }
 
+function normalizeReasonedDecisionResult(value: unknown): V3ReasonedDecisionResult {
+  const input = isObject(value) ? value : {};
+  return Object.freeze({
+    reasoning: String(input.reasoning ?? input.why ?? ""),
+    alternativeInterpretations: Object.freeze(normalizeList(input.alternativeInterpretations ?? input.alternative_interpretations)),
+    confidence: clampConfidence(input.confidence),
+    supportingEvidence: Object.freeze(normalizeList(input.supportingEvidence ?? input.supporting_evidence)),
+    contradictingEvidence: Object.freeze(normalizeList(input.contradictingEvidence ?? input.contradicting_evidence)),
+    applicableArticles: Object.freeze(normalizeArticleList(input.applicableArticles ?? input.applicable_articles)),
+    rejectedArticles: Object.freeze(normalizeArticleList(input.rejectedArticles ?? input.rejected_articles)),
+    riskAnalysis: String(input.riskAnalysis ?? input.risk_analysis ?? ""),
+    narrativeAnalysis: String(input.narrativeAnalysis ?? input.narrative_analysis ?? ""),
+    humanLikeExplanation: String(input.humanLikeExplanation ?? input.human_like_explanation ?? ""),
+  });
+}
+
 export function mapV3ProviderResponse(rawResponse: string): Readonly<{
   narrative: LegalNarrativeResult;
   evidence: LegalEvidenceResult;
   semantic: LegalSemanticResult;
   context: LegalContextResult;
+  reasonedDecision: V3ReasonedDecisionResult;
 }> {
   const parsed = extractJson(rawResponse);
   const payload = isObject(parsed) ? (parsed.reasoning && isObject(parsed.reasoning) ? parsed.reasoning : parsed) : {};
@@ -139,5 +164,11 @@ export function mapV3ProviderResponse(rawResponse: string): Readonly<{
     evidence: normalizeEvidenceResult(source.evidence ?? source.evidence_result ?? source.evidenceResult),
     semantic: normalizeSemanticResult(source.semantic ?? source.semantic_result ?? source.semanticResult),
     context: normalizeContextResult(source.context ?? source.context_result ?? source.contextResult),
+    reasonedDecision: normalizeReasonedDecisionResult(
+      source.reasoned_decision ??
+      source.reasonedDecision ??
+      source.reasoned_decision_result ??
+      source.reasonedDecisionResult
+    ),
   });
 }

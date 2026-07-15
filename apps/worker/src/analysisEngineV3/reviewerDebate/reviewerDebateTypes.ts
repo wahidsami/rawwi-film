@@ -3,6 +3,24 @@ import type { LegalDecision } from "../legal/legalDecision.js";
 import type { LegalModule } from "../legal/legalModule.js";
 import type { ReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
 
+export type GPTReviewerAssistant = Readonly<{
+  providerName: string;
+  modelName: string;
+  promptHash: string;
+  responseHash: string;
+  latencyMs: number;
+  reasoning: string;
+  alternativeInterpretations: readonly string[];
+  confidence: number;
+  supportingEvidence: readonly string[];
+  contradictingEvidence: readonly string[];
+  applicableArticles: readonly number[];
+  rejectedArticles: readonly number[];
+  riskAnalysis: string;
+  narrativeAnalysis: string;
+  humanLikeExplanation: string;
+}>;
+
 export type ReviewerDebateKnowledgeSupport = Readonly<{
   lessons: readonly string[];
   blueprints: readonly string[];
@@ -109,10 +127,12 @@ export type ReviewerDebatePackage = Readonly<{
   confidenceDistribution: ReviewerDebateConfidenceDistribution;
   consensusScore: number;
   metrics: ReviewerDebateMetrics;
+  gptAssistant?: GPTReviewerAssistant | null;
 }>;
 
 export type ReviewerDebateEngineInput = Readonly<{
   analysisResponse: AnalysisResponse;
   legalModules: readonly LegalModule[];
   reviewerReasoningEngine: ReviewerReasoningEnginePayload;
+  gptAssistant?: GPTReviewerAssistant | null;
 }>;

@@ -72,6 +72,18 @@ function buildMockOpenAIResponse(): string {
       narrativeContext: "Direct hostile dialogue about religion.",
       confidence: 0.95,
     },
+    reasoned_decision: {
+      reasoning: "The quote directly supports the semantic conclusion.",
+      alternative_interpretations: ["It could be commentary, but the context supports a direct attack."],
+      supporting_evidence: ["النبي كذاب والدين باطل"],
+      contradicting_evidence: [],
+      applicable_articles: [1, 2, 3],
+      rejected_articles: [17],
+      risk_analysis: "Low ambiguity because the evidence is explicit.",
+      narrative_analysis: "Direct hostile dialogue with no blocking exception.",
+      human_like_explanation: "A human reviewer would likely treat this as a direct religion attack.",
+      confidence: 0.97,
+    },
   };
 
   return JSON.stringify({
@@ -218,6 +230,7 @@ async function testReligionModuleIsReachableAtRuntime(): Promise<void> {
     } | null;
     assert.equal(result.diagnostics.subjectModuleId, "v3_01_religion");
     assert.equal(result.truthLayerMeta.subject_module_id, "v3_01_religion");
+    assert.equal((result.truthLayerMeta as { gpt_assistant?: { reasoning?: string } }).gpt_assistant?.reasoning, "The quote directly supports the semantic conclusion.");
     assert.equal(result.findings.length > 0, true, "religion module should be reachable at runtime");
     assert.equal(Boolean(result.truthLayerMeta.explanation), true, "explanation package should be exposed");
     assert.equal(gcamMapping.status, "MAPPED");
@@ -230,6 +243,10 @@ async function testReligionModuleIsReachableAtRuntime(): Promise<void> {
     assert(
       capturedRequestBody?.messages?.[0]?.content?.includes("primaryCandidateIndex"),
       "system prompt should explicitly request the primary candidate index",
+    );
+    assert(
+      capturedRequestBody?.messages?.[0]?.content?.includes("humanLikeExplanation"),
+      "system prompt should explicitly request the GPT reviewer assistant explanation",
     );
     console.log("✓ religion module reachable through runtime adapter");
   } finally {

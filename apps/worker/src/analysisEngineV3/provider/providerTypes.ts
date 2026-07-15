@@ -30,6 +30,19 @@ export type V3ProviderRawResponse = Readonly<{
   responseTimestamp: string | null;
 }>;
 
+export type V3ReasonedDecisionResult = Readonly<{
+  reasoning: string;
+  alternativeInterpretations: readonly string[];
+  confidence: number;
+  supportingEvidence: readonly string[];
+  contradictingEvidence: readonly string[];
+  applicableArticles: readonly number[];
+  rejectedArticles: readonly number[];
+  riskAnalysis: string;
+  narrativeAnalysis: string;
+  humanLikeExplanation: string;
+}>;
+
 export type V3Provider = Readonly<{
   name: V3ProviderName;
   callJudgeRaw: (input: V3ProviderCallJudgeRawInput) => Promise<V3ProviderRawResponse>;
@@ -56,6 +69,7 @@ export type V3ProviderReasoningResult = Readonly<{
   evidence: LegalEvidenceResult;
   semantic: LegalSemanticResult;
   context: LegalContextResult;
+  reasonedDecision: V3ReasonedDecisionResult;
 }>;
 
 export type V3ReasoningResponsePayload = Readonly<{
@@ -71,6 +85,10 @@ export type V3ReasoningResponsePayload = Readonly<{
   context?: V3PromptJsonObject | null;
   context_result?: V3PromptJsonObject | null;
   contextResult?: V3PromptJsonObject | null;
+  reasoned_decision?: V3PromptJsonObject | null;
+  reasonedDecision?: V3PromptJsonObject | null;
+  reasoned_decision_result?: V3PromptJsonObject | null;
+  reasonedDecisionResult?: V3PromptJsonObject | null;
   reasoning?: V3PromptJsonObject | null;
   metadata?: V3PromptJsonObject | null;
   [key: string]: V3PromptJsonValue | undefined;

@@ -79,6 +79,7 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     evidence: mapped.evidence,
     semantic: mapped.semantic,
     context: mapped.context,
+    reasonedDecision: mapped.reasonedDecision,
   });
 }
 

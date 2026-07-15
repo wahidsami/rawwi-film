@@ -1,7 +1,7 @@
 import type { V3RuntimeDiagnostics } from "./runtimeDiagnostics.js";
 import type { V3RuntimeAdapterResult } from "./runtimeTypes.js";
 
-export function buildRuntimeTruthLayerMeta(result: Pick<V3RuntimeAdapterResult, "analysisResponse" | "findings" | "diagnostics">): Record<string, unknown> {
+export function buildRuntimeTruthLayerMeta(result: Pick<V3RuntimeAdapterResult, "analysisResponse" | "findings" | "diagnostics"> & Readonly<{ gptAssistant?: Record<string, unknown> | null }>): Record<string, unknown> {
   return {
     architecture: "v3_runtime_adapter",
     stage: "reasoning",
@@ -20,6 +20,7 @@ export function buildRuntimeTruthLayerMeta(result: Pick<V3RuntimeAdapterResult, 
     chunk_hash: result.diagnostics.chunkHash,
     finding_count: result.diagnostics.findingCount,
     findings_count: result.findings.length,
+    gpt_assistant: result.gptAssistant ?? null,
   };
 }
 

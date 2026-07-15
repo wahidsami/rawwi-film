@@ -114,6 +114,18 @@ function testResponseMapper(): void {
           confidence: 0.88,
           notes: [],
         },
+        reasoned_decision: {
+          reasoning: "The line is explicit profanity.",
+          alternative_interpretations: ["It could be quoted language, but the scene supports literal use."],
+          supporting_evidence: ["damn"],
+          contradicting_evidence: [],
+          applicable_articles: [4],
+          rejected_articles: [17],
+          risk_analysis: "Low risk because the evidence is direct.",
+          narrative_analysis: "Direct dialogue with no exception cues.",
+          human_like_explanation: "A human reviewer would treat this as a straightforward profanity case.",
+          confidence: 0.94,
+        },
       },
     }),
   );
@@ -122,6 +134,7 @@ function testResponseMapper(): void {
   assert.equal(mapped.evidence.candidates[0]?.text, "damn");
   assert.equal(mapped.semantic.semanticMeaning, "The evidence is direct dialogue.");
   assert.equal(mapped.context.neighboringSentences.length, 2);
+  assert.equal(mapped.reasonedDecision.reasoning, "The line is explicit profanity.");
   console.log("✓ response mapper normalizes GPT JSON");
 }
 
@@ -139,6 +152,18 @@ async function testProviderFlowWithMockProvider(): Promise<void> {
           evidence: { candidates: [{ text: "damn", startOffset: 10, endOffset: 14, confidence: 0.99, source: "chunk" }], primaryCandidateIndex: 0, admissible: true, confidence: 0.99 },
           semantic: { semanticMeaning: "direct dialogue", narrativeIntent: "dialogue", conversationRole: "speaker", sceneRole: "dialogue scene", emotion: "neutral", riskContext: "medium", confidence: 0.9 },
           context: { localContext: "A: damn, stop that.", chunkContext: "chunk_index=1", neighboringSentences: ["Before", "After"], narrativeContext: "dialogue", confidence: 0.88 },
+          reasoned_decision: {
+            reasoning: "The line is explicit profanity.",
+            alternative_interpretations: ["It could be quoted language, but the scene supports literal use."],
+            supporting_evidence: ["damn"],
+            contradicting_evidence: [],
+            applicable_articles: [4],
+            rejected_articles: [17],
+            risk_analysis: "Low risk because the evidence is direct.",
+            narrative_analysis: "Direct dialogue with no exception cues.",
+            human_like_explanation: "A human reviewer would treat this as a straightforward profanity case.",
+            confidence: 0.94,
+          },
         }),
         finishReason: "stop",
         usage: null,
@@ -159,6 +184,7 @@ async function testProviderFlowWithMockProvider(): Promise<void> {
   assert.equal(result.promptHash, buildV3RenderedPrompt(input).promptHash);
   assert.equal(result.narrative.dialogue, true);
   assert.equal(result.evidence.candidates[0]?.text, "damn");
+  assert.equal(result.reasonedDecision.reasoning, "The line is explicit profanity.");
   assert.equal(result.rawResponse.responseId, "resp_123");
   console.log("✓ provider flow uses the abstraction and preserves hashes");
 }

@@ -163,13 +163,13 @@ function defaultOutputSchema(): V3PromptOutputSchema {
       { name: "evidence", description: "Evidence result", required: true },
       { name: "semantic", description: "Semantic result", required: true },
       { name: "context", description: "Context result", required: true },
-      { name: "reasoned_decision", description: "Reviewer decision with why, evidence, counterargument, applicable articles, rejected articles, and confidence.", required: true },
+      { name: "reasoned_decision", description: "GPT Reviewer Assistant reasoning package with reasoning, alternative interpretations, supporting and contradicting evidence, applicable and rejected articles, risk analysis, narrative analysis, human-like explanation, and confidence.", required: true },
     ],
     notes: [
       "The evidence object must include candidates and primaryCandidateIndex.",
       "Each evidence candidate must include the compatibility fields required by the existing mapper: text, startOffset, endOffset, confidence, source, and notes.",
       "To preserve downstream compatibility, candidate objects should also include id, quote, offsetStart, offsetEnd, concepts, entities, and reason.",
-      "The reasoned decision must answer why, evidence, counterargument, applicable_articles, rejected_articles, and confidence.",
+      "The reasoned decision must answer reasoning, alternativeInterpretations, supportingEvidence, contradictingEvidence, applicableArticles, rejectedArticles, riskAnalysis, narrativeAnalysis, humanLikeExplanation, and confidence.",
       "Use cases, precedents, lessons, blueprints, patterns, and relationships as reviewer memory, not as a substitute for evidence.",
       "Response is mapped into the existing V2 finding model after legal evaluation.",
     ],
@@ -246,11 +246,15 @@ function defaultOutputSchema(): V3PromptOutputSchema {
         confidence: 0.95,
       },
       reasoned_decision: {
-        why: "The quote directly supports the semantic conclusion.",
-        evidence: ["exact screenplay quote"],
-        counterargument: "The line could be read as a joke, but the context supports a direct attack.",
+        reasoning: "The quote directly supports the semantic conclusion.",
+        alternative_interpretations: ["The line could be read as a joke, but the context supports a direct attack."],
+        supporting_evidence: ["exact screenplay quote"],
+        contradicting_evidence: [],
         applicable_articles: [11],
         rejected_articles: [4],
+        risk_analysis: "Low ambiguity because the quote is explicit.",
+        narrative_analysis: "Direct dialogue attack with no blocking exception.",
+        human_like_explanation: "A human reviewer would likely say the same line is explicit and direct.",
         confidence: 0.95,
       },
     },
@@ -393,6 +397,7 @@ export async function runV3RuntimeAdapter(
     await persistAnalysisExecutionSignature(signatureContext, renderedPrompt.prompt, userPrompt);
   }
 
+  const reasoningStartedAt = Date.now();
   const rawResponse = await provider.callJudgeRaw({
     systemPrompt: renderedPrompt.prompt,
     userPrompt,
@@ -403,8 +408,26 @@ export async function runV3RuntimeAdapter(
     maxTokens,
     responseFormat,
   });
+  const reasoningLatencyMs = Date.now() - reasoningStartedAt;
 
   const mapped = mapV3ProviderResponse(rawResponse.rawResponse);
+  const gptAssistant = Object.freeze({
+    providerName: rawResponse.providerName,
+    modelName: rawResponse.modelName,
+    promptHash: renderedPrompt.promptHash,
+    responseHash: sha256(rawResponse.rawResponse),
+    latencyMs: reasoningLatencyMs,
+    reasoning: mapped.reasonedDecision.reasoning,
+    alternativeInterpretations: [...mapped.reasonedDecision.alternativeInterpretations],
+    confidence: mapped.reasonedDecision.confidence,
+    supportingEvidence: [...mapped.reasonedDecision.supportingEvidence],
+    contradictingEvidence: [...mapped.reasonedDecision.contradictingEvidence],
+    applicableArticles: [...mapped.reasonedDecision.applicableArticles],
+    rejectedArticles: [...mapped.reasonedDecision.rejectedArticles],
+    riskAnalysis: mapped.reasonedDecision.riskAnalysis,
+    narrativeAnalysis: mapped.reasonedDecision.narrativeAnalysis,
+    humanLikeExplanation: mapped.reasonedDecision.humanLikeExplanation,
+  });
   const intelligence = buildIntelligenceContext({
     moduleId: analysisRequest.subjectModule.id,
     storyMemory: analysisRequest.storyMemory,
@@ -504,6 +527,7 @@ export async function runV3RuntimeAdapter(
     analysisResponse,
     findings,
     diagnostics,
+    gptAssistant,
   });
   const reviewerConceptContext = createPromptConceptContext(promptInput);
   const reviewerAssessment = runReviewerMethodology({
@@ -521,6 +545,7 @@ export async function runV3RuntimeAdapter(
     analysisResponse,
     legalModules,
     reviewerReasoningEngine,
+    gptAssistant,
   });
   const arbitrationStartedAt = Date.now();
   const arbitration = Object.freeze({
