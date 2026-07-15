@@ -10,6 +10,7 @@ import { CHILDREN_MODULE } from "../legal/modules/children/childrenModule.js";
 import { VIOLENCE_MODULE } from "../legal/modules/violence/violenceModule.js";
 import { SEXUALITY_MODULE } from "../legal/modules/sexuality/sexualityModule.js";
 import { DRUGS_MODULE } from "../legal/modules/drugs/drugsModule.js";
+import { SOCIETY_MODULE } from "../legal/modules/society/societyModule.js";
 import { buildIntelligenceContext } from "../intelligence/intelligenceBuilder.js";
 import { createV3PipelineContext } from "./pipelineContext.js";
 import { runContextStage } from "./contextStage.js";
@@ -43,7 +44,7 @@ function freezeStage<T>(stage: T): T {
 
 function buildRegistry(input: V3PipelineInput["registry"]): LegalModuleRegistry {
   if (input) return input;
-  return new LegalModuleRegistry().register(PROFANITY_MODULE).register(RELIGION_MODULE).register(STATE_LEADERSHIP_MODULE).register(NATIONAL_SECURITY_MODULE).register(CHILDREN_MODULE).register(VIOLENCE_MODULE).register(SEXUALITY_MODULE).register(DRUGS_MODULE);
+  return new LegalModuleRegistry().register(PROFANITY_MODULE).register(RELIGION_MODULE).register(STATE_LEADERSHIP_MODULE).register(NATIONAL_SECURITY_MODULE).register(CHILDREN_MODULE).register(VIOLENCE_MODULE).register(SEXUALITY_MODULE).register(DRUGS_MODULE).register(SOCIETY_MODULE);
 }
 
 export function runV3ReasoningPipeline(input: V3PipelineInput): V3PipelineResult {
