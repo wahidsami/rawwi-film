@@ -82,6 +82,7 @@ export function buildV3KnowledgeMatchingInspectionRecord(input: Readonly<{
   reviewQuestions: readonly string[];
   matchedConcepts: readonly string[];
   matchedEvidence: readonly string[];
+  knowledgeRetrieval?: Record<string, unknown> | null;
   evidenceAssessment: Record<string, unknown>;
   context: Record<string, unknown>;
   conceptContext: Record<string, unknown>;
@@ -104,6 +105,7 @@ export function buildV3KnowledgeMatchingInspectionRecord(input: Readonly<{
     review_questions: [...input.reviewQuestions],
     matched_concepts: [...input.matchedConcepts],
     matched_evidence: [...input.matchedEvidence],
+    knowledge_retrieval: input.knowledgeRetrieval ?? null,
     evidence_assessment: input.evidenceAssessment,
     context: input.context,
     concept_context: input.conceptContext,
@@ -321,6 +323,13 @@ export function buildV3ReviewerDebateInspectionRecord(input: Readonly<{
   return createStageRecord(input.base, 10, "reviewer_debate", {
     analysis_engine: input.analysisEngine,
     pipeline_version: input.pipelineVersion,
+    consultation_graph: input.debate.consultationGraph ?? null,
+    consultation_supporting_reviewers: [...(input.debate.consultationGraph?.supportingReviewers ?? [])],
+    consultation_opposing_reviewers: [...(input.debate.consultationGraph?.opposingReviewers ?? [])],
+    consultation_consensus_score: input.debate.consultationGraph?.consensusScore ?? null,
+    consultation_disagreement_score: input.debate.consultationGraph?.disagreementScore ?? null,
+    consultation_consulted_reviewer_count: input.debate.consultationGraph?.consultedReviewerCount ?? 0,
+    consultation_triggered_reviewer_count: input.debate.consultationGraph?.triggeredReviewerCount ?? 0,
     gpt_assistant: input.debate.gptAssistant,
     gpt_prompt_hash: input.debate.gptAssistant?.promptHash ?? null,
     gpt_response_hash: input.debate.gptAssistant?.responseHash ?? null,
@@ -335,6 +344,19 @@ export function buildV3ReviewerDebateInspectionRecord(input: Readonly<{
     gpt_risk_analysis: input.debate.gptAssistant?.riskAnalysis ?? null,
     gpt_narrative_analysis: input.debate.gptAssistant?.narrativeAnalysis ?? null,
     gpt_human_like_explanation: input.debate.gptAssistant?.humanLikeExplanation ?? null,
+    self_critique: input.debate.opinions.map((opinion) => ({
+      reviewer_id: opinion.reviewerId,
+      reviewer_name: opinion.reviewerName,
+      why_could_i_be_wrong: opinion.selfCritique?.whyCouldIBeWrong ?? null,
+      contradicting_evidence: [...(opinion.selfCritique?.contradictingEvidence ?? [])],
+      assumptions: [...(opinion.selfCritique?.assumptions ?? [])],
+      possible_disagreement: opinion.selfCritique?.possibleDisagreement ?? null,
+      missed_context: opinion.selfCritique?.missedContext ?? null,
+      confidence_before: opinion.selfCritique?.confidenceBefore ?? null,
+      confidence_after: opinion.selfCritique?.confidenceAfter ?? null,
+      confidence_delta: opinion.selfCritique?.confidenceDelta ?? null,
+      reason_changes: [...(opinion.selfCritique?.reasonChanges ?? [])],
+    })),
     reviewer_count: input.debate.reviewerCount,
     execution_order: [...input.debate.executionOrder],
     reviewer_durations: [...input.debate.reviewerDurations],

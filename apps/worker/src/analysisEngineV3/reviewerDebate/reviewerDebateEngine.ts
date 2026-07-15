@@ -1,7 +1,8 @@
 import { evaluateWithModule } from "../legal/legalEngine.js";
 import type { LegalModule } from "../legal/legalModule.js";
 import type { ReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
-import type { ReviewerDebateConfidenceDistribution, ReviewerDebateEngineInput, ReviewerDebateKnowledgeSupport, ReviewerDebateMetrics, ReviewerDebateOpinion, ReviewerDebatePackage, ReviewerDebatePairwiseAssessment } from "./reviewerDebateTypes.js";
+import { buildReviewerDecisionContext } from "../legal/reviewerDecisionPreparation.js";
+import type { ReviewerDebateConfidenceDistribution, ReviewerDebateConsultationEntry, ReviewerDebateConsultationGraph, ReviewerDebateConsultationOpinion, ReviewerDebateConsultationSummary, ReviewerDebateEngineInput, ReviewerDebateKnowledgeSupport, ReviewerDebateMetrics, ReviewerDebateOpinion, ReviewerDebatePackage, ReviewerDebatePairwiseAssessment, ReviewerSelfCritique } from "./reviewerDebateTypes.js";
 
 function normalizeText(value: string): string {
   return value.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase();
@@ -72,6 +73,39 @@ function selectTopIds<T>(items: readonly T[], terms: readonly string[], getId: (
       .map((entry) => entry.id),
   );
 }
+
+const CONSULTATION_TARGETS: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  "religion reviewer": Object.freeze(["History Reviewer", "Politics Reviewer", "Family Values Reviewer", "General Reviewer", "Children Reviewer"]),
+  "politics reviewer": Object.freeze(["History Reviewer", "State Leadership Reviewer", "National Security Reviewer", "General Reviewer"]),
+  "national security reviewer": Object.freeze(["Politics Reviewer", "Crime Reviewer", "History Reviewer", "General Reviewer"]),
+  "society reviewer": Object.freeze(["Politics Reviewer", "Family Values Reviewer", "General Reviewer"]),
+  "crime reviewer": Object.freeze(["National Security Reviewer", "Children Reviewer", "General Reviewer"]),
+  "children reviewer": Object.freeze(["Crime Reviewer", "Family Values Reviewer", "Profanity Reviewer", "General Reviewer"]),
+  "drugs reviewer": Object.freeze(["Crime Reviewer", "Society Reviewer", "Family Values Reviewer", "General Reviewer"]),
+  "sexual content reviewer": Object.freeze(["Children Reviewer", "Family Values Reviewer", "General Reviewer"]),
+  "profanity reviewer": Object.freeze(["Society Reviewer", "Family Values Reviewer", "Religion Reviewer", "General Reviewer"]),
+  "history reviewer": Object.freeze(["Politics Reviewer", "Religion Reviewer", "General Reviewer"]),
+  "family values reviewer": Object.freeze(["Children Reviewer", "Society Reviewer", "Religion Reviewer", "General Reviewer"]),
+  "state leadership reviewer": Object.freeze(["Politics Reviewer", "National Security Reviewer", "General Reviewer"]),
+  "violence reviewer": Object.freeze(["Crime Reviewer", "National Security Reviewer", "Children Reviewer", "General Reviewer"]),
+  "travel reviewer": Object.freeze(["Politics Reviewer", "National Security Reviewer", "General Reviewer"]),
+  "general reviewer": Object.freeze([
+    "Religion Reviewer",
+    "Politics Reviewer",
+    "National Security Reviewer",
+    "Society Reviewer",
+    "Crime Reviewer",
+    "Children Reviewer",
+    "Drugs Reviewer",
+    "Sexual Content Reviewer",
+    "Profanity Reviewer",
+    "History Reviewer",
+    "Family Values Reviewer",
+    "State Leadership Reviewer",
+    "Violence Reviewer",
+    "Travel Reviewer",
+  ]),
+});
 
 function confidence(value: number): number {
   return Number(Math.max(0, Math.min(1, value)).toFixed(6));
@@ -185,6 +219,51 @@ function summarizeRisk(confidenceValue: number, disagreementScore: number): Revi
   return "low";
 }
 
+function buildSelfCritique(
+  decision: ReturnType<typeof evaluateWithModule>,
+  reviewerName: string,
+  confidenceValue: number,
+): ReviewerSelfCritique {
+  const contradictingEvidence = uniqueStrings([
+    ...decision.exceptions.filter((exception) => exception.applies).map((exception) => exception.reason),
+    ...decision.evidence.candidates.slice(1).map((candidate) => candidate.text),
+  ]);
+  const assumptions = uniqueStrings([
+    "I assumed the strongest surfaced evidence is the most representative reading.",
+    "I assumed no stronger unseen context overrides the visible evidence.",
+  ]);
+  const possibleDisagreement = "Another reviewer could prioritize wider scene context, quotation, satire, or historical framing differently.";
+  const missedContext = "A broader scene, earlier dialogue, or later payoff could change the conclusion.";
+  const confidenceAfter = confidence(
+    Math.max(
+      0,
+      confidenceValue
+        - (decision.exceptions.some((exception) => exception.applies) ? 0.08 : 0.03)
+        - (decision.evidence.candidates.length === 0 ? 0.05 : 0),
+    ),
+  );
+  const confidenceDelta = Number((confidenceAfter - confidenceValue).toFixed(6));
+  const reasonChanges = uniqueStrings([
+    `Initial reason: ${decision.reason}`,
+    `Self-critique: ${reviewerName} noted alternate context and counter-reading risk.`,
+    `Confidence adjusted from ${confidenceValue.toFixed(6)} to ${confidenceAfter.toFixed(6)}.`,
+  ]);
+
+  return Object.freeze({
+    whyCouldIBeWrong: decision.exceptions.some((exception) => exception.applies)
+      ? decision.exceptions.filter((exception) => exception.applies).map((exception) => exception.reason).join(" | ")
+      : "A different reviewer could interpret the same evidence with more contextual caution.",
+    contradictingEvidence: Object.freeze(contradictingEvidence),
+    assumptions: Object.freeze(assumptions),
+    possibleDisagreement,
+    missedContext,
+    confidenceBefore: confidenceValue,
+    confidenceAfter,
+    confidenceDelta,
+    reasonChanges: Object.freeze(reasonChanges),
+  });
+}
+
 function buildGeneralReviewerOpinion(
   specialistOpinions: readonly ReviewerDebateOpinion[],
   primaryDecision: ReviewerDebatePackage["primaryDecision"],
@@ -218,6 +297,27 @@ function buildGeneralReviewerOpinion(
     : 0;
   const counterargument = minorityOpinions[0]?.reasoning ?? "No stronger counterargument identified.";
   const needsHumanReview = majorityStatus === "needs_review" || disagreementScore >= 0.35 || averageConfidenceValue < 0.65;
+  const selfCritique = Object.freeze({
+    whyCouldIBeWrong: minorityOpinions.length > 0
+      ? `Specialist disagreement exists for ${minorityOpinions[0]?.reviewerName ?? "another reviewer"}; context may support a different reading.`
+      : "Consensus can still miss a subtle contextual exception or broader narrative framing.",
+    contradictingEvidence: Object.freeze(uniqueStrings([
+      ...minorityOpinions.flatMap((opinion) => opinion.supportingEvidence),
+    ])),
+    assumptions: Object.freeze([
+      "I assumed the majority specialist interpretation is the most stable reading.",
+      "I assumed no stronger unseen exception overrides the apparent consensus.",
+    ]),
+    possibleDisagreement: "A specialist reviewer could legitimately prioritize a narrower exception or different context signal.",
+    missedContext: "The scene could contain framing, quotation, or narrative context that shifts the committee outcome.",
+    confidenceBefore: averageConfidenceValue,
+    confidenceAfter: confidence(Math.max(0, averageConfidenceValue - (disagreementScore >= 0.35 ? 0.05 : 0.02))),
+    confidenceDelta: Number((confidence(Math.max(0, averageConfidenceValue - (disagreementScore >= 0.35 ? 0.05 : 0.02))) - averageConfidenceValue).toFixed(6)),
+    reasonChanges: Object.freeze([
+      `Initial committee reason: ${primaryDecision.reason}`,
+      "Self-critique: committee consensus may still underweight a minority contextual reading.",
+    ]),
+  });
 
   return Object.freeze({
     reviewerId: "general_reviewer",
@@ -246,6 +346,112 @@ function buildGeneralReviewerOpinion(
     needsHumanReview,
     independence: "independent",
     durationMs: 0,
+    selfCritique,
+  });
+}
+
+function consultationTargetsFor(reviewerName: string): readonly string[] {
+  return CONSULTATION_TARGETS[normalizeText(reviewerName)] ?? Object.freeze(["General Reviewer"]);
+}
+
+function buildConsultationOpinionSummary(opinion: ReviewerDebateOpinion): ReviewerDebateConsultationOpinion {
+  return Object.freeze({
+    reviewerId: opinion.reviewerId,
+    reviewerName: opinion.reviewerName,
+    status: opinion.status,
+    confidence: opinion.confidence,
+    reasoning: opinion.reasoning,
+    supportingEvidence: [...opinion.supportingEvidence],
+    articleIds: [...opinion.suggestedArticles],
+  });
+}
+
+function buildConsultationSummary(
+  consultedOpinions: readonly ReviewerDebateOpinion[],
+  sourceOpinion: ReviewerDebateOpinion,
+): ReviewerDebateConsultationSummary {
+  const supporting = consultedOpinions.filter((opinion) => opinion.status === sourceOpinion.status || opinion.confidence >= sourceOpinion.confidence);
+  const opposing = consultedOpinions.filter((opinion) => opinion.status !== sourceOpinion.status && opinion.confidence < sourceOpinion.confidence);
+  const consensusScore = confidence(consultedOpinions.length > 0 ? supporting.length / consultedOpinions.length : 1);
+  const disagreementScore = confidence(1 - consensusScore);
+
+  return Object.freeze({
+    consultedReviewerIds: Object.freeze(consultedOpinions.map((opinion) => opinion.reviewerId)),
+    consultedReviewerNames: Object.freeze(consultedOpinions.map((opinion) => opinion.reviewerName)),
+    supportingReviewerIds: Object.freeze(supporting.map((opinion) => opinion.reviewerId)),
+    supportingReviewerNames: Object.freeze(supporting.map((opinion) => opinion.reviewerName)),
+    opposingReviewerIds: Object.freeze(opposing.map((opinion) => opinion.reviewerId)),
+    opposingReviewerNames: Object.freeze(opposing.map((opinion) => opinion.reviewerName)),
+    consultedEvidence: Object.freeze(uniqueStrings(consultedOpinions.flatMap((opinion) => opinion.supportingEvidence))),
+    consensusScore,
+    disagreementScore,
+  });
+}
+
+function buildConsultationGraph(opinions: readonly ReviewerDebateOpinion[]): ReviewerDebateConsultationGraph {
+  const opinionsByName = new Map(opinions.map((opinion) => [opinion.reviewerName, opinion] as const));
+  const opinionById = new Map(opinions.map((opinion) => [opinion.reviewerId, opinion] as const));
+  const entries: ReviewerDebateConsultationEntry[] = [];
+  const supportingReviewers = new Set<string>();
+  const opposingReviewers = new Set<string>();
+
+  for (const opinion of opinions) {
+    const requestedReviewerNames = uniqueStrings(
+      consultationTargetsFor(opinion.reviewerName).filter((reviewerName) => reviewerName !== opinion.reviewerName && opinionsByName.has(reviewerName)),
+    );
+    const requestedReviewerIds = requestedReviewerNames.map((reviewerName) => opinionsByName.get(reviewerName)!.reviewerId);
+    const consultedOpinions = requestedReviewerIds.map((reviewerId) => opinionById.get(reviewerId)!).filter(Boolean);
+    const primaryOpinion = buildConsultationOpinionSummary(opinion);
+    const secondaryOpinions = consultedOpinions.map((consultedOpinion) => buildConsultationOpinionSummary(consultedOpinion));
+    const supportingOpinionNames = uniqueStrings(
+      consultedOpinions
+        .filter((consultedOpinion) => consultedOpinion.status === opinion.status || consultedOpinion.confidence >= opinion.confidence)
+        .map((consultedOpinion) => consultedOpinion.reviewerName),
+    );
+    const opposingOpinionNames = uniqueStrings(
+      consultedOpinions
+        .filter((consultedOpinion) => consultedOpinion.status !== opinion.status && consultedOpinion.confidence < opinion.confidence)
+        .map((consultedOpinion) => consultedOpinion.reviewerName),
+    );
+
+    supportingOpinionNames.forEach((name) => supportingReviewers.add(name));
+    opposingOpinionNames.forEach((name) => opposingReviewers.add(name));
+
+    const consultationSummary = buildConsultationSummary(consultedOpinions, opinion);
+    entries.push(Object.freeze({
+      reviewerId: opinion.reviewerId,
+      reviewerName: opinion.reviewerName,
+      moduleId: opinion.moduleId,
+      moduleTitle: opinion.moduleTitle,
+      difficultCandidate: opinion.needsHumanReview || opinion.status !== "accept" || opinion.confidence < 0.85,
+      consultationReason: requestedReviewerNames.length > 0
+        ? "Deterministic peer consultation for specialist calibration."
+        : "No consultation targets configured.",
+      requestedReviewerIds: Object.freeze(requestedReviewerIds),
+      requestedReviewerNames: Object.freeze(requestedReviewerNames),
+      primaryOpinion,
+      secondaryOpinions: Object.freeze(secondaryOpinions),
+      supportingReviewerIds: Object.freeze(supportingOpinionNames.map((name) => opinionsByName.get(name)?.reviewerId ?? name)),
+      supportingReviewerNames: Object.freeze(supportingOpinionNames),
+      opposingReviewerIds: Object.freeze(opposingOpinionNames.map((name) => opinionsByName.get(name)?.reviewerId ?? name)),
+      opposingReviewerNames: Object.freeze(opposingOpinionNames),
+      consensusScore: consultationSummary.consensusScore,
+      disagreementScore: consultationSummary.disagreementScore,
+      supportingEvidence: consultationSummary.consultedEvidence,
+    }));
+  }
+
+  const consensusScore = average(entries.map((entry) => entry.consensusScore));
+  const disagreementScore = average(entries.map((entry) => entry.disagreementScore));
+
+  return Object.freeze({
+    entries: Object.freeze([...entries].sort((left, right) => left.reviewerName.localeCompare(right.reviewerName))),
+    supportingReviewers: Object.freeze([...supportingReviewers].sort((left, right) => left.localeCompare(right))),
+    opposingReviewers: Object.freeze([...opposingReviewers].sort((left, right) => left.localeCompare(right))),
+    consensusScore,
+    disagreementScore,
+    consultedReviewerCount: new Set(entries.flatMap((entry) => entry.requestedReviewerNames)).size,
+    triggeredReviewerCount: entries.filter((entry) => entry.difficultCandidate || entry.requestedReviewerNames.length > 0).length,
   });
 }
 
@@ -261,6 +467,7 @@ function buildOpinion(
   const needsHumanReview = decision.status === "needs_review" || confidenceValue < 0.65;
   const riskLevel = opinionConfidenceStatus(confidenceValue);
   const suggestedArticles = Object.freeze([...new Set(decision.articleIds)].sort((left, right) => left - right));
+  const selfCritique = buildSelfCritique(decision, reviewerName, confidenceValue);
 
   return Object.freeze({
     reviewerId: module.id,
@@ -283,6 +490,7 @@ function buildOpinion(
     needsHumanReview,
     independence: "independent",
     durationMs: 0,
+    selfCritique,
   });
 }
 
@@ -295,11 +503,17 @@ export function buildReviewerDebatePackage(input: ReviewerDebateEngineInput): Re
     articleIds: Object.freeze([...input.analysisResponse.legalDecision.articleIds]),
     reason: input.analysisResponse.legalDecision.reason,
   });
+  const reviewerDecision = buildReviewerDecisionContext({
+    intelligence: input.analysisResponse.intelligence,
+    reviewerReasoningEngine: input.reviewerReasoningEngine,
+    subjectModuleArticleIds: input.analysisResponse.legalDecision.articleIds,
+  });
 
   const specialistOpinionsMutable = input.legalModules.map((module) => {
     const decision = evaluateWithModule(module, {
       moduleId: module.id,
       intelligence: input.analysisResponse.intelligence,
+      reviewerDecision,
     });
     return buildOpinion(module, input.reviewerReasoningEngine, decision);
   });
@@ -322,6 +536,23 @@ export function buildReviewerDebatePackage(input: ReviewerDebateEngineInput): Re
   const generalReviewerOpinion = buildGeneralReviewerOpinion(specialistOpinions, primaryDecision);
   const opinions = Object.freeze([...specialistOpinions, generalReviewerOpinion]);
   const executionOrder = Object.freeze([...opinions.map((opinion) => opinion.reviewerName)]);
+  const consultationGraph = buildConsultationGraph(opinions);
+  const consultationSummaryByReviewerId = new Map(
+    consultationGraph.entries.map((entry) => [
+      entry.reviewerId,
+      Object.freeze({
+        consultedReviewerIds: [...entry.requestedReviewerIds],
+        consultedReviewerNames: [...entry.requestedReviewerNames],
+        supportingReviewerIds: [...entry.supportingReviewerIds],
+        supportingReviewerNames: [...entry.supportingReviewerNames],
+        opposingReviewerIds: [...entry.opposingReviewerIds],
+        opposingReviewerNames: [...entry.opposingReviewerNames],
+        consultedEvidence: [...entry.supportingEvidence],
+        consensusScore: entry.consensusScore,
+        disagreementScore: entry.disagreementScore,
+      }) satisfies ReviewerDebateConsultationSummary,
+    ] as const),
+  );
 
   const rejectedArticlesByOpinion = new Map<string, readonly number[]>();
   const statusMajority = (() => {
@@ -346,6 +577,7 @@ export function buildReviewerDebatePackage(input: ReviewerDebateEngineInput): Re
       Object.freeze({
         ...opinion,
         rejectedArticles: rejectedArticlesByOpinion.get(opinion.reviewerId) ?? Object.freeze([]),
+        consultation: consultationSummaryByReviewerId.get(opinion.reviewerId) ?? null,
         riskLevel: opinion.reviewerId === "general_reviewer"
           ? opinion.riskLevel
           : summarizeRisk(opinion.confidence, average(
@@ -462,6 +694,7 @@ export function buildReviewerDebatePackage(input: ReviewerDebateEngineInput): Re
     confidenceDistribution,
     consensusScore,
     metrics,
+    consultationGraph,
     gptAssistant: input.gptAssistant ?? null,
   });
 }

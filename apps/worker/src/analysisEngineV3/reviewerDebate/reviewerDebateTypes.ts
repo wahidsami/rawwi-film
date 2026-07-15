@@ -19,6 +19,19 @@ export type GPTReviewerAssistant = Readonly<{
   riskAnalysis: string;
   narrativeAnalysis: string;
   humanLikeExplanation: string;
+  recommendation: string;
+}>;
+
+export type ReviewerSelfCritique = Readonly<{
+  whyCouldIBeWrong: string;
+  contradictingEvidence: readonly string[];
+  assumptions: readonly string[];
+  possibleDisagreement: string;
+  missedContext: string;
+  confidenceBefore: number;
+  confidenceAfter: number;
+  confidenceDelta: number;
+  reasonChanges: readonly string[];
 }>;
 
 export type ReviewerDebateKnowledgeSupport = Readonly<{
@@ -28,6 +41,58 @@ export type ReviewerDebateKnowledgeSupport = Readonly<{
   relationships: readonly string[];
   cases: readonly string[];
   precedents: readonly string[];
+}>;
+
+export type ReviewerDebateConsultationOpinion = Readonly<{
+  reviewerId: string;
+  reviewerName: string;
+  status: LegalDecision["status"];
+  confidence: number;
+  reasoning: string;
+  supportingEvidence: readonly string[];
+  articleIds: readonly number[];
+}>;
+
+export type ReviewerDebateConsultationSummary = Readonly<{
+  consultedReviewerIds: readonly string[];
+  consultedReviewerNames: readonly string[];
+  supportingReviewerIds: readonly string[];
+  supportingReviewerNames: readonly string[];
+  opposingReviewerIds: readonly string[];
+  opposingReviewerNames: readonly string[];
+  consultedEvidence: readonly string[];
+  consensusScore: number;
+  disagreementScore: number;
+}>;
+
+export type ReviewerDebateConsultationEntry = Readonly<{
+  reviewerId: string;
+  reviewerName: string;
+  moduleId: string;
+  moduleTitle: string;
+  difficultCandidate: boolean;
+  consultationReason: string;
+  requestedReviewerIds: readonly string[];
+  requestedReviewerNames: readonly string[];
+  primaryOpinion: ReviewerDebateConsultationOpinion;
+  secondaryOpinions: readonly ReviewerDebateConsultationOpinion[];
+  supportingReviewerIds: readonly string[];
+  supportingReviewerNames: readonly string[];
+  opposingReviewerIds: readonly string[];
+  opposingReviewerNames: readonly string[];
+  consensusScore: number;
+  disagreementScore: number;
+  supportingEvidence: readonly string[];
+}>;
+
+export type ReviewerDebateConsultationGraph = Readonly<{
+  entries: readonly ReviewerDebateConsultationEntry[];
+  supportingReviewers: readonly string[];
+  opposingReviewers: readonly string[];
+  consensusScore: number;
+  disagreementScore: number;
+  consultedReviewerCount: number;
+  triggeredReviewerCount: number;
 }>;
 
 export type ReviewerDebateOpinion = Readonly<{
@@ -49,6 +114,8 @@ export type ReviewerDebateOpinion = Readonly<{
   needsHumanReview: boolean;
   independence: "independent";
   durationMs: number;
+  selfCritique?: ReviewerSelfCritique | null;
+  consultation?: ReviewerDebateConsultationSummary | null;
 }>;
 
 export type ReviewerDebatePairwiseAssessment = Readonly<{
@@ -127,6 +194,7 @@ export type ReviewerDebatePackage = Readonly<{
   confidenceDistribution: ReviewerDebateConfidenceDistribution;
   consensusScore: number;
   metrics: ReviewerDebateMetrics;
+  consultationGraph?: ReviewerDebateConsultationGraph | null;
   gptAssistant?: GPTReviewerAssistant | null;
 }>;
 

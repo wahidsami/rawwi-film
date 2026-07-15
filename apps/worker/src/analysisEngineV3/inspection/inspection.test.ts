@@ -11,6 +11,7 @@ import {
   buildV3AggregationInspectionRecord,
   buildV3FinalReportInspectionRecord,
   buildV3LegalReviewInspectionRecord,
+  buildV3KnowledgeMatchingInspectionRecord,
   buildV3KnowledgeRegistryInspectionRecord,
   buildV3KnowledgeRankingInspectionRecord,
   buildV3SemanticGenerationInspectionRecord,
@@ -236,6 +237,46 @@ async function testStageBuildersHandleZeroCounts(): Promise<void> {
     },
   });
 
+  const knowledgeMatchingRecord = buildV3KnowledgeMatchingInspectionRecord({
+    base: {
+      jobId: "job-zero",
+      chunkId: "chunk-zero",
+      findingKey: "job:job-zero:chunk:chunk-zero",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+    analysisEngine: "v3",
+    pipelineVersion: "v2",
+    reviewerModule: { id: "v3_11_profanity", title_ar: "الألفاظ النابية" },
+    reviewerDomainsLoaded: ["v3_11_profanity"],
+    knowledgeAssetsUsed: [],
+    storyMemory: "",
+    scriptMemory: null,
+    sceneMemory: "",
+    lessonsUsed: [],
+    patternLibrariesUsed: [],
+    knowledgePacksUsed: [],
+    reviewQuestions: [],
+    matchedConcepts: [],
+    matchedEvidence: [],
+    knowledgeRetrieval: {
+      queryTerms: [],
+      topK: 0,
+      knowledgeScore: 0,
+      knowledgeConfidence: 0,
+      knowledgeSource: "ranked_retrieval",
+      cacheKey: "cache-key",
+      cacheHit: false,
+      retrievedPacks: [],
+      rejectedPacks: [],
+    },
+    evidenceAssessment: {},
+    context: {},
+    conceptContext: {},
+    legalConcepts: [],
+    flags: {},
+    reasoningTrace: null,
+  });
+
   const knowledgeRankingRecord = buildV3KnowledgeRankingInspectionRecord({
     base: {
       jobId: "job-zero",
@@ -281,6 +322,8 @@ async function testStageBuildersHandleZeroCounts(): Promise<void> {
   assert.equal(aggregationRecord.payloadJson.report_findings, 0);
   assert.equal(finalReportRecord.payloadJson.final_finding_count, 0);
   assert.equal(finalReportRecord.payloadJson.observation_count, 0);
+  assert.equal((knowledgeMatchingRecord.payloadJson.knowledge_retrieval as Record<string, unknown>).knowledgeConfidence, 0);
+  assert.equal(((knowledgeMatchingRecord.payloadJson.knowledge_retrieval as Record<string, unknown>).retrievedPacks as readonly unknown[]).length, 0);
   assert.equal(knowledgeRegistryRecord.payloadJson.registry_total_count, 0);
   assert.equal(knowledgeRegistryRecord.payloadJson.validation_valid, true);
   const knowledgeRankingPayload = knowledgeRankingRecord.payloadJson as Record<string, unknown>;
@@ -290,12 +333,12 @@ async function testStageBuildersHandleZeroCounts(): Promise<void> {
   const recorder = createV3InspectionRecorder({
     enabled: true,
     persist: async (records) => {
-      assert.equal(records.length, 6);
+      assert.equal(records.length, 7);
     },
     now: () => "2026-01-01T00:00:00.000Z",
   });
 
-  await recorder.recordStages([semanticRecord, legalRecord, aggregationRecord, finalReportRecord, knowledgeRegistryRecord, knowledgeRankingRecord]);
+  await recorder.recordStages([semanticRecord, legalRecord, aggregationRecord, finalReportRecord, knowledgeRegistryRecord, knowledgeMatchingRecord, knowledgeRankingRecord]);
 }
 
 function testReviewerDebateStageBuilder(): void {
@@ -365,6 +408,17 @@ function testReviewerDebateStageBuilder(): void {
           needsHumanReview: false,
           independence: "independent",
           durationMs: 0,
+          selfCritique: {
+            whyCouldIBeWrong: "A broader context could soften the reading.",
+            contradictingEvidence: ["possible alternate reading"],
+            assumptions: ["Assumed direct profanity"],
+            possibleDisagreement: "Another reviewer could disagree on context.",
+            missedContext: "Missing broader scene context.",
+            confidenceBefore: 0.9,
+            confidenceAfter: 0.87,
+            confidenceDelta: -0.03,
+            reasonChanges: ["Initial reason: supported", "Self-critique: context may alter the outcome."],
+          },
         },
         {
           reviewerId: "general_reviewer",
@@ -392,6 +446,17 @@ function testReviewerDebateStageBuilder(): void {
           needsHumanReview: false,
           independence: "independent",
           durationMs: 0,
+          selfCritique: {
+            whyCouldIBeWrong: "Committee consensus can still miss nuance.",
+            contradictingEvidence: ["possible alternate reading"],
+            assumptions: ["Assumed consensus"],
+            possibleDisagreement: "A different reviewer may prioritize nuance.",
+            missedContext: "Potential broader narrative framing.",
+            confidenceBefore: 0.9,
+            confidenceAfter: 0.87,
+            confidenceDelta: -0.03,
+            reasonChanges: ["Initial reason: consensus", "Self-critique: minority context may matter."],
+          },
         },
       ],
       opinionSummaries: [
@@ -461,12 +526,53 @@ function testReviewerDebateStageBuilder(): void {
         evidenceOverlap: 1,
         consensusPercentage: 1,
       },
+      consultationGraph: {
+        entries: [
+          {
+            reviewerId: "profanity",
+            reviewerName: "Profanity Reviewer",
+            moduleId: "profanity",
+            moduleTitle: "Profanity",
+            difficultCandidate: true,
+            consultationReason: "Deterministic peer consultation for specialist calibration.",
+            requestedReviewerIds: ["general_reviewer"],
+            requestedReviewerNames: ["General Reviewer"],
+            primaryOpinion: {
+              reviewerId: "profanity",
+              reviewerName: "Profanity Reviewer",
+              status: "accept",
+              confidence: 0.9,
+              reasoning: "supported",
+              supportingEvidence: ["quote"],
+              articleIds: [4],
+            },
+            secondaryOpinions: [],
+            supportingReviewerIds: ["general_reviewer"],
+            supportingReviewerNames: ["General Reviewer"],
+            opposingReviewerIds: [],
+            opposingReviewerNames: [],
+            consensusScore: 1,
+            disagreementScore: 0,
+            supportingEvidence: ["quote"],
+          },
+        ],
+        supportingReviewers: ["General Reviewer"],
+        opposingReviewers: [],
+        consensusScore: 1,
+        disagreementScore: 0,
+        consultedReviewerCount: 1,
+        triggeredReviewerCount: 1,
+      },
     },
   });
 
   assert.equal(debateRecord.stageName, "reviewer_debate");
   assert.equal(debateRecord.stageOrder, 10);
   assert.equal((debateRecord.payloadJson as Record<string, unknown>).reviewer_count, 2);
+  assert.equal(((debateRecord.payloadJson as Record<string, unknown>).consultation_graph as Record<string, unknown>).consultedReviewerCount, 1);
+  const selfCritique = (debateRecord.payloadJson as Record<string, unknown>).self_critique as readonly Record<string, unknown>[];
+  assert.equal(selfCritique[0]?.confidence_before, 0.9);
+  assert.equal(Array.isArray(selfCritique[0]?.reason_changes), true);
 }
 
 function testArbitrationStageBuilder(): void {

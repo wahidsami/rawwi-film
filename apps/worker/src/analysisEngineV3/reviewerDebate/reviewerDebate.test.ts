@@ -167,6 +167,9 @@ function testDebatePackageDeterminism(): void {
   assert.equal(first.opinions.length, legalModules.length + 1);
   assert.equal(first.agreementMatrix.length > 0, true);
   assert.equal(first.confidenceDistribution.maximum >= first.confidenceDistribution.minimum, true);
+  assert.equal(first.consultationGraph?.entries.length, legalModules.length + 1);
+  assert.equal(first.consultationGraph?.consultedReviewerCount > 0, true);
+  assert.equal(first.consultationGraph?.triggeredReviewerCount > 0, true);
   const reviewerNames = new Set(first.opinions.map((opinion) => opinion.reviewerName));
   assert(reviewerNames.has("Religion Reviewer"));
   assert(reviewerNames.has("Politics Reviewer"));
@@ -174,6 +177,14 @@ function testDebatePackageDeterminism(): void {
   assert(reviewerNames.has("Crime Reviewer"));
   assert(reviewerNames.has("Profanity Reviewer"));
   assert(reviewerNames.has("General Reviewer"));
+  const religionConsultation = first.consultationGraph?.entries.find((entry) => entry.reviewerName === "Religion Reviewer");
+  assert(religionConsultation);
+  assert(religionConsultation?.requestedReviewerNames.includes("History Reviewer"));
+  assert(religionConsultation?.requestedReviewerNames.includes("Politics Reviewer"));
+  assert(religionConsultation?.requestedReviewerNames.includes("Family Values Reviewer"));
+  assert.equal(first.opinions[0]?.selfCritique?.confidenceBefore, first.opinions[0]?.confidence);
+  assert.equal(first.opinions[0]?.selfCritique?.reasonChanges.length > 0, true);
+  assert.equal(first.opinions[0]?.selfCritique?.whyCouldIBeWrong.length > 0, true);
 }
 
 async function main(): Promise<void> {
