@@ -1932,7 +1932,6 @@ export async function processChunkJudge(
             semanticHash: runtimeResult.diagnostics.semanticHash,
             legalHash: runtimeResult.diagnostics.legalHash,
           });
-          return;
         },
         onFallback: async (failure) => {
           const fallbackExecutionCount = recordV3FallbackExecution();
