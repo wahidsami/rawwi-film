@@ -13,6 +13,7 @@ import { NATIONAL_SECURITY_MODULE } from "../legal/modules/nationalSecurity/nati
 import { STATE_LEADERSHIP_MODULE } from "../legal/modules/stateLeadership/stateLeadershipModule.js";
 import { CHILDREN_MODULE } from "../legal/modules/children/childrenModule.js";
 import { VIOLENCE_MODULE } from "../legal/modules/violence/violenceModule.js";
+import { SEXUALITY_MODULE } from "../legal/modules/sexuality/sexualityModule.js";
 
 export type AnalysisEngineConfig = Readonly<{
   reasoningContract: V3PromptReasoningContract;
@@ -131,7 +132,7 @@ function buildSemanticLayer(): V3PromptSemanticLayer {
 }
 
 export function createDefaultAnalysisEngineConfig(overrides?: Partial<AnalysisEngineConfig>): AnalysisEngineConfig {
-  const registry = overrides?.registry ?? new Registry().register(PROFANITY_MODULE).register(RELIGION_MODULE).register(STATE_LEADERSHIP_MODULE).register(NATIONAL_SECURITY_MODULE).register(CHILDREN_MODULE).register(VIOLENCE_MODULE);
+  const registry = overrides?.registry ?? new Registry().register(PROFANITY_MODULE).register(RELIGION_MODULE).register(STATE_LEADERSHIP_MODULE).register(NATIONAL_SECURITY_MODULE).register(CHILDREN_MODULE).register(VIOLENCE_MODULE).register(SEXUALITY_MODULE);
   return {
     reasoningContract: overrides?.reasoningContract ?? buildReasoningContract(),
     decisionGraph: overrides?.decisionGraph ?? buildDecisionGraph(),
