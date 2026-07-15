@@ -2576,6 +2576,13 @@ export async function runAggregation(jobId: string): Promise<void> {
     const processedChunks = summary.partial_report?.processed_chunks ?? 0;
     const totalProgress = Math.max(1, ((job as { progress_total?: number | null }).progress_total ?? 1));
     const progressPercent = Math.floor((100 * processedChunks) / totalProgress);
+    logger.info("V3 inspection: about to mark job completed", {
+      jobId,
+      isPartialReport,
+      branch: "partial",
+      processedChunks,
+      totalProgress,
+    });
     await supabase
       .from("analysis_jobs")
       .update({
@@ -2587,6 +2594,13 @@ export async function runAggregation(jobId: string): Promise<void> {
         paused_at: null,
       })
       .eq("id", jobId);
+    logger.info("V3 inspection: job marked completed", {
+      jobId,
+      isPartialReport,
+      branch: "partial",
+      processedChunks,
+      totalProgress,
+    });
   } else {
     const { data: jobFinal } = await supabase
       .from("analysis_jobs")
@@ -2594,6 +2608,12 @@ export async function runAggregation(jobId: string): Promise<void> {
       .eq("id", jobId)
       .single();
     const total = jobFinal?.progress_total ?? 1;
+    logger.info("V3 inspection: about to mark job completed", {
+      jobId,
+      isPartialReport,
+      branch: "full",
+      total,
+    });
     await supabase
       .from("analysis_jobs")
       .update({
@@ -2603,6 +2623,12 @@ export async function runAggregation(jobId: string): Promise<void> {
         progress_percent: 100,
       })
       .eq("id", jobId);
+    logger.info("V3 inspection: job marked completed", {
+      jobId,
+      isPartialReport,
+      branch: "full",
+      total,
+    });
   }
 
   const { logAuditEvent } = await import("./audit.js");

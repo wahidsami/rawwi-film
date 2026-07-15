@@ -333,10 +333,24 @@ async function processOneJob(): Promise<boolean> {
   }
 
   try {
+    logger.info("V3 inspection: about to run aggregation", {
+      jobId: job.id,
+      desiredConcurrency,
+      claimedCount: claimed.length,
+    });
     await runAggregation(job.id);
+    logger.info("V3 inspection: runAggregation completed", {
+      jobId: job.id,
+      desiredConcurrency,
+      claimedCount: claimed.length,
+    });
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : String(e);
-    logger.error("Aggregation failed after batch", { jobId: job.id, error: errMsg });
+    logger.error("Aggregation failed after batch", {
+      jobId: job.id,
+      error: errMsg,
+      stack: e instanceof Error ? e.stack ?? null : null,
+    });
     await setJobFailed(job.id, errMsg);
     return true;
   }

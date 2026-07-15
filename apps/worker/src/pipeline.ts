@@ -3208,7 +3208,17 @@ export async function processChunkJudge(
     await setChunkFailed(chunk.id, "Cancelled by user");
     throw new JobCancelledError();
   }
+  logger.info("V3 inspection: about to set chunk done", {
+    jobId,
+    chunkId: chunk.id,
+    runKey,
+  });
   await setChunkDone(chunk.id);
+  logger.info("V3 inspection: setChunkDone completed", {
+    jobId,
+    chunkId: chunk.id,
+    runKey,
+  });
   await incrementJobProgress(jobId);
   logger.info("Chunk processed", {
     chunkId: chunk.id,
