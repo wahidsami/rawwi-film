@@ -18,3 +18,4 @@ export * from "./modules/violence/index.js";
 export * from "./modules/sexuality/index.js";
 export * from "./modules/drugs/index.js";
 export * from "./modules/society/index.js";
+export * from "./modules/familyValues/index.js";
