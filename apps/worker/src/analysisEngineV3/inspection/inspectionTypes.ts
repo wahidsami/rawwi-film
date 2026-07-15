@@ -6,20 +6,18 @@ export const V3_INSPECTION_STAGE_ORDER = [
   5,
   6,
   7,
-  8,
 ] as const;
 
 export type V3InspectionStageOrder = (typeof V3_INSPECTION_STAGE_ORDER)[number];
 
 export const V3_INSPECTION_STAGE_NAMES = Object.freeze({
-  1: "semantic_output",
-  2: "intelligence_context",
-  3: "reviewer_knowledge",
-  4: "legal_decision",
-  5: "finding_mapper",
-  6: "persistence",
-  7: "aggregation",
-  8: "final_report",
+  1: "semantic_generation",
+  2: "knowledge_matching",
+  3: "legal_review",
+  4: "finding_mapper",
+  5: "persistence",
+  6: "aggregation",
+  7: "final_report",
 } as const);
 
 export type V3InspectionStageName = (typeof V3_INSPECTION_STAGE_NAMES)[V3InspectionStageOrder];

@@ -19,7 +19,12 @@ import { config } from "./config.js";
 import { containsAnyNormalized } from "./textDetectionNormalize.js";
 import { normalizeReviewFindingConsistency } from "./reviewFindingConsistency.js";
 import { buildLineageEvent, persistLineageEvents } from "./findingLineage.js";
-import { v3InspectionRecorder, type V3InspectionRecordInput } from "./analysisEngineV3/inspection/index.js";
+import { v3InspectionRecorder } from "./analysisEngineV3/inspection/index.js";
+import { buildV3InspectionJobFindingKey } from "./analysisEngineV3/inspection/inspectionKeys.js";
+import {
+  buildV3AggregationInspectionRecord,
+  buildV3FinalReportInspectionRecord,
+} from "./analysisEngineV3/inspection/inspectionStageBuilders.js";
 
 export type SummaryJson = {
   job_id: string;
@@ -1565,8 +1570,6 @@ export function buildSummaryJson(
     /** DB source of primary row: lexicon_mandatory = true glossary insert; ai = model. */
     source?: string;
   }>();
-  const inspectionAggregationRecords: V3InspectionRecordInput[] = [];
-
   const canonicalGroups = buildCanonicalGroups(deduped, oneCardPerOccurrence, overlapRatio);
 
   for (const [clusterIndex, { key: groupKey, list }] of canonicalGroups.entries()) {
@@ -1632,80 +1635,6 @@ export function buildSummaryJson(
             : "ai",
     });
 
-    if (config.V3_INSPECTION_MODE) {
-      inspectionAggregationRecords.push({
-        jobId,
-        chunkId: null,
-        findingKey: cId,
-        stageOrder: 7,
-        stageName: "aggregation",
-        payloadJson: {
-          analysis_engine: String(jobConfigMeta?.analysis_engine ?? config.ANALYSIS_ENGINE),
-          pipeline_version: String(jobConfigMeta?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION),
-          cluster_id: cId,
-          cluster_index: clusterIndex,
-          merged: list.length > 1,
-          deduplicated: list.length > 1,
-          rewritten: false,
-          primary_selection_reason: {
-            article_id: primary.article_id,
-            atom_id: primary.atom_id,
-            severity: primary.severity,
-            confidence: primary.confidence,
-            source: primary.source,
-          },
-          cluster_members: list.map((finding) => ({
-            source: finding.source,
-            article_id: finding.article_id,
-            atom_id: finding.atom_id,
-            canonical_atom: finding.canonical_atom ?? null,
-            title_ar: finding.title_ar,
-            evidence_snippet: finding.evidence_snippet,
-            severity: finding.severity,
-            confidence: finding.confidence,
-            lineage_id: finding.lineage_id ?? null,
-            canonical_hash: finding.canonical_hash ?? null,
-            evidence_hash: finding.evidence_hash ?? null,
-          })),
-          canonical_finding: {
-            canonical_finding_id: cId,
-            title_ar: primary.title_ar,
-            description_ar: primary.description_ar ?? null,
-            evidence_snippet: primary.evidence_snippet,
-            severity: primary.severity,
-            confidence: primary.confidence,
-            final_ruling: (v3.final_ruling as string | undefined) ?? null,
-            rationale: (() => {
-              const fromPrimary = (primary.rationale_ar != null && primary.rationale_ar.trim() !== "") ? primary.rationale_ar : null;
-              const fromV3 = ((v3.rationale_ar as string | undefined) != null && (v3.rationale_ar as string).trim() !== "") ? (v3.rationale_ar as string) : null;
-              const raw = fromPrimary ?? fromV3 ?? RATIONALE_FALLBACK;
-              if (isSnippetOnlyRationale(raw, primary.evidence_snippet)) return RATIONALE_FALLBACK;
-              return raw;
-            })(),
-            pillar_id: (v3.pillar_id as string | undefined) ?? null,
-            primary_article_id: primary.article_id,
-            related_article_ids: relatedArticleIds,
-            policy_links: policyLinks,
-            primary_policy_atom_id: (() => {
-              const n = normalizeAtomId(primary.atom_id, primary.article_id);
-              return n && String(n).trim() !== "" ? String(n) : null;
-            })(),
-            canonical_atom: primary.canonical_atom ?? null,
-            intensity: primary.intensity ?? null,
-            context_impact: primary.context_impact ?? null,
-            legal_sensitivity: primary.legal_sensitivity ?? null,
-            audience_risk: primary.audience_risk ?? null,
-            source:
-              primary.source === "lexicon_mandatory"
-                ? "lexicon_mandatory"
-                : primary.source === "manual"
-                  ? "manual"
-                  : "ai",
-          },
-        },
-        createdAt: generated_at,
-      });
-    }
   }
 
   const canonical_findings = [...canonicalMap.values()].sort(compareCanonicalItemsStable);
@@ -1715,10 +1644,6 @@ export function buildSummaryJson(
     canonicalFindingCount: canonical_findings.length,
     reportHintCount: report_hints.length,
   });
-  if (config.V3_INSPECTION_MODE && inspectionAggregationRecords.length > 0) {
-    void v3InspectionRecorder.recordStages(inspectionAggregationRecords);
-  }
-
   // Severity counts from canonical (unique incidents).
   const severity_counts = { low: 0, medium: 0, high: 0, critical: 0 };
   for (const f of canonical_findings) {
@@ -2432,6 +2357,26 @@ export async function runAggregation(jobId: string): Promise<void> {
     summary.report_hints = [...(summary.report_hints ?? []), ...documentStructureHints];
   }
   const isPartialReport = Boolean(summary.partial_report?.is_partial);
+  if (config.V3_INSPECTION_MODE) {
+    const inspectionTimestamp = new Date().toISOString();
+    await v3InspectionRecorder.recordStages([
+      buildV3AggregationInspectionRecord({
+        base: {
+          jobId,
+          chunkId: null,
+          findingKey: buildV3InspectionJobFindingKey(jobId),
+          createdAt: inspectionTimestamp,
+        },
+        analysisEngine: String((job as { config_snapshot?: { analysis_engine?: string } }).config_snapshot?.analysis_engine ?? config.ANALYSIS_ENGINE),
+        pipelineVersion: String((job as { config_snapshot?: { pipeline_version?: string } }).config_snapshot?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION),
+        canonicalFindings: summary.canonical_findings ?? [],
+        findingsCount: summary.totals.findings_count,
+        reportHintsCount: summary.report_hints?.length ?? 0,
+        severityCounts: summary.totals.severity_counts,
+        reportOverview: summary.report_overview ?? null,
+      }),
+    ]);
+  }
   const largeJobSize = {
     textLength: fullScriptText.length,
     chunkCount: totalChunks,
@@ -2499,27 +2444,6 @@ export async function runAggregation(jobId: string): Promise<void> {
   applyReportGate(summary);
 
   const reportHtml = buildReportHtml(summary);
-
-  if (config.V3_INSPECTION_MODE && (summary.canonical_findings?.length ?? 0) > 0) {
-    const inspectionTimestamp = new Date().toISOString();
-    await v3InspectionRecorder.recordStages(
-      (summary.canonical_findings ?? []).map((finding) => ({
-        jobId,
-        chunkId: null,
-        findingKey: finding.canonical_finding_id,
-        stageOrder: 8,
-        stageName: "final_report",
-        createdAt: inspectionTimestamp,
-        payloadJson: {
-          analysis_engine: String((job as { config_snapshot?: { analysis_engine?: string } }).config_snapshot?.analysis_engine ?? config.ANALYSIS_ENGINE),
-          pipeline_version: String((job as { config_snapshot?: { pipeline_version?: string } }).config_snapshot?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION),
-          report_summary: summary.report_overview ?? null,
-          report_html: reportHtml,
-          canonical_finding: finding,
-        },
-      })),
-    );
-  }
 
   logger.info("[DEBUG] Aggregation report payload ready", {
     jobId,
@@ -2629,6 +2553,28 @@ export async function runAggregation(jobId: string): Promise<void> {
       branch: "full",
       total,
     });
+  }
+
+  if (config.V3_INSPECTION_MODE) {
+    const inspectionTimestamp = new Date().toISOString();
+    await v3InspectionRecorder.recordStages([
+      buildV3FinalReportInspectionRecord({
+        base: {
+          jobId,
+          chunkId: null,
+          findingKey: buildV3InspectionJobFindingKey(jobId),
+          createdAt: inspectionTimestamp,
+        },
+        analysisEngine: String((job as { config_snapshot?: { analysis_engine?: string } }).config_snapshot?.analysis_engine ?? config.ANALYSIS_ENGINE),
+        pipelineVersion: String((job as { config_snapshot?: { pipeline_version?: string } }).config_snapshot?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION),
+        finalFindingCount: summary.totals.findings_count,
+        observationCount: summary.report_overview?.total_observations ?? summary.report_hints?.length ?? 0,
+        reportStatus: reportErr ? "error" : "completed",
+        jobStatus: "completed",
+        reportSummary: summary.report_overview ?? null,
+        reportHtml,
+      }),
+    ]);
   }
 
   const { logAuditEvent } = await import("./audit.js");

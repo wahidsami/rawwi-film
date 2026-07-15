@@ -47,6 +47,8 @@ import { runV3RuntimeAdapter } from "./analysisEngineV3/runtime/runtimeAdapter.j
 import { runWithV3AutomaticFallback } from "./analysisEngineV3/runtime/automaticFallback.js";
 import { recordV3FallbackExecution } from "./analysisEngineV3/runtime/runtimeMetrics.js";
 import { v3InspectionRecorder } from "./analysisEngineV3/inspection/index.js";
+import { buildV3InspectionChunkFindingKey } from "./analysisEngineV3/inspection/inspectionKeys.js";
+import { buildV3PersistenceInspectionRecord } from "./analysisEngineV3/inspection/inspectionStageBuilders.js";
 import { processChunkJudgeV2 } from "./pipelineV2.js";
 
 export type FindingWithGlobal = Omit<JudgeFinding, "source" | "evidence_hash" | "canonical_hash" | "lineage_id" | "parent_lineage_id" | "related_article_ids"> & {
@@ -3113,37 +3115,31 @@ export async function processChunkJudge(
       error: error ?? null,
     });
 
-    if (config.V3_INSPECTION_MODE && rows.length > 0) {
+    if (config.V3_INSPECTION_MODE) {
       const inspectionTimestamp = new Date().toISOString();
-      await v3InspectionRecorder.recordStages(
-        rows.map((row) => ({
+      const inspectionRecord = buildV3PersistenceInspectionRecord({
+        base: {
           jobId,
           chunkId: chunk.id,
-          findingKey: row.lineage_id ?? row.evidence_hash ?? `${row.article_id}:${row.start_offset_global ?? 0}-${row.end_offset_global ?? 0}`,
-          stageOrder: 6,
-          stageName: "persistence",
+          findingKey: buildV3InspectionChunkFindingKey(jobId, chunk.id),
           createdAt: inspectionTimestamp,
-          payloadJson: {
-            analysis_engine: analysisEngine,
-            pipeline_version: jobConfig?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION,
-            chunk_id: chunk.id,
-            finding_key: row.lineage_id ?? row.evidence_hash ?? null,
-            analysis_findings_row: row,
-            database_result: {
-              attempted: rows.length,
-              inserted: data?.length ?? 0,
-              error: error
-                ? {
-                    message: error.message,
-                    code: error.code ?? null,
-                    details: error.details ?? null,
-                    hint: error.hint ?? null,
-                  }
-                : null,
-            },
-          },
-        })),
-      );
+        },
+        analysisEngine: analysisEngine,
+        pipelineVersion: jobConfig?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION,
+        attempted: rows.length,
+        inserted: data?.length ?? 0,
+        skipped: rows.length - (data?.length ?? 0),
+        error: error
+          ? {
+              message: error.message,
+              code: error.code ?? null,
+              details: error.details ?? null,
+              hint: error.hint ?? null,
+            }
+          : null,
+        rows,
+      });
+      await v3InspectionRecorder.recordStages([inspectionRecord]);
     }
 
     if (error) {

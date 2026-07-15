@@ -16,6 +16,20 @@ function normalizeCreatedAt(value: string | null | undefined, fallback: () => st
   return text.length > 0 ? text : fallback();
 }
 
+function summarizeRecordLocations(records: readonly V3InspectionRecord[]): Readonly<{
+  jobIds: readonly string[];
+  chunkIds: readonly string[];
+  findingKeys: readonly string[];
+  stageNames: readonly string[];
+}> {
+  return Object.freeze({
+    jobIds: Object.freeze([...new Set(records.map((record) => record.jobId))].sort((left, right) => left.localeCompare(right))),
+    chunkIds: Object.freeze([...new Set(records.map((record) => record.chunkId ?? ""))].filter(Boolean).sort((left, right) => left.localeCompare(right))),
+    findingKeys: Object.freeze([...new Set(records.map((record) => record.findingKey))].sort((left, right) => left.localeCompare(right))),
+    stageNames: Object.freeze([...new Set(records.map((record) => record.stageName))].sort((left, right) => left.localeCompare(right))),
+  });
+}
+
 async function persistInspectionRecords(records: readonly V3InspectionRecord[]): Promise<void> {
   const { error } = await supabase.from("analysis_v3_inspection").insert(
     records.map((record) => ({
@@ -59,8 +73,15 @@ export function createV3InspectionRecorder(deps?: Readonly<{
     try {
       await persist(payload);
     } catch (error) {
+      const recordLocations = summarizeRecordLocations(payload);
+      const stack = error instanceof Error ? error.stack ?? null : null;
       logger.warn("V3 inspection record persist failed", {
+        stageNames: recordLocations.stageNames,
+        jobIds: recordLocations.jobIds,
+        chunkIds: recordLocations.chunkIds,
+        findingKeys: recordLocations.findingKeys,
         error: error instanceof Error ? error.message : String(error),
+        stack,
         recordCount: payload.length,
       });
     }
