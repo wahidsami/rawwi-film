@@ -7,6 +7,7 @@ import type { KnowledgeRegistryEntry } from "../reviewerKnowledge/knowledgeRegis
 import { createDefaultLessonEngine } from "../reviewerKnowledge/lessons/lessonEngine.js";
 import type { ReviewerKnowledgeLesson } from "../reviewerKnowledge/lessons/lessonTypes.js";
 import { createPrecedentEngineRegistry } from "../reviewerKnowledge/precedentEngine/precedentEngine.js";
+import { createReviewerKnowledgeRetrievalReport, type ReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import type { ReviewerKnowledgePack } from "../reviewerKnowledge/reviewerKnowledgeTypes.js";
 import type { V3PromptBuilderInput, V3PromptJsonObject, V3PromptSubjectModule } from "./builderTypes.js";
 import { buildKnowledgeRankingCorpus, scoreTerms, uniqueStrings } from "../reviewerKnowledge/knowledgeRanking/knowledgeRankingUtils.js";
@@ -53,6 +54,12 @@ let precedentEngineCache: ReturnType<typeof createPrecedentEngineRegistry> | nul
 
 function normalizeText(value: string | null | undefined): string {
   return typeof value === "string" ? value.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase() : "";
+}
+
+function stringValue(value: unknown): string {
+  if (typeof value === "string") return normalizeText(value);
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return "";
 }
 
 function uniqueStringsWithNormalization(values: readonly string[]): readonly string[] {
@@ -300,6 +307,306 @@ function selectPrecedents(queryTerms: readonly string[], input: V3PromptBuilderI
   })));
 }
 
+function buildPromptReviewerDecisionPipeline(
+  input: V3PromptBuilderInput,
+  conceptContext: ConceptContext,
+  assessment: ReviewerAssessment,
+  packs: readonly ReviewerKnowledgePack[],
+  lessons: readonly Record<string, unknown>[],
+  precedents: readonly ReasoningEnginePrecedent[],
+  decisionRecords: readonly ReasoningEngineEntry[],
+  knowledgeRetrieval: ReviewerKnowledgeRetrievalReport,
+): V3PromptJsonObject {
+  const primaryArticleIds = [...new Set(input.subjectModule.articleIds ?? [])].sort((left, right) => left - right);
+  const precedentIds = uniqueStringsWithNormalization(precedents.map((precedent) => precedent.decisionId));
+  const evidenceSummary = uniqueStringsWithNormalization([
+    input.chunkContext.localChunk,
+    ...(input.chunkContext.neighboringSentences ?? []),
+    assessment.reasoningTrace.join(" | "),
+  ]);
+  const knowledgeSummary = uniqueStringsWithNormalization([
+    ...packs.map((pack) => pack.id),
+    ...knowledgeRetrieval.retrievedPacks.map((pack) => `${pack.id}:${pack.score.toFixed(4)}`),
+    ...lessons.map((lesson) => stringValue(lesson.id)),
+    ...decisionRecords.map((record) => record.id),
+    ...knowledgeRetrieval.decisionMemoryRetrieval.retrievedMemories.map((memory) => `${memory.id}:${memory.similarity.toFixed(4)}`),
+  ]);
+  const preliminaryStatus = assessment.exceptionSignals.length > 0 || assessment.confidence < 0.55
+    ? "needs_review"
+    : assessment.conceptCount > 0 && assessment.evidenceStrength >= 0.7
+      ? "accept"
+      : "reject";
+  const preliminaryConfidence = Number(
+    Math.min(1, Math.max(0, (assessment.confidence + assessment.evidenceStrength + conceptContext.confidence) / 3)).toFixed(6),
+  );
+
+  return Object.freeze({
+    stages: Object.freeze([
+      Object.freeze({
+        key: "literal_meaning",
+        title: "Literal Meaning",
+        summary: evidenceSummary[0] ?? input.chunkContext.localChunk,
+        confidence: assessment.evidenceStrength,
+      }),
+      Object.freeze({
+        key: "implied_meaning",
+        title: "Implied Meaning",
+        summary: assessment.literalVsImpliedMeaning,
+        confidence: assessment.confidence,
+      }),
+      Object.freeze({
+        key: "speaker_analysis",
+        title: "Speaker Analysis",
+        summary: assessment.speaker ?? "Unknown speaker.",
+        confidence: assessment.confidence,
+      }),
+      Object.freeze({
+        key: "target_analysis",
+        title: "Target Analysis",
+        summary: assessment.target ?? "Unknown target.",
+        confidence: assessment.confidence,
+      }),
+      Object.freeze({
+        key: "intent_analysis",
+        title: "Intent Analysis",
+        summary: assessment.narrativeIntent,
+        confidence: assessment.confidence,
+      }),
+      Object.freeze({
+        key: "narrative_purpose",
+        title: "Narrative Purpose",
+        summary: assessment.narrativeUnderstanding,
+        confidence: assessment.confidence,
+      }),
+      Object.freeze({
+        key: "context_positioning",
+        title: "Context Positioning",
+        summary: assessment.contextClassification,
+        confidence: assessment.confidence,
+      }),
+      Object.freeze({
+        key: "knowledge_retrieval",
+        title: "Reviewer Knowledge Retrieval",
+        summary: knowledgeSummary.join(" | ") || "No reviewer knowledge assets were selected.",
+        confidence: conceptContext.confidence,
+      }),
+      Object.freeze({
+        key: "precedent_retrieval",
+        title: "Precedent Retrieval",
+        summary: precedentIds.length > 0 ? precedentIds.join(" | ") : "No precedents matched.",
+        confidence: conceptContext.confidence,
+      }),
+      Object.freeze({
+        key: "gcam_applicability",
+        title: "GCAM Applicability",
+        summary: primaryArticleIds.length > 0 ? primaryArticleIds.join(", ") : "No GCAM articles were preselected.",
+        confidence: conceptContext.confidence,
+      }),
+      Object.freeze({
+        key: "reasoning_generation",
+        title: "Reasoning Generation",
+        summary: [
+    `Evidence: ${evidenceSummary.join(" | ") || "none"}`,
+    `Reasoning trace: ${assessment.reasoningTrace.join(" | ") || "none"}`,
+    `Recommendation: assist the reviewer reasoning only; the legal engine remains authoritative.`,
+        ].join(" | "),
+        confidence: assessment.confidence,
+      }),
+      Object.freeze({
+        key: "preliminary_decision",
+        title: "Preliminary Decision",
+        summary: preliminaryStatus,
+        confidence: preliminaryConfidence,
+      }),
+    ]),
+    literalMeaning: evidenceSummary[0] ?? input.chunkContext.localChunk,
+    impliedMeaning: assessment.literalVsImpliedMeaning,
+    narrativeContext: assessment.narrativeUnderstanding,
+    speakerAnalysis: assessment.speaker ?? "Unknown speaker.",
+    victimAnalysis: assessment.victim ?? "Unknown victim.",
+    socialImpact: uniqueStringsWithNormalization([
+      assessment.contextClassification,
+      assessment.narrativeIntent,
+      ...assessment.exceptionSignals,
+    ]).join(" | "),
+    applicableGcamArticles: Object.freeze(primaryArticleIds),
+    rejectedGcamArticles: Object.freeze([]),
+    supportingEvidence: Object.freeze(evidenceSummary),
+    counterEvidence: Object.freeze(uniqueStringsWithNormalization([
+      ...assessment.exceptionSignals,
+      ...assessment.stageResults.filter((stage) => stage.status !== "complete").map((stage) => stage.summary),
+    ])),
+    confidenceExplanation: [
+      `Assessment confidence ${assessment.confidence.toFixed(6)}.`,
+      `Concept confidence ${conceptContext.confidence.toFixed(6)}.`,
+      `Evidence strength ${assessment.evidenceStrength.toFixed(6)}.`,
+    ].join(" "),
+    preliminaryDecision: Object.freeze({
+      status: preliminaryStatus,
+      reason: assessment.reasoningTrace.join(" | "),
+      confidence: preliminaryConfidence,
+      applicableArticles: Object.freeze(primaryArticleIds),
+      rejectedArticles: Object.freeze([]),
+    }),
+  });
+}
+
+function buildGptReviewerAssistant(
+  input: V3PromptBuilderInput,
+  conceptContext: ConceptContext,
+  assessment: ReviewerAssessment,
+  knowledgeRetrieval: ReviewerKnowledgeRetrievalReport,
+  lessonSummaries: readonly Record<string, unknown>[],
+  precedents: readonly ReasoningEnginePrecedent[],
+  decisionRecords: readonly ReasoningEngineEntry[],
+  reasoningPipeline: V3PromptJsonObject,
+): V3PromptJsonObject {
+  const retrievedKnowledge = knowledgeRetrieval.retrievedPacks.map((item) => ({
+    id: item.id,
+    title: item.title,
+    module_id: item.moduleId,
+    score: item.score,
+    confidence: item.confidence,
+    reasons: [...item.reasons],
+    source: [...item.source],
+    trigger_concept_ids: [...item.triggerConceptIds],
+    article_ids: [...item.articleIds],
+    selected: item.selected,
+  }));
+  const lessonPackage = lessonSummaries.map((lesson) => ({
+    id: stringValue(lesson.id),
+    title: stringValue(lesson.title),
+    version: stringValue(lesson.version),
+    summary: stringValue(lesson.summary),
+    score: Number.isFinite(Number((lesson as Record<string, unknown>).score)) ? Number((lesson as Record<string, unknown>).score) : 0,
+  }));
+  const lessonIds = lessonPackage.map((lesson) => lesson.id);
+  const decisionRecordPackage = decisionRecords.map((record) => ({
+    id: stringValue(record.id),
+    title: stringValue(record.title),
+    kind: stringValue(record.kind),
+    summary: stringValue(record.summary),
+    score: Number.isFinite(Number(record.score)) ? Number(record.score) : 0,
+  }));
+  const precedentIds = precedents.map((precedent) => ({
+    decision_id: precedent.decisionId,
+    similarity: precedent.similarity,
+    reason: precedent.reason,
+    article_ids: [...precedent.articleIds],
+    matched_concepts: [...precedent.matchedConcepts],
+  }));
+
+  return Object.freeze({
+    role: "GPT Reviewer Assistant",
+    authority: "The legal engine remains the final decision maker.",
+    reviewer_module: Object.freeze({
+      id: input.subjectModule.id,
+      title_ar: input.subjectModule.titleAr,
+      scope: input.subjectModule.scope ?? null,
+      article_ids: [...(input.subjectModule.articleIds ?? [])],
+    }),
+    semantic_interpretation: Object.freeze({
+      concept_ids: [...conceptContext.conceptIds],
+      primary_concept_id: conceptContext.primaryConceptId,
+      concept_count: conceptContext.conceptCount,
+      confidence: conceptContext.confidence,
+      narrative_intent: assessment.narrativeIntent,
+      context_classification: assessment.contextClassification,
+      literal_vs_implied_meaning: assessment.literalVsImpliedMeaning,
+      exception_signals: [...assessment.exceptionSignals],
+      evidence_strength: assessment.evidenceStrength,
+    }),
+    evidence: Object.freeze({
+      literal_meaning: assessment.reasoningTrace[0] ?? null,
+      supporting_evidence: [...assessment.reasoningTrace],
+      confidence: assessment.evidenceStrength,
+    }),
+    knowledge: Object.freeze({
+      retrieved_packs: Object.freeze(retrievedKnowledge),
+      lessons: Object.freeze(lessonPackage),
+      precedents: Object.freeze(precedentIds),
+      decision_records: Object.freeze(decisionRecordPackage),
+      decision_memory_retrieval: Object.freeze({
+        query_terms: [...knowledgeRetrieval.decisionMemoryRetrieval.queryTerms],
+        top_k: knowledgeRetrieval.decisionMemoryRetrieval.topK,
+        memory_score: knowledgeRetrieval.decisionMemoryRetrieval.memoryScore,
+        memory_confidence: knowledgeRetrieval.decisionMemoryRetrieval.memoryConfidence,
+        memory_source: knowledgeRetrieval.decisionMemoryRetrieval.memorySource,
+        cache_key: knowledgeRetrieval.decisionMemoryRetrieval.cacheKey,
+        cache_hit: knowledgeRetrieval.decisionMemoryRetrieval.cacheHit,
+        retrieved_memories: knowledgeRetrieval.decisionMemoryRetrieval.retrievedMemories.map((memory) => ({
+          id: memory.id,
+          source_id: memory.sourceId,
+          title: memory.title,
+          summary: memory.summary,
+          status: memory.status,
+          confidence: memory.confidence,
+          confidence_score: memory.confidenceScore,
+          similarity: memory.similarity,
+          memory_influence: memory.memoryInfluence,
+          why: memory.why,
+          evidence: [...memory.evidence],
+          article_ids: [...memory.articleIds],
+          atom_ids: [...memory.atomIds],
+          concepts: [...memory.concepts],
+          reasoning: [...memory.reasoning],
+          benchmark_tags: [...memory.benchmarkTags],
+          related_lessons: [...memory.relatedLessons],
+          related_patterns: [...memory.relatedPatterns],
+          related_blueprint_concepts: [...memory.relatedBlueprintConcepts],
+          false_positive_risk: memory.falsePositiveRisk,
+          reviewer_decision: memory.reviewerDecision,
+          finding_type: memory.findingType,
+          reasons: [...memory.reasons],
+          selected: memory.selected,
+        })),
+        rejected_memories: knowledgeRetrieval.decisionMemoryRetrieval.rejectedMemories.map((memory) => ({
+          id: memory.id,
+          source_id: memory.sourceId,
+          title: memory.title,
+          summary: memory.summary,
+          status: memory.status,
+          confidence: memory.confidence,
+          confidence_score: memory.confidenceScore,
+          similarity: memory.similarity,
+          memory_influence: memory.memoryInfluence,
+          why: memory.why,
+          evidence: [...memory.evidence],
+          article_ids: [...memory.articleIds],
+          atom_ids: [...memory.atomIds],
+          concepts: [...memory.concepts],
+          reasoning: [...memory.reasoning],
+          benchmark_tags: [...memory.benchmarkTags],
+          related_lessons: [...memory.relatedLessons],
+          related_patterns: [...memory.relatedPatterns],
+          related_blueprint_concepts: [...memory.relatedBlueprintConcepts],
+          false_positive_risk: memory.falsePositiveRisk,
+          reviewer_decision: memory.reviewerDecision,
+          finding_type: memory.findingType,
+          reasons: [...memory.reasons],
+          selected: memory.selected,
+        })),
+        selected_memory_ids: [...knowledgeRetrieval.decisionMemoryRetrieval.selectedMemoryIds],
+      }),
+      reviewer_academy: Object.freeze({
+        lesson_ids: Object.freeze(lessonIds),
+        lesson_count: lessonIds.length,
+      }),
+    }),
+    decision_template: Object.freeze({
+      answer_with: Object.freeze(["reasoning", "supporting_evidence", "counter_evidence", "applicable_articles", "rejected_articles", "confidence", "recommendation"]),
+      reasoning: "Explain why the reading is supported before the legal engine finalizes the outcome.",
+      supporting_evidence: "Cite the exact text and context that support the reasoning.",
+      counter_evidence: "State the strongest counter-reading and why it loses.",
+      applicable_articles: "List the articles that the reviewer believes are relevant.",
+      rejected_articles: "List the articles that were considered but rejected.",
+      confidence: "Provide a calibrated confidence value between 0 and 1.",
+      recommendation: "State the reviewer recommendation, but do not assign findings directly.",
+    }),
+    reasoning_pipeline: reasoningPipeline,
+  });
+}
+
 export function buildReviewerReasoningEnginePayload(
   input: V3PromptBuilderInput,
   conceptContext: ConceptContext,
@@ -308,7 +615,12 @@ export function buildReviewerReasoningEnginePayload(
 ): ReviewerReasoningEnginePayload {
   const knowledgeRegistry = getKnowledgeRegistry();
   const lessonEngine = getLessonEngine();
-  const queryTerms = collectQueryTerms(input, conceptContext, assessment, packs);
+  const knowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
+    assessment,
+    conceptContext,
+    subjectModule: input.subjectModule,
+  });
+  const queryTerms = knowledgeRetrieval.queryTerms;
   const lessonSearchResults = lessonEngine.search({
     concept: assessment.applicableConceptIds[0] ?? input.subjectModule.id,
     keyword: queryTerms.slice(0, 12).join(" "),
@@ -383,13 +695,33 @@ export function buildReviewerReasoningEnginePayload(
     decision: entry.decision,
     score: entry.score,
     reasons: [...entry.reasons],
-    related_ids: [...entry.relatedIds],
+    relatedIds: [...entry.relatedIds],
   }));
 
-  const relationships = buildRelationshipSummaries(packs, lessonSearchResults.map((result) => result.lesson));
+  const selectedPacks = knowledgeRetrieval.selectedPacks.map((pack) => normalizePackView(pack));
+  const relationships = buildRelationshipSummaries(knowledgeRetrieval.selectedPacks, lessonSearchResults.map((result) => result.lesson));
   const cases = selectCases(queryTerms, input, assessment);
   const precedents = selectPrecedents(queryTerms, input, assessment);
-  const selectedPacks = packs.map((pack) => normalizePackView(pack));
+  const reasoningPipeline = buildPromptReviewerDecisionPipeline(
+    input,
+    conceptContext,
+    assessment,
+    knowledgeRetrieval.selectedPacks,
+    lessonSummaries,
+    precedents,
+    decisionRecords,
+    knowledgeRetrieval,
+  );
+  const gptReviewerAssistant = buildGptReviewerAssistant(
+    input,
+    conceptContext,
+    assessment,
+    knowledgeRetrieval,
+    lessonSummaries,
+    precedents,
+    decisionRecords,
+    reasoningPipeline,
+  );
 
   return Object.freeze({
     semantic: Object.freeze({
@@ -408,7 +740,102 @@ export function buildReviewerReasoningEnginePayload(
       selected_packs: Object.freeze(selectedPacks),
       pack_ids: Object.freeze(selectedPacks.map((pack) => String(pack.id))),
       pack_count: selectedPacks.length,
-    }),
+        knowledge_retrieval: Object.freeze({
+          query_terms: [...knowledgeRetrieval.queryTerms],
+          top_k: knowledgeRetrieval.topK,
+          knowledge_score: knowledgeRetrieval.knowledgeScore,
+          knowledge_confidence: knowledgeRetrieval.knowledgeConfidence,
+        knowledge_source: knowledgeRetrieval.knowledgeSource,
+        cache_key: knowledgeRetrieval.cacheKey,
+        cache_hit: knowledgeRetrieval.cacheHit,
+        retrieved_packs: Object.freeze(knowledgeRetrieval.retrievedPacks.map((item) => Object.freeze({
+          id: item.id,
+          title: item.title,
+          module_id: item.moduleId,
+          score: item.score,
+          confidence: item.confidence,
+          reasons: [...item.reasons],
+          source: [...item.source],
+          trigger_concept_ids: [...item.triggerConceptIds],
+          article_ids: [...item.articleIds],
+          selected: item.selected,
+        }))),
+          rejected_packs: Object.freeze(knowledgeRetrieval.rejectedPacks.map((item) => Object.freeze({
+            id: item.id,
+            title: item.title,
+            module_id: item.moduleId,
+            score: item.score,
+          confidence: item.confidence,
+          reasons: [...item.reasons],
+          source: [...item.source],
+          trigger_concept_ids: [...item.triggerConceptIds],
+            article_ids: [...item.articleIds],
+            selected: item.selected,
+          }))),
+        }),
+        decision_memory_retrieval: Object.freeze({
+          query_terms: [...knowledgeRetrieval.decisionMemoryRetrieval.queryTerms],
+          top_k: knowledgeRetrieval.decisionMemoryRetrieval.topK,
+          memory_score: knowledgeRetrieval.decisionMemoryRetrieval.memoryScore,
+          memory_confidence: knowledgeRetrieval.decisionMemoryRetrieval.memoryConfidence,
+          memory_source: knowledgeRetrieval.decisionMemoryRetrieval.memorySource,
+          cache_key: knowledgeRetrieval.decisionMemoryRetrieval.cacheKey,
+          cache_hit: knowledgeRetrieval.decisionMemoryRetrieval.cacheHit,
+          retrieved_memories: knowledgeRetrieval.decisionMemoryRetrieval.retrievedMemories.map((memory) => Object.freeze({
+            id: memory.id,
+            source_id: memory.sourceId,
+            title: memory.title,
+            summary: memory.summary,
+            status: memory.status,
+            confidence: memory.confidence,
+            confidence_score: memory.confidenceScore,
+            similarity: memory.similarity,
+            memory_influence: memory.memoryInfluence,
+            why: memory.why,
+            evidence: [...memory.evidence],
+            article_ids: [...memory.articleIds],
+            atom_ids: [...memory.atomIds],
+            concepts: [...memory.concepts],
+            reasoning: [...memory.reasoning],
+            benchmark_tags: [...memory.benchmarkTags],
+            related_lessons: [...memory.relatedLessons],
+            related_patterns: [...memory.relatedPatterns],
+            related_blueprint_concepts: [...memory.relatedBlueprintConcepts],
+            false_positive_risk: memory.falsePositiveRisk,
+            reviewer_decision: memory.reviewerDecision,
+            finding_type: memory.findingType,
+            reasons: [...memory.reasons],
+            selected: memory.selected,
+          })),
+          rejected_memories: knowledgeRetrieval.decisionMemoryRetrieval.rejectedMemories.map((memory) => Object.freeze({
+            id: memory.id,
+            source_id: memory.sourceId,
+            title: memory.title,
+            summary: memory.summary,
+            status: memory.status,
+            confidence: memory.confidence,
+            confidence_score: memory.confidenceScore,
+            similarity: memory.similarity,
+            memory_influence: memory.memoryInfluence,
+            why: memory.why,
+            evidence: [...memory.evidence],
+            article_ids: [...memory.articleIds],
+            atom_ids: [...memory.atomIds],
+            concepts: [...memory.concepts],
+            reasoning: [...memory.reasoning],
+            benchmark_tags: [...memory.benchmarkTags],
+            related_lessons: [...memory.relatedLessons],
+            related_patterns: [...memory.relatedPatterns],
+            related_blueprint_concepts: [...memory.relatedBlueprintConcepts],
+            false_positive_risk: memory.falsePositiveRisk,
+            reviewer_decision: memory.reviewerDecision,
+            finding_type: memory.findingType,
+            reasons: [...memory.reasons],
+            selected: memory.selected,
+          })),
+          selected_memory_ids: [...knowledgeRetrieval.decisionMemoryRetrieval.selectedMemoryIds],
+        }),
+      }),
     lessons: Object.freeze(lessonSummaries),
     blueprints: Object.freeze(blueprints),
     patterns: Object.freeze(patterns),
@@ -419,14 +846,18 @@ export function buildReviewerReasoningEnginePayload(
       top_matches: Object.freeze(precedents),
       total_matches: precedents.length,
     }),
+    decision_records: Object.freeze(decisionRecords),
+    gpt_reviewer_assistant: gptReviewerAssistant,
+    reasoning_pipeline: reasoningPipeline,
     decision_guidance: Object.freeze({
-      answer_with: Object.freeze(["why", "evidence", "counterargument", "applicable_articles", "rejected_articles", "confidence"]),
+      answer_with: Object.freeze(["why", "evidence", "counterargument", "applicable_articles", "rejected_articles", "confidence", "recommendation"]),
       why: "Explain the reviewer conclusion in plain language.",
       evidence: "Cite the exact supporting chunk, context, and precedent evidence.",
       counterargument: "State the strongest alternative interpretation and why it loses.",
       applicable_articles: "List the article ids that support the final decision.",
       rejected_articles: "List the article ids that were considered and rejected, if any.",
       confidence: "Provide a calibrated confidence value between 0 and 1.",
+      recommendation: "State the reviewer recommendation only as reasoning support for the legal engine.",
     }),
   });
 }

@@ -1,6 +1,7 @@
 import type { V3InspectionRecordInput, V3InspectionStageName, V3InspectionStageOrder } from "./inspectionTypes.js";
 import type { KnowledgeRegistryReport } from "../reviewerKnowledge/knowledgeRegistry/index.js";
 import type { KnowledgeRankingReport } from "../reviewerKnowledge/knowledgeRanking/index.js";
+import type { DecisionMemoryRetrievalReport } from "../reviewerKnowledge/decisionMemory/decisionMemoryRetrieval.js";
 import type { ReviewerDebatePackage } from "../reviewerDebate/index.js";
 import type { ArbitrationDecisionPackage } from "../arbitration/index.js";
 import type { ExplanationPackage } from "../explanation/index.js";
@@ -83,6 +84,7 @@ export function buildV3KnowledgeMatchingInspectionRecord(input: Readonly<{
   matchedConcepts: readonly string[];
   matchedEvidence: readonly string[];
   knowledgeRetrieval?: Record<string, unknown> | null;
+  decisionMemoryRetrieval: DecisionMemoryRetrievalReport;
   evidenceAssessment: Record<string, unknown>;
   context: Record<string, unknown>;
   conceptContext: Record<string, unknown>;
@@ -106,6 +108,68 @@ export function buildV3KnowledgeMatchingInspectionRecord(input: Readonly<{
     matched_concepts: [...input.matchedConcepts],
     matched_evidence: [...input.matchedEvidence],
     knowledge_retrieval: input.knowledgeRetrieval ?? null,
+    decision_memory_retrieval: {
+      query_terms: [...input.decisionMemoryRetrieval.queryTerms],
+      retrieved_memories: input.decisionMemoryRetrieval.retrievedMemories.map((memory) => ({
+        id: memory.id,
+        source_id: memory.sourceId,
+        title: memory.title,
+        summary: memory.summary,
+        status: memory.status,
+        confidence: memory.confidence,
+        confidence_score: memory.confidenceScore,
+        similarity: memory.similarity,
+        memory_influence: memory.memoryInfluence,
+        why: memory.why,
+        evidence: [...memory.evidence],
+        article_ids: [...memory.articleIds],
+        atom_ids: [...memory.atomIds],
+        concepts: [...memory.concepts],
+        reasoning: [...memory.reasoning],
+        benchmark_tags: [...memory.benchmarkTags],
+        related_lessons: [...memory.relatedLessons],
+        related_patterns: [...memory.relatedPatterns],
+        related_blueprint_concepts: [...memory.relatedBlueprintConcepts],
+        false_positive_risk: memory.falsePositiveRisk,
+        reviewer_decision: memory.reviewerDecision,
+        finding_type: memory.findingType,
+        reasons: [...memory.reasons],
+        selected: memory.selected,
+      })),
+      rejected_memories: input.decisionMemoryRetrieval.rejectedMemories.map((memory) => ({
+        id: memory.id,
+        source_id: memory.sourceId,
+        title: memory.title,
+        summary: memory.summary,
+        status: memory.status,
+        confidence: memory.confidence,
+        confidence_score: memory.confidenceScore,
+        similarity: memory.similarity,
+        memory_influence: memory.memoryInfluence,
+        why: memory.why,
+        evidence: [...memory.evidence],
+        article_ids: [...memory.articleIds],
+        atom_ids: [...memory.atomIds],
+        concepts: [...memory.concepts],
+        reasoning: [...memory.reasoning],
+        benchmark_tags: [...memory.benchmarkTags],
+        related_lessons: [...memory.relatedLessons],
+        related_patterns: [...memory.relatedPatterns],
+        related_blueprint_concepts: [...memory.relatedBlueprintConcepts],
+        false_positive_risk: memory.falsePositiveRisk,
+        reviewer_decision: memory.reviewerDecision,
+        finding_type: memory.findingType,
+        reasons: [...memory.reasons],
+        selected: memory.selected,
+      })),
+      selected_memory_ids: [...input.decisionMemoryRetrieval.selectedMemoryIds],
+      memory_score: input.decisionMemoryRetrieval.memoryScore,
+      memory_confidence: input.decisionMemoryRetrieval.memoryConfidence,
+      memory_source: input.decisionMemoryRetrieval.memorySource,
+      top_k: input.decisionMemoryRetrieval.topK,
+      cache_key: input.decisionMemoryRetrieval.cacheKey,
+      cache_hit: input.decisionMemoryRetrieval.cacheHit,
+    },
     evidence_assessment: input.evidenceAssessment,
     context: input.context,
     concept_context: input.conceptContext,

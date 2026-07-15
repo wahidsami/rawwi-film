@@ -53,10 +53,11 @@ import {
 } from "../inspection/inspectionStageBuilders.js";
 import { createKnowledgeRegistry, createKnowledgeRegistryFromEntries, defaultKnowledgeRegistryRoot } from "../reviewerKnowledge/knowledgeRegistry/index.js";
 import { createKnowledgeRankingReport } from "../reviewerKnowledge/knowledgeRanking/index.js";
-import { selectReviewerKnowledgePacks } from "../reviewerKnowledge/reviewerKnowledgeSelector.js";
+import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { buildReviewerDebatePackage } from "../reviewerDebate/index.js";
 import { buildArbitrationDecisionPackage } from "../arbitration/index.js";
 import { buildExplanationPackage } from "../explanation/index.js";
+import { buildReviewerDecisionContext } from "../legal/reviewerDecisionPreparation.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -169,7 +170,7 @@ function defaultOutputSchema(): V3PromptOutputSchema {
       "The evidence object must include candidates and primaryCandidateIndex.",
       "Each evidence candidate must include the compatibility fields required by the existing mapper: text, startOffset, endOffset, confidence, source, and notes.",
       "To preserve downstream compatibility, candidate objects should also include id, quote, offsetStart, offsetEnd, concepts, entities, and reason.",
-      "The reasoned decision must answer reasoning, alternativeInterpretations, supportingEvidence, contradictingEvidence, applicableArticles, rejectedArticles, riskAnalysis, narrativeAnalysis, humanLikeExplanation, and confidence.",
+      "The reasoned decision must answer reasoning, alternativeInterpretations, supportingEvidence, contradictingEvidence, applicableArticles, rejectedArticles, riskAnalysis, narrativeAnalysis, humanLikeExplanation, recommendation, and confidence.",
       "Use cases, precedents, lessons, blueprints, patterns, and relationships as reviewer memory, not as a substitute for evidence.",
       "Response is mapped into the existing V2 finding model after legal evaluation.",
     ],
@@ -199,6 +200,7 @@ function defaultOutputSchema(): V3PromptOutputSchema {
         dialogue: true,
         narration: false,
         sceneDescription: false,
+        recommendation: "Support the finding, but let the legal engine make the final decision.",
         confidence: 0.95,
       },
       evidence: {
@@ -427,6 +429,7 @@ export async function runV3RuntimeAdapter(
     riskAnalysis: mapped.reasonedDecision.riskAnalysis,
     narrativeAnalysis: mapped.reasonedDecision.narrativeAnalysis,
     humanLikeExplanation: mapped.reasonedDecision.humanLikeExplanation,
+    recommendation: mapped.reasonedDecision.recommendation,
   });
   const intelligence = buildIntelligenceContext({
     moduleId: analysisRequest.subjectModule.id,
@@ -436,6 +439,31 @@ export async function runV3RuntimeAdapter(
     semantic: mapped.semantic,
     context: mapped.context,
     glossary: analysisRequest.glossary,
+  });
+  const reviewerConceptContext = createPromptConceptContext(promptInput);
+  const reviewerAssessment = runReviewerMethodology({
+    promptInput,
+    conceptContext: reviewerConceptContext,
+  });
+  const reviewerKnowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
+    assessment: reviewerAssessment,
+    conceptContext: reviewerConceptContext,
+    subjectModule: analysisRequest.subjectModule,
+  });
+  const reviewerKnowledgePacks = reviewerKnowledgeRetrieval.selectedPacks;
+  const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(
+    promptInput,
+    reviewerConceptContext,
+    reviewerAssessment,
+    reviewerKnowledgePacks,
+  );
+  const reviewerDecision = buildReviewerDecisionContext({
+    intelligence,
+    reviewerReasoningEngine,
+    reviewerAssessment,
+    conceptContext: reviewerConceptContext,
+    reasonedDecision: mapped.reasonedDecision,
+    subjectModuleArticleIds: analysisRequest.subjectModule.articleIds ?? [],
   });
   const legalModuleRegistry = new LegalModuleRegistry()
     .register(PROFANITY_MODULE)
@@ -459,6 +487,7 @@ export async function runV3RuntimeAdapter(
   const legalDecision = legalEngine.evaluate({
     moduleId: analysisRequest.subjectModule.id,
     intelligence,
+    reviewerDecision,
   });
   const gcamMapping = evaluateRuntimeGcamMapping(legalDecision, intelligence);
 
@@ -529,18 +558,6 @@ export async function runV3RuntimeAdapter(
     diagnostics,
     gptAssistant,
   });
-  const reviewerConceptContext = createPromptConceptContext(promptInput);
-  const reviewerAssessment = runReviewerMethodology({
-    promptInput,
-    conceptContext: reviewerConceptContext,
-  });
-  const reviewerKnowledgePacks = selectReviewerKnowledgePacks(reviewerAssessment, reviewerConceptContext);
-  const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(
-    promptInput,
-    reviewerConceptContext,
-    reviewerAssessment,
-    reviewerKnowledgePacks,
-  );
   const reviewerDebate = buildReviewerDebatePackage({
     analysisResponse,
     legalModules,
@@ -691,6 +708,40 @@ export async function runV3RuntimeAdapter(
           notes: [...(analysisRequest.subjectModule.notes ?? [])],
         },
         reviewerDomainsLoaded: [analysisRequest.subjectModule.id],
+        knowledgeRetrieval: {
+          queryTerms: [...reviewerKnowledgeRetrieval.queryTerms],
+          topK: reviewerKnowledgeRetrieval.topK,
+          knowledgeScore: reviewerKnowledgeRetrieval.knowledgeScore,
+          knowledgeConfidence: reviewerKnowledgeRetrieval.knowledgeConfidence,
+          knowledgeSource: reviewerKnowledgeRetrieval.knowledgeSource,
+          cacheKey: reviewerKnowledgeRetrieval.cacheKey,
+          cacheHit: reviewerKnowledgeRetrieval.cacheHit,
+          retrievedPacks: reviewerKnowledgeRetrieval.retrievedPacks.map((item) => ({
+            id: item.id,
+            title: item.title,
+            moduleId: item.moduleId,
+            score: item.score,
+            confidence: item.confidence,
+            reasons: [...item.reasons],
+            source: [...item.source],
+            triggerConceptIds: [...item.triggerConceptIds],
+            articleIds: [...item.articleIds],
+            selected: item.selected,
+          })),
+          rejectedPacks: reviewerKnowledgeRetrieval.rejectedPacks.map((item) => ({
+            id: item.id,
+            title: item.title,
+            moduleId: item.moduleId,
+            score: item.score,
+            confidence: item.confidence,
+            reasons: [...item.reasons],
+            source: [...item.source],
+            triggerConceptIds: [...item.triggerConceptIds],
+            articleIds: [...item.articleIds],
+            selected: item.selected,
+          })),
+        },
+        decisionMemoryRetrieval: reviewerKnowledgeRetrieval.decisionMemoryRetrieval,
         knowledgeAssetsUsed,
         storyMemory: analysisRequest.storyMemory,
         scriptMemory: input.analysisPromptContext ?? null,
