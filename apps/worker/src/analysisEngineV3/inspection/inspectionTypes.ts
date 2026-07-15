@@ -1,0 +1,57 @@
+export const V3_INSPECTION_STAGE_ORDER = [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+] as const;
+
+export type V3InspectionStageOrder = (typeof V3_INSPECTION_STAGE_ORDER)[number];
+
+export const V3_INSPECTION_STAGE_NAMES = Object.freeze({
+  1: "semantic_output",
+  2: "intelligence_context",
+  3: "reviewer_knowledge",
+  4: "legal_decision",
+  5: "finding_mapper",
+  6: "persistence",
+  7: "aggregation",
+  8: "final_report",
+} as const);
+
+export type V3InspectionStageName = (typeof V3_INSPECTION_STAGE_NAMES)[V3InspectionStageOrder];
+
+export type V3InspectionRecordInput = Readonly<{
+  jobId: string;
+  chunkId: string | null;
+  findingKey: string;
+  stageOrder: V3InspectionStageOrder;
+  stageName: V3InspectionStageName;
+  payloadJson: Record<string, unknown>;
+  createdAt?: string | null;
+}>;
+
+export type V3InspectionRecord = Readonly<{
+  id?: string;
+  jobId: string;
+  chunkId: string | null;
+  findingKey: string;
+  stageOrder: V3InspectionStageOrder;
+  stageName: V3InspectionStageName;
+  payloadJson: Readonly<Record<string, unknown>>;
+  createdAt: string;
+}>;
+
+export type V3InspectionTimelineFinding = Readonly<{
+  findingKey: string;
+  records: readonly V3InspectionRecord[];
+}>;
+
+export type V3InspectionTimeline = Readonly<{
+  jobId: string;
+  records: readonly V3InspectionRecord[];
+  findings: readonly V3InspectionTimelineFinding[];
+}>;

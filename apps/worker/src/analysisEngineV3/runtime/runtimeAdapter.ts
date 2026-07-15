@@ -32,8 +32,11 @@ import { canonicalStringify } from "../../canonicalJson.js";
 import { sha256 } from "../../hash.js";
 import { persistAnalysisExecutionSignature, type AnalysisExecutionSignatureInput } from "../../executionSignature.js";
 import { config } from "../../config.js";
+import { logger } from "../../logger.js";
 import { toPromptBuilderInput } from "../engine/analysisRequest.js";
 import type { V3StageHash, V3StageTiming } from "../pipeline/pipelineTypes.js";
+import { buildV3ReasoningTrace } from "../debug/reasoningTrace.js";
+import { v3InspectionRecorder } from "../inspection/index.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -376,6 +379,169 @@ export async function runV3RuntimeAdapter(
     findings,
     diagnostics,
   });
+
+  if (config.V3_INSPECTION_MODE && findings.length > 0 && legalDecision.finding) {
+    try {
+      const inspectionTimestamp = new Date().toISOString();
+      const reasoningTraces = buildV3ReasoningTrace({
+        analysisResponse,
+        findings,
+      });
+      const primaryTrace = reasoningTraces[0] ?? null;
+      const traceStageMap = new Map(primaryTrace?.stages.map((stage) => [stage.stage, stage] as const) ?? []);
+      const findingKey = legalDecision.finding.findingKey;
+      await v3InspectionRecorder.recordStages([
+        {
+          jobId: input.jobId,
+          chunkId: input.chunkId,
+          findingKey,
+          stageOrder: 1,
+          stageName: "semantic_output",
+          createdAt: inspectionTimestamp,
+          payloadJson: {
+            analysis_engine: "v3",
+            pipeline_version: input.analysisSignatureContext?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION,
+            chunk: {
+              start_offset: input.chunkStart,
+              end_offset: input.chunkEnd,
+              chunk_index: input.chunkIndex,
+              start_line: input.startLine,
+              end_line: input.endLine,
+            },
+            semantic_output: analysisResponse.semantic,
+            semantic_confidence: analysisResponse.semantic.confidence,
+            concepts: [...analysisResponse.intelligence.conceptContext.conceptIds],
+            entities: [...analysisResponse.intelligence.entities],
+            scene_information: {
+              scene_type: analysisResponse.narrative.sceneType,
+              story_position: analysisResponse.narrative.storyPosition,
+              dialogue_mode: analysisResponse.intelligence.dialogueMode,
+              interpretation_mode: analysisResponse.intelligence.interpretationMode,
+            },
+          },
+        },
+        {
+          jobId: input.jobId,
+          chunkId: input.chunkId,
+          findingKey,
+          stageOrder: 2,
+          stageName: "intelligence_context",
+          createdAt: inspectionTimestamp,
+          payloadJson: {
+            analysis_engine: "v3",
+            pipeline_version: input.analysisSignatureContext?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION,
+            context: analysisResponse.context,
+            story_memory: analysisRequest.storyMemory,
+            scene_memory: analysisRequest.sceneMemory,
+            flags: analysisResponse.intelligence.flags,
+            concept_context: analysisResponse.intelligence.conceptContext,
+            legal_concepts: analysisResponse.intelligence.legalConcepts,
+            evidence_assessment: analysisResponse.intelligence.evidenceAssessment,
+            confidence: analysisResponse.intelligence.contextConfidence,
+          },
+        },
+        {
+          jobId: input.jobId,
+          chunkId: input.chunkId,
+          findingKey,
+          stageOrder: 3,
+          stageName: "reviewer_knowledge",
+          createdAt: inspectionTimestamp,
+          payloadJson: {
+            analysis_engine: "v3",
+            pipeline_version: input.analysisSignatureContext?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION,
+            reviewer_module: {
+              id: analysisRequest.subjectModule.id,
+              title_ar: analysisRequest.subjectModule.titleAr,
+              scope: analysisRequest.subjectModule.scope ?? null,
+              rules: [...(analysisRequest.subjectModule.rules ?? [])],
+              exclusions: [...(analysisRequest.subjectModule.exclusions ?? [])],
+              required_evidence: [...(analysisRequest.subjectModule.requiredEvidence ?? [])],
+              decision_tree: [...(analysisRequest.subjectModule.decisionTree ?? [])],
+              examples: [...(analysisRequest.subjectModule.examples ?? [])],
+              non_examples: [...(analysisRequest.subjectModule.nonExamples ?? [])],
+              article_ids: [...(analysisRequest.subjectModule.articleIds ?? [])],
+              notes: [...(analysisRequest.subjectModule.notes ?? [])],
+            },
+            knowledge_assets_used: Object.freeze([
+              ...new Set([
+                ...((primaryTrace?.stages.flatMap((stage) => stage.items) ?? []) as readonly string[]),
+                ...((traceStageMap.get("applicable_lessons")?.items ?? []) as readonly string[]),
+                ...((traceStageMap.get("applicable_pattern_libraries")?.items ?? []) as readonly string[]),
+                ...((traceStageMap.get("applicable_knowledge_packs")?.items ?? []) as readonly string[]),
+              ]),
+            ]),
+            lessons_used: [...(traceStageMap.get("applicable_lessons")?.items ?? [])],
+            pattern_libraries_used: [...(traceStageMap.get("applicable_pattern_libraries")?.items ?? [])],
+            knowledge_packs_used: [...(traceStageMap.get("applicable_knowledge_packs")?.items ?? [])],
+            review_questions: [...(traceStageMap.get("reviewer_questions")?.items ?? [])],
+            matched_concepts: [...(traceStageMap.get("detected_concepts")?.items ?? analysisResponse.intelligence.conceptContext.conceptIds ?? [])],
+            matched_evidence: [...(traceStageMap.get("supporting_evidence")?.items ?? analysisResponse.legalDecision.evidence.candidates.map((candidate) => candidate.text))],
+            relationships_traversed: [
+              analysisResponse.intelligence.narrativeIntent,
+              analysisResponse.intelligence.target ?? "",
+              analysisResponse.intelligence.victim ?? "",
+              analysisResponse.narrative.relationship ?? "",
+              ...analysisResponse.intelligence.entities.map((entity) => entity.label),
+            ].map((value) => String(value)).filter((value) => value.trim().length > 0),
+            reasoning_trace: primaryTrace,
+          },
+        },
+        {
+          jobId: input.jobId,
+          chunkId: input.chunkId,
+          findingKey,
+          stageOrder: 4,
+          stageName: "legal_decision",
+          createdAt: inspectionTimestamp,
+          payloadJson: {
+            analysis_engine: "v3",
+            pipeline_version: input.analysisSignatureContext?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION,
+            module_id: legalDecision.moduleId,
+            module_title: legalDecision.moduleTitle,
+            status: legalDecision.status,
+            applies: legalDecision.applies,
+            accept_reject_review: legalDecision.status,
+            reason: legalDecision.reason,
+            confidence: legalDecision.confidence,
+            article_ids: [...legalDecision.articleIds],
+            finding: legalDecision.finding,
+            exceptions: legalDecision.exceptions,
+            trace: [...legalDecision.trace],
+          },
+        },
+        {
+          jobId: input.jobId,
+          chunkId: input.chunkId,
+          findingKey,
+          stageOrder: 5,
+          stageName: "finding_mapper",
+          createdAt: inspectionTimestamp,
+          payloadJson: {
+            analysis_engine: "v3",
+            pipeline_version: input.analysisSignatureContext?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION,
+            input_decision: legalDecision,
+            output_findings: findings,
+            article_mapping: gcamMapping,
+            confidence: gcamMapping.confidence,
+            title: gcamMapping.findingTitle,
+            description: gcamMapping.reviewerExplanation,
+            evidence_snippet: findings[0]?.evidence_snippet ?? legalDecision.finding?.evidence.text ?? null,
+            article_ids: findings.flatMap((findingItem) => [findingItem.article_id]),
+            atom_ids: findings.flatMap((findingItem) => findingItem.atom_id ? [findingItem.atom_id] : []),
+            legal_module: legalDecision.moduleId,
+            legal_module_title: legalDecision.moduleTitle,
+          },
+        },
+      ]);
+    } catch (error) {
+      logger.warn("V3 inspection capture failed", {
+        jobId: input.jobId,
+        chunkId: input.chunkId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 
   return Object.freeze({
     analysisResponse,

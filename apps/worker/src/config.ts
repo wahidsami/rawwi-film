@@ -149,5 +149,6 @@ export const config = {
   SCRIPT_SUMMARY_LOCK_TTL_MS: Math.max(60000, parseInt(process.env.SCRIPT_SUMMARY_LOCK_TTL_MS ?? "600000", 10) || 600000),
   ENABLE_AI_DIAGNOSTICS: (process.env.ENABLE_AI_DIAGNOSTICS ?? "false").toLowerCase() === "true",
   ENABLE_FINDING_LINEAGE: (process.env.ENABLE_FINDING_LINEAGE ?? "false").toLowerCase() === "true",
+  V3_INSPECTION_MODE: (process.env.V3_INSPECTION_MODE ?? "false").toLowerCase() === "true",
   EXTRACT_STRIP_REPEATED_HEADERS: (process.env.EXTRACT_STRIP_REPEATED_HEADERS ?? "false").toLowerCase() === "true",
 } as const;

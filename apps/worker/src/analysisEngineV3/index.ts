@@ -13,3 +13,4 @@ export * from "./concepts/index.js";
 export * from "./benchmark/index.js";
 export * from "./reviewerMethodology/index.js";
 export * from "./reviewerKnowledge/index.js";
+export * from "./inspection/index.js";
