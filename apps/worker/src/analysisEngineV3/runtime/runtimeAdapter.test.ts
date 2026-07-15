@@ -219,6 +219,7 @@ async function testReligionModuleIsReachableAtRuntime(): Promise<void> {
     assert.equal(result.diagnostics.subjectModuleId, "v3_01_religion");
     assert.equal(result.truthLayerMeta.subject_module_id, "v3_01_religion");
     assert.equal(result.findings.length > 0, true, "religion module should be reachable at runtime");
+    assert.equal(Boolean(result.truthLayerMeta.explanation), true, "explanation package should be exposed");
     assert.equal(gcamMapping.status, "MAPPED");
     assert(capturedRequestBody, "OpenAI request body should be captured");
     assert.equal(capturedRequestBody?.response_format?.type, "json_object");

@@ -43,6 +43,7 @@ import { buildV3InspectionChunkFindingKey } from "../inspection/inspectionKeys.j
 import {
   buildV3FindingMapperInspectionRecord,
   buildV3ArbitrationInspectionRecord,
+  buildV3ExplanationInspectionRecord,
   buildV3KnowledgeMatchingInspectionRecord,
   buildV3LegalReviewInspectionRecord,
   buildV3KnowledgeRegistryInspectionRecord,
@@ -55,6 +56,7 @@ import { createKnowledgeRankingReport } from "../reviewerKnowledge/knowledgeRank
 import { selectReviewerKnowledgePacks } from "../reviewerKnowledge/reviewerKnowledgeSelector.js";
 import { buildReviewerDebatePackage } from "../reviewerDebate/index.js";
 import { buildArbitrationDecisionPackage } from "../arbitration/index.js";
+import { buildExplanationPackage } from "../explanation/index.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -370,6 +372,7 @@ export async function runV3RuntimeAdapter(
   const seed = options.seed ?? (config.DETERMINISTIC_MODE ? 12345 : undefined);
   const maxTokens = options.maxTokens ?? 4096;
   const responseFormat = options.responseFormat ?? "json_object";
+  const pipelineVersion = input.analysisSignatureContext?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION;
 
   const signatureContext = input.analysisSignatureContext ?? null;
   let executionSignatureHash: string | null = null;
@@ -502,6 +505,40 @@ export async function runV3RuntimeAdapter(
     findings,
     diagnostics,
   });
+  const reviewerConceptContext = createPromptConceptContext(promptInput);
+  const reviewerAssessment = runReviewerMethodology({
+    promptInput,
+    conceptContext: reviewerConceptContext,
+  });
+  const reviewerKnowledgePacks = selectReviewerKnowledgePacks(reviewerAssessment, reviewerConceptContext);
+  const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(
+    promptInput,
+    reviewerConceptContext,
+    reviewerAssessment,
+    reviewerKnowledgePacks,
+  );
+  const reviewerDebate = buildReviewerDebatePackage({
+    analysisResponse,
+    legalModules,
+    reviewerReasoningEngine,
+  });
+  const arbitrationStartedAt = Date.now();
+  const arbitration = Object.freeze({
+    ...buildArbitrationDecisionPackage({
+      debate: reviewerDebate,
+    }),
+    decisionDurationMs: Date.now() - arbitrationStartedAt,
+  });
+  const explanation = buildExplanationPackage({
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+    pipelineVersion,
+    analysisResponse,
+    findings,
+    reviewerDebate,
+    arbitration,
+    diagnostics,
+  });
 
   if (config.V3_INSPECTION_MODE) {
     try {
@@ -523,7 +560,6 @@ export async function runV3RuntimeAdapter(
       const primaryTrace = reasoningTraces[0] ?? null;
       const traceStageMap = new Map(primaryTrace?.stages.map((stage) => [stage.stage, stage] as const) ?? []);
       const findingKey = buildV3InspectionChunkFindingKey(input.jobId, input.chunkId);
-      const pipelineVersion = input.analysisSignatureContext?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION;
       const semanticCandidates = analysisResponse.evidence.candidates.map((candidate, index) => ({
         index,
         text: candidate.text,
@@ -586,30 +622,6 @@ export async function runV3RuntimeAdapter(
         analysisRequest,
         analysisResponse,
         registry: knowledgeRegistry,
-      });
-      const reviewerConceptContext = createPromptConceptContext(promptInput);
-      const reviewerAssessment = runReviewerMethodology({
-        promptInput,
-        conceptContext: reviewerConceptContext,
-      });
-      const reviewerKnowledgePacks = selectReviewerKnowledgePacks(reviewerAssessment, reviewerConceptContext);
-      const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(
-        promptInput,
-        reviewerConceptContext,
-        reviewerAssessment,
-        reviewerKnowledgePacks,
-      );
-      const reviewerDebate = buildReviewerDebatePackage({
-        analysisResponse,
-        legalModules,
-        reviewerReasoningEngine,
-      });
-      const arbitrationStartedAt = Date.now();
-      const arbitration = Object.freeze({
-        ...buildArbitrationDecisionPackage({
-          debate: reviewerDebate,
-        }),
-        decisionDurationMs: Date.now() - arbitrationStartedAt,
       });
       const knowledgeRankingRecord = buildV3KnowledgeRankingInspectionRecord({
         base: {
@@ -739,6 +751,17 @@ export async function runV3RuntimeAdapter(
         mappedCount: findings.length,
         droppedCount: Math.max(0, (legalDecision.finding ? 1 : 0) - findings.length),
       });
+      const explanationRecord = buildV3ExplanationInspectionRecord({
+        base: {
+          jobId: input.jobId,
+          chunkId: input.chunkId,
+          findingKey,
+          createdAt: inspectionTimestamp,
+        },
+        analysisEngine: "v3",
+        pipelineVersion,
+        explanation,
+      });
       await v3InspectionRecorder.recordStages([
         knowledgeRegistryRecord,
         knowledgeRankingRecord,
@@ -748,6 +771,7 @@ export async function runV3RuntimeAdapter(
         debateRecord,
         arbitrationRecord,
         mappingRecord,
+        explanationRecord,
       ]);
     } catch (error) {
       logger.warn("V3 inspection capture failed", {
@@ -763,9 +787,10 @@ export async function runV3RuntimeAdapter(
     analysisResponse,
     findings,
     diagnostics,
-    truthLayerMeta: Object.freeze({
+      truthLayerMeta: Object.freeze({
       ...truthLayerMeta,
-      gcam_mapping: Object.freeze({
+      explanation,
+        gcam_mapping: Object.freeze({
         status: gcamMapping.status,
         articleId: gcamMapping.articleId,
         articleNumber: gcamMapping.articleNumber,

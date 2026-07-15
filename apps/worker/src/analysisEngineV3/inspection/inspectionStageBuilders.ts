@@ -3,6 +3,7 @@ import type { KnowledgeRegistryReport } from "../reviewerKnowledge/knowledgeRegi
 import type { KnowledgeRankingReport } from "../reviewerKnowledge/knowledgeRanking/index.js";
 import type { ReviewerDebatePackage } from "../reviewerDebate/index.js";
 import type { ArbitrationDecisionPackage } from "../arbitration/index.js";
+import type { ExplanationPackage } from "../explanation/index.js";
 
 type V3InspectionStageBaseInput = Readonly<{
   jobId: string;
@@ -383,5 +384,30 @@ export function buildV3ArbitrationInspectionRecord(input: Readonly<{
     decision_duration_ms: input.arbitration.decisionDurationMs,
     final_decision_status: input.arbitration.finalDecisionStatus,
     final_decision_package: input.arbitration,
+  });
+}
+
+export function buildV3ExplanationInspectionRecord(input: Readonly<{
+  base: V3InspectionStageBaseInput;
+  analysisEngine: string;
+  pipelineVersion: string;
+  explanation: ExplanationPackage;
+}>): V3InspectionRecordInput {
+  return createStageRecord(input.base, 12, "explanation", {
+    analysis_engine: input.analysisEngine,
+    pipeline_version: input.pipelineVersion,
+    finding_count: input.explanation.findingCount,
+    winning_reviewer: input.explanation.winningReviewer,
+    rejected_reviewers: [...input.explanation.rejectedReviewers],
+    findings: [...input.explanation.findings],
+    summary: input.explanation.summary,
+    metrics: input.explanation.metrics,
+    inspection_references: [...input.explanation.inspectionReferences],
+    explanation_completeness: input.explanation.summary.explanationCompleteness,
+    reference_completeness: input.explanation.summary.referenceCompleteness,
+    knowledge_completeness: input.explanation.summary.knowledgeCompleteness,
+    evidence_completeness: input.explanation.summary.evidenceCompleteness,
+    reasoning_completeness: input.explanation.summary.reasoningCompleteness,
+    diagnostics: input.explanation.diagnostics,
   });
 }

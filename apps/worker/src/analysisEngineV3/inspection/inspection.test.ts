@@ -15,6 +15,7 @@ import {
   buildV3KnowledgeRankingInspectionRecord,
   buildV3SemanticGenerationInspectionRecord,
   buildV3ReviewerDebateInspectionRecord,
+  buildV3ExplanationInspectionRecord,
 } from "./inspectionStageBuilders.js";
 
 function buildRecord(input: Partial<V3InspectionRecord> & Pick<V3InspectionRecord, "findingKey" | "stageOrder" | "stageName" | "jobId" | "chunkId" | "payloadJson" | "createdAt">): V3InspectionRecord {
@@ -636,6 +637,144 @@ function testArbitrationStageBuilder(): void {
   assert.equal((arbitrationRecord.payloadJson as Record<string, unknown>).winning_article, 4);
 }
 
+function testExplanationStageBuilder(): void {
+  const explanationRecord = buildV3ExplanationInspectionRecord({
+    base: {
+      jobId: "job-explanation",
+      chunkId: "chunk-explanation",
+      findingKey: "job:job-explanation:chunk:chunk-explanation",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+    analysisEngine: "v3",
+    pipelineVersion: "v2",
+    explanation: {
+      jobId: "job-explanation",
+      chunkId: "chunk-explanation",
+      analysisEngine: "v3",
+      pipelineVersion: "v2",
+      findingCount: 1,
+      winningReviewer: {
+        reviewerId: "profanity",
+        reviewerName: "Profanity Reviewer",
+        status: "accept",
+        confidence: 0.95,
+      },
+      rejectedReviewers: [
+        {
+          reviewerId: "general_reviewer",
+          reviewerName: "General Reviewer",
+          reason: "consensus",
+          status: "accept",
+          confidence: 0.9,
+        },
+      ],
+      findings: [
+        {
+          findingIndex: 0,
+          findingKey: "job:job-explanation:chunk:chunk-explanation",
+          findingId: "finding-1",
+          articleId: 4,
+          atomId: "atom-1",
+          title: "Profanity",
+          category: "accept",
+          semanticReasoning: {
+            semanticMeaning: "direct profanity",
+            narrativeIntent: "attack",
+            riskContext: "high",
+            conversationRole: "speaker",
+            sceneRole: "dialogue",
+            speaker: "A",
+            listener: "B",
+            target: "B",
+            victim: "B",
+            confidence: 0.98,
+          },
+          knowledgeUsed: {
+            lessons: ["lesson-1"],
+            blueprints: ["blueprint-1"],
+            patterns: ["pattern-1"],
+            relationships: ["relationship-1"],
+            cases: ["case-1"],
+            precedents: ["precedent-1"],
+          },
+          reviewerOpinions: [],
+          winningReviewer: {
+            reviewerId: "profanity",
+            reviewerName: "Profanity Reviewer",
+            status: "accept",
+            confidence: 0.95,
+          },
+          rejectedReviewers: [],
+          confidenceExplanation: {
+            semantic: 0.98,
+            evidence: 0.95,
+            legal: 0.97,
+            debate: 1,
+            arbitration: 0.95,
+            final: 0.95,
+            adjustment: 0.98,
+          },
+          applicableArticles: [4],
+          rejectedArticles: [1],
+          counterarguments: ["none"],
+          evidenceChain: ["exact quote"],
+          reasoningChain: ["direct profanity"],
+          inspectionReferences: ["semantic_generation", "knowledge_matching", "legal_review", "reviewer_debate", "arbitration", "finding_mapper"],
+          completeness: {
+            explanation: 1,
+            references: 1,
+            knowledge: 1,
+            evidence: 1,
+            reasoning: 1,
+          },
+        },
+      ],
+      summary: {
+        explanationCompleteness: 1,
+        referenceCompleteness: 1,
+        knowledgeCompleteness: 1,
+        evidenceCompleteness: 1,
+        reasoningCompleteness: 1,
+        applicableArticles: [4],
+        rejectedArticles: [1],
+      },
+      metrics: {
+        explanationCompleteness: 1,
+        referenceCompleteness: 1,
+        knowledgeCompleteness: 1,
+        evidenceCompleteness: 1,
+        reasoningCompleteness: 1,
+      },
+      inspectionReferences: ["semantic_generation", "knowledge_matching", "legal_review", "reviewer_debate", "arbitration", "finding_mapper"],
+      diagnostics: {
+        engineVersion: "v3",
+        providerName: "openai",
+        modelName: "gpt-4.1",
+        modelVersion: null,
+        rawResponseHash: "raw",
+        responseId: null,
+        responseTimestamp: null,
+        promptHash: "prompt",
+        semanticHash: "semantic",
+        legalHash: "legal",
+        executionSignatureHash: null,
+        stageHashes: [],
+        stageTimings: [],
+        subjectModuleId: "profanity",
+        chunkHash: "chunk",
+        findingCount: 1,
+      },
+      analysisResponse: {} as never,
+      reviewerDebate: {} as never,
+      arbitration: {} as never,
+    },
+  });
+
+  assert.equal(explanationRecord.stageName, "explanation");
+  assert.equal(explanationRecord.stageOrder, 12);
+  assert.equal((explanationRecord.payloadJson as Record<string, unknown>).finding_count, 1);
+}
+
 async function main(): Promise<void> {
   await testRecorderDisabledIsNoOp();
   await testRecorderEnabledPersistsRecords();
@@ -643,6 +782,7 @@ async function main(): Promise<void> {
   await testStageBuildersHandleZeroCounts();
   testReviewerDebateStageBuilder();
   testArbitrationStageBuilder();
+  testExplanationStageBuilder();
   console.log("✓ V3 inspection recorder, loader, and renderer behave correctly");
 }
 
