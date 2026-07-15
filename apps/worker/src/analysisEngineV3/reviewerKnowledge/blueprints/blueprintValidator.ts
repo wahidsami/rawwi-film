@@ -29,6 +29,17 @@ function isBlueprintEntry(entry: unknown): entry is BlueprintEntry {
     && !("type" in entry);
 }
 
+function normalizeEntry(entry: Record<string, unknown>): Record<string, unknown> {
+  const normalized: Record<string, unknown> = { ...entry };
+  if (typeof entry.id === "string") normalized.id = normalizeText(entry.id);
+  if (typeof entry.title === "string") normalized.title = normalizeText(entry.title);
+  if (typeof entry.description === "string") normalized.description = normalizeText(entry.description);
+  if (typeof entry.from === "string") normalized.from = normalizeText(entry.from);
+  if (typeof entry.to === "string") normalized.to = normalizeText(entry.to);
+  if (typeof entry.type === "string") normalized.type = normalizeText(entry.type);
+  return normalized;
+}
+
 function stableSerialize(value: unknown): string {
   if (Array.isArray(value)) {
     return `[${value.map((entry) => stableSerialize(entry)).join(",")}]`;
@@ -59,15 +70,7 @@ function loadDocument(filePath: string): BlueprintDocument {
     id: normalizeText(String(parsed.id ?? "")),
     title: normalizeText(String(parsed.title ?? "")),
     description: normalizeText(String(parsed.description ?? "")),
-    entries: Object.freeze(entries.map((entry) => isPlainObject(entry) ? Object.freeze({
-      ...entry,
-      id: typeof entry.id === "string" ? normalizeText(entry.id) : undefined,
-      title: typeof entry.title === "string" ? normalizeText(entry.title) : undefined,
-      description: typeof entry.description === "string" ? normalizeText(entry.description) : undefined,
-      from: typeof entry.from === "string" ? normalizeText(entry.from) : undefined,
-      to: typeof entry.to === "string" ? normalizeText(entry.to) : undefined,
-      type: typeof entry.type === "string" ? normalizeText(entry.type) : undefined,
-    }) : entry)),
+    entries: Object.freeze(entries.map((entry) => isPlainObject(entry) ? Object.freeze(normalizeEntry(entry)) : entry)),
   });
 }
 
