@@ -1982,7 +1982,6 @@ export async function processChunkJudge(
         },
         runFallback: runFallbackToV2,
       });
-      return;
     } else {
     // 2) Router (or high-recall bypass / deterministic no-op skip)
     const routerStartedAt = Date.now();
