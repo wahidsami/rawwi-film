@@ -421,8 +421,11 @@ export function mapLegalDecisionToFindings(args: {
 
   const primaryEvidence = pickPrimaryEvidence(decision) ?? decision.finding.evidence;
   const mappedArticleId = gcamMapping?.status === "MAPPED" ? gcamMapping.articleId : null;
-  const articleId = mappedArticleId ?? decision.finding.articleIds[0] ?? decision.articleIds[0] ?? 0;
-  const mappedAtomId = gcamMapping?.status === "MAPPED" ? gcamMapping.atomId : null;
+  const decisionArticleId = decision.finding.articleIds[0] ?? decision.articleIds[0] ?? null;
+  const articleId = decisionArticleId ?? mappedArticleId ?? 0;
+  const mappedAtomId = gcamMapping?.status === "MAPPED" && (mappedArticleId === null || mappedArticleId === articleId)
+    ? gcamMapping.atomId
+    : null;
   const fallbackAtomId = getPolicyAtomIdsForArticle(articleId)[0] ?? null;
   const atomId = normalizeAtomId(mappedAtomId ?? fallbackAtomId ?? null, articleId) || null;
   const canonicalAtom = getPrimaryCanonicalAtomForGcam(articleId, atomId);
