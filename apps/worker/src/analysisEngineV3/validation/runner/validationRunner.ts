@@ -84,22 +84,25 @@ function buildFindingSummary(moduleId: string | null, disposition: "match" | "re
 }
 
 function buildExplanation(
-  moduleId: string | null,
-  disposition: "match" | "review" | "reject",
-  conceptIds: readonly string[],
-  intent: string,
-  context: string,
-  exceptions: readonly string[],
+  evidenceText: string,
   articleIds: readonly number[],
+  disposition: "match" | "review" | "reject",
 ): string {
+  const primaryArticle = articleIds[0] ?? null;
+  const articleLabel = primaryArticle === null ? "NO ARTICLE" : `GCAM article ${primaryArticle}`;
+  const reason =
+    evidenceText.trim().length === 0 || primaryArticle === null
+      ? "NO VIOLATION"
+      : disposition === "match"
+        ? `The exact quote directly satisfies ${articleLabel}.`
+        : disposition === "review"
+          ? `The quote may relate to ${articleLabel}, but the evidence is not strong enough to confirm a violation.`
+          : `The quote does not satisfy ${articleLabel}.`;
+
   return [
-    `module=${moduleId ?? "none"}`,
-    `concepts=${conceptIds.length > 0 ? conceptIds.join(",") : "none"}`,
-    `intent=${intent}`,
-    `context=${context}`,
-    `exceptions=${exceptions.length > 0 ? exceptions.join(",") : "none"}`,
-    `articles=${articleIds.length > 0 ? articleIds.join(",") : "none"}`,
-    `disposition=${disposition}`,
+    `observed evidence=${evidenceText.trim().length > 0 ? evidenceText : "NO EVIDENCE"}`,
+    `applicable article=${articleLabel}`,
+    `why this quote satisfies the article=${reason}`,
   ].join(" | ");
 }
 
@@ -227,13 +230,9 @@ function evaluateCase(caseItem: ValidationCase): ValidationCaseResult {
     disposition: actualJudgment,
     summary: buildFindingSummary(actualLegalModule, actualJudgment, actualArticleMapping, intelligence.conceptContext.conceptIds),
     explanation: buildExplanation(
-      actualLegalModule,
-      actualJudgment,
-      intelligence.conceptContext.conceptIds,
-      assessment.narrativeIntent,
-      assessment.contextClassification,
-      assessment.exceptionSignals,
+      intelligence.evidenceAssessment.primaryText,
       actualArticleMapping,
+      actualJudgment,
     ),
     confidence: Number(assessment.confidence.toFixed(6)),
   });

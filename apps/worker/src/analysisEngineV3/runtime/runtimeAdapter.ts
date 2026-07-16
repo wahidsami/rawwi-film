@@ -58,6 +58,7 @@ import { buildReviewerDebatePackage } from "../reviewerDebate/index.js";
 import { buildArbitrationDecisionPackage } from "../arbitration/index.js";
 import { buildExplanationPackage } from "../explanation/index.js";
 import { buildReviewerDecisionContext } from "../legal/reviewerDecisionPreparation.js";
+import { buildExplanationSafeAnalysisResponse } from "./explanationSafeAnalysisResponse.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -579,7 +580,7 @@ export async function runV3RuntimeAdapter(
     jobId: input.jobId,
     chunkId: input.chunkId,
     pipelineVersion,
-    analysisResponse,
+    analysisResponse: buildExplanationSafeAnalysisResponse(analysisResponse),
     findings,
     reviewerDebate,
     arbitration,
