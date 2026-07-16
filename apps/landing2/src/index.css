@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sfc-navy: #112838;
+  --color-sfc-green: #1A7A5D;
+  --color-sfc-red: #c62734;
+  --color-sfc-orange: #f6921e;
+  --color-sfc-peach: #f8c49e;
+  --color-sfc-teal: #92c6b4;
+  --color-sfc-purple: #6f2c50;
+  
+  --color-gov-surface: #ffffff;
+  --color-gov-surface-muted: #f3f4f6;
+  --color-gov-border: #e5e7eb;
+
+  --font-sans: 'IBM Plex Sans', 'IBM Plex Sans Arabic', ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: 'IBM Plex Sans Arabic', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+
+  --spacing-8: 2rem;
+  --spacing-16: 4rem;
+  --spacing-24: 6rem;
+  --spacing-32: 8rem;
+
+  --radius-sm: 0.125rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  
+  --shadow-subtle: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  html[dir="rtl"] {
+    font-family: var(--font-arabic);
+  }
+  html[dir="ltr"] {
+    font-family: var(--font-sans);
+  }
+}
+

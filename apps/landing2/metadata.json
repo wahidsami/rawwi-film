@@ -1,0 +1,6 @@
+{
+  "name": "Saudi Film Commission",
+  "description": "Official public website of the Saudi Film Commission",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
