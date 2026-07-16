@@ -279,7 +279,7 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
   let stepStartedAt = startedAt;
   const logStep = (step: string, details: Record<string, unknown> = {}): void => {
     const now = Date.now();
-    logger.info("V3 instrumentation STEP: createReviewerKnowledgeRetrievalReport", {
+    logger.info("V3 instrumentation EXIT: createReviewerKnowledgeRetrievalReport", {
       step,
       elapsedMs: now - stepStartedAt,
       subjectModuleId: input.subjectModule?.id ?? null,
@@ -293,7 +293,7 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
   });
   const registry = input.registry ?? createDefaultReviewerKnowledgeRegistry();
   logStep("registry_resolution", {
-    selectedRegistrySize: registry.list().length,
+    registrySize: registry.list().length,
     registrySource: input.registry ? "provided" : "default",
   });
 
@@ -339,7 +339,9 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     });
     logStep("cache_lookup_hit", {
       cacheKey,
+      cacheEntries: retrievalCache.size,
       selectedPackCount: cachedReport.selectedPacks.length,
+      cacheHit: true,
     });
     logger.info("V3 instrumentation EXIT: createReviewerKnowledgeRetrievalReport", {
       subjectModuleId: input.subjectModule?.id ?? null,
@@ -349,7 +351,11 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     });
     return cachedReport;
   }
-  logStep("cache_lookup_miss", { cacheKey });
+  logStep("cache_lookup_miss", {
+    cacheKey,
+    cacheEntries: retrievalCache.size,
+    cacheHit: false,
+  });
 
   logger.info("V3 instrumentation ENTER: registry scoring", {
     subjectModuleId: input.subjectModule?.id ?? null,
@@ -363,6 +369,7 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
   logStep("registry_scoring", {
     universalPackLoaded: universalPack !== null,
     scoredPackCount: scored.length,
+    candidateCount: scored.length,
   });
 
   logger.info("V3 instrumentation ENTER: pack selection", {
@@ -392,6 +399,7 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
   logStep("pack_selection", {
     selectedCount: selected.size,
     topK,
+    selectedPackIds: [...selected.keys()],
   });
 
   logger.info("V3 instrumentation ENTER: pack materialization", {
@@ -416,6 +424,8 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     selectedPackCount: selectedPacks.length,
     retrievedPackCount: retrievedPacks.length,
     rejectedPackCount: rejectedPacks.length,
+    materializedPackCount: selectedPacks.length,
+    totalCharactersLoaded: selectedPacks.reduce((total, pack) => total + JSON.stringify(pack).length, 0),
   });
 
   logger.info("V3 instrumentation ENTER: knowledge scoring", {
@@ -428,6 +438,7 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
   logStep("knowledge_scoring", {
     knowledgeConfidence,
     knowledgeScore,
+    scoredKnowledgeCount: [...selected.values()].filter((item) => item.score > 0).length,
   });
 
   logger.info("V3 instrumentation ENTER: report construction", {
@@ -452,6 +463,7 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     selectedPackCount: report.selectedPacks.length,
     knowledgeConfidence: report.knowledgeConfidence,
     knowledgeScore: report.knowledgeScore,
+    outputSizeChars: JSON.stringify(report).length,
   });
   logger.info("V3 instrumentation EXIT: createReviewerKnowledgeRetrievalReport", {
     subjectModuleId: input.subjectModule?.id ?? null,

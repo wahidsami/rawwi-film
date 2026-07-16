@@ -642,7 +642,7 @@ export function buildReviewerReasoningEnginePayload(
   let stepStartedAt = startedAt;
   const logStep = (step: string, details: Record<string, unknown> = {}): void => {
     const now = Date.now();
-    logger.info("V3 instrumentation STEP: buildReviewerReasoningEnginePayload", {
+    logger.info("V3 instrumentation EXIT: buildReviewerReasoningEnginePayload", {
       step,
       elapsedMs: now - stepStartedAt,
       selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
@@ -663,7 +663,7 @@ export function buildReviewerReasoningEnginePayload(
     gcamArticle: input.subjectModule.articleIds?.[0] ?? null,
   }).slice(0, 5);
   logStep("lesson_engine_search", {
-    lessonCount: lessonSearchResults.length,
+    candidateLessonCount: lessonSearchResults.length,
   });
 
   logger.info("V3 instrumentation ENTER: lesson summaries", {
@@ -701,7 +701,8 @@ export function buildReviewerReasoningEnginePayload(
     reasons: [...result.reasons],
   }));
   logStep("lesson_summaries", {
-    lessonCount: lessonSummaries.length,
+    summaryCount: lessonSummaries.length,
+    summaryCharacters: JSON.stringify(lessonSummaries).length,
   });
 
   logger.info("V3 instrumentation ENTER: blueprint scoring", {
@@ -766,7 +767,7 @@ export function buildReviewerReasoningEnginePayload(
   });
   const selectedPacks = selectedReviewerKnowledge.map((pack) => normalizePackView(pack));
   logStep("selected_pack_normalization", {
-    selectedPackCount: selectedPacks.length,
+    normalizedPackCount: selectedPacks.length,
   });
 
   logger.info("V3 instrumentation ENTER: relationship summaries", {
@@ -782,7 +783,7 @@ export function buildReviewerReasoningEnginePayload(
   });
   const cases = selectCases(queryTerms, input, assessment);
   logStep("case_selection", {
-    caseCount: cases.length,
+    selectedCaseCount: cases.length,
   });
 
   logger.info("V3 instrumentation ENTER: precedent selection", {
@@ -790,7 +791,7 @@ export function buildReviewerReasoningEnginePayload(
   });
   const precedents = selectPrecedents(queryTerms, input, assessment);
   logStep("precedent_selection", {
-    precedentCount: precedents.length,
+    selectedPrecedentCount: precedents.length,
   });
 
   logger.info("V3 instrumentation ENTER: reasoning pipeline build", {
@@ -827,6 +828,8 @@ export function buildReviewerReasoningEnginePayload(
   );
   logStep("gpt_reviewer_assistant_build", {
     reviewerCount: gptReviewerAssistant.reviewerCount ?? null,
+    promptLengthChars: JSON.stringify(gptReviewerAssistant).length,
+    estimatedPromptTokens: Math.ceil(JSON.stringify(gptReviewerAssistant).length / 4),
   });
 
   logger.info("V3 instrumentation ENTER: payload construction", {
@@ -974,6 +977,7 @@ export function buildReviewerReasoningEnginePayload(
     blueprintCount: blueprints.length,
     patternCount: patterns.length,
     decisionRecordCount: decisionRecords.length,
+    payloadSizeChars: JSON.stringify(payload).length,
   });
   logger.info("V3 instrumentation EXIT: buildReviewerReasoningEnginePayload", {
     selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
