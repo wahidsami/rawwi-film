@@ -12,6 +12,7 @@ import { renderReviewerMethodologySection } from "../reviewerMethodology/reviewe
 import { getDefaultReviewerQuestionSet, renderReviewerQuestionSetSection, createDefaultReviewerQuestionRegistry } from "../reviewerQuestions/index.js";
 import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { renderReviewerKnowledgePacksSection } from "../reviewerKnowledge/reviewerKnowledgeRenderer.js";
+import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
 import { buildReviewerReasoningEnginePayload } from "./reviewerReasoningEngine.js";
 
 function renderDecisionGraphSection(decisionGraph: V3PromptBuilderInput["decisionGraph"]): string {
@@ -70,17 +71,31 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
   const conceptContext = createPromptConceptContext(context);
   const reviewerAssessment = runReviewerMethodology({ promptInput: context, conceptContext });
   const reviewerQuestionRegistry = createDefaultReviewerQuestionRegistry();
+  const reviewerKnowledgeSelection = createEmergencyContextualReviewerKnowledgeSelection({
+    promptInput: context,
+    conceptContext,
+    assessment: reviewerAssessment,
+  });
   const knowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
     assessment: reviewerAssessment,
     conceptContext,
     subjectModule: context.subjectModule,
+    registry: reviewerKnowledgeSelection.reviewerKnowledgeRegistry,
+    topK: Math.max(1, reviewerKnowledgeSelection.routing.selectedReviewerPackIds.length),
   });
   const universalKnowledgePack = knowledgeRetrieval.selectedPacks.find((pack) => pack.id === "v3_00_universal") ?? null;
   const reviewerQuestionSet = universalKnowledgePack?.default_question_set_id
     ? reviewerQuestionRegistry.load(universalKnowledgePack.default_question_set_id) ?? getDefaultReviewerQuestionSet()
     : getDefaultReviewerQuestionSet();
   const reviewerKnowledgePacks = knowledgeRetrieval.selectedPacks;
-  const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(context, conceptContext, reviewerAssessment, reviewerKnowledgePacks);
+  const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(
+    context,
+    conceptContext,
+    reviewerAssessment,
+    reviewerKnowledgePacks,
+    reviewerKnowledgeSelection.knowledgeRegistry,
+    knowledgeRetrieval,
+  );
   const reviewerMethodology = getDefaultReviewerMethodology();
 
   return joinPromptSections([

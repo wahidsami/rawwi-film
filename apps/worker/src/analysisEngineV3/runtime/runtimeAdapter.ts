@@ -51,7 +51,6 @@ import {
   buildV3SemanticGenerationInspectionRecord,
   buildV3ReviewerDebateInspectionRecord,
 } from "../inspection/inspectionStageBuilders.js";
-import { createKnowledgeRegistry } from "../reviewerKnowledge/knowledgeRegistry/index.js";
 import { createKnowledgeRankingReport } from "../reviewerKnowledge/knowledgeRanking/index.js";
 import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { buildReviewerDebatePackage } from "../reviewerDebate/index.js";
@@ -59,6 +58,7 @@ import { buildArbitrationDecisionPackage } from "../arbitration/index.js";
 import { buildExplanationPackage } from "../explanation/index.js";
 import { buildReviewerDecisionContext } from "../legal/reviewerDecisionPreparation.js";
 import { buildExplanationSafeAnalysisResponse } from "./explanationSafeAnalysisResponse.js";
+import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -450,10 +450,17 @@ export async function runV3RuntimeAdapter(
     promptInput,
     conceptContext: reviewerConceptContext,
   });
+  const reviewerKnowledgeSelection = createEmergencyContextualReviewerKnowledgeSelection({
+    promptInput,
+    conceptContext: reviewerConceptContext,
+    assessment: reviewerAssessment,
+  });
   const reviewerKnowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
     assessment: reviewerAssessment,
     conceptContext: reviewerConceptContext,
     subjectModule: analysisRequest.subjectModule,
+    registry: reviewerKnowledgeSelection.reviewerKnowledgeRegistry,
+    topK: Math.max(1, reviewerKnowledgeSelection.routing.selectedReviewerPackIds.length),
   });
   const reviewerKnowledgePacks = reviewerKnowledgeRetrieval.selectedPacks;
   const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(
@@ -461,6 +468,8 @@ export async function runV3RuntimeAdapter(
     reviewerConceptContext,
     reviewerAssessment,
     reviewerKnowledgePacks,
+    reviewerKnowledgeSelection.knowledgeRegistry,
+    reviewerKnowledgeRetrieval,
   );
   const reviewerDecision = buildReviewerDecisionContext({
     intelligence,
@@ -590,16 +599,8 @@ export async function runV3RuntimeAdapter(
   if (config.V3_INSPECTION_MODE) {
     try {
       const inspectionTimestamp = new Date().toISOString();
-      let knowledgeRegistry;
-      try {
-        knowledgeRegistry = createKnowledgeRegistry();
-      } catch (error) {
-        logger.warn("V3 knowledge registry load failed", {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack ?? null : null,
-        });
-        throw error;
-      }
+      const knowledgeRegistry = reviewerKnowledgeSelection.knowledgeRegistry;
+      const routing = reviewerKnowledgeSelection.routing;
       const reasoningTraces = buildV3ReasoningTrace({
         analysisResponse,
         findings,
@@ -712,7 +713,15 @@ export async function runV3RuntimeAdapter(
           article_ids: [...(analysisRequest.subjectModule.articleIds ?? [])],
           notes: [...(analysisRequest.subjectModule.notes ?? [])],
         },
-        reviewerDomainsLoaded: [analysisRequest.subjectModule.id],
+        reviewerDomainsLoaded: [...routing.selectedReviewerIds],
+        selectedReviewers: [...routing.selectedReviewerLabels],
+        selectedReviewerPackIds: [...routing.selectedReviewerPackIds],
+        rejectedReviewers: [...routing.rejectedReviewerLabels],
+        loadedAcademyCount: routing.loadedAcademyCount,
+        skippedAcademyCount: routing.skippedAcademyCount,
+        knowledgeReductionPercent: routing.knowledgeReductionPercent,
+        routingConfidence: routing.routingConfidence,
+        routingReason: routing.routingReason,
         knowledgeRetrieval: {
           queryTerms: [...reviewerKnowledgeRetrieval.queryTerms],
           topK: reviewerKnowledgeRetrieval.topK,

@@ -11,15 +11,17 @@ function isDirectory(path: string): boolean {
   return existsSync(path) && statSync(path).isDirectory();
 }
 
-function discoverAcademyPackDocuments(rootDir: string): readonly ReviewerAcademyPackDocument[] {
+function discoverAcademyPackDocuments(rootDir: string, selectedFolders?: readonly string[]): readonly ReviewerAcademyPackDocument[] {
   if (!isDirectory(rootDir)) {
     return [];
   }
 
   const documents: ReviewerAcademyPackDocument[] = [];
+  const folderFilter = selectedFolders ? new Set(selectedFolders.map((folder) => folder.trim().toLowerCase())) : null;
   const folders = readdirSync(rootDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
+    .filter((folder) => folderFilter ? folderFilter.has(folder.trim().toLowerCase()) : true)
     .sort((left, right) => left.localeCompare(right));
 
   for (const folder of folders) {
@@ -46,10 +48,10 @@ function discoverAcademyPackDocuments(rootDir: string): readonly ReviewerAcademy
 }
 
 export class ReviewerAcademyLoader {
-  constructor(private readonly rootDir: string) {}
+  constructor(private readonly rootDir: string, private readonly selectedFolders?: readonly string[]) {}
 
   loadIndex(): ReviewerAcademyIndex {
-    const documents = discoverAcademyPackDocuments(this.rootDir);
+    const documents = discoverAcademyPackDocuments(this.rootDir, this.selectedFolders);
     return createReviewerAcademyIndex(this.rootDir, documents);
   }
 
@@ -62,14 +64,14 @@ export class ReviewerAcademyLoader {
   }
 }
 
-export function createReviewerAcademyLoader(rootDir: string): ReviewerAcademyLoader {
-  return new ReviewerAcademyLoader(rootDir);
+export function createReviewerAcademyLoader(rootDir: string, selectedFolders?: readonly string[]): ReviewerAcademyLoader {
+  return new ReviewerAcademyLoader(rootDir, selectedFolders);
 }
 
-export function loadReviewerAcademyIndex(rootDir: string): ReviewerAcademyIndex {
-  return createReviewerAcademyLoader(rootDir).loadIndex();
+export function loadReviewerAcademyIndex(rootDir: string, selectedFolders?: readonly string[]): ReviewerAcademyIndex {
+  return createReviewerAcademyLoader(rootDir, selectedFolders).loadIndex();
 }
 
-export function loadReviewerAcademyPacks(rootDir: string): readonly ReviewerKnowledgePack[] {
-  return loadReviewerAcademyIndex(rootDir).packs;
+export function loadReviewerAcademyPacks(rootDir: string, selectedFolders?: readonly string[]): readonly ReviewerKnowledgePack[] {
+  return loadReviewerAcademyIndex(rootDir, selectedFolders).packs;
 }

@@ -15,6 +15,10 @@ import type { KnowledgeRegistryEntry, KnowledgeRegistryKind } from "./knowledgeR
 
 import type { BlueprintDocument, BlueprintEntry, BlueprintRelationship } from "../blueprints/blueprintTypes.js";
 
+export type KnowledgeRegistryLoadOptions = Readonly<{
+  academyFolders?: readonly string[];
+}>;
+
 const BLUEPRINT_FILE_NAMES = Object.freeze(["domain.json", "concepts.json", "actions.json", "targets.json", "contexts.json", "intents.json", "evidence.json", "relationships.json", "reviewQuestions.json"]);
 const ACADEMY_PACK_FILE_NAMES = Object.freeze(["pack.v1.json", "pack.v1.yaml", "pack.v1.yml"]);
 
@@ -26,22 +30,33 @@ function isDirectory(path: string): boolean {
   }
 }
 
-function loadAcademyDocuments(rootDir: string): readonly ReviewerAcademyPackDocument[] {
+function loadAcademyPackDocument(folderPath: string): ReviewerAcademyPackDocument | null {
+  const fileCandidates = ACADEMY_PACK_FILE_NAMES.map((fileName) => join(folderPath, fileName)).filter((filePath) => existsSync(filePath));
+  if (fileCandidates.length === 0) return null;
+  const filePath = fileCandidates.sort((left, right) => left.localeCompare(right))[0];
+  if (!filePath) return null;
+  return parseReviewerAcademyPackDocumentText(readFileSync(filePath, "utf8"));
+}
+
+function loadAcademyDocuments(rootDir: string, academyFolders?: readonly string[]): readonly ReviewerAcademyPackDocument[] {
   if (!isDirectory(rootDir)) return Object.freeze([]);
 
-  const folders = readdirSync(rootDir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-    .sort((left, right) => left.localeCompare(right));
-
   const documents: ReviewerAcademyPackDocument[] = [];
+  const folders = academyFolders && academyFolders.length > 0
+    ? [...new Set(academyFolders.map((folder) => folder.normalize("NFC").replace(/\s+/g, " ").trim()))].sort((left, right) => left.localeCompare(right))
+    : readdirSync(rootDir, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => entry.name)
+        .sort((left, right) => left.localeCompare(right));
+
   for (const folder of folders) {
     const folderPath = join(rootDir, folder);
-    const fileCandidates = ACADEMY_PACK_FILE_NAMES.map((fileName) => join(folderPath, fileName)).filter((filePath) => existsSync(filePath));
-    if (fileCandidates.length === 0) continue;
-    const filePath = fileCandidates.sort((left, right) => left.localeCompare(right))[0];
-    if (!filePath) continue;
-    documents.push(parseReviewerAcademyPackDocumentText(readFileSync(filePath, "utf8")));
+    if (academyFolders && academyFolders.length > 0 && !isDirectory(folderPath)) {
+      throw new Error(`Required reviewer academy folder is missing: ${folderPath}`);
+    }
+    const document = loadAcademyPackDocument(folderPath);
+    if (!document) continue;
+    documents.push(document);
   }
 
   return Object.freeze(documents);
@@ -251,10 +266,10 @@ function createBlueprintRegistryEntries(rootDir: string): readonly KnowledgeRegi
   return Object.freeze(entries);
 }
 
-function createAcademyEntries(rootDir: string): readonly KnowledgeRegistryEntry[] {
+function createAcademyEntries(rootDir: string, academyFolders?: readonly string[]): readonly KnowledgeRegistryEntry[] {
   const academyRoot = join(rootDir, "academy");
   if (!isDirectory(academyRoot)) return Object.freeze([]);
-  const documents = loadAcademyDocuments(academyRoot);
+  const documents = loadAcademyDocuments(academyRoot, academyFolders);
   const entries: KnowledgeRegistryEntry[] = [];
 
   for (const document of documents) {
@@ -523,10 +538,10 @@ function createGcamKnowledgeEntries(rootDir: string): readonly KnowledgeRegistry
   })));
 }
 
-export function loadKnowledgeRegistryEntries(rootDir: string): readonly KnowledgeRegistryEntry[] {
+export function loadKnowledgeRegistryEntries(rootDir: string, options?: KnowledgeRegistryLoadOptions): readonly KnowledgeRegistryEntry[] {
   const entries = [
     ...createBlueprintRegistryEntries(rootDir),
-    ...createAcademyEntries(rootDir),
+    ...createAcademyEntries(rootDir, options?.academyFolders),
     ...createLessonEntries(rootDir),
     ...createPatternEntries(rootDir),
     ...createDecisionEntries(rootDir),

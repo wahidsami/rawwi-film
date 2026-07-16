@@ -73,6 +73,14 @@ export function buildV3KnowledgeMatchingInspectionRecord(input: Readonly<{
   pipelineVersion: string;
   reviewerModule: Record<string, unknown>;
   reviewerDomainsLoaded: readonly string[];
+  selectedReviewers?: readonly string[];
+  selectedReviewerPackIds?: readonly string[];
+  rejectedReviewers?: readonly string[];
+  loadedAcademyCount?: number;
+  skippedAcademyCount?: number;
+  knowledgeReductionPercent?: number;
+  routingConfidence?: number;
+  routingReason?: string;
   knowledgeAssetsUsed: readonly string[];
   storyMemory?: string | null;
   scriptMemory?: string | null;
@@ -97,6 +105,14 @@ export function buildV3KnowledgeMatchingInspectionRecord(input: Readonly<{
     pipeline_version: input.pipelineVersion,
     reviewer_module: input.reviewerModule,
     reviewer_domains_loaded: [...input.reviewerDomainsLoaded],
+    selected_reviewers: [...(input.selectedReviewers ?? [])],
+    selected_reviewer_pack_ids: [...(input.selectedReviewerPackIds ?? [])],
+    rejected_reviewers: [...(input.rejectedReviewers ?? [])],
+    loaded_academy_count: input.loadedAcademyCount ?? null,
+    skipped_academy_count: input.skippedAcademyCount ?? null,
+    knowledge_reduction_percent: input.knowledgeReductionPercent ?? null,
+    routing_confidence: input.routingConfidence ?? null,
+    routing_reason: input.routingReason ?? null,
     knowledge_assets_used: [...input.knowledgeAssetsUsed],
     story_memory: input.storyMemory ?? null,
     script_memory: input.scriptMemory ?? null,

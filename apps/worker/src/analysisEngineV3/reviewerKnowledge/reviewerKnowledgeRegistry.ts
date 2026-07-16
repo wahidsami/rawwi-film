@@ -42,16 +42,26 @@ export function createReviewerKnowledgeRegistry(entries?: readonly ReviewerKnowl
   return new ReviewerKnowledgeRegistry(entries);
 }
 
-export function createDefaultReviewerKnowledgeRegistry(): ReviewerKnowledgeRegistry {
+export function createDefaultReviewerKnowledgeRegistry(selectedFolders?: readonly string[]): ReviewerKnowledgeRegistry {
   if (cachedDefaultReviewerKnowledgeRegistry) {
+    if (!selectedFolders || selectedFolders.length === 0) {
+      return cachedDefaultReviewerKnowledgeRegistry;
+    }
+  }
+
+  const packs = selectedFolders && selectedFolders.length > 0
+    ? loadReviewerAcademyPacks(ACADEMY_DIRECTORY, selectedFolders)
+    : loadReviewerAcademyPacks(ACADEMY_DIRECTORY);
+
+  if (!selectedFolders || selectedFolders.length === 0) {
+    cachedDefaultReviewerKnowledgeRegistry = new ReviewerKnowledgeRegistry(packs);
     return cachedDefaultReviewerKnowledgeRegistry;
   }
 
-  cachedDefaultReviewerKnowledgeRegistry = new ReviewerKnowledgeRegistry(loadReviewerAcademyPacks(ACADEMY_DIRECTORY));
-  return cachedDefaultReviewerKnowledgeRegistry;
+  return new ReviewerKnowledgeRegistry(packs);
 }
 
-export async function createReviewerKnowledgeRegistryFromDirectory(directoryPath: string): Promise<ReviewerKnowledgeRegistry> {
+export async function createReviewerKnowledgeRegistryFromDirectory(directoryPath: string, selectedFolders?: readonly string[]): Promise<ReviewerKnowledgeRegistry> {
   const loaded = await loadReviewerKnowledgeDocumentsFromDirectory(directoryPath);
   return new ReviewerKnowledgeRegistry(loaded.packs);
 }

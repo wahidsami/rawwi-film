@@ -3,6 +3,7 @@ import type { ReviewerAssessment } from "../reviewerMethodology/reviewerMethodol
 import { createCaseLibraryRegistry } from "../reviewerKnowledge/caseLibrary/caseLibrary.js";
 import { createDecisionMemoryRegistry } from "../reviewerKnowledge/decisionMemory/decisionMemory.js";
 import { createKnowledgeRegistry } from "../reviewerKnowledge/knowledgeRegistry/index.js";
+import type { KnowledgeRegistry } from "../reviewerKnowledge/knowledgeRegistry/index.js";
 import type { KnowledgeRegistryEntry } from "../reviewerKnowledge/knowledgeRegistry/knowledgeRegistryTypes.js";
 import { createDefaultLessonEngine } from "../reviewerKnowledge/lessons/lessonEngine.js";
 import type { ReviewerKnowledgeLesson } from "../reviewerKnowledge/lessons/lessonTypes.js";
@@ -311,7 +312,7 @@ function buildPromptReviewerDecisionPipeline(
   input: V3PromptBuilderInput,
   conceptContext: ConceptContext,
   assessment: ReviewerAssessment,
-  packs: readonly ReviewerKnowledgePack[],
+  selectedReviewerKnowledge: readonly ReviewerKnowledgePack[],
   lessons: readonly Record<string, unknown>[],
   precedents: readonly ReasoningEnginePrecedent[],
   decisionRecords: readonly ReasoningEngineEntry[],
@@ -328,7 +329,7 @@ function buildPromptReviewerDecisionPipeline(
     ? primaryArticleIds.map((articleId) => `article:${articleId}: PASS/FAIL independently from quote-based evidence only`).join(" | ")
     : "No GCAM articles were preselected.";
   const knowledgeSummary = uniqueStringsWithNormalization([
-    ...packs.map((pack) => pack.id),
+    ...selectedReviewerKnowledge.map((pack) => pack.id),
     ...knowledgeRetrieval.retrievedPacks.map((pack) => `${pack.id}:${pack.score.toFixed(4)}`),
     ...lessons.map((lesson) => stringValue(lesson.id)),
     ...decisionRecords.map((record) => record.id),
@@ -629,15 +630,11 @@ export function buildReviewerReasoningEnginePayload(
   input: V3PromptBuilderInput,
   conceptContext: ConceptContext,
   assessment: ReviewerAssessment,
-  packs: readonly ReviewerKnowledgePack[],
+  selectedReviewerKnowledge: readonly ReviewerKnowledgePack[],
+  knowledgeRegistry: KnowledgeRegistry,
+  knowledgeRetrieval: ReviewerKnowledgeRetrievalReport,
 ): ReviewerReasoningEnginePayload {
-  const knowledgeRegistry = getKnowledgeRegistry();
   const lessonEngine = getLessonEngine();
-  const knowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
-    assessment,
-    conceptContext,
-    subjectModule: input.subjectModule,
-  });
   const queryTerms = knowledgeRetrieval.queryTerms;
   const lessonSearchResults = lessonEngine.search({
     concept: assessment.applicableConceptIds[0] ?? input.subjectModule.id,
@@ -716,15 +713,15 @@ export function buildReviewerReasoningEnginePayload(
     relatedIds: [...entry.relatedIds],
   }));
 
-  const selectedPacks = knowledgeRetrieval.selectedPacks.map((pack) => normalizePackView(pack));
-  const relationships = buildRelationshipSummaries(knowledgeRetrieval.selectedPacks, lessonSearchResults.map((result) => result.lesson));
+  const selectedPacks = selectedReviewerKnowledge.map((pack) => normalizePackView(pack));
+  const relationships = buildRelationshipSummaries(selectedReviewerKnowledge, lessonSearchResults.map((result) => result.lesson));
   const cases = selectCases(queryTerms, input, assessment);
   const precedents = selectPrecedents(queryTerms, input, assessment);
   const reasoningPipeline = buildPromptReviewerDecisionPipeline(
     input,
     conceptContext,
     assessment,
-    knowledgeRetrieval.selectedPacks,
+    selectedReviewerKnowledge,
     lessonSummaries,
     precedents,
     decisionRecords,

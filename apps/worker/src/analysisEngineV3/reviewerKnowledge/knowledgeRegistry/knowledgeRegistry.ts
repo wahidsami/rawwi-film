@@ -1,7 +1,7 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { loadKnowledgeRegistryEntries, defaultKnowledgeRegistryRoot as loadDefaultKnowledgeRegistryRoot } from "./knowledgeRegistryLoader.js";
+import { loadKnowledgeRegistryEntries, defaultKnowledgeRegistryRoot as loadDefaultKnowledgeRegistryRoot, type KnowledgeRegistryLoadOptions } from "./knowledgeRegistryLoader.js";
 import { summarizeKnowledgeRegistryEntries } from "./knowledgeRegistryStatistics.js";
 import { validateKnowledgeRegistryEntries } from "./knowledgeRegistryValidator.js";
 import type { KnowledgeRegistryEntry, KnowledgeRegistryKind, KnowledgeRegistryReport } from "./knowledgeRegistryTypes.js";
@@ -110,4 +110,11 @@ export function createKnowledgeRegistryFromEntries(entries: readonly KnowledgeRe
 
 export function loadKnowledgeRegistryFromDirectory(rootDir: string): KnowledgeRegistry {
   return new KnowledgeRegistry(rootDir);
+}
+
+export function createKnowledgeRegistryWithOptions(
+  rootDir: string = loadDefaultKnowledgeRegistryRoot(),
+  options: KnowledgeRegistryLoadOptions = {},
+): KnowledgeRegistry {
+  return new KnowledgeRegistry(rootDir, loadKnowledgeRegistryEntries(rootDir, options));
 }

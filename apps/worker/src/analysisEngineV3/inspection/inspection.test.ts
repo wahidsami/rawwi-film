@@ -248,6 +248,14 @@ async function testStageBuildersHandleZeroCounts(): Promise<void> {
     pipelineVersion: "v2",
     reviewerModule: { id: "v3_11_profanity", title_ar: "الألفاظ النابية" },
     reviewerDomainsLoaded: ["v3_11_profanity"],
+    selectedReviewers: ["Profanity Reviewer"],
+    selectedReviewerPackIds: ["v3_00_universal", "v4_11_profanity"],
+    rejectedReviewers: ["Religion Reviewer"],
+    loadedAcademyCount: 2,
+    skippedAcademyCount: 11,
+    knowledgeReductionPercent: 84.62,
+    routingConfidence: 0.91,
+    routingReason: "High routing confidence (0.910); loading Profanity Reviewer.",
     knowledgeAssetsUsed: [],
     storyMemory: "",
     scriptMemory: null,
@@ -336,6 +344,9 @@ async function testStageBuildersHandleZeroCounts(): Promise<void> {
   assert.equal(finalReportRecord.payloadJson.observation_count, 0);
   assert.equal((knowledgeMatchingRecord.payloadJson.knowledge_retrieval as Record<string, unknown>).knowledgeConfidence, 0);
   assert.equal(((knowledgeMatchingRecord.payloadJson.knowledge_retrieval as Record<string, unknown>).retrievedPacks as readonly unknown[]).length, 0);
+  assert.equal((knowledgeMatchingRecord.payloadJson.selected_reviewers as readonly string[]).includes("Profanity Reviewer"), true);
+  assert.equal(knowledgeMatchingRecord.payloadJson.loaded_academy_count, 2);
+  assert.equal(knowledgeMatchingRecord.payloadJson.knowledge_reduction_percent, 84.62);
   assert.equal(knowledgeRegistryRecord.payloadJson.registry_total_count, 0);
   assert.equal(knowledgeRegistryRecord.payloadJson.validation_valid, true);
   const knowledgeRankingPayload = knowledgeRankingRecord.payloadJson as Record<string, unknown>;

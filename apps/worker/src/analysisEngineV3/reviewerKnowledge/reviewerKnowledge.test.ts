@@ -10,6 +10,7 @@ import { createDefaultReviewerKnowledgeRegistry, createReviewerKnowledgeRegistry
 import { createReviewerKnowledgeLoader } from "./reviewerKnowledgeLoader.js";
 import { renderReviewerKnowledgePacksSection } from "./reviewerKnowledgeRenderer.js";
 import { selectReviewerKnowledgePacks } from "./reviewerKnowledgeSelector.js";
+import { createEmergencyContextualReviewerKnowledgeSelection } from "./emergencyContextualReviewerRouter.js";
 import { PROFANITY_REVIEWER_KNOWLEDGE_PACK } from "./packs/profanityPack.js";
 import { SECURITY_REVIEWER_KNOWLEDGE_PACK } from "./packs/securityPack.js";
 import { validateReviewerKnowledgePack } from "./reviewerKnowledgeValidator.js";
@@ -123,6 +124,35 @@ function makeSecurityAssessment(): ReviewerAssessment {
     reasoningTrace: Object.freeze(["The utterance directly urges unrest and system harm."]),
     stageResults: Object.freeze([]),
   });
+}
+
+function makeProfanityPromptInput(): never {
+  return {
+    reasoningContract: { title: "x", stages: [] },
+    decisionGraph: { title: "x", nodes: [] },
+    semanticLayer: { title: "x" },
+    storyMemory: "",
+    chunkContext: {
+      localChunk: "A: يا كلب",
+      neighboringSentences: [],
+      sceneMemory: "",
+    },
+    subjectModule: {
+      id: "v4_11_profanity",
+      titleAr: "الألفاظ النابية",
+      scope: "Direct profanity analysis",
+      articleIds: [11],
+      rules: ["Identify literal profanity in the chunk."],
+      exclusions: ["Do not classify neutral quotations."],
+      requiredEvidence: ["Literal profanity present in the chunk."],
+      decisionTree: ["Is there literal profanity?", "Does context negate the literal reading?"],
+      examples: ["A direct profanity in dialogue."],
+      nonExamples: ["Educational mention of a profanity term."],
+      notes: ["Deterministic router test input."],
+    },
+    glossary: { title: "x", entries: [] },
+    outputSchema: { title: "x", fields: [] },
+  } as never;
 }
 
 function testRegistryAndLoader(): void {
@@ -273,6 +303,38 @@ function testSelectorFindsSexualPack(): void {
   console.log("✓ selector includes the universal pack and the sexuality pack");
 }
 
+function testEmergencyRouterIsDeterministicAndSelective(): void {
+  const promptInput = makeProfanityPromptInput();
+  const conceptContext = makeConceptContext();
+  const assessment = runReviewerMethodology({
+    promptInput,
+    conceptContext,
+  });
+
+  const selectionA = createEmergencyContextualReviewerKnowledgeSelection({
+    promptInput,
+    conceptContext,
+    assessment,
+  });
+  const selectionB = createEmergencyContextualReviewerKnowledgeSelection({
+    promptInput,
+    conceptContext,
+    assessment,
+  });
+
+  assert.deepEqual(selectionA.routing.selectedReviewerIds, selectionB.routing.selectedReviewerIds);
+  assert.deepEqual(selectionA.routing.selectedReviewerPackIds, selectionB.routing.selectedReviewerPackIds);
+  assert.equal(selectionA.routing.selectedReviewerIds.includes("v4_11_profanity"), true);
+  assert.equal(selectionA.routing.rejectedReviewerIds.includes("v3_01_religion"), true);
+  assert.equal(selectionA.routing.rejectedReviewerIds.includes("v3_04_history"), true);
+  assert.equal(selectionA.routing.rejectedReviewerIds.includes("v3_04_politics"), true);
+  assert.equal(selectionA.routing.rejectedReviewerIds.includes("v3_13_travel"), true);
+  assert.equal(selectionA.routing.rejectedReviewerIds.includes("v3_06_leadership"), false);
+  assert.equal(selectionA.routing.knowledgeReductionPercent > 0, true);
+  assert.equal(selectionA.reviewerKnowledgeRegistry.list().length < createDefaultReviewerKnowledgeRegistry().list().length, true);
+  console.log("✓ emergency router is deterministic and selective");
+}
+
 function testSecurityRendererIsDeterministic(): void {
   const packs = [SECURITY_REVIEWER_KNOWLEDGE_PACK];
   const renderedA = renderReviewerKnowledgePacksSection(packs);
@@ -316,6 +378,7 @@ async function main(): Promise<void> {
   testSecurityPackValidation();
   testMethodologyRenderer();
   testSelectorFindsProfanityPack();
+  testEmergencyRouterIsDeterministicAndSelective();
   testSelectorFindsSecurityPack();
   testSelectorFindsSexualPack();
   testRendererIsDeterministic();

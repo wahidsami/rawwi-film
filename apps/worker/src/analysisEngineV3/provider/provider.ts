@@ -11,6 +11,7 @@ import type {
 import { createPromptConceptContext, runReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRunner.js";
 import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRegistry.js";
 import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
+import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
 import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
 import { validateReasonedDecisionAgainstEvidence } from "./reasonedDecisionValidation.js";
 
@@ -33,12 +34,27 @@ export function createV3Provider(provider: V3Provider): V3Provider {
 export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
   const conceptContext = createPromptConceptContext(input);
   const reviewerAssessment = runReviewerMethodology({ promptInput: input, conceptContext });
-  const reviewerKnowledgePacks = createReviewerKnowledgeRetrievalReport({
+  const reviewerKnowledgeSelection = createEmergencyContextualReviewerKnowledgeSelection({
+    promptInput: input,
+    conceptContext,
+    assessment: reviewerAssessment,
+  });
+  const reviewerKnowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
     assessment: reviewerAssessment,
     conceptContext,
     subjectModule: input.subjectModule,
-  }).selectedPacks;
-  const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(input, conceptContext, reviewerAssessment, reviewerKnowledgePacks);
+    registry: reviewerKnowledgeSelection.reviewerKnowledgeRegistry,
+    topK: Math.max(1, reviewerKnowledgeSelection.routing.selectedReviewerPackIds.length),
+  });
+  const reviewerKnowledgePacks = reviewerKnowledgeRetrieval.selectedPacks;
+  const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(
+    input,
+    conceptContext,
+    reviewerAssessment,
+    reviewerKnowledgePacks,
+    reviewerKnowledgeSelection.knowledgeRegistry,
+    reviewerKnowledgeRetrieval,
+  );
 
   return stableSerializePromptValue({
     chunkContext: input.chunkContext,
