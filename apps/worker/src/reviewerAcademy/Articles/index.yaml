@@ -1,0 +1,368 @@
+articles:
+  article_01:
+    reviewer: General
+    inherits:
+      - universal
+      - general
+    title: "التعريفات"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms: []
+  article_02:
+    reviewer: General
+    inherits:
+      - universal
+      - general
+    title: "نطاق التطبيق"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms: []
+  article_03:
+    reviewer: General
+    inherits:
+      - universal
+      - general
+    title: "المسؤولية"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms: []
+  article_04:
+    reviewer: General
+    inherits:
+      - universal
+      - general
+    title: "ضوابط المحتوى الإعلامي — تفصيل القواعد الفرعية"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_4_1
+      - atom_4_2
+      - atom_4_3
+      - atom_4_4
+      - atom_4_5
+      - atom_4_6
+      - atom_4_7
+      - atom_4_8
+  article_05:
+    reviewer: General
+    inherits:
+      - universal
+      - general
+    title: "التصنيف العمري"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_5_1
+      - atom_5_2
+      - atom_5_3
+      - atom_5_4
+      - atom_5_5
+  article_06:
+    reviewer: Children
+    inherits:
+      - universal
+      - children
+    title: "حماية الطفل"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_6_1
+      - atom_6_2
+      - atom_6_3
+      - atom_6_4
+      - atom_6_5
+  article_07:
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+    title: "حقوق المرأة"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_7_1
+      - atom_7_2
+      - atom_7_3
+      - atom_7_4
+      - atom_7_5
+  article_08:
+    reviewer: Religion
+    inherits:
+      - universal
+      - religion
+    title: "الكراهية والتمييز"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_8_1
+      - atom_8_2
+      - atom_8_3
+      - atom_8_4
+  article_09:
+    reviewer: Violence
+    inherits:
+      - universal
+      - violence
+    title: "العنف والمحتوى المحظور"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_9_1
+      - atom_9_2
+      - atom_9_3
+      - atom_9_4
+      - atom_9_5
+  article_10:
+    reviewer: Drugs
+    inherits:
+      - universal
+      - drugs
+    title: "التبغ والكحول والمخدرات"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_10_1
+      - atom_10_2
+      - atom_10_3
+      - atom_10_4
+      - atom_10_5
+  article_11:
+    reviewer: History
+    inherits:
+      - universal
+      - history
+    title: "المصداقية الإعلامية"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_11_1
+      - atom_11_2
+      - atom_11_3
+      - atom_11_4
+  article_12:
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+    title: "النظام العام"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_12_1
+      - atom_12_2
+      - atom_12_3
+      - atom_12_4
+      - atom_12_5
+  article_13:
+    reviewer: Crime
+    inherits:
+      - universal
+      - crime
+    title: "ثوابت الحكم"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_13_1
+      - atom_13_2
+      - atom_13_3
+      - atom_13_4
+      - atom_13_5
+  article_14:
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+    title: "التحريض على قلب نظام الحكم أو الدعوة إلى العنف"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_14_1
+      - atom_14_2
+      - atom_14_3
+      - atom_14_4
+      - atom_14_5
+  article_15:
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+    title: "الجماعات المحظورة"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_15_1
+      - atom_15_2
+      - atom_15_3
+      - atom_15_4
+      - atom_15_5
+  article_16:
+    reviewer: History
+    inherits:
+      - universal
+      - history
+    title: "الشائعات والمعلومات المضللة"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_16_1
+      - atom_16_2
+      - atom_16_3
+      - atom_16_4
+      - atom_16_5
+  article_17:
+    reviewer: Society
+    inherits:
+      - universal
+      - society
+    title: "الكرامة والسمعة والخصوصية"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_17_1
+      - atom_17_2
+      - atom_17_3
+      - atom_17_4
+      - atom_17_5
+      - atom_17_6
+  article_18:
+    reviewer: State
+    inherits:
+      - universal
+      - state
+    title: "العلاقات الدولية"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_18_1
+      - atom_18_2
+      - atom_18_3
+      - atom_18_4
+      - atom_18_5
+  article_19:
+    reviewer: State
+    inherits:
+      - universal
+      - state
+    title: "الاقتصاد والاستقرار المالي"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_19_1
+      - atom_19_2
+      - atom_19_3
+      - atom_19_4
+      - atom_19_5
+  article_20:
+    reviewer: State
+    inherits:
+      - universal
+      - state
+    title: "الإفلاس والقضايا التجارية"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_20_1
+      - atom_20_2
+      - atom_20_3
+      - atom_20_4
+      - atom_20_5
+  article_21:
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+    title: "الوثائق والمعلومات السرية"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_21_1
+      - atom_21_2
+      - atom_21_3
+      - atom_21_4
+      - atom_21_5
+  article_22:
+    reviewer: State
+    inherits:
+      - universal
+      - state
+    title: "الاتفاقيات والمعاهدات"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_22_1
+      - atom_22_2
+      - atom_22_3
+      - atom_22_4
+      - atom_22_5
+  article_23:
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+    title: "المظهر العام"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_23_1
+      - atom_23_2
+      - atom_23_3
+      - atom_23_4
+      - atom_23_5
+  article_24:
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+    title: "الزي والاحتشام"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms:
+      - atom_24_1
+      - atom_24_2
+      - atom_24_3
+      - atom_24_4
+      - atom_24_5
+  article_25:
+    reviewer: General
+    inherits:
+      - universal
+      - general
+    title: "الالتزام بالترخيص"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms: []
+  article_26:
+    reviewer: General
+    inherits:
+      - universal
+      - general
+    title: "الجزاءات"
+    protected_interest: ""
+    purpose: ""
+    neighboring_articles: []
+    atoms: []

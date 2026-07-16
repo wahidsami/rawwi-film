@@ -1,0 +1,964 @@
+atoms:
+  atom_4_1:
+    article: article_04
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_04
+    protected_interest: ""
+    title: "الإخلال بالذوق العام أو الآداب العامة"
+  atom_4_2:
+    article: article_04
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_04
+    protected_interest: ""
+    title: "المساس بالأمن الوطني أو الصحة أو الاقتصاد"
+  atom_4_3:
+    article: article_04
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_04
+    protected_interest: ""
+    title: "الإساءة للرموز الوطنية"
+  atom_4_4:
+    article: article_04
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_04
+    protected_interest: ""
+    title: "الإضرار بالقيم والهوية الثقافية"
+  atom_4_5:
+    article: article_04
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_04
+    protected_interest: ""
+    title: "الإخلال بالنظام العام أو الوحدة الوطنية"
+  atom_4_6:
+    article: article_04
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_04
+    protected_interest: ""
+    title: "الإضرار بالقيم الأسرية أو النسيج الاجتماعي"
+  atom_4_7:
+    article: article_04
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_04
+    protected_interest: ""
+    title: "عرض مظاهر أو ألفاظ أو إيحاءات غير لائقة"
+  atom_4_8:
+    article: article_04
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_04
+    protected_interest: ""
+    title: "عدم الالتزام بالتصنيف العمري"
+  atom_5_1:
+    article: article_05
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_05
+    protected_interest: ""
+    title: "مشاهد العنف ومدى ملاءمتها للفئة العمرية"
+  atom_5_2:
+    article: article_05
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_05
+    protected_interest: ""
+    title: "الألفاظ والحوارات غير المناسبة للفئة العمرية"
+  atom_5_3:
+    article: article_05
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_05
+    protected_interest: ""
+    title: "الإيحاءات والمضامين ذات الحساسية الأخلاقية"
+  atom_5_4:
+    article: article_05
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_05
+    protected_interest: ""
+    title: "عرض تعاطي المواد الضارة وتأثيره على الفئة العمرية"
+  atom_5_5:
+    article: article_05
+    reviewer: General
+    inherits:
+      - universal
+      - general
+      - article_05
+    protected_interest: ""
+    title: "الاتساق العام بين مضمون العمل والتصنيف العمري المعلن"
+  atom_6_1:
+    article: article_06
+    reviewer: Children
+    inherits:
+      - universal
+      - children
+      - article_06
+    protected_interest: ""
+    title: "تعريض الأطفال لمشاهد عنف أو إساءة دون إدانة واضحة"
+  atom_6_2:
+    article: article_06
+    reviewer: Children
+    inherits:
+      - universal
+      - children
+      - article_06
+    protected_interest: ""
+    title: "تطبيع السلوكيات الخطرة لدى الأطفال"
+  atom_6_3:
+    article: article_06
+    reviewer: Children
+    inherits:
+      - universal
+      - children
+      - article_06
+    protected_interest: ""
+    title: "استغلال الطفل أو الإساءة إليه ضمن سياق غير توعوي"
+  atom_6_4:
+    article: article_06
+    reviewer: Children
+    inherits:
+      - universal
+      - children
+      - article_06
+    protected_interest: ""
+    title: "التنمر أو الإذلال الموجَّه للأطفال"
+  atom_6_5:
+    article: article_06
+    reviewer: Children
+    inherits:
+      - universal
+      - children
+      - article_06
+    protected_interest: ""
+    title: "كشف خصوصية الطفل أو تعريضه لانتهاك الخصوصية"
+  atom_7_1:
+    article: article_07
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_07
+    protected_interest: ""
+    title: "تبرير العنف ضد المرأة أو تطبيعه"
+  atom_7_2:
+    article: article_07
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_07
+    protected_interest: ""
+    title: "التحقير أو الإهانة القائمة على الجنس"
+  atom_7_3:
+    article: article_07
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_07
+    protected_interest: ""
+    title: "تصوير التحرش أو الإكراه بشكل إيجابي أو اعتيادي"
+  atom_7_4:
+    article: article_07
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_07
+    protected_interest: ""
+    title: "لوم الضحية أو تبرير الإساءة إليها"
+  atom_7_5:
+    article: article_07
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_07
+    protected_interest: ""
+    title: "تقويض كرامة المرأة أو استقلاليتها"
+  atom_8_1:
+    article: article_08
+    reviewer: Religion
+    inherits:
+      - universal
+      - religion
+      - article_08
+    protected_interest: ""
+    title: "التحريض ضد فئة اجتماعية أو ثقافية أو دينية"
+  atom_8_2:
+    article: article_08
+    reviewer: Religion
+    inherits:
+      - universal
+      - religion
+      - article_08
+    protected_interest: ""
+    title: "التعميمات المهينة أو الدعوة إلى الإقصاء"
+  atom_8_3:
+    article: article_08
+    reviewer: Religion
+    inherits:
+      - universal
+      - religion
+      - article_08
+    protected_interest: ""
+    title: "تبرير العنف أو الكراهية ضد جماعات"
+  atom_8_4:
+    article: article_08
+    reviewer: Religion
+    inherits:
+      - universal
+      - religion
+      - article_08
+    protected_interest: ""
+    title: "التنميط السلبي الممنهج للفئات"
+  atom_9_1:
+    article: article_09
+    reviewer: Violence
+    inherits:
+      - universal
+      - violence
+      - article_09
+    protected_interest: ""
+    title: "تمجيد العنف أو تقديمه كحل"
+  atom_9_2:
+    article: article_09
+    reviewer: Violence
+    inherits:
+      - universal
+      - violence
+      - article_09
+    protected_interest: ""
+    title: "الترويج للإرهاب أو التطرف"
+  atom_9_3:
+    article: article_09
+    reviewer: Violence
+    inherits:
+      - universal
+      - violence
+      - article_09
+    protected_interest: ""
+    title: "الترويع المفرط أو التخويف الشديد"
+  atom_9_4:
+    article: article_09
+    reviewer: Violence
+    inherits:
+      - universal
+      - violence
+      - article_09
+    protected_interest: ""
+    title: "المحتوى الجنسي غير المناسب"
+  atom_9_5:
+    article: article_09
+    reviewer: Violence
+    inherits:
+      - universal
+      - violence
+      - article_09
+    protected_interest: ""
+    title: "الجمع بين أكثر من عنصر محظور"
+  atom_10_1:
+    article: article_10
+    reviewer: Drugs
+    inherits:
+      - universal
+      - drugs
+      - article_10
+    protected_interest: ""
+    title: "الإعلان أو الترويج المباشر"
+  atom_10_2:
+    article: article_10
+    reviewer: Drugs
+    inherits:
+      - universal
+      - drugs
+      - article_10
+    protected_interest: ""
+    title: "الترويج غير المباشر أو الضمني"
+  atom_10_3:
+    article: article_10
+    reviewer: Drugs
+    inherits:
+      - universal
+      - drugs
+      - article_10
+    protected_interest: ""
+    title: "التطبيع مع التعاطي دون إظهار العواقب"
+  atom_10_4:
+    article: article_10
+    reviewer: Drugs
+    inherits:
+      - universal
+      - drugs
+      - article_10
+    protected_interest: ""
+    title: "التعاطي في محتوى موجّه للفئات العمرية الأصغر"
+  atom_10_5:
+    article: article_10
+    reviewer: Drugs
+    inherits:
+      - universal
+      - drugs
+      - article_10
+    protected_interest: ""
+    title: "الجمع بين التعاطي وعناصر جذب أخرى"
+  atom_11_1:
+    article: article_11
+    reviewer: History
+    inherits:
+      - universal
+      - history
+      - article_11
+    protected_interest: ""
+    title: "تقديم معلومات مضللة أو غير دقيقة على أنها حقائق"
+  atom_11_2:
+    article: article_11
+    reviewer: History
+    inherits:
+      - universal
+      - history
+      - article_11
+    protected_interest: ""
+    title: "الخلط بين الرأي والمعلومة"
+  atom_11_3:
+    article: article_11
+    reviewer: History
+    inherits:
+      - universal
+      - history
+      - article_11
+    protected_interest: ""
+    title: "كشف معلومات خاصة أو بيانات حساسة دون مبرر"
+  atom_11_4:
+    article: article_11
+    reviewer: History
+    inherits:
+      - universal
+      - history
+      - article_11
+    protected_interest: ""
+    title: "كشف معلومات سرية أو محمية دون مسوغ"
+  atom_12_1:
+    article: article_12
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_12
+    protected_interest: ""
+    title: "التحريض على الإخلال بالنظام العام"
+  atom_12_2:
+    article: article_12
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_12
+    protected_interest: ""
+    title: "تمجيد الفوضى أو تقويض الاستقرار المجتمعي"
+  atom_12_3:
+    article: article_12
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_12
+    protected_interest: ""
+    title: "التحريض على العنف أو الإضرار بالممتلكات العامة"
+  atom_12_4:
+    article: article_12
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_12
+    protected_interest: ""
+    title: "تقويض التعايش والسلم المجتمعي"
+  atom_12_5:
+    article: article_12
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_12
+    protected_interest: ""
+    title: "الدعوة إلى تجاوز الأنظمة أو إضعاف الالتزام بها"
+  atom_13_1:
+    article: article_13
+    reviewer: Crime
+    inherits:
+      - universal
+      - crime
+      - article_13
+    protected_interest: ""
+    title: "الإساءة المباشرة لثوابت الحكم"
+  atom_13_2:
+    article: article_13
+    reviewer: Crime
+    inherits:
+      - universal
+      - crime
+      - article_13
+    protected_interest: ""
+    title: "التشكيك أو التقويض غير المباشر لثوابت الحكم"
+  atom_13_3:
+    article: article_13
+    reviewer: Crime
+    inherits:
+      - universal
+      - crime
+      - article_13
+    protected_interest: ""
+    title: "التحريض على المساس بثوابت الحكم أو إضعافها"
+  atom_13_4:
+    article: article_13
+    reviewer: Crime
+    inherits:
+      - universal
+      - crime
+      - article_13
+    protected_interest: ""
+    title: "إهانة أو التقليل من رمزية مؤسسات الحكم"
+  atom_13_5:
+    article: article_13
+    reviewer: Crime
+    inherits:
+      - universal
+      - crime
+      - article_13
+    protected_interest: ""
+    title: "استخدام السياق الدرامي كغطاء للإساءة"
+  atom_14_1:
+    article: article_14
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_14
+    protected_interest: ""
+    title: "التحريض الصريح على قلب نظام الحكم"
+  atom_14_2:
+    article: article_14
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_14
+    protected_interest: ""
+    title: "التحريض غير المباشر أو الضمني على قلب نظام الحكم"
+  atom_14_3:
+    article: article_14
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_14
+    protected_interest: ""
+    title: "الدعوة إلى العنف لتحقيق أهداف سياسية أو اجتماعية"
+  atom_14_4:
+    article: article_14
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_14
+    protected_interest: ""
+    title: "شرعنة أو تبرير الأعمال العنيفة"
+  atom_14_5:
+    article: article_14
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_14
+    protected_interest: ""
+    title: "استخدام السياق الفني أو الدرامي كغطاء للتحريض"
+  atom_15_1:
+    article: article_15
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_15
+    protected_interest: ""
+    title: "الترويج المباشر للجماعات المحظورة"
+  atom_15_2:
+    article: article_15
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_15
+    protected_interest: ""
+    title: "الترويج غير المباشر أو الضمني"
+  atom_15_3:
+    article: article_15
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_15
+    protected_interest: ""
+    title: "استخدام الرموز أو الشعارات أو الخطاب المرتبط بالجماعات المحظورة"
+  atom_15_4:
+    article: article_15
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_15
+    protected_interest: ""
+    title: "شرعنة الانتماء أو التعاطف مع الجماعات المحظورة"
+  atom_15_5:
+    article: article_15
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_15
+    protected_interest: ""
+    title: "استخدام السياق الدرامي كغطاء للتطبيع"
+  atom_16_1:
+    article: article_16
+    reviewer: History
+    inherits:
+      - universal
+      - history
+      - article_16
+    protected_interest: ""
+    title: "تقديم معلومات مغلوطة أو غير دقيقة على أنها حقائق"
+  atom_16_2:
+    article: article_16
+    reviewer: History
+    inherits:
+      - universal
+      - history
+      - article_16
+    protected_interest: ""
+    title: "التضليل التاريخي أو الديني"
+  atom_16_3:
+    article: article_16
+    reviewer: History
+    inherits:
+      - universal
+      - history
+      - article_16
+    protected_interest: ""
+    title: "التضليل السياسي أو الاجتماعي"
+  atom_16_4:
+    article: article_16
+    reviewer: History
+    inherits:
+      - universal
+      - history
+      - article_16
+    protected_interest: ""
+    title: "التضليل عبر الحوار أو السلوك أو الحبكة"
+  atom_16_5:
+    article: article_16
+    reviewer: History
+    inherits:
+      - universal
+      - history
+      - article_16
+    protected_interest: ""
+    title: "غياب التمييز بين الخيال والواقع"
+  atom_17_1:
+    article: article_17
+    reviewer: Society
+    inherits:
+      - universal
+      - society
+      - article_17
+    protected_interest: ""
+    title: "الإساءة إلى الكرامة الإنسانية"
+  atom_17_2:
+    article: article_17
+    reviewer: Society
+    inherits:
+      - universal
+      - society
+      - article_17
+    protected_interest: ""
+    title: "التشهير والإساءة إلى السمعة"
+  atom_17_3:
+    article: article_17
+    reviewer: Society
+    inherits:
+      - universal
+      - society
+      - article_17
+    protected_interest: ""
+    title: "انتهاك الخصوصية"
+  atom_17_4:
+    article: article_17
+    reviewer: Society
+    inherits:
+      - universal
+      - society
+      - article_17
+    protected_interest: ""
+    title: "الخلط بين الشخص الحقيقي والشخصية الدرامية"
+  atom_17_5:
+    article: article_17
+    reviewer: Society
+    inherits:
+      - universal
+      - society
+      - article_17
+    protected_interest: ""
+    title: "الإساءة عبر التلميح أو الإيحاء"
+  atom_17_6:
+    article: article_17
+    reviewer: Society
+    inherits:
+      - universal
+      - society
+      - article_17
+    protected_interest: ""
+    title: "استغلال المعاناة الشخصية"
+  atom_18_1:
+    article: article_18
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_18
+    protected_interest: ""
+    title: "الإساءة إلى الدول أو الشعوب أو الكيانات الدولية"
+  atom_18_2:
+    article: article_18
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_18
+    protected_interest: ""
+    title: "الإضرار بالمصالح المشتركة للمملكة"
+  atom_18_3:
+    article: article_18
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_18
+    protected_interest: ""
+    title: "إثارة التوترات الإقليمية أو الدولية"
+  atom_18_4:
+    article: article_18
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_18
+    protected_interest: ""
+    title: "تقديم معلومات غير دقيقة عن السياسة الخارجية"
+  atom_18_5:
+    article: article_18
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_18
+    protected_interest: ""
+    title: "استخدام الدراما كغطاء للإساءة الدبلوماسية"
+  atom_19_1:
+    article: article_19
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_19
+    protected_interest: ""
+    title: "نشر معلومات اقتصادية مضللة أو غير دقيقة"
+  atom_19_2:
+    article: article_19
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_19
+    protected_interest: ""
+    title: "زعزعة الثقة في المؤسسات الاقتصادية أو المالية"
+  atom_19_3:
+    article: article_19
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_19
+    protected_interest: ""
+    title: "إثارة الهلع الاقتصادي أو الذعر المالي"
+  atom_19_4:
+    article: article_19
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_19
+    protected_interest: ""
+    title: "الترويج لسلوكيات مالية مضرة"
+  atom_19_5:
+    article: article_19
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_19
+    protected_interest: ""
+    title: "الربط غير المنطقي بين أحداث درامية والاستقرار الاقتصادي"
+  atom_20_1:
+    article: article_20
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_20
+    protected_interest: ""
+    title: "تقديم معلومات غير دقيقة عن الإفلاس أو التعثر المالي"
+  atom_20_2:
+    article: article_20
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_20
+    protected_interest: ""
+    title: "تشويه سمعة الشركات أو الأنشطة التجارية دون سند"
+  atom_20_3:
+    article: article_20
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_20
+    protected_interest: ""
+    title: "التضليل في عرض القضايا والنزاعات التجارية"
+  atom_20_4:
+    article: article_20
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_20
+    protected_interest: ""
+    title: "تمجيد أو تطبيع الممارسات التجارية غير النظامية"
+  atom_20_5:
+    article: article_20
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_20
+    protected_interest: ""
+    title: "الربط غير المنطقي بين قضايا فردية والاستقرار التجاري العام"
+  atom_21_1:
+    article: article_21
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_21
+    protected_interest: ""
+    title: "عرض وثائق أو معلومات سرية على أنها حقيقية"
+  atom_21_2:
+    article: article_21
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_21
+    protected_interest: ""
+    title: "كشف معلومات محمية دون مسوغ سردي مشروع"
+  atom_21_3:
+    article: article_21
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_21
+    protected_interest: ""
+    title: "تمثيل آليات أو طرق الحصول غير المشروع على معلومات"
+  atom_21_4:
+    article: article_21
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_21
+    protected_interest: ""
+    title: "الخلط بين الوثائق التخيلية والوثائق الواقعية"
+  atom_21_5:
+    article: article_21
+    reviewer: Security
+    inherits:
+      - universal
+      - security
+      - article_21
+    protected_interest: ""
+    title: "إضفاء شرعية أو تطبيع كشف المعلومات السرية"
+  atom_22_1:
+    article: article_22
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_22
+    protected_interest: ""
+    title: "تقديم معلومات غير دقيقة عن الاتفاقيات أو المعاهدات"
+  atom_22_2:
+    article: article_22
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_22
+    protected_interest: ""
+    title: "الإساءة أو التقليل من شأن الاتفاقيات الدولية"
+  atom_22_3:
+    article: article_22
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_22
+    protected_interest: ""
+    title: "الإضرار بصورة التزامات المملكة الدولية"
+  atom_22_4:
+    article: article_22
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_22
+    protected_interest: ""
+    title: "استخدام الدراما كغطاء لتشويه القانون الدولي"
+  atom_22_5:
+    article: article_22
+    reviewer: State
+    inherits:
+      - universal
+      - state
+      - article_22
+    protected_interest: ""
+    title: "غياب التمييز بين الرأي السياسي والالتزام القانوني"
+  atom_23_1:
+    article: article_23
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_23
+    protected_interest: ""
+    title: "المظاهر غير المحتشمة"
+  atom_23_2:
+    article: article_23
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_23
+    protected_interest: ""
+    title: "المظاهر غير الملائمة للذوق العام"
+  atom_23_3:
+    article: article_23
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_23
+    protected_interest: ""
+    title: "تطبيع المظهر المخالف للقيم الإسلامية أو الاجتماعية"
+  atom_23_4:
+    article: article_23
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_23
+    protected_interest: ""
+    title: "عدم مراعاة الفئة العمرية والجمهور العام"
+  atom_23_5:
+    article: article_23
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_23
+    protected_interest: ""
+    title: "استخدام المظهر كوسيلة إثارة أو تسويق"
+  atom_24_1:
+    article: article_24
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_24
+    protected_interest: ""
+    title: "الزي غير المحتشم"
+  atom_24_2:
+    article: article_24
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_24
+    protected_interest: ""
+    title: "الزي غير الملائم للفئة العمرية أو الجمهور العام"
+  atom_24_3:
+    article: article_24
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_24
+    protected_interest: ""
+    title: "تطبيع الزي المخالف للقيم الإسلامية أو الاجتماعية"
+  atom_24_4:
+    article: article_24
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_24
+    protected_interest: ""
+    title: "استخدام الزي كوسيلة إثارة أو جذب"
+  atom_24_5:
+    article: article_24
+    reviewer: SexualContent
+    inherits:
+      - universal
+      - sexualcontent
+      - article_24
+    protected_interest: ""
+    title: "عدم التمييز بين الزي التخييلي والزي الواقعي"

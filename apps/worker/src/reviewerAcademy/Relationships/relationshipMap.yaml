@@ -1,0 +1,186 @@
+reviewers:
+  General:
+    articles:
+      article_01:
+        atoms:
+      article_02:
+        atoms:
+      article_03:
+        atoms:
+      article_04:
+        atoms:
+          - atom_4_1
+          - atom_4_2
+          - atom_4_3
+          - atom_4_4
+          - atom_4_5
+          - atom_4_6
+          - atom_4_7
+          - atom_4_8
+      article_05:
+        atoms:
+          - atom_5_1
+          - atom_5_2
+          - atom_5_3
+          - atom_5_4
+          - atom_5_5
+      article_25:
+        atoms:
+      article_26:
+        atoms:
+  Children:
+    articles:
+      article_06:
+        atoms:
+          - atom_6_1
+          - atom_6_2
+          - atom_6_3
+          - atom_6_4
+          - atom_6_5
+  SexualContent:
+    articles:
+      article_07:
+        atoms:
+          - atom_7_1
+          - atom_7_2
+          - atom_7_3
+          - atom_7_4
+          - atom_7_5
+      article_23:
+        atoms:
+          - atom_23_1
+          - atom_23_2
+          - atom_23_3
+          - atom_23_4
+          - atom_23_5
+      article_24:
+        atoms:
+          - atom_24_1
+          - atom_24_2
+          - atom_24_3
+          - atom_24_4
+          - atom_24_5
+  Religion:
+    articles:
+      article_08:
+        atoms:
+          - atom_8_1
+          - atom_8_2
+          - atom_8_3
+          - atom_8_4
+  Violence:
+    articles:
+      article_09:
+        atoms:
+          - atom_9_1
+          - atom_9_2
+          - atom_9_3
+          - atom_9_4
+          - atom_9_5
+  Drugs:
+    articles:
+      article_10:
+        atoms:
+          - atom_10_1
+          - atom_10_2
+          - atom_10_3
+          - atom_10_4
+          - atom_10_5
+  History:
+    articles:
+      article_11:
+        atoms:
+          - atom_11_1
+          - atom_11_2
+          - atom_11_3
+          - atom_11_4
+      article_16:
+        atoms:
+          - atom_16_1
+          - atom_16_2
+          - atom_16_3
+          - atom_16_4
+          - atom_16_5
+  Security:
+    articles:
+      article_12:
+        atoms:
+          - atom_12_1
+          - atom_12_2
+          - atom_12_3
+          - atom_12_4
+          - atom_12_5
+      article_14:
+        atoms:
+          - atom_14_1
+          - atom_14_2
+          - atom_14_3
+          - atom_14_4
+          - atom_14_5
+      article_15:
+        atoms:
+          - atom_15_1
+          - atom_15_2
+          - atom_15_3
+          - atom_15_4
+          - atom_15_5
+      article_21:
+        atoms:
+          - atom_21_1
+          - atom_21_2
+          - atom_21_3
+          - atom_21_4
+          - atom_21_5
+  Crime:
+    articles:
+      article_13:
+        atoms:
+          - atom_13_1
+          - atom_13_2
+          - atom_13_3
+          - atom_13_4
+          - atom_13_5
+  Society:
+    articles:
+      article_17:
+        atoms:
+          - atom_17_1
+          - atom_17_2
+          - atom_17_3
+          - atom_17_4
+          - atom_17_5
+          - atom_17_6
+  State:
+    articles:
+      article_18:
+        atoms:
+          - atom_18_1
+          - atom_18_2
+          - atom_18_3
+          - atom_18_4
+          - atom_18_5
+      article_19:
+        atoms:
+          - atom_19_1
+          - atom_19_2
+          - atom_19_3
+          - atom_19_4
+          - atom_19_5
+      article_20:
+        atoms:
+          - atom_20_1
+          - atom_20_2
+          - atom_20_3
+          - atom_20_4
+          - atom_20_5
+      article_22:
+        atoms:
+          - atom_22_1
+          - atom_22_2
+          - atom_22_3
+          - atom_22_4
+          - atom_22_5
+  Language:
+    articles: {}
+  Morality:
+    articles: {}
