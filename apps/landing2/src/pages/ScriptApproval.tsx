@@ -2,12 +2,11 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { Clock, CheckCircle2, Info, Mail, Phone, ArrowRight, Download, PlayCircle, LogIn, FileText, Send, Bell, ShieldCheck } from 'lucide-react';
 import { useEffect } from 'react';
 import scriptImg from '../assets/images/about_img_1784138196047.jpg';
+import { getBeneficiaryLoginUrl } from '../lib/urls';
 
 export default function ScriptApproval() {
   const { t } = useLanguage();
-  const appPublicUrl = import.meta.env.VITE_APP_PUBLIC_URL?.trim().replace(/\/$/, '');
-  const beneficiaryLoginUrl = import.meta.env.VITE_BENEFICIARY_LOGIN_URL?.trim()
-    || (appPublicUrl ? `${appPublicUrl}/client/login` : '/client/login');
+  const beneficiaryLoginUrl = getBeneficiaryLoginUrl();
 
   useEffect(() => {
     window.scrollTo(0, 0);

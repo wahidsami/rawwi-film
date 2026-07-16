@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Globe, User, Menu, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Link, useLocation } from 'react-router-dom';
+import { getBeneficiaryLoginUrl } from '../lib/urls';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -9,9 +10,7 @@ export default function Header() {
   const { t, language, setLanguage } = useLanguage();
   const location = useLocation();
   const isHomePage = location.pathname === '/';
-  const appPublicUrl = import.meta.env.VITE_APP_PUBLIC_URL?.trim().replace(/\/$/, '');
-  const beneficiaryLoginUrl = import.meta.env.VITE_BENEFICIARY_LOGIN_URL?.trim()
-    || (appPublicUrl ? `${appPublicUrl}/client/login` : '/client/login');
+  const beneficiaryLoginUrl = getBeneficiaryLoginUrl();
   const logoUrl = `${import.meta.env.BASE_URL}colorlogo.png`;
   const logoWhiteUrl = `${import.meta.env.BASE_URL}whitelogo.png`;
 
