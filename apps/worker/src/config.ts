@@ -139,6 +139,9 @@ export const config = {
    * - summary/revisit default to skip on very large jobs
    * - deep auditor skip is opt-in because it can change final persisted rulings
    */
+  ENABLE_DECISION_MEMORY: (process.env.ENABLE_DECISION_MEMORY ?? "true").toLowerCase() !== "false",
+  ENABLE_CASE_SELECTION: (process.env.ENABLE_CASE_SELECTION ?? "true").toLowerCase() !== "false",
+  ENABLE_PRECEDENT_SELECTION: (process.env.ENABLE_PRECEDENT_SELECTION ?? "true").toLowerCase() !== "false",
   ANALYSIS_SKIP_SCRIPT_SUMMARY_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_SCRIPT_SUMMARY_ON_LARGE_JOBS ?? "true").toLowerCase() !== "false",
   ANALYSIS_SKIP_REVISIT_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_REVISIT_ON_LARGE_JOBS ?? "true").toLowerCase() !== "false",
   ANALYSIS_SKIP_DEEP_AUDITOR_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_DEEP_AUDITOR_ON_LARGE_JOBS ?? "false").toLowerCase() === "true",

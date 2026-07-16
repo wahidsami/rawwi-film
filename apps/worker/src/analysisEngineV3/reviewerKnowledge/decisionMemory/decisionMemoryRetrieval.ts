@@ -1,6 +1,7 @@
 import type { ConceptContext } from "../../concepts/conceptTypes.js";
 import type { ReviewerAssessment } from "../../reviewerMethodology/reviewerMethodologyTypes.js";
 import type { V3PromptSubjectModule } from "../../builder/builderTypes.js";
+import { config } from "../../../config.js";
 import { createDefaultDecisionMemoryRegistry } from "./decisionMemory.js";
 import type { DecisionMemoryRegistry, DecisionMemorySearchResult } from "./decisionMemoryTypes.js";
 import { hashDecisionMemoryValue } from "./decisionMemoryUtils.js";
@@ -154,6 +155,33 @@ function buildCacheKey(input: DecisionMemoryRetrievalInput, registry: DecisionMe
   });
 }
 
+function buildDisabledReport(
+  input: DecisionMemoryRetrievalInput,
+  queryTerms: readonly string[],
+  topK: number,
+): DecisionMemoryRetrievalReport {
+  const cacheKey = hashDecisionMemoryValue({
+    disabled: true,
+    queryTerms,
+    subjectModule: input.subjectModule ?? null,
+    topK,
+  });
+  const report = Object.freeze({
+    queryTerms,
+    retrievedMemories: Object.freeze([] as readonly DecisionMemoryRetrievalItem[]),
+    rejectedMemories: Object.freeze([] as readonly DecisionMemoryRetrievalItem[]),
+    selectedMemoryIds: Object.freeze([] as readonly string[]),
+    memoryScore: 0,
+    memoryConfidence: 0,
+    memorySource: "disabled",
+    topK,
+    cacheKey,
+    cacheHit: false,
+  });
+  retrievalCache.set(cacheKey, report);
+  return report;
+}
+
 function selectTopMemories(results: readonly DecisionMemorySearchResult[], topK: number): readonly DecisionMemoryRetrievalItem[] {
   return Object.freeze(
     results.slice(0, topK).map((result) => {
@@ -190,9 +218,12 @@ function selectTopMemories(results: readonly DecisionMemorySearchResult[], topK:
 }
 
 export function createDecisionMemoryRetrievalReport(input: DecisionMemoryRetrievalInput): DecisionMemoryRetrievalReport {
-  const registry = input.registry ?? createDefaultDecisionMemoryRegistry();
   const topK = Math.max(1, input.topK ?? DEFAULT_TOP_K);
   const queryTerms = buildQueryTerms(input);
+  if (!config.ENABLE_DECISION_MEMORY) {
+    return buildDisabledReport(input, queryTerms, topK);
+  }
+  const registry = input.registry ?? createDefaultDecisionMemoryRegistry();
   const subjectArticleIds = buildSubjectArticleIds(input.subjectModule);
   const cacheKey = buildCacheKey(input, registry, queryTerms);
   const cached = retrievalCache.get(cacheKey);

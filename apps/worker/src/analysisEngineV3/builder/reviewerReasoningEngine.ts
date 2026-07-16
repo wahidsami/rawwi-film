@@ -12,6 +12,7 @@ import { createReviewerKnowledgeRetrievalReport, type ReviewerKnowledgeRetrieval
 import type { ReviewerKnowledgePack } from "../reviewerKnowledge/reviewerKnowledgeTypes.js";
 import type { V3PromptBuilderInput, V3PromptJsonObject, V3PromptSubjectModule } from "./builderTypes.js";
 import { buildKnowledgeRankingCorpus, scoreTerms, uniqueStrings } from "../reviewerKnowledge/knowledgeRanking/knowledgeRankingUtils.js";
+import { config } from "../../config.js";
 import { logger } from "../../logger.js";
 
 type ReasoningEngineEntry = Readonly<{
@@ -267,6 +268,9 @@ function buildRelationshipSummaries(packs: readonly ReviewerKnowledgePack[], les
 }
 
 function selectCases(queryTerms: readonly string[], input: V3PromptBuilderInput, assessment: ReviewerAssessment): readonly ReasoningEngineCase[] {
+  if (!config.ENABLE_CASE_SELECTION) {
+    return Object.freeze([]);
+  }
   const registry = getCaseLibraryRegistry();
   const concept = assessment.applicableConceptIds[0] ?? input.subjectModule.id;
   const keyword = uniqueStringsWithNormalization([
@@ -292,6 +296,9 @@ function selectCases(queryTerms: readonly string[], input: V3PromptBuilderInput,
 }
 
 function selectPrecedents(queryTerms: readonly string[], input: V3PromptBuilderInput, assessment: ReviewerAssessment): readonly ReasoningEnginePrecedent[] {
+  if (!config.ENABLE_PRECEDENT_SELECTION) {
+    return Object.freeze([]);
+  }
   const precedentEngine = getPrecedentEngineRegistry();
   const report = precedentEngine.search({
     articleId: input.subjectModule.articleIds?.[0] ?? null,
@@ -826,10 +833,11 @@ export function buildReviewerReasoningEnginePayload(
     decisionRecords,
     reasoningPipeline,
   );
+  const gptReviewerAssistantJson = JSON.stringify(gptReviewerAssistant);
   logStep("gpt_reviewer_assistant_build", {
     reviewerCount: gptReviewerAssistant.reviewerCount ?? null,
-    promptLengthChars: JSON.stringify(gptReviewerAssistant).length,
-    estimatedPromptTokens: Math.ceil(JSON.stringify(gptReviewerAssistant).length / 4),
+    promptLengthChars: gptReviewerAssistantJson.length,
+    estimatedPromptTokens: Math.ceil(gptReviewerAssistantJson.length / 4),
   });
 
   logger.info("V3 instrumentation ENTER: payload construction", {
