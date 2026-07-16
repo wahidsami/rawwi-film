@@ -140,6 +140,12 @@ async function processClaimedChunk(
   const chunkTimeoutMs = Math.min(config.CHUNK_SOFT_TIMEOUT_MS, config.CHUNK_HARD_TIMEOUT_MS);
   let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
   try {
+    const processStartedAt = Date.now();
+    logger.info("V3 instrumentation ENTER: processClaimedChunk", {
+      jobId: job.id,
+      chunkId: claimed.id,
+      chunkTimeoutMs,
+    });
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutHandle = setTimeout(() => {
         const error = new ChunkTimeoutError(
@@ -153,6 +159,11 @@ async function processClaimedChunk(
       processChunkForJob(job as any, claimed as any, normalizedText, abortController.signal),
       timeoutPromise,
     ]);
+    logger.info("V3 instrumentation EXIT: processClaimedChunk", {
+      jobId: job.id,
+      chunkId: claimed.id,
+      durationMs: Date.now() - processStartedAt,
+    });
     return { ok: true, retryable: false };
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : String(e);

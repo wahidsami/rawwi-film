@@ -370,6 +370,11 @@ export async function runV3RuntimeAdapter(
   input: V3RuntimeAdapterRequest,
   options: V3RuntimeAdapterOptions = {},
 ): Promise<V3RuntimeAdapterResult> {
+  const startedAt = Date.now();
+  logger.info("V3 instrumentation ENTER: runV3RuntimeAdapter", {
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+  });
   const analysisRequest = buildRuntimeAnalysisRequest(input, options);
   const promptInput = buildPromptInput(analysisRequest);
   const renderedPrompt = buildV3RenderedPrompt(promptInput);
@@ -401,7 +406,16 @@ export async function runV3RuntimeAdapter(
       userPrompt,
     });
     executionSignatureHash = computeExecutionSignatureHash(signatureRow);
+    logger.info("V3 instrumentation ENTER: persistAnalysisExecutionSignature", {
+      jobId: input.jobId,
+      chunkId: input.chunkId,
+    });
     await persistAnalysisExecutionSignature(signatureContext, renderedPrompt.prompt, userPrompt);
+    logger.info("V3 instrumentation EXIT: persistAnalysisExecutionSignature", {
+      jobId: input.jobId,
+      chunkId: input.chunkId,
+      durationMs: Date.now() - startedAt,
+    });
   }
 
   const reasoningStartedAt = Date.now();
@@ -852,6 +866,11 @@ export async function runV3RuntimeAdapter(
         pipelineVersion,
         explanation,
       });
+      logger.info("V3 instrumentation ENTER: first inspection write batch", {
+        jobId: input.jobId,
+        chunkId: input.chunkId,
+        recordCount: 9,
+      });
       await v3InspectionRecorder.recordStages([
         knowledgeRegistryRecord,
         knowledgeRankingRecord,
@@ -863,6 +882,11 @@ export async function runV3RuntimeAdapter(
         mappingRecord,
         explanationRecord,
       ]);
+      logger.info("V3 instrumentation EXIT: first inspection write batch", {
+        jobId: input.jobId,
+        chunkId: input.chunkId,
+        durationMs: Date.now() - startedAt,
+      });
     } catch (error) {
       logger.warn("V3 inspection capture failed", {
         jobId: input.jobId,
@@ -873,7 +897,7 @@ export async function runV3RuntimeAdapter(
     }
   }
 
-  return Object.freeze({
+  const result = Object.freeze({
     analysisResponse,
     findings,
     diagnostics,
@@ -901,4 +925,10 @@ export async function runV3RuntimeAdapter(
       }),
     }),
   });
+  logger.info("V3 instrumentation EXIT: runV3RuntimeAdapter", {
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+    durationMs: Date.now() - startedAt,
+  });
+  return result;
 }

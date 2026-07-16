@@ -14,6 +14,7 @@ import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/rev
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
 import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
 import { validateReasonedDecisionAgainstEvidence } from "./reasonedDecisionValidation.js";
+import { logger } from "../../logger.js";
 
 export type V3ProviderFlowInput = Readonly<{
   promptInput: V3PromptBuilderInput;
@@ -32,6 +33,10 @@ export function createV3Provider(provider: V3Provider): V3Provider {
 }
 
 export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
+  const startedAt = Date.now();
+  logger.info("V3 instrumentation ENTER: buildV3ProviderUserPrompt", {
+    subjectModuleId: input.subjectModule.id,
+  });
   const conceptContext = createPromptConceptContext(input);
   const reviewerAssessment = runReviewerMethodology({ promptInput: input, conceptContext });
   const reviewerKnowledgeSelection = createEmergencyContextualReviewerKnowledgeSelection({
@@ -55,6 +60,10 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
     reviewerKnowledgeSelection.knowledgeRegistry,
     reviewerKnowledgeRetrieval,
   );
+  logger.info("V3 instrumentation EXIT: buildV3ProviderUserPrompt", {
+    subjectModuleId: input.subjectModule.id,
+    durationMs: Date.now() - startedAt,
+  });
 
   return stableSerializePromptValue({
     chunkContext: input.chunkContext,
@@ -94,8 +103,15 @@ function appendValidationRepairInstruction(userPrompt: string, issues: readonly 
 }
 
 export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promise<V3ProviderReasoningResult> {
+  const startedAt = Date.now();
+  logger.info("V3 instrumentation ENTER: runV3ProviderReasoning", {
+    modelName: input.modelName,
+  });
   const renderedPrompt = buildV3RenderedPrompt(input.promptInput);
   const userPrompt = buildV3ProviderUserPrompt(input.promptInput);
+  logger.info("V3 instrumentation ENTER: provider.callJudgeRaw", {
+    modelName: input.modelName,
+  });
   const rawResponse = await input.provider.callJudgeRaw({
     systemPrompt: renderedPrompt.prompt,
     userPrompt,
@@ -107,7 +123,18 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     responseFormat: input.responseFormat ?? "json_object",
     signal: input.signal ?? null,
   });
+  logger.info("V3 instrumentation EXIT: provider.callJudgeRaw", {
+    modelName: input.modelName,
+    durationMs: Date.now() - startedAt,
+  });
+  logger.info("V3 instrumentation ENTER: mapV3ProviderResponse", {
+    modelName: input.modelName,
+  });
   const mapped = mapV3ProviderResponse(rawResponse.rawResponse);
+  logger.info("V3 instrumentation EXIT: mapV3ProviderResponse", {
+    modelName: input.modelName,
+    durationMs: Date.now() - startedAt,
+  });
   const validation = validateReasonedDecisionAgainstEvidence(input.promptInput, {
     prompt: renderedPrompt.prompt,
     promptHash: renderedPrompt.promptHash,
@@ -121,6 +148,9 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
   });
 
   if (!validation.valid) {
+    logger.info("V3 instrumentation ENTER: provider.callJudgeRaw (validation retry)", {
+      modelName: input.modelName,
+    });
     const retryRawResponse = await input.provider.callJudgeRaw({
       systemPrompt: renderedPrompt.prompt,
       userPrompt: appendValidationRepairInstruction(userPrompt, validation.issues),
@@ -132,7 +162,18 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
       responseFormat: input.responseFormat ?? "json_object",
       signal: input.signal ?? null,
     });
+    logger.info("V3 instrumentation EXIT: provider.callJudgeRaw (validation retry)", {
+      modelName: input.modelName,
+      durationMs: Date.now() - startedAt,
+    });
+    logger.info("V3 instrumentation ENTER: mapV3ProviderResponse (validation retry)", {
+      modelName: input.modelName,
+    });
     const retryMapped = mapV3ProviderResponse(retryRawResponse.rawResponse);
+    logger.info("V3 instrumentation EXIT: mapV3ProviderResponse (validation retry)", {
+      modelName: input.modelName,
+      durationMs: Date.now() - startedAt,
+    });
     const retryValidation = validateReasonedDecisionAgainstEvidence(input.promptInput, {
       prompt: renderedPrompt.prompt,
       promptHash: renderedPrompt.promptHash,
@@ -145,7 +186,7 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
       reasonedDecision: retryMapped.reasonedDecision,
     });
 
-    return Object.freeze({
+    const retryResult = Object.freeze({
       prompt: renderedPrompt.prompt,
       promptHash: renderedPrompt.promptHash,
       userPrompt: appendValidationRepairInstruction(userPrompt, validation.issues),
@@ -156,9 +197,14 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
       context: retryMapped.context,
       reasonedDecision: retryValidation.valid ? retryMapped.reasonedDecision : retryValidation.sanitizedDecision,
     });
+    logger.info("V3 instrumentation EXIT: runV3ProviderReasoning", {
+      modelName: input.modelName,
+      durationMs: Date.now() - startedAt,
+    });
+    return retryResult;
   }
 
-  return Object.freeze({
+  const result = Object.freeze({
     prompt: renderedPrompt.prompt,
     promptHash: renderedPrompt.promptHash,
     userPrompt,
@@ -169,6 +215,11 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     context: mapped.context,
     reasonedDecision: mapped.reasonedDecision,
   });
+  logger.info("V3 instrumentation EXIT: runV3ProviderReasoning", {
+    modelName: input.modelName,
+    durationMs: Date.now() - startedAt,
+  });
+  return result;
 }
 
 export type { V3Provider, V3ProviderName, V3ProviderRawResponse, V3ProviderReasoningRequest, V3ProviderReasoningResult } from "./providerTypes.js";

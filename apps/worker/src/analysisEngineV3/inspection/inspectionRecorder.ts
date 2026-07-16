@@ -31,6 +31,10 @@ function summarizeRecordLocations(records: readonly V3InspectionRecord[]): Reado
 }
 
 async function persistInspectionRecords(records: readonly V3InspectionRecord[]): Promise<void> {
+  const startedAt = Date.now();
+  logger.info("V3 instrumentation ENTER: first inspection write", {
+    recordCount: records.length,
+  });
   const { error } = await supabase.from("analysis_v3_inspection").insert(
     records.map((record) => ({
       job_id: record.jobId,
@@ -46,6 +50,10 @@ async function persistInspectionRecords(records: readonly V3InspectionRecord[]):
   if (error) {
     throw error;
   }
+  logger.info("V3 instrumentation EXIT: first inspection write", {
+    recordCount: records.length,
+    durationMs: Date.now() - startedAt,
+  });
 }
 
 export function createV3InspectionRecorder(deps?: Readonly<{

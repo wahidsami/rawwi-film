@@ -12,6 +12,7 @@ import { createReviewerKnowledgeRetrievalReport, type ReviewerKnowledgeRetrieval
 import type { ReviewerKnowledgePack } from "../reviewerKnowledge/reviewerKnowledgeTypes.js";
 import type { V3PromptBuilderInput, V3PromptJsonObject, V3PromptSubjectModule } from "./builderTypes.js";
 import { buildKnowledgeRankingCorpus, scoreTerms, uniqueStrings } from "../reviewerKnowledge/knowledgeRanking/knowledgeRankingUtils.js";
+import { logger } from "../../logger.js";
 
 type ReasoningEngineEntry = Readonly<{
   id: string;
@@ -634,6 +635,10 @@ export function buildReviewerReasoningEnginePayload(
   knowledgeRegistry: KnowledgeRegistry,
   knowledgeRetrieval: ReviewerKnowledgeRetrievalReport,
 ): ReviewerReasoningEnginePayload {
+  const startedAt = Date.now();
+  logger.info("V3 instrumentation ENTER: buildReviewerReasoningEnginePayload", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const lessonEngine = getLessonEngine();
   const queryTerms = knowledgeRetrieval.queryTerms;
   const lessonSearchResults = lessonEngine.search({
@@ -738,7 +743,7 @@ export function buildReviewerReasoningEnginePayload(
     reasoningPipeline,
   );
 
-  return Object.freeze({
+  const payload = Object.freeze({
     semantic: Object.freeze({
       concept_ids: [...conceptContext.conceptIds],
       primary_concept_id: conceptContext.primaryConceptId,
@@ -875,4 +880,9 @@ export function buildReviewerReasoningEnginePayload(
       recommendation: "State the reviewer recommendation only as reasoning support for the legal engine.",
     }),
   });
+  logger.info("V3 instrumentation EXIT: buildReviewerReasoningEnginePayload", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+    durationMs: Date.now() - startedAt,
+  });
+  return payload;
 }

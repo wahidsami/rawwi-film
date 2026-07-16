@@ -1,3 +1,5 @@
+import { logger } from "../../logger.js";
+
 export type V3AutomaticFallbackDiagnostics = Readonly<{
   engineAttempted: "v3";
   engineUsed: "v2_fallback";
@@ -21,8 +23,15 @@ function toFailureStack(error: unknown): string | null {
 }
 
 export async function runWithV3AutomaticFallback<T>(input: V3AutomaticFallbackInput<T>): Promise<T> {
+  const startedAt = Date.now();
+  logger.info("V3 instrumentation ENTER: runWithV3AutomaticFallback", {});
   try {
-    return await input.runPrimary();
+    logger.info("V3 instrumentation ENTER: runPrimary", {});
+    const primaryResult = await input.runPrimary();
+    logger.info("V3 instrumentation EXIT: runPrimary", {
+      durationMs: Date.now() - startedAt,
+    });
+    return primaryResult;
   } catch (error) {
     if (!input.enabled) throw error;
 
@@ -35,12 +44,25 @@ export async function runWithV3AutomaticFallback<T>(input: V3AutomaticFallbackIn
 
     if (input.onFallback) {
       try {
+        logger.info("V3 instrumentation ENTER: onFallback", {
+          fallbackReason: diagnostics.fallbackReason,
+        });
         await input.onFallback(diagnostics);
+        logger.info("V3 instrumentation EXIT: onFallback", {
+          durationMs: Date.now() - startedAt,
+        });
       } catch {
         // The fallback handler is observability-only; the V2 recovery path must still execute.
       }
     }
 
-    return input.runFallback(diagnostics);
+    logger.info("V3 instrumentation ENTER: runFallback", {
+      fallbackReason: diagnostics.fallbackReason,
+    });
+    const fallbackResult = await input.runFallback(diagnostics);
+    logger.info("V3 instrumentation EXIT: runFallback", {
+      durationMs: Date.now() - startedAt,
+    });
+    return fallbackResult;
   }
 }

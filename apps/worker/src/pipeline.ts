@@ -1870,7 +1870,24 @@ export async function processChunkJudge(
     }
 
     if (analysisEngine === "v3") {
+      const v3BranchStartedAt = Date.now();
+      logger.info("V3 instrumentation ENTER: pipeline V3 branch", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+      });
+      logger.info("V3 instrumentation ENTER: setChunkPhase(postprocess)", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+      });
       await setChunkPhase(chunk.id, "postprocess");
+      logger.info("V3 instrumentation EXIT: setChunkPhase(postprocess)", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        durationMs: Date.now() - v3BranchStartedAt,
+      });
       const v3StartedAt = Date.now();
       const runFallbackToV2 = async (): Promise<void> => {
         const fallbackJob = {
@@ -1881,12 +1898,35 @@ export async function processChunkJudge(
             pipeline_version: "v2",
           },
         } as AnalysisJob;
+        const fallbackStartedAt = Date.now();
+        logger.info("V3 instrumentation ENTER: fallback to V2", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+        });
         await processChunkJudgeV2(fallbackJob, chunk, normalizedText, signal);
+        logger.info("V3 instrumentation EXIT: fallback to V2", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          durationMs: Date.now() - fallbackStartedAt,
+        });
       };
 
+      logger.info("V3 instrumentation ENTER: runWithV3AutomaticFallback", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+      });
       await runWithV3AutomaticFallback({
         enabled: config.V3_ENABLE_AUTOMATIC_FALLBACK,
         runPrimary: async () => {
+          const runtimeAdapterStartedAt = Date.now();
+          logger.info("V3 instrumentation ENTER: runV3RuntimeAdapter", {
+            jobId,
+            chunkId: chunk.id,
+            runKey,
+          });
           const runtimeResult = await runV3RuntimeAdapter({
             jobId,
             chunkId: chunk.id,
@@ -1905,6 +1945,12 @@ export async function processChunkJudge(
             promptLexiconTerms: terms,
             analysisSignatureContext: analysisSignatureBase,
             diagnosticsEnabled: config.ENABLE_AI_DIAGNOSTICS,
+          });
+          logger.info("V3 instrumentation EXIT: runV3RuntimeAdapter", {
+            jobId,
+            chunkId: chunk.id,
+            runKey,
+            durationMs: Date.now() - runtimeAdapterStartedAt,
           });
           allFindings = sortFindingsStable(runtimeResult.findings as FindingWithGlobal[]);
           const runtimeTruthLayer = runtimeResult.truthLayerMeta as Record<string, unknown> | null | undefined;
@@ -1983,6 +2029,12 @@ export async function processChunkJudge(
           }
         },
         runFallback: runFallbackToV2,
+      });
+      logger.info("V3 instrumentation EXIT: runWithV3AutomaticFallback", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        durationMs: Date.now() - v3BranchStartedAt,
       });
     } else {
     // 2) Router (or high-recall bypass / deterministic no-op skip)

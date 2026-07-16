@@ -19,6 +19,11 @@ export async function processChunkForJob(
   normalizedText: string | null,
   signal?: AbortSignal,
 ): Promise<void> {
+  const startedAt = Date.now();
+  logger.info("V3 instrumentation ENTER: processChunkForJob", {
+    jobId: job.id,
+    chunkId: chunk.id,
+  });
   const pipelineVersion = resolvePipelineVersion(job);
 
   logger.info("Dispatching analysis pipeline", {
@@ -29,8 +34,20 @@ export async function processChunkForJob(
 
   if (pipelineVersion === "v2") {
     await processChunkJudgeV2(job, chunk, normalizedText, signal);
+    logger.info("V3 instrumentation EXIT: processChunkForJob", {
+      jobId: job.id,
+      chunkId: chunk.id,
+      pipelineVersion,
+      durationMs: Date.now() - startedAt,
+    });
     return;
   }
 
   await processChunkJudgeV1(job, chunk, normalizedText, signal);
+  logger.info("V3 instrumentation EXIT: processChunkForJob", {
+    jobId: job.id,
+    chunkId: chunk.id,
+    pipelineVersion,
+    durationMs: Date.now() - startedAt,
+  });
 }

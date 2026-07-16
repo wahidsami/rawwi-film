@@ -14,6 +14,7 @@ import {
   scoreTerms,
   uniqueNumbers,
 } from "./knowledgeRanking/knowledgeRankingUtils.js";
+import { logger } from "../../logger.js";
 
 type ReviewerKnowledgeRetrievalSource = "concept_context" | "assessment" | "subject_module" | "pack_trigger" | "pack_corpus" | "pack_articles";
 
@@ -270,6 +271,11 @@ function buildSubjectArticleIds(subjectModule: V3PromptSubjectModule | null | un
 }
 
 export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeRetrievalInput): ReviewerKnowledgeRetrievalReport {
+  const startedAt = Date.now();
+  logger.info("V3 instrumentation ENTER: createReviewerKnowledgeRetrievalReport", {
+    subjectModuleId: input.subjectModule?.id ?? null,
+    topK: input.topK ?? DEFAULT_TOP_K,
+  });
   const registry = input.registry ?? createDefaultReviewerKnowledgeRegistry();
   const topK = Math.max(1, input.topK ?? DEFAULT_TOP_K);
   const queryTerms = buildQueryTerms(input);
@@ -285,10 +291,17 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
   const cacheKey = hashCacheKey(input, registry, queryTerms, decisionMemoryRetrieval.cacheKey);
   const cached = retrievalCache.get(cacheKey);
   if (cached) {
-    return Object.freeze({
+    const cachedReport = Object.freeze({
       ...cached,
       cacheHit: true,
     });
+    logger.info("V3 instrumentation EXIT: createReviewerKnowledgeRetrievalReport", {
+      subjectModuleId: input.subjectModule?.id ?? null,
+      selectedPackCount: cachedReport.selectedPacks.length,
+      cacheHit: true,
+      durationMs: Date.now() - startedAt,
+    });
+    return cachedReport;
   }
 
   const universalPack = registry.load("v3_00_universal");
@@ -354,5 +367,11 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     decisionMemoryRetrieval,
   });
   retrievalCache.set(cacheKey, report);
+  logger.info("V3 instrumentation EXIT: createReviewerKnowledgeRetrievalReport", {
+    subjectModuleId: input.subjectModule?.id ?? null,
+    selectedPackCount: report.selectedPacks.length,
+    cacheHit: false,
+    durationMs: Date.now() - startedAt,
+  });
   return report;
 }

@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { config } from "../../config.js";
+import { logger } from "../../logger.js";
 import type { V3Provider, V3ProviderCallJudgeRawInput, V3ProviderRawResponse } from "./providerTypes.js";
 
 export type OpenAIProviderOptions = Readonly<{
@@ -18,6 +19,16 @@ export function createOpenAIProvider(options?: OpenAIProviderOptions): V3Provide
   return {
     name: "openai",
     async callJudgeRaw(input: V3ProviderCallJudgeRawInput): Promise<V3ProviderRawResponse> {
+      const startedAt = Date.now();
+      logger.info("V3 instrumentation ENTER provider.call()", {
+        modelName: input.modelName,
+      });
+      logger.info("V3 instrumentation ENTER: provider.callJudgeRaw (openai)", {
+        modelName: input.modelName,
+      });
+      logger.info("V3 instrumentation SEND OpenAI request", {
+        modelName: input.modelName,
+      });
       const completion = await client.chat.completions.create(
         {
           model: input.modelName,
@@ -33,6 +44,17 @@ export function createOpenAIProvider(options?: OpenAIProviderOptions): V3Provide
         },
         { timeout: timeoutMs, signal: input.signal ?? undefined },
       );
+      logger.info("V3 instrumentation RECEIVED OpenAI response", {
+        modelName: input.modelName,
+      });
+      logger.info("V3 instrumentation EXIT: provider.callJudgeRaw (openai)", {
+        modelName: input.modelName,
+        durationMs: Date.now() - startedAt,
+      });
+      logger.info("V3 instrumentation EXIT provider.call()", {
+        modelName: input.modelName,
+        elapsedMs: Date.now() - startedAt,
+      });
 
       return Object.freeze({
         providerName: "openai",

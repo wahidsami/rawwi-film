@@ -13,6 +13,7 @@ import {
   uniqueNumbers,
   uniqueStrings,
 } from "./knowledgeRankingUtils.js";
+import { logger } from "../../../logger.js";
 
 type KnowledgeRankingBucket = Readonly<{
   key: string;
@@ -516,6 +517,11 @@ function buildArticleIds(subjectModule: V3PromptSubjectModule): readonly number[
 }
 
 export function createKnowledgeRankingReport(input: KnowledgeRankingQuery): KnowledgeRankingReport {
+  const startedAt = Date.now();
+  logger.info("V3 instrumentation ENTER: createKnowledgeRankingReport", {
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+  });
   const registryEntries = input.registry.list();
   const subjectTerms = collectSubjectTerms(input.subjectModule);
   const conceptTerms = collectConceptSignals(input.analysisResponse);
@@ -541,7 +547,7 @@ export function createKnowledgeRankingReport(input: KnowledgeRankingQuery): Know
     ...relationshipScores.flatMap((item) => item.registryKeys),
   ]).slice(0, 50);
 
-  return Object.freeze({
+  const report = Object.freeze({
     jobId: input.jobId,
     chunkId: input.chunkId,
     analysisEngine: input.analysisEngine,
@@ -567,4 +573,11 @@ export function createKnowledgeRankingReport(input: KnowledgeRankingQuery): Know
     retrievalCoverage,
     totalRegistryEntries: registryEntries.length,
   });
+  logger.info("V3 instrumentation EXIT: createKnowledgeRankingReport", {
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+    selectedRegistryKeyCount: report.selectedRegistryKeys.length,
+    durationMs: Date.now() - startedAt,
+  });
+  return report;
 }

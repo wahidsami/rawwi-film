@@ -1,6 +1,7 @@
 import type { LegalContextResult, LegalEvidenceCandidate, LegalEvidenceResult, LegalNarrativeResult, LegalSemanticResult } from "../legal/legalTypes.js";
 import type { V3PromptJsonObject, V3PromptJsonValue } from "../builder/builderTypes.js";
 import type { V3ReasonedDecisionArticleEvaluation, V3ReasonedDecisionResult, V3ReasoningResponsePayload } from "./providerTypes.js";
+import { logger } from "../../logger.js";
 
 function isObject(value: unknown): value is V3PromptJsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -174,11 +175,14 @@ export function mapV3ProviderResponse(rawResponse: string): Readonly<{
   context: LegalContextResult;
   reasonedDecision: V3ReasonedDecisionResult;
 }> {
+  const startedAt = Date.now();
+  logger.info("V3 instrumentation ENTER: mapV3ProviderResponse", {
+    rawResponseLength: rawResponse.length,
+  });
   const parsed = extractJson(rawResponse);
   const payload = isObject(parsed) ? (parsed.reasoning && isObject(parsed.reasoning) ? parsed.reasoning : parsed) : {};
   const source = payload as V3ReasoningResponsePayload;
-
-  return Object.freeze({
+  const mapped = Object.freeze({
     narrative: normalizeNarrativeResult(source.narrative ?? source.narrative_result ?? source.narrativeResult),
     evidence: normalizeEvidenceResult(source.evidence ?? source.evidence_result ?? source.evidenceResult),
     semantic: normalizeSemanticResult(source.semantic ?? source.semantic_result ?? source.semanticResult),
@@ -190,4 +194,9 @@ export function mapV3ProviderResponse(rawResponse: string): Readonly<{
       source.reasonedDecisionResult
     ),
   });
+  logger.info("V3 instrumentation EXIT: mapV3ProviderResponse", {
+    rawResponseLength: rawResponse.length,
+    durationMs: Date.now() - startedAt,
+  });
+  return mapped;
 }
