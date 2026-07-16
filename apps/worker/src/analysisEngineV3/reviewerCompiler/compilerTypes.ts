@@ -1,4 +1,5 @@
 import type { EmergencyContextualReviewerRoutingReport } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
+import type { ReviewerCandidateSelectionDiagnostics } from "../ranking/rankingTypes.js";
 import type { V3PromptJsonValue } from "../builder/builderTypes.js";
 
 export type ReviewerAcademyManualSection = Readonly<{
@@ -123,6 +124,7 @@ export type ReviewerCompiledContext = Readonly<{
   promptCharacterCount: number;
   promptTokenEstimate: number;
   promptPreview: string;
+  candidateDiagnostics?: ReviewerCandidateSelectionDiagnostics | null;
 }>;
 
 export type ReviewerCompiledReviewerPackage = Readonly<{

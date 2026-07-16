@@ -1,7 +1,9 @@
 import type { ConceptContext } from "../concepts/conceptTypes.js";
 import type { ReviewerAssessment } from "../reviewerMethodology/reviewerMethodologyTypes.js";
 import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
+import { config } from "../../config.js";
 import { logger } from "../../logger.js";
+import { createDeterministicCandidateCompiledContext } from "../ranking/candidateEngine.js";
 import { ensureReviewerAcademyRegistry } from "./compilerLoader.js";
 import { resolveReviewerCompilerSelection } from "./compilerResolver.js";
 import { createCompiledReviewerContextPromptSection, summarizeCompilerOutput } from "./compilerRenderer.js";
@@ -119,6 +121,20 @@ function buildCompiledReviewerContext(input: ReviewerCompilerInput, registry: Re
     conceptContext: input.conceptContext,
     assessment: input.assessment,
   });
+
+  if (config.DETERMINISTIC_CANDIDATES_ENABLED) {
+    return Object.freeze({
+      registry,
+      routing: resolution.routing,
+      compiledReviewerContext: createDeterministicCandidateCompiledContext({
+        routing: resolution.routing,
+        promptInput: input.promptInput,
+        conceptContext: input.conceptContext,
+        assessment: input.assessment,
+        registry,
+      }),
+    });
+  }
 
   const selectedFolders = resolution.selectedFolders.filter((folder) => normalizeFolderName(folder) !== "universal");
   const universalManuals = Object.freeze([...(registry.universalManuals ?? [])]);

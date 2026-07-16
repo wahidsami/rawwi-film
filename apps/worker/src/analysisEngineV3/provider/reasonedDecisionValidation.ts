@@ -143,6 +143,10 @@ function normalizeText(value: string | null | undefined): string {
   return typeof value === "string" ? value.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase() : "";
 }
 
+function normalizeIdSet(values: readonly string[] | null | undefined): ReadonlySet<string> {
+  return new Set((values ?? []).map((value) => normalizeText(value)).filter((value) => value.length > 0));
+}
+
 function splitTokens(value: string): readonly string[] {
   return value
     .normalize("NFC")
@@ -222,6 +226,8 @@ export function validateReasonedDecisionAgainstEvidence(
   result: V3ProviderReasoningResult,
 ): V3ReasonedDecisionValidationResult {
   const issues: V3ReasonedDecisionValidationIssue[] = [];
+  const compiledReviewerContext = input.compiledReviewerContext ?? null;
+  const candidateDiagnostics = compiledReviewerContext?.candidateDiagnostics ?? null;
   const groundingCorpus = normalizeText(collectGroundingCorpus(input, result));
   const primaryCandidate = result.evidence.candidates[result.evidence.primaryCandidateIndex ?? 0] ?? result.evidence.candidates[0] ?? null;
   const exactEvidenceTexts = new Set(
@@ -234,6 +240,27 @@ export function validateReasonedDecisionAgainstEvidence(
   const recommendation = normalizeText(result.reasonedDecision.recommendation);
   const noViolationRecommendation = recommendation.includes("no violation");
   const passArticleCount = result.reasonedDecision.articleEvaluations.filter((evaluation) => evaluation.status === "PASS").length;
+  const candidateArticleIds = normalizeIdSet(
+    candidateDiagnostics?.articleRanking.selectedPolicyArticleIds.map((articleId) => String(articleId))
+      ?? compiledReviewerContext?.selectedArticles.map((article) => article.articleId),
+  );
+  const candidateAtomIds = normalizeIdSet(
+    candidateDiagnostics?.atomRanking.selectedPolicyAtomIds
+      ?? compiledReviewerContext?.selectedAtoms.map((atom) => atom.atomId),
+  );
+
+  if (candidateArticleIds.size > 0) {
+    for (const [index, evaluation] of result.reasonedDecision.articleEvaluations.entries()) {
+      if (!candidateArticleIds.has(normalizeText(String(evaluation.articleId)))) {
+        issues.push({
+          code: "article_outside_candidate_set",
+          path: `reasonedDecision.articleEvaluations[${index}].articleId`,
+          message: `The reviewer returned article ${evaluation.articleId}, but it was not supplied in the candidate article set.`,
+        });
+      }
+    }
+  }
+
   if (passArticleCount === 0 && !noViolationRecommendation) {
     issues.push({
       code: "insufficient_evidence_requires_no_violation",
@@ -257,6 +284,29 @@ export function validateReasonedDecisionAgainstEvidence(
       path: `reasonedDecision.supportingEvidence[${index}]`,
       message: `Supporting evidence must be an exact quote or scene span, but received: ${JSON.stringify(evidence)}.`,
     });
+  }
+
+  if (candidateAtomIds.size > 0) {
+    const candidateAtomPattern = /\b(?:atom[_-]?\d+(?:[_-]\d+)*|\d+-\d+)\b/gi;
+    const atomMentionText = [
+      result.reasonedDecision.reasoning,
+      result.reasonedDecision.narrativeAnalysis,
+      result.reasonedDecision.humanLikeExplanation,
+      result.reasonedDecision.recommendation,
+      ...result.reasonedDecision.supportingEvidence,
+      ...result.reasonedDecision.contradictingEvidence,
+    ].join(" | ");
+    const atomMentions = [...new Set(atomMentionText.match(candidateAtomPattern) ?? [])];
+
+    for (const atomId of atomMentions) {
+      if (!candidateAtomIds.has(normalizeText(atomId))) {
+        issues.push({
+          code: "atom_outside_candidate_set",
+          path: "reasonedDecision.reasoning",
+          message: `The reviewer referenced atom ${atomId}, but it was not supplied in the candidate atom set.`,
+        });
+      }
+    }
   }
 
   const claimText = [

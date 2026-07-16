@@ -92,6 +92,16 @@ export function renderCompiledReviewerContextSection(context: ReviewerCompiledCo
   return renderSection(
     "Compiled Reviewer Context",
     joinPromptSections([
+      context.candidateDiagnostics
+        ? renderStableJsonSection("Deterministic Candidate Contract", {
+            enabled: context.candidateDiagnostics.enabled,
+            selected_reviewer_ids: [...context.candidateDiagnostics.selectedReviewerIds],
+            selected_reviewer_labels: [...context.candidateDiagnostics.selectedReviewerLabels],
+            selected_article_ids: [...context.selectedArticles.map((article) => article.articleId)],
+            selected_atom_ids: [...context.selectedAtoms.map((atom) => atom.atomId)],
+            instruction: "Evaluate only the supplied candidate articles and atoms. Do not invent any new article or atom ids.",
+          })
+        : null,
       renderStableJsonSection("Selection Summary", {
         selected_reviewer_ids: [...context.selection.selectedReviewerIds],
         selected_reviewer_labels: [...context.selection.selectedReviewerLabels],

@@ -71,24 +71,25 @@ function renderDecisionGraphSection(decisionGraph: V3PromptBuilderInput["decisio
 
 export function renderV3Prompt(input: V3PromptBuilderInput): string {
   const context = normalizePromptBuilderInput(input);
+  const useReviewerCompiler = config.REVIEWER_COMPILER_ENABLED || config.DETERMINISTIC_CANDIDATES_ENABLED;
   const conceptContext = createPromptConceptContext(context);
   const reviewerAssessment = runReviewerMethodology({ promptInput: context, conceptContext });
   const reviewerQuestionSet = getDefaultReviewerQuestionSet();
-  const compiledReviewerContext = config.REVIEWER_COMPILER_ENABLED
+  const compiledReviewerContext = useReviewerCompiler
     ? (context.compiledReviewerContext ?? compileReviewerContext({
         promptInput: context,
         conceptContext,
         assessment: reviewerAssessment,
       }).compiledReviewerContext)
     : null;
-  const reviewerKnowledgeSelection = config.REVIEWER_COMPILER_ENABLED
+  const reviewerKnowledgeSelection = useReviewerCompiler
     ? null
     : createEmergencyContextualReviewerKnowledgeSelection({
         promptInput: context,
         conceptContext,
         assessment: reviewerAssessment,
       });
-  const knowledgeRetrieval = config.REVIEWER_COMPILER_ENABLED
+  const knowledgeRetrieval = useReviewerCompiler
     ? null
     : createReviewerKnowledgeRetrievalReport({
         assessment: reviewerAssessment,
@@ -98,7 +99,7 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
         topK: Math.max(1, reviewerKnowledgeSelection!.routing.selectedReviewerPackIds.length),
       });
   const reviewerKnowledgePacks = knowledgeRetrieval?.selectedPacks ?? [];
-  const reviewerReasoningEngine = config.REVIEWER_COMPILER_ENABLED
+  const reviewerReasoningEngine = useReviewerCompiler
     ? null
     : buildReviewerReasoningEnginePayload(
         context,
@@ -114,10 +115,10 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
     "# Analysis Engine V3 System Prompt",
     renderReviewerMethodologySection(reviewerMethodology, reviewerAssessment),
     renderReviewerQuestionSetSection(reviewerQuestionSet),
-    config.REVIEWER_COMPILER_ENABLED && compiledReviewerContext
+    useReviewerCompiler && compiledReviewerContext
       ? renderCompiledReviewerContextSection(compiledReviewerContext)
       : renderReviewerKnowledgePacksSection(reviewerKnowledgePacks),
-    config.REVIEWER_COMPILER_ENABLED && compiledReviewerContext
+    useReviewerCompiler && compiledReviewerContext
       ? renderStableJsonSection("Compiled Reviewer Context Summary", {
           selected_reviewer_ids: [...compiledReviewerContext.selection.selectedReviewerIds],
           selected_reviewer_labels: [...compiledReviewerContext.selection.selectedReviewerLabels],
@@ -127,7 +128,7 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
           prompt_token_estimate: compiledReviewerContext.promptTokenEstimate,
         })
       : renderStableJsonSection("GPT Reviewer Assistant", reviewerReasoningEngine!.gpt_reviewer_assistant ?? {}),
-    config.REVIEWER_COMPILER_ENABLED && compiledReviewerContext
+    useReviewerCompiler && compiledReviewerContext
       ? null
       : renderStableJsonSection("Reviewer Reasoning Engine", reviewerReasoningEngine!),
     renderReasoningStageAssembly(context.reasoningContract),

@@ -39,23 +39,24 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
   logger.info("V3 instrumentation ENTER: buildV3ProviderUserPrompt", {
     subjectModuleId: input.subjectModule.id,
   });
+  const useReviewerCompiler = config.REVIEWER_COMPILER_ENABLED || config.DETERMINISTIC_CANDIDATES_ENABLED;
   const conceptContext = createPromptConceptContext(input);
   const reviewerAssessment = runReviewerMethodology({ promptInput: input, conceptContext });
-  const compiledReviewerContext = config.REVIEWER_COMPILER_ENABLED
+  const compiledReviewerContext = useReviewerCompiler
     ? (input.compiledReviewerContext ?? compileReviewerContext({
         promptInput: input,
         conceptContext,
         assessment: reviewerAssessment,
       }).compiledReviewerContext)
     : null;
-  const reviewerKnowledgeSelection = config.REVIEWER_COMPILER_ENABLED
+  const reviewerKnowledgeSelection = useReviewerCompiler
     ? null
     : createEmergencyContextualReviewerKnowledgeSelection({
         promptInput: input,
         conceptContext,
         assessment: reviewerAssessment,
       });
-  const reviewerKnowledgeRetrieval = config.REVIEWER_COMPILER_ENABLED
+  const reviewerKnowledgeRetrieval = useReviewerCompiler
     ? null
     : createReviewerKnowledgeRetrievalReport({
         assessment: reviewerAssessment,
@@ -65,7 +66,7 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
         topK: Math.max(1, reviewerKnowledgeSelection!.routing.selectedReviewerPackIds.length),
       });
   const reviewerKnowledgePacks = reviewerKnowledgeRetrieval?.selectedPacks ?? [];
-  const reviewerReasoningEngine = config.REVIEWER_COMPILER_ENABLED
+  const reviewerReasoningEngine = useReviewerCompiler
     ? null
     : buildReviewerReasoningEnginePayload(
         input,
@@ -80,7 +81,7 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
     durationMs: Date.now() - startedAt,
   });
 
-  return stableSerializePromptValue(config.REVIEWER_COMPILER_ENABLED && compiledReviewerContext
+  return stableSerializePromptValue(useReviewerCompiler && compiledReviewerContext
     ? {
         chunkContext: input.chunkContext,
         glossary: input.glossary,
@@ -96,24 +97,24 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
           scope: input.subjectModule.scope ?? null,
           titleAr: input.subjectModule.titleAr,
         },
-      }
-    : {
-    chunkContext: input.chunkContext,
-    glossary: input.glossary,
-    reviewerReasoningEngine,
-    reviewerAssessment,
-    reviewerMethodology: getDefaultReviewerMethodology(),
-    reviewerKnowledgePacks,
-    outputSchema: input.outputSchema,
-    reasoningContract: input.reasoningContract,
-    semanticLayer: input.semanticLayer,
-    storyMemory: input.storyMemory,
-    subjectModule: {
-      id: input.subjectModule.id,
-      scope: input.subjectModule.scope ?? null,
-      titleAr: input.subjectModule.titleAr,
-    },
-  });
+    }
+      : {
+        chunkContext: input.chunkContext,
+        glossary: input.glossary,
+        reviewerReasoningEngine,
+        reviewerAssessment,
+        reviewerMethodology: getDefaultReviewerMethodology(),
+        reviewerKnowledgePacks,
+        outputSchema: input.outputSchema,
+        reasoningContract: input.reasoningContract,
+        semanticLayer: input.semanticLayer,
+        storyMemory: input.storyMemory,
+        subjectModule: {
+          id: input.subjectModule.id,
+          scope: input.subjectModule.scope ?? null,
+          titleAr: input.subjectModule.titleAr,
+        },
+      });
 }
 
 function appendValidationRepairInstruction(userPrompt: string, issues: readonly { path: string; message: string }[]): string {
