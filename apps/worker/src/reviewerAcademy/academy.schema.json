@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "academy.schema.json",
+  "title": "Reviewer Academy Metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "academyVersion",
+    "reviewer",
+    "domain",
+    "version",
+    "status"
+  ],
+  "properties": {
+    "academyVersion": {
+      "type": "string",
+      "description": "Version of the reviewer academy format."
+    },
+    "inherits": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ],
+      "description": "Single or multiple inheritance targets."
+    },
+    "reviewer": {
+      "type": "string",
+      "description": "Reviewer identity or module name."
+    },
+    "domain": {
+      "type": "string",
+      "description": "Primary reviewer domain."
+    },
+    "article": {
+      "type": "string",
+      "description": "GCAM article or article reference."
+    },
+    "atoms": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ],
+      "description": "Atom identifiers or atom references."
+    },
+    "priority": {
+      "type": "number",
+      "description": "Relative retrieval or evaluation priority."
+    },
+    "runtime": {
+      "type": "boolean",
+      "description": "Whether the academy item is runtime-relevant."
+    },
+    "retrieval": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Retrieval metadata for compiler and ranking."
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the academy entry."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "deprecated",
+        "archived"
+      ],
+      "description": "Lifecycle state of the academy entry."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the academy entry."
+    }
+  }
+}
+
