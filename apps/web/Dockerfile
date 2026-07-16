@@ -1,18 +1,18 @@
 # apps/web/Dockerfile
-# Keep the legacy web deployment path serving the new landing2 experience.
+# Build and serve the dashboard frontend from apps/web.
 FROM node:20-alpine AS builder
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Context is root of monorepo
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-COPY apps/landing2/package.json ./apps/landing2/
+COPY apps/web/package.json ./apps/web/
 
 RUN pnpm install --frozen-lockfile
 
-COPY apps/landing2 ./apps/landing2
+COPY apps/web ./apps/web
 
-WORKDIR /app/apps/landing2
+WORKDIR /app/apps/web
 # Build Args
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_ANON_KEY
@@ -26,6 +26,8 @@ RUN pnpm build
 
 # Serve
 FROM nginx:alpine
-COPY --from=builder /app/apps/landing2/dist /usr/share/nginx/html
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY apps/web/nginx-security-headers.conf /etc/nginx/conf.d/security-headers.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
