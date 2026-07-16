@@ -1,29 +1,23 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft,
+  ArrowRight,
   Calendar,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Clapperboard,
-  DollarSign,
   Globe,
-  Lightbulb,
   LogIn,
   MapPin,
   Menu,
   Shield,
-  UserRound,
   UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
+import { useLangStore } from '@/store/langStore';
 
 const heroSlides = [
   {
-    id: 1,
     titleAr: 'انضم إلى منصة هيئة الأفلام الآن',
     titleEn: 'Join the Film Commission platform now',
     subtitleAr: 'هيئة الأفلام تساعدك في إيصال نصوصك السينمائية بسرعة أكبر للمراجعة والاعتماد.',
@@ -31,179 +25,100 @@ const heroSlides = [
     image: '/slide01.jpg',
   },
   {
-    id: 2,
     titleAr: 'هيئة الأفلام ستساعدك!',
     titleEn: 'The Film Commission will help!',
-    subtitleAr: 'هيئة الأفلام تنظم ملفات نصوص الأفلام والمسلسلات، وتعرض الملاحظات، وتساعدك للوصول إلى أفضل نسخة.',
-    subtitleEn: 'The Film Commission organizes your film and series scripts, shows issues, and helps you reach the best version.',
+    subtitleAr: 'منصة واضحة لتنظيم النصوص، عرض الملاحظات، وتسهيل الوصول إلى أفضل نسخة.',
+    subtitleEn: 'A clear platform to organize scripts, show findings, and reach the best version.',
     image: '/slide02.jpg',
   },
   {
-    id: 3,
     titleAr: 'شهادة النص... بسرعة',
     titleEn: 'Script certificate... so fast',
-    subtitleAr: 'هيئة الأفلام تصدر شهادة اعتماد النص الخاصة بك بسرعة غير مسبوقة.',
-    subtitleEn: 'The Film Commission issues your script approval certificate faster than ever.',
+    subtitleAr: 'هيئة الأفلام تصدر شهادة اعتماد النص الخاصة بك بسرعة وبمسار واضح.',
+    subtitleEn: 'The Film Commission issues your script approval certificate with a fast, clear flow.',
     image: '/slide03.jpg',
   },
 ];
 
-const aboutCards = [
+const services = [
   {
-    titleAr: 'حساب واحد لنصوصك',
-    titleEn: 'One home for your scripts',
-    bodyAr: 'جميع النصوص السينمائية الخاصة بشركتك في مكان واحد.',
-    bodyEn: 'All your company scripts in one place.',
-    image:
-      'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=1200&q=80',
+    titleAr: 'اعتماد النص السينمائي',
+    titleEn: 'Script approval',
+    bodyAr: 'قدّم النص ثم تابع مراحل الاعتماد في مكان واحد.',
+    bodyEn: 'Submit your script and follow the approval stages in one place.',
   },
   {
-    titleAr: 'محرر ومتابعة أوضح',
-    titleEn: 'Cleaner review flow',
-    bodyAr: 'واجهة تساعد على تتبع الملاحظات والقرارات والتعديلات بسهولة.',
-    bodyEn: 'A cleaner interface for findings, decisions, and edits.',
-    image:
-      'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=80',
+    titleAr: 'مراجعة ميسرة',
+    titleEn: 'Simplified review',
+    bodyAr: 'واجهة مرتبة تساعد على رؤية النتائج والملاحظات بسرعة.',
+    bodyEn: 'A clean interface for quickly reviewing findings and comments.',
   },
   {
-    titleAr: 'إصدار الشهادات بسرعة',
-    titleEn: 'Fast Certificate issuing',
-    bodyAr: 'هيئة الأفلام تساعدك في إصدار شهادة اعتماد النص تلقائيًا بمجرد الموافقة عليه.',
-    bodyEn: 'The Film Commission helps you get your script approval certificate automatically once it is approved.',
-    image:
-      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
+    titleAr: 'إصدار الشهادة',
+    titleEn: 'Certificate issuance',
+    bodyAr: 'احصل على شهادة الاعتماد بعد الموافقة بشكل مباشر.',
+    bodyEn: 'Receive your approval certificate immediately after approval.',
   },
-];
-
-const films = [
-  { id: 1, title: 'Kandahar', year: '2023', image: 'https://m.media-amazon.com/images/I/513qYXGPkYL._UF894,1000_QL80_.jpg' },
-  { id: 2, title: 'Dunki', year: '2023', image: 'https://m.media-amazon.com/images/M/MV5BMThhZjM4M2UtYmE1NC00YTMzLTk3ZTAtNmQ1ZmI4YmRmZGE1XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg' },
-  { id: 3, title: 'Cherry', year: '2021', image: 'https://m.media-amazon.com/images/M/MV5BOGZlOWM5YWQtZjk2YS00ZTIyLWJkMDgtZTYwNDFjNGI3YjFiXkEyXkFqcGc@._V1_.jpg' },
-  { id: 4, title: 'The Cello', year: '2023', image: 'https://m.media-amazon.com/images/M/MV5BMWQ1OGFkN2YtMjExZC00ZjE1LThiOGQtMWMwY2JlZmY4ODkwXkEyXkFqcGc@._V1_.jpg' },
-  { id: 5, title: 'Wadjda', year: '2021', image: 'https://m.media-amazon.com/images/M/MV5BMjI4MzMyNzM2Ml5BMl5BanBnXkFtZTgwNDQ5MDgwMDE@._V1_FMjpg_UX1000_.jpg' },
-  { id: 6, title: 'Malcolm X', year: '1992', image: 'https://m.media-amazon.com/images/M/MV5BMDBjNzhlNDgtNGQzOC00OGE2LTlhMzQtZDVlMzFhZjg4MmI5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg' },
-  { id: 7, title: 'Barakah Meets Barakah', year: '2016', image: 'https://m.media-amazon.com/images/M/MV5BZTAyODQ5ZGUtMDgxNi00MTE3LTk3ZjAtMjEwNzRjNWQ3MGUyXkEyXkFqcGc@._V1_.jpg' },
-  { id: 8, title: 'Le Grand Voyage', year: '2004', image: 'https://m.media-amazon.com/images/M/MV5BN2Y1YzRjODItNjkxNy00YzcwLTllMmItZTA1YWU5MDg5ODY0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg' },
-  { id: 9, title: 'Journey to Mecca', year: '2009', image: 'https://m.media-amazon.com/images/M/MV5BMTQ1MDcxNjYzMF5BMl5BanBnXkFtZTcwODEwMDA1Nw@@._V1_FMjpg_UX1000_.jpg' },
 ];
 
 const locations = [
   {
-    id: 1,
-    nameAr: 'العُلا التاريخية',
+    nameAr: 'العلا التاريخية',
     nameEn: 'Historic AlUla',
     cityAr: 'المدينة المنورة',
     cityEn: 'Madinah',
-    featureAr: 'كنوز أثرية ومقابر نبطية وتكوينات صخرية فريدة.',
-    featureEn: 'Ancient heritage, Nabataean tombs, and dramatic rock formations.',
-    image:
-      'https://vid.alarabiya.net/images/2017/07/21/bfae2f58-343b-4d93-acdd-740ba92321b1/bfae2f58-343b-4d93-acdd-740ba92321b1_16x9_1200x676.jpg',
+    image: '/raawi-dashboard-new.png',
   },
   {
-    id: 2,
-    nameAr: 'نيوم',
-    nameEn: 'NEOM',
-    cityAr: 'تبوك',
-    cityEn: 'Tabuk',
-    featureAr: 'بحر وجبل وصحراء في مساحة واحدة لهوية بصرية مستقبلية.',
-    featureEn: 'Sea, mountain, and desert in one cinematic futuristic region.',
-    image: 'https://www.vision2030.gov.sa/media/twdjd3ye/sindalah.webp',
-  },
-  {
-    id: 3,
     nameAr: 'جدة التاريخية',
     nameEn: 'Historic Jeddah',
     cityAr: 'جدة',
     cityEn: 'Jeddah',
-    featureAr: 'عمارة حجازية قديمة وبيوت الروشان وأزقة غنية بالهوية.',
-    featureEn: 'Hijazi architecture, roshan houses, and identity-rich alleys.',
-    image: 'https://cdn.salla.sa/ApXEE/1RigZ880Fp4VcStQ6aI3uXmKkPN4a4oGTHJ1XMI5.jpg',
+    image: '/bannerguide.jpg',
   },
   {
-    id: 4,
-    nameAr: 'الدرعية',
-    nameEn: 'Diriyah',
+    nameAr: 'الرياض الحديثة',
+    nameEn: 'Modern Riyadh',
     cityAr: 'الرياض',
     cityEn: 'Riyadh',
-    featureAr: 'الطراز النجدي الطيني القديم ومشهد تاريخي شديد الخصوصية.',
-    featureEn: 'Distinctive Najdi architecture and deeply historic atmosphere.',
-    image: 'https://assets-diriyah.diriyah.me/8cbd4b9bcf984719ad8d09996cb2f648?width=3840&quality=80&transform=true&format=webp',
-  },
-  {
-    id: 5,
-    nameAr: 'واجهة الرياض',
-    nameEn: 'Riyadh Front',
-    cityAr: 'الرياض',
-    cityEn: 'Riyadh',
-    featureAr: 'مشهد حضري حديث مناسب للأعمال العصرية والإيقاع السريع.',
-    featureEn: 'A modern cityscape fit for contemporary productions.',
-    image: 'https://waditrip.sa/wp-content/uploads/2018/10/%D9%81%D8%AA%D9%82%D8%AA%D9%82%D9%81%D8%AA%D9%82%D9%81%D8%AA-1024x576.jpg',
-  },
-  {
-    id: 6,
-    nameAr: 'جزر فرسان',
-    nameEn: 'Farasan Islands',
-    cityAr: 'جازان',
-    cityEn: 'Jazan',
-    featureAr: 'شواطئ ومياه فيروزية وإحساس بصري مختلف تمامًا.',
-    featureEn: 'White beaches, turquoise waters, and a distinctive visual feel.',
-    image: 'https://cnn-arabic-images.cnn.io/cloudinary/image/upload/w_1920,h_1080,c_fill,q_auto,g_center/cnnarabic/2020/08/17/images/162713.jpg',
+    image: '/cover.jpg',
   },
 ];
 
-const newsItems = [
+const news = [
   {
-    id: 1,
-    titleAr: 'إطلاق مسار أوضح لمراجعة النصوص',
-    titleEn: 'A clearer script review journey',
     dateAr: '١٥ أبريل ٢٠٢٦',
     dateEn: '15 Apr 2026',
-    summaryAr: 'تحسينات في تسلسل الرفع والتحليل والمراجعة والتصدير لرفع وضوح التجربة.',
-    summaryEn: 'Workflow improvements across upload, analysis, review, and export.',
-    image:
-      'https://images.unsplash.com/photo-1616530940355-351fabd9524b?auto=format&fit=crop&w=1080&q=80',
+    titleAr: 'مسار أوضح لمراجعة النصوص',
+    titleEn: 'A clearer script review journey',
+    bodyAr: 'تحسينات جديدة في تجربة الرفع والتحليل والمراجعة لرفع وضوح النتائج.',
+    bodyEn: 'New workflow improvements across upload, analysis, and review to make results clearer.',
   },
   {
-    id: 2,
-    titleAr: 'تعزيز بوابة شركات الإنتاج',
-    titleEn: 'Enhancing the production portal',
     dateAr: '١٢ أبريل ٢٠٢٦',
     dateEn: '12 Apr 2026',
-    summaryAr: 'تطوير تجربة الشركات في التسجيل المجاني ورفع النصوص ومتابعة التقارير.',
-    summaryEn: 'Improved registration, submission, and report follow-up for companies.',
-    image:
-      'https://images.unsplash.com/photo-1519662978799-2f05096d3636?auto=format&fit=crop&w=1080&q=80',
+    titleAr: 'تعزيز بوابة المستفيدين',
+    titleEn: 'Enhancing the beneficiary portal',
+    bodyAr: 'تجربة أبسط لتسجيل الدخول ورفع النصوص ومتابعة التقارير.',
+    bodyEn: 'A simpler experience for login, script submission, and report tracking.',
   },
   {
-    id: 3,
-    titleAr: 'تحسينات على دقة المخرجات',
-    titleEn: 'Output quality improvements',
     dateAr: '٨ أبريل ٢٠٢٦',
     dateEn: '8 Apr 2026',
-    summaryAr: 'مزيد من التشديد على ربط الملاحظة بالنص وتقليل الضوضاء في النتائج.',
-    summaryEn: 'Stronger evidence grounding and lower report noise in findings.',
-    image:
-      'https://images.unsplash.com/photo-1695014192231-18462db3ebde?auto=format&fit=crop&w=1080&q=80',
+    titleAr: 'تحسينات على دقة المخرجات',
+    titleEn: 'Output quality improvements',
+    bodyAr: 'تركيز أكبر على ربط الملاحظة بالنص وتقليل الضوضاء في النتائج.',
+    bodyEn: 'Stronger evidence grounding and lower noise in findings.',
   },
 ];
-
-function getLoopedDiff(index: number, activeIndex: number, length: number) {
-  let diff = index - activeIndex;
-  if (diff > length / 2) diff -= length;
-  if (diff < -length / 2) diff += length;
-  return diff;
-}
 
 export function Landing() {
   const navigate = useNavigate();
   const { lang, toggleLang } = useLangStore();
   const { isAuthenticated, isClient } = useAuthStore();
   const isArabic = lang === 'ar';
-  const dashboardHref = isClient() ? '/client' : '/app';
 
   const [heroIndex, setHeroIndex] = useState(0);
-  const [showIncentiveDropdown, setShowIncentiveDropdown] = useState(false);
-  const [filmIndex, setFilmIndex] = useState(4);
   const [locationIndex, setLocationIndex] = useState(0);
 
   useEffect(() => {
@@ -213,76 +128,22 @@ export function Landing() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const currentHero = heroSlides[heroIndex];
-
-  const filmCards = useMemo(
-    () =>
-      films.map((film, index) => {
-        const diff = getLoopedDiff(index, filmIndex, films.length);
-        if (diff === 0) return { film, style: { x: 0, scale: 1, rotate: 0, opacity: 1, z: 10 } };
-        if (diff === 1) return { film, style: { x: -240, scale: 0.76, rotate: 42, opacity: 0.78, z: 9 } };
-        if (diff === -1) return { film, style: { x: 240, scale: 0.76, rotate: -42, opacity: 0.78, z: 9 } };
-        if (diff === 2) return { film, style: { x: -430, scale: 0.56, rotate: 54, opacity: 0.48, z: 8 } };
-        if (diff === -2) return { film, style: { x: 430, scale: 0.56, rotate: -54, opacity: 0.48, z: 8 } };
-        if (diff === 3) return { film, style: { x: -600, scale: 0.4, rotate: 60, opacity: 0.28, z: 7 } };
-        if (diff === -3) return { film, style: { x: 600, scale: 0.4, rotate: -60, opacity: 0.28, z: 7 } };
-        return { film, style: { x: diff > 0 ? -760 : 760, scale: 0.24, rotate: diff > 0 ? 65 : -65, opacity: 0, z: 6 } };
-      }),
-    [filmIndex]
-  );
+  const hero = heroSlides[heroIndex];
+  const dashboardHref = isClient() ? '/client' : '/app';
 
   return (
     <div className="min-h-screen bg-black text-white" dir={isArabic ? 'rtl' : 'ltr'}>
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#141414]/95 backdrop-blur-sm">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 lg:px-10">
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <img src="/colorlogo.png" alt="Film Commission" className="h-14 w-auto object-contain" />
-          </div>
+          </Link>
 
-          <nav className="hidden items-center gap-10 xl:flex">
-            <a href="#hero" className="group relative text-white transition hover:text-white/90">
-              <span>{isArabic ? 'الرئيسية' : 'Home'}</span>
-              <span className="absolute inset-x-0 -bottom-2 h-px w-0 bg-red-600 transition-all duration-300 group-hover:w-full" />
-            </a>
-            <div
-              className="relative"
-              onMouseEnter={() => setShowIncentiveDropdown(true)}
-              onMouseLeave={() => setShowIncentiveDropdown(false)}
-            >
-              <a href="#about" className="group relative flex items-center gap-1 text-white transition hover:text-white/90">
-                <span>{isArabic ? 'مميزات هيئة الأفلام' : 'Film Commission features'}</span>
-                <ChevronDown className={`h-4 w-4 transition ${showIncentiveDropdown ? 'rotate-180' : ''}`} />
-                <span className="absolute inset-x-0 -bottom-2 h-px w-0 bg-red-600 transition-all duration-300 group-hover:w-full" />
-              </a>
-              {showIncentiveDropdown && (
-                <div className="absolute top-full right-0 mt-3 w-56 overflow-hidden rounded-2xl border border-red-900/40 bg-[#1a1a1a] shadow-2xl shadow-black/50">
-                  <a href="#about" className="flex items-center gap-3 px-4 py-3 text-sm text-white transition hover:bg-red-950/30">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/20 text-red-300">
-                      <DollarSign className="h-4 w-4" />
-                    </div>
-                    <span>{isArabic ? 'عن هيئة الأفلام' : 'About the Film Commission'}</span>
-                  </a>
-                  <a href="#contact" className="flex items-center gap-3 px-4 py-3 text-sm text-white transition hover:bg-red-950/30">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/20 text-red-300">
-                      <Lightbulb className="h-4 w-4" />
-                    </div>
-                    <span>{isArabic ? 'ابدأ الآن' : 'Get started'}</span>
-                  </a>
-                </div>
-              )}
-            </div>
-            <a href="#locations" className="group relative text-white transition hover:text-white/90">
-              <span>{isArabic ? 'مواقع التصوير' : 'Locations'}</span>
-              <span className="absolute inset-x-0 -bottom-2 h-px w-0 bg-red-600 transition-all duration-300 group-hover:w-full" />
-            </a>
-            <a href="#films" className="group relative text-white transition hover:text-white/90">
-              <span>{isArabic ? 'أفلام' : 'Films'}</span>
-              <span className="absolute inset-x-0 -bottom-2 h-px w-0 bg-red-600 transition-all duration-300 group-hover:w-full" />
-            </a>
-            <a href="#news" className="group relative text-white transition hover:text-white/90">
-              <span>{isArabic ? 'الأخبار' : 'News'}</span>
-              <span className="absolute inset-x-0 -bottom-2 h-px w-0 bg-red-600 transition-all duration-300 group-hover:w-full" />
-            </a>
+          <nav className="hidden items-center gap-8 xl:flex">
+            <a href="#hero" className="text-white transition hover:text-white/85">{isArabic ? 'الرئيسية' : 'Home'}</a>
+            <a href="#services" className="text-white transition hover:text-white/85">{isArabic ? 'الخدمات' : 'Services'}</a>
+            <a href="#locations" className="text-white transition hover:text-white/85">{isArabic ? 'مواقع التصوير' : 'Locations'}</a>
+            <a href="#news" className="text-white transition hover:text-white/85">{isArabic ? 'الأخبار' : 'News'}</a>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -295,24 +156,20 @@ export function Landing() {
                 <span>{isArabic ? 'الدخول للنظام' : 'Open app'}</span>
               </button>
             ) : (
-              <>
-                <Link
-                  to="/client/login"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
-                  aria-label={isArabic ? 'تسجيل دخول المستفيدين' : 'Beneficiary login'}
-                  title={isArabic ? 'تسجيل دخول المستفيدين' : 'Beneficiary login'}
-                >
-                  <UserRound className="h-4 w-4" />
-                  <span>{isArabic ? 'دخول المستفيدين' : 'Beneficiary Login'}</span>
-                </Link>
-              </>
+              <Link
+                to="/client/login"
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+                aria-label={isArabic ? 'دخول المستفيدين' : 'Beneficiary login'}
+              >
+                <LogIn className="h-4 w-4" />
+                <span>{isArabic ? 'دخول المستفيدين' : 'Beneficiary Login'}</span>
+              </Link>
             )}
-            <div className="h-6 w-px bg-white/20" />
             <button onClick={toggleLang} className="inline-flex items-center gap-1.5 text-sm text-white/85 transition hover:text-white">
               <Globe className="h-4 w-4" />
               <span>{isArabic ? 'EN' : 'عربي'}</span>
             </button>
-            <button className="xl:hidden">
+            <button className="xl:hidden" aria-label="Menu">
               <Menu className="h-5 w-5" />
             </button>
           </div>
@@ -320,43 +177,30 @@ export function Landing() {
       </header>
 
       <main>
-        <section id="hero" className="relative h-screen overflow-hidden pt-20">
-          <div className="absolute inset-0 transition-all duration-1000">
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url(${currentHero.image})` }}
-            />
+        <section id="hero" className="relative min-h-screen overflow-hidden pt-20">
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${hero.image})` }} />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/40" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60" />
             <div className="absolute inset-0 bg-red-950/20" />
           </div>
 
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(211,47,47,0.12),transparent_42%)] opacity-70" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(118,182,183,0.1),transparent_38%)] opacity-60" />
-
-          <div className="relative flex h-full items-center justify-center px-4 text-center">
+          <div className="relative z-10 flex min-h-screen items-center justify-center px-4 text-center">
             <div className="mx-auto max-w-5xl">
               <h1 className="mb-8 text-5xl font-bold leading-tight text-white md:text-6xl lg:text-7xl">
-                {isArabic ? currentHero.titleAr : currentHero.titleEn}
+                {isArabic ? hero.titleAr : hero.titleEn}
               </h1>
               <p className="mx-auto mb-10 max-w-3xl text-xl text-gray-300 md:text-2xl">
-                {isArabic ? currentHero.subtitleAr : currentHero.subtitleEn}
+                {isArabic ? hero.subtitleAr : hero.subtitleEn}
               </p>
 
               <div className="flex justify-center">
-                {isAuthenticated ? (
-                  <Button size="lg" onClick={() => navigate(dashboardHref)} className="gap-3 bg-[#76B6B7] text-black hover:bg-[#5a9fa0]">
-                    <span>{isArabic ? 'الدخول إلى لوحة التحكم' : 'Go to dashboard'}</span>
-                    <ChevronLeft className={`h-5 w-5 ${isArabic ? 'rotate-180' : ''}`} />
+                <Link to="/services/script-approval">
+                  <Button size="lg" className="gap-3 bg-[#76B6B7] text-black hover:bg-[#5a9fa0]">
+                    <span>{isArabic ? 'اعتماد النص' : 'Script Approval'}</span>
+                    <ChevronRight className={`h-5 w-5 ${isArabic ? 'rotate-180' : ''}`} />
                   </Button>
-                ) : (
-                  <Link to="/services/script-approval">
-                    <Button size="lg" className="gap-3 bg-[#76B6B7] text-black hover:bg-[#5a9fa0]">
-                      <span>{isArabic ? 'اعتماد النص' : 'Script Approval'}</span>
-                      <ChevronLeft className={`h-5 w-5 ${isArabic ? 'rotate-180' : ''}`} />
-                    </Button>
-                  </Link>
-                )}
+                </Link>
               </div>
 
               <div className="mt-12 flex items-center justify-center gap-4">
@@ -369,271 +213,144 @@ export function Landing() {
 
           <button
             onClick={() => setHeroIndex((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
-            className="absolute left-8 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-red-900/50 bg-black/50 backdrop-blur-sm transition hover:bg-red-950/50"
+            className="absolute left-6 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-red-900/50 bg-black/50 backdrop-blur-sm transition hover:bg-red-950/50"
+            aria-label="Previous slide"
           >
             <ChevronLeft className="h-6 w-6 text-white" />
           </button>
           <button
             onClick={() => setHeroIndex((prev) => (prev + 1) % heroSlides.length)}
-            className="absolute right-8 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-red-900/50 bg-black/50 backdrop-blur-sm transition hover:bg-red-950/50"
+            className="absolute right-6 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-red-900/50 bg-black/50 backdrop-blur-sm transition hover:bg-red-950/50"
+            aria-label="Next slide"
           >
             <ChevronRight className="h-6 w-6 text-white" />
           </button>
 
-          <div className="absolute bottom-12 left-1/2 z-20 flex -translate-x-1/2 gap-3" dir="ltr">
-            {heroSlides.map((slide, index) => (
-              <button
-                key={slide.id}
-                onClick={() => setHeroIndex(index)}
-                className={`h-1 rounded-full transition-all duration-500 ${index === heroIndex ? 'w-12 bg-red-600' : 'w-8 bg-white/30 hover:bg-white/50'}`}
-              />
-            ))}
+          <div className="absolute bottom-0 left-0 z-20 w-full bg-black/40 backdrop-blur-sm">
+            <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-6 text-sm md:grid-cols-4 lg:px-10">
+              <div>
+                <p className="text-3xl font-bold text-white">200+</p>
+                <p className="text-white/70">{isArabic ? 'نصوص معتمدة' : 'Approved scripts'}</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-white">50+</p>
+                <p className="text-white/70">{isArabic ? 'شركات إنتاج' : 'Production companies'}</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-white">120</p>
+                <p className="text-white/70">{isArabic ? 'أفلام سعودية' : 'Saudi films'}</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-white">45</p>
+                <p className="text-white/70">{isArabic ? 'مشاريع مدعومة' : 'Supported projects'}</p>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section id="about" className="relative overflow-hidden bg-gradient-to-b from-black via-neutral-950 to-black py-28">
-          <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'linear-gradient(rgba(220,38,38,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(220,38,38,0.3) 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
-          <div className="mx-auto max-w-7xl px-4 lg:px-10">
-            <div className="mb-20 text-center">
-              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-red-800/50 bg-red-950/50 px-6 py-3">
-                <Clapperboard className="h-5 w-5 text-red-400" />
-                <span className="text-lg text-red-300">{isArabic ? 'نبذة عنا' : 'About us'}</span>
-              </div>
-              <h2 className="mb-6 text-5xl text-white md:text-6xl">{isArabic ? 'منصة هيئة الأفلام' : 'Film Commission Platform'}</h2>
-              <p className="mx-auto max-w-4xl text-2xl text-gray-300">
+        <section id="services" className="bg-[#f4f2f7] px-4 py-24 text-[#1f1724]">
+          <div className="mx-auto max-w-7xl">
+            <div className="mx-auto mb-14 max-w-3xl text-center">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-[#672a55]">
+                {isArabic ? 'الخدمات الرقمية' : 'Digital services'}
+              </p>
+              <h2 className="text-4xl font-bold md:text-5xl">{isArabic ? 'اعتماد النص السينمائي' : 'Script approval'}</h2>
+              <p className="mt-4 text-lg text-[#74697a]">
                 {isArabic
-                  ? 'منصة تتبع هيئة الأفلام لتسهيل مراجعة النصوص السينمائية ومساعدة الشركات على فهم الملاحظات مبكرًا.'
-                  : 'A Film Commission platform that helps production companies review scripts and understand issues earlier.'}
+                  ? 'الوصول إلى خدمة رسمية مبسطة لمراجعة النصوص واعتمادها قبل بدء الإنتاج.'
+                  : 'Access a streamlined official service for script review and approval before production.'}
               </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
-              {aboutCards.map((card) => (
-                <article key={card.titleAr} className="group relative overflow-hidden rounded-2xl border border-red-900/20 p-8 transition-all duration-500 hover:border-red-600/50">
-                  <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url(${card.image})` }} />
-                  <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/80 to-black/85 group-hover:from-black/75 group-hover:via-black/70 group-hover:to-black/75 transition-all duration-500" />
-                  <div className="relative z-10">
-                    <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-xl border border-red-600/30 bg-gradient-to-br from-red-600/30 to-red-900/30">
-                      <Clapperboard className="h-8 w-8 text-red-400" />
-                    </div>
-                    <h3 className="mb-3 text-2xl text-white transition group-hover:text-red-400">
-                      {isArabic ? card.titleAr : card.titleEn}
-                    </h3>
-                    <p className="leading-relaxed text-gray-300">{isArabic ? card.bodyAr : card.bodyEn}</p>
+            <div className="grid gap-6 lg:grid-cols-3">
+              {services.map((service) => (
+                <article key={isArabic ? service.titleAr : service.titleEn} className="rounded-3xl border border-[#e6deea] bg-white p-7 shadow-sm">
+                  <div className="mb-4 inline-flex rounded-2xl bg-[#672a55]/10 px-4 py-2 text-sm font-semibold text-[#672a55]">
+                    {isArabic ? service.titleAr : service.titleEn}
                   </div>
+                  <p className="text-base leading-8 text-[#74697a]">
+                    {isArabic ? service.bodyAr : service.bodyEn}
+                  </p>
                 </article>
               ))}
             </div>
+
+            <div className="mt-10 flex justify-center">
+              <Link to="/services/script-approval">
+                <Button className="gap-2 bg-[#672a55] text-white hover:bg-[#7d3566]">
+                  <span>{isArabic ? 'ابدأ الخدمة' : 'Start Service'}</span>
+                  <ArrowRight className={`h-4 w-4 ${isArabic ? 'rotate-180' : ''}`} />
+                </Button>
+              </Link>
+            </div>
           </div>
         </section>
 
-        <section id="films" className="relative overflow-hidden bg-[#141414] py-32">
-          <div className="absolute inset-0 bg-gradient-to-b from-black via-[#141414] to-black" />
-          <div className="relative mx-auto max-w-7xl px-4 lg:px-8">
-            <div className="mb-20 text-center">
-              <h2 className="mb-4 text-5xl text-white md:text-6xl">
-                {isArabic ? 'أفلام حصلت على فسح النص السعودي' : 'Films cleared in Saudi Arabia'}
-              </h2>
-              <p className="mx-auto max-w-3xl text-xl text-gray-400">
-                {isArabic ? 'أفلام صورت بين طبيعتنا وثقافتنا ضمن مشهد سينمائي متنامٍ.' : 'Films produced across the Kingdom’s growing cinematic landscape.'}
-              </p>
-              <div className="mt-8 flex items-center justify-center gap-4">
-                <div className="h-px w-24 bg-gradient-to-r from-transparent via-red-600 to-[#76B6B7]" />
-                <div className="h-2 w-2 rounded-full bg-[#76B6B7]" />
-                <div className="h-px w-24 bg-gradient-to-l from-transparent via-red-600 to-[#76B6B7]" />
+        <section className="bg-black px-4 py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#141414]">
+                <img src="/cover.jpg" alt="Film Commission" className="h-full w-full object-cover" />
               </div>
-            </div>
+              <div className="rounded-[2rem] border border-white/10 bg-[#141414] p-8">
+                <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-[#76B6B7]">
+                  {isArabic ? 'مواقع التصوير' : 'Filming locations'}
+                </p>
+                <h2 className="text-4xl font-bold text-white md:text-5xl">
+                  {isArabic ? 'اكتشف مواقع تصوير ملهمة' : 'Discover inspiring filming locations'}
+                </h2>
+                <p className="mt-4 text-lg leading-8 text-white/70">
+                  {isArabic
+                    ? 'ساعد جمهورك على الوصول إلى رحلة واضحة من الصفحة الرئيسية إلى خدمة اعتماد النص.'
+                    : 'Guide your audience from the landing page directly into the script approval journey.'}
+                </p>
 
-            <div className="relative flex h-[700px] items-center justify-center">
-              <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: '2000px', perspectiveOrigin: 'center center' }}>
-                <div className="relative h-full w-full">
-                  {filmCards.map(({ film, style }) => {
-                    const isActive = film.id === films[filmIndex].id;
-                    return (
-                      <div
-                        key={film.id}
-                        className="absolute left-1/2 top-1/2 transition-all duration-700 ease-out"
-                        style={{
-                          transform: `translate(-50%, -50%) translateX(${style.x}px) rotateY(${style.rotate}deg) scale(${style.scale})`,
-                          opacity: style.opacity,
-                          zIndex: style.z,
-                          transformStyle: 'preserve-3d',
-                          pointerEvents: isActive ? 'auto' : 'none',
-                        }}
-                      >
-                        <div className="relative">
-                          <div
-                            className="relative overflow-hidden rounded-2xl shadow-2xl"
-                            style={{
-                              width: '280px',
-                              height: '420px',
-                              boxShadow: isActive ? '0 40px 80px rgba(0,0,0,0.8), 0 0 60px rgba(220,38,38,0.3)' : '0 20px 40px rgba(0,0,0,0.6)',
-                            }}
-                          >
-                            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${film.image})`, filter: isActive ? 'none' : 'saturate(0.7) brightness(0.8)' }} />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" style={{ opacity: isActive ? 0.8 : 0.92 }} />
-                            {isActive && <div className="absolute inset-0 rounded-2xl border-2 border-red-600/30" />}
-                          </div>
-
-                          <div
-                            className="absolute left-0 top-full h-full w-full overflow-hidden rounded-b-2xl"
-                            style={{
-                              transform: 'scaleY(-1)',
-                              transformOrigin: 'top',
-                              opacity: isActive ? 0.28 : 0.14,
-                              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 60%)',
-                              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 60%)',
-                            }}
-                          >
-                            <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(${film.image})`, filter: 'blur(2px) brightness(0.4)' }} />
-                          </div>
-
-                          {isActive && (
-                            <div className="absolute -bottom-32 left-0 right-0 text-center">
-                              <h3 className="mb-2 text-3xl text-white">{film.title}</h3>
-                              <p className="text-lg text-red-400">{film.year}</p>
-                            </div>
-                          )}
-                        </div>
+                <div className="mt-8 space-y-4">
+                  {locations.map((location, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setLocationIndex(index)}
+                      className={`flex w-full items-center justify-between rounded-2xl border px-5 py-4 text-start transition ${
+                        index === locationIndex
+                          ? 'border-[#76B6B7] bg-[#76B6B7]/10 text-white'
+                          : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/10'
+                      }`}
+                    >
+                      <div>
+                        <div className="text-lg font-semibold">{isArabic ? location.nameAr : location.nameEn}</div>
+                        <div className="mt-1 text-sm text-white/60">{isArabic ? location.cityAr : location.cityEn}</div>
                       </div>
-                    );
-                  })}
+                      <MapPin className="h-5 w-5" />
+                    </button>
+                  ))}
                 </div>
               </div>
-
-              <button
-                onClick={() => setFilmIndex((prev) => (prev - 1 + films.length) % films.length)}
-                className="absolute right-8 top-1/2 z-20 flex h-16 w-16 -translate-y-1/2 items-center justify-center rounded-full bg-red-600/90 shadow-lg shadow-red-950/50 transition hover:scale-110 hover:bg-red-600"
-              >
-                <ChevronRight className="h-8 w-8 text-white" />
-              </button>
-              <button
-                onClick={() => setFilmIndex((prev) => (prev + 1) % films.length)}
-                className="absolute left-8 top-1/2 z-20 flex h-16 w-16 -translate-y-1/2 items-center justify-center rounded-full bg-red-600/90 shadow-lg shadow-red-950/50 transition hover:scale-110 hover:bg-red-600"
-              >
-                <ChevronLeft className="h-8 w-8 text-white" />
-              </button>
-
-              <div className="absolute bottom-0 left-1/2 z-20 flex -translate-x-1/2 gap-3">
-                {films.map((film, index) => (
-                  <button
-                    key={film.id}
-                    onClick={() => setFilmIndex(index)}
-                    className={`h-2 rounded-full transition-all duration-500 ${index === filmIndex ? 'w-12 bg-red-600' : 'w-2 bg-white/30 hover:bg-white/50'}`}
-                  />
-                ))}
-              </div>
             </div>
           </div>
         </section>
 
-        <section id="locations" className="relative overflow-hidden bg-gradient-to-b from-black via-neutral-950 to-black py-32">
-          <div className="mx-auto max-w-7xl px-4 lg:px-10">
-            <div className="mb-16 text-center">
-              <h2 className="mb-4 text-5xl text-white md:text-6xl">{isArabic ? 'مواقع التصوير' : 'Filming locations'}</h2>
-              <p className="mx-auto max-w-3xl text-xl text-gray-400">
-                {isArabic ? 'اكتشف جمال وتنوع مواقع التصوير كي تلهمك في قصتك القادمة.' : 'Discover visually rich locations across the Kingdom for your next story.'}
+        <section id="news" className="bg-[#111111] px-4 py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-14 text-center">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-[#76B6B7]">
+                {isArabic ? 'الأخبار' : 'News'}
               </p>
+              <h2 className="text-4xl font-bold text-white md:text-5xl">
+                {isArabic ? 'آخر الأخبار والتحديثات' : 'Latest news and updates'}
+              </h2>
             </div>
 
-            <div className="mb-12 flex h-[600px] gap-2" dir="ltr">
-              {locations.map((location, index) => {
-                const active = index === locationIndex;
-                return (
-                  <div
-                    key={location.id}
-                    onClick={() => setLocationIndex(index)}
-                    className="group relative cursor-pointer overflow-hidden rounded-2xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
-                    style={{
-                      width: active ? '70%' : '5%',
-                      backgroundImage: `url(${location.image})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }}
-                  >
-                    <div className={`absolute inset-0 transition-all duration-500 ${active ? 'bg-gradient-to-t from-black via-black/70 to-black/40' : 'bg-black/60 group-hover:bg-black/50'}`} />
-
-                    {!active && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="whitespace-nowrap text-2xl tracking-wider text-white" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                          {isArabic ? location.nameAr : location.nameEn}
-                        </div>
-                      </div>
-                    )}
-
-                    {active && (
-                      <div className="absolute inset-0 flex items-end p-12" dir={isArabic ? 'rtl' : 'ltr'}>
-                        <div className="max-w-2xl text-right">
-                          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-600/50 bg-red-600/20 px-4 py-2 backdrop-blur-sm">
-                            <MapPin className="h-4 w-4 text-red-400" />
-                            <span className="text-sm text-red-300">{isArabic ? location.cityAr : location.cityEn}</span>
-                          </div>
-                          <h3 className="mb-6 text-5xl text-white">{isArabic ? location.nameAr : location.nameEn}</h3>
-                          <p className="mb-8 text-lg leading-relaxed text-gray-300">{isArabic ? location.featureAr : location.featureEn}</p>
-                          <p className="mb-5 text-sm font-medium text-amber-200">
-                            {isArabic
-                              ? 'لابد من الحصول على تصاريح للتصوير في هذة المواقع من الجهات المعنية'
-                              : 'Filming permits from the relevant authorities are required for these locations.'}
-                          </p>
-                          <button className="inline-flex items-center gap-3 rounded-lg bg-[#76B6B7] px-8 py-4 text-lg text-black shadow-2xl transition hover:scale-105 hover:bg-[#5a9fa0]">
-                            <span>{isArabic ? 'استكشف' : 'Explore'}</span>
-                            <ArrowLeft className="h-5 w-5" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {!active && (
-                      <div className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 opacity-0 backdrop-blur-sm transition group-hover:opacity-100">
-                        <ArrowLeft className="h-6 w-6 rotate-180 text-white" />
-                      </div>
-                    )}
-
-                    {active && <div className="absolute right-0 top-0 h-full w-1 bg-gradient-to-b from-red-600 to-red-800" />}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="mb-12 flex justify-center gap-3">
-              {locations.map((location, index) => (
-                <button
-                  key={location.id}
-                  onClick={() => setLocationIndex(index)}
-                  className={`h-2 rounded-full transition-all duration-500 ${index === locationIndex ? 'w-12 bg-red-600' : 'w-2 bg-white/30 hover:bg-white/50'}`}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="news" className="relative overflow-hidden bg-gradient-to-b from-black via-neutral-950 to-black py-24">
-          <div className="mx-auto max-w-7xl px-4 lg:px-8">
-            <div className="mb-16 text-center">
-              <h2 className="mb-4 text-5xl text-white md:text-6xl">{isArabic ? 'آخر الأخبار' : 'Latest news'}</h2>
-              <p className="mx-auto max-w-3xl text-xl text-gray-400">
-                {isArabic ? 'تابع آخر التطورات في منصة هيئة الأفلام وتجربة العمل السينمائي.' : 'Follow the latest updates around the Film Commission and script workflows.'}
-              </p>
-            </div>
-
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {newsItems.map((item, index) => (
-                <article key={item.id} className="group overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 transition-all duration-500 hover:border-red-900/50 hover:shadow-2xl hover:shadow-red-950/30">
-                  <div className="relative h-56 overflow-hidden">
-                    <div className="absolute inset-0 bg-cover bg-center transition duration-700 group-hover:scale-110" style={{ backgroundImage: `url(${item.image})` }} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
-                  </div>
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {news.map((item) => (
+                <article key={isArabic ? item.titleAr : item.titleEn} className="overflow-hidden rounded-3xl border border-white/10 bg-black/40">
+                  <div className="h-56 bg-gradient-to-br from-[#672a55] to-[#1f1724]" />
                   <div className="p-6">
-                    <div className="mb-3 flex items-center gap-2 text-sm" style={{ color: index % 2 === 0 ? '#76B6B7' : 'rgb(248 113 113)' }}>
+                    <div className="mb-3 flex items-center gap-2 text-sm text-[#76B6B7]">
                       <Calendar className="h-4 w-4" />
                       <span>{isArabic ? item.dateAr : item.dateEn}</span>
                     </div>
-                    <h3 className="mb-3 text-xl text-white transition group-hover:text-red-400">{isArabic ? item.titleAr : item.titleEn}</h3>
-                    <p className="mb-4 leading-relaxed text-gray-400">{isArabic ? item.summaryAr : item.summaryEn}</p>
-                    <div className="flex items-center gap-2 transition-all duration-300 group-hover:gap-3" style={{ color: index % 2 === 0 ? '#76B6B7' : 'rgb(239 68 68)' }}>
-                      <span>{isArabic ? 'اقرأ المزيد' : 'Read more'}</span>
-                      <ArrowLeft className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </div>
+                    <h3 className="text-2xl font-semibold text-white">{isArabic ? item.titleAr : item.titleEn}</h3>
+                    <p className="mt-3 leading-7 text-white/70">{isArabic ? item.bodyAr : item.bodyEn}</p>
                   </div>
                 </article>
               ))}
@@ -641,75 +358,44 @@ export function Landing() {
           </div>
         </section>
 
-        <section id="abdea" className="relative overflow-hidden py-24">
-          <div className="mx-auto max-w-7xl px-4 lg:px-8">
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black">
-              <img
-                src="/abde.png"
-                alt={isArabic ? 'منصة ابدع لإصدار التراخيص' : 'Ebdaa Platform for Licensing'}
-                className="h-auto max-h-[760px] w-full object-contain"
-              />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/20" />
-
-              <div className="absolute inset-y-0 start-0 flex w-full items-center p-4 md:w-[52%] md:p-8">
-                <div className="pointer-events-auto rounded-2xl border border-white/15 bg-black/50 p-6 text-start shadow-2xl backdrop-blur-sm md:p-8">
-                  <h2 className="mb-3 text-3xl font-bold text-white md:text-4xl">
-                    {isArabic ? 'منصة ابدع لإصدار التراخيص' : 'Ebdaa Platform for Licensing'}
-                  </h2>
-                  <p className="mb-6 text-base leading-8 text-gray-200 md:text-lg">
-                    {isArabic
-                      ? 'للحصول على التراخيص اللازمة للإنتاج السينمائي والإعلامي، تفضّل بزيارة منصة ابدع التابعة لوزارة الثقافة.'
-                      : 'For production licensing needs, visit the Ministry of Culture Ebdaa platform and complete your required permits.'}
-                  </p>
-                  <a
-                    href="https://abdea.moc.gov.sa/licenses"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-3 rounded-xl bg-[#76B6B7] px-6 py-3 text-base font-semibold text-black transition hover:bg-[#5a9fa0]"
-                  >
-                    <img src="/95214.png" alt="Ebdaa" className="h-6 w-6 rounded-sm object-contain" />
-                    {isArabic ? 'زيارة منصة ابدع' : 'Visit Ebdaa Platform'}
-                    <ArrowLeft className="h-5 w-5" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="contact" className="overflow-hidden bg-[linear-gradient(to_bottom_right,#3b0c12,#000,#111827)] py-24">
-          <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        <section className="bg-[linear-gradient(to_bottom_right,#3b0c12,#000,#111827)] px-4 py-24">
+          <div className="mx-auto max-w-7xl">
             <div className="grid gap-10 lg:grid-cols-[1fr_0.95fr]">
               <div>
-              <h2 className="mb-4 text-5xl text-white md:text-6xl">{isArabic ? 'ابدأ الآن' : 'Get started now'}</h2>
-              <p className="max-w-2xl text-xl leading-8 text-gray-300">
-                {isArabic
-                  ? 'هيئة الأفلام هي أداتك المثالية لتنظيم نصوصك وتحريرها والحصول على الموافقات.'
-                  : 'The Film Commission is your ultimate tool to organize, edit, and get approvals for your scripts'}
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link to="/client/login">
-                  <Button size="lg" className="gap-2 bg-[#76B6B7] text-black hover:bg-[#5a9fa0]">
-                    <UserPlus className="h-5 w-5" />
-                      {isArabic ? 'دخول المستفيدين' : 'Beneficiary login'}
-                  </Button>
-                </Link>
+                <h2 className="mb-4 text-5xl font-bold text-white md:text-6xl">
+                  {isArabic ? 'ابدأ الآن' : 'Get started now'}
+                </h2>
+                <p className="max-w-2xl text-xl leading-8 text-gray-300">
+                  {isArabic
+                    ? 'هيئة الأفلام هي أداتك المثالية لتنظيم نصوصك وتحريرها والحصول على الموافقات.'
+                    : 'The Film Commission is your central place to organize scripts, review feedback, and obtain approvals.'}
+                </p>
+                <div className="mt-8 flex flex-wrap gap-3">
                   <Link to="/client/login">
+                    <Button size="lg" className="gap-2 bg-[#76B6B7] text-black hover:bg-[#5a9fa0]">
+                      <UserPlus className="h-5 w-5" />
+                      {isArabic ? 'دخول المستفيدين' : 'Beneficiary login'}
+                    </Button>
+                  </Link>
+                  <Link to="/services/script-approval">
                     <Button size="lg" variant="outline" className="gap-2 border-white/20 text-white hover:bg-white/10">
                       <LogIn className="h-5 w-5" />
-                      {isArabic ? 'تسجيل الدخول' : 'Login'}
+                      {isArabic ? 'الانتقال للخدمة' : 'Go to service'}
                     </Button>
                   </Link>
                 </div>
               </div>
 
               <div className="rounded-[32px] border border-white/10 bg-black/35 p-6 shadow-[0_30px_100px_rgba(0,0,0,0.35)] backdrop-blur">
-                <h3 className="mb-4 text-2xl text-white">{isArabic ? 'مزايا هيئة الأفلام للمستفيدين' : 'Film Commission features for beneficiaries'}</h3>
+                <img src="/whitelogo.png" alt="Film Commission logo" className="mb-5 h-14 w-auto object-contain" />
+                <h3 className="mb-4 text-2xl font-semibold text-white">
+                  {isArabic ? 'مزايا الهيئة للمستفيدين' : 'Film Commission features for beneficiaries'}
+                </h3>
                 <ul className="space-y-3 text-white/80">
-                  <li>{isArabic ? 'تسجيل مجاني وسريع للشركات.' : 'Fast and free company registration.'}</li>
-                  <li>{isArabic ? 'رفع النصوص ومتابعة حالتها خطوة بخطوة.' : 'Submit scripts and track status step by step.'}</li>
-                  <li>{isArabic ? 'تقارير واضحة تساعدك على التحسين قبل الاعتماد.' : 'Clear reports that help you improve before approval.'}</li>
-                  <li>{isArabic ? 'إصدار شهادة الاعتماد تلقائيًا بعد الموافقة.' : 'Automatic certificate issuance after approval.'}</li>
+                  <li>{isArabic ? 'تسجيل سريع وسهل.' : 'Fast and easy registration.'}</li>
+                  <li>{isArabic ? 'رفع النصوص ومتابعة الحالة خطوة بخطوة.' : 'Submit scripts and track status step by step.'}</li>
+                  <li>{isArabic ? 'تقارير واضحة تساعد على التحسين قبل الاعتماد.' : 'Clear reports that help you improve before approval.'}</li>
+                  <li>{isArabic ? 'إصدار شهادة الاعتماد بعد الموافقة.' : 'Approval certificate after acceptance.'}</li>
                 </ul>
               </div>
             </div>
@@ -723,47 +409,50 @@ export function Landing() {
           <div className="grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-4">
             <div className="text-right">
               <img src="/whitelogo.png" alt="Film Commission Logo" className="mb-4 h-14 w-auto object-contain" />
-              <h3 className="mb-2 text-xl text-white">{isArabic ? 'عن منصة هيئة الأفلام' : 'About the Film Commission'}</h3>
+              <h3 className="mb-2 text-xl text-white">{isArabic ? 'عن هيئة الأفلام' : 'About the Film Commission'}</h3>
               <p className="leading-relaxed text-gray-400">
-                {isArabic ? 'منصة هيئة الأفلام تضع بين يديك أداة قوية لتحليل النصوص ومتابعتها داخل المملكة العربية السعودية.' : 'The Film Commission provides a focused environment for script analysis and review.'}
+                {isArabic
+                  ? 'هيئة الأفلام تقدم بيئة واضحة واحترافية لمراجعة النصوص واعتمادها داخل المملكة العربية السعودية.'
+                  : 'The Film Commission provides a clear, professional environment for script review and approval in Saudi Arabia.'}
               </p>
             </div>
             <div className="text-right">
               <h3 className="mb-2 text-xl text-white">{isArabic ? 'روابط سريعة' : 'Quick links'}</h3>
               <ul className="space-y-2 text-gray-400">
                 <li><a href="#hero" className="transition hover:text-red-400">{isArabic ? 'الرئيسية' : 'Home'}</a></li>
-                <li><a href="#about" className="transition hover:text-red-400">{isArabic ? 'عن هيئة الأفلام' : 'About'}</a></li>
+                <li><a href="#services" className="transition hover:text-red-400">{isArabic ? 'الخدمات' : 'Services'}</a></li>
                 <li><a href="#locations" className="transition hover:text-red-400">{isArabic ? 'مواقع التصوير' : 'Locations'}</a></li>
-                <li><a href="#films" className="transition hover:text-red-400">{isArabic ? 'الأفلام' : 'Films'}</a></li>
+                <li><a href="#news" className="transition hover:text-red-400">{isArabic ? 'الأخبار' : 'News'}</a></li>
               </ul>
             </div>
             <div className="text-right">
               <h3 className="mb-2 text-xl text-white">{isArabic ? 'الوصول السريع' : 'Quick access'}</h3>
               <ul className="space-y-2 text-gray-400">
                 <li><Link to="/client/login" className="transition hover:text-red-400">{isArabic ? 'دخول المستفيدين' : 'Beneficiary login'}</Link></li>
-                <li><Link to="/client/login" className="transition hover:text-red-400">{isArabic ? 'دخول المستفيدين' : 'Beneficiary login'}</Link></li>
-                <li><a href="#contact" className="transition hover:text-red-400">{isArabic ? 'ابدأ الآن' : 'Get started'}</a></li>
+                <li><Link to="/services/script-approval" className="transition hover:text-red-400">{isArabic ? 'اعتماد النص' : 'Script approval'}</Link></li>
+                <li><a href="#hero" className="transition hover:text-red-400">{isArabic ? 'العودة للأعلى' : 'Back to top'}</a></li>
               </ul>
             </div>
             <div className="text-right">
               <h3 className="mb-2 text-xl text-white">{isArabic ? 'معلومات عامة' : 'General info'}</h3>
               <p className="text-gray-400">{isArabic ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia'}</p>
-              <p className="mt-2 text-gray-400">cinamaa@moc.gov.sa</p>
-              <p className="mt-2">
-                <Link to="/contact-us" className="text-gray-300 transition hover:text-red-400">
-                  {isArabic ? 'تواصل معنا' : 'Contact Us'}
-                </Link>
-              </p>
+              <p className="mt-2 text-gray-400">support@film.sa</p>
+              <p className="mt-2 text-gray-400">+966 11 000 0000</p>
             </div>
           </div>
 
           <div className="border-t border-red-900/20 py-8">
             <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-              <p className="text-center text-sm text-gray-500">{isArabic ? '© 2026 هيئة الأفلام — جميع الحقوق محفوظة' : '© 2026 Film Commission — All rights reserved'}</p>
-              <a href="#hero" className="inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white">
+              <p className="text-center text-sm text-gray-500">
+                {isArabic ? '© 2026 هيئة الأفلام — جميع الحقوق محفوظة' : '© 2026 Film Commission — All rights reserved'}
+              </p>
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white"
+              >
                 <span>{isArabic ? 'العودة للأعلى' : 'Back to top'}</span>
-                <ArrowLeft className={`h-4 w-4 ${isArabic ? 'rotate-90' : '-rotate-90'}`} />
-              </a>
+                <ArrowRight className={`h-4 w-4 ${isArabic ? 'rotate-180' : '-rotate-90'}`} />
+              </button>
             </div>
           </div>
         </div>
@@ -771,5 +460,4 @@ export function Landing() {
     </div>
   );
 }
-
 
