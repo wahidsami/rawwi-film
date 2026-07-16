@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { hashGcamKnowledgeValue, normalizeGcamKnowledgeText } from "./gcamKnowledgeUtils.js";
@@ -20,8 +20,7 @@ type TaxonomyArticle = Readonly<{ id: number; title_ar: string; atoms: readonly 
 type TaxonomyDocument = Readonly<{ articles: readonly TaxonomyArticle[] }>;
 
 const ROOT_CANDIDATES = Object.freeze([
-  join(process.cwd(), "docs"),
-  join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..", "..", "..", "docs"),
+  resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..", "..", "..", "docs"),
 ]);
 
 const OFFICIAL_SOURCE_FILES = Object.freeze({
@@ -43,7 +42,14 @@ function readFirstExistingFile(fileName: string): string {
 }
 
 function loadTaxonomy(): TaxonomyDocument {
+  validateOfficialSourceAvailability();
   return JSON.parse(readFirstExistingFile(OFFICIAL_SOURCE_FILES.taxonomy)) as TaxonomyDocument;
+}
+
+function validateOfficialSourceAvailability(): void {
+  for (const fileName of Object.values(OFFICIAL_SOURCE_FILES)) {
+    readFirstExistingFile(fileName);
+  }
 }
 
 function sourceReference(document: string, articleId: number | null, atomId: string | null, excerpt: string): GcamKnowledgeSourceReference {

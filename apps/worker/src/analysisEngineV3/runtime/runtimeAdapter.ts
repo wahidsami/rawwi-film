@@ -51,7 +51,7 @@ import {
   buildV3SemanticGenerationInspectionRecord,
   buildV3ReviewerDebateInspectionRecord,
 } from "../inspection/inspectionStageBuilders.js";
-import { createKnowledgeRegistry, createKnowledgeRegistryFromEntries, defaultKnowledgeRegistryRoot } from "../reviewerKnowledge/knowledgeRegistry/index.js";
+import { createKnowledgeRegistry } from "../reviewerKnowledge/knowledgeRegistry/index.js";
 import { createKnowledgeRankingReport } from "../reviewerKnowledge/knowledgeRanking/index.js";
 import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { buildReviewerDebatePackage } from "../reviewerDebate/index.js";
@@ -598,7 +598,7 @@ export async function runV3RuntimeAdapter(
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack ?? null : null,
         });
-        knowledgeRegistry = createKnowledgeRegistryFromEntries([], defaultKnowledgeRegistryRoot());
+        throw error;
       }
       const reasoningTraces = buildV3ReasoningTrace({
         analysisResponse,

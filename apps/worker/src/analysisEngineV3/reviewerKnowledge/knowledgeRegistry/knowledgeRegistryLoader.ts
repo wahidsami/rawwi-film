@@ -484,7 +484,9 @@ function createKnowledgeAcquisitionEntries(rootDir: string): readonly KnowledgeR
 
 function createGcamKnowledgeEntries(rootDir: string): readonly KnowledgeRegistryEntry[] {
   const gcamRoot = join(rootDir, "gcamKnowledge");
-  if (!isDirectory(gcamRoot)) return Object.freeze([]);
+  if (!isDirectory(gcamRoot)) {
+    throw new Error(`Required GCAM knowledge directory is missing: ${gcamRoot}`);
+  }
   const registry = loadGcamKnowledgeRegistryFromDirectory(gcamRoot);
   return Object.freeze(registry.listAll().map((record) => makeEntry({
     kind: "gcam_knowledge_record",

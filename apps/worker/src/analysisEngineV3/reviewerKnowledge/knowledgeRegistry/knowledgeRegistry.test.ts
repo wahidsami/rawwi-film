@@ -2,6 +2,7 @@
  * Run: node --import tsx apps/worker/src/analysisEngineV3/reviewerKnowledge/knowledgeRegistry/knowledgeRegistry.test.ts
  */
 import { strict as assert } from "node:assert";
+import { join } from "node:path";
 
 import { createKnowledgeRegistry, createKnowledgeRegistryFromEntries, defaultKnowledgeRegistryRoot } from "./index.js";
 import type { KnowledgeRegistryEntry } from "./knowledgeRegistryTypes.js";
@@ -64,9 +65,16 @@ function testRegistryValidation(): void {
   console.log("✓ knowledge registry validation catches duplicate metadata ids");
 }
 
+function testMissingGCAMResourcesFailFast(): void {
+  const missingRoot = join(defaultKnowledgeRegistryRoot(), "__missing_gcam_resources__");
+  assert.throws(() => createKnowledgeRegistry(missingRoot), /Required GCAM knowledge directory is missing/i);
+  console.log("✓ missing GCAM knowledge resources fail fast");
+}
+
 async function main(): Promise<void> {
   testDefaultRegistryLoads();
   testRegistryValidation();
+  testMissingGCAMResourcesFailFast();
   console.log("\nAll knowledge registry tests passed.");
 }
 

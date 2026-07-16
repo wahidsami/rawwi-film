@@ -11,6 +11,9 @@ COPY apps/worker/package.json ./apps/worker/
 RUN pnpm install --frozen-lockfile
 
 COPY apps/worker ./apps/worker
+COPY docs/taxonomy-from-docx.json ./docs/
+COPY ["docs/GCAM Canonical Atom Framework (v1).md", "./docs/"]
+COPY ["docs/GCAM Severity Rulebook (v1).md", "./docs/"]
 COPY ["docs/V3 prompts", "./docs/V3 prompts"]
 
 WORKDIR /app/apps/worker
