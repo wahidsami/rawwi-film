@@ -12,6 +12,7 @@ import { createPromptConceptContext, runReviewerMethodology } from "../reviewerM
 import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRegistry.js";
 import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
+import { validateReasonedDecisionAgainstEvidence } from "./reasonedDecisionValidation.js";
 
 export type V3ProviderFlowInput = Readonly<{
   promptInput: V3PromptBuilderInput;
@@ -58,6 +59,24 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
   });
 }
 
+function appendValidationRepairInstruction(userPrompt: string, issues: readonly { path: string; message: string }[]): string {
+  const issueLines = issues.map((issue) => `- ${issue.path}: ${issue.message}`).join("\n");
+  return [
+    userPrompt,
+    "",
+    "Validation repair instruction:",
+    "The previous answer failed post-generation validation.",
+    "Revise only the reviewer reasoning package.",
+    "Requirements:",
+    "- Keep every claim grounded in the exact quoted evidence or current scene.",
+    "- Use at most one applicable article.",
+    "- If evidence is insufficient, return NO VIOLATION.",
+    "- Do not add facts, actors, objects, injuries, or events not present in the source evidence.",
+    "Validation issues:",
+    issueLines,
+  ].join("\n");
+}
+
 export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promise<V3ProviderReasoningResult> {
   const renderedPrompt = buildV3RenderedPrompt(input.promptInput);
   const userPrompt = buildV3ProviderUserPrompt(input.promptInput);
@@ -73,6 +92,55 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     signal: input.signal ?? null,
   });
   const mapped = mapV3ProviderResponse(rawResponse.rawResponse);
+  const validation = validateReasonedDecisionAgainstEvidence(input.promptInput, {
+    prompt: renderedPrompt.prompt,
+    promptHash: renderedPrompt.promptHash,
+    userPrompt,
+    rawResponse,
+    narrative: mapped.narrative,
+    evidence: mapped.evidence,
+    semantic: mapped.semantic,
+    context: mapped.context,
+    reasonedDecision: mapped.reasonedDecision,
+  });
+
+  if (!validation.valid) {
+    const retryRawResponse = await input.provider.callJudgeRaw({
+      systemPrompt: renderedPrompt.prompt,
+      userPrompt: appendValidationRepairInstruction(userPrompt, validation.issues),
+      modelName: input.modelName,
+      temperature: input.temperature,
+      topP: input.topP,
+      seed: input.seed,
+      maxTokens: input.maxTokens,
+      responseFormat: input.responseFormat ?? "json_object",
+      signal: input.signal ?? null,
+    });
+    const retryMapped = mapV3ProviderResponse(retryRawResponse.rawResponse);
+    const retryValidation = validateReasonedDecisionAgainstEvidence(input.promptInput, {
+      prompt: renderedPrompt.prompt,
+      promptHash: renderedPrompt.promptHash,
+      userPrompt: appendValidationRepairInstruction(userPrompt, validation.issues),
+      rawResponse: retryRawResponse,
+      narrative: retryMapped.narrative,
+      evidence: retryMapped.evidence,
+      semantic: retryMapped.semantic,
+      context: retryMapped.context,
+      reasonedDecision: retryMapped.reasonedDecision,
+    });
+
+    return Object.freeze({
+      prompt: renderedPrompt.prompt,
+      promptHash: renderedPrompt.promptHash,
+      userPrompt: appendValidationRepairInstruction(userPrompt, validation.issues),
+      rawResponse: retryRawResponse,
+      narrative: retryMapped.narrative,
+      evidence: retryMapped.evidence,
+      semantic: retryMapped.semantic,
+      context: retryMapped.context,
+      reasonedDecision: retryValidation.valid ? retryMapped.reasonedDecision : retryValidation.sanitizedDecision,
+    });
+  }
 
   return Object.freeze({
     prompt: renderedPrompt.prompt,

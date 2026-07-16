@@ -193,6 +193,123 @@ async function testProviderFlowWithMockProvider(): Promise<void> {
   console.log("✓ provider flow uses the abstraction and preserves hashes");
 }
 
+async function testProviderRepairsInvalidReasonedDecision(): Promise<void> {
+  const input = makeInput();
+  let callCount = 0;
+  const provider: V3Provider = {
+    name: "openai",
+    async callJudgeRaw() {
+      callCount += 1;
+      const validResponse = {
+        narrative: {
+          speaker: "speaker",
+          listener: "listener",
+          target: "listener",
+          narrativeVoice: "dialogue",
+          sceneType: "dialogue scene",
+          narrativeIntent: "dialogue",
+          storyPosition: "opening",
+          relationship: "peer",
+          emotionalTone: "neutral",
+          condemnation: false,
+          approval: false,
+          neutrality: true,
+          historicalContext: false,
+          dream: false,
+          flashback: false,
+          comedy: false,
+          satire: false,
+          threat: false,
+          instruction: false,
+          news: false,
+          documentary: false,
+          dialogue: true,
+          narration: false,
+          sceneDescription: false,
+          confidence: 0.91,
+        },
+        evidence: {
+          candidates: [{ text: "damn", quote: "damn", startOffset: 10, endOffset: 14, offsetStart: 10, offsetEnd: 14, confidence: 0.99, source: "chunk", concepts: [], entities: [], reason: "Exact quote." }],
+          primaryCandidateIndex: 0,
+          admissible: true,
+          confidence: 0.99,
+        },
+        semantic: {
+          semanticMeaning: "direct dialogue",
+          narrativeIntent: "dialogue",
+          conversationRole: "speaker",
+          sceneRole: "dialogue scene",
+          speaker: "speaker",
+          listener: "listener",
+          target: "listener",
+          victim: "listener",
+          emotion: "neutral",
+          riskContext: "medium",
+          confidence: 0.9,
+        },
+        context: {
+          storyMemory: "Memory",
+          sceneMemory: "Scene",
+          localContext: "A: damn, stop that.",
+          chunkContext: "chunk_index=1",
+          neighboringSentences: ["Before", "After"],
+          narrativeContext: "dialogue",
+          confidence: 0.88,
+        },
+        reasoned_decision: {
+          reasoning: "The quote directly supports the semantic conclusion.",
+          alternative_interpretations: ["It could be quoted language, but the scene supports literal use."],
+          supporting_evidence: ["damn"],
+          contradicting_evidence: [],
+          applicable_articles: [4],
+          rejected_articles: [17],
+          risk_analysis: "Low risk because the evidence is direct.",
+          narrative_analysis: "Direct dialogue with no exception cues.",
+          human_like_explanation: "A human reviewer would treat this as a straightforward profanity case.",
+          recommendation: "Support the finding while keeping the legal engine authoritative.",
+          confidence: 0.94,
+        },
+      };
+
+      const invalidResponse = {
+        ...validResponse,
+        reasoned_decision: {
+          ...validResponse.reasoned_decision,
+          supporting_evidence: ["invented actor attacked the mayor"],
+          applicable_articles: [4, 16],
+          recommendation: "Support the finding while keeping the legal engine authoritative.",
+        },
+      };
+
+      return {
+        providerName: "openai",
+        modelName: "test-model",
+        modelVersion: null,
+        rawResponse: JSON.stringify(callCount === 1 ? invalidResponse : validResponse),
+        finishReason: "stop",
+        usage: null,
+        responseId: callCount === 1 ? "resp_invalid" : "resp_valid",
+        responseTimestamp: "2026-07-12T00:00:00.000Z",
+      };
+    },
+  };
+
+  const result = await runV3ProviderReasoning({
+    promptInput: input,
+    provider,
+    modelName: "test-model",
+    temperature: 0,
+    seed: 12345,
+  });
+
+  assert.equal(callCount, 2, "provider should retry once after validation failure");
+  assert.equal(result.reasonedDecision.applicableArticles.length, 1);
+  assert.equal(result.reasonedDecision.applicableArticles[0], 4);
+  assert.equal(result.rawResponse.responseId, "resp_valid");
+  assert.equal(result.reasonedDecision.recommendation, "Support the finding while keeping the legal engine authoritative.");
+  console.log("✓ provider regenerates when the reviewer response is not grounded");
+}
+
 function testFactoryCreatesOpenAIProvider(): void {
   const provider = createV3ProviderFactory().create("openai");
   assert.equal(provider.name, "openai");
@@ -202,6 +319,7 @@ function testFactoryCreatesOpenAIProvider(): void {
 async function main(): Promise<void> {
   testResponseMapper();
   await testProviderFlowWithMockProvider();
+  await testProviderRepairsInvalidReasonedDecision();
   testFactoryCreatesOpenAIProvider();
   console.log("\nAll V3 provider tests passed.");
 }

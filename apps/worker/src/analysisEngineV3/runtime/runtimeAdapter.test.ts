@@ -77,7 +77,7 @@ function buildMockOpenAIResponse(): string {
       alternative_interpretations: ["It could be commentary, but the context supports a direct attack."],
       supporting_evidence: ["النبي كذاب والدين باطل"],
       contradicting_evidence: [],
-      applicable_articles: [1, 2, 3],
+      applicable_articles: [3],
       rejected_articles: [17],
       risk_analysis: "Low ambiguity because the evidence is explicit.",
       narrative_analysis: "Direct hostile dialogue with no blocking exception.",
@@ -247,6 +247,14 @@ async function testReligionModuleIsReachableAtRuntime(): Promise<void> {
     assert(
       capturedRequestBody?.messages?.[0]?.content?.includes("humanLikeExplanation"),
       "system prompt should explicitly request the GPT reviewer assistant explanation",
+    );
+    assert(
+      capturedRequestBody?.messages?.[0]?.content?.includes("NO VIOLATION"),
+      "system prompt should explicitly require NO VIOLATION when evidence is insufficient",
+    );
+    assert(
+      capturedRequestBody?.messages?.[0]?.content?.includes("single article"),
+      "system prompt should explicitly require a single applicable article",
     );
     console.log("✓ religion module reachable through runtime adapter");
   } finally {
