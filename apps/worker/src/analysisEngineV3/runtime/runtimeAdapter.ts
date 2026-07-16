@@ -59,6 +59,8 @@ import { buildExplanationPackage } from "../explanation/index.js";
 import { buildReviewerDecisionContext } from "../legal/reviewerDecisionPreparation.js";
 import { buildExplanationSafeAnalysisResponse } from "./explanationSafeAnalysisResponse.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
+import { validateReasonedDecisionAgainstEvidence } from "../provider/reasonedDecisionValidation.js";
+import { validateReviewerScope } from "./reviewerScopeValidator.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -432,23 +434,42 @@ export async function runV3RuntimeAdapter(
   const reasoningLatencyMs = Date.now() - reasoningStartedAt;
 
   const mapped = mapV3ProviderResponse(rawResponse.rawResponse);
+  const groundingValidation = validateReasonedDecisionAgainstEvidence(promptInput, {
+    prompt: renderedPrompt.prompt,
+    promptHash: renderedPrompt.promptHash,
+    userPrompt,
+    rawResponse,
+    narrative: mapped.narrative,
+    evidence: mapped.evidence,
+    semantic: mapped.semantic,
+    context: mapped.context,
+    reasonedDecision: mapped.reasonedDecision,
+  });
+  const validatedReasonedDecision = groundingValidation.valid ? mapped.reasonedDecision : groundingValidation.sanitizedDecision;
+  logger.info("V3 reviewer grounding validation", {
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+    valid: groundingValidation.valid,
+    issueCount: groundingValidation.issues.length,
+    validationNote: groundingValidation.validationNote,
+  });
   const gptAssistant = Object.freeze({
     providerName: rawResponse.providerName,
     modelName: rawResponse.modelName,
     promptHash: renderedPrompt.promptHash,
     responseHash: sha256(rawResponse.rawResponse),
     latencyMs: reasoningLatencyMs,
-    reasoning: mapped.reasonedDecision.reasoning,
-    alternativeInterpretations: [...mapped.reasonedDecision.alternativeInterpretations],
-    confidence: mapped.reasonedDecision.confidence,
-    supportingEvidence: [...mapped.reasonedDecision.supportingEvidence],
-    contradictingEvidence: [...mapped.reasonedDecision.contradictingEvidence],
-    applicableArticles: [...mapped.reasonedDecision.applicableArticles],
-    rejectedArticles: [...mapped.reasonedDecision.rejectedArticles],
-    riskAnalysis: mapped.reasonedDecision.riskAnalysis,
-    narrativeAnalysis: mapped.reasonedDecision.narrativeAnalysis,
-    humanLikeExplanation: mapped.reasonedDecision.humanLikeExplanation,
-    recommendation: mapped.reasonedDecision.recommendation,
+    reasoning: validatedReasonedDecision.reasoning,
+    alternativeInterpretations: [...validatedReasonedDecision.alternativeInterpretations],
+    confidence: validatedReasonedDecision.confidence,
+    supportingEvidence: [...validatedReasonedDecision.supportingEvidence],
+    contradictingEvidence: [...validatedReasonedDecision.contradictingEvidence],
+    applicableArticles: [...validatedReasonedDecision.applicableArticles],
+    rejectedArticles: [...validatedReasonedDecision.rejectedArticles],
+    riskAnalysis: validatedReasonedDecision.riskAnalysis,
+    narrativeAnalysis: validatedReasonedDecision.narrativeAnalysis,
+    humanLikeExplanation: validatedReasonedDecision.humanLikeExplanation,
+    recommendation: validatedReasonedDecision.recommendation,
   });
   const intelligence = buildIntelligenceContext({
     moduleId: analysisRequest.subjectModule.id,
@@ -485,12 +506,22 @@ export async function runV3RuntimeAdapter(
     reviewerKnowledgeSelection.knowledgeRegistry,
     reviewerKnowledgeRetrieval,
   );
+  logger.info("V3 reviewer routing", {
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+    selectedReviewers: [...reviewerKnowledgeSelection.routing.selectedReviewerLabels],
+    rejectedReviewers: [...reviewerKnowledgeSelection.routing.rejectedReviewerLabels],
+    selectedReviewerIds: [...reviewerKnowledgeSelection.routing.selectedReviewerIds],
+    rejectedReviewerIds: [...reviewerKnowledgeSelection.routing.rejectedReviewerIds],
+    knowledgeReductionPercent: reviewerKnowledgeSelection.routing.knowledgeReductionPercent,
+    routingConfidence: reviewerKnowledgeSelection.routing.routingConfidence,
+  });
   const reviewerDecision = buildReviewerDecisionContext({
     intelligence,
     reviewerReasoningEngine,
     reviewerAssessment,
     conceptContext: reviewerConceptContext,
-    reasonedDecision: mapped.reasonedDecision,
+    reasonedDecision: validatedReasonedDecision,
     subjectModuleArticleIds: analysisRequest.subjectModule.articleIds ?? [],
   });
   const legalModuleRegistry = new LegalModuleRegistry()
@@ -517,11 +548,25 @@ export async function runV3RuntimeAdapter(
     intelligence,
     reviewerDecision,
   });
-  const gcamMapping = evaluateRuntimeGcamMapping(legalDecision, intelligence);
+  const scopeValidation = validateReviewerScope({
+    routing: reviewerKnowledgeSelection.routing,
+    decision: legalDecision,
+  });
+  logger.info("V3 reviewer scope validation", {
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+    selectedReviewers: [...scopeValidation.selectedReviewerLabels],
+    rejectedReviewers: [...scopeValidation.rejectedReviewerLabels],
+    rejectedFindingsByScope: scopeValidation.rejectedFindingsByScopeCount,
+    acceptedFindings: scopeValidation.acceptedFindingsCount,
+    scopeReason: scopeValidation.scopeReason,
+  });
+  const validatedLegalDecision = scopeValidation.sanitizedDecision;
+  const gcamMapping = evaluateRuntimeGcamMapping(validatedLegalDecision, intelligence);
 
   const intelligenceHash = sha256(canonicalStringify(intelligence));
   const semanticHash = sha256(canonicalStringify(mapped.semantic));
-  const legalHash = sha256(canonicalStringify(legalDecision));
+  const legalHash = sha256(canonicalStringify(validatedLegalDecision));
   const stageHashes = [
     { stage: "narrative" as const, hash: sha256(canonicalStringify(mapped.narrative)) },
     { stage: "evidence" as const, hash: sha256(canonicalStringify(mapped.evidence)) },
@@ -546,7 +591,7 @@ export async function runV3RuntimeAdapter(
     semantic: mapped.semantic,
     context: mapped.context,
     intelligence,
-    legalDecision,
+    legalDecision: validatedLegalDecision,
     diagnostics: Object.freeze({
       executionOrder: ["build_prompt", "reasoning_pipeline", "semantic_layer", "intelligence_layer", "legal_engine", "module_evaluation", "analysis_response"] as const,
       promptHash: renderedPrompt.promptHash,
@@ -569,10 +614,10 @@ export async function runV3RuntimeAdapter(
     executionSignatureHash,
     subjectModuleId: analysisRequest.subjectModule.id,
     chunkText: analysisRequest.chunk.text,
-    findingCount: legalDecision.finding ? 1 : 0,
+    findingCount: validatedLegalDecision.finding ? 1 : 0,
   });
   const findings = mapLegalDecisionToFindings({
-    decision: legalDecision,
+    decision: validatedLegalDecision,
     chunkStart: input.chunkStart,
     chunkEnd: input.chunkEnd,
     startLine: input.startLine,
@@ -796,19 +841,19 @@ export async function runV3RuntimeAdapter(
         },
         analysisEngine: "v3",
         pipelineVersion,
-        moduleId: legalDecision.moduleId,
-        moduleTitle: legalDecision.moduleTitle,
-        status: legalDecision.status,
-        reason: legalDecision.reason,
-        confidence: legalDecision.confidence,
-        articleIds: [...legalDecision.articleIds],
-        finding: legalDecision.finding as unknown as Record<string, unknown> | null,
-        exceptions: [...legalDecision.exceptions] as readonly unknown[],
-        trace: [...legalDecision.trace] as readonly unknown[],
+        moduleId: validatedLegalDecision.moduleId,
+        moduleTitle: validatedLegalDecision.moduleTitle,
+        status: validatedLegalDecision.status,
+        reason: validatedLegalDecision.reason,
+        confidence: validatedLegalDecision.confidence,
+        articleIds: [...validatedLegalDecision.articleIds],
+        finding: validatedLegalDecision.finding as unknown as Record<string, unknown> | null,
+        exceptions: [...validatedLegalDecision.exceptions] as readonly unknown[],
+        trace: [...validatedLegalDecision.trace] as readonly unknown[],
         candidateCount: semanticCandidates.length,
-        acceptedCount: legalDecision.finding ? 1 : 0,
-        rejectedCount: legalDecision.status === "reject" ? 1 : 0,
-        needsReviewCount: legalDecision.status === "needs_review" ? 1 : 0,
+        acceptedCount: validatedLegalDecision.finding ? 1 : 0,
+        rejectedCount: validatedLegalDecision.status === "reject" ? 1 : 0,
+        needsReviewCount: validatedLegalDecision.status === "needs_review" ? 1 : 0,
       });
       const debateRecord = buildV3ReviewerDebateInspectionRecord({
         base: {
@@ -841,19 +886,19 @@ export async function runV3RuntimeAdapter(
         },
         analysisEngine: "v3",
         pipelineVersion,
-        inputDecision: legalDecision as unknown as Record<string, unknown>,
+        inputDecision: validatedLegalDecision as unknown as Record<string, unknown>,
         outputFindings: findings as readonly unknown[],
         articleMapping: gcamMapping as unknown as Record<string, unknown>,
         confidence: gcamMapping.confidence,
         title: gcamMapping.findingTitle,
         description: gcamMapping.reviewerExplanation,
-        evidenceSnippet: findings[0]?.evidence_snippet ?? legalDecision.finding?.evidence.text ?? null,
+        evidenceSnippet: findings[0]?.evidence_snippet ?? validatedLegalDecision.finding?.evidence.text ?? null,
         articleIds: findings.map((findingItem) => findingItem.article_id),
         atomIds: findings.flatMap((findingItem) => (findingItem.atom_id ? [findingItem.atom_id] : [])),
-        legalModule: legalDecision.moduleId,
-        legalModuleTitle: legalDecision.moduleTitle,
+        legalModule: validatedLegalDecision.moduleId,
+        legalModuleTitle: validatedLegalDecision.moduleTitle,
         mappedCount: findings.length,
-        droppedCount: Math.max(0, (legalDecision.finding ? 1 : 0) - findings.length),
+        droppedCount: Math.max(0, (validatedLegalDecision.finding ? 1 : 0) - findings.length),
       });
       const explanationRecord = buildV3ExplanationInspectionRecord({
         base: {
