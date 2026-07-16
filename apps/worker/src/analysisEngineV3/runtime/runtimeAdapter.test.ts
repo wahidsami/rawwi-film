@@ -75,6 +75,22 @@ function buildMockOpenAIResponse(): string {
     reasoned_decision: {
       reasoning: "The quote directly supports the semantic conclusion.",
       alternative_interpretations: ["It could be commentary, but the context supports a direct attack."],
+      article_evaluations: [
+        {
+          article_id: 3,
+          status: "PASS",
+          evidence: ["النبي كذاب والدين باطل"],
+          reason: "The quote directly attacks religion.",
+          confidence: 0.97,
+        },
+        {
+          article_id: 17,
+          status: "FAIL",
+          evidence: ["النبي كذاب والدين باطل"],
+          reason: "A different article does not fit the same quote.",
+          confidence: 0.97,
+        },
+      ],
       supporting_evidence: ["النبي كذاب والدين باطل"],
       contradicting_evidence: [],
       applicable_articles: [3],
@@ -250,11 +266,15 @@ async function testReligionModuleIsReachableAtRuntime(): Promise<void> {
     );
     assert(
       capturedRequestBody?.messages?.[0]?.content?.includes("NO VIOLATION"),
-      "system prompt should explicitly require NO VIOLATION when evidence is insufficient",
+      "system prompt should explicitly require NO VIOLATION when no article passes",
     );
     assert(
-      capturedRequestBody?.messages?.[0]?.content?.includes("single article"),
-      "system prompt should explicitly require a single applicable article",
+      capturedRequestBody?.messages?.[0]?.content?.includes("article-by-article"),
+      "system prompt should explicitly require article-by-article evaluation",
+    );
+    assert(
+      capturedRequestBody?.messages?.[0]?.content?.includes("PASS or FAIL"),
+      "system prompt should explicitly require PASS or FAIL per article",
     );
     console.log("✓ religion module reachable through runtime adapter");
   } finally {

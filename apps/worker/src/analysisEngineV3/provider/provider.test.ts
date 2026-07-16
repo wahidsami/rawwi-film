@@ -117,6 +117,10 @@ function testResponseMapper(): void {
         reasoned_decision: {
           reasoning: "The line is explicit profanity.",
           alternative_interpretations: ["It could be quoted language, but the scene supports literal use."],
+          article_evaluations: [
+            { article_id: 4, status: "PASS", evidence: ["damn"], reason: "Exact quote supports the article.", confidence: 0.94 },
+            { article_id: 17, status: "FAIL", evidence: ["damn"], reason: "Different article does not fit the quote.", confidence: 0.94 },
+          ],
           supporting_evidence: ["damn"],
           contradicting_evidence: [],
           applicable_articles: [4],
@@ -133,6 +137,8 @@ function testResponseMapper(): void {
 
   assert.equal(mapped.narrative.dialogue, true);
   assert.equal(mapped.evidence.candidates[0]?.text, "damn");
+  assert.equal(mapped.reasonedDecision.articleEvaluations.length, 2);
+  assert.equal(mapped.reasonedDecision.articleEvaluations[0]?.status, "PASS");
   assert.equal(mapped.semantic.semanticMeaning, "The evidence is direct dialogue.");
   assert.equal(mapped.context.neighboringSentences.length, 2);
   assert.equal(mapped.reasonedDecision.reasoning, "The line is explicit profanity.");
@@ -157,6 +163,10 @@ async function testProviderFlowWithMockProvider(): Promise<void> {
           reasoned_decision: {
             reasoning: "The line is explicit profanity.",
             alternative_interpretations: ["It could be quoted language, but the scene supports literal use."],
+            article_evaluations: [
+              { article_id: 4, status: "PASS", evidence: ["damn"], reason: "Exact quote supports the article.", confidence: 0.94 },
+              { article_id: 17, status: "FAIL", evidence: ["damn"], reason: "Different article does not fit the quote.", confidence: 0.94 },
+            ],
             supporting_evidence: ["damn"],
             contradicting_evidence: [],
             applicable_articles: [4],
@@ -256,12 +266,16 @@ async function testProviderRepairsInvalidReasonedDecision(): Promise<void> {
           narrativeContext: "dialogue",
           confidence: 0.88,
         },
-        reasoned_decision: {
-          reasoning: "The quote directly supports the semantic conclusion.",
-          alternative_interpretations: ["It could be quoted language, but the scene supports literal use."],
-          supporting_evidence: ["damn"],
-          contradicting_evidence: [],
-          applicable_articles: [4],
+          reasoned_decision: {
+            reasoning: "The quote directly supports the semantic conclusion.",
+            alternative_interpretations: ["It could be quoted language, but the scene supports literal use."],
+            article_evaluations: [
+              { article_id: 4, status: "PASS", evidence: ["damn"], reason: "Exact quote supports the article.", confidence: 0.94 },
+              { article_id: 17, status: "FAIL", evidence: ["damn"], reason: "Different article does not fit the quote.", confidence: 0.94 },
+            ],
+            supporting_evidence: ["damn"],
+            contradicting_evidence: [],
+            applicable_articles: [4],
           rejected_articles: [17],
           risk_analysis: "Low risk because the evidence is direct.",
           narrative_analysis: "Direct dialogue with no exception cues.",

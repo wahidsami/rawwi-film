@@ -34,6 +34,7 @@ export type V3ReasonedDecisionResult = Readonly<{
   reasoning: string;
   alternativeInterpretations: readonly string[];
   confidence: number;
+  articleEvaluations: readonly V3ReasonedDecisionArticleEvaluation[];
   supportingEvidence: readonly string[];
   contradictingEvidence: readonly string[];
   applicableArticles: readonly number[];
@@ -42,6 +43,14 @@ export type V3ReasonedDecisionResult = Readonly<{
   narrativeAnalysis: string;
   humanLikeExplanation: string;
   recommendation: string;
+}>;
+
+export type V3ReasonedDecisionArticleEvaluation = Readonly<{
+  articleId: number;
+  status: "PASS" | "FAIL";
+  evidence: readonly string[];
+  reason: string;
+  confidence: number;
 }>;
 
 export type V3Provider = Readonly<{

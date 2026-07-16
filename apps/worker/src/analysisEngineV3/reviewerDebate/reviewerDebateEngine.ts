@@ -368,7 +368,7 @@ function buildGeneralReviewerOpinion(
     ].join(" | "),
     supportingEvidence,
     supportingKnowledge,
-    suggestedArticles: Object.freeze(majorityArticles.length > 0 ? majorityArticles : primaryDecision.articleIds),
+    suggestedArticles: Object.freeze(majorityStatus === "accept" ? majorityArticles : []),
     rejectedArticles: Object.freeze(dissentArticles),
     counterargument,
     riskLevel: summarizeRisk(averageConfidenceValue, disagreementScore),
@@ -498,7 +498,7 @@ function buildOpinion(
   const supportingEvidence = uniqueStrings(decision.evidence.candidates.map((candidate) => candidate.text));
   const needsHumanReview = decision.status === "needs_review" || confidenceValue < 0.65;
   const riskLevel = opinionConfidenceStatus(confidenceValue);
-  const suggestedArticles = Object.freeze([...new Set(decision.articleIds)].sort((left, right) => left - right));
+  const suggestedArticles = Object.freeze(decision.status === "accept" ? [...new Set(decision.articleIds)].sort((left, right) => left - right) : []);
   const selfCritique = buildSelfCritique(decision, reviewerName, confidenceValue);
 
   return Object.freeze({

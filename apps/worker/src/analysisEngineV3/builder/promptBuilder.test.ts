@@ -188,8 +188,9 @@ function testReviewerKnowledgePackRendered(): void {
   assert(rendered.prompt.includes("Profanity Reviewer Knowledge Pack"), "profanity pack should be selected for profanity input");
   assert(rendered.prompt.includes("reasoned_decision"), "output schema should request a reasoned decision");
   assert(rendered.prompt.includes("recommendation"), "output schema should request a recommendation");
-  assert(rendered.prompt.includes("NO VIOLATION"), "prompt should instruct NO VIOLATION when evidence is insufficient");
-  assert(rendered.prompt.includes("single article"), "prompt should instruct a single applicable article");
+  assert(rendered.prompt.includes("NO VIOLATION"), "prompt should instruct NO VIOLATION when no article passes");
+  assert(rendered.prompt.includes("article-by-article"), "prompt should instruct article-by-article evaluation");
+  assert(rendered.prompt.includes("PASS or FAIL"), "prompt should instruct PASS or FAIL per article");
   assert(rendered.prompt.includes("facts, actors, objects, injuries, or events"), "prompt should prohibit unsupported facts");
   assert(!rendered.prompt.includes('"rules": ['), "subject rule bundles should no longer be rendered directly");
   console.log("✓ reviewer knowledge packs are rendered instead of subject rule bundles");

@@ -324,6 +324,9 @@ function buildPromptReviewerDecisionPipeline(
     ...(input.chunkContext.neighboringSentences ?? []),
     assessment.reasoningTrace.join(" | "),
   ]);
+  const articleEvaluationSummary = primaryArticleIds.length > 0
+    ? primaryArticleIds.map((articleId) => `article:${articleId}: PASS/FAIL independently from quote-based evidence only`).join(" | ")
+    : "No GCAM articles were preselected.";
   const knowledgeSummary = uniqueStringsWithNormalization([
     ...packs.map((pack) => pack.id),
     ...knowledgeRetrieval.retrievedPacks.map((pack) => `${pack.id}:${pack.score.toFixed(4)}`),
@@ -399,7 +402,7 @@ function buildPromptReviewerDecisionPipeline(
       Object.freeze({
         key: "gcam_applicability",
         title: "GCAM Applicability",
-        summary: primaryArticleIds.length > 0 ? primaryArticleIds.join(", ") : "No GCAM articles were preselected.",
+        summary: primaryArticleIds.length > 0 ? articleEvaluationSummary : "No GCAM articles were preselected.",
         confidence: conceptContext.confidence,
       }),
       Object.freeze({
@@ -429,6 +432,13 @@ function buildPromptReviewerDecisionPipeline(
       assessment.narrativeIntent,
       ...assessment.exceptionSignals,
     ]).join(" | "),
+    articleEvaluations: Object.freeze(primaryArticleIds.map((articleId) => Object.freeze({
+      articleId,
+      status: "PASS" as const,
+      evidence: Object.freeze([] as string[]),
+      reason: "Evaluate this article independently with quote-based evidence only. Mark PASS only when the evidence supports it; otherwise mark FAIL.",
+      confidence: preliminaryConfidence,
+    }))),
     applicableGcamArticles: Object.freeze(primaryArticleIds),
     rejectedGcamArticles: Object.freeze([]),
     supportingEvidence: Object.freeze(evidenceSummary),
@@ -593,22 +603,23 @@ function buildGptReviewerAssistant(
         lesson_count: lessonIds.length,
       }),
       grounding_policy: Object.freeze({
-        evidence_first: "Begin from the exact quoted evidence and the current scene before any interpretation.",
-        quote_grounded: "Every claim must stay grounded in the quoted evidence or the current scene. Do not add facts, actors, objects, injuries, or events that are not present there.",
-        single_article_only: "Choose at most one applicable article. If evidence is insufficient, return NO VIOLATION instead of guessing.",
-        no_violation_rule: "When the evidence does not clearly support a violation, say NO VIOLATION.",
-        contradiction_rule: "State the strongest counter-reading before the recommendation.",
-      }),
+      evidence_first: "Begin from the exact quoted evidence and the current scene before any interpretation.",
+      quote_grounded: "Every claim must stay grounded in the quoted evidence or the current scene. Do not add facts, actors, objects, injuries, or events that are not present there.",
+      article_by_article: "Evaluate every GCAM article independently. Do not choose the closest category. Return PASS or FAIL for each article.",
+      no_violation_rule: "If no article passes, return NO VIOLATION instead of guessing.",
+      contradiction_rule: "State the strongest counter-reading before the recommendation.",
+    }),
     }),
     decision_template: Object.freeze({
-      answer_with: Object.freeze(["reasoning", "supporting_evidence", "counter_evidence", "applicable_articles", "rejected_articles", "confidence", "recommendation"]),
-      reasoning: "Explain why the reading is supported before the legal engine finalizes the outcome. Keep it evidence-first and quote-grounded.",
+      answer_with: Object.freeze(["reasoning", "article_evaluations", "supporting_evidence", "counter_evidence", "applicable_articles", "rejected_articles", "confidence", "recommendation"]),
+      reasoning: "Explain why each supplied article passes or fails based only on quote-based evidence. Keep it evidence-first and quote-grounded.",
+      article_evaluations: "For each supplied article return articleId, PASS or FAIL, evidence, reason, and confidence. Do not choose the closest category.",
       supporting_evidence: "Cite the exact quote and current-scene context that support the reasoning.",
       counter_evidence: "State the strongest counter-reading and why it loses.",
-      applicable_articles: "List at most one article that the reviewer believes is relevant. If evidence is insufficient, use NO VIOLATION.",
+      applicable_articles: "List only the article ids whose evaluations are PASS. If no article passes, use NO VIOLATION.",
       rejected_articles: "List the articles that were considered but rejected.",
       confidence: "Provide a calibrated confidence value between 0 and 1.",
-      recommendation: "State the reviewer recommendation only as reasoning support for the legal engine. If evidence is insufficient, return NO VIOLATION.",
+      recommendation: "State the reviewer recommendation only as reasoning support for the legal engine. If no article passes, return NO VIOLATION.",
     }),
     reasoning_pipeline: reasoningPipeline,
   });

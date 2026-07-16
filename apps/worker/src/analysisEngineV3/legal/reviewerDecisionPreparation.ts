@@ -3,6 +3,7 @@ import type { ReviewerAssessment } from "../reviewerMethodology/reviewerMethodol
 import type { ReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
 import type { V3ReasonedDecisionResult } from "../provider/providerTypes.js";
 import type {
+  ReviewerDecisionArticleEvaluation,
   ReviewerDecisionContext,
   ReviewerDecisionKnowledgeAssets,
   ReviewerDecisionPreliminaryDecision,
@@ -41,6 +42,16 @@ function stringValue(value: unknown): string {
   if (typeof value === "string") return normalizeText(value);
   if (typeof value === "number" && Number.isFinite(value)) return String(value);
   return "";
+}
+
+function normalizeArticleStatus(value: unknown): ReviewerDecisionArticleEvaluation["status"] {
+  return String(value ?? "").toUpperCase() === "PASS" ? "PASS" : "FAIL";
+}
+
+function normalizeArticleEvidence(values: readonly unknown[] | undefined): readonly string[] {
+  return Object.freeze(
+    [...new Set((values ?? []).map((value) => normalizeText(String(value))).filter((value) => value.length > 0))],
+  );
 }
 
 function objectArray(value: unknown): readonly Record<string, unknown>[] {
@@ -126,10 +137,62 @@ function collectKnowledgeAssets(
   });
 }
 
+function buildArticleEvaluations(
+  input: ReviewerDecisionPreparationInput,
+  applicableArticles: readonly number[],
+  rejectedArticles: readonly number[],
+): readonly ReviewerDecisionArticleEvaluation[] {
+  const explicitEvaluations = Array.isArray(input.reasonedDecision?.articleEvaluations)
+    ? input.reasonedDecision.articleEvaluations
+    : [];
+
+  if (explicitEvaluations.length > 0) {
+    return Object.freeze(
+      explicitEvaluations
+        .map((evaluation) => Object.freeze({
+          articleId: Number.isFinite(Number(evaluation.articleId)) ? Number(evaluation.articleId) : 0,
+          status: normalizeArticleStatus(evaluation.status),
+          evidence: normalizeArticleEvidence(evaluation.evidence),
+          reason: normalizeText(evaluation.reason),
+          confidence: clampConfidence(evaluation.confidence),
+        }))
+        .filter((evaluation) => evaluation.articleId > 0),
+    );
+  }
+
+  const passSet = new Set(applicableArticles);
+  const failSet = new Set(rejectedArticles);
+  const subjectArticleIds = [...new Set(input.subjectModuleArticleIds ?? [])].sort((left, right) => left - right);
+  const sourceArticleIds = subjectArticleIds.length > 0 ? subjectArticleIds : [...new Set([...passSet, ...failSet])].sort((left, right) => left - right);
+  const sharedEvidence = normalizeArticleEvidence([
+    ...(input.reasonedDecision?.supportingEvidence ?? []),
+    ...input.intelligence.evidence.candidates.map((candidate) => candidate.text),
+    input.intelligence.evidence.primaryCandidateIndex !== null
+      ? input.intelligence.evidence.candidates[input.intelligence.evidence.primaryCandidateIndex]?.text ?? ""
+      : "",
+  ]);
+
+  return Object.freeze(sourceArticleIds.map((articleId) => Object.freeze({
+    articleId,
+    status: passSet.has(articleId) ? "PASS" : "FAIL",
+    evidence: sharedEvidence,
+    reason: passSet.has(articleId)
+      ? "Quote-based evidence supports this article."
+      : "Quote-based evidence does not support this article.",
+    confidence: clampConfidence(
+      input.reasonedDecision?.confidence ??
+      input.reviewerAssessment?.confidence ??
+      input.intelligence.evidence.confidence ??
+      input.intelligence.semantic.confidence,
+    ),
+  })));
+}
+
 function buildPreliminaryDecision(
   input: ReviewerDecisionPreparationInput,
   applicableArticles: readonly number[],
   rejectedArticles: readonly number[],
+  articleEvaluations: readonly ReviewerDecisionArticleEvaluation[],
 ): ReviewerDecisionPreliminaryDecision {
   const confidence = clampConfidence(
     input.reasonedDecision?.confidence ??
@@ -141,9 +204,13 @@ function buildPreliminaryDecision(
   const evidenceCount = input.intelligence.evidence.candidates.length;
   const exceptionHeavy = input.intelligence.flags.quotation || input.intelligence.flags.educational || input.intelligence.flags.condemnation;
   const narrativeSupport = input.intelligence.flags.promotion || input.intelligence.flags.neutrality || input.intelligence.flags.description;
+  const passArticles = articleEvaluations.filter((evaluation) => evaluation.status === "PASS").map((evaluation) => evaluation.articleId);
+  const failArticles = articleEvaluations.filter((evaluation) => evaluation.status === "FAIL").map((evaluation) => evaluation.articleId);
 
-  const status = evidenceCount === 0 || confidence < 0.45
+  const status = passArticles.length === 0
     ? "reject"
+    : evidenceCount === 0 || confidence < 0.45
+      ? "reject"
     : exceptionHeavy
       ? "needs_review"
       : narrativeSupport && confidence >= 0.65
@@ -158,6 +225,7 @@ function buildPreliminaryDecision(
     input.reasonedDecision?.riskAnalysis ?? "",
     input.reviewerAssessment?.narrativeUnderstanding ?? "",
     input.reviewerAssessment?.literalVsImpliedMeaning ?? "",
+    passArticles.length > 0 ? `PASS articles: ${passArticles.join(", ")}.` : "NO VIOLATION.",
     exceptionHeavy ? "Exception-heavy context requires caution." : "",
     evidenceCount > 0 ? `Evidence candidates: ${evidenceCount}.` : "No semantic evidence candidates were provided.",
   ]).join(" | ");
@@ -166,8 +234,8 @@ function buildPreliminaryDecision(
     status,
     reason,
     confidence,
-    applicableArticles: Object.freeze([...new Set(applicableArticles)].sort((left, right) => left - right)),
-    rejectedArticles: Object.freeze([...new Set(rejectedArticles)].sort((left, right) => left - right)),
+    applicableArticles: Object.freeze(passArticles.length > 0 ? [...new Set(passArticles)].sort((left, right) => left - right) : []),
+    rejectedArticles: Object.freeze([...new Set(failArticles.length > 0 ? failArticles : rejectedArticles)].sort((left, right) => left - right)),
   });
 }
 
@@ -339,10 +407,10 @@ function buildReasoningStages(
     {
       key: "gcam_applicability",
       title: "GCAM Applicability",
-      purpose: "Evaluate which GCAM articles apply to the reasoning package.",
+      purpose: "Evaluate each GCAM article independently using quote-based evidence only.",
       summary: preliminaryDecision.applicableArticles.length > 0
-        ? `Applicable articles: ${preliminaryDecision.applicableArticles.join(", ")}`
-        : "No GCAM articles were confidently applicable yet.",
+        ? `PASS articles: ${preliminaryDecision.applicableArticles.join(", ")} | FAIL articles: ${preliminaryDecision.rejectedArticles.join(", ") || "none"}`
+        : "NO VIOLATION | all evaluated articles failed.",
       confidence: preliminaryDecision.confidence,
       inputs: ["knowledge", "precedents", "context"],
       outputs: ["gcam_applicability"],
@@ -382,10 +450,16 @@ function buildReasoningStages(
 
 export function buildReviewerDecisionContext(input: ReviewerDecisionPreparationInput): ReviewerDecisionContext {
   const knowledgeAssets = collectKnowledgeAssets(input.reviewerReasoningEngine, input.reviewerAssessment);
+  const articleEvaluations = buildArticleEvaluations(
+    input,
+    input.reasonedDecision?.applicableArticles ?? input.subjectModuleArticleIds ?? [],
+    input.reasonedDecision?.rejectedArticles ?? [],
+  );
   const preliminaryDecision = buildPreliminaryDecision(
     input,
     input.reasonedDecision?.applicableArticles ?? input.subjectModuleArticleIds ?? [],
     input.reasonedDecision?.rejectedArticles ?? [],
+    articleEvaluations,
   );
   const reasoning = Object.freeze({
     literalMeaning: normalizeText(
@@ -417,8 +491,9 @@ export function buildReviewerDecisionContext(input: ReviewerDecisionPreparationI
       input.intelligence.flags.quotation ? "quoted" : "",
       input.intelligence.flags.neutrality ? "neutral" : "",
     ].filter(Boolean).join(", ") || "context-sensitive"),
-    applicableGcamArticles: preliminaryDecision.applicableArticles,
-    rejectedGcamArticles: preliminaryDecision.rejectedArticles,
+    articleEvaluations,
+    applicableGcamArticles: Object.freeze(articleEvaluations.filter((evaluation) => evaluation.status === "PASS").map((evaluation) => evaluation.articleId)),
+    rejectedGcamArticles: Object.freeze(articleEvaluations.filter((evaluation) => evaluation.status === "FAIL").map((evaluation) => evaluation.articleId)),
     supportingEvidence: Object.freeze(uniqueStrings([
       ...(input.reasonedDecision?.supportingEvidence ?? []),
       ...input.intelligence.evidence.candidates.map((candidate) => candidate.text),

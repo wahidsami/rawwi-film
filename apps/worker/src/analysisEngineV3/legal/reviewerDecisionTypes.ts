@@ -34,6 +34,14 @@ export type ReviewerDecisionPreliminaryDecision = Readonly<{
   rejectedArticles: readonly number[];
 }>;
 
+export type ReviewerDecisionArticleEvaluation = Readonly<{
+  articleId: number;
+  status: "PASS" | "FAIL";
+  evidence: readonly string[];
+  reason: string;
+  confidence: number;
+}>;
+
 export type ReviewerDecisionReasoning = Readonly<{
   literalMeaning: string;
   impliedMeaning: string;
@@ -41,6 +49,7 @@ export type ReviewerDecisionReasoning = Readonly<{
   speakerAnalysis: string;
   victimAnalysis: string;
   socialImpact: string;
+  articleEvaluations: readonly ReviewerDecisionArticleEvaluation[];
   applicableGcamArticles: readonly number[];
   rejectedGcamArticles: readonly number[];
   supportingEvidence: readonly string[];

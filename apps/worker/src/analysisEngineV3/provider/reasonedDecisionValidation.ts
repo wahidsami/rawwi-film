@@ -231,21 +231,14 @@ export function validateReasonedDecisionAgainstEvidence(
       .filter((text) => text.length > 0),
   );
 
-  if (result.reasonedDecision.applicableArticles.length > 1) {
-    issues.push({
-      code: "single_article_required",
-      path: "reasonedDecision.applicableArticles",
-      message: "The reviewer decision must reference at most one applicable article.",
-    });
-  }
-
   const recommendation = normalizeText(result.reasonedDecision.recommendation);
   const noViolationRecommendation = recommendation.includes("no violation");
-  if (result.evidence.candidates.length === 0 && !noViolationRecommendation) {
+  const passArticleCount = result.reasonedDecision.articleEvaluations.filter((evaluation) => evaluation.status === "PASS").length;
+  if (passArticleCount === 0 && !noViolationRecommendation) {
     issues.push({
       code: "insufficient_evidence_requires_no_violation",
       path: "reasonedDecision.recommendation",
-      message: "When evidence is insufficient, the reviewer must return NO VIOLATION instead of guessing.",
+      message: "When no article passes, the reviewer must return NO VIOLATION instead of guessing.",
     });
   }
 
@@ -294,12 +287,12 @@ export function validateReasonedDecisionAgainstEvidence(
     valid: issues.length === 0,
     issues: Object.freeze(issues),
     validationNote: issues.length === 0
-      ? "The reasoned decision is evidence-first, quote-grounded, and single-article."
+      ? "The reasoned decision is evidence-first, quote-grounded, and article-by-article."
       : [
           "Validation failed.",
-          "Return a single-article, evidence-first answer.",
+          "Return an evidence-first, quote-grounded answer evaluated article-by-article.",
           "Use only exact quotes from the current evidence or scene.",
-          "If evidence is insufficient, return NO VIOLATION.",
+          "If no article passes, return NO VIOLATION.",
           ...issues.map((issue) => `${issue.path}: ${issue.message}`),
         ].join(" "),
     sanitizedDecision,

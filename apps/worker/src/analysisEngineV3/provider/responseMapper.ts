@@ -1,6 +1,6 @@
 import type { LegalContextResult, LegalEvidenceCandidate, LegalEvidenceResult, LegalNarrativeResult, LegalSemanticResult } from "../legal/legalTypes.js";
 import type { V3PromptJsonObject, V3PromptJsonValue } from "../builder/builderTypes.js";
-import type { V3ReasonedDecisionResult, V3ReasoningResponsePayload } from "./providerTypes.js";
+import type { V3ReasonedDecisionArticleEvaluation, V3ReasonedDecisionResult, V3ReasoningResponsePayload } from "./providerTypes.js";
 
 function isObject(value: unknown): value is V3PromptJsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -38,6 +38,17 @@ function normalizeArticleList(value: unknown): number[] {
     .map((item) => Number(item))
     .filter((item) => Number.isFinite(item))
     .map((item) => Number(item));
+}
+
+function normalizeArticleEvaluation(value: unknown): V3ReasonedDecisionArticleEvaluation {
+  const input = isObject(value) ? value : {};
+  return Object.freeze({
+    articleId: Number.isFinite(Number(input.articleId ?? input.article_id)) ? Number(input.articleId ?? input.article_id) : 0,
+    status: String(input.status ?? input.result ?? input.decision ?? "FAIL").toUpperCase() === "PASS" ? "PASS" : "FAIL",
+    evidence: Object.freeze(normalizeList(input.evidence ?? input.supportingEvidence ?? input.supporting_evidence)),
+    reason: String(input.reason ?? input.explanation ?? input.description ?? ""),
+    confidence: clampConfidence(input.confidence),
+  });
 }
 
 function normalizeNarrativeResult(value: unknown): LegalNarrativeResult {
@@ -134,10 +145,17 @@ function normalizeContextResult(value: unknown): LegalContextResult {
 
 function normalizeReasonedDecisionResult(value: unknown): V3ReasonedDecisionResult {
   const input = isObject(value) ? value : {};
+  const rawArticleEvaluations = input.articleEvaluations ?? input.article_evaluations;
+  const articleEvaluations = Object.freeze(
+    Array.isArray(rawArticleEvaluations)
+      ? rawArticleEvaluations.map(normalizeArticleEvaluation)
+      : [],
+  );
   return Object.freeze({
     reasoning: String(input.reasoning ?? input.why ?? ""),
     alternativeInterpretations: Object.freeze(normalizeList(input.alternativeInterpretations ?? input.alternative_interpretations)),
     confidence: clampConfidence(input.confidence),
+    articleEvaluations,
     supportingEvidence: Object.freeze(normalizeList(input.supportingEvidence ?? input.supporting_evidence)),
     contradictingEvidence: Object.freeze(normalizeList(input.contradictingEvidence ?? input.contradicting_evidence)),
     applicableArticles: Object.freeze(normalizeArticleList(input.applicableArticles ?? input.applicable_articles)),

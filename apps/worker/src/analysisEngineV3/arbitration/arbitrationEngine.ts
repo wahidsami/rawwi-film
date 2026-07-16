@@ -225,7 +225,9 @@ export function buildArbitrationDecisionPackage(input: ArbitrationJudgeInput): A
   const winningPrecedents = Object.freeze([...winningKnowledge.precedents]);
   const winningCases = Object.freeze([...winningKnowledge.cases]);
   const winningRelationships = Object.freeze([...winningKnowledge.relationships]);
-  const winningArticle = winningOpinion.suggestedArticles[0] ?? input.debate.primaryDecision.articleIds[0] ?? null;
+  const winningArticle = winningOpinion.status === "accept"
+    ? (winningOpinion.suggestedArticles[0] ?? input.debate.primaryDecision.articleIds[0] ?? null)
+    : null;
   const finalArticle = winningArticle;
   const rejectedReasons = Object.freeze(rejectedReviewers.map((reviewer) => reviewer.reason));
   const escalationRecommendation = needsHumanReview
